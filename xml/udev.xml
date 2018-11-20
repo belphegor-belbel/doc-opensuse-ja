@@ -24,7 +24,7 @@
 
   <para>必要なデバイス情報は <systemitem class="filesystem">sysfs</systemitem> ファイルシステム経由で開示されています。それぞれのデバイスに対して、カーネルが認識し準備を行なうと、デバイス名のディレクトリを作成します。ここには属性ファイルのほか、デバイス固有のプロパティファイルなどが含まれています。</para>
 
-  <para>デバイスが追加されたり削除されたりすると、カーネルは uevent を送信し、 <systemitem class="service">udev</systemitem> に変更を通知します。 <systemitem class="service">udev</systemitem> デーモンは、その起動時に <filename>/etc/udev/rules.d/*.rules</filename> にあるファイルから設定されている全てのルールを読み込み、メモリ内に保持します。ルールファイルを変更したり、追加もしくは削除を行なったりした場合は、 <command>udevadm control --reload</command> コマンドでデーモン側に再読み込みを依頼することができます。 <systemitem class="service">udev</systemitem> のルールとその文法について、詳しくは <xref linkend="sec.udev.rules"/> をお読みください。</para>
+  <para>デバイスが追加されたり削除されたりすると、カーネルは uevent を送信し、 <systemitem class="service">udev</systemitem> に変更を通知します。 <systemitem class="service">udev</systemitem> デーモンは、その起動時に <filename>/usr/lib/udev/rules.d/*.rules</filename> および <filename>/etc/udev/rules.d/*.rules</filename> にあるファイルから、設定されている全てのルールを読み込み、メモリ内に保持します。ルールファイルを変更したり、追加もしくは削除を行なったりした場合は、 <command>udevadm control --reload</command> コマンドでデーモン側に再読み込みを依頼することができます。 <systemitem class="service">udev</systemitem> のルールとその文法について、詳しくは <xref linkend="sec.udev.rules"/> をお読みください。</para>
 
   <para>受信したそれぞれのイベントは、読み込んだルールに対して適合可否を判断します。ルール側では環境キーを追加したり変更したりすることができるほか、作成すべきデバイスノードの名前を指定したり、ノードを指し示すシンボリックリンクを追加したり、デバイスノードの作成後に実行すべきプログラムなどを指定したりすることができます。なお、 <systemitem class="service">uevent</systemitem> はカーネルの netlink ソケットを介して受信されます。</para>
  </sect1>
@@ -83,9 +83,9 @@ MODALIAS=input:b0003v046DpC03Ee0110-e0,1,2,k110,111,112,r0,1,8,amlsfw</screen>
  <sect1 xml:id="sec.udev.rules">
   <title><systemitem class="service">udev</systemitem> ルールによるカーネルのデバイスイベント処理の調整</title>
 
-  <para><systemitem class="service">udev</systemitem> のルールは、カーネルがイベント自身に付与するプロパティ情報のほか、カーネルが <filename>sysfs</filename> で開示する任意の情報を条件として設定することができます。このほか、外部プログラムから追加の情報を取得することもできます。また、それぞれのイベントは提供されている全てのルールに対して適合可否を判断します。全てのルールは <filename>/etc/udev/rules.d</filename> 内に配置されます。</para>
+  <para><systemitem class="service">udev</systemitem> のルールは、カーネルがイベント自身に付与するプロパティ情報のほか、カーネルが <filename>sysfs</filename> で開示する任意の情報を条件として設定することができます。このほか、外部プログラムから追加の情報を取得することもできます。また、それぞれのイベントは提供されている全てのルールに対して適合可否を判断します。全てのルールは <filename>/usr/lib/udev/rules.d/</filename> (既定のルール) および <filename>/etc/udev/rules.d</filename> (システム固有の設定) 内に配置されます。</para>
 
-  <para>ルールファイルの各行には、少なくとも 1 つ以上のキーと値の対が含まれています。キーには 2 種類のものがあり、それぞれマッチ (適合可否) キーと代入キーと呼ばれています。ルール内のマッチキーで指定された全ての条件が満たされると、そのルールが適用され、代入キーに対して値が割り当てられます。また、マッチキーのルールではデバイスノードの名前を指定することができるほか、ノードを指し示すシンボリックリンクを追加したり、イベント処理の一部として指定したプログラムを起動したりすることができます。なお、いずれのルールにも該当しない場合は、デバイスノードを作成する際に既定のデバイス名が使われます。ルールの文法やマッチキーの一覧、およびデータの取り込み方法などについては、 <systemitem class="service">udev</systemitem> のマニュアルページをお読みください。下記の例では、 <systemitem class="service">udev</systemitem> のルールに関する基本的な文法の説明を行なっています。ルールの例は、 <filename>/etc/udev/rules.d/50-udev-default.rules</filename> にある <systemitem class="service">udev</systemitem> の既定のルールから引用されているものです。</para>
+  <para>ルールファイルの各行には、少なくとも 1 つ以上のキーと値の対が含まれています。キーには 2 種類のものがあり、それぞれマッチ (適合可否) キーと代入キーと呼ばれています。ルール内のマッチキーで指定された全ての条件が満たされると、そのルールが適用され、代入キーに対して値が割り当てられます。また、マッチキーのルールではデバイスノードの名前を指定することができるほか、ノードを指し示すシンボリックリンクを追加したり、イベント処理の一部として指定したプログラムを起動したりすることができます。なお、いずれのルールにも該当しない場合は、デバイスノードを作成する際に既定のデバイス名が使われます。ルールの文法やマッチキーの一覧、およびデータの取り込み方法などについては、 <systemitem class="service">udev</systemitem> のマニュアルページをお読みください。下記の例では、 <systemitem class="service">udev</systemitem> のルールに関する基本的な文法の説明を行なっています。ルールの例は、 <filename>/usr/lib/udev/rules.d/50-udev-default.rules</filename> にある <systemitem class="service">udev</systemitem> の既定のルールから引用されているものです。</para>
 
   <example xml:id="ex.rules">
    <title><systemitem class="service">udev</systemitem> ルールの例</title>
@@ -489,27 +489,14 @@ SUBSYSTEM=="firmware", ACTION=="add", RUN+="firmware.sh"</screen>
    <varlistentry>
     <term><filename>/etc/udev/rules.d/*</filename></term>
     <listitem>
-     <para>
-      System-specific <systemitem class="service">udev</systemitem> event
-      matching rules. You can add custom rules here to modify or override
-      the default rules from <filename>/usr/lib/udev/rules.d/*</filename>.
-     </para>
-     <para>
-      Files are parsed in alphanumeric order. Rules from files with a higher
-      priority modify or override rules with lower priority. The lower the
-      number, the higher the priority.
-     </para>
+     <para>システム固有の <systemitem class="service">udev</systemitem> マッチングルールが含まれています。ここに独自のルールを設定することで、 <filename>/usr/lib/udev/rules.d/*</filename> にある既定のルールを変更したり、上書きしたりすることができます。</para>
+     <para>ファイルはアルファベット／数字順に読み込まれます。また、低い優先順位のファイルに書かれたルールは、より高い優先順位のファイルに書かれたルールによって変更されたり、上書きされたりします。数字の小さいものほど高い優先順位が割り当てられます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/usr/lib/udev/*</filename></term>
+    <term><filename>/usr/lib/udev/rules.d/*</filename></term>
     <listitem>
-     <para>
-      Default <systemitem class="service">udev</systemitem> event matching
-      rules. The files in this directory are owned by packages and will be
-      overwritten by updates. Do not add, remove or edit files here, use
-      <filename>/etc/udev/rules.d</filename> instead.
-     </para>
+     <para>既定の <systemitem class="service">udev</systemitem> イベントマッチングルールが含まれています。このディレクトリ内にあるファイルは、それぞれのパッケージが所有しているファイルであるため、将来の更新によって上書きされることがあります。そのため、このディレクトリ内にあるファイルに対しては、追加や削除、編集などを行なってはなりません。追加や削除、編集などを行ないたい場合は、 <filename>/etc/udev/rules.d</filename> ディレクトリをお使いください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
