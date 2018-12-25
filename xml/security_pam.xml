@@ -4,16 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.pam">
- <title>Authentication with PAM</title>
+ <title>PAM を利用した認証</title>
  <info>
       <abstract>
-        <para>
-    Linux uses PAM (pluggable authentication modules) in the authentication
-    process as a layer that mediates between user and application. PAM
-    modules are available on a system wide basis, so they can be requested by
-    any application. This chapter describes how the modular authentication
-    mechanism works and how it is configured.
-   </para>
+        <para>Linux では認証処理に際して PAM (Pluggable Authentication Modules; プラグインを使用することのできる認証モジュール) を利用し、ユーザとアプリケーションとの間の仲介を行なっています。 PAM のモジュールはシステム全体に対して提供されているため、様々なアプリケーションから利用できるようになっています。本章では、このようなモジュール型の認証機構の動作と、設定方法について説明しています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -22,325 +16,160 @@
     </info>
 
  <sect1 xml:id="sec.security.pam.whatis">
-  <title>What is PAM?</title>
+  <title>PAM とは？</title>
 
-  <para>
-   System administrators and programmers often want to restrict access to
-   certain parts of the system or to limit the use of certain functions of
-   an application. Without PAM, applications must be adapted every time a
-   new authentication mechanism, such as LDAP, Samba, or Kerberos, is
-   introduced. However, this process is time-consuming and
-   error-prone. One way to avoid these drawbacks is to separate applications
-   from the authentication mechanism and delegate authentication to
-   centrally managed modules. Whenever a newly required authentication
-   scheme is needed, it is sufficient to adapt or write a suitable
-   <emphasis>PAM module</emphasis> for use by the program in question.
-  </para>
+  <para>システム管理者やプログラマは、システムの特定の箇所や、アプリケーション内の特定の機能に対してアクセスを制限したいと考えることがあります。 PAM の無い状態では、それぞれのアプリケーションは LDAP や Samba, Kerberos など、様々な認証機構に対応しなければならなくなります。このような開発には時間を要するばかりか、開発によってエラーを引き起こす可能性すらあります。このような欠点を防ぐ唯一の方法は、認証の仕組みとアプリケーションを分離するという方法で、集中管理されたモジュール内で、認証の仕組みを代行させるやり方です。このような仕組みであれば、新しい認証方式が開発された場合でも、対応する <emphasis>PAM モジュール</emphasis> を作成すれば、アプリケーション側ですぐに利用できるようになります。</para>
 
-  <para>
-   The PAM concept consists of:
-  </para>
+  <para>PAM は下記のような考え方から成り立っています:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <emphasis>PAM modules</emphasis>, which are a set of shared libraries
-     for a specific authentication mechanism.
-    </para>
+    <para><emphasis>PAM モジュール</emphasis>: 特定の認証機構に対応する共有ライブラリです。</para>
    </listitem>
    <listitem>
-    <para>
-     A <emphasis>module stack</emphasis> with of one or more PAM modules.
-    </para>
+    <para><emphasis>モジュールスタック</emphasis>: 複数の PAM モジュールから構成されるものです。</para>
    </listitem>
    <listitem>
-    <para>
-     A PAM-aware <emphasis>service</emphasis> which needs authentication by
-     using a module stack or PAM modules. Usually a service is a familiar
-     name of the corresponding application, like <command>login</command> or
-     <command>su</command>. The service name <literal>other</literal> is a
-     reserved word for default rules.
-    </para>
+    <para>PAM 対応の <emphasis>サービス</emphasis>: モジュールスタック、もしくは PAM モジュールを利用して、認証の仕組みを利用するものです。通常、サービスは <command>login</command> や <command>su</command> のように、対応するアプリケーションに対する分かりやすい名前を指定します。サービス名 <literal>other</literal> は、既定のルールで使用される予約語です。</para>
    </listitem>
    <listitem>
-    <para>
-     <emphasis>Module arguments</emphasis>, with which the execution of a
-     single PAM module can be influenced.
-    </para>
+    <para><emphasis>モジュールのパラメータ</emphasis>: 特定の PAM モジュールに対して、その処理に影響を与えるためのものです。</para>
    </listitem>
    <listitem>
-    <para>
-     A mechanism evaluating each <emphasis>result</emphasis> of a single PAM
-     module execution. A positive value executes the next PAM module. The
-     way a negative value is dealt with depends on the configuration:
-     <quote>no influence, proceed</quote> up to <quote>terminate
-     immediately</quote> and anything in between are valid options.
-    </para>
+    <para><emphasis>結果</emphasis>: それぞれの PAM モジュールの実行結果を意味します。正の値が返された場合、次の PAM モジュールを実行します。負の値は設定によって異なる動作となり、 <quote>何も影響を与えず、そのまま次のモジュールに進む</quote> から <quote>即時に終了する</quote> まで、様々な処理を行なうことができます。</para>
    </listitem>
   </itemizedlist>
  </sect1>
  <sect1 xml:id="sec.pam.struc.files">
-  <title>Structure of a PAM Configuration File</title>
+  <title>PAM 設定ファイルの構造</title>
 
-  <para>
-   PAM can be configured in two ways:
-  </para>
+  <para>PAM は下記の 2 種類の方式で設定することができます:</para>
 
   <variablelist>
    <varlistentry>
-    <term>File based configuration (<filename>/etc/pam.conf</filename>)</term>
+    <term>ファイルベースの設定 ( <filename>/etc/pam.conf</filename> )</term>
     <listitem>
-     <para>
-      The configuration of each service is stored in
-      <filename>/etc/pam.conf</filename>. However, for maintenance and
-      usability reasons, this configuration scheme is not used in
-      &productname;.
-     </para>
+     <para>それぞれのサービスに対する設定を <filename>/etc/pam.conf</filename> に書き込む方式です。この方式は、メンテナンス性と利便性が損なわれることから、 &productname; では使用していません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Directory based configuration (<filename>/etc/pam.d/</filename>)</term>
+    <term>ディレクトリベースの設定 ( <filename>/etc/pam.d/</filename> )</term>
     <listitem>
-     <para>
-      Every service (or program) that relies on the PAM mechanism has its
-      own configuration file in the <filename>/etc/pam.d/</filename>
-      directory. For example, the service for
-      <systemitem class="daemon">sshd</systemitem> can be found in the
-      <filename>/etc/pam.d/sshd</filename> file.
-     </para>
+     <para>PAM の仕組みを利用する各サービス (もしくはプログラム) に対する設定を、 <filename>/etc/pam.d/</filename> ディレクトリ内のそれぞれの設定ファイルに保存する方式です。たとえば <systemitem class="daemon">sshd</systemitem> サービスに対する設定は、 <filename>/etc/pam.d/sshd</filename> ファイル内に書き込むことになります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   The files under <filename>/etc/pam.d/</filename> define the PAM modules
-   used for authentication. Each file consists of lines, which define a
-   service, and each line consists of a maximum of four components:
-  </para>
+  <para><filename>/etc/pam.d/</filename> ディレクトリ内のファイルでは、認証に使用する PAM モジュールを設定します。ファイル内の各行には最大で 4 つの値を指定します:</para>
 
-<screen><replaceable>TYPE</replaceable>  <replaceable>CONTROL</replaceable>
- <replaceable>MODULE_PATH</replaceable>  <replaceable>MODULE_ARGS</replaceable></screen>
+<screen><replaceable>種類</replaceable>  <replaceable>制御</replaceable>
+ <replaceable>モジュールパス</replaceable>  <replaceable>モジュールパラメータ</replaceable></screen>
 
-  <para>
-   The components have the following meaning:
-  </para>
+  <para>それぞれの意味は下記のとおりです:</para>
 
   <variablelist>
    <varlistentry>
-    <term><replaceable>TYPE</replaceable>
-    </term>
+    <term><replaceable>種類</replaceable></term>
     <listitem>
-     <para>
-      Declares the type of the service. PAM modules are processed as stacks.
-      Different types of modules have different purposes. For example, one
-      module checks the password, another verifies the location from which
-      the system is accessed, and yet another reads user-specific settings.
-      PAM knows about four different types of modules:
-     </para>
+     <para>PAM モジュールの種類を指定します。 PAM モジュールはスタックとして処理されます。それぞれの種類はそれぞれ別々の目的で使用します。たとえば一方のモジュールではパスワードをチェックし、他方のモジュールではシステムにアクセスする際のアクセス元をチェックし、さらに別のモジュールではユーザ固有の設定を読み込む、などです。 PAM では、下記 4 つのモジュールの種類に対応しています:</para>
      <variablelist>
       <varlistentry>
-       <term><literal>auth</literal>
-       </term>
+       <term><literal>auth</literal></term>
        <listitem>
-        <para>
-         Check the user's authenticity, traditionally by querying a
-         password. However, this can also be achieved with a
-         chip card or through biometrics (for example, fingerprints or iris
-         scan).
-        </para>
+        <para>従来であればパスワードの問い合わせなど、ユーザの正当性を確認するための種類です。現在では IC カードによる認証や生体認証 (指紋認証、虹彩認証など) も使用することができます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>account</literal>
-       </term>
+       <term><literal>account</literal></term>
        <listitem>
-        <para>
-         Modules of this type check if the user has general permission to
-         use the requested service. As an example, such a check should be
-         performed to ensure that no one can log in with the user name of an
-         expired account.
-        </para>
+        <para>そのサービスを使用できる権限があるかどうかを確認するための種類です。たとえば有効期限の切れたユーザ名でログインできないようにする、などの目的で使用します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>password</literal>
-       </term>
+       <term><literal>password</literal></term>
        <listitem>
-        <para>
-         The purpose of this type of module is to enable the change of an
-         authentication token. Usually this is a password.
-        </para>
+        <para>認証トークン (通常はパスワード) の変更を有効化するための種類です。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>session</literal>
-       </term>
+       <term><literal>session</literal></term>
        <listitem>
-        <para>
-         Modules of this type are responsible for managing and configuring
-         user sessions. They are started before and after authentication to
-         log login attempts and configure the user's specific environment
-         (mail accounts, home directory, system limits, etc.).
-        </para>
+        <para>ユーザセッションを管理したり設定したりするための種類です。ログインに際しては認証前と認証後の両方で開始され、ユーザ固有の環境 (メールアカウント、ホームディレクトリ、システム制限など) を設定するために使用します。</para>
        </listitem>
       </varlistentry>
      </variablelist>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><replaceable>CONTROL</replaceable>
-    </term>
+    <term><replaceable>制御</replaceable></term>
     <listitem>
-     <para>
-      Indicates the behavior of a PAM module. Each module can have the
-      following control flags:
-     </para>
+     <para>PAM モジュールの動作を表わす箇所です。それぞれのモジュールには、下記のような制御フラグを設定することができます:</para>
      <variablelist>
       <varlistentry>
-       <term><literal>required</literal>
-       </term>
+       <term><literal>required</literal></term>
        <listitem>
-        <para>
-         A module with this flag must be successfully processed before the
-         authentication may proceed. After the failure of a module with the
-         <literal>required</literal> flag, all other modules with the same
-         flag are processed before the user receives a message about the
-         failure of the authentication attempt.
-        </para>
+        <para>このフラグを設定したモジュールは、認証を成功させるにあたって必ず成功しなければならないものであることを表わします。 <literal>required</literal> フラグを設定したモジュールが失敗すると、同じフラグを設定した他のモジュールは、ユーザが認証失敗メッセージを受け取る前に処理が行なわれます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>requisite</literal>
-       </term>
+       <term><literal>requisite</literal></term>
        <listitem>
-        <para>
-         Modules having this flag must also be processed successfully, in
-         much the same way as a module with the <literal>required</literal>
-         flag. However, in case of failure a module with this flag gives
-         immediate feedback to the user and no further modules are
-         processed. In case of success, other modules are subsequently
-         processed, like any modules with the <literal>required</literal>
-         flag. The <literal>requisite</literal> flag can be used as a basic
-         filter checking for the existence of certain conditions that are
-         essential for a correct authentication.
-        </para>
+        <para>このフラグを設定したモジュールは、 <literal>required</literal> フラグと同様に処理が成功しなければならないものであることを表わします。ただし、このフラグを設定したモジュールが失敗すると、ユーザに対して即時にフィードバックが送られ、その他のモジュールは処理されなくなります。成功した場合は、 <literal>required</literal> フラグを設定した場合と同様に、その他のモジュールは引き続き処理されます。 <literal>requisite</literal> フラグは、認証を成功させるために必要な条件をチェックするための基本フィルタとして動作します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>sufficient</literal>
-       </term>
+       <term><literal>sufficient</literal></term>
        <listitem>
-        <para>
-         After a module with this flag has been successfully processed, the
-         requesting application receives an immediate message about the
-         success and no further modules are processed, provided there was no
-         preceding failure of a module with the <literal>required</literal>
-         flag. The failure of a module with the
-         <literal>sufficient</literal> flag has no direct consequences, in
-         the sense that any subsequent modules are processed in their
-         respective order.
-        </para>
+        <para>このフラグを設定したモジュールの処理が成功すると、それより前に存在する <literal>required</literal> フラグ付きのモジュールの処理が失敗しない限り、サービスは成功を示すメッセージを即時に受け取り、その他のモジュールが処理されなくなります。なお、 <literal>sufficient</literal> フラグが設定されたモジュールの処理が失敗しても、直接的な結果には至らず、残りのモジュールは通常通り処理されます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>optional</literal>
-       </term>
+       <term><literal>optional</literal></term>
        <listitem>
-        <para>
-         The failure or success of a module with this flag does not have any
-         direct consequences. This can be useful for modules that are only
-         intended to display a message (for example, to tell the user that
-         mail has arrived) without taking any further action.
-        </para>
+        <para>このフラグを設定したモジュールの処理は、成功した場合も失敗した場合も、直接的な影響を与えません。このフラグは、メッセージ (たとえばメールが到着しているなど) を表示し、それ以外の処理を行なわないモジュールを使用する場合に有用です。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>include</literal>
-       </term>
+       <term><literal>include</literal></term>
        <listitem>
-        <para>
-         If this flag is given, the file specified as argument is inserted
-         at this place.
-        </para>
+        <para>このフラグを指定した場合、この位置に指定した追加設定を取り込むことを表わします。</para>
        </listitem>
       </varlistentry>
      </variablelist>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><replaceable>MODULE_PATH</replaceable>
-    </term>
+    <term><replaceable>モジュールパス</replaceable></term>
     <listitem>
-     <para>
-      Contains a full file name of a PAM module. It does not need to be
-      specified explicitly, as long as the module is located in the default
-      directory <filename>/lib/security</filename> (for all 64-bit platforms
-      supported by &productnamereg;, the directory is
-      <filename>/lib64/security</filename>).
-     </para>
+     <para>PAM モジュールに対する完全なファイル名を指定します。モジュールが既定のディレクトリ (32 ビット版の場合は <filename>/lib/security</filename>, 64 ビット版の場合は <filename>/lib64/security</filename>) 内に存在している場合、ディレクトリを指定する必要はありません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><replaceable>MODULE_ARGS</replaceable>
-    </term>
+    <term><replaceable>モジュールパラメータ</replaceable></term>
     <listitem>
-     <para>
-      Contains a space-separated list of options to influence the behavior
-      of a PAM module, such as <option>debug</option> (enables debugging) or
-      <option>nullok</option> (allows the use of empty passwords).
-     </para>
+     <para>PAM モジュールの動作に影響を与えるための、スペース区切りのパラメータリストです。たとえば <option>debug</option> (デバッグの有効化) や <option>nullok</option> (空のパスワードを許可する) などがあります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   In addition, there are global configuration files for PAM modules under
-   <filename>/etc/security</filename>, which define the exact behavior of
-   these modules (examples include <filename>pam_env.conf</filename> and
-   <filename>time.conf</filename>). Every application that uses a PAM module
-   actually calls a set of PAM functions, which then process the information
-   in the various configuration files and return the result to the
-   requesting application.
-  </para>
+  <para>これらに加えて、 <filename>/etc/security</filename> ディレクトリ内には PAM モジュール向けのグローバルな設定ファイルが用意されています。このディレクトリ内には、モジュールに対する厳密な動作設定が書かれています (<filename>pam_env.conf</filename> や <filename>time.conf</filename> など) 。 PAM モジュールを使用する各アプリケーションは、 PAM の機能を実際に呼び出したあと、様々な設定ファイルに含まれる情報を処理して、結果を返します。</para>
 
-  <para>
-   To simplify the creation and maintenance of PAM modules, common default
-   configuration files for the types <literal>auth</literal>,
-   <literal>account</literal>, <literal>password</literal>, and
-   <literal>session</literal> modules have been introduced. These are
-   retrieved from every application's PAM configuration. Updates to the
-   global PAM configuration modules in <filename>common-*</filename> are
-   thus propagated across all PAM configuration files without requiring the
-   administrator to update every single PAM configuration file.
-  </para>
+  <para>PAM モジュールの作成やメンテナンスを簡略化する目的で、 <literal>auth</literal> , <literal>account</literal> , <literal>password</literal> , <literal>session</literal> の各種類に対応する一般的な既定の設定ファイルが用意されています。これらは、各アプリケーション側の PAM 設定から読み込まれるようになっているため、これらの設定ファイルが更新されると、それぞれの PAM 設定ファイルを個別に書き換えることなく、各アプリケーションに適用できるようになっています。</para>
 
-  <para>
-   The global PAM configuration files are maintained using the
-   <command>pam-config</command> tool. This tool automatically adds new
-   modules to the configuration, changes the configuration of existing ones
-   or deletes modules (or options) from the configurations. Manual
-   intervention in maintaining PAM configurations is minimized or no longer
-   required.
-  </para>
+  <para>このような PAM のグローバル設定ファイルは、 <command>pam-config</command> ツールを利用して管理します。このツールは設定ファイルに新しいモジュールを自動的に追加したり、既存の設定ファイルを変更したり、既存の設定ファイルからモジュール (もしくはオプション) を削除したりすることができます。このような仕組みにより、 PAM の設定ファイルを手作業で管理する手間が最小化できているばかりか、場合によっては全く不要にもなっています。</para>
 
   <note>
-   <title>64-Bit and 32-Bit Mixed Installations</title>
-   <para>
-    When using a 64-bit operating system, it is possible to also include a
-    runtime environment for 32-bit applications. In this case, make sure
-    that you also install the 32-bit version of the PAM modules.
-   </para>
+   <title>64 ビットアプリケーションと 32 ビットアプリケーションの混在する環境について</title>
+   <para>64 ビットのオペレーティングシステムをお使いの場合、 32 ビットアプリケーション向けのランタイム環境をそろえることもできます。この場合、 32 ビット版の PAM モジュールを追加でインストールする必要があります。</para>
   </note>
  </sect1>
  <sect1 xml:id="sec.pam.struc.format">
-  <title>The PAM Configuration of sshd</title>
+  <title>sshd の PAM 設定</title>
 
-  <para>
-   Consider the PAM configuration of sshd as an example:
-  </para>
+  <para>sshd の PAM 設定ファイルを例として取り上げてみます:</para>
 
   <example xml:id="dat.pam.sshd">
-   <title>PAM Configuration for sshd (<filename>/etc/pam.d/sshd</filename>)</title>
+   <title>sshd の PAM 設定 ( <filename>/etc/pam.d/sshd</filename> )</title>
 <screen>#%PAM-1.0 <co xml:id="co.security.pam.sshd.pam-line"/>
 auth     requisite      pam_nologin.so                              <co xml:id="co.security.pam.sshd.pam_nologin"/>
 auth     include        common-auth                                 <co xml:id="co.security.pam.sshd.common-auth"/>
@@ -352,64 +181,29 @@ session  include        common-session                              <xref linken
 session  optional       pam_lastlog.so   silent noupdate showfailed <co xml:id="co.security.pam.sshd.lastlog"/></screen>
    <calloutlist>
     <callout arearefs="co.security.pam.sshd.pam-line">
-     <para>
-      Declares the version of this configuration file for PAM 1.0. This is
-      merely a convention, but could be used in the future to check the
-      version.
-     </para>
+     <para>設定ファイルのバージョンを表わす文字列です。慣習として書かれているだけの項目ですが、将来のバージョンでも使用できるよう、必ず記述しておくことをお勧めします。</para>
     </callout>
     <callout arearefs="co.security.pam.sshd.pam_nologin">
-     <para>
-      Checks, if <filename>/etc/nologin</filename> exists. If it does, no
-      user other than <systemitem class="username">root</systemitem> may log
-      in.
-     </para>
+     <para><filename>/etc/nologin</filename> ファイルが存在するかどうかをチェックするモジュールの指定です。存在した場合、 <systemitem class="username">root</systemitem> 以外のユーザがログインできなくなります。</para>
     </callout>
     <callout arearefs="co.security.pam.sshd.common-auth">
-     <para>
-      Refers to the configuration files of four module types:
-      <filename>common-auth</filename>, <filename>common-account</filename>,
-      <filename>common-password</filename>, and
-      <filename>common-session</filename>. These four files hold the default
-      configuration for each module type.
-     </para>
+     <para>4 種類のモジュールタイプに対して、それぞれ設定ファイルを参照しています (<filename>common-auth</filename> , <filename>common-account</filename> , <filename>common-password</filename> , <filename>common-session</filename>) 。これらの 4 種類のファイルには、それぞれのモジュールの種類に対応する既定の設定が含まれています。</para>
     </callout>
     <callout arearefs="co.security.pam.sshd.pam_loginuid">
-     <para>
-      Sets the login UID process attribute for the process that was
-      authenticated.
-     </para>
+     <para>認証を行なったプロセスに対して、ログイン UID プロセス属性を設定します。</para>
     </callout>
     <callout arearefs="co.security.pam.sshd.lastlog">
-     <para>
-      Displays information about the last login of a user.
-     </para>
+     <para>ユーザの最終ログイン情報を表示します。</para>
     </callout>
    </calloutlist>
   </example>
 
-  <para>
-   By including the configuration files instead of adding each module
-   separately to the respective PAM configuration, you automatically get an
-   updated PAM configuration when an administrator changes the defaults.
-   Formerly, you needed to adjust all configuration files manually for all
-   applications when changes to PAM occurred or a new application was
-   installed. Now the PAM configuration is made with central configuration
-   files and all changes are automatically inherited by the PAM
-   configuration of each service.
-  </para>
+  <para>それぞれの PAM モジュールに対する設定ファイルに個別に追加していく代わりに、他の設定ファイルを取り込むように指定することで、管理者側が既定値を変更するだけで、その設定を取り込み元のモジュールに反映させることができるようになります。従来は PAM に対して変更があったり、新しいアプリケーションをインストールしたりするたびに、全ての設定ファイルを手作業で調整しなければなりませんでした。現在はこのような仕組みになっているため、設定の変更を一箇所で行なうことができるようになっていて、各サービスの PAM 設定にもそのまま反映できるようになっています。</para>
 
-  <para>
-   The first include file (<filename>common-auth</filename>) calls three
-   modules of the <literal>auth</literal> type:
-   <systemitem class="library">pam_env.so</systemitem>,
-   <systemitem class="library">pam_gnome_keyring.so</systemitem> and
-   <systemitem class="library">pam_unix.so</systemitem>. See
-   <xref linkend="dat.pam.common-auth"/>.
-  </para>
+  <para>最初の <literal>include</literal> では <filename>common-auth</filename> という設定ファイルを取り込むように指定していますが、ここでは <literal>auth</literal> の種類に対して、 3 種類のモジュール (<systemitem class="library">pam_env.so</systemitem> , <systemitem class="library">pam_gnome_keyring.so</systemitem> , <systemitem class="library">pam_unix.so</systemitem> を呼び出しています。詳しくは <xref linkend="dat.pam.common-auth"/>) をご覧ください。</para>
 
   <example xml:id="dat.pam.common-auth">
-   <title>Default Configuration for the <literal>auth</literal> Section (<filename>common-auth</filename>)</title>
+   <title><literal>auth</literal> セクションに対する既定の設定 ( <filename>common-auth</filename> )</title>
 <screen>auth  required  pam_env.so                   <co xml:id="co.security.pam.sshd.pam_env"/>
 auth  optional  pam_gnome_keyring.so         <co xml:id="co.security.pam.sshd.gnome"/>
 auth  required  pam_unix.so  try_first_pass <co xml:id="co.security.pam.sshd.pam_unix"/></screen>
@@ -417,91 +211,38 @@ auth  required  pam_unix.so  try_first_pass <co xml:id="co.security.pam.sshd.pam
 
   <calloutlist>
    <callout arearefs="co.security.pam.sshd.pam_env">
-    <para>
-     <systemitem class="library">pam_env.so</systemitem> loads
-     <filename>/etc/security/pam_env.conf</filename> to set the environment
-     variables as specified in this file. It can be used to set the
-     <envar>DISPLAY</envar> variable to the correct value, because the
-     <systemitem class="library">pam_env</systemitem> module knows about the
-     location from which the login is taking place.
-    </para>
+    <para><systemitem class="library">pam_env.so</systemitem> は <filename>/etc/security/pam_env.conf</filename> ファイルを読み込んで、そのファイルに指定されているとおりに環境変数を設定します。これは、 <systemitem class="library">pam_env</systemitem> ではログインが行なわれた場所に関する情報を保持していることから、 <envar>DISPLAY</envar> 環境変数を適切な値に設定するために使用されています。</para>
    </callout>
    <callout arearefs="co.security.pam.sshd.gnome">
-    <para>
-     <systemitem class="library">pam_gnome_keyring.so</systemitem> checks
-     the user's login and password against the &gnome; key ring
-    </para>
+    <para><systemitem class="library">pam_gnome_keyring.so</systemitem> では、 &gnome; 鍵リングに対してユーザのログイン名とパスワードをチェックします。</para>
    </callout>
    <callout arearefs="co.security.pam.sshd.pam_unix">
-    <para>
-     <systemitem class="library">pam_unix</systemitem> checks the user's
-     login and password against <filename>/etc/passwd</filename> and
-     <filename>/etc/shadow</filename>.
-    </para>
+    <para><systemitem class="library">pam_unix</systemitem> は、ユーザのログイン名とパスワードを、 <filename>/etc/passwd</filename> および <filename>/etc/shadow</filename> でチェックします。</para>
    </callout>
   </calloutlist>
 
-  <para>
-   The whole stack of <literal>auth</literal> modules is processed before
-   <systemitem class="daemon">sshd</systemitem> gets any feedback about
-   whether the login has succeeded. All modules of the stack having the
-   <literal>required</literal> control flag must be processed successfully
-   before <systemitem class="daemon">sshd</systemitem> receives a message
-   about the positive result. If one of the modules is not successful, the
-   entire module stack is still processed and only then is
-   <systemitem class="daemon">sshd</systemitem> notified about the negative
-   result.
-  </para>
+  <para><literal>auth</literal> 内の全てのモジュールは、 <systemitem class="daemon">sshd</systemitem> 側でログインが成功したかどうかについて、結果を得る前に処理が行なわれます。また、制御フラグ <literal>required</literal> が設定された全てのモジュールは、 <systemitem class="daemon">sshd</systemitem> が肯定応答を受け取るよりも前に成功していなければなりません。これらのうちのいずれかのモジュールが成功以外の状態になると、残りのモジュールはそのまま処理されるものの、最終的には <systemitem class="daemon">sshd</systemitem> が否定応答を受け取ることになります。</para>
 
-  <para>
-   When all modules of the <literal>auth</literal> type have been
-   successfully processed, another include statement is processed, in this
-   case, that in <xref linkend="dat.pam.common-account"/>.
-   <filename>common-account</filename> contains only one module,
-   <literal>pam_unix</literal>. If <literal>pam_unix</literal> returns the
-   result that the user exists, sshd receives a message announcing this
-   success and the next stack of modules (<literal>password</literal>) is
-   processed, shown in <xref linkend="dat.pam.common-password"/>.
-  </para>
+  <para><literal>auth</literal> の種類が設定された全てのモジュールが成功すると、その他のステートメントが処理されるようになります。この場合は <xref linkend="dat.pam.common-account"/> で示されている内容になります。この <filename>common-account</filename> には 1 つのモジュール (<literal>pam_unix</literal>) のみが書かれています。この <literal>pam_unix</literal> は対象のユーザが存在しているかどうかを返すもので、 sshd が成功を表わすメッセージを受け取ると、さらに続くモジュールスタック (この場合は <xref linkend="dat.pam.common-password"/> に示されている <literal>password</literal>) を実行することになります。</para>
 
   <example xml:id="dat.pam.common-account">
-   <title>Default Configuration for the <literal>account</literal> Section (<filename>common-account</filename>)</title>
+   <title><literal>account</literal> セクションに対する既定の設定 ( <filename>common-account</filename> )</title>
 <screen>account  required  pam_unix.so  try_first_pass</screen>
   </example>
 
   <example xml:id="dat.pam.common-password">
-   <title>Default Configuration for the <literal>password</literal> Section (<filename>common-password</filename>)</title>
+   <title><literal>password</literal> セクションに対する既定の設定 ( <filename>common-password</filename> )</title>
 <screen>password  requisite  pam_cracklib.so
 password  optional   pam_gnome_keyring.so  use_authtok
 password  required   pam_unix.so  use_authtok nullok shadow try_first_pass</screen>
   </example>
 
-  <para>
-   Again, the PAM configuration of
-   <systemitem class="daemon">sshd</systemitem> involves only an include
-   statement referring to the default configuration for
-   <literal>password</literal> modules located in
-   <filename>common-password</filename>. These modules must successfully be
-   completed (control flags <literal>requisite</literal> and
-   <literal>required</literal>) whenever the application requests the change
-   of an authentication token.
-  </para>
+  <para><systemitem class="daemon">sshd</systemitem> の PAM 設定では、 <filename>common-password</filename> のファイル名で指定されている <literal>password</literal> モジュール向けの既定の設定のみが include で設定されています。ここには、アプリケーションが認証トークンの変更を要求した場合、必ず成功しておかなければならないもの (制御フラグ <literal>requisite</literal> および <literal>required</literal>) が書かれています。</para>
 
-  <para>
-   Changing a password or another authentication token requires a security
-   check. This is achieved with the <filename>pam_cracklib</filename>
-   module. The <filename>pam_unix</filename> module used afterward carries
-   over any old and new passwords from <filename>pam_cracklib</filename>, so
-   the user does not need to authenticate again after changing the password.
-   This procedure makes it impossible to circumvent the checks carried out
-   by <filename>pam_cracklib</filename>. Whenever the
-   <literal>account</literal> or the <literal>auth</literal> type are
-   configured to complain about expired passwords, the
-   <literal>password</literal> modules should also be used.
-  </para>
+  <para>パスワードなどの認証トークンを変更する際には、セキュリティチェックを必要とします。セキュリティチェックは <filename>pam_cracklib</filename> モジュールで行ないます。 <filename>pam_unix</filename> モジュールはその後に動作するモジュールで、 <filename>pam_cracklib</filename> から古いパスワードと新しいパスワードを受け取ります。これにより、パスワードの変更に際しても、ユーザ側で再度認証を行なう必要が無いようにしています。また、このような仕組みにより、 <filename>pam_cracklib</filename> 側のチェックは回避できないようにもなっています。 <literal>account</literal> や <literal>auth</literal> の種類でパスワードの有効期限を確認するよう設定する場合は、 <literal>password</literal> モジュールも使用する必要があります。</para>
 
   <example xml:id="dat.pam.common-session">
-   <title>Default Configuration for the <literal>session</literal> Section (<filename>common-session</filename>)</title>
+   <title><literal>session</literal> セクションに対する既定の設定 ( <filename>common-session</filename> )</title>
 <screen>session  required  pam_limits.so
 session  required  pam_unix.so  try_first_pass
 session  optional  pam_umask.so
@@ -510,78 +251,38 @@ session  optional  pam_gnome_keyring.so auto_start only_if=gdm,gdm-password,lxdm
 session  optional  pam_env.so</screen>
   </example>
 
-  <para>
-   As the final step, the modules of the <literal>session</literal> type
-   (bundled in the <filename>common-session</filename> file) are called to
-   configure the session according to the settings for the user in question.
-   The <filename>pam_limits</filename> module loads the file
-   <filename>/etc/security/limits.conf</filename>, which may define limits
-   on the use of certain system resources. The <filename>pam_unix</filename>
-   module is processed again. The <filename>pam_umask</filename> module can
-   be used to set the file mode creation mask. Since this module carries the
-   <literal>optional</literal> flag, a failure of this module would not
-   affect the successful completion of the entire session module stack. The
-   <literal>session</literal> modules are called a second time when the user
-   logs out.
-  </para>
+  <para>最後のステップとして、 <literal>session</literal> の種類が指定されたモジュール (<filename>common-session</filename> ファイル内に書かれています) を呼び出して、対象のユーザの設定に従ってセッションを設定します。 <filename>pam_limits</filename> モジュールは <filename>/etc/security/limits.conf</filename> ファイルを読み込むモジュールで、特定のシステム資源の使用に対して制限を設定することができるものです。ここでは再度 <filename>pam_unix</filename> モジュールを使用しています。 <filename>pam_umask</filename> モジュールは、ファイル作成時のマスクを設定するためのモジュールです。このモジュールには <literal>optional</literal> フラグが設定されているため、このモジュールの処理が失敗しても、セッションモジュールスタックの処理には影響を与えないようになっています。なお、 <literal>session</literal> の種類が設定されたモジュールは、ユーザがログアウトする際にも再度呼び出されます。</para>
  </sect1>
  <sect1 xml:id="sec.pam.struc.conf">
-  <title>Configuration of PAM Modules</title>
+  <title>PAM モジュールの設定</title>
 
-  <para>
-   Some PAM modules are configurable. The configuration files are
-   located in <filename>/etc/security</filename>. This section briefly
-   describes the configuration files relevant to the sshd
-   example&mdash;<filename>pam_env.conf</filename> and
-   <filename>limits.conf</filename>.
-  </para>
+  <para>PAM モジュールによっては、設定ファイルが別途用意されているものがあります。設定ファイルは <filename>/etc/security</filename> 内に配置します。本章では、 sshd の例に示されているモジュール (<filename>pam_env.conf</filename> および <filename>limits.conf</filename>) について、概要を説明しています。</para>
 
   <sect2 xml:id="sec.pam.struc.conf.pamenv">
    <title>pam_env.conf</title>
-   <para>
-    <filename>pam_env.conf</filename> can be used to define a standardized
-    environment for users that is set whenever the
-    <systemitem>pam_env</systemitem> module is called. With it, preset
-    environment variables using the following syntax:
-   </para>
-<screen><replaceable>VARIABLE</replaceable>  [DEFAULT=<replaceable>VALUE</replaceable>]  [OVERRIDE=<replaceable>VALUE</replaceable>]</screen>
+   <para><filename>pam_env.conf</filename> は、 <systemitem>pam_env</systemitem> モジュールが呼び出された際に、対象のユーザに対して標準化された環境を設定するために使用するファイルです。このファイルでは、下記のような書式で環境変数を設定します:</para>
+<screen><replaceable>変数名</replaceable>  [DEFAULT=<replaceable>値</replaceable>]  [OVERRIDE=<replaceable>値</replaceable>]</screen>
    <variablelist>
     <varlistentry>
-     <term><replaceable>VARIABLE</replaceable>
-     </term>
+     <term><replaceable>変数名</replaceable></term>
      <listitem>
-      <para>
-       Name of the environment variable to set.
-      </para>
+      <para>設定したい環境変数の名前を指定します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>[DEFAULT=&lt;value&gt;]</systemitem>
-     </term>
+     <term><systemitem>[DEFAULT=&lt;値&gt;]</systemitem></term>
      <listitem>
-      <para>
-       Default <replaceable>VALUE</replaceable> the administrator wants to
-       set.
-      </para>
+      <para>管理者側で設定したい既定値を指定します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>[OVERRIDE=&lt;value&gt;]</systemitem>
-     </term>
+     <term><systemitem>[OVERRIDE=&lt;値&gt;]</systemitem></term>
      <listitem>
-      <para>
-       Values that may be queried and set by
-       <systemitem>pam_env</systemitem>, overriding the default value.
-      </para>
+      <para><systemitem>pam_env</systemitem> に対して問い合わせ、必要であれば既定値を上書きして設定する値を指定します。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    A typical example of how <systemitem>pam_env</systemitem> can be used is
-    the adaptation of the <envar>DISPLAY</envar> variable, which is changed
-    whenever a remote login takes place. This is shown in
-    <xref linkend="dat.pam.pamenv"/>.
-   </para>
+   <para><systemitem>pam_env</systemitem> の一般的な用途としては、 <envar>DISPLAY</envar> 環境変数があげられます。これはリモートからログインが行なわれることで、常に変化する可能性があるものです。詳しくは <xref linkend="dat.pam.pamenv"/> をご覧ください。</para>
    <example xml:id="dat.pam.pamenv">
     <title>pam_env.conf</title>
 <screen>
@@ -589,232 +290,110 @@ REMOTEHOST  DEFAULT=localhost          OVERRIDE=@{PAM_RHOST}
 DISPLAY     DEFAULT=${REMOTEHOST}:0.0  OVERRIDE=${DISPLAY}
 </screen>
    </example>
-   <para>
-    The first line sets the value of the <envar>REMOTEHOST</envar> variable
-    to <literal>localhost</literal>, which is used whenever
-    <filename>pam_env</filename> cannot determine any other value. The
-    <envar>DISPLAY</envar> variable in turn contains the value of
-    <envar>REMOTEHOST</envar>. Find more information in the comments in
-    <filename>/etc/security/pam_env.conf</filename>.
-   </para>
+   <para>最初の行では環境変数 <envar>REMOTEHOST</envar> の値に対して、 <filename>pam_env</filename> 側で判断が付かなかった場合、 <literal>localhost</literal> を設定するよう指定しています。 2 行目の <envar>DISPLAY</envar> 環境変数は、 <envar>REMOTEHOST</envar> の値をもとに設定を行なう意味です。詳しくは <filename>/etc/security/pam_env.conf</filename> 内のコメント (英語) をお読みください。</para>
   </sect2>
 
 <!-- pam_mount is a stand-alone package -->
 
   <sect2 xml:id="sec.pam.struc.conf.pammount">
    <title>pam_mount.conf.xml</title>
-   <para>
-    The purpose of <systemitem>pam_mount</systemitem> is to mount user home
-    directories during the login process, and to unmount them during logout
-    in an environment where a central file server keeps all the home
-    directories of users. With this method, it is not necessary to mount a
-    complete <filename>/home</filename> directory where all the user home
-    directories would be accessible. Instead, only the home directory of the
-    user who is about to log in, is mounted.
-   </para>
-   <para>
-    After installing <systemitem>pam_mount</systemitem>, a template for
-    <filename>pam_mount.conf.xml</filename> is available in
-    <filename>/etc/security</filename>. The description of the various
-    elements can be found in the manual page <command>man 5
-    pam_mount.conf</command>.
-   </para>
-   <para>
-    A basic configuration of this feature can be done with &yast;. Select
-    <menuchoice><guimenu>Network Settings</guimenu> <guimenu>Windows Domain
-    Membership</guimenu> <guimenu>Expert Settings</guimenu></menuchoice> to
-    add the file server; see <xref linkend="sec.samba.client.inst"/>.
-   </para>
+   <para><systemitem>pam_mount</systemitem> は、ログインの処理中にユーザのホームディレクトリをマウントし、ログアウト時にマウントを解除するためのモジュールです。一般的には、中央のファイルサーバ内にユーザのホームディレクトリが存在しているような環境で使用するものです。この方式を使用することで、 <filename>/home</filename> 全体を共有してマウントする必要がなくなり、ログインしているユーザのホームディレクトリのみをマウントして使用できるようになります。</para>
+   <para><systemitem>pam_mount</systemitem> をインストールすると、 <filename>/etc/security</filename> 内に <filename>pam_mount.conf.xml</filename> に対するテンプレートファイルが用意されるようになります。様々な要素の説明について、詳しくは <command>man 5 pam_mount.conf</command> で表示されるマニュアルページをお読みください。</para>
+   <para>なお、 &yast; を利用することで、この機能に対する基本的な設定を行なうことができます。 <menuchoice><guimenu>ネットワークサービス</guimenu> <guimenu>Windows ドメインメンバーシップ</guimenu> <guimenu>熟練者向け設定</guimenu></menuchoice> を選択して、ファイルサーバを追加してください。詳しくは <xref linkend="sec.samba.client.inst"/> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.pam.struc.pamlimits">
    <title>limits.conf</title>
-   <para>
-    System limits can be set on a user or group basis in
-    <filename>limits.conf</filename>, which is read by the
-    <systemitem>pam_limits</systemitem> module. The file allows you to set
-    hard limits, which may not be exceeded, and soft limits, which
-    may be exceeded temporarily. For more information about the syntax and
-    the options, see the comments in
-    <filename>/etc/security/limits.conf</filename>.
-   </para>
+   <para>システムに対する制限は、 <systemitem>pam_limits</systemitem> モジュールが読み込む <filename>limits.conf</filename> ファイルで設定することができます。制限はユーザ単位やグループ単位で設定することができます。このファイルでは、超過を許さないハード制限のほか、一時的であれば超過を許すソフト制限も設定することができます。文法とオプションについて、詳しくは <filename>/etc/security/limits.conf</filename> ファイル内のコメント (英語) をお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.pam.pam-config">
-  <title>Configuring PAM Using pam-config</title>
+  <title>pam-config を利用した PAM の設定</title>
 
-  <para>
-   The <command>pam-config</command> tool helps you configure the global PAM
-   configuration files (<filename>/etc/pam.d/common-*</filename>) and
-   several selected application configurations. For a list of supported
-   modules, use the <command>pam-config --list-modules</command> command.
-   Use the <command>pam-config</command> command to maintain your PAM
-   configuration files. Add new modules to your PAM configurations, delete
-   other modules or modify options to these modules. When changing global
-   PAM configuration files, no manual tweaking of the PAM setup for
-   individual applications is required.
-  </para>
+  <para><command>pam-config</command> ツールは、グローバルな PAM 設定ファイル ( <filename>/etc/pam.d/common-*</filename> ) やいくつかのアプリケーション設定を行なう際の支援ツールとなるものです。対応するモジュールの一覧は、 <command>pam-config --list-modules</command> を実行して得ることができます。また、 <command>pam-config</command> コマンドは、お使いの PAM 設定ファイルを管理するためにも使用することができます。 PAM 設定への新しいモジュールの追加や、既存のモジュールの削除、モジュールに対する設定の変更などを行なうことができます。グローバルな PAM 設定ファイルを変更する場合は、個別のアプリケーションに対して PAM の設定を手作業で調整する必要はありません。</para>
 
-  <para>
-   A simple use case for <command>pam-config</command> involves the
-   following:
-  </para>
+  <para><command>pam-config</command> の使用例としては、下記のようなものがあります:</para>
 
   <procedure>
    <step>
     <formalpara>
-     <title>Auto-generate a fresh Unix-style PAM configuration.</title>
-     <para>
-      Let pam-config create the simplest possible setup which you can extend
-      later on. The <command>pam-config --create</command> command creates a
-      simple Unix authentication configuration. Pre-existing configuration
-      files not maintained by pam-config are overwritten, but backup copies
-      are kept as <literal>*.pam-config-backup</literal>.
-     </para>
+     <title>新しい Unix 形式の PAM 設定の自動生成:</title>
+     <para>pam-config に対して、あとから追加や変更ができるよう、最もシンプルな設定を作成するように指示します。具体的には <command>pam-config --create</command> というコマンドを実行することで、シンプルな Unix 認証設定を作成することができます。 pam-config で管理されていない設定が既に存在していた場合、設定は上書きされてしまいますが、バックアップコピーが <literal>*.pam-config-backup</literal> という形式で保存されます。</para>
     </formalpara>
    </step>
    <step>
     <formalpara>
-     <title>Add a new authentication method.</title>
-     <para>
-      Adding a new authentication method (for example, LDAP) to your stack
-      of PAM modules comes down to a simple <command>pam-config --add
-      --ldap</command> command. LDAP is added wherever appropriate across
-      all <filename>common-*-pc</filename> PAM configuration files.
-     </para>
+     <title>新しい認証方式の追加:</title>
+     <para>新しい認証方式 (たとえば LDAP) をお使いの PAM モジュールスタックに追加するには、 <command>pam-config --add --ldap</command> のようにコマンドを実行します。このコマンドを実行すると、 LDAP は全ての PAM 設定ファイルに対して追加されるようになります。</para>
     </formalpara>
    </step>
    <step>
     <formalpara>
-     <title>Add debugging for test purposes.</title>
-     <para>
-      To make sure the new authentication procedure works as planned, turn
-      on debugging for all PAM-related operations. The <command>pam-config
-      --add --ldap-debug</command> turns on debugging for LDAP-related PAM
-      operations. Find the debugging output in the &systemd; journal (see
-      <xref linkend="cha.journalctl"/>).
-     </para>
+     <title>テスト目的でのデバッグの有効化:</title>
+     <para>新しい認証の仕組みが期待通りに動作しているかどうかを確認するには、全ての PAM 関連操作に対して、デバッグ機能を有効化する必要があります。たとえば <command>pam-config --add --ldap-debug</command> のように実行すると、 LDAP 関連の PAM 操作に対して、デバッグが有効化されます。デバッグ出力は、 &systemd; のジャーナル (詳しくは <xref linkend="cha.journalctl"/> をお読みください) 経由で読むことができます。</para>
     </formalpara>
    </step>
    <step>
     <formalpara>
-     <title>Query your setup.</title>
-     <para>
-      Before you finally apply your new PAM setup, check if it contains all
-      the options you wanted to add. The <command>pam-config --query
-      --</command> <replaceable>MODULE</replaceable> lists both the type and
-      the options for the queried PAM module.
-     </para>
+     <title>設定の問い合わせ:</title>
+     <para>新しい PAM の設定を適用する際には、必要な全てのオプションを指定しているかどうかを確認する必要があります。 <command>pam-config --query --</command> <replaceable>モジュール名</replaceable> のように実行すると、使用されている種類の一覧と、モジュールに対して指定されているオプションが表示されます。</para>
     </formalpara>
    </step>
    <step>
     <formalpara>
-     <title>Remove the debug options.</title>
-     <para>
-      Finally, remove the debug option from your setup when you are entirely
-      satisfied with the performance of it. The <command>pam-config --delete
-      --ldap-debug</command> command turns off debugging for LDAP
-      authentication. In case you had debugging options added for other
-      modules, use similar commands to turn these off.
-     </para>
+     <title>デバッグオプションの削除:</title>
+     <para>設定に問題がないことを確認し終えたら、最後にデバッグオプションを削除します。たとえば <command>pam-config --delete --ldap-debug</command> のように実行すると、 LDAP 認証に対して設定していたデバッグを無効化することができます。他のモジュールの場合も、同じようなコマンドで無効化することができます。</para>
     </formalpara>
    </step>
   </procedure>
 
-  <para>
-   For more information on the <command>pam-config</command> command and the
-   options available, refer to the manual page of
-   <command>pam-config(8)</command>.
-  </para>
+  <para><command>pam-config</command> コマンドに対する詳しい使用方法と利用可能なオプションについて、詳しくは <command>pam-config(8)</command> のマニュアルページをお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.pam.manual-config">
-  <title>Manually Configuring PAM</title>
+  <title>PAM の手動設定</title>
 
-  <para>
-   If you prefer to manually create or maintain your PAM configuration
-   files, make sure to disable <command>pam-config</command> for these
-   files.
-  </para>
+  <para>PAM の設定ファイルを手作業で作成もしくは管理したい場合は、これらのファイルに対する <command>pam-config</command> を無効化する必要があります。</para>
 
-  <para>
-   When you create your PAM configuration files from scratch using the
-   <command>pam-config --create</command> command, it creates symbolic links
-   from the <filename>common-<replaceable>*</replaceable></filename> to the
-   <filename>common-<replaceable>*</replaceable>-pc</filename> files.
-   <command>pam-config</command> only modifies the
-   <filename>common-<replaceable>*</replaceable>-pc</filename> configuration
-   files. Removing these symbolic links effectively disables pam-config,
-   because pam-config only operates on the
-   <filename>common-<replaceable>*</replaceable>-pc</filename> files and
-   these files are not put into effect without the symbolic links.
-  </para>
+  <para><command>pam-config --create</command> コマンドを利用して独自の PAM 設定ファイルを手作業で作成する場合、 <filename>common-<replaceable>*</replaceable></filename> から <filename>common-<replaceable>*</replaceable>-pc</filename> ファイルに対するシンボリックリンクが作成されます。 <command>pam-config</command> では <filename>common-<replaceable>*</replaceable>-pc</filename> の設定ファイルのみを修正しますので、これらのシンボリックリンクを削除することで、 pam-config を効率的に無効化することができます。</para>
   <warning>
-   <title>Include <filename>pam_systemd.so</filename> into Configuration</title>
-   <para>
-    If you are creating your own PAM configuration, make sure to include
-    <literal>pam_systemd.so</literal> configured as <literal>session
-    optional</literal>. Not including the <literal>pam_systemd.so</literal> can
-    cause problems with &systemd; task limits. For details, refer to the man
-    page of <literal>pam_systemd.so</literal>.
-   </para>
+   <title><filename>pam_systemd.so</filename> を含める必要性について</title>
+   <para>独自の PAM 設定を作成する場合は、 <literal>pam_systemd.so</literal> モジュールを<literal>session optional</literal> で指定するようにしてください。 <literal>pam_systemd.so</literal> を含めるように指定しないと、 &systemd; のタスク制限で問題が発生するようになります。詳しくは <literal>pam_systemd.so</literal> のマニュアルページをお読みください。</para>
   </warning>
  </sect1>
  <sect1 xml:id="sec.pam.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   In the <filename>/usr/share/doc/packages/pam</filename> directory after
-   installing the <systemitem>pam-doc</systemitem> package, find the
-   following additional documentation:
-  </para>
+  <para><systemitem>pam-doc</systemitem> パッケージをインストールすると、 <filename>/usr/share/doc/packages/pam</filename> ディレクトリ内に下記のような追加のドキュメンテーションが提供されるようになります:</para>
 
   <variablelist>
    <varlistentry>
-    <term>READMEs</term>
+    <term>README</term>
     <listitem>
-     <para>
-      In the top level of this directory, there is the
-      <filename>modules</filename> subdirectory holding README files about
-      the available PAM modules.
-     </para>
+     <para>このディレクトリの直下には <filename>modules</filename> サブディレクトリがあり、ここには利用可能な PAM モジュールに関する説明 (英語) の書かれた README ファイルがあります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>The Linux-PAM System Administrators' Guide</term>
+    <term>Linux-PAM System Administrators' Guide (Linux-PAM システム管理者ガイド)</term>
     <listitem>
-     <para>
-      This document comprises everything that the system administrator
-      should know about PAM. It discusses a range of topics, from the syntax
-      of configuration files to the security aspects of PAM.
-     </para>
+     <para>この文書には、システム管理者が PAM について知っておくべき内容を説明しています。設定ファイルの文法から、 PAM のセキュリティ要素までの範囲を説明しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>The Linux-PAM Module Writers' Manual</term>
+    <term>Linux-PAM Module Writers' Manual (Linux-PAM モジュール開発者マニュアル)</term>
     <listitem>
-     <para>
-      This document summarizes the topic from the developer's point of view,
-      with information about how to write standard-compliant PAM modules.
-     </para>
+     <para>この文書には、開発者の観点からの内容を説明しています。具体的には、標準に準拠した PAM モジュールの作成方法などを説明しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>The Linux-PAM Application Developers' Guide</term>
+    <term>Linux-PAM Application Developers' Guide (Linux-PAM アプリケーション開発者マニュアル)</term>
     <listitem>
-     <para>
-      This document comprises everything needed by an application developer
-      who wants to use the PAM libraries.
-     </para>
+     <para>この文書には、 PAM ライブラリを使用したいアプリケーション開発者に対して、必要な全ての情報が含まれています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>The PAM Manual Pages</term>
+    <term>PAM マニュアルページ</term>
     <listitem>
-     <para>
-      PAM in general and the individual modules come with manual
-      pages that provide a good overview of the functionality of all the
-      components.
-     </para>
+     <para>PAM の一般的な説明と、全てのコンポーネントの機能をよりよく説明するためのモジュール向けマニュアルページが用意されています。</para>
     </listitem>
    </varlistentry>
   </variablelist>
