@@ -4,16 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.ldap">
- <title>LDAP&mdash;A Directory Service</title>
+ <title>LDAP ディレクトリサービス</title>
  <info>
       <abstract>
-        <para>
-    The Lightweight Directory Access Protocol (LDAP) is a set of protocols
-    designed to access and maintain information directories. LDAP can be
-    used for user and group management, system configuration management,
-    address management, and more. This chapter provides a basic
-    understanding of how OpenLDAP works.
-   </para>
+        <para>軽量ディレクトリアクセスプロトコル (Lightweight Directory Access Protocol (LDAP)) は、情報ディレクトリにアクセスしたり情報ディレクトリを管理したりするためのプロトコル集です。 LDAP はユーザやグループのほか、システム設定の管理やアドレスの管理などにも使用することができます。本章では、 OpenLDAP の基本的な動作について説明しています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -21,158 +15,59 @@
       </dm:docmanager>
     </info>
 
- <para>
-  In a network environment, it is crucial to keep important information
-  structured and to serve it quickly. A directory service keeps information
-  available in a well-structured and searchable form.
- </para>
- <para>
-  Ideally, a central server stores the data in a directory and distributes
-  it to all clients using a well-defined protocol. The structured data allow
-  a wide range of applications to access them. A central repository reduces
-  the necessary administrative effort. The use of an open and standardized
-  protocol like LDAP ensures that as many client applications as
-  possible can access such information.
- </para>
- <para>
-  A directory in this context is a type of database optimized for quick and
-  effective reading and searching:
- </para>
+ <para>ネットワークでマシンが接続されている環境では、データの構造化と素早い提供が重要となります。ディレクトリサービスは、適切に構造化され、検索の可能な形態で情報を提供することができます。</para>
+ <para>実際には、中央のサーバがディレクトリ内にデータを保管しておき、全てのクライアントに対しては明確に定義されたプロトコルで配布を行ないます。構造化されたデータの仕組みにより、様々なアプリケーションがそれらのデータにアクセスできるようになります。中央のサーバ (リポジトリとも呼びます) を用意することで管理の手間を省き、 LDAP のようなオープンで標準化されたプロトコルを使用することで、そこで管理されている情報にアクセスするプログラムをできる限り多く用意することができます。</para>
+ <para>なお、本章での <quote>ディレクトリ</quote> とは、読み込みや検索の速度や効率性の点で最適化されたデータベースを意味します:</para>
  <itemizedlist mark="bullet" spacing="normal">
   <listitem>
    <remark condition="clarity">
     2011-02-18 - fs: the number is limited? and why limit reads?
    </remark>
-   <para>
-    To make multiple concurrent reading accesses possible, the number of
-    updates is usually very low. The number of read and write accesses is
-    often limited to a few users with administrative privileges. In
-    contrast, conventional databases are optimized for accepting the largest
-    possible data volume in a short time.
-   </para>
+   <para>同時に多数の読み込みアクセスを受け付けることができるよう、更新の頻度は非常に少なく設定します。また、読み書きに対するアクセス権は、管理者権限を持つごく一部のユーザにのみ許可します。一般的なデータベースでは、短い時間にできる限り多くのデータを受け付けるようにしますが、これとは対照的な仕組みになっています。</para>
   </listitem>
   <listitem>
-   <para>
-    When static data is administered, updates of the existing data sets are
-    very rare. When working with dynamic data, especially when data sets
-    like bank accounts or accounting are concerned, the consistency of the
-    data is of primary importance. If an amount should be subtracted from
-    one place to be added to another, both operations must happen
-    concurrently, within one <emphasis>transaction</emphasis>, to ensure
-    balance over the data stock. Traditional relational databases usually
-    have a very strong focus on data consistency, such as the referential
-    integrity support of transactions. Conversely, short-term
-    inconsistencies are usually acceptable in LDAP directories. LDAP
-    directories often do not have the same strong consistency requirements
-    as relational databases.
-   </para>
+   <para>ほぼ変化のないデータを管理している場合、既存のデータセットに対する更新処理もほとんど発生しません。逆に動的なデータ、特に銀行口座に対するデータセットや会計が関係してくるデータのような場合、データの一貫性は最も重要となります。たとえば一方から他方に資金を移すような処理の場合、一方の口座で資金を減らして、他方の口座で資金を増やす処理は、全体で資金が増減したりすることのないよう、 1 つの <emphasis>トランザクション</emphasis> として一括で処理されなければなりません。従来のリレーショナルデータベースでは、トランザクションの参照整合性サポートなどの形で、データの一貫性の維持を非常に重視しています。その逆に、 LDAP のディレクトリでは、リレーショナルデータベースほどの強力な一貫性維持は行なっていません。</para>
   </listitem>
  </itemizedlist>
- <para>
-  The design of a directory service like LDAP is not laid out to support
-  complex update or query mechanisms. All applications are guaranteed to
-  access this service quickly and easily.
- </para>
+ <para>LDAP のようなディレクトリサービスでは、複雑な更新や問い合わせの仕組みにも対応していません。全てのアプリケーションに対して、サービスへのアクセスを素早く実施できる点を重視しています。</para>
  <sect1 xml:id="sec.security.ldap.vs_nis">
-  <title>LDAP versus NIS</title>
+  <title>LDAP と NIS の違い</title>
 
   <remark condition="generic"> 2007-05-29 - jjaeger: this still necessary? Why not discard the NIS
    part altogether and merge the use cases for LDAP with the intro? </remark>
 
-  <para>
-   Unix system administrators traditionally use NIS (Network Information
-   Service) for name resolution and data distribution in a network. The
-   configuration data contained in the files <filename>group</filename>,
-   <filename>hosts</filename>, <filename>mail</filename>,
-   <filename>netgroup</filename>, <filename>networks</filename>,
-   <filename>passwd</filename>, <filename>printcap</filename>,
-   <filename>protocols</filename>, <filename>rpc</filename>, and
-   <filename>services</filename> in the <filename>/etc</filename> directory
-   is distributed to clients all over the network. These files can be
-   maintained without major effort because they are simple text files. The
-   handling of larger amounts of data, however, becomes increasingly
-   difficult because of nonexistent structuring.
-   <remark>sknorr, 2014-08-26: "nonexistent structuring" sounds a bit
-    complicated.</remark>
-   NIS is only designed for Unix platforms, and is not suitable as a
-   centralized data administration tool in heterogeneous networks.
-  </para>
+  <para>Unix のシステム管理者は、以前より NIS (Network Information Service) を利用してネットワーク内での名前の解決やデータの配布などを行なってきました。 <filename>/etc</filename> ディレクトリ内にある <filename>group</filename> , <filename>hosts</filename> , <filename>mail</filename> , <filename>netgroup</filename> , <filename>networks</filename> , <filename>passwd</filename> , <filename>printcap</filename> , <filename>protocols</filename> , <filename>rpc</filename> , <filename>services</filename> などのファイルも、ネットワークを介して配信されていました。これらのファイルは、いずれもシンプルなテキストファイル形式であるため、管理の手間もあまり発生していませんでしたが、データ量が増えてくると、構造化されていないことによって管理が面倒になってきていました。 <remark>sknorr, 2014-08-26: "nonexistent structuring" sounds a bit complicated.</remark> また、 NIS は Unix プラットフォーム向けにのみ設計されていて、異なるオペレーティングシステムの存在する異種混合型ネットワーク内の中央データ管理ツールとしては、不十分な存在でした。</para>
 
-  <para>
-   Unlike NIS, the LDAP service is not restricted to pure Unix networks.
-   Windows&trade; servers (starting with Windows 2000) support LDAP as a
-   directory service. The
-   application tasks mentioned above are additionally supported in non-Unix
-   systems.
-  </para>
+  <para>NIS とは異なり、 LDAP サービスは純粋な Unix ネットワーク環境だけでなく、Windows&trade; サーバ (Windows 2000 以降) でも LDAP をディレクトリサービスとして使用しています。上述のアプリケーションの処理についても、非 Unix システムで動作させることができるようになっています。</para>
 
-  <para>
-   The LDAP principle can be applied to any data structure that needs to be
-   centrally administered. A few application examples are:
-  </para>
+  <para>LDAP は、データを集中管理する必要のある任意のデータ構造に適用することができます。たとえば下記のような用途に使用することができます:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Replacement for the NIS service
-    </para>
+    <para>NIS サービスの置き換え</para>
    </listitem>
    <listitem>
-    <para>
-     Mail routing (postfix)
-    </para>
+    <para>メールの配送制御 (postfix)</para>
    </listitem>
    <listitem>
-    <para>
-     Address books for mail clients, like Mozilla Thunderbird, Evolution,
-     and Outlook
-    </para>
+    <para>メールクライアント (Mozilla Thunderbird, Evolution, Outlook) 向けのアドレス帳</para>
    </listitem>
    <listitem>
-    <para>
-     Administration of zone descriptions for a BIND 9 name server
-    </para>
+    <para>BIND 9 ネームサーバのゾーン設定の管理</para>
    </listitem>
    <listitem>
-    <para>
-     User authentication with Samba in heterogeneous networks
-    </para>
+    <para>異種混在ネットワークでの Samba によるユーザ認証</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   This list can be extended because LDAP is extensible, unlike NIS. The
-   clearly-defined hierarchical structure of the data simplifies the
-   administration of large amounts of data, as it can be searched more
-   easily.
-  </para>
+  <para>NIS とは異なり、 LDAP は拡張性に富む仕組みであることから、上記以外の用途にも使用することができます。また、データ構造を明確な階層構造にしていることから、大規模なデータの管理も検索もより簡単にできるようになっています。</para>
  </sect1>
  <sect1 xml:id="sec.security.ldap.tree">
-  <title>Structure of an LDAP Directory Tree</title>
+  <title>LDAP のディレクトリツリー構造</title>
 
-  <para>
-   To get background knowledge on how an LDAP server works and how the data
-   is stored, it is vital to understand the way the data is organized on the
-   server and how this structure enables LDAP to provide fast access to the
-   data. To successfully operate an LDAP setup, you also need to be familiar
-   with some basic LDAP terminology. This section introduces the basic
-   layout of an LDAP directory tree and provides the basic terminology used
-   with regard to LDAP. Skip this introductory section if you already have
-   some LDAP background knowledge and only want to learn how to set up an
-   LDAP environment in &productname;.<phrase os="sles;osuse"> Read on at
-<!-- <xref linkend="sec.security.ldap.yast"/> or -->
-   <xref linkend="sec.security.ldap.slapd"/>.</phrase>
-  </para>
+  <para>LDAP サーバの動作とデータの保管方法に関する情報を得るには、まずサーバ内でデータがどのように統合されているのかと、そのような構造化されたデータを素早くアクセスできる仕組みについて知っておく必要があります。また、 LDAP の設定を正しく知るには、基本的ないくつかの LDAP 用語を知っておく必要もあります。本章では、 LDAP ディレクトリツリーの基本的な配置と、 LDAP に関する基本的な用語を説明しています。既に LDAP に関する知識があって、 &productname; での LDAP 設定方法を知りたいだけであれば、本章は読み飛ばしていただいてかまいません。 <phrase os="sles;osuse"> そのような場合は、 <!-- <xref linkend="sec.security.ldap.yast"/> or --> <xref linkend="sec.security.ldap.slapd"/> をお読みください。</phrase></para>
 
-  <para>
-   An LDAP directory has a tree structure. All entries (called objects) of
-   the directory have a defined position within this hierarchy. This
-   hierarchy is called the <emphasis>directory information tree</emphasis>
-   (DIT). The complete path to the desired entry, which unambiguously
-   identifies it, is called the <emphasis>distinguished name</emphasis> or
-   DN. A single node along the path to this entry is called
-   <emphasis>relative distinguished name</emphasis> or RDN.
-  </para>
+  <para>LDAP ディレクトリはツリー型の構造になっています。ディレクトリ内の全ての項目 (オブジェクトと呼びます) は、この階層構造内での位置が決められています。この階層構造を <emphasis>ディレクトリ情報ツリー</emphasis> (Directory Information Tree (DIT)) と呼びます。また、特定の項目に対して、それを正確に識別するためのパス情報を、 <emphasis>識別名</emphasis> (Distinguished Name (DN)) と呼びます。また、ファイルシステムと同様に、 DN も相対的な表記を行なうことができます。これを <emphasis>相対識別名</emphasis> (Relative Distinguished Name (RDN)) と呼びます。</para>
 
 <!-- rhafer says:
 "This entire paragraph is actually not quite correct. With LDAP, each object
@@ -219,13 +114,10 @@ this paragraph out completely."
   </para>
   -->
 
-  <para>
-   The relations within an LDAP directory tree become more evident in the
-   following example, shown in <xref linkend="fig.ldap.tree"/>.
-  </para>
+  <para>LDAP ディレクトリツリーの構造を図に表わすと、 <xref linkend="fig.ldap.tree"/> のようになります。</para>
 
   <figure xml:id="fig.ldap.tree">
-   <title>Structure of an LDAP Directory</title>
+   <title>LDAP ディレクトリの構造</title>
    <mediaobject>
     <imageobject role="fo">
      <imagedata fileref="ldap_tree.svg" width="85%"/>
@@ -236,44 +128,16 @@ this paragraph out completely."
    </mediaobject>
   </figure>
 
-  <para>
-   The complete diagram is a fictional directory information tree. The
-   entries on three levels are depicted. Each entry corresponds to one box
-   in the image. The complete, valid <emphasis>distinguished name</emphasis>
-   for the fictional employee <systemitem class="username">Geeko
-   Linux</systemitem>, in this case, is <literal>cn=Geeko
-   Linux,ou=doc,dc=example,dc=com</literal>. It is composed by adding the
-   RDN <literal>cn=Geeko Linux</literal> to the DN of the preceding entry
-   <literal>ou=doc,dc=example,dc=com</literal>.
-  </para>
+  <para>上記は架空のディレクトリ情報ツリーを表わしています。そのうち、 3 階層分の項目のみを図示しています。図の中では、各項目を 1 つの箱として表わしています。たとえば架空の従業員である <systemitem class="username">Geeko Linux</systemitem> に対する完全な <emphasis>識別名 (DN)</emphasis> は、 <literal>cn=Geeko Linux,ou=doc,dc=example,dc=com</literal> となります。これは相対識別名である <literal>cn=Geeko Linux</literal> に対して、階層構造上の親である <literal>ou=doc,dc=example,dc=com</literal> を追加することによります。</para>
 
 <!-- ke: yes, these things are called "Schema" -->
 
-  <para>
-   The types of objects that can be stored in the DIT are globally
-   determined following a <emphasis>Schema</emphasis>. The type of an object
-   is determined by the <emphasis>object class</emphasis>. The object class
-   determines what attributes the relevant object must or can be assigned.
-   The Schema, therefore, must contain definitions of all object classes and
-   attributes used in the desired application scenario. There are a few
-   common Schemas (see RFC 2252 and 2256). The LDAP RFC defines a few
-   commonly used Schemas (see for example, RFC4519). Additionally, Schemas
-   are available for many other use cases (for example, Samba or NIS
-   replacement). It is, however, possible to create custom Schemas or to use
-   multiple Schemas complementing each other (if this is required by the
-   environment in which the LDAP server should operate).
-  </para>
+  <para>ディレクトリ情報ツリー (DIT) 内に保管できるオブジェクトの種類は、 <emphasis>スキーマ</emphasis> と呼ばれるものに従って設定されます。オブジェクトの種類は <emphasis>オブジェクトクラス</emphasis> と呼ばれ、それに対応するスキーマで、そのオブジェクトが設定しなければならない値や、設定できる値が示されます。そのためスキーマは、特定の用途で使用される全てのオブジェクトクラスや属性の定義を含んでいなければならないことになります。一般的なスキーマとしてはいくつかのものが規定されています (RFC 2252 および RFC 2256) 。 LDAP RFC でも、いくつかの一般的なスキーマが規定されています (RFC 4519 など) 。これに加えて、様々な用途に対応するスキーマが用意されています (たとえば Samba や NIS の代替など) 。もちろん、独自のスキーマを作成して使用することもできますし、必要であれば、お互いに補完し合うような関係の複数のスキーマを使用することもできます。</para>
 
-  <para>
-   <xref linkend="tab.ldap.schema"/> offers a small overview of the object
-   classes from <filename>core.schema</filename> and
-   <filename>inetorgperson.schema</filename> used in the example, including
-   required attributes (Req. Attr.) and valid attribute values.
-<!-- intro abbrev "Req. Attr." too shorten the table header -->
-  </para>
+  <para><xref linkend="tab.ldap.schema"/> には、 <filename>core.schema</filename> や <filename>inetorgperson.schema</filename> で規定されているオブジェクトクラスの一部と、それらで必須とされている属性を紹介しています。 <!-- intro abbrev "Req. Attr." too shorten the table header --></para>
 
   <table xml:id="tab.ldap.schema">
-   <title>Commonly Used Object Classes and Attributes</title>
+   <title>よく使用されるオブジェクトクラスと属性</title>
    <tgroup cols="4">
     <colspec colname="c1" colwidth="30*"/>
     <colspec colname="c2" colwidth="40*"/>
@@ -282,106 +146,70 @@ this paragraph out completely."
     <thead>
      <row>
       <entry>
-       <para>
-        Object Class
-       </para>
+       <para>オブジェクトクラス</para>
       </entry>
       <entry>
-       <para>
-        Meaning
-       </para>
+       <para>意味</para>
       </entry>
       <entry>
-       <para>
-        Example Entry
-       </para>
+       <para>値の例</para>
       </entry>
       <entry>
-       <para>
-        Req. Attr.
-       </para>
+       <para>必須の属性</para>
       </entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry>
-       <para>
-        <literal>dcObject</literal>
-       </para>
+       <para><literal>dcObject</literal></para>
       </entry>
       <entry>
-       <para>
-        <emphasis>domainComponent</emphasis> (name components of the domain)
-       </para>
+       <para><emphasis>domainComponent</emphasis> (ドメインの各パート)</para>
       </entry>
       <entry>
-       <para>
-        example
-       </para>
+       <para>example</para>
       </entry>
       <entry>
-       <para>
-        dc
-       </para>
+       <para>dc</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        <literal>organizationalUnit</literal>
-       </para>
+       <para><literal>organizationalUnit</literal></para>
       </entry>
       <entry>
-       <para>
-        <emphasis>organizationalUnit</emphasis> (organizational unit)
-       </para>
+       <para><emphasis>organizationalUnit</emphasis> (組織単位)</para>
       </entry>
       <entry>
-       <para>
-        doc
-       </para>
+       <para>doc</para>
       </entry>
       <entry>
-       <para>
-        ou
-       </para>
+       <para>ou</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        <literal>inetOrgPerson</literal>
-       </para>
+       <para><literal>inetOrgPerson</literal></para>
       </entry>
       <entry>
-       <para>
-        <emphasis>inetOrgPerson</emphasis> (person-related data for the
-        intranet or Internet)
-       </para>
+       <para><emphasis>inetOrgPerson</emphasis> (イントラネットもしくはインターネットの個人に関するデータ)</para>
       </entry>
       <entry>
-       <para>
-        Geeko Linux
-       </para>
+       <para>Geeko Linux</para>
       </entry>
       <entry>
-       <para>
-        sn and cn
-       </para>
+       <para>sn および cn</para>
       </entry>
      </row>
     </tbody>
    </tgroup>
   </table>
 
-  <para>
-   <xref linkend="aus.ldap.schema.help"/> shows an excerpt from a Schema
-   directive with explanations.
-  </para>
+  <para>また <xref linkend="aus.ldap.schema.help"/> では、スキーマ定義の例を示しています。</para>
 
   <example xml:id="aus.ldap.schema.help">
-   <title>Excerpt from schema.core</title>
+   <title>schema.core からの抜粋</title>
 <screen>attributetype (2.5.4.11 NAME ( 'ou' 'organizationalUnitName') <co xml:id="co.ldap.schema.core.att_type"/>
        DESC 'RFC2256: organizational unit this object belongs to' <co xml:id="co.ldap.schema.core.desc"/>
        SUP name ) <co xml:id="co.ldap.schema.core.sup"/>
@@ -401,94 +229,45 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
   ...</screen>
   </example>
 
-  <para>
-   The attribute type <literal>organizationalUnitName</literal> and the
-   corresponding object class <literal>organizationalUnit</literal> serve as
-   an example here.
-  </para>
+  <para>ここでは、属性の種類 <literal>organizationalUnitName</literal> と、対応するオブジェクトクラス <literal>organizationalUnit</literal> の定義を抜粋しています。</para>
 
   <calloutlist>
    <callout arearefs="co.ldap.schema.core.att_type">
-    <para>
-     The name of the attribute, its unique OID (<emphasis>object
-     identifier</emphasis>) (numerical), and the abbreviation of the
-     attribute.
-    </para>
+    <para>属性の名前とユニークな OID (<emphasis>オブジェクト識別子 (Object Identifier)</emphasis>) (数字) 、そして属性の略称を表わしています。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.desc">
-    <para>
-     A brief description of the attribute with <literal>DESC</literal>. The
-     corresponding RFC, on which the definition is based, is also mentioned
-     here.
-    </para>
+    <para><literal>DESC</literal> では属性に対する簡潔な説明を記します。定義の元となった RFC などがあれば、それも記述されます。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.sup">
-    <para>
-     <literal>SUP</literal> indicates a superordinate attribute type to
-     which this attribute belongs.
-    </para>
+    <para><literal>SUP</literal> では、その属性が属する親の属性種類を表わします。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.oc">
-    <para>
-     The definition of the object class
-     <literal>organizationalUnit</literal> begins&mdash;the same as in
-     the definition of the attribute&mdash;with an OID and the name of
-     the object class.
-    </para>
+    <para>オブジェクトクラス <literal>organizationalUnit</literal> の定義の始まりです。オブジェクトクラスの定義は属性の定義と同じで、 OID とオブジェクトクラスの名前をそれぞれ記します。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.desc.oc">
-    <para>
-     A brief description of the object class.
-    </para>
+    <para>そのオブジェクトクラスに対する簡潔な説明です。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.sup.oc">
-    <para>
-     The <literal>SUP top</literal> entry indicates that this object class
-     is not subordinate to another object class.
-    </para>
+    <para><literal>SUP top</literal> と書くことで、このオブジェクトクラスの上位に存在するオブジェクトクラスが存在していないことを表わしています。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.must.oc">
-    <para>
-     With <literal>MUST</literal> list all attribute types that must be used
-     with an object of the type
-     <literal>organizationalUnit</literal>.
-    </para>
+    <para><literal>MUST</literal> 以下には、 <literal>organizationalUnit</literal> のオブジェクトクラスで、設定されなければならない全ての属性種類を記します。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.may.oc">
-    <para>
-     With <literal>MAY</literal> list all attribute types that are permitted
-     with this object class.
-    </para>
+    <para><literal>MAY</literal> 以下には、そのオブジェクトクラスで設定することのできる全ての属性種類を記します。</para>
    </callout>
   </calloutlist>
 
-  <para>
-   A very good introduction to the use of Schemas can be found in the
-   OpenLDAP documentation (<systemitem>openldap2-doc</systemitem>). When
-   installed, find it in
-   <filename>/usr/share/doc/packages/openldap2/adminguide/guide.html</filename>.
-  </para>
+  <para>スキーマの使用例で最良のものが OpenLDAP のドキュメンテーション ( <systemitem>openldap2-doc</systemitem> ) 内に用意されています。このパッケージをインストールしたあと、 <filename>/usr/share/doc/packages/openldap2/adminguide/guide.html</filename> ファイルをお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec.security.ldap.yast.client">
-  <title>Configuring an LDAP Client with &yast;</title>
-  <para>
-   &yast; includes the module <guimenu>LDAP and Kerberos Client</guimenu>
-   that helps define authentication scenarios involving either LDAP or Kerberos.
-  </para>
-  <para>
-   It can also be used to join Kerberos and LDAP separately. However, in
-   many such cases, using this module may not be the first choice, such as
-   for joining &ad; (which uses a combination of LDAP and Kerberos). For
-   more information, see <xref linkend="sec.security.auth.yast.client"/>.
-  </para>
-  <para>
-   Start the module by selecting
-   <menuchoice> <guimenu>Network Services</guimenu> <guimenu>LDAP and
-   Kerberos Client</guimenu> </menuchoice>.
-  </para>
+  <title>&yast; による LDAP クライアントの設定</title>
+  <para>&yast; には <guimenu>LDAP および Kerberos クライアント</guimenu> モジュールが用意されています。このモジュールでは、 LDAP や Kerberos を利用する認証を設定することができます。</para>
+  <para>Kerberos と LDAP を個別に参加させるように使用することもできます。そのような場合、たとえば &ad; への参加 (LDAP と Kerberos を組み合わせて使用します) などでは、 このモジュールは最初の選択とはならないかもしれません。詳しくは <xref linkend="sec.security.auth.yast.client"/> をお読みください。</para>
+  <para><menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>LDAP および Kerberos クライアント</guimenu> </menuchoice> を選択して、モジュールを起動します。</para>
   <figure xml:id="fig.yast2.ldapkerberos.ldap">
-   <title><guimenu>LDAP and Kerberos Client</guimenu> Window</title>
+   <title><guimenu>LDAP および Kerberos クライアント</guimenu> のウインドウ</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="yast2_auth_client_config.png" width="65%" format="PNG"/>
@@ -499,19 +278,11 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
    </mediaobject>
   </figure>
 
-  <para>
-   To configure an LDAP client, follow the procedure below:
-  </para>
+  <para>LDAP クライアントを設定するには、下記の手順を実施します:</para>
   <procedure xml:id="pro.security.auth.ldap">
    <step>
-    <para>
-     In the window <guimenu>LDAP and Kerberos Client</guimenu>, click
-     <guimenu>Change Settings</guimenu>.
-    </para>
-    <para>
-     Make sure that the tab <guimenu>Use a Directory as Identity Provider
-     (LDAP)</guimenu> is chosen.
-    </para>
+    <para><guimenu>LDAP および Kerberos クライアント</guimenu> のウインドウ内で、 <guimenu>設定の変更</guimenu> を押します。</para>
+    <para>このとき、 <guimenu>ディレクトリを識別子プロバイダとして使用する (LDAP)</guimenu> を選択していることを確認してください。</para>
     <informalfigure>
      <mediaobject>
       <imageobject role="html">
@@ -524,75 +295,33 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
     </informalfigure>
    </step>
    <step>
-    <para>
-     Specify one or more LDAP server URLs, host names, or IP addresses under
-     <guimenu>Enter LDAP server locations</guimenu>. When specifying multiple
-     addresses, separate them with spaces.
-    </para>
+    <para><guimenu>LDAP サーバの場所</guimenu> 内に、 1 つもしくは複数の LDAP サーバ URL やホスト名、 IP アドレスを入力します。複数のアドレスを指定する場合は、スペースで区切って指定してください。</para>
    </step>
    <step>
-    <para>
-     Specify the appropriate LDAP distinguished name (DN) under
-     <guimenu>DN of Search Base</guimenu>. For example, a valid entry could
-     be <literal>dc=example,dc=com</literal>.
-    </para>
+    <para>次に <guimenu>検索ベースの DN</guimenu> 内に、 LDAP の識別名 (DN) を指定します。たとえば <literal>dc=example,dc=com</literal> のように指定します。</para>
    </step>
    <step>
-    <para>
-     If your LDAP server supports TLS encryption, choose the appropriate
-     security option under <guimenu>Secure LDAP Connection</guimenu>.
-    </para>
-    <para>
-     To first ask the server whether it supports TLS encryption and be able
-     to downgrade to an unencrypted connection if it does not, use
-     <guimenu>Secure Communication via StartTLS</guimenu>.
-    </para>
+    <para>お使いの LDAP サーバが TLS による暗号化に対応している場合は、 <guimenu>LDAP 通信の暗号化</guimenu> 以下のオプションを選択します。</para>
+    <para>サーバ側に問い合わせて、 TLS による暗号化に対応していれば暗号化を使用し、そうでない場合は使用せずに接続したい場合は、 <guimenu>StartTLS を利用して通信を暗号化する</guimenu> を選択します。</para>
    </step>
    <step>
-    <para>
-     Activate other options as necessary:
-    </para>
+    <para>その他のオプションについては、必要に応じて設定を行ないます:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       You can <guimenu>Allow users to authenticate via LDAP</guimenu> and
-       <guimenu>Automatically Create Home Directories</guimenu> on the local
-       computer for them.
-      </para>
+      <para>必要に応じて、 <guimenu>LDAP のユーザに対して認証を許可する</guimenu> と <guimenu>自動的にホームディレクトリを作成する</guimenu> を選択します。</para>
      </listitem>
      <listitem>
-      <para>
-       Use <guimenu>Cache LDAP Entries For Faster Response</guimenu> to cache
-       LDAP entries locally. However, this bears the danger that entries can
-       be slightly out of date.
-      </para>
+      <para>LDAP の項目をローカルにキャッシュするには、 <guimenu>より高速な応答のため LDAP の項目をキャッシュする</guimenu> を選択します。この場合、項目が古いまま保持される危険性がありますので、あらかじめご了承ください。</para>
      </listitem>
      <listitem>
-      <para>
-       Specify the types of data that should be used from the LDAP source,
-       such as
-       <guimenu>Users</guimenu> and <guimenu>Groups</guimenu>,
-       <guimenu>Super-User Commands</guimenu>, and <guimenu>Network Disk
-       Locations</guimenu> (network-shared drives that can be automatically
-       mounted on request).
-      </para>
+      <para>さらに LDAP の情報源から使用すべきデータの種類 (たとえば <guimenu>ユーザ</guimenu> ,  <guimenu>グループ</guimenu> , <guimenu>スーパーユーザコマンド</guimenu> , <guimenu>ネットワークディスクの場所</guimenu> (必要に応じて自動的にマウントすることのできる共有ドライブ)) を指定します。</para>
      </listitem>
      <listitem>
-      <para>
-       Specify the distinguished name (DN) and password of the user under
-       whose name you want to bind to the LDAP directory in <guimenu>DN of
-       Bind User</guimenu> and <guimenu>Password of the Bind User</guimenu>.
-      </para>
-      <para>
-       Otherwise, if the server supports it, you can also leave both text
-       boxes empty to bind anonymously to the server.
-      </para>
+      <para><guimenu>バインドユーザの DN</guimenu> および <guimenu>バインドユーザのパスワード</guimenu> に、 LDAP ディレクトリにバインドする際のユーザの識別名 (DN) とパスワードを指定します。</para>
+      <para>サーバに対して匿名でバインドしたい場合は、サーバ側でのサポートが必要になりますが、これらのテキストボックスには何も入力しないでください。</para>
       <warning>
-       <title>Authentication Without Encryption</title>
-       <para>
-        When using authentication without enabling transport encryption
-        using TLS or StartTLS, the password will be transmitted in the clear.
-       </para>
+       <title>暗号化を行なわない認証について</title>
+       <para>TLS や StartTLS を利用した伝送路の暗号化を使用せずに認証を行なうと、パスワードは平文のまま転送されてしまいます。</para>
        <remark>
         Is the YaST dialog compatible with SASL in any way? - sknorr,
         2017-03-01
@@ -600,97 +329,49 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
       </warning>
      </listitem>
     </itemizedlist>
-    <para>
-     Under <guimenu>Extended Options</guimenu>, you can additionally
-     configure timeouts for BIND operations.
-    </para>
+    <para><guimenu>拡張オプション</guimenu> 内では、追加でバインド操作時のタイムアウトを設定することができます。</para>
    </step>
    <step>
-    <para>
-     To check whether the LDAP connection works, click
-     <guimenu>Test Connection</guimenu>.
-    </para>
+    <para>LDAP が正しく接続できるかどうかを確認したい場合は、 <guimenu>接続のテスト</guimenu> を押してください。</para>
    </step>
    <step>
-    <para>
-     To leave the dialog, click <guimenu>OK</guimenu>. Then wait for the
-     setup to complete.
-    </para>
-    <para>
-     Finally, click <guimenu>Finish</guimenu>.
-    </para>
+    <para>ダイアログを閉じるには、 <guimenu>OK</guimenu> を押します。設定の書き込みが終わるまで、しばらくお待ちください。</para>
+    <para>全ての設定が終わったら、 <guimenu>完了</guimenu> を押して閉じます。</para>
    </step>
   </procedure>
  </sect1>
 
  <sect1 xml:id="sec.security.ldap.yast.usergr">
-  <title>Configuring LDAP Users and Groups in &yast;</title>
+  <title>&yast; での LDAP ユーザとグループの設定</title>
 
-  <para>
-   The actual registration of user and group data differs only slightly from
-   the procedure when not using LDAP. The following instructions relate to
-   the administration of users. The procedure for administering groups is
-   analogous.
-  </para>
+  <para>ユーザやグループの登録作業は、 LDAP を使用する場合と使用しない場合で、少しだけ異なる手順になります。また、下記に示す手順はユーザの管理の手順ですが、グループの管理も同様の手順で行なうことができます。</para>
 
   <procedure>
    <step>
-    <para>
-     Access the &yast; user administration with <menuchoice>
-     <guimenu>Security and Users</guimenu><guimenu>User and Group
-     Management</guimenu></menuchoice>.
-    </para>
+    <para>&yast; から <menuchoice> <guimenu>セキュリティとユーザ</guimenu><guimenu>ユーザとグループの管理</guimenu></menuchoice> を選択して、ユーザとグループの管理モジュールを起動します。</para>
    </step>
    <step>
-    <para>
-     Use <guimenu>Set Filter</guimenu> to limit the view of users to the
-     LDAP users and enter the password for Root DN.
-    </para>
+    <para><guimenu>フィルタの設定</guimenu> を押して <guimenu>LDAP ユーザ</guimenu> を選択し、バインド DN に対するパスワードを入力して、 LDAP のユーザのみを表示します。</para>
    </step>
    <step>
-    <para>
-     Click <guimenu>Add</guimenu> to enter the user configuration. A dialog
-     with four tabs opens:
-    </para>
+    <para><guimenu>追加</guimenu> を押してユーザ設定を入力します。表示されたダイアログには、 4 つのタブがあります:</para>
     <substeps performance="required">
      <step>
-      <para>
-       Specify the user's name, login name, and password in the
-       <guimenu>User Data</guimenu> tab.
-      </para>
+      <para><guimenu>ユーザ情報</guimenu> のタブでは、ユーザのフルネームとログイン名、パスワードをそれぞれ設定します。</para>
      </step>
      <step>
-      <para>
-       Check the <guimenu>Details</guimenu> tab for the group membership,
-       login shell, and home directory of the new user. If necessary, change
-       the default to values that better suit your needs.
-<!-- The default values
-       (as well as those of the password settings) can be defined with the
-       procedure described in
-       <xref linkend="sec.security.auth.yast.client.conf.mod"/>.-->
-      </para>
+      <para><guimenu>詳細</guimenu> タブでは、そのユーザが所属するグループやログイン時に使用するシェル、そしてホームディレクトリなどを設定します。必要に応じて変更してください。 <!-- The default values (as well as those of the password settings) can be defined with the procedure described in <xref linkend="sec.security.auth.yast.client.conf.mod"/>.--></para>
      </step>
      <step>
-      <para>
-       Modify or accept the default <guimenu>Password Settings</guimenu>.
-      </para>
+      <para><guimenu>パスワードの設定</guimenu> タブでは、必要であれば設定を変更します。</para>
      </step>
      <step>
-      <para>
-       Enter the <guimenu>Plug-Ins</guimenu> tab, select the LDAP plug-in,
-       and click <guimenu>Launch</guimenu> to configure additional LDAP
-       attributes assigned to the new user.
-<!-- (see
-       <xref linkend="fig.ldap.y2.adset"/>).-->
-      </para>
+      <para><guimenu>プラグイン</guimenu> タブでは LDAP プラグインを選択して <guimenu>起動</guimenu> を押し、新しいユーザに設定する追加の LDAP 属性を指定します <!-- (see <xref linkend="fig.ldap.y2.adset"/>).--> 。</para>
      </step>
     </substeps>
    </step>
    <step>
-    <para>
-     Click <guimenu>OK</guimenu> to apply your settings and leave the user
-     configuration.
-    </para>
+    <para><guimenu>OK</guimenu> を押して設定を適用し、ユーザ設定を終了します。</para>
    </step>
   </procedure>
 
@@ -708,17 +389,11 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
   </figure>
   -->
 
-  <para>
-   The initial input form of user administration offers <guimenu>LDAP
-   Options</guimenu>. This allows you to apply LDAP search filters to the
-   set of available users. Alternatively open the module for configuring
-   LDAP users and groups by selecting <guimenu>LDAP User and Group
-   Configuration</guimenu>.
-  </para>
+  <para>ユーザ管理モジュールで最初に表示されるフォーム内では、 <guimenu>LDAP オプション</guimenu> を指定することができます。このオプションを設定することにより、特定のユーザのみを表示するための検索フィルタを適用することができます。この方法以外にも、 <guimenu>LDAP ユーザとグループの設定</guimenu> を選択してユーザとグループを設定することもできます。</para>
  </sect1>
 
  <sect1 xml:id="sec.security.ldap.slapd" os="sles;osuse">
-  <title>Manually Configuring an LDAP Server</title>
+  <title>LDAP サーバの手動設定</title>
 
 <!--
   <para>
@@ -730,45 +405,21 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
   </para>
 -->
 
-  <para>
-   &yast; uses OpenLDAP's dynamic configuration database
-   (<systemitem>back-config</systemitem>) to store the LDAP server's
-   configuration. For details about the dynamic configuration back-end, see
-   the <systemitem>slapd-config(5)</systemitem> man page or the OpenLDAP
-   Software 2.4 Administrator's Guide located at
-   <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename>
-   on your system if the <systemitem>openldap2</systemitem> package is
-   installed.
-  </para>
+  <para>&yast; では、 OpenLDAP の動的設定データベース ( <systemitem>back-config</systemitem> ) を利用して LDAP の設定を保存しています。動的な設定の保存方式について、詳しくは <systemitem>slapd-config(5)</systemitem> のマニュアルページ、もしくは <systemitem>openldap2</systemitem> パッケージをインストールしてある環境内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> に存在する、 OpenLDAP Software 2.4 Administrator's Guide をお読みください。</para>
 
   <tip>
-   <title>Upgrading an Old OpenLDAP Installation</title>
-   <para>
-    &yast; does not use <filename>/etc/openldap/slapd.conf</filename> to
-    store the OpenLDAP configuration anymore. In case of a system upgrade, a
-    copy of the original <filename>/etc/openldap/slapd.conf</filename> file
-    will get created as
-    <filename>/etc/openldap/slapd.conf.YaSTsave</filename>.
-   </para>
+   <title>古い OpenLDAP インストールのアップグレードについて</title>
+   <para>&yast; では OpenLDAP の設定を保存するにあたって、 <filename>/etc/openldap/slapd.conf</filename> を使用しなくなっています。システムをアップグレードした場合は、 <filename>/etc/openldap/slapd.conf</filename> の設定ファイルのコピーが <filename>/etc/openldap/slapd.conf.YaSTsave</filename> として保存されます。</para>
   </tip>
 
-  <para>
-   To conveniently access the configuration back-end, you use SASL external
-   authentication. For example, the following <command>ldapsearch</command>
-   command executed as &rootuser; can show the complete
-   <command>slapd</command> configuration:
-  </para>
+  <para>設定バックエンドに便利にアクセスすることができるようにするため、 SASL 外部認証を使用することができます。たとえば下記の <command>ldapsearch</command> コマンドを &rootuser; で実行すると、 <command>slapd</command> の完全な設定を表示させることができます:</para>
 
 <screen>&prompt.user;ldapsearch -Y external -H ldapi:/// -b cn=config</screen>
 
   <note>
 <!-- bnc#911409 -->
-   <title>LDAP Server Is Part of the Authentication Server</title>
-   <para>
-    Basic LDAP Server initialization and configuration can be done within
-    the Authentication Server &yast; module. For more information, see
-    <xref linkend="sec.security.auth.yast"/>.
-   </para>
+   <title>認証サーバの設定の一部で LDAP サーバの設定も行なうことができる件について</title>
+   <para>&yast; の認証サーバモジュール内では、基本的な LDAP サーバの準備と設定を行なうことができます。詳しくは <xref linkend="sec.security.auth.yast"/> をお読みください。</para>
   </note>
 
 <!-- Why is this commented away? At least the initial bits look okay-ish.
@@ -1208,113 +859,51 @@ ppolicy_use_lockout</screen>
 
   <!-- <sect2 xml:id="sec.security.ldap.slapd.start"> -->
   <!--  <title>Starting and Stopping the Servers</title> -->
-   <para>
-    When the LDAP server is fully configured and all desired entries have
-    been made according to the pattern described in
-    <xref linkend="sec.security.ldap.data"/>, start the LDAP server as
-    &rootuser; by entering <command>sudo systemctl start
-    slapd</command>. To stop the server manually, enter the command
-    <command>sudo systemctl stop slapd</command>. Query the status of
-    the running LDAP server with <command>sudo systemctl status
-    slapd</command>.
-   </para>
-   <para>
-    Use the &yast; <guimenu>&ycc_runlevel;</guimenu>, described in
-    <xref linkend="sec.boot.runlevel.edit"/>, to have the server started and
-    stopped automatically on system bootup and shutdown. You can also
-    create the corresponding links to the start and stop scripts with the
-    <command>systemctl</command> commands as described
-    in <xref linkend="sec.boot.systemd.basics.services"/>.
-   </para>
+   <para>LDAP サーバの設定を全て終えて、 <xref linkend="sec.security.ldap.data"/> で説明している手順で必要な項目を全て設定したあとは、 <command>sudo systemctl start slapd</command> を実行して &rootuser; で LDAP サーバを起動します。サーバを手動で停止したい場合は、 <command>sudo systemctl stop slapd</command> を実行します。また、 LDAP サーバの動作状態を確認したい場合は、 <command>sudo systemctl status slapd</command> を実行します。</para>
+   <para>また、 <xref linkend="sec.boot.runlevel.edit"/> で説明している手順で &yast; <guimenu>&ycc_runlevel;</guimenu> を使用することで、システムの起動時に自動的にサーバを開始させ、システムのシャットダウン時に自動的にサーバを停止することができます。また、 <xref linkend="sec.boot.systemd.basics.services"/> で説明しているコマンドを使用することで、開始時や停止時にスクリプトを動作させることもできます。</para>
   <!-- </sect2> -->
  </sect1>
 <!-- ==================================================================== -->
  <sect1 xml:id="sec.security.ldap.data" os="sles;osuse">
-  <title>Manually Administering LDAP Data</title>
+  <title>LDAP データの手動管理</title>
 
-  <para>
-   OpenLDAP offers a series of tools for the administration of data in the
-   LDAP directory. The four most important tools for adding to, deleting
-   from, searching through and modifying the data stock are explained in
-   this section.
-  </para>
+  <para>OpenLDAP では、 LDAP ディレクトリ内のデータを管理するための様々なツールが提供されています。本章では、データを追加したり削除したり、検索したり修正したりするための最も重要なツールについて説明しています。</para>
 
   <sect2 xml:id="sec.security.ldap.data.add">
-   <title>Inserting Data into an LDAP Directory</title>
-   <para>
-    Once your LDAP server
-<!--in
-    <filename>/etc/openldap/slapd.conf</filename>-->
-    is correctly configured (it features appropriate entries for
-    <literal>suffix</literal>, <literal>directory</literal>,
-    <literal>rootdn</literal>, <literal>rootpw</literal> and
-    <literal>index</literal>), proceed to entering records. OpenLDAP offers
-    the <command>ldapadd</command> command for this task. If possible, add
-    the objects to the database in bundles (for practical reasons). LDAP
-    can process the LDIF format (LDAP data interchange format) for this.
-    An LDIF file is a simple text file that can contain an arbitrary number
-    of attribute and value pairs.
-<!-- Refer
-    to the Schema files declared in <filename>slapd.conf</filename> for the
-    available object classes and attributes.-->
-    The LDIF file for creating a rough framework for the example in
-    <xref linkend="fig.ldap.tree"/> would look like the one in
-    <xref linkend="dat.ldap.ldif"/>.
-   </para>
+   <title>LDAP ディレクトリへのデータの挿入</title>
+   <para>LDAP サーバの設定 <!--in <filename>/etc/openldap/slapd.conf</filename>--> (それぞれ <literal>suffix</literal> , <literal>directory</literal> , <literal>rootdn</literal> , <literal>rootpw</literal> , <literal>index</literal> の項目の指定) を正しく完了したあとは、レコードの追加作業を行ないます。 OpenLDAP では、 <command>ldapadd</command> というコマンドを利用して行なうことができます。なお、可能であればデータは一括で追加するようにしてください (実用上の理由からです) 。 LDAP では、 LDIF と呼ばれる形式 (LDAP データ交換形式 (LDAP data interchange format)) のデータを読み込むことができます。 LDIF ファイルは単純なテキストファイル形式で、任意の数の名前と値の対を含むことができるものです。 <!-- Refer to the Schema files declared in <filename>slapd.conf</filename> for the available object classes and attributes.--> <xref linkend="fig.ldap.tree"/> で示している構造を作成する際の例を <xref linkend="dat.ldap.ldif"/> に示します。</para>
    <important>
-    <title>Encoding of LDIF Files</title>
-    <para>
-<!-- UTF-8 is the default since ages now...-->
-     LDAP works with UTF-8 (Unicode). Umlauts must be encoded correctly.
-     Otherwise, avoid umlauts and other special characters or use
-     <command>iconv</command> to convert the input to UTF-8.
-    </para>
+    <title>LDIF ファイルのエンコードについて</title>
+    <para><!-- UTF-8 is the default since ages now...--> <!-- NOTE: Explanation was changed for Japanese, for example, kanji character must be encoded with UTF-8.. --> LDAP は UTF-8 (Unicode) で動作する仕組みであるため、適切にエンコードが行なわれていれば、漢字や記号などの文字も設定することができます。 UTF-8 以外のエンコードで作成している場合は、 <command>iconv</command> などで UTF-8 に変換しておいてください。</para>
    </important>
    <example xml:id="dat.ldap.ldif">
-    <title>An LDIF File</title>
-<screen># The Organization
+    <title>LDIF ファイル</title>
+<screen># 組織全体
 dn: dc=example,dc=com
 objectClass: dcObject
 objectClass: organization
 o: Example dc: example
 
-# The organizational unit development (devel)
+# 組織内の開発部門 (devel)
 dn: ou=devel,dc=example,dc=com
 objectClass: organizationalUnit
 ou: devel
 
-# The organizational unit documentation (doc)
+# 組織内の文書部門 (doc)
 dn: ou=doc,dc=example,dc=com
 objectClass: organizationalUnit
 ou: doc
 
-# The organizational unit internal IT (it)
+# 組織内の IT 部門 (it)
 dn: ou=it,dc=example,dc=com
 objectClass: organizationalUnit
 ou: it</screen>
    </example>
-   <para>
-    Save the file with the <filename>.ldif</filename> suffix then pass it to
-    the server with the following command:
-   </para>
-<screen>&prompt.user;ldapadd -x -D <replaceable>DN_OF_THE_ADMINISTRATOR</replaceable> -W -f <replaceable>FILE</replaceable>.ldif</screen>
-   <para>
-    <literal>-x</literal> switches off the authentication with SASL in this
-    case. <literal>-D</literal> declares the user that calls the operation.
-    The valid DN of the administrator is entered here, as it has been
-    configured in <filename>slapd.conf</filename>. In the current example,
-    this is <literal>cn=Administrator,dc=example,dc=com</literal>.
-    <literal>-W</literal> circumvents entering the password on the command
-    line (in clear text) and activates a separate password prompt.
-<!-- This
-    password was previously determined in <filename>slapd.conf</filename>
-    with <literal>rootpw</literal>. -->
-    The <literal>-f</literal> option passes the file name. See the details
-    of running <command>ldapadd</command> in
-    <xref linkend="aus.ldap.addentry"/>.
-   </para>
+   <para>上記の内容を <filename>.ldif</filename> で終わるファイル名のファイルで作成して保存したあとは、下記のコマンドを実行してサーバに渡します:</para>
+<screen>&prompt.user;ldapadd -x -D <replaceable>管理者の_DN</replaceable> -W -f <replaceable>ファイル名</replaceable>.ldif</screen>
+   <para><literal>-x</literal> を指定することで、ここでは SASL の認証を無効化しています。また、 <literal>-D</literal> ではその操作を実行する際のユーザを指定しています。ここには通常、 <filename>slapd.conf</filename> 内に設定する管理者の DN を正しく入力します。たとえば下記の例では <literal>cn=Administrator,dc=example,dc=com</literal> を指定しています。 <literal>-W</literal> はコマンドライン内でのパスワードの入力を回避するための指定で、パスワードを入力するためのプロンプトを別途表示するための指定です。 <!-- This password was previously determined in <filename>slapd.conf</filename> with <literal>rootpw</literal>. --> 最後の <literal>-f</literal> オプションは、ファイル名を指定するためのものです。 <command>ldapadd</command> を実行すると、 <xref linkend="aus.ldap.addentry"/> のような出力が現われるはずです。</para>
    <example xml:id="aus.ldap.addentry">
-    <title>ldapadd with example.ldif</title>
+    <title>example.ldif での ldapadd</title>
 <screen>&prompt.user;ldapadd -x -D cn=Administrator,dc=example,dc=com -W -f example.ldif
 
 Enter LDAP password:
@@ -1323,13 +912,9 @@ adding new entry "ou=devel,dc=example,dc=com"
 adding new entry "ou=doc,dc=example,dc=com"
 adding new entry "ou=it,dc=example,dc=com"</screen>
    </example>
-   <para>
-    The user data of individuals can be prepared in separate LDIF files.
-    <xref linkend="aus.ldap.addtux"/> adds
-    <systemitem class="username">Tux</systemitem> to the new LDAP directory.
-   </para>
+   <para>各個人のユーザデータについては、別途の LDIF ファイルで用意することができます。たとえば <xref linkend="aus.ldap.addtux"/> では、 <systemitem class="username">Tux</systemitem> というユーザを新しい LDAP ディレクトリに追加しています。</para>
    <example xml:id="aus.ldap.addtux">
-    <title>LDIF Data for Tux</title>
+    <title>Tux の LDIF データ例</title>
 <screen># coworker Tux
 dn: cn=Tux Linux,ou=devel,dc=example,dc=com
 objectClass: inetOrgPerson
@@ -1338,191 +923,101 @@ givenName: Tux
 sn: Linux
 mail: tux@example.com
 uid: tux
-telephoneNumber: +49 1234 567-8</screen>
+telephoneNumber: +81 3 0000-0000</screen>
    </example>
-   <para>
-    An LDIF file can contain an arbitrary number of objects. It is possible
-    to pass directory branches (entirely or in part) to the server in one
-    go, as shown in the example of individual objects. If it is necessary to
-    modify some data relatively often, a fine subdivision of single objects
-    is recommended.
-   </para>
+   <para>LDIF ファイルには任意の数のオブジェクトを含めることができます。個別のオブジェクトの例と同様に、部門全体もしくは部門の一部を一括でサーバに渡すこともできます。比較的頻繁に変更されるようなデータがあるような場合は、その部分だけを個別のファイルにしてもかまいません。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.ldap.data.change">
-   <title>Modifying Data in the LDAP Directory</title>
-   <para>
-    The tool <command>ldapmodify</command> is provided for modifying the
-    data stock. The easiest way to do this is to modify the corresponding
-    LDIF file and pass the modified file to the LDAP server. To change the
-    telephone number of colleague Tux from <literal>+49 1234 567-8</literal>
-    to <literal>+49 1234 567-10</literal>, edit the LDIF file like in
-    <xref linkend="aus.ldap.ldif.tux"/>.
-   </para>
+   <title>LDAP ディレクトリ内のデータの変更</title>
+   <para><command>ldapmodify</command> ツールは、データの変更を行なうために使用するツールです。変更を行なうにあたって最も簡単な方法は、変更用の LDIF ファイルを作成して、それを LDAP サーバに送信する方法です。たとえば Tux ユーザの電話番号を <literal>+49 1234 567-8</literal> から <literal>+49 1234 567-10</literal> に変更したい場合は、 <xref linkend="aus.ldap.ldif.tux"/> に示すような LDIF ファイルを作成します。</para>
    <example xml:id="aus.ldap.ldif.tux">
-    <title>Modified LDIF File tux.ldif</title>
+    <title>変更用の LDIF ファイル tux.ldif</title>
 <screen># coworker Tux
 dn: cn=Tux Linux,ou=devel,dc=example,dc=com
 changetype: modify
 replace: telephoneNumber
-telephoneNumber: +49 1234 567-10</screen>
+telephoneNumber: +81 3 0000-0000</screen>
    </example>
-   <para>
-    Import the modified file into the LDAP directory with the following
-    command:
-   </para>
+   <para>あとは下記のコマンドを実行して、 LDAP ディレクトリに修正用のファイルを送信します:</para>
 <screen>&prompt.user;ldapmodify -x -D cn=Administrator,dc=example,dc=com -W -f tux.ldif</screen>
-   <para>
-    Alternatively, pass the attributes to change directly to
-    <command>ldapmodify</command> as follows:
-   </para>
+   <para>上記の方法以外にも、 <command>ldapmodify</command> を利用して直接データを変更することもできます:</para>
    <procedure>
     <step>
-     <para>
-      Start <command>ldapmodify</command> and enter your password:
-     </para>
+     <para><command>ldapmodify</command> を実行してパスワードを入力します:</para>
 <screen>&prompt.user;ldapmodify -x -D cn=Administrator,dc=example,dc=com -W
 Enter LDAP password:</screen>
     </step>
     <step>
-     <para>
-      Enter the changes while carefully complying with the syntax in the
-      order presented below:
-     </para>
+     <para>変更用の書式をそのまま入力します:</para>
 <screen>dn: cn=Tux Linux,ou=devel,dc=example,dc=com
 changetype: modify
 replace: telephoneNumber
 telephoneNumber: +49 1234 567-10</screen>
     </step>
    </procedure>
-   <para>
-    For more information about <command>ldapmodify</command> and its syntax,
-    see the <command>ldapmodify</command> man page.
-   </para>
+   <para><command>ldapmodify</command> に関する詳細やその書式について、詳しくは <command>ldapmodify</command> のマニュアルページをお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.ldap.data.search">
-   <title>Searching or Reading Data from an LDAP Directory</title>
-   <para>
-    OpenLDAP provides, with <command>ldapsearch</command>, a command line
-    tool for searching data within an LDAP directory and reading data from
-    it. This is a simple query:
-   </para>
+   <title>LDAP ディレクトリ内のデータの検索および読み取り</title>
+   <para>OpenLDAP では、 <command>ldapsearch</command> コマンドを利用して LDAP ディレクトリの検索を行ない、その結果を表示させることができます。下記のようにして実行します:</para>
 <screen>&prompt.user;ldapsearch -x -b dc=example,dc=com "(objectClass=*)"</screen>
-   <para>
-    The <option>-b</option> option determines the search base (the section
-    of the tree within which the search should be performed). In the current
-    case, this is <literal>dc=example,dc=com</literal>. To perform a more
-    finely-grained search in specific subsections of the LDAP directory (for
-    example, only within the <literal>devel</literal> department), pass this
-    section to <command>ldapsearch</command> with <option>-b</option>.
-    <option>-x</option> requests activation of simple authentication.
-    <literal>(objectClass=*)</literal> declares that all objects contained
-    in the directory should be read. This command option can be used after
-    the creation of a new directory tree to verify that all entries have
-    been recorded correctly and the server responds as desired. For more
-    information about the use of <command>ldapsearch</command>, see the
-    <systemitem>ldapsearch(1)</systemitem> man page.
-   </para>
+   <para><option>-b</option> オプションは検索ベース (検索を開始するツリー構造の位置) を指定するためのものです。上記の例では <literal>dc=example,dc=com</literal> 以下を検索する意味になります。たとえば開発部門 (<literal>devel</literal>) のみを対象にして検索を行ないたい場合は、対応する部門の DN を <command>ldapsearch</command> の <option>-b</option> で指定してください。 <option>-x</option> オプションはシンプル認証を使用する指定です。 <literal>(objectClass=*)</literal> は、ディレクトリ内の任意のオブジェクトを読み込むための指定です。このコマンドを使用することで、新しいディレクトリツリーとその中の項目が正しく設定されているかどうかと、サーバが期待通りの応答をするかどうかを確認することができます。 <command>ldapsearch</command> の使用方法について、詳しくは <systemitem>ldapsearch(1)</systemitem> のマニュアルページをお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.ldap.data.del">
-   <title>Deleting Data from an LDAP Directory</title>
-   <para>
-    Delete unwanted entries with <command>ldapdelete</command>. The syntax
-    is similar to that of the other commands. To delete, for example, the
-    complete entry for <literal>Tux Linux</literal>, issue the following
-    command:
-   </para>
+   <title>LDAP ディレクトリからのデータの削除</title>
+   <para><command>ldapdelete</command> コマンドを使用することで、不要な項目を削除することができます。書式は他のコマンドと同様です。たとえば <literal>Tux Linux</literal> の項目を削除したい場合は、下記のようなコマンドを実行します:</para>
 <screen>&prompt.user;ldapdelete -x -D cn=Administrator,dc=example,dc=com -W cn=Tux \
 Linux,ou=devel,dc=example,dc=com</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.ldap.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   More complex subjects (like SASL configuration or establishment of a
-   replicating LDAP server that distributes the workload among multiple
-   slaves) were omitted from this chapter. Find detailed information about
-   both subjects in the <emphasis>OpenLDAP 2.4 Administrator's
-   Guide</emphasis>&mdash;see at
-   <xref linkend="list.ldap.info.adminguide"/>.
-  </para>
+  <para>さらに複雑な内容 (SASL の設定や複数のスレーブに負荷を分散させる LDAP サーバ群の構築方法など) については、本章では説明していません。詳しくは <xref linkend="list.ldap.info.adminguide"/> で説明している <emphasis>OpenLDAP 2.4 Administrator's Guide</emphasis> をお読みください。</para>
 
-  <para>
-   The Web site of the OpenLDAP project offers exhaustive documentation for
-   beginner and advanced LDAP users:
-  </para>
+  <para>OpenLDAP プロジェクトの Web サイトでは、 LDAP の初心者から上級者にいたるまで、様々な要件に適合した広範囲のドキュメンテーションを提供しています:</para>
 
   <variablelist>
    <varlistentry>
-    <term>OpenLDAP Faq-O-Matic</term>
+    <term>OpenLDAP Faq-O-Matic (よくある質問)</term>
     <listitem>
-     <para>
-      A detailed question and answer collection applying to the
-      installation, configuration, and use of OpenLDAP. Find it at
-      <link xlink:href="http://www.openldap.org/faq/data/cache/1.html"/>.
-     </para>
+     <para>OpenLAP のインストールや設定／使用に対する様々な質問と回答 (英語) を記載しています。詳しくは <link xlink:href="http://www.openldap.org/faq/data/cache/1.html"/> をご覧ください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Quick Start Guide</term>
+    <term>Quick Start Guide (クイックスタートガイド)</term>
     <listitem>
-     <para>
-      Brief step-by-step instructions for installing your first LDAP server.
-      Find it at
-      <link xlink:href="http://www.openldap.org/doc/admin24/quickstart.html"/>
-      or on an installed system in Section 2 of
-      <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename>.
-     </para>
+     <para>LDAP サーバを初めてインストールされる方に向けて、手順を追って説明する形式の文書 (英語のみ) です。 <link xlink:href="http://www.openldap.org/doc/admin24/quickstart.html"/> もしくはインストール済みのシステム内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> にあるセクション 2 をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry xml:id="list.ldap.info.adminguide">
-    <term>OpenLDAP 2.4 Administrator's Guide</term>
+    <term>OpenLDAP 2.4 Administrator's Guide (OpenLDAP 2.4 管理者ガイド)</term>
     <listitem>
-     <para>
-      A detailed introduction to all important aspects of LDAP
-      configuration, including access controls and encryption. See
-      <link xlink:href="http://www.openldap.org/doc/admin24/"/> or, on an
-      installed system,
-      <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename>.
-     </para>
+     <para>LDAP の設定に関する全ての重要な項目に対する詳しい説明が書かれています。ここにはアクセス制御や暗号化に関する話題も記載されています。 <link xlink:href="http://www.openldap.org/doc/admin24/"/> もしくはインストール済みのシステム内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>Understanding LDAP</term>
     <listitem>
-     <para>
-      A detailed general introduction to the basic principles of LDAP:
-      <link xlink:href="http://www.redbooks.ibm.com/redbooks/pdfs/sg244986.pdf"/>.
-     </para>
+     <para>LDAP の基本的な考え方に対する詳しい説明です。詳しくは: <link xlink:href="http://www.redbooks.ibm.com/redbooks/pdfs/sg244986.pdf"/> 。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Printed literature about LDAP:
-  </para>
+  <para>LDAP に関する印刷済みの書籍もあります:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <citetitle>LDAP System Administration</citetitle> by Gerald Carter
-     (ISBN 1-56592-491-6)
-    </para>
+    <para><!-- NOTE: altered to Japanese book --> <citetitle>システム管理者のための LDAP 徹底理解</citetitle> (著者: 太田 俊哉／中満 英生／堀田 倫英／菊池 研自) (ISBN 479734847X)</para>
    </listitem>
    <listitem>
-    <para>
-     <citetitle>Understanding and Deploying LDAP Directory
-     Services</citetitle> by Howes, Smith, and Good (ISBN 0-672-32316-8)
-    </para>
+    <para><!-- NOTE: altered to Japanese book --> <citetitle>入門LDAP/OpenLDAPディレクトリサービス導入・運用ガイド</citetitle>  (著者: デージーネット) (ISBN 4798018007)</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   The ultimate reference material for the subject of LDAP are the
-   corresponding RFCs (request for comments), 2251 to 2256.
-  </para>
+  <para>LDAP の詳細仕様を確認したい場合は、対応する RFC をお読みになってもかまいません (RFC-2251, RFC-2256) 。</para>
  </sect1>
 </chapter>
