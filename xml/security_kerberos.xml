@@ -4,14 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.kerberos">
- <title>Network Authentication with &krb;</title>
+ <title>&krb; を利用したネットワーク認証</title>
  <info>
   <abstract>
-   <para>
-    &krb; is a network authentication protocol which also provides
-    encryption. This chapter describes how to set up &krb; and integrate
-    services like LDAP and NFS.
-   </para>
+   <para>&krb; は暗号化の機能も提供するネットワーク認証プロトコルです。本章では &krb; の設定方法のほか、 LDAP や NFS のようなサービスとの統合方法について説明しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
@@ -19,571 +15,266 @@
   </dm:docmanager>
  </info>
  <sect1 xml:id="sec.security.kerberos.overview">
-  <title>Conceptual Overview</title>
-  <para>
-   An open network provides no means of ensuring that a workstation can
-   identify its users properly, except through the usual password
-   mechanisms. In common installations, the user must enter the
-   password each time a service inside the network is accessed. &krb;
-   provides an authentication method with which a user registers only
-   once and is trusted in the complete network for the rest of the
-   session. To have a secure network, the following requirements must
-   be met:
-  </para>
+  <title>考え方の概要</title>
+  <para>通常のオープンなネットワークの場合、ワークステーションがユーザを認証する際、パスワード以外の方法を取ることができません。一般的なインストール環境では、ネットワーク内に存在する各サービスにアクセスするごとに、パスワードの入力が求められます。 &krb; を利用すると、ユーザの認証を一度行なうだけで、他の連携サービスにも自動的に接続できるようになります。なお、ネットワークの機密を保持するため、下記の要件に適合していなければなりません:</para>
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Have all users prove their identity for each desired service and
-     make sure that no one can take the identity of someone else.
-    </para>
+    <para>各サービスを利用するユーザが自身の識別情報をきちんと管理し、第三者によって識別情報を利用されてしまうことがないようにすること。</para>
    </listitem>
    <listitem>
-    <para>
-     Make sure that each network server also proves its identity.
-     Otherwise an attacker might be able to impersonate the server and
-     obtain sensitive information transmitted to the server. This
-     concept is called <emphasis>mutual authentication</emphasis>,
-     because the client authenticates to the server and vice versa.
-    </para>
+    <para>それぞれのネットワークサービスの提供側 (サーバ) でも、識別情報を保持すること。サーバ側でも識別情報を持っておかないと、攻撃者は容易にサーバになりすますことができてしまいますので、これによってサーバに送信されるはずの認証情報を窃取することができるようになってしまいます。このような考え方は、クライアントがサーバに対して認証を行なうだけでなく、その逆の認証も行なうことになることから、 <emphasis>相互認証</emphasis> と呼んでいます。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   &krb; helps you meet these requirements by providing strongly
-   encrypted authentication. Only the basic principles of &krb; are
-   discussed here. For detailed technical instruction, refer to the
-   &krb; documentation.
-  </para>
+  <para>&krb; では、強力に暗号化された認証の仕組みによって、このような要件を満たすようになっています。なお、本章での &krb; の説明は、基本的な考え方にとどまります。より詳しい技術的な説明をご希望の場合は、 &krb; のドキュメンテーションをお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.security.kerberos.terms">
-  <title>&krb; Terminology</title>
+  <title>&krb; で使用する用語</title>
 
-  <para>
-   The following glossary defines some &krb; terminology.
-  </para>
+  <para>&krb; の世界では、下記のような用語を使用します。</para>
 
   <variablelist>
    <varlistentry>
-    <term>credential</term>
+    <term>クレデンシャル (信任状)</term>
     <listitem>
-     <para>
-      Users or clients need to present some kind of credentials that authorize
-      them to request services. &krb; knows two kinds of
-      credentials&mdash;tickets and authenticators.
-     </para>
+     <para>ユーザやクライアントは、利用したいサービスに対して、その利用を許可する旨を表わす資格情報を提示する必要があります。 &krb; では、チケットとオーセンティケータと呼ばれる 2 種類のクレデンシャルが用意されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>ticket</term>
+    <term>チケット (切符)</term>
     <listitem>
-     <para>
-      A ticket is a per-server credential used by a client to
-      authenticate at a server from which it is requesting a service. It
-      contains the name of the server, the client's name, the client's
-      Internet address, a time stamp, a lifetime, and a random session key.
-      All this data is encrypted using the server's key.
-     </para>
+     <para>チケットとはサーバごとに発行されるクレデンシャルで、クライアントが特定のサービスを利用する際、その提供者 (サーバ) に対して提示するものです。チケットにはサーバの名前のほか、クライアントの名前とクライアントのインターネットアドレス、タイムスタンプと有効期限、ランダムなセッション鍵が書かれています。このデータの全ては、サーバ側の鍵で暗号化されます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>authenticator</term>
+    <term>オーセンティケータ</term>
     <listitem>
-     <para>
-      Combined with the ticket, an authenticator is used to prove that the
-      client presenting a ticket is really the one it claims to be. An
-      authenticator is built using the client's name, the workstation's IP
-      address, and the current workstation's time, all encrypted with the
-      session key known only to the client and the relevant server. An
-      authenticator can only be used once, unlike a ticket. A client can build
-      an authenticator itself.
-     </para>
+     <para>オーセンティケータはチケットと組み合わせて使用するもので、チケットを提示しているクライアントが正当なクライアントであることを示すためのものです。オーセンティケータはクライアント名と IP アドレス、そしてクライアント側の時刻から構成されていて、クライアントと相手側のサーバのみが知りうるセッション鍵で全て暗号化されています。なお、チケットとは異なり、オーセンティケータは一度しか使用することができません。オーセンティケータはクライアント自身が構築します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>principal</term>
+    <term>プリンシパル</term>
     <listitem>
-     <para>
-      A &krb; principal is a unique entity (a user or service) to which it
-      can assign a ticket. A principal consists of the following components:
-     </para>
-     <screen><replaceable>USER</replaceable>/<replaceable>INSTANCE</replaceable>@<replaceable>REALM</replaceable></screen>
+     <para>&krb; でのプリンシパルとは、チケットを割り当てた先を表わすユニークな実体 (ユーザやサービス) を表わします。プリンシパルは、下記のような形式で表わされます:</para>
+     <screen><replaceable>プライマリ</replaceable>/<replaceable>インスタンス名</replaceable>@<replaceable>レルム</replaceable></screen>
 
      <itemizedlist>
       <listitem>
        <formalpara>
-        <title>primary:</title>
-        <para>
-         The first part of the principal. In the case of users, this is
-         usually the same as the user name.
-        </para>
+        <title>プライマリ:</title>
+        <para>プリンシパルの最初の部分です。プリンシパルがユーザを表わすものである場合、この項目はユーザ名になります。</para>
        </formalpara>
       </listitem>
       <listitem>
        <formalpara>
-        <title>instance <emphasis>(optional)</emphasis>:</title>
-        <para>
-         Additional information characterizing the
-         <emphasis>primary</emphasis>. This string is separated from the
-         <emphasis>primary</emphasis> by a <literal>/</literal>.
-        </para>
+        <title>インスタンス名 <emphasis>(オプション)</emphasis> :</title>
+        <para><emphasis>プライマリ</emphasis> を特徴付ける、追加の情報を表わします。この文字列と <emphasis>プライマリ</emphasis> との間は、 <literal>/</literal> で区切ります。</para>
        </formalpara>
-       <para>
-       <literal>tux@example.org</literal> and
-       <literal>tux/admin@example.org</literal> can both exist on the same
-       &krb; system and are treated as different principals.
-       </para>
+       <para>たとえば <literal>tux@example.org</literal> と <literal>tux/admin@example.org</literal> は、同じ &krb; システム内に同時に存在しうるプリンシパルで、それぞれは別々のものとして扱われます。</para>
       </listitem>
       <listitem>
        <formalpara>
-        <title>realm:</title>
-        <para>
-         Specifies the &krb; realm. Normally, your realm is your domain
-         name in uppercase letters.
-        </para>
+        <title>レルム:</title>
+        <para>&krb; の領域 (レルム) を表わします。通常、レルムはドメイン名を大文字で表わしたものになります。</para>
        </formalpara>
       </listitem>
      </itemizedlist>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>mutual authentication</term>
+    <term>相互認証</term>
     <listitem>
-     <para>
-      &krb; ensures that both client and server can be sure of each
-      others identity. They share a session key, which they can use to
-      communicate securely.
-     </para>
+     <para>&krb; では、クライアントとサーバが相互に認証を行ないます。認証の際、通信の機密を守る目的で、セッション鍵を共有して使用します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>session key</term>
+    <term>セッション鍵</term>
     <listitem>
-     <para>
-      Session keys are temporary private keys generated by &krb;. They are
-      known to the client and used to encrypt the communication between the
-      client and the server for which it requested and received a ticket.
-     </para>
+     <para>セッション鍵とは、 &krb; が生成した一時的な機密鍵を意味します。セッション鍵はクライアント側が保持していて、クライアントとサービスを提供するサーバとの間で、チケットのやり取りを行なう際に暗号化をするために使用します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>replay</term>
+    <term>リプレイ</term>
     <listitem>
-     <para>
-      Almost all messages sent in a network can be eavesdropped, stolen, and
-      resent. In the &krb; context, this would be most dangerous if an
-      attacker manages to obtain your request for a service containing your
-      ticket and authenticator. The attacker could then try to resend it
-      (<emphasis>replay</emphasis>) to impersonate you. However, &krb;
-      implements several mechanisms to deal with this problem.
-     </para>
+     <para>ネットワーク上を流れるほぼ全てのメッセージは、盗聴や盗難、偽装を行なうことができてしまいます。 &krb; の世界では、攻撃者が特定のサービスに対するチケットやオーセンティケータを盗むことができてしまうことになりますので、このままでは非常に危険です。たとえそれがサーバ側に届いた後であったとしても、再送信 ( <emphasis>リプレイ</emphasis> ) を行なうことで、特定のユーザになりすますことができてしまいます。しかしながら、 &krb; ではいくつかの仕組みを利用して、この問題を回避しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>server or service</term>
+    <term>サーバ／サービス</term>
     <listitem>
-     <para>
-      <emphasis>Service</emphasis> is used to refer to a specific action to
-      perform. The process behind this action is called a
-      <emphasis>server</emphasis>.
-     </para>
+     <para><emphasis>サービス</emphasis> とは、何らかの処理を表わす用語です。このサービスを提供するものを <emphasis>サーバ</emphasis> と呼んでいます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
  <sect1 xml:id="sec.security.kerberos.how">
-  <title>How &krb; Works</title>
+  <title>&krb; の動作概要</title>
 
-  <para>
-   &krb; is often called a third-party trusted authentication service,
-   which means all its clients trust &krb;'s judgment of another client's
-   identity. &krb; keeps a database of all its users and their private
-   keys.
-  </para>
+  <para>&krb; はしばしば、第三者の信頼による認証サービスとも呼ばれます。これは、全てのクライアントが他のクライアントの識別情報を判断する際、 &krb; での判断結果を信頼して使用することから、そのように呼ばれています。 &krb; では、全てのユーザに対する情報と、それに対応する機密鍵を保持するデータベースとなっています。</para>
 
-  <para>
-   To ensure &krb; is working correctly, run both the authentication and
-   ticket-granting server on a dedicated machine. Make sure that only the
-   administrator can access this machine physically and over the network.
-   Reduce the (networking) services running on it to the absolute
-   minimum&mdash;do not even run
-   <systemitem class="daemon">sshd</systemitem>.
-  </para>
+  <para>&krb; を正しく動作させるためには、認証とチケット発行許諾サーバを専用のマシンで動作させるようにしてください。また、このマシンに対しては、物理的にもネットワーク経由でも、管理者のみがアクセスできるようにしてください。また、このマシンで動作させるサービスはごく限られたもののみとし、 <systemitem class="daemon">sshd</systemitem> なども停止しておくことを強くお勧めします。</para>
 
   <sect2 xml:id="sec.security.kerberos.how.contact">
-   <title>First Contact</title>
-   <para>
-    Your first contact with &krb; is quite similar to any login procedure
-    at a normal networking system. Enter your user name. This piece of
-    information and the name of the ticket-granting service are sent to the
-    authentication server (&krb;). If the authentication server knows
-    you, it generates a random session key for further use between your
-    client and the ticket-granting server. Now the authentication server
-    prepares a ticket for the ticket-granting server. The ticket contains
-    the following information&mdash;all encrypted with a session key only
-    the authentication server and the ticket-granting server know:
-   </para>
+   <title>最初の通信</title>
+   <para>&krb; に対する最初の通信は、一般的なネットワークシステムにおけるログイン処理に非常に似通っています。まずはユーザ名を入力します。この情報とチケット発行許諾サービスの名前が認証サーバ (&krb;) に送信されます。認証サーバ側でユーザ名が既知のものであった場合は、クライアントとチケット発行許諾サーバとの間で使用される、乱数を利用したセッション鍵を発行します。あとは認証サーバがチケット発行許諾サーバに対するチケットを発行します。このチケットには下記のような情報が含まれていて、これら全てが認証サーバとチケット発行許諾サーバのみが知りうるセッション鍵で暗号化されます:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      The names of both, the client and the ticket-granting server
-     </para>
+     <para>クライアントの名前とチケット発行許諾サーバの名前</para>
     </listitem>
     <listitem>
-     <para>
-      The current time
-     </para>
+     <para>現在時刻</para>
     </listitem>
     <listitem>
-     <para>
-      A lifetime assigned to this ticket
-     </para>
+     <para>チケットの有効期限</para>
     </listitem>
     <listitem>
-     <para>
-      The client's IP address
-     </para>
+     <para>クライアントの IP アドレス</para>
     </listitem>
     <listitem>
-     <para>
-      The newly-generated session key
-     </para>
+     <para>新しく生成されたセッション鍵</para>
     </listitem>
    </itemizedlist>
-   <para>
-    This ticket is then sent back to the client together with the session
-    key, again in encrypted form, but this time the private key of the
-    client is used. This private key is only known to &krb; and the
-    client, because it is derived from your user password. Now that the
-    client has received this response, you are prompted for your password.
-    This password is converted into the key that can decrypt the package
-    sent by the authentication server. The package is
-    <quote>unwrapped</quote> and password and key are erased from the
-    workstation's memory. As long as the lifetime given to the ticket used
-    to obtain other tickets does not expire, your workstation can prove your
-    identity.
-   </para>
+   <para>このチケットは、セッション鍵と共に暗号化された状態のまま、クライアント側に返却されます。ただし、この時点ではクライアントが使用する機密鍵を使用して暗号化を行ないます。機密鍵はユーザのパスワードを元にして作られるものであるため、 &krb; とクライアントのみが知りうる情報となります。クライアント側では応答を受け取ったあと、利用者に対してパスワードを尋ねるようになります。クライアント内では、このパスワードを機密鍵に変換して、認証サーバから届いたデータを解読する処理を行ないます。必要な情報が <quote>開梱できた</quote> あとは、パスワードを自身のメモリ内から消去します。チケット内には有効期間が示されていることから、この有効期間が切れるまでの間に新しいチケットの発行を要求することで、クライアント側は認証を必要な期間だけ使い続けられることになります。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.how.request">
-   <title>Requesting a Service</title>
-   <para>
-    To request a service from any server in the network, the client
-    application needs to prove its identity to the server. Therefore, the
-    application generates an authenticator. An authenticator consists of the
-    following components:
-   </para>
+   <title>サービスの要求</title>
+   <para>ネットワーク内のサーバが提供するサービスを利用するため、クライアント側のアプリケーションは、サーバに対して識別情報を提示する必要があります。そのため、アプリケーションはオーセンティケータを生成します。オーセンティケータには下記のような情報が含まれています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      The client's principal
-     </para>
+     <para>クライアント側のプリンシパル</para>
     </listitem>
     <listitem>
-     <para>
-      The client's IP address
-     </para>
+     <para>クライアントの IP アドレス</para>
     </listitem>
     <listitem>
-     <para>
-      The current time
-     </para>
+     <para>現在時刻</para>
     </listitem>
     <listitem>
-     <para>
-      A checksum (chosen by the client)
-     </para>
+     <para>チェックサム (クライアント側で選択)</para>
     </listitem>
    </itemizedlist>
-   <para>
-    All this information is encrypted using the session key that the client
-    has already received for this special server. The authenticator and the
-    ticket for the server are sent to the server. The server uses its copy
-    of the session key to decrypt the authenticator, which gives it all the
-    information needed about the client requesting its service, to compare
-    it to that contained in the ticket. The server checks if the ticket and
-    the authenticator originate from the same client.
-   </para>
-   <para>
-    Without any security measures implemented on the server side, this stage
-    of the process would be an ideal target for replay attacks. Someone
-    could try to resend a request stolen off the net some time before. To
-    prevent this, the server does not accept any request with a time stamp
-    and ticket received previously. In addition to that, a request with a
-    time stamp differing too much from the time the request is received is
-    ignored.
-   </para>
+   <para>これら全ての情報は、クライアント側で既に受信しているセッション鍵を利用して、暗号化が行なわれます。サーバ向けのオーセンティケータとチケットが揃ったら、あとはそれらをサーバに送信します。サーバはオーセンティケータを解読するためにセッション鍵のコピーを使用し、サービスを要求するクライアントに対して必要な情報を取得したあと、チケットに書かれている内容と比較します。これにより、サーバ側ではチケットとオーセンティケータが同じクライアントから送信されたものであるかを確認します。</para>
+   <para>サーバ側では特別なセキュリティを実装しない限り、この処理はリプレイ攻撃に対する標的となり得てしまいます。たとえば誰かが以前に送信したオーセンティケータとチケットを保存しておいて、後からそれを送信して認証をかいくぐる方法が考えられます。このような不正を防止する目的で、サーバ側では以前に受信したものと同じタイムスタンプのチケットは受け付けないようになっているほか、受信した時刻とタイムスタンプがあまりにも違いすぎる場合も、要求を受け付けないようになっています。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.how.mutual">
-   <title>Mutual Authentication</title>
-   <para>
-    &krb; authentication can be used in both directions. It is not only a
-    question of the client being the one it claims to be. The server should
-    also be able to authenticate itself to the client requesting its
-    service. Therefore, it sends an authenticator itself. It adds one to the
-    checksum it received in the client's authenticator and encrypts it with
-    the session key, which is shared between it and the client. The client
-    takes this response as a proof of the server's authenticity and they
-    both start cooperating.
-   </para>
+   <title>相互認証</title>
+   <para>&krb; の認証は両方向に使用することができます。つまり、認証はクライアント側にだけ求められるものではありません。サーバ側でも、サービスを要求するクライアントに対して、自分自身を認証する必要があります。そのため、サーバ側ではオーセンティケータ自身を送信します。クライアント側のオーセンティケータのチェックサムに 1 を加えたあと、サーバとクライアントとの間で共有されているセッション鍵で暗号化を行ないます。クライアント側ではこの応答をもとに、サーバの正当性を確認して後続の処理を行なうかどうかを判別します。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.how.tgs">
-   <title>Ticket Granting&mdash;Contacting All Servers</title>
-   <para>
-    Tickets are designed to be used for one server at a time.  Therefore, you
-    need to get a new ticket each time you request another service. &krb;
-    implements a mechanism to obtain tickets for individual servers. This
-    service is called the <quote>ticket-granting service</quote>. The
-    ticket-granting service is a service (like any other service mentioned
-    before) and uses the same access protocols that have already been
-    outlined. Any time an application needs a ticket that has not already been
-    requested, it contacts the ticket-granting server.  This request consists
-    of the following components:
-   </para>
+   <title>チケット発行許諾&mdash;全てのサーバへの通信</title>
+   <para>チケットは特定のサーバに対して使用するために設計されています。そのため、異なるサービスに接続する際には、新しいチケットの発行を受ける必要があります。 &krb; では、それぞれのサーバに対するチケットを取得する仕組みが用意されています。このサービスを <quote>チケット発行許諾サービス</quote> と呼びます。チケット発行許諾サービスは、それ自身が (ここまでに説明しているのと同じ) サービスであり、ここまでの説明と同じプロトコルでアクセスを行ないます。アプリケーション側で新しいチケットが必要になると、チケット発行許諾サーバにアクセスを行ないます。このリクエストには下記のような情報が含まれています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      The requested principal
-     </para>
+     <para>要求者のプリンシパル</para>
     </listitem>
     <listitem>
-     <para>
-      The ticket-granting ticket
-     </para>
+     <para>チケット発行許諾チケット</para>
     </listitem>
     <listitem>
-     <para>
-      An authenticator
-     </para>
+     <para>オーセンティケータ</para>
     </listitem>
    </itemizedlist>
-   <para>
-    Like any other server, the ticket-granting server now checks the
-    ticket-granting ticket and the authenticator. If they are considered
-    valid, the ticket-granting server builds a new session key to be used
-    between the original client and the new server. Then the ticket for the
-    new server is built, containing the following information:
-   </para>
+   <para>他のサーバと同様に、チケット発行許諾サーバでもチケット発行許諾チケットと、オーセンティケータの内容を確認します。それらの情報がいずれも正当なものであった場合、チケット発行許諾サーバは元々のクライアントと新しく接続するサーバとの間で使用するセッション鍵を構築します。新しく接続するサーバに対するチケットには、下記のような情報が含まれています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      The client's principal
-     </para>
+     <para>クライアント側のプリンシパル</para>
     </listitem>
     <listitem>
-     <para>
-      The server's principal
-     </para>
+     <para>サーバのプリンシパル</para>
     </listitem>
     <listitem>
-     <para>
-      The current time
-     </para>
+     <para>現在時刻</para>
     </listitem>
     <listitem>
-     <para>
-      The client's IP address
-     </para>
+     <para>クライアントの IP アドレス</para>
     </listitem>
     <listitem>
-     <para>
-      The newly-generated session key
-     </para>
+     <para>新しく生成されたセッション鍵</para>
     </listitem>
    </itemizedlist>
-   <para>
-    The new ticket has a lifetime, which is either the remaining lifetime of
-    the ticket-granting ticket or the default for the service. The lesser of
-    both values is assigned. The client receives this ticket and the session
-    key, which are sent by the ticket-granting service. But this time the
-    answer is encrypted with the session key that came with the original
-    ticket-granting ticket. The client can decrypt the response without
-    requiring the user's password when a new service is contacted. &krb;
-    can thus acquire ticket after ticket for the client without bothering
-    the user.
-   </para>
+   <para>新しいチケットにも有効期間が設定されています。この有効期間はチケット発行許諾チケットと同じか、もしくはサービスごとの既定値のうち、いずれか早いほうが設定されます。クライアントは、チケット発行許諾サービスからこのチケットとセッション鍵を受け取ります。ただし、この時点では元々のチケット発行許諾チケットのセッション鍵で暗号化されています。そのため、クライアント側では利用者に対してパスワードを求めることなく、応答を解読できることになります。これにより、 &krb; はユーザの手を煩わせることなくチケットを取得できることになります。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.kerberos.users">
-  <title>User View of &krb;</title>
+  <title>&krb; のユーザ側からの見た目</title>
 
-  <para>
-   Ideally, a user only contact with &krb; happens during login
-   at the workstation. The login process includes obtaining a
-   ticket-granting ticket. At logout, a user's &krb; tickets are
-   automatically destroyed, which makes it difficult for anyone else to
-   impersonate this user.
-  </para>
+  <para>ユーザ側からの見た目では、 &krb; とのやり取りは端末のログイン時にのみ発生します。ログイン処理ではチケット発行許諾チケットの取得を行ないます。ログアウト時にはユーザ側の &krb; チケットが自動的に破棄され、第三者が偽装することができないようにしています。</para>
 
-  <para>
-   The automatic expiration of tickets can lead to a situation when a user's login session lasts longer than the maximum
-   lifespan given to the ticket-granting ticket (a reasonable setting is 10
-   hours). However, the user can get a new ticket-granting ticket by running
-   <command>kinit</command>. Enter the password again and &krb; obtains
-   access to desired services without additional authentication. To get a
-   list of all the tickets silently acquired for you by &krb;, run
-   <command>klist</command>.
-  </para>
+  <para>それぞれのチケットには有効期間が設定されているため、チケット発行許諾チケットに書かれた有効期間 (一般的には 10 時間程度) よりもユーザが長くログインしたままになることがあり得ます。しかしながら、ユーザ側では <command>kinit</command> を実行するだけで、新しいチケット発行許諾チケットを受け取ることができるようになっています。ここではパスワードを再入力することで、アクセス中の様々なサービスに対して個別に認証を行なわずに済むようになっています。 &krb; で暗黙のうちに取得できるチケットの一覧について、詳しくは <command>klist</command> を実行してください。</para>
 
-  <para>
-   Here is a short list of applications that use &krb; authentication.
-   These applications can be found under
-   <filename>/usr/lib/mit/bin</filename> or
-   <filename>/usr/lib/mit/sbin</filename> after installing the package
-   <systemitem>krb5-apps-clients</systemitem>. They all have the full
-   functionality of their common Unix and Linux brothers plus the additional
-   bonus of transparent authentication managed by &krb;:
-  </para>
+  <para>下記には &krb; 認証を使用するアプリケーションの一覧を示します。これらのアプリケーションは <systemitem>krb5-apps-clients</systemitem> パッケージをインストールしたあと、 <filename>/usr/lib/mit/bin</filename> もしくは <filename>/usr/lib/mit/sbin</filename> 内にインストールされるものです。これらのソフトウエアには、一般的な Unix および Linux オペレーティングシステムでの全ての機能に加えて、 &krb; による透過的な認証機構の機能が追加されています:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <command>telnet</command>,
-     <systemitem class="daemon">telnetd</systemitem>
-    </para>
+    <para><command>telnet</command> , <systemitem class="daemon">telnetd</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <command>rlogin</command>
-    </para>
+    <para><command>rlogin</command></para>
    </listitem>
    <listitem>
-    <para>
-     <command>rsh</command>, <command>rcp</command>,
-     <systemitem class="daemon">rshd</systemitem>
-    </para>
+    <para><command>rsh</command> , <command>rcp</command> , <systemitem class="daemon">rshd</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <command>ftp</command>, <systemitem class="daemon">ftpd</systemitem>
-    </para>
+    <para><command>ftp</command> , <systemitem class="daemon">ftpd</systemitem></para>
    </listitem>
    <listitem os="sles;osuse">
-    <para>
-     <command>ksu</command>
-    </para>
+    <para><command>ksu</command></para>
     <remark>
      Is ksu shipped on SLE still? cnf does not find it. - sknorr, 2017-12-15
     </remark>
    </listitem>
   </itemizedlist>
 
-  <para>
-   You no longer need to enter your password for using these applications
-   because &krb; has already proven your identity.
-   <command>ssh</command>, if compiled with &krb; support, can even
-   forward all the tickets acquired for one workstation to another one. If
-   you use <command>ssh</command> to log in to another workstation,
-   <command>ssh</command> makes sure that the encrypted contents of the
-   tickets are adjusted to the new situation. Simply copying tickets between
-   workstations is not sufficient because the ticket contains
-   workstation-specific information (the IP address). XDM and GDM offer
-   &krb; support, too. Read more about the &krb; network applications
-   in <citetitle>Kerberos V5 UNIX User's Guide</citetitle> at
-   <link xlink:href="http://web.mit.edu/kerberos"/>.
-  </para>
+  <para>これらのアプリケーションを使用する場合、 &krb; 側で既に識別情報を確認済みであることから、さらにパスワードを入力する必要を無くすことができます。なお、 &krb; に対応するよう <command>ssh</command> をコンパイルしてある場合、一方の端末で取得したチケットを他方の端末に転送することもできます。たとえば他のマシンにログインするために <command>ssh</command> を使用すると、 <command>ssh</command> が暗号化されたチケットの内容を必要に応じて調整する処理を行ないます。これは、チケットには端末固有の情報 (IP アドレスなど) が書かれているためです。 XDM や GDM でも &krb; へのサポートが提供されています。 &krb; に対応するネットワークアプリケーションについて、詳しくは <link xlink:href="http://web.mit.edu/kerberos"/> にある <citetitle>Kerberos V5 UNIX User's Guide</citetitle> (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.security.kerberos.admin" os="sles;osuse">
-  <title>Installing and Administering &krb;</title>
+  <title>&krb; のインストールと管理</title>
 
-  <para>
-   A &krb; environment consists of several components. A key
-   distribution center (KDC) holds the central database with all
-   &krb;-relevant data. All clients rely on the KDC for proper
-   authentication across the network. Both the KDC and the clients need to
-   be configured to match your setup:
-  </para>
+  <para>&krb; の環境は複数のコンポーネントから構成されています。鍵配送センター (KDC) は、 &krb; 関連のデータの全てを保持する中央データベースです。全てのクライアントからネットワーク経由で適切に認証を行なうことができるようにするため、 KDC のデータに依存して動作するようになっています。 KDC とクライアントでは、お使いの環境に合わせて下記のような設定を行なう必要があります:</para>
 
   <variablelist>
    <varlistentry>
-    <term>General Preparations</term>
+    <term>一般的な準備</term>
     <listitem>
-     <para>
-      Check your network setup and make sure it meets the minimum
-      requirements outlined in
-      <xref linkend="sec.security.kerberos.admin.top"/>. Choose an
-      appropriate realm for your &krb; setup, see
-      <xref linkend="sec.security.kerberos.admin.realm"/>. Carefully set up
-      the machine that is to serve as the KDC and apply tight security, see
-      <xref linkend="sec.security.kerberos.admin.kdc"/>. Set up a reliable
-      time source in your network to make sure all tickets contain valid
-      time stamps, see <xref linkend="sec.security.kerberos.admin.time"/>.
-     </para>
+     <para>ネットワークの設定を確認し、 <xref linkend="sec.security.kerberos.admin.top"/> で示されている最低要件を満たしていることをご確認ください。また、 <xref linkend="sec.security.kerberos.admin.realm"/> で説明している内容をもとに、 &krb; を設定する際のレルムについても適切な値をご用意ください。 KDC として動作させるマシンについては、 <xref linkend="sec.security.kerberos.admin.kdc"/> の説明に従って注意深く設定を行なってください。さらに、ネットワーク内で正しく時刻が設定されるよう、 <xref linkend="sec.security.kerberos.admin.time"/> の手順に従って設定を行なってください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Basic Configuration</term>
+    <term>基本的な設定</term>
     <listitem>
-     <para>
-      Configure the KDC and the clients, see
-      <xref linkend="sec.security.kerberos.admin.instkdc"/> and
-      <xref linkend="sec.security.kerberos.admin.client"/>. Enable remote
-      administration for your &krb; service, so you do not need physical
-      access to your KDC machine, see
-      <xref linkend="sec.security.kerberos.admin.remote"/>. Create service
-      principals for every service in your realm, see
-      <xref linkend="sec.security.kerberos.admin.hostprinc"/>.
-     </para>
+     <para><xref linkend="sec.security.kerberos.admin.instkdc"/> と <xref linkend="sec.security.kerberos.admin.client"/> の説明に従って、 KDC とクライアントを設定してください。 &krb; サービスに対する遠隔からの管理を有効化し、 KDC マシンへの物理的なアクセスを不要にしたい場合は、 <xref linkend="sec.security.kerberos.admin.remote"/> をお読みください。また、 <xref linkend="sec.security.kerberos.admin.hostprinc"/> をお読みになって、レルム内に各サービスに対応するプリンシパルを作成してください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Enabling &krb; Authentication</term>
+    <term>&krb; 認証の有効化</term>
     <listitem>
-     <para>
-      Various services in your network can use &krb;. To add
-      &krb; password-checking to applications using PAM, proceed as
-      outlined in <xref linkend="sec.security.kerberos.admin.pam"/>. To
-      configure SSH or LDAP with &krb; authentication, proceed as
-      outlined in <xref linkend="sec.security.kerberos.admin.sshd"/> and
-      <xref linkend="sec.security.kerberos.admin.ldap"/>.
-     </para>
+     <para>ネットワーク内にある様々なサービスが &krb; に対応しています。 &krb; のパスワードチェックを PAM 経由でアプリケーションに追加したい場合は、 <xref linkend="sec.security.kerberos.admin.pam"/> の手順に従って設定を行なってください。また、 SSH や LDAP と &krb; を設定したい場合は、 <xref linkend="sec.security.kerberos.admin.sshd"/> と <xref linkend="sec.security.kerberos.admin.ldap"/> の説明に従って設定を行なってください。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
   <sect2 xml:id="sec.security.kerberos.admin.top">
-   <title>&krb; Network Topology</title>
-   <para>
-    Any &krb; environment must meet the following requirements to be
-    fully functional:
-   </para>
+   <title>&krb; ネットワークトポロジ</title>
+   <para>&krb; の環境を正しく完全に動作させるには、下記の要件を満たさなければなりません:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      Provide a DNS server for name resolution across your network, so
-      clients and servers can locate each other. Refer to
-      <xref linkend="cha.dns"/> for information on DNS setup.
-     </para>
+     <para>ネットワーク内に DNS サーバを用意して、クライアントとサーバの両方が名前で解決できるようにする必要があります。 DNS の設定について、詳しくは <xref linkend="cha.dns"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      Provide a time server in your network. Using exact time stamps is
-      crucial to a &krb; setup, because valid &krb; tickets must
-      contain correct time stamps. Refer to <xref linkend="cha.ntp"/>
-      for information on NTP setup.
-     </para>
+     <para>ネットワーク内にタイムサーバを用意してください。 &krb; ではチケット内にタイムスタンプを書き込んで有効期限を管理するため、時刻を正しく設定しておくことが重要です。 NTP の設定について、詳しくは <xref linkend="cha.ntp"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      Provide a key distribution center (KDC) as the center piece of the
-      &krb; architecture. It holds the &krb; database. Use the
-      tightest possible security policy on this machine to prevent any
-      attacks on this machine compromising your entire infrastructure.
-     </para>
+     <para>鍵配送センター (KDC) は &krb; の構造の中心に位置するものです。ここには &krb; のデータベースが保存されます。このマシンに対しては最も厳しいセキュリティポリシーを適用してください。このマシンに対する攻撃が成功してしまうと、 &krb; の構造全体に被害を及ぼしてしまいます。</para>
     </listitem>
     <listitem>
-     <para>
-      Configure the client machines to use &krb; authentication.
-     </para>
+     <para>クライアント側のマシンを設定して、 &krb; の認証を使用するようにしてください。</para>
     </listitem>
    </itemizedlist>
-   <para>
-    The following figure depicts a simple example network with only the
-    minimum components needed to build a &krb; infrastructure. Depending
-    on the size and topology of your deployment, your setup may vary.
-   </para>
+   <para>下記の図に、 &krb; のインフラストラクチャを構築するのに必要な、最小限のコンポーネントのみを配置した構成例を示します。実際の構成はネットワークの規模やトポロジに応じて決定してください。</para>
    <figure xml:id="fig.netw.kerb">
-    <title>&krb; Network Topology</title>
+    <title>&krb; ネットワークトポロジ</title>
     <mediaobject>
      <imageobject role="html">
       <imagedata fileref="network_kerb.png" width="73%" format="PNG"/>
@@ -594,281 +285,111 @@
     </mediaobject>
    </figure>
    <tip>
-    <title>Configuring Subnet Routing</title>
-    <para>
-     For a setup similar to the one in <xref linkend="fig.netw.kerb"/>,
-     configure routing between the two subnets (&subnetImask; and
-     &subnetIImask;). Refer to
-     <xref linkend="sec.network.yast.change.route"/> for more information
-     on configuring routing with &yast;.
-    </para>
+    <title>サブネットルーティングの設定について</title>
+    <para><xref linkend="fig.netw.kerb"/> に示しているような構成を作成するには、 2 つのサブネット (&subnetImask; および &subnetIImask;) の間を結ぶルータで、ルーティング (経路制御) を設定する必要があります。 &yast; でルーティングを設定する場合は、 <xref linkend="sec.network.yast.change.route"/> をお読みください。</para>
    </tip>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.realm">
-   <title>Choosing the &krb; Realms</title>
-   <para>
-    The domain of a &krb; installation is called a realm and is
-    identified by a name, such as <literal>EXAMPLE.COM</literal> or simply
-    <literal>ACCOUNTING</literal>. &krb; is case-sensitive, so
-    <literal>example.com</literal> is actually a different realm than
-    <literal>EXAMPLE.COM</literal>. Use the case you prefer. It is common
-    practice, however, to use uppercase realm names.
-   </para>
-   <para>
-    It is also a good idea to use your DNS domain name (or a subdomain, such
-    as <literal>ACCOUNTING.EXAMPLE.COM</literal>). As shown below, your life
-    as an administrator can be much easier if you configure your &krb;
-    clients to locate the KDC and other &krb; services via DNS. To do so,
-    it is helpful if your realm name is a subdomain of your DNS domain name.
-   </para>
-   <para> Unlike the DNS name space, &krb; is not hierarchical. So if you have
-   a realm named <literal>EXAMPLE.COM</literal> with two
-   <quote>subrealms</quote> named <literal>DEVELOPMENT</literal> and
-   <literal>ACCOUNTING</literal>, these subordinate realms do not inherit
-   principals from <literal>EXAMPLE.COM</literal>. Instead, you would have
-   three separate realms, and you would need to configure cross-realm
-   authentication for each realm, so that users from one realm can interact with
-   servers or other users from another realm. </para>
-   <para>
-    For the sake of simplicity, let us assume you are setting up only one
-    realm for your entire organization. For the remainder of this section,
-    the realm name <literal>EXAMPLE.COM</literal> is used in all examples.
-   </para>
+   <title>&krb; レルムの選択</title>
+   <para>&krb; の世界では認証の管理単位をレルムと呼び、たとえば <literal>EXAMPLE.COM</literal> や単純に <literal>ACCOUNTING</literal> のように、名前を付けて区別します。 &krb; は大文字と小文字を区別して扱う仕組みであることから、 <literal>example.com</literal> と <literal>EXAMPLE.COM</literal> は別々のレルムとして扱われます。いずれかお好きなほうをお使いください。ただし、一般的には大文字のレルムを使用します。</para>
+   <para>また、レルムには DNS ドメイン名 (もしくは <literal>ACCOUNTING.EXAMPLE.COM</literal> のようなサブドメイン) を使用するのが一般的です。このような構成にすることで、 KDC やその他の &krb; サービスを DNS ドメイン名と一括で管理できるようになります。また、レルム名を DNS ドメイン名のサブドメインにしておくと、将来の追加時に便利になることでしょう。</para>
+   <para>ただし、 DNS のドメイン名とは異なり、 &krb; は階層構造にはなっていません。そのため、たとえば <literal>EXAMPLE.COM</literal> 以下に <quote>下位のレルム</quote> として <literal>DEVELOPMENT</literal> と <literal>ACCOUNTING</literal> を作成しても、 <literal>EXAMPLE.COM</literal> のプリンシパルを引き継いで使用することはできません。このような構成では、 3 つの独立したレルムとして構成をすることになります。ただし、レルム間には相互認証を設定することができますので、一方のレルムに属するユーザがアクセスできるサーバが存在した場合、他方のレルムに属するユーザを許可するような設定を行なうことができます。</para>
+   <para>なお、構成や説明をわかりやすくする目的から、下記の記述では組織内全体を表わすレルム <literal>EXAMPLE.COM</literal> を 1 つだけ使用するものとして説明を行ないます。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.kdc">
-   <title>Setting Up the KDC Hardware</title>
-   <para>
-    The first thing required to use &krb; is a machine that acts as the
-    key distribution center, or KDC for short. This machine holds the entire
-    &krb; user database with passwords and all information.
-   </para>
-   <para>
-    The KDC is the most important part of your security
-    infrastructure&mdash;if someone breaks into it, all user accounts and
-    all of your infrastructure protected by &krb; is compromised. An
-    attacker with access to the &krb; database can impersonate any
-    principal in the database. Tighten security for this machine as much as
-    possible:
-   </para>
+   <title>KDC ハードウエアの設定</title>
+   <para>&krb; を使用するにあたって最初にすべきことは、鍵配送センター (KDC) として動作させるマシンの準備になります。このマシンには &krb; のユーザデータベース (パスワードなどのユーザに関連する全ての情報) を保存します。</para>
+   <para>KDC はセキュリティインフラストラクチャで最も重要な構成部品です。そのセキュリティを突破されてしまうと、 &krb; が保持し保護している全てのアカウント情報が漏洩することになってしまいます。また、漏洩した情報をもとに &krb; 内の任意のユーザになりすますこともできてしまいます。そのため、このマシンに対するセキュリティは、最も強固な設定にしてください:</para>
    <procedure>
     <step>
-     <para>
-      Put the server machine into a physically secured location, such as a
-      locked server room to which only a very few people have access.
-     </para>
+     <para>サーバマシン自身を物理的に安全な場所に配置してください。ごく限られた人々のみが入室することのできる、施錠されたサーバルームなどが望ましいです。</para>
     </step>
     <step>
-     <para>
-      Do not run any network applications on it except the KDC. This
-      includes servers and clients&mdash;for example, the KDC should not
-      import any file systems via NFS or use DHCP to retrieve its network
-      configuration.
-     </para>
+     <para>KDC 以外のネットワークアプリケーションを動作させてはなりません。サーバ機能もクライアント機能も KDC とは決して共存させないでください。具体的には、 NFS によるファイルシステムの取り込みや公開、 DHCP によるネットワーク設定の取得などを行なってはなりません。</para>
     </step>
     <step>
-     <para>
-      Install a minimal system first then check the list of installed
-      packages and remove any unneeded packages. This includes servers, such
-      as <systemitem class="daemon">inetd</systemitem>,
-      <systemitem class="daemon">portmap</systemitem>, and CUPS, plus
-      anything X-based. Even installing an SSH server should be considered a
-      potential security risk.
-     </para>
+     <para>まずは最小限のシステムインストールを実施したあと、インストール済みのパッケージの一覧を確認して、不要なパッケージを削除してください。たとえば <systemitem class="daemon">inetd</systemitem> , <systemitem class="daemon">portmap</systemitem> , CUPS などは削除しておくべきですし、 X 関連のパッケージも削除しておいてください。また、 SSH サーバについても、潜在的なセキュリティリスクとなりますので、削除しておいてください。</para>
     </step>
     <step>
-     <para>
-      No graphical login is provided on this machine as an X server is a
-      potential security risk. &krb; provides its own administration
-      interface.
-     </para>
+     <para>X サーバは潜在的なセキュリティリスクとなるものであるため、このマシンではグラフィカルログインを動作させないでください。 &krb; では、専用の管理インターフェイスを提供しています。</para>
     </step>
     <step>
-     <para>
-      Configure <filename>/etc/nsswitch.conf</filename> to use only local
-      files for user and group lookup. Change the lines for
-      <literal>passwd</literal> and <literal>group</literal> to look like
-      this:
-     </para>
+     <para><filename>/etc/nsswitch.conf</filename> ファイルを編集して、ユーザとグループを検索する際にローカルファイルのみを使用するように設定してください。具体的には、 <literal>passwd</literal> と <literal>group</literal> の行を下記のように設定します:</para>
 <screen>passwd:         files
 group:          files</screen>
-     <para>
-      Edit the <filename>passwd</filename>, <filename>group</filename>, and
-      <filename>shadow</filename> files in <filename>/etc</filename> and
-      remove the lines that start with a <literal>+</literal> character
-      (these are for NIS lookups).
-     </para>
+     <para><filename>/etc</filename> ディレクトリ内にある <filename>passwd</filename> , <filename>group</filename> , <filename>shadow</filename> の各ファイルを編集して、 <literal>+</literal> 文字で始まる行 (これらは NIS で使用していた項目です) を削除してください。</para>
     </step>
     <step>
-     <para>
-      Disable all user accounts except &rootuser;'s account by editing
-      <filename>/etc/shadow</filename> and replacing the hashed passwords
-      with <literal>*</literal> or <literal>!</literal> characters.
-     </para>
+     <para><filename>/etc/shadow</filename> ファイルを編集して、 &rootuser; 以外のアカウントを全て無効化するほか、ハッシュ化されたパスワードが書かれている箇所についても <literal>*</literal> や <literal>!</literal> に置き換えてください。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.time">
-   <title>Configuring Time Synchronization</title>
-   <para>
-    To use &krb; successfully, make sure that all system clocks within
-    your organization are synchronized within a certain range. This is
-    important because &krb; protects against replayed credentials. An
-    attacker might be able to observe &krb; credentials on the network
-    and reuse them to attack the server. &krb; employs several defenses
-    to prevent this. One of them is that it puts time stamps into its
-    tickets. A server receiving a ticket with a time stamp that differs from
-    the current time rejects the ticket.
-   </para>
-   <para>
-    &krb; allows a certain leeway when comparing time
-    stamps. However, computer clocks can be very inaccurate in keeping
-    time&mdash;it is not unheard of for PC clocks to lose or gain half
-    an hour during a week. For this reason, configure all hosts on the
-    network to synchronize their clocks with a central time source.
-   </para>
-   <para>
-    A simple way to do so is by installing an NTP time server on one machine and
-    having all clients synchronize their clocks with this server. Do this by
-    running an NTP daemon &chronyd; as a client on all these machines. The KDC
-    itself needs to be synchronized to the common time source as well. Because
-    running an NTP daemon on this machine would be a security risk, it is
-    probably a good idea to do this by running <command>chronyd -q</command> via
-    a cron job. To configure your machine as an NTP client, proceed as outlined
-    in <xref linkend="sec.ntp.yast"/>.
-   </para>
-   <para>
-    A different way to secure the time service and still use the NTP daemon
-    is to attach a hardware reference clock to a dedicated NTP server and
-    an additional hardware reference clock to the KDC.
-   </para>
-   <para>
-    It is also possible to adjust the maximum deviation &krb; allows when
-    checking time stamps. This value (called <emphasis>clock
-    skew</emphasis>) can be set in the <filename>krb5.conf</filename> file
-    as described in
-    <xref linkend="sec.security.kerberos.admin.client.clockskew"/>.
-   </para>
+   <title>時刻同期の設定</title>
+   <para>&krb; を正しく動作させるには、組織内の全てのシステムの時刻の誤差が適切な範囲内に収まるよう、時刻を同期させる必要があります。これは他者が送信した認証情報を窃取したあと、再送信して権限を不正に得てしまうリプレイ攻撃を防ぐために重要となります。 &krb; では、このような攻撃を防ぐための様々な仕組みを取り入れていますが、その中の 1 つに、チケット内にタイムスタンプを書き込む、というものがあります。サーバ側では、不正な再送信を防ぐため、現在時刻とは異なるタイムスタンプの書かれたチケットを拒否するようになっています。</para>
+   <para>もちろんネットワーク上を流れるにあたって、ある程度の時間は必要となることから、タイムスタンプの比較に際しても一定の猶予時間が設けられています。しかしながら、コンピュータの時計は、誤差という観点では非常に不正確なものです。 PC の時計が 1 週間のうちに 30 分程度進んだり遅れたりするようなことも、よくある話です。このような理由から、ネットワーク内の全てのコンピュータは、特定の中央の時刻情報源に対して同期を行なう必要があります。</para>
+   <para>時刻同期を行なうのに最も簡単な方法は、特定の 1 台のマシンに NTP タイムサーバをインストールして、残りのクライアントはその NTP タイムサーバに対して同期するように設定する方法です。同期する側のコンピュータについては、 NTP デーモンである &chronyd; をインストールして動作させることで、同期を行なうことができます。なお、 KDC 自身も中央の時刻情報源と同期する必要があります。ただし、 KDC 自身で NTP デーモンを実行するのはリスクとなりうるため、 cron ジョブで <command>chronyd -q</command> を実行するよう設定するのが適切でしょう。 NTP クライアントの設定方法について、詳しくは <xref linkend="sec.ntp.yast"/> をお読みください。</para>
+   <para>時刻同期を行なうためのもう 1 つの方法としては、専用の NTP サーバを用意するか、もしくは KDC に直接電波時計や GPS 時計などのハードウエア時計を接続して時刻を管理する方法もあります。</para>
+   <para>なお、 &krb; がタイムスタンプを比較する際の最大許容範囲を設定することもできます。 <xref linkend="sec.security.kerberos.admin.client.clockskew"/> の手順に従って、 <filename>krb5.conf</filename> ファイル内の <emphasis>clock skew</emphasis> の値を変更してください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.instkdc">
-   <title>Configuring the KDC</title>
-   <para>
-    This section covers the initial configuration and installation of the
-    KDC, including the creation of an administrative principal. This
-    procedure consists of several steps:
-   </para>
+   <title>KDC の設定</title>
+   <para>本章では、 KDC の初期設定とインストール、そして管理者のプリンシパルを作成するまでの手順を説明しています。具体的には、下記のような流れで作業を行ないます:</para>
    <procedure>
     <step>
      <formalpara>
-      <title>Install the RPMs</title>
-      <para>
-       On a machine designated as the KDC, install the following software
-       packages: <systemitem class="resource">krb5</systemitem>,
-       <systemitem class="resource">krb5-server</systemitem> and
-       <systemitem class="resource">krb5-client</systemitem> packages.
-      </para>
+      <title>RPM のインストール</title>
+      <para>まずは KDC として動作させるマシンに、 <systemitem class="resource">krb5</systemitem> , <systemitem class="resource">krb5-server</systemitem> , <systemitem class="resource">krb5-client</systemitem> のソフトウエアパッケージをインストールします。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Adjust the Configuration Files</title>
-      <para>
-       The <filename>/etc/krb5.conf</filename> and
-       <filename>/var/lib/kerberos/krb5kdc/kdc.conf</filename> configuration
-       files must be adjusted for your scenario. These files contain all
-       information on the KDC.
-      </para>
+      <title>設定ファイルの調整</title>
+      <para>必要に応じて、 <filename>/etc/krb5.conf</filename> および <filename>/var/lib/kerberos/krb5kdc/kdc.conf</filename> の設定ファイルを編集します。これらのファイルには、 KDC 内の全ての情報が含まれています。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Create the &krb; Database</title>
-      <para>
-       &krb; keeps a database of all principal identifiers and the secret
-       keys of all principals that need to be authenticated. Refer to
-       <xref linkend="sec.security.kerberos.admin.kdc.database"/> for
-       details.
-      </para>
+      <title>&krb; データベースの作成</title>
+      <para>&krb; は全てのプリンシパルに対する情報と、認証時に使用する機密鍵を保持しています。詳しくは <xref linkend="sec.security.kerberos.admin.kdc.database"/> をお読みください。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Adjust the ACL Files: Add Administrators</title>
-      <para>
-       The &krb; database on the KDC can be managed remotely. To prevent
-       unauthorized principals from tampering with the database, &krb;
-       uses access control lists. You must explicitly enable remote access
-       for the administrator principal to enable them to manage the database.
-       The &krb; ACL file is located under
-       <filename>/var/lib/kerberos/krb5kdc/kadm5.acl</filename>. Refer to
-       <xref linkend="sec.security.kerberos.admin.remote"/> for details.
-      </para>
+      <title>ACL ファイルの調整: 管理者の追加</title>
+      <para>KDC 内の &krb; データベースは、ネットワーク上離れた場所から管理することもできます。データベースに対して不正なアクセスがされないよう、 &krb; ではアクセス制御リストを使用します。離れた場所から管理する場合は、データベースを管理することのできる管理者プリンシパルを明示的に指定しなければなりません。 &krb; の ACL ファイルは、 <filename>/var/lib/kerberos/krb5kdc/kadm5.acl</filename> にあります。詳しくは <xref linkend="sec.security.kerberos.admin.remote"/> をお読みください。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Adjust the &krb; Database: Add Administrators</title>
-      <para>
-       You need at least one administrative principal to run and administer
-       &krb;. This principal must be added before starting the KDC. Refer
-       to <xref linkend="sec.security.kerberos.admin.kdc.princ"/> for
-       details.
-      </para>
+      <title>&krb; データベースの調整: 管理者の追加</title>
+      <para>&krb; を動作させて管理できるようにするには、 1 人以上の管理者プリンシパルを設定する必要があります。このプリンシパルは KDC を起動する前に追加しておかなければなりません。詳しくは <xref linkend="sec.security.kerberos.admin.kdc.princ"/> をお読みください。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Start the &krb; Daemon</title>
-      <para>
-       After the KDC software is installed and properly configured, start
-       the &krb; daemon to provide &krb; service for your realm. Refer
-       to <xref linkend="sec.security.kerberos.admin.kdc.start"/> for
-       details.
-      </para>
+      <title>&krb; デーモンの起動</title>
+      <para>KDC ソフトウエアをインストールして設定が完了したら、 &krb; デーモンを起動してレルムに対するサービス提供を開始します。詳しくは <xref linkend="sec.security.kerberos.admin.kdc.start"/> をお読みください。</para>
      </formalpara>
     </step>
     <step>
      <formalpara>
-      <title>Create a Principal for Yourself</title>
-      <para>
-       You need a principal for yourself. Refer to
-       <xref linkend="sec.security.kerberos.admin.kdc.princ"/> for details.
-      </para>
+      <title>プリンシパルの作成</title>
+      <para>あなた自身を表わすプリンシパルを作成します。詳しくは <xref linkend="sec.security.kerberos.admin.kdc.princ"/> をお読みください。</para>
      </formalpara>
     </step>
    </procedure>
    <sect3 xml:id="sec.security.kerberos.admin.kdc.database">
-    <title>Setting Up the Database</title>
-    <para>
-     Your next step is to initialize the database where &krb; keeps all
-     information about principals. Set up the database master key, which is
-     used to protect the database from accidental disclosure (in particular
-     if it is backed up to tape). The master key is derived from a pass
-     phrase and is stored in a file called the stash file. This is so you do
-     not need to enter the password every time the KDC is restarted. Make
-     sure that you choose a good pass phrase, such as a sentence from a book
-     opened to a random page.
-    </para>
-    <para>
-     When you make tape backups of the &krb; database
-     (<filename>/var/lib/kerberos/krb5kdc/principal</filename>), do not back
-     up the stash file (which is in
-     <filename>/var/lib/kerberos/krb5kdc/.k5.EXAMPLE.COM</filename>).
-     Otherwise, everyone able to read the tape could also decrypt the
-     database. Therefore, keep a copy of the pass phrase in a safe or some
-     other secure location, because you will need it to restore your
-     database from backup tape after a crash.
-    </para>
-    <para>
-     To create the stash file and the database, run:
-    </para>
+    <title>データベースの設定</title>
+    <para>まずは &krb; がプリンシパルに対する全ての情報を保存するための、データベースを準備します。また、特にテープメディアにバックアップを採取した場合など、不用意に漏洩してしまうような事態を避けるため、データベースのマスターキーを設定しておくこともお勧めします。マスターキーはパスフレーズから生成するもので、 stash と呼ばれるファイル内に補完されます。この仕組みにより、 KDC の起動時に毎回パスフレーズを入力しなくても済むようになっています。なお、書籍内の適当なページを開いて目に付いた文章など、適切なパスフレーズを設定するようにしてください。</para>
+    <para>また、 &krb; データベース ( <filename>/var/lib/kerberos/krb5kdc/principal</filename> ) をバックアップする際には、 stash ファイル (たとえば <filename>/var/lib/kerberos/krb5kdc/.k5.EXAMPLE.COM</filename> など) は除外するように設定してください。 stash ファイルまでバックアップしてしまうと、そこから容易にデータベースを解読できてしまうからです。そのため、クラッシュ時に備えてパスフレーズを保管する際には、安全で機密を保持できる別の場所に配置するようにしてください。</para>
+    <para>stash ファイルとデータベースを作成するには、下記のように実行します:</para>
 <screen>&prompt.sudo;kdb5_util create -r EXAMPLE.COM -s</screen>
-    <para>
-     You will see the following output:
-    </para>
+    <para>実行すると、下記のように表示されるはずです:</para>
 <screen>Initializing database '/var/lib/kerberos/krb5kdc/principal' for realm 'EXAMPLE.COM',
 master key name 'K/M@EXAMPLE.COM'
 You will be prompted for the database Master Password.
@@ -878,139 +399,65 @@ Re-enter KDC database master key to verify:  <co xml:id="co.kerb.kdb5.pass.repea
 </screen>
     <calloutlist>
      <callout arearefs="co.kerb.kdb5.pass">
-      <para>
-       Type the master password.
-      </para>
+      <para>マスターキー (パスフレーズ) を入力します。</para>
      </callout>
      <callout arearefs="co.kerb.kdb5.pass.repeat">
-      <para>
-       Type the password again.
-      </para>
+      <para>パスフレーズを再度入力します。</para>
      </callout>
     </calloutlist>
-    <para>
-     To verify, use the list command:
-    </para>
+    <para>構築されたデータベースを確認するには、下記のコマンドを実行します:</para>
 <screen>&prompt.user;kadmin.local
 
 <prompt>kadmin&gt; </prompt>listprincs</screen>
-    <para>
-     You will see several principals in the database, which are for internal
-     use by &krb;:
-    </para>
+    <para>データベース内には既にいくつかのプリンシパルが存在していますが、これらは &krb; 内部用のものです:</para>
 <screen>K/M@EXAMPLE.COM
 kadmin/admin@EXAMPLE.COM
 kadmin/changepw@EXAMPLE.COM
 krbtgt/EXAMPLE.COM@EXAMPLE.COM</screen>
    </sect3>
    <sect3 xml:id="sec.security.kerberos.admin.kdc.princ">
-    <title>Creating a Principal</title>
-    <para>
-     Create two &krb; principals for yourself: one normal principal for
-     everyday work and one for administrative tasks relating to &krb;.
-     Assuming your login name is &exampleuserIII;, proceed as follows:
-    </para>
+    <title>プリンシパルの作成</title>
+    <para>次に &krb; のプリンシパルを 2 つ作成します。 1 つは通常時に利用するための個人用プリンシパル、もう 1 つは &krb; の管理作業用に使用するプリンシパルです。たとえばログイン名が &exampleuserIII; であれば、下記のように実行します:</para>
 <screen>&prompt.user;kadmin.local
 
 <prompt>kadmin&gt; </prompt>ank &exampleuserIII_plain;
 </screen>
-    <para>
-     You will see the following output:
-    </para>
+    <para>実行すると、下記のように表示されるはずです:</para>
 <screen>&exampleuserIII_plain;@EXAMPLE.COM's Password: <co xml:id="co.kerb.geeko.pass"/>
 Verifying password: <co xml:id="co.kerb.geeko.pass.repeat"/>
 </screen>
     <calloutlist>
      <callout arearefs="co.kerb.geeko.pass">
-      <para>
-       Type &exampleuserIII;'s password.
-      </para>
+      <para>&exampleuserIII; のパスワードを入力します。</para>
      </callout>
      <callout arearefs="co.kerb.geeko.pass">
-      <para>
-       Type &exampleuserIII;'s password again.
-      </para>
+      <para>&exampleuserIII; のパスワードを再度入力します。</para>
      </callout>
     </calloutlist>
-    <para>
-     Next, create another principal named
-     <literal>&exampleuserIII_plain;/admin</literal> by typing
-     <command>ank</command> <option>&exampleuserIII_plain;/admin</option> at
-     the <command>kadmin</command> prompt. The <literal>admin</literal>
-     suffixed to your user name is a <emphasis>role</emphasis>. Later, use
-     this role when administering the &krb; database. A user can have
-     several roles for different purposes. Roles act like completely
-     different accounts that have similar names.
-    </para>
+    <para>次に、 <command>kadmin</command> のプロンプトで続けて <command>ank</command> <option>&exampleuserIII_plain;/admin</option> と入力し、 <literal>&exampleuserIII_plain;/admin</literal> というもう 1 つのプリンシパルを作成します。 <literal>admin</literal> という接尾辞を付けて、管理者の <emphasis>役割</emphasis> で使用するものであることを指定します。ここで指定した <emphasis>役割</emphasis> は、後ほどの手順で &krb; データベースの管理者を指定する際に使用します。なお、ユーザに対してはそれぞれ別々の目的で設定した複数の役割を指定することができます。役割を指定したアカウントは、通常のものとは別のアカウントであるものとして扱われます。</para>
    </sect3>
    <sect3 xml:id="sec.security.kerberos.admin.kdc.start">
-    <title>Starting the KDC</title>
-    <para>
-     Start the KDC daemon and the kadmin daemon. To start the daemons
-     manually, enter:
-    </para>
+    <title>KDC の起動</title>
+    <para>KDC デーモンと kadmin デーモンを起動します。デーモンを手作業で起動したい場合は、下記のように入力して実行してください:</para>
 <screen>&prompt.sudo;systemctl start krb5kdc
 sudo systemctl start kadmind</screen>
-    <para>
-     Also make sure that the services KDC (<systemitem>krb5kdc</systemitem>) and
-     kadmind (<systemitem>kadmind</systemitem>) are started by
-     default when the server machine is rebooted. Enable them by entering:
-    </para>
+    <para>なお、マシンの起動時に ( <systemitem>krb5kdc</systemitem> ) と kadmind ( <systemitem>kadmind</systemitem> ) を自動的に開始するようにも設定してください。下記のように実行します:</para>
 <screen>&prompt.sudo;systemctl enable krb5kdc kadmind</screen>
-    <para>
-     or by using the &yast; <guimenu>&ycc_runlevel;</guimenu>.
-    </para>
+    <para>上記の方法以外にも、 &yast; の <guimenu>&ycc_runlevel;</guimenu> を使用してもかまいません。</para>
    </sect3>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.client">
-   <title>Configuring &krb; Clients</title>
-   <para>
-    When the supporting infrastructure is in place (DNS, NTP) and the KDC
-    has been properly configured and started, configure the client machines.
-    To configure a &krb; client, use one of the two manual approaches
-    described below.
-   </para>
+   <title>&krb; クライアントの設定</title>
+   <para>対応するインフラストラクチャ (DNS, NTP) を用意し、 KDC を正しく設定して開始することができたら、あとはクライアント側のマシンの設定になります。 &krb; のクライアントを設定するには、下記で説明している 2 つの手作業のうち、いずれかを実施してください。</para>
    <!-- <sect3 xml:id="sec.security.kerberos.admin.client.man"> -->
    <!--  <title>Manually Configuring &krb; Clients</title> -->
-    <para>
-     When configuring &krb;, there are two approaches you can
-     take&mdash;static configuration in the
-     <filename>/etc/krb5.conf</filename> file or dynamic configuration with
-     DNS. With DNS configuration, &krb; applications try to locate the
-     KDC services using DNS records. With static configuration, add the host
-     names of your KDC server to <filename>krb5.conf</filename> (and update
-     the file whenever you move the KDC or reconfigure your realm in other
-     ways).
-    </para>
-    <para>
-     DNS-based configuration is generally a lot more flexible and the amount
-     of configuration work per machine is a lot less. However, it requires
-     that your realm name is either the same as your DNS domain or a
-     subdomain of it. Configuring &krb; via DNS also creates a
-     security issue: An attacker can seriously disrupt your
-     infrastructure through your DNS (by shooting down the name server,
-     spoofing DNS records, etc.). However, this amounts to a denial of
-     service at worst. A similar scenario applies to the static
-     configuration case unless you enter IP addresses in
-     <filename>krb5.conf</filename> instead of host names.
-    </para>
+    <para>&krb; を設定するにあたっては、 2 種類のアプローチをとることができます。 1 つは <filename>/etc/krb5.conf</filename> ファイルを利用したクライアントごとの手動の設定方法、もう 1 つは DNS を利用した動的な設定方法です。 DNS を利用する場合、 &krb; のアプリケーションは DNS レコードを利用して KDC サービスがどこにあるのかを判断します。クライアントごとの設定を行なう場合は、 <filename>krb5.conf</filename> 内に KDC サーバのホスト名を設定します (この場合、 KDC を別のホストに移動させるには、設定ファイルの更新を行なうか、その他の方法で再設定を行なう必要があります) 。</para>
+    <para>DNS ベースの設定のほうがより柔軟な構成を取ることができるほか、クライアントごとの設定作業も大幅に削減することができます。ですが、レルム名と DNS ドメイン名が一致しているか、もしくはレルム名が DNS ドメインのサブドメインでなければならなくなります。それ以外にも、ネームサーバを攻撃してダウンさせてしまったり、 DNS レコードを偽装させたりするなどの方法で、 &krb; のインフラストラクチャを混乱させることができてしまいます。とはいえ、最大限に攻撃が成功したとしても、サービスの提供を妨害するまでのことしかできませんし、クライアントごとの設定でも、 <filename>krb5.conf</filename> 内に IP アドレスではなくホスト名を記述してしまうと、 DNS への攻撃による妨害は発生しうることになります。</para>
     <sect3 xml:id="sec.security.kerberos.admin.client.stat">
-     <title>Static Configuration</title>
-     <para>
-      One way to configure &krb; is to edit
-      <filename>/etc/krb5.conf</filename>. The file installed by default
-      contains various sample entries. Erase all of these entries before
-      starting. <filename>krb5.conf</filename> is made up of several
-      sections (stanzas), each introduced by the section name in brackets
-      like <literal>[this]</literal>.
-     </para>
-     <para>
-      To configure your &krb; clients, add the following stanza to
-      <filename>krb5.conf</filename> (where
-      <systemitem class="fqdomainname">kdc.example.com</systemitem> is the
-      host name of the KDC):
-     </para>
+     <title>手動での設定</title>
+     <para>&krb; の設定方法のうちの 1 つとして、 <filename>/etc/krb5.conf</filename> ファイルを編集する方法があります。このファイルは既定でインストールされるファイルで、いくつかの設定例が書かれています。設定を行なう際には、これら全てを削除してから実施してください。また、 <filename>krb5.conf</filename> ファイルは複数のセクション (節) から構成されていますが、セクションは <literal>[this]</literal> のように、大括弧で括られて表わされます。</para>
+     <para>&krb; クライアントを設定するには、下記のセクションを <filename>krb5.conf</filename> ファイルに追加します (なお、 <systemitem class="fqdomainname">kdc.example.com</systemitem> の箇所には、お使いの KDC のホスト名を入れてください):</para>
 <screen>[libdefaults]
         default_realm = EXAMPLE.COM
 
@@ -1019,67 +466,24 @@ sudo systemctl start kadmind</screen>
                 kdc = kdc.example.com
                 admin_server = kdc.example.com
         }</screen>
-     <para>
-      The <literal>default_realm</literal> line sets the default realm for
-      &krb; applications. If you have several realms, add additional
-      statements to the <literal>[realms]</literal> section.
-     </para>
-     <para>
-      Also add a statement to this file that tells applications how to map
-      host names to a realm. For example, when connecting to a remote host,
-      the &krb; library needs to know in which realm this host is
-      located. This must be configured in the
-      <literal>[domain_realms]</literal> section:
-     </para>
+     <para>上記の例の <literal>default_realm</literal> 行は、 &krb; での既定のレルムを指定しています。複数のレルムを使用する場合は、 <literal>[realms]</literal> セクション内でそれぞれのレルムを設定してください。</para>
+     <para>また、このファイルでは、ホスト名とレルムをどのようにして対応づけるのかを設定することもできます。たとえばリモートのホストに接続する際、 &krb; ライブラリ側ではそのホストがどのレルムに属しているのかを知る必要が発生するためです。この設定は <literal>[domain_realms]</literal> セクション内で設定しなければなりません:</para>
 <screen>[domain_realm]
 .example.com = EXAMPLE.COM
 www.example.org = EXAMPLE.COM</screen>
-     <para>
-      This tells the library that all hosts in the
-      <filename>example.com</filename> DNS domains are in the
-      <filename>EXAMPLE.COM</filename> &krb; realm. In addition, one
-      external host named <filename>www.example.org</filename> should also
-      be considered a member of the <filename>EXAMPLE.COM</filename> realm.
-     </para>
+     <para>上記のように設定することで、 <filename>example.com</filename> の DNS ドメイン名のホストは <filename>EXAMPLE.COM</filename> の &krb; レルムに属していることになります。これに加えて、 <filename>www.example.org</filename> というドメイン名のホストについても、 <filename>EXAMPLE.COM</filename> レルムのメンバーであることを宣言しています。</para>
     </sect3>
     <sect3 xml:id="sec.security.kerberos.admin.client.dns">
-     <title>DNS-Based Configuration</title>
-     <para>
-      DNS-based &krb; configuration makes heavy use of SRV records. See
-      <emphasis>(RFC2052) A DNS RR for specifying the location of
-      services</emphasis> at <link xlink:href="http://www.ietf.org"/>.
-     </para>
-     <para>
-      The name of an SRV record, as far as &krb; is concerned, is always
-      in the format <literal>_service._proto.realm</literal>, where realm is
-      the &krb; realm. Domain names in DNS are case-insensitive, so
-      case-sensitive &krb; realms would break when using this
-      configuration method. <literal>_service</literal> is a service name
-      (different names are used when trying to contact the KDC or the
-      password service, for example). <literal>_proto</literal> can be
-      either <literal>_udp</literal> or <literal>_tcp</literal>, but not all
-      services support both protocols.
-     </para>
-     <para>
-      The data portion of SRV resource records consists of a priority value,
-      a weight, a port number, and a host name. The priority defines the
-      order in which hosts should be tried (lower values indicate a higher
-      priority). The weight value is there to support some sort of load
-      balancing among servers of equal priority. You probably do not need
-      any of this, so it is okay to set these to zero.
-     </para>
-     <para>
-      MIT &krb; currently looks up the following names when looking for
-      services:
-     </para>
+     <title>DNS ベースの設定</title>
+     <para>DNS ベースの &krb; 設定では、 DNS の SRV レコードを多用します。詳しくは <link xlink:href="http://www.ietf.org"/> にある <emphasis>(RFC2052) A DNS RR for specifying the location of services (サービスの場所を指定するための DNS 資源レコード)</emphasis> (英語) をお読みください。</para>
+     <para>&krb; に関連する SRV レコードは、 <literal><replaceable>_サービス</replaceable>.<replaceable>_プロトコル</replaceable>.<replaceable>レルム</replaceable></literal> の書式になっていなければなりません (<replaceable>レルム</replaceable> は &krb; のレルムです) 。また、 DNS 内のドメイン名は大文字と小文字を区別しない仕組みであるため、区別する &krb; ではこの方式がうまく動作しない場合があります。なお <replaceable>_サービス</replaceable> はサービス名 (KDC やパスワードサービスなどで別々の名前を使用します) 、 <replaceable>_プロトコル</replaceable> は <literal>_udp</literal> もしくは <literal>_tcp</literal> のいずれかになります (ただし、全てのサービスが両方のプロトコルに対応しているとは限りません) 。</para>
+     <para>SRV リソースのデータ部分には、優先順位と重み、ポート番号とホスト名をそれぞれ設定します。優先順位は接続を試すべき順序 (低い値ほど優先度が高いことを表わします) を、重みは同じ優先順位内での負荷分散用の値を、それぞれ表わします。特に必要がなければ、いずれの値とも 0 に設定してかまいません。</para>
+     <para>MIT &krb; では、サービスを参照する際に下記の名前を使用します:</para>
      <variablelist>
       <varlistentry>
        <term>_kerberos</term>
        <listitem>
-        <para>
-         This defines the location of the KDC daemon (the authentication and
-         ticket granting server). Typical records look like this:
-        </para>
+        <para>KDC デーモン (認証サーバおよびチケット発行許諾サーバ) の場所を定義します。たとえば下記のように設定します:</para>
 <screen>_kerberos._udp.EXAMPLE.COM.  IN  SRV    0 0 88 kdc.example.com.
 _kerberos._tcp.EXAMPLE.COM.  IN  SRV    0 0 88 kdc.example.com.</screen>
        </listitem>
@@ -1087,42 +491,20 @@ _kerberos._tcp.EXAMPLE.COM.  IN  SRV    0 0 88 kdc.example.com.</screen>
       <varlistentry>
        <term>_kerberos-adm</term>
        <listitem>
-        <para>
-         This describes the location of the remote administration service.
-         Typical records look like this:
-        </para>
+        <para>リモート管理サービスの場所を定義します。たとえば下記のように設定します:</para>
 <screen>
 _kerberos-adm._tcp.EXAMPLE.COM. IN  SRV    0 0 749 kdc.example.com.</screen>
-        <para>
-         Because kadmind does not support UDP, there should be no
-         <literal>_udp</literal> record.
-        </para>
+        <para>なお、 kadmind は UDP に対応していないため、 <literal>_udp</literal> のレコードは存在すべきではありません。</para>
        </listitem>
       </varlistentry>
      </variablelist>
-     <para>
-      As with the static configuration file, there is a mechanism to inform
-      clients that a specific host is in the <literal>EXAMPLE.COM</literal>
-      realm, even if it is not part of the <literal>example.com</literal>
-      DNS domain. This can be done by attaching a TXT record to
-      <literal>_kerberos.host_name</literal>, as shown here:
-     </para>
+     <para>手動での設定と同様に、 <literal>example.com</literal> ドメイン以下に存在していないホストに対しても、 <literal>EXAMPLE.COM</literal> レルムの配下として設定する仕組みが用意されています。このような設定を行ないたい場合は、 TXT レコードで <literal>_kerberos.<replaceable>ホスト名</replaceable></literal> のようなレコードを作成してください。たとえば下記のようになります:</para>
 <screen>_kerberos.www.example.org.  IN TXT "EXAMPLE.COM"</screen>
     </sect3>
     <sect3 xml:id="sec.security.kerberos.admin.client.clockskew">
-     <title>Adjusting the Clock Skew</title>
-     <para>
-      The <emphasis>clock skew</emphasis> is the tolerance for accepting
-      tickets with time stamps that do not exactly match the host's system
-      clock. Usually, the clock skew is set to 300 seconds (five minutes).
-      This means a ticket can have a time stamp somewhere between five
-      minutes behind and five minutes ahead of the server's clock.
-     </para>
-     <para>
-      When using NTP to synchronize all hosts, you can reduce this value to
-      about one minute. The clock skew value can be set in
-      <filename>/etc/krb5.conf</filename> like this:
-     </para>
+     <title>時計の許容誤差の設定</title>
+     <para><emphasis>クロックスキュー</emphasis> とは、ホスト側のシステム時計と厳密に一致していないタイムスタンプを持つチケットに対して、どの範囲までを許容するのかを指定する項目です。通常、クロックスキューは 300 秒 (5 分) 程度に設定しておきます。この設定の場合、サーバの時計と比較して最大 5 分までの遅れ、および進みまでを許す意味になります。</para>
+     <para>NTP を利用して全てのホストの時刻同期を行なう環境であれば、この値を 1 分程度にまで縮めることができます。この場合、 <filename>/etc/krb5.conf</filename> 内でのクロックスキューの設定は下記のようになります:</para>
 <screen>[libdefaults]
         clockskew = 60</screen>
     </sect3>
@@ -1130,43 +512,20 @@ _kerberos-adm._tcp.EXAMPLE.COM. IN  SRV    0 0 749 kdc.example.com.</screen>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.remote">
-   <title>Configuring Remote &krb; Administration</title>
-   <para>
-    To be able to add and remove principals from the &krb; database
-    without accessing the KDC's console directly, tell the &krb;
-    administration server which principals are allowed to do what by editing
-    <filename>/var/lib/kerberos/krb5kdc/kadm5.acl</filename>. The ACL
-    (access control list) file allows you to specify privileges with a
-    precise degree of control. For details, refer to the manual page with
-    <command>man</command> <option>8 kadmind</option>.
-   </para>
-   <para>
-    For now, grant yourself the privilege to administer the database by
-    putting the following line into the file:
-   </para>
+   <title>リモートからの &krb; 管理の設定</title>
+   <para>KDC のコンソールに直接アクセスすることなく、リモートから &krb; のデータベースにプリンシパルを追加または削除できるようにするには、 &krb; の管理サーバに対して、どのプリンシパルからの編集を許可するのかを <filename>/var/lib/kerberos/krb5kdc/kadm5.acl</filename> ファイルで設定します。このファイルは ACL (アクセス制御リスト) ファイルと呼ばれ、様々な操作に対して細かく権限を設定することができます。詳しくは <command>man</command> <option>8 kadmind</option> で表示されるマニュアルページをお読みください。</para>
+   <para>ここでは、あなた自身に対してデータベースの管理者権限を割り当てます。具体的には、下記の内容をファイルに追加してください:</para>
 <screen>&exampleuserIII_plain;/admin              *</screen>
-   <para>
-    Replace the user name &exampleuserIII; with your own. Restart
-    <systemitem>kadmind</systemitem> for the change to take effect.
-   </para>
-   <para>
-    You should now be able to perform &krb; administration tasks remotely
-    using the kadmin tool. First, obtain a ticket for your admin role and
-    use that ticket when connecting to the kadmin server:
-   </para>
+   <para>なお、 &exampleuserIII; の箇所をあなた自身のユーザ名に置き換えてください。設定内容を反映させるには、 <systemitem>kadmind</systemitem> を再起動する必要があります。</para>
+   <para>これで kadmin ツールを利用して &krb; の管理作業を行なうことができるようになります。まずは管理者ロールに対するチケットを取得して、 kadmin サーバの接続時にそのチケットを使用します:</para>
 <screen>&prompt.user;kadmin -p &exampleuserIII_plain;/admin
 Authenticating as principal &exampleuserIII_plain;/admin@EXAMPLE.COM with password.
 Password for &exampleuserIII_plain;/admin@EXAMPLE.COM:
 kadmin:  getprivs
 current privileges: GET ADD MODIFY DELETE
 kadmin:</screen>
-   <para>
-    Using the <command>getprivs</command> command, verify which privileges
-    you have. The list shown above is the full set of privileges.
-   </para>
-   <para>
-    As an example, modify the principal &exampleuserIII;:
-   </para>
+   <para><command>getprivs</command> コマンドを使用すると、取得済みの権限を確認することができます。なお、上記に示されているもので全ての権限となります。</para>
+   <para>例として、 &exampleuserIII; のプリンシパルを編集します:</para>
 <screen>&prompt.user;kadmin -p &exampleuserIII_plain;/admin
 Authenticating as principal &exampleuserIII_plain;/admin@EXAMPLE.COM with password.
 Password for &exampleuserIII_plain;/admin@EXAMPLE.COM:
@@ -1207,147 +566,81 @@ Key: vno 1, DES cbc mode with CRC-32, no salt
 Attributes:
 Policy: [none]
 kadmin:</screen>
-   <para>
-    This changes the maximum ticket life time to eight hours. For more
-    information about the <command>kadmin</command> command and the options
-    available, see the <systemitem>krb5-doc</systemitem> package or refer to
-    the <command>man</command> <option>8 kadmin</option> manual page.
-   </para>
+   <para>上記の変更では、チケットの最大有効期限を 8 時間に変更しています。 <command>kadmin</command> コマンドに関する詳細や、利用可能なオプションの一覧については、 <systemitem>krb5-doc</systemitem> パッケージ、もしくは <command>man</command> <option>8 kadmin</option> で表示されるマニュアルページをお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.hostprinc">
-   <title>Creating &krb; Service Principals</title>
-   <para>
-    So far, only user credentials have been discussed. However,
-    &krb;-compatible services usually need to authenticate themselves to
-    the client user, too. Therefore, special service principals must be
-    in the &krb; database for each service offered in the realm.
-    For example, if &ldapname; offers an LDAP service, you need a service
-    principal, <literal>ldap/&ldapname;@EXAMPLE.COM</literal>, to
-    authenticate this service to all clients.
-   </para>
-   <para>
-    The naming convention for service principals is
-    <literal><replaceable>SERVICE</replaceable>/<replaceable>HOSTNAME</replaceable>@<replaceable>REALM</replaceable></literal>,
-    where <replaceable>HOSTNAME</replaceable> is the host's fully qualified
-    host name.
-   </para>
-   <para>
-    Valid service descriptors are:
-   </para>
+   <title>&krb; サービスプリンシパルの作成</title>
+   <para>ここまではユーザ認証の部分のみを説明してきましたが、 &krb; に対応するサービスでは、サービス側もクライアントに対して認証を行なう必要があります。そのため、レルム内で提供されるサービスに対しては、サービスそのものを表わす特殊なサービスプリンシパルを &krb; データベース内に作成しなければなりません。たとえば &ldapname; が LDAP サービスを提供するような場合、 <literal>ldap/&ldapname;@EXAMPLE.COM</literal> という名前のサービスプリンシパルを作成する必要があります。</para>
+   <para>サービスプリンシパルは <literal><replaceable>サービス名</replaceable>/<replaceable>ホスト名</replaceable>@<replaceable>レルム</replaceable></literal> の形式で表わします。ここで、 <replaceable>ホスト名</replaceable> にはホストの完全修飾名を指定します。</para>
+   <para>利用可能なサービス名は下記のとおりです:</para>
    <informaltable>
     <tgroup cols="2">
      <thead>
       <row>
        <entry>
-        <para>
-         Service Descriptor
-        </para>
+        <para>サービス記述子</para>
        </entry>
        <entry>
-        <para>
-         Service
-        </para>
+        <para>サービス</para>
        </entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry>
-        <para>
-         <literal>host</literal>
-        </para>
+        <para><literal>host</literal></para>
        </entry>
        <entry>
-        <para>
-         Telnet, RSH, SSH
-        </para>
+        <para>Telnet, RSH, SSH</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <literal>nfs</literal>
-        </para>
+        <para><literal>nfs</literal></para>
        </entry>
        <entry>
-        <para>
-         NFSv4 (with &krb; support)
-        </para>
+        <para>NFSv4 (&krb; に対応しているもの)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <literal>HTTP</literal>
-        </para>
+        <para><literal>HTTP</literal></para>
        </entry>
        <entry>
-        <para>
-         HTTP (with &krb; authentication)
-        </para>
+        <para>HTTP (&krb; 認証の機能があるもの)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <literal>imap</literal>
-        </para>
+        <para><literal>imap</literal></para>
        </entry>
        <entry>
-        <para>
-         IMAP
-        </para>
+        <para>IMAP</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <literal>pop</literal>
-        </para>
+        <para><literal>pop</literal></para>
        </entry>
        <entry>
-        <para>
-         POP3
-        </para>
+        <para>POP3</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <literal>ldap</literal>
-        </para>
+        <para><literal>ldap</literal></para>
        </entry>
        <entry>
-        <para>
-         LDAP
-        </para>
+        <para>LDAP</para>
        </entry>
       </row>
      </tbody>
     </tgroup>
    </informaltable>
-   <para>
-    Service principals are similar to user principals, but have significant
-    differences. The main difference between a user principal and a service
-    principal is that the key of the former is protected by a
-    password. When a user obtains a ticket-granting ticket from the
-    KDC, they needs to type their password, so &krb; can decrypt the ticket.
-    It would be inconvenient for system administrators to obtain new tickets
-    for the SSH daemon every eight hours or so.
-   </para>
-   <para>
-    Instead, the key required to decrypt the initial ticket for the service
-    principal is extracted by the administrator from the KDC only once and
-    stored in a local file called the <emphasis>keytab</emphasis>. Services
-    such as the SSH daemon read this key and use it to obtain new tickets
-    automatically, when needed. The default keytab file resides in
-    <filename>/etc/krb5.keytab</filename>.
-   </para>
-   <para>
-    To create a host service principal for <literal>&wsIname;</literal>
-    enter the following commands during your kadmin session:
-   </para>
+   <para>サービスプリンシパルはユーザプリンシパルと似ていますが、明らかな違いが存在しています。それは、サービスプリンシパルが鍵で保護されているのに対して、ユーザプリンシパルはパスワードで保護されているという点です。ユーザが KDC からチケット発行許諾チケットを取得した場合、 &krb; 側でチケットを解読する際にパスワード入力が必要となります。この仕組みをそのままサービスプリンシパルにも適用してしまうと、たとえばシステム管理者が SSH デーモン向けのチケットを取得する目的で、 8 時間おきにパスワードを入力しなければならなくなってしまうため、現実的ではなくなってしまいます。</para>
+   <para>その代わり、サービスプリンシパルの場合は初期チケットの解読に鍵を使用するようになっています。鍵は管理者が KDC から一度だけ取り出したあと、 <emphasis>keytab</emphasis> と呼ばれるファイルに保存しておくものです。これにより SSH デーモンは鍵を読み込んで、必要なタイミングで新しいチケットを自動的に取得するようになります。既定の keytab ファイルは <filename>/etc/krb5.keytab</filename> にあります。</para>
+   <para>たとえば <literal>&wsIname;</literal> に対するホストサービスプリンシパルを作成したい場合は、 kadmin セッション内で下記のようにコマンドを入力します:</para>
 <screen>&prompt.user;kadmin -p &exampleuserIII_plain;/admin
 Authenticating as principal &exampleuserIII_plain;/admin@EXAMPLE.COM with password.
 Password for &exampleuserIII_plain;/admin@EXAMPLE.COM:
@@ -1355,214 +648,79 @@ kadmin:  addprinc -randkey host/&wsIname;
 WARNING: no policy specified for host/&wsIname;@EXAMPLE.COM;
 defaulting to no policy
 Principal "host/&wsIname;@EXAMPLE.COM" created.</screen>
-   <para>
-    Instead of setting a password for the new principal, the
-    <option>-randkey</option> flag tells <command>kadmin</command> to
-    generate a random key. This is used here because no user interaction is
-    wanted for this principal. It is a server account for the machine.
-   </para>
-   <para>
-    Finally, extract the key and store it in the local keytab file
-    <filename>/etc/krb5.keytab</filename>. This file is owned by the
-    superuser, so you must be <systemitem class="username">root</systemitem>
-    to execute the next command in the kadmin shell:
-   </para>
+   <para>新しいプリンシパルに対してパスワードを設定する代わりに、 <option>-randkey</option> フラグを指定して、 <command>kadmin</command> でランダムな鍵を生成するように指定します。これは、このプリンシパルに対してユーザ操作を不要にするために必要なフラグとなります。これがマシンに対するサーバアカウントとなります。</para>
+   <para>最後に、鍵を抽出してローカルの keytab ファイル <filename>/etc/krb5.keytab</filename> に保管します。このファイルはスーパーユーザが所有するファイルであるため、下記の kadmin シェルを実行する際には、 <systemitem class="username">root</systemitem> でなければなりません:</para>
 <screen>kadmin:  ktadd host/&wsIname;
 Entry for principal host/&wsIname; with kvno 3, encryption type Triple
 DES cbc mode with HMAC/sha1 added to keytab WRFILE:/etc/krb5.keytab.
 Entry for principal host/&wsIname; with kvno 3, encryption type DES
 cbc mode with CRC-32 added to keytab WRFILE:/etc/krb5.keytab.
 kadmin:</screen>
-   <para>
-    When completed, make sure that you destroy the admin ticket obtained
-    with kinit above with <command>kdestroy</command>.
-   </para>
+   <para>全ての作業が完了したら、 kinit で取得した管理チケットを破棄するため、 <command>kdestroy</command> を実行します。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.pam">
-   <title>Enabling PAM Support for &krb;</title>
+   <title>&krb; に対する PAM サポートの有効化</title>
    <warning>
-    <title>Incomplete Configuration Locks Users Out</title>
-    <para>
-     An incomplete &krb; configuration may completely lock you out of
-     your system, including the root user. To prevent this, add the
-     <option>ignore_unknown_principals</option> directive to the
-     <option>pam_krb5</option> module <emphasis>after</emphasis> you
-     have added the <option>pam_krb5</option> module to the existing
-     PAM configuration files as described below.
-    </para>
+    <title>不完全な設定を行なってしまうと、ユーザが締め出されてしまう問題について</title>
+    <para>&krb; を不完全に設定してしまうと、 root ユーザを含め全てのユーザが締め出されてしまうことがあります。このような問題が起こらないようにするには、既存の PAM 設定内に <option>pam_krb5</option> を追加した <emphasis>あと</emphasis> 、 <option>pam_krb5</option> モジュールに <option>ignore_unknown_principals</option> ディレクティブを追加してください。具体的には、下記を実行します:</para>
     <screen>&prompt.sudo;<command>pam-config --add --krb5-ignore_unknown_principals</command></screen>
-    <para>
-     This will direct the <option>pam_krb5</option> module to ignore
-     some errors that would otherwise cause the account phase to fail.
-    </para>
+    <para>これにより、 <option>pam_krb5</option> モジュールがアカウントフェーズの失敗を引き起こすいくつかのエラーを無視するようになります。</para>
    </warning>
-   <para>
-    &productnamereg; comes with a PAM module named
-    <option>pam_krb5</option>, which supports &krb; login and
-    password update. This module can be used by applications such as console
-    login, <command>su</command>, and graphical login applications like GDM.
-    That is, it can be used in all cases where the user enters a password
-    and expects the authenticating application to obtain an initial &krb;
-    ticket on their behalf. To configure PAM support for &krb;, use the
-    following command:
-   </para>
+   <para>&productnamereg; には <option>pam_krb5</option> と呼ばれる PAM モジュールが用意されています。このモジュールは &krb; のログインとパスワード更新に対応しており、コンソールのログインや <command>su</command> 、もしくは GDM のようなグラフィカルログイン時に使用することができます。つまり、ユーザ側でパスワードを入力することで、ユーザに成り代わって初期の &krb; チケットを取得するような、全ての用途に使用することができるモジュールです。 PAM で &krb; に対応するように設定するには、下記のコマンドを実行します:</para>
 <screen>&prompt.sudo;<command>pam-config --add --krb5</command></screen>
-   <para>
-    The above command adds the <option>pam_krb5</option> module to the
-    existing PAM configuration files and makes sure it is called in the
-    right order. To make precise adjustments to the way in which
-    <option>pam_krb5</option> is used, edit the file
-    <filename>/etc/krb5.conf</filename> and add default applications to
-    PAM. For details, refer to the manual page with
-    <command>man 5 pam_krb5</command>.
-   </para>
-   <para>
-    The <option>pam_krb5</option> module was specifically not designed
-    for network services that accept &krb; tickets as part of user
-    authentication. This is an entirely different matter, and is
-    discussed below.
-   </para>
+   <para>上記のコマンドを実行すると、既存の PAM 設定ファイル内に <option>pam_krb5</option> を追加し、適切な順序で呼び出されるように設定を調整します。 <option>pam_krb5</option> に対してより詳しい設定を行ないたい場合は、 <filename>/etc/krb5.conf</filename> ファイルを編集したあと、 PAM に既定のアプリケーションを追加してください。詳しくは <command>man 5 pam_krb5</command> で表示されるマニュアルページをお読みください。</para>
+   <para><option>pam_krb5</option> モジュールは、 &krb; のチケットをユーザ認証処理の一部として受け付けるような、ネットワークサービス向けには設計されていません。このような用途については、後続の章をお読みください。</para>
 
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.sshd">
-   <title>Configuring SSH for &krb; Authentication</title>
-   <para>
-    OpenSSH supports &krb; authentication in both protocol
-    version&nbsp;1 and 2. In version&nbsp;1, there are special
-    protocol messages to transmit &krb; tickets. Version&nbsp;2 does
-    not use &krb; directly anymore, but relies on GSSAPI, the General
-    Security Services API. This is a programming interface that is not
-    specific to &krb;&mdash;it was designed to hide the peculiarities
-    of the underlying authentication system, be it &krb;, a public-key
-    authentication system like SPKM, or others. However, the included GSSAPI
-    library only supports &krb;.
-   </para>
-   <para>
-    To use sshd with &krb; authentication, edit
-    <filename>/etc/ssh/sshd_config</filename> and set the following options:
-   </para>
-<screen># These are for protocol version 1
+   <title>&krb; 認証用の SSH の設定</title>
+   <para>OpenSSH ではプロトコルバージョン 1 および 2 の両方で &krb; 認証に対応しています。バージョン 1 では &krb; のチケットを送信するための特殊なプロトコルメッセージが用意されています。バージョン 2 では &krb; を直接使用するようなことは行なっておらず、その代わりに GSSAPI (General Security Services API; 汎用セキュリティサービス API) を使用するようになっています。これは &krb; 限定のプログラミングインターフェイスではなく、 SPKM のような公開鍵認証システムなどでも使用することのできる、下位の認証システムの特異性を隠蔽するように設計されたインターフェイスです。ただし、現時点では GSSAPI ライブラリは &krb; のみに対応しています。</para>
+   <para>sshd で &krb; 認証を使用するには、 <filename>/etc/ssh/sshd_config</filename> ファイルを編集して下記のオプションを追加します:</para>
+<screen># 下記はプロトコルバージョン 1 用
 #
 # KerberosAuthentication yes
 # KerberosTicketCleanup yes
 
-# These are for version 2 - better to use this
+# 下記はプロトコルバージョン 2 用 (こちらをお使いください)
 GSSAPIAuthentication yes
 GSSAPICleanupCredentials yes</screen>
-   <para>
-    Then restart your SSH daemon using <command>sudo systemctl restart
-    sshd</command>.
-   </para>
-   <para>
-    To use &krb; authentication with protocol version 2, enable it on the
-    client side as well. Do this either in the system wide configuration file
-    <filename>/etc/ssh/ssh_config</filename> or on a per-user level by
-    editing <filename>~/.ssh/config</filename>. In both cases, add the
-    option <literal>GSSAPIAuthentication yes</literal>.
-   </para>
-   <para>
-    You should now be able to connect using &krb; authentication. Use
-    <command>klist</command> to verify that you have a valid ticket, then
-    connect to the SSH server. To force SSH protocol version 1, specify the
-    <literal>-1</literal> option on the command line.
-   </para>
+   <para>あとは <command>sudo systemctl restart sshd</command> を実行して、 SSH デーモンを再起動してください。</para>
+   <para>プロトコルバージョン 2 で &krb; 認証を使用するには、クライアント側でも同様に有効化を行なう必要があります。クライアント側ではシステム全体の設定ファイル <filename>/etc/ssh/ssh_config</filename> で設定することができるほか、 ユーザ単位でも <filename>~/.ssh/config</filename> ファイルを編集することで設定を行なうことができます。いずれのファイルの場合も、 <literal>GSSAPIAuthentication yes</literal> のオプションを追加することになります。</para>
+   <para>これで &krb; 認証を使用して接続できるようになります。 <command>klist</command> を実行すると、有効なチケットの一覧を確認することができます。あとは SSH サーバに接続するだけです。 SSH プロトコルバージョン 1 を強制的に使用したい場合は、コマンドラインで <literal>-1</literal> オプションを指定してください。</para>
    <tip>
-    <title>Additional Information</title>
-    <para>
-     The file
-     <filename>/usr/share/doc/packages/openssh/README.kerberos</filename>
-     discusses the interaction of OpenSSH and &krb; in more detail.
-    </para>
+    <title>さらなる情報について</title>
+    <para><filename>/usr/share/doc/packages/openssh/README.kerberos</filename> ファイルには、 OpenSSH と &krb; の関係について、より詳しい説明が書かれています。</para>
    </tip>
    <tip>
 <!-- fate#313067 -->
-    <title>Additional Directives for Protocol Version 2</title>
-    <para>
-     The <literal>GSSAPIKeyExchange</literal> mechanism (RFC 4462) is
-     supported. This directive specifies how host keys are exchanged. For
-     more information, see the sshd_config manual page (<command>man
-     sshd_config</command>).
-    </para>
+    <title>プロトコルバージョン 2 向けの追加ディレクティブについて</title>
+    <para><literal>GSSAPIKeyExchange</literal> の仕組み (RFC 4462) に対応しています。このディレクティブは、どのようにしてホスト鍵を交換するのかを指定します。詳しくは sshd_config のマニュアルページ ( <command>man sshd_config</command> ) をお読みください。</para>
    </tip>
   </sect2>
 
   <sect2 xml:id="sec.security.kerberos.admin.ldap">
-   <title>Using LDAP and &krb;</title>
-   <para>
-    When using &krb;, one way to distribute the user information (such as
-    user ID, groups, and home directory) in your local network is to use
-    LDAP. This requires a strong authentication mechanism that prevents
-    packet spoofing and other attacks. One solution is to use &krb; for
-    LDAP communication, too.
-   </para>
-   <para>
-    OpenLDAP implements most authentication flavors through SASL, the simple
-    authentication session layer. SASL is a network protocol designed for
-    authentication. The SASL implementation is cyrus-sasl, which supports
-    several authentication flavors. &krb; authentication is
-    performed through GSSAPI (General Security Services API). By default,
-    the SASL plug-in for GSSAPI is not installed. Install the
-    <systemitem>cyrus-sasl-gssapi</systemitem> with &yast;.
-   </para>
-   <para>
-    To enable &krb; to bind to the OpenLDAP server, create a principal
-    <literal>ldap/&ldapname;</literal> and add that to the keytab.
-   </para>
-   <para>
-    By default, the LDAP server slapd runs as user and group
-    <systemitem class="username">ldap</systemitem>, while the keytab file is
-    readable by <systemitem class="username">root</systemitem> only.
-    Therefore, either change the LDAP configuration so the server runs as
-    <systemitem class="username">root</systemitem> or make the keytab file
-    readable by the group <systemitem class="username">ldap</systemitem>.
-    The latter is done automatically by the OpenLDAP start script
-    (<filename>/usr/lib/openldap/start</filename>) if the keytab file has
-    been specified in the <envar>OPENLDAP_KRB5_KEYTAB</envar> variable in
-    <filename>/etc/sysconfig/openldap</filename> and the
-    <envar>OPENLDAP_CHOWN_DIRS</envar> variable is set to
-    <literal>yes</literal>, which is the default setting. If
-    <envar>OPENLDAP_KRB5_KEYTAB</envar> is left empty, the default keytab
-    under <filename>/etc/krb5.keytab</filename> is used and you must adjust
-    the privileges yourself as described below.
-   </para>
-   <para>
-    To run slapd as &rootuser;, edit
-    <filename>/etc/sysconfig/openldap</filename>. Disable the
-    <systemitem>OPENLDAP_USER</systemitem> and
-    <systemitem>OPENLDAP_GROUP</systemitem> variables by putting a comment
-    character in front of them.
-   </para>
-   <para>
-    To make the keytab file readable by group LDAP, execute
-   </para>
+   <title>LDAP と &krb; の使用</title>
+   <para>&krb; を使用する際、ユーザ情報 (ユーザ ID, グループ, ホームディレクトリ) をローカルのネットワーク内に配信する方法の 1 つとして、 LDAP という仕組みがあります。なお、パケットを盗聴することによる情報漏洩や、その他の攻撃を防ぐため、強力な暗号化を施す必要があります。この LDAP 通信の強力な暗号化に際しても、 &krb; を利用することができます。</para>
+   <para>OpenLDAP ではほとんどの認証方式を SASL 経由で実装しています。 SASL はシンプルな認証セッションレイヤであるほか、認証用に設計されたネットワークプロトコルでもあります。 SASL の実装は cyrus-sasl と呼ばれ、いくつかの認証方式に対応する仕組みになっています。 &krb; の認証は GSSAPI (General Security Services API; 汎用セキュリティサービス API) を介して実行されるようになっています。既定では GSSAPI 向けの SASL プラグインはインストールされませんので、 &yast; から <systemitem>cyrus-sasl-gssapi</systemitem> をインストールしてください。</para>
+   <para>OpenLDAP サーバに対してバインドするよう &krb; を設定するには、 <literal>ldap/&ldapname;</literal> というプリンシパルを作成して、これを keytab に追加してください。</para>
+   <para>既定では、 LDAP サーバである slapd は <systemitem class="username">ldap</systemitem> というユーザおよびグループで動作するように設定されています。ところが、 keytab ファイルは <systemitem class="username">root</systemitem> のみに対して読み込み権限が与えられています。そのような事情から、 LDAP 側の設定を変更してサーバを <systemitem class="username">root</systemitem> で動作させるようにするか、もしくは keytab ファイルを <systemitem class="username">ldap</systemitem> グループから読み込むことができるように設定する必要があります。後者の設定については、 <filename>/etc/sysconfig/openldap</filename> 内の <envar>OPENLDAP_KRB5_KEYTAB</envar> ファイルで keytab ファイルを指定していて、かつ <envar>OPENLDAP_CHOWN_DIRS</envar> が <literal>yes</literal> に設定されている (既定値) 場合に、 OpenLDAP の起動スクリプト ( <filename>/usr/lib/openldap/start</filename> ) 内で自動的に設定が行なわれます。なお、 <envar>OPENLDAP_KRB5_KEYTAB</envar> に何も指定していない場合は、既定の keytab ファイルである <filename>/etc/krb5.keytab</filename> が使用されますので、必要であれば下記の通りの手順で、調整を行なわなければならなくなります。</para>
+   <para>slapd を &rootuser; で動作させたい場合は、 <filename>/etc/sysconfig/openldap</filename> ファイルを編集します。それぞれ <systemitem>OPENLDAP_USER</systemitem> と <systemitem>OPENLDAP_GROUP</systemitem> の項目を探して、それぞれの行頭にコメント文字を入力して、コメントアウトしてください。</para>
+   <para>keytab ファイルを LDAP グループから読み込めるようにするには、下記を実行します:</para>
 <screen>&prompt.sudo;chgrp ldap /etc/krb5.keytab
 &prompt.sudo;chmod 640 /etc/krb5.keytab</screen>
-   <para>
-    A third (and maybe the best) solution is to tell OpenLDAP to use a
-    special keytab file. To do this, start kadmin, and enter the following
-    command after you have added the principal ldap/&ldapname;:
-   </para>
+   <para>もう 1 つの (おそらくこの中で最適な) 解決方法として、 OpenLDAP に別の keytab ファイルを読み込ませる方法があります。これを行なうには、 kadmin を起動して ldap/&ldapname; のプリンシパルを追加したあと、下記を実行します:</para>
 <screen>&prompt.sudo;ktadd -k /etc/openldap/ldap.keytab ldap/&ldapname;@EXAMPLE.COM</screen>
-   <para>
-    Then in the shell run:
-   </para>
+   <para>あとはシェル側で下記を実行します:</para>
 <screen>&prompt.sudo;chown ldap:ldap /etc/openldap/ldap.keytab
 &prompt.sudo;chmod 600 /etc/openldap/ldap.keytab</screen>
-   <para>
-    To tell OpenLDAP to use a different keytab file, change the following
-    variable in <filename>/etc/sysconfig/openldap</filename>:
-   </para>
+   <para>OpenLDAP に対して別の keytab ファイルを使用するようにするには、 <filename>/etc/sysconfig/openldap</filename> 内の下記の変数を変更します:</para>
 <screen>OPENLDAP_KRB5_KEYTAB="/etc/openldap/ldap.keytab"</screen>
-   <para> Finally, restart the LDAP server using <command>sudo systemctl
-     restart slapd</command>. </para>
+   <para>あとは <command>sudo systemctl restart slapd</command> を実行して、 LDAP サーバを再起動してください。</para>
    <sect3 xml:id="sec.security.kerberos.admin.ldap.auth">
-    <title>Using &krb; Authentication with LDAP</title>
-    <para>
-     You are now able to automatically use tools such as ldapsearch with
-     &krb; authentication.
-    </para>
+    <title>LDAP を利用した &krb; 認証の使用</title>
+    <para>これで ldapsearch などのツールを使用することで、 &krb; の認証を使用できるようになります。</para>
 <screen>&prompt.user;ldapsearch -b ou=people,dc=example,dc=com '(uid=&exampleuserIII_plain;)'
 
 SASL/GSSAPI authentication started
@@ -1575,27 +733,11 @@ dn: uid=&exampleuserIII_plain;,ou=people,dc=example,dc=com
 uid: &exampleuserIII_plain;
 cn: &exampleuserIIIfull;
 [...]</screen>
-    <para>
-     As you can see, <command>ldapsearch</command> prints a message that it
-     started GSSAPI authentication. The next message is very cryptic, but it
-     shows that the <emphasis>security strength factor</emphasis> (SSF for
-     short) is 56 (The value 56 is somewhat arbitrary. Most likely it was
-     chosen because this is the number of bits in a DES encryption key).
-     This means that GSSAPI authentication was successful and that
-     encryption is being used to protect integrity and provide
-     confidentiality for the LDAP connection.
-    </para>
-    <para>
-     In &krb;, authentication is always mutual. This means that not only
-     have you authenticated yourself to the LDAP server, but also the LDAP
-     server has authenticated itself to you. In particular, this means
-     communication is with the desired LDAP server, rather than some bogus
-     service set up by an attacker.
-     <!-- ke: I think "set up" is fine here. -->
-    </para>
+    <para>上記のとおり、 <command>ldapsearch</command> コマンドを実行すると、 GSSAPI による認証を表わすメッセージが表示されます。次の行は非常にわかりにくいのですが、 <emphasis>Security Strength Factor (セキュリティ強度係数; SSF)</emphasis> が 56 であることを表わしています (56 という値はいくぶん恣意的な値で、 DES 暗号鍵のビット長を表わすよくある値です) 。これにより、 GSSAPI の認証が成功し、 LDAP の通信に対して暗号化によるデータの保護と守秘が行なわれていることを表わしています。</para>
+    <para>&krb; では認証は常に相互的に動作します。つまり、 LDAP サーバに対して認証を行なっているだけでなく、 LDAP サーバ自身もあなたに対して認証を行なっていることになります。これは、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。 <!-- ke: I think "set up" is fine here. --></para>
    </sect3>
    <sect3 xml:id="sec.security.kerberos.admin.ldap.acl">
-    <title>&krb; Authentication and LDAP Access Control</title>
+    <title>&krb; 認証と LDAP アクセス制御</title>
 <!-- see bnc#764297:
      the ACL change isn't even required to make &krb; logins work for
      OpenLDAP.
@@ -1645,71 +787,26 @@ olcAccess: to * by users read</screen>
 
 <screen>olcDatabase={-1}frontend,cn=config</screen>
 -->
-    <para>
-     There is one minor piece of the puzzle missing&mdash;how the LDAP
-     server can find out that the &krb; user
-     <literal>&exampleuser_plain;@EXAMPLE.COM</literal> corresponds to the LDAP
-     distinguished name
-     <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal>.
-     This sort of mapping must be configured manually using the
-     <literal>saslExpr</literal> directive. In this example, the
-     "authz-regexp" change in LDIF would look as follows:
-    </para>
+    <para>&krb; と LDAP を組み合わせて使用するにあたっては、もう 1 つ足りないものがあります。それは LDAP サーバ内で &krb; のユーザを見つける方法です。たとえば <literal>&exampleuser_plain;@EXAMPLE.COM</literal> という &krb; のユーザを LDAP の DN <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal> に結びつけたい場合、 <literal>saslExpr</literal> ディレクティブを使用して手作業でマッピングを設定しなければなりません。上記の例のとおり設定すると仮定すると、 LDIF ファイルで "authz-regexp" を修正する場合、下記のようなファイルになります:</para>
 <screen>dn: cn=config
 add: olcAuthzRegexp
 olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</screen>
-    <para>
-     All these changes can be applied via <command>ldapmodify</command> on
-     the command line.
-    </para>
-    <para>
-     When SASL authenticates a user, OpenLDAP forms a distinguished name
-     from the name given to it by SASL (such as &exampleuser;) and the
-     name of the SASL flavor (<literal>GSSAPI</literal>). The result
-     would be
-     <literal>uid=&exampleuser_plain;,cn=GSSAPI,cn=auth</literal>.
-    </para>
-    <para>
-     If a <literal>authz-regexp</literal> has been configured, it checks the
-     DN formed from the SASL information using the first argument as a
-     regular expression. If this regular expression matches, the name is
-     replaced with the second argument of the
-     <literal>authz-regexp</literal> statement. The placeholder
-     <literal>$1</literal> is replaced with the substring matched by the
-     <literal>(.*)</literal> expression.
-    </para>
-    <para>
-     More complicated match expressions are possible. If you have a more
-     complicated directory structure or a schema in which the user name is
-     not part of the DN, you can even use search expressions to map the SASL
-     DN to the user DN.
-    </para>
-    <para>
-     For more information, see the <literal>slapd-config</literal> man page.
-    </para>
+    <para>いずれの変更であっても、コマンドラインから <command>ldapmodify</command> を実行することで、設定を反映させることができます。</para>
+    <para>SASL がユーザ認証を行なう際、まず OpenLDAP は SASL 側で指定された名前 (たとえば &exampleuser;) と SASL の方式 ( <literal>GSSAPI</literal> ) から DN を生成します。たとえば <literal>uid=&exampleuser_plain;,cn=GSSAPI,cn=auth</literal> のようになります。</para>
+    <para><literal>authz-regexp</literal> を設定すると、最初に指定されたパラメータを正規表現として使用し、 SASL の情報から生成された DN と比較が行なわれます。比較が成功すると、 <literal>authz-regexp</literal> の 2 つ目のパラメータを利用して DN を生成します。なお、 <literal>$1</literal> は 1 つ目のパラメータの比較結果の一部を取り出して適用します。この場合、 <literal>(.*)</literal> の部分を取り出して使用します。</para>
+    <para>より複雑な正規表現を使用することもできます。より複雑なディレクトリ構造やスキーマをお使いの場合や、ユーザ名が DN の一部になっていなかったりする場合でも、正規表現で SASL DN からユーザ DN に変換することができます。</para>
+    <para>詳しくは <literal>slapd-config</literal> のマニュアルページをお読みください。</para>
    </sect3>
   </sect2>
  </sect1>
 
  <sect1 xml:id="sec.security.kerberos.yast.client">
-  <title>Setting up &krb; using <guimenu>LDAP and &krb; Client</guimenu></title>
-  <para>
-   &yast; includes the module <guimenu>LDAP and &krb; Client</guimenu>
-   that helps define authentication scenarios involving either LDAP or &krb;.
-  </para>
-  <para>
-   It can also be used to join &krb; and LDAP separately. However, in
-   many such cases, using this module may not be the first choice, such as
-   for joining &ad; (which uses a combination of LDAP and &krb;). For
-   more information, see <xref linkend="sec.security.auth.yast.client"/>.
-  </para>
-  <para>
-   Start the module by selecting
-   <menuchoice> <guimenu>Network Services</guimenu> <guimenu>LDAP and
-   &krb; Client</guimenu> </menuchoice>.
-  </para>
+  <title><guimenu>LDAP および &krb; クライアント</guimenu> を利用した &krb; の設定</title>
+  <para>&yast; には <guimenu>LDAP および &krb; クライアント</guimenu> と呼ばれるモジュールが含まれ、 LDAP や &krb; を含む認証シナリオでの設定を支援しています。</para>
+  <para>&krb; と LDAP は個別に参加させるように設定することができますが、たとえば &ad; (LDAP と &krb; を組み合わせて使用します) への参加など多くの場合、下記で説明する以外のモジュールを使用したほうが適切である場合があります。詳しくは <xref linkend="sec.security.auth.yast.client"/> をお読みください。</para>
+  <para>モジュールを起動するには、 <menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>LDAP および &krb; クライアント</guimenu> </menuchoice> を選択します。</para>
   <figure xml:id="fig.yast2.ldapkerberos.kerberos">
-   <title><guimenu>LDAP and &krb; Client</guimenu> Window</title>
+   <title><guimenu>LDAP および &krb; クライアント</guimenu> のウインドウ</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="yast2_auth_client_config.png" width="65%" format="PNG"/>
@@ -1720,18 +817,11 @@ olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</s
    </mediaobject>
   </figure>
 
-  <para>
-   To configure a &krb; client, follow the procedure below:
-  </para>
+  <para>&krb; クライアントを設定するには、下記の手順を実施します:</para>
   <procedure xml:id="pro.security.auth.kerberos">
    <step>
-    <para>
-     In the window <guimenu>LDAP and &krb; Client</guimenu>, click
-     <guimenu>Change Settings</guimenu>.
-    </para>
-    <para>
-     Choose the tab <guimenu>Authentication via Kerberos</guimenu>.
-    </para>
+    <para><guimenu>LDAP および &krb; クライアント</guimenu> のウインドウ内で、 <guimenu>設定の変更</guimenu> ボタンを押します。</para>
+    <para><guimenu>Kerberos 経由での認証</guimenu> のタブを選択します。</para>
     <informalfigure>
      <mediaobject>
       <imageobject role="html">
@@ -1740,352 +830,106 @@ olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</s
       <imageobject role="fo">
        <imagedata fileref="yast2_auth_client_krb5.png" width="65%" format="PNG"/>
       </imageobject>
-      <textobject>
-       <phrase>Tab <guimenu>Authentication via Kerberos</guimenu></phrase>
-      </textobject>
+      <textobject><phrase><guimenu>Kerberos 経由での認証</guimenu> タブ</phrase></textobject>
      </mediaobject>
     </informalfigure>
    </step>
    <step xml:id="st.kerberos.realm.add">
-    <para>
-     Click <guimenu>Add Realm</guimenu>.
-    </para>
+    <para><guimenu>領域の追加</guimenu> を押します。</para>
    </step>
    <step xml:id="st.kerberos.realm.configure">
-    <para>
-     In the appearing dialog, specify the correct
-     <guimenu>Realm name</guimenu>. Usually, the realm name is an uppercase
-     version of the domain name. Additionally, you can specify the following:
-    </para>
+    <para>表示されたダイアログ内で、 <guimenu>領域名</guimenu> を正しく指定します。通常は、ドメイン名を全て大文字に変換したものが領域名となります。それ以外にも、必要に応じて下記を指定します:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       To apply mappings from the realm name to the domain name, activate
-       <guimenu>Map Domain Name to the Realm</guimenu> and/or
-       <guimenu>Map Wildcard Domain Name to the Realm</guimenu>.
-      </para>
+      <para>レルム名からドメイン名へのマッピングを適用したい場合は、 <guimenu>ドメイン名から領域名へのマッピング</guimenu> および <guimenu>ワイルドカードドメイン名から領域名へのマッピング</guimenu> のいずれか、もしくはその両方を選択します。</para>
      </listitem>
      <listitem>
-      <para>
-       You can specify the <guimenu>Host Name of Administration
-       Server</guimenu>, the <guimenu>Host Name of Master Key Distribution
-       Server</guimenu> and additional <guimenu>Key Distribution Centers</guimenu>.
-      </para>
-      <para>
-       All of these items are optional if they can be automatically
-       discovered via the <literal>SRV</literal> and
-       <literal>TXT</literal> records in DNS.
-      </para>
+      <para>また、必要であれば <guimenu>管理サーバのホスト名</guimenu> や <guimenu>マスターキー配布センターのホスト名</guimenu> 、そして <guimenu>鍵配布センター</guimenu> をそれぞれ指定します。</para>
+      <para>これらの項目は、 DNS の <literal>SRV</literal> や <literal>TXT</literal> レコードで配信される場合、必須ではありません。</para>
      </listitem>
      <listitem>
-      <para>
-       To manually map Principals to local user names, use
-       <guimenu>Custom Mappings of Principal Names to User Names</guimenu>.
-      </para>
-      <para>
-       You can also use <literal>auth_to_local</literal> rules to supply such
-       mappings using <guimenu>Custom Rules for Mapping Principal Names to
-       User Names</guimenu>. For more information about using such rules, see
-       the official documentation at
-       <link xlink:href="https://web.mit.edu/kerberos/krb5-current/doc/admin/conf_files/krb5_conf.html#realms"/>
-       and an article at <link xlink:href="https://community.hortonworks.com/articles/14463/auth-to-local-rules-syntax.html"/>.
-      </para>
+      <para>プリンシパルからローカルユーザ名へのマッピングを手動で指定したい場合は、 <guimenu>プリンシパル名からユーザ名への独自マッピング</guimenu> を指定します。</para>
+      <para>また、 <guimenu>プリンシパル名からユーザ名へのマッピングに対する独自ルール</guimenu> を使用することで、 <literal>auth_to_local</literal> ルールを使用することもできます。ルールに関する詳細は、 <link xlink:href="https://web.mit.edu/kerberos/krb5-current/doc/admin/conf_files/krb5_conf.html#realms"/> (英語) で公開されている公式のドキュメンテーション、もしくは <link xlink:href="https://community.hortonworks.com/articles/14463/auth-to-local-rules-syntax.html"/> に書かれている記事をお読みください。</para>
      </listitem>
     </itemizedlist>
-    <para>
-     Continue with <guimenu>OK</guimenu>.
-    </para>
+    <para><guimenu>OK</guimenu> を押して続行します。</para>
    </step>
    <step>
-    <para>
-     To add more realms, repeat from <xref linkend="st.kerberos.realm.add"/>.
-    </para>
+    <para>さらにレルムを追加したい場合は、 <xref linkend="st.kerberos.realm.add"/> からの手順を繰り返し実行します。</para>
    </step>
    <step>
-    <para>
-     Enable &krb; users logging in and creation of home directories by
-     activating
-     <guimenu>Allow Kerberos Users to Authenticate</guimenu> and
-     <guimenu>Automatically Create Home Directory</guimenu>.
-    </para>
+    <para>&krb; のユーザに対して認証を許可するには <guimenu>Kerberos のユーザに対して認証を許可する</guimenu> を、認証を許可したユーザがログインした際にホームディレクトリを自動的に作成するには <guimenu>自動的にホームディレクトリを作成する</guimenu> をそれぞれ選択します。</para>
    </step>
    <step>
-    <para>
-     If you left empty the optional text boxes in
-     <xref linkend="st.kerberos.realm.configure"/>, make sure to enable
-     automatic discovery of realms and key distribution centers by activating
-     <guimenu>Use DNS TXT Record to Discover Realms</guimenu> and
-     <guimenu>Use DNS SRV Record to Discover KDC Servers</guimenu>.
-    </para>
+    <para><xref linkend="st.kerberos.realm.configure"/> で任意指定のテキストボックス内に何も指定していない場合は、 <guimenu>領域を検出するために DNS の TXT レコードを使用する</guimenu> と <guimenu>KDC サーバを検出するために DNS の SRV レコードを使用する</guimenu> をそれぞれ選択して、レルム (領域) と鍵配布センターの自動検出を有効化します。</para>
    </step>
    <step>
-    <para>
-     You can additionally activate the following:
-    </para>
+    <para>必要であれば、下記のものを有効化することもできます:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       <guimenu>Allow Insecure Encryption (for Windows NT)</guimenu> allows
-       the encryption types listed as weak at
-       <link xlink:href="http://web.mit.edu/kerberos/krb5-current/doc/admin/conf_files/kdc_conf.html#encryption-types"/>.
-      </para>
+      <para><guimenu>安全ではない暗号化を許可する (Windows NT)</guimenu> を選択すると、 <link xlink:href="http://web.mit.edu/kerberos/krb5-current/doc/admin/conf_files/kdc_conf.html#encryption-types"/> で脆弱であるとして示されている暗号化を許可するようになります。</para>
      </listitem>
      <listitem>
-      <para>
-       <guimenu>Allow KDC on Other Networks to Issue Authentication
-       Tickets</guimenu> allows forwarding of tickets.
-      </para>
+      <para><guimenu>他のネットワーク内にある KDC に対して認証チケットの発行を許可する</guimenu> を選択すると、チケットの転送を許可するようになります。</para>
      </listitem>
      <listitem>
-      <para>
-       <guimenu>Allow Kerberos-Enabled Services to Take on The Identity Of a
-       User</guimenu> allows the use of proxies between the computer of the
-       user and the key distribution center.
-      </para>
+      <para><guimenu>Kerberos が有効化されたサービスに対して、ユーザの識別子の取得を許可する</guimenu> を選択すると、利用者側のコンピュータと鍵配布センターとの間で、仲介サーバを使用することができるようになります。</para>
      </listitem>
      <listitem>
-      <para>
-       <guimenu>Issue Address-Less Tickets for Computers Behind
-       NAT</guimenu> allows granting tickets to users behind networks using
-       network address translation.
-      </para>
+      <para><guimenu>NAT 配下にあるコンピュータ向けにアドレス無しのチケットを発行する</guimenu> を選択すると、ネットワークアドレス変換 (NAT) を利用するネットワーク内にいるユーザに対して、チケット発行許諾チケットを許可するようになります。</para>
      </listitem>
     </itemizedlist>
    </step>
    <step>
-    <para>
-     To set up allowed encryption types and define the name of the keytab
-     file which lists the names of principals and their encrypted keys, use
-     the <guimenu>Extended Options</guimenu>.
-    </para>
+    <para>使用する暗号化の種類や、プリンシパルの名前と暗号鍵を表わす keytab ファイルの名前を設定したい場合は、 <guimenu>拡張オプション</guimenu> を押します。</para>
    </step>
    <step>
-    <para>
-     Finish with <guimenu>OK</guimenu> and <guimenu>Finish</guimenu>.
-    </para>
-    <para>
-     &yast; may now install extra packages.
-    </para>
+    <para><guimenu>OK</guimenu> および <guimenu>完了</guimenu> を押して、設定を完了します。</para>
+    <para>必要に応じて、 &yast; が追加のパッケージをインストールします。</para>
    </step>
   </procedure>
  </sect1>
 
  <sect1 xml:id="sec.security.kerberos.nfs">
-  <title>&krb; and NFS</title>
-  <para>
-   Most NFS servers can export file systems using any combination of the
-   default <quote>trust the network</quote> form of security known as
-   <option>sec=sys</option>, and three different levels of &krb;-based
-   security, <option>sec=krb5</option>, <option>sec=krb5i</option>, and
-   <option>sec=krb5p</option>. The <option>sec</option> option is set as a
-   mount option on the client. It is often the case that the NFS service will first
-   be configured and used with <option>sec=sys</option>, and then &krb; can be
-   imposed afterwards.  In this case it is likely that the server will be
-   configured to support both <option>sec=sys</option> and one of the &krb;
-   levels, and then after all clients have transitioned, the
-   <option>sec=sys</option> support will be removed, thus achieving true
-   security. The transition to &krb; should be fairly transparent if done in an
-   orderly manner. However there is one subtle detail of NFS behavior that
-   works differently when &krb; is used, and the implications of this need to
-   be understood and possibly addressed.  See <xref linkend="sec.security.kerberos.overview.group"/>.
-  </para>
-  <para>
-   The three &krb; levels indicate different levels of security. With
-   more security comes a need for more processor power to encrypt and
-   decrypt messages. Choosing the right balance is an important
-   consideration when planning a roll-out of &krb; for
-   NFS.
-  </para>
-  <para>
-   <literal>krb5</literal> provides only authentication. The server
-   can know who sent a request, and the client can know that the
-   server sent a reply. No security is provided for the content of
-   the request or reply, so an attacker with physical network access
-   could transform the request or reply, or both, in various ways to
-   deceive either server or client. They cannot directly read or
-   change any file that the authenticated user could not read or
-   change, but almost anything is theoretically
-  possible.
-  </para>
-  <para>
-   <literal>krb5i</literal> adds integrity checks to all messages.
-   With <literal>krb5i</literal>, an attacker cannot modify any
-   request or reply, but they can view all the data exchanged, and so
-   could discover the content of any file that is read.
-  </para>
-  <para>
-   <literal>krb5p</literal> adds privacy to the protocol. As well as
-   reliable authentication and integrity checking, messages are fully
-   encrypted so an attacker can only know that messages were exchanged
-   between client and server, and cannot extract other information
-   directly from the message. Whether information can be extracted
-   from message timing is a separate question that &krb; does not
-   address.
-  </para>
+  <title>&krb; と NFS</title>
+  <para>ほとんどの NFS サーバでは、 <option>sec=sys</option> として知られている <quote>ネットワークベースの信頼</quote> と、 <option>sec=krb5</option> , <option>sec=krb5i</option> , <option>sec=krb5p</option> として知られている 3 種類の &krb; ベースのセキュリティを任意に組み合わせて使用することができます。<option>sec</option> オプションはクライアント側のマウントオプションとして指定します。 NFS サービスによっては、いったん <option>sec=sys</option> を利用して設定および接続を行ない、その後 &krb; を適用するものもあります。この場合、サーバ側では <option>sec=sys</option> といずれかの &krb; レベルの両方に対応するよう設定されたあと、全てのクライアントを遷移させてから <option>sec=sys</option> サポートを無効化してください。これにより、セキュリティを確実にすることができます。なお、 &krb; への遷移は手順通り行なわれる限り、完全に透過的に動作します。しかしながら、 NFS 側には微妙な動作の違いが存在することもありますので、 &krb; を使用した場合にはうまくいかないこともあります。そのため、 NFS サーバを &krb; で使用するにあたっては、詳細をよくご確認のうえ設定を行なう必要があります。詳しくは <xref linkend="sec.security.kerberos.overview.group"/> をお読みください。</para>
+  <para>3 種類の &krb; レベルは、それぞれ異なるセキュリティレベルを構成します。セキュリティレベルを高めれば高めるほど、メッセージの暗号化や解読に際してプロセッサの処理能力が必要になります。 NFS 向けに &krb; を開放するにあたっては、双方で適切なバランスを保つよう選択してください。</para>
+  <para><literal>krb5</literal> は認証機能のみを提供します。サーバはリクエストを送信した相手を知っていますし、クライアントは応答を送ったサーバを知っています。ただし、リクエストや応答の内容に対する追加のセキュリティ機能は提供されないため、様々な方法でサーバやクライアントになりすますことができてしまいます。認証済みのユーザが読み込んだり変更したりできなかったファイルに対して、攻撃者が読み込んだり変更したりすることはできませんが、それ以外のほぼ全てのことができてしまいます。</para>
+  <para><literal>krb5i</literal> は全てのメッセージに対してチェック機能を追加します。 <literal>krb5i</literal> では、攻撃者がリクエストや応答を書き換えたりすることができなくなりますが、交換されているデータは全て盗聴できてしまいます。そのため、読み込んでいるファイルの内容などは容易に盗聴できてしまいます。</para>
+  <para><literal>krb5p</literal> はプロトコルにプライバシー機能を追加します。信頼性のある認証機能とチェック機能に加えて、全てのメッセージが暗号化されます。そのため、攻撃者はサーバとクライアントとの間でメッセージが交換されていることを知ることはできますが、メッセージ内に直接含まれている情報は抽出できなくなります。なお、メッセージのタイミングから、どのような状況にあるのかは推測できてしまいますが、こちらは &krb; では対応のできない範疇外のものとなります。</para>
   <sect2 xml:id="sec.security.kerberos.overview.group">
-   <title>Group Membership</title>
-   <para>
-    The one behavioral difference between <option>sec=sys</option> and
-    the various &krb; security levels that might be visible is related
-    to group membership. In Unix and Linux, each file system access
-    comes from a process which is owned by a particular user and has a
-    particular group owner, and a number of supplemental groups. Access
-    rights to files can vary based on the owner and the various groups.
-   </para>
-   <para>
-    With <option>sec=sys</option>, the user-id, group-id, and a list of
-    up to 16 supplementary groups are sent to the server in each
-    request.
-   </para>
-   <para>
-    If a user is a member of more than 16 supplementary groups, the
-    extra groups are lost and some files may not be accessible over NFS
-    that the user would normally expect to have access to. For this
-    reason, most sites that use NFS find a way to limit all users to at
-    most 16 supplementary groups.
-   </para>
-   <para>
-    If the user runs the <command>newgrp</command> command or runs a
-    set-group-id program, either of which can change the list of groups
-    they are a member of, these changes take effect immediately and
-    provide different accesses over NFS.
-   </para>
-   <para>
-    With &krb;, group information is not sent in requests at all. Only the user
-    is identified (using a &krb; <quote>principal</quote>), and the server
-    performs a lookup to determine the user ID and group list for that
-    principal. This means that if the user is a member of more than 16 groups,
-    all of these group memberships will be used in determining file access
-    permissions. However it also means that if the user changes a group-id on
-    the client in some way, the server will not notice the change and will not
-    take it into account in determining access rights.
-   </para>
-   <para>
-    In most cases, the improvement of having access to more groups
-    brings a real benefit, and the loss of not being able to change
-    groups is not noticed as it is not widely used. A site
-    administrator considering the use of &krb; should be aware of the
-    difference though and ensure that it will not actually cause
-    problems.
-   </para>
+   <title>グループのメンバー</title>
+   <para><option>sec=sys</option> と &krb; のセキュリティレベルとの間で、動作が大きく異なるのは、グループのメンバー関係に関する箇所です。 Unix や Linux では、ファイルシステムへのアクセスはプロセスから届くものであり、そのプロセスには特定のユーザとグループが結びつけられています。また、ユーザは複数のグループに対するメンバーとなることができます。このような仕組みから、ファイルへのアクセス権は所有者とグループをベースにして行なわれます。</para>
+   <para><option>sec=sys</option> を指定した場合、ユーザ ID とグループ ID 、そして最大 16 種類までの補助グループが、各リクエスト内に書き込まれてサーバ側に送られます。</para>
+   <para>ユーザが 16 種類以上のグループに対するメンバーである場合、それより多くのグループ情報は失われます。そのため、通常はユーザからアクセスできていたはずのファイルに対して、 NFS 経由にするとアクセスができなくなってしまうことがあります。このような理由から、 NFS を使用する場合は、最大でも 16 種類までの補助グループとなるよう、うまく構成して回避を行なってください。</para>
+   <para>ユーザが <command>newgrp</command> コマンドや set-group-id のプログラムを実行すると、いずれのコマンドとも所属するグループのリストを変更することができますので、これによって NFS へのアクセス結果が即時に変わることがあります。</para>
+   <para>なお、 &krb; ではグループに関する情報は全く送信されません。ユーザが (&krb; の <quote>プリンシパル</quote> で) 認証されると、ユーザ ID とそのプリンシパルに対するグループリストを元にして、検索を行なうだけです。つまり、ユーザが 16 種類以上のグループに対するメンバーであった場合、ファイルへのアクセス許可判断は、それら全てのグループメンバー情報をもとに行なわれることになります。しかしながら、ユーザがクライアント側でグループ ID を変更しても、サーバ側にはその変更が送信されないため、アクセス権の判断には影響しません。</para>
+   <para>多くの場合、多数のグループにアクセスできるようになったことで、大きな利益がもたらされますが、グループが変更できなくてもあまり実害はありません。ただし、 &krb; を使用しているサイトの管理者はその情報を認識し、実際に問題を引き起こしたりすることがないようご注意ください。</para>
   </sect2>
   <sect2 xml:id="sec.security.kerberos.overview.performance">
-   <title>Performance and Scalability</title>
-   <para>
-    Using &krb; for security requires extra CPU power for encrypting and
-    decrypting messages. How much extra CPU power is required and whether the
-    difference is noticeable will vary with different hardware and different
-    applications. If the server or client are already saturating the available
-    CPU power, it is likely that a performance drop will be measurable when
-    switching from <literal>sec=sys</literal> to &krb;. If there is spare CPU
-    capacity available, it is quite possible that the transition will not
-    result in any throughput change. The only way to be sure how much impact
-    the use of &krb; will have is to test your load on your hardware.
-   </para>
-   <para>
-    The only configuration options that might reduce the load will also
-    reduce the quality of the protection offered.
-    <option>sec=krb5</option> should produce noticeably less load than
-    <option>sec=krb5p</option> but, as discussed above, it doesn't
-    produce very strong security. Similarly it is possible to adjust
-    the list of ciphers that &krb; can choose from, and this might
-    change the CPU requirement. However the defaults are carefully
-    chosen and should not be changed without similar careful
-    consideration.
-   </para>
-   <para>
-    The other possible performance issue when configuring NFS to use
-    &krb; involves availability of the &krb; authentication servers,
-    known as the KDC or Key Distribution Center.
-   </para>
-   <para>
-    The use of NFS adds load to such servers to the same degree that
-    adding the use of &krb; for any other services adds some load.
-    Every time a given user (&krb; principal) establishes a
-    session with a service, for example by accessing files
-    exported by a particular NFS server, the client needs to negotiate
-    with the KDC. Once a session key has been negotiated, the client
-    server can communicate without further help for many hours,
-    depending on details of the &krb; configuration, particularly the
-    <option>ticket_lifetime</option> setting.
-   </para>
-   <para>
-    The concerns most likely to affect the provisioning of &krb; KDC
-    servers are availability and peak usage.
-   </para>
-   <para>
-    As with other core services such as DNS, LDAP or similar name-lookup
-    services, having two servers that are reasonably "close" to every client
-    provides good availability for modest resources. &krb; allows for multiple
-    KDC servers with flexible models for database propagation, so distributing
-    servers as needed around campuses, buildings, and even cabinets is fairly
-    straightforward. The best mechanism to ensure each client finds a nearby
-    &krb; server is to use split-horizon DNS with each building (or similar)
-    getting different details from the DNS server. If this is not possible,
-    then managing the <filename>/etc/krb5.conf</filename> file to be different
-    at different locations is a suitable alternative.
-   </para>
-   <para>
-    As access to the &krb; KDC is infrequent, load is only likely to be
-    a problem at peak times. If thousands of people all log in between
-    9:00 and 9:05, then the servers will receive many more
-    requests-per-minute than they might in the middle of the night. The
-    load on the &krb; server is likely to be more than that on an LDAP
-    server, but not orders of magnitude more. A sensible guideline is
-    to provision &krb; replicas in the same manner that you provision
-    LDAP replicas, and then monitor performance to determine if demand
-    ever exceeds capacity.
-   </para>
+   <title>性能とスケーラビリティ</title>
+   <para>セキュリティ確保の目的で &krb; を使用すると、メッセージの暗号化や解読に際して、 CPU の負荷がかかるようになります。どれだけの CPU 性能が必要かや、通常時と比べてどれだけ負荷が高くなるのかは、ハードウエアや用途によって大きく異なります。もしもサーバやクライアント側の CPU 性能が限界に達しているような場合は、 <literal>sec=sys</literal> を &krb; に切り替えることで、顕著な性能劣化が現われることになります。 CPU の性能に余裕がある場合であれば、この移行作業で性能が変わることはありません。 &krb; を使用することによる性能変化は、実際のハードウエアと環境でテストしてお確かめください。</para>
+   <para>負荷を軽減するための唯一の選択は、保護品質の設定です。 <option>sec=krb5p</option> よりも <option>sec=krb5</option> のほうがずっと負荷の軽い処理になりますが、上述のとおり強力な機密保持は行なわれなくなります。それ以外にも、 &krb; が利用する暗号化方式を変更する手もあります。これによって CPU 要件をより低減させることができます。とはいえ、変更することによる影響をよくよくご検討のうえ、変更を行なってください。</para>
+   <para>NFS で &krb; を使用するように設定する際の性能問題という観点では、 KDC (鍵配送センター) として知られている &krb; の認証サーバの可用性についてもご検討ください。</para>
+   <para>NFS を使用すると、他のサービスに対して &krb; を使用すると負荷が増えるのと同様に、ある程度の負荷上昇が発生します。あるユーザ (&krb; のプリンシパル) がサービスに対してセッションを確立した場合、たとえば特定の NFS サーバが公開するファイルにアクセスした場合、クライアントは KDC との間でやり取りを実施する必要があります。やり取りの結果セッション鍵を取得できれば、サーバとクライアントはしばらく直接やり取りできるようになります。これは &krb; の設定である <option>ticket_lifetime</option> の設定に依存して決まります。</para>
+   <para>&krb; の KDC サーバの配置を設計するのに重要な項目は、可用性とピーク使用量です。</para>
+   <para>DNS や LDAP などの名前検索サービスなどの他のコアサービスと KDC サーバとの間は適度に "近く" なるように設計し、各クライアントに対する適度な可用性を提供するようにしてください。 &krb; ではデータベースの伝搬のために柔軟なモデルを採用しているため、複数の KDC サーバを用意することができます。これにより、キャンパス単位やビル単位、キャビネット単位でも、必要なサーバをわかりやすく配置することができます。それぞれのクライアントが近くにある &krb; サーバを検出できるようにするための適切な方式として、それぞれのビルなどに DNS を水平展開して、それぞれで異なる応答をするように設定するやり方があります。このような方式を採用できない場合は、 <filename>/etc/krb5.conf</filename> ファイルをビルごとに別々の値にするなどして、適度に分散させるように設計してください。</para>
+   <para>&krb; KDC へのアクセスはあまり頻繁に発生しないことから、負荷として考慮すべきことはピークタイムとなります。たとえば 9:00 から 9:05 の間に多くの人々がログインするような場合、夜間に比べるとその時間帯は非常に多くの毎分リクエストを受け付けることになります。 &krb; サーバの負荷は LDAP サーバの負荷よりも高くなりやすいのですが、桁違いというほどではありません。一般的には、 LDAP のレプリカと同じやり方で &krb; のレプリカを配置したあと、さらにサーバを増設する必要があるかどうかを性能監視で判断するのが良いでしょう。</para>
   </sect2>
   <sect2 xml:id="sec.security.kerberos.overview.kdc">
-   <title>Master KDC, Multiple Domains, and Trust Relationships</title>
-   <para>
-    One service of the &krb; KDC that is not easily distributed is
-    the handling of updates, such as password changes and new user
-    creation. These must happen at a single master KDC.
-   </para>
-   <para>
-    These updates are not likely to happen with such frequency that any
-    significant load will be generated, but availability could be an
-    issue. It can be annoying if you want to create a new user or change
-    a password, and the master KDC on the other side of the world is
-    temporarily unavailable.
-   </para>
-   <para>
-    When an organization is geographically distributed and has a policy
-    of handling administration tasks locally at each site, it can be
-    beneficial to create multiple &krb; domains, one for each
-    administrative center. Each domain would then have its own master
-    KDC which would be geographically local. Users in one domain can
-    still get access to resources in another domain by setting up trust
-    relationships between domains.
-   </para>
-   <para>
-    The easiest arrangement for multiple domains is to have a global
-    domain (e.g. EXAMPLE.COM) and various local domains (e.g.
-    ASIA.EXAMPLE.COM, EUROPE.EXAMPLE.COM, etc). If the global domain is
-    configured to trust each local domain, and each local domain is
-    configured to trust the global domain, then fully transitive trust
-    is available between any pair of domains, and any principal can
-    establish a secure connection with any service. Ensuring
-    appropriate access rights to resources, for example files provided
-    by that service, will be dependent on the user name lookup service
-    used, and the functionality of the NFS file server, and is beyond
-    the scope of this document.
-   </para>
+   <title>マスター KDC／複数ドメイン／信頼関係</title>
+   <para>&krb; KDC のサービスは、パスワードの変更や新しいユーザの作成などの処理を扱う必要があることから、容易には分散させることができません。これらの処理は、単一のマスター KDC で行なわなければなりません。</para>
+   <para>これらに対する更新処理はそれほど多く発生しないため、負荷に対する要件もあまり厳しくありません。ですが、可用性という観点は重視する必要があります。可用性を考慮しておかないと、新しいユーザを作成したりパスワードを変更したりする際に時間がかかる場合があるほか、拠点によっては一時的にマスター KDC にアクセスできなくなってしまうこともあります。</para>
+   <para>組織が地理的に分散しているような場合で、各拠点に対する管理作業を拠点内で実施するような場合、それぞれ別々の &krb; ドメインを作成して、それぞれの管理センターを 1 台ずつ構成するのがよいでしょう。それぞれのドメイン (拠点) には、それぞれのマスター KDC が存在することになります。一方のドメイン内のユーザが他のドメイン内のリソースにアクセスする場合でも、ドメイン間の信頼関係を設定することで解決することができます。</para>
+   <para>複数ドメインを扱う際の最も簡単な方法は、グローバルドメイン (例: EXAMPLE.COM) とローカルドメイン (例: ASIA.EXAMPLE.COM, EUROPE.EXAMPLE.COM など) をそれぞれ構築する方法です。グローバルドメインはそれぞれのローカルドメインを信頼するように設定し、それぞれのローカルドメインはグローバルドメインを信頼するように設定すれば、任意のドメイン間で完全な信頼を実現できますので、どのドメインに属するプリンシパルであっても、任意のサービスを利用できるようになります。なお、リソースに対して適切なアクセス許可を設定する作業については、ユーザ名の参照方法や NFS ファイルサーバの機能によって異なりますので、ここでは説明していません。</para>
   </sect2>
  </sect1>
 
 
  <sect1 xml:id="sec.security.kerberos.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   The official site of MIT &krb; is
-   <link xlink:href="http://web.mit.edu/kerberos"/>. There, find links to
-   any other relevant resource concerning &krb;, including &krb;
-   installation, user, and administration guides.
-  </para>
+  <para>MIT &krb; の公式サイトは <link xlink:href="http://web.mit.edu/kerberos"/> にあります。ここには &krb; のインストールから利用、管理ガイドに至るまで、様々な &krb; の情報に対するリンクが提供されています。</para>
 
  <!-- Paper is from 1995, not sure whether it is a good idea to link it
  again. The official homepage has a section "How Kerberos Works" too. -
@@ -2098,10 +942,6 @@ olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</s
    opportunities for further investigation and reading about &krb;.
   </para>-->
 
-  <para>
-   The book <emphasis>Kerberos&mdash;A Network Authentication
-   System</emphasis> by Brian Tung (ISBN 0-201-37924-4) offers extensive
-   information.
-  </para>
+  <para><!-- NOTE: changed to Japanese (translated) book --><emphasis>Kerberos&mdash;ネットワーク認証システム</emphasis> (Brian Tung (原著), 桑村 潤 (翻訳)) (ISBN 978-4894711464) には、幅広い情報が含まれています。</para>
  </sect1>
 </chapter>
