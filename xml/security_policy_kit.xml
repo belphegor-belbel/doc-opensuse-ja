@@ -7,21 +7,10 @@
      existant anymore :-(
 -->
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.policykit">
- <title>Authorization with &pk;</title>
+ <title>&pk; による認可制御</title>
  <info>
       <abstract>
-        <para>
-    &pk; (formerly known as PolicyKit) is an application framework that
-    acts as a negotiator between the unprivileged user session and the
-    privileged system context. Whenever a process from the user session
-    tries to carry out an action in the system context, &pk; is queried.
-    Based on its configuration&mdash;specified in a so-called
-    <quote>policy</quote>&mdash;the answer could be <quote>yes</quote>,
-    <quote>no</quote>, or <quote>needs authentication</quote>. Unlike
-    classical privilege authorization programs such as sudo, &pk; does
-    not grant &rootuser; permissions to an entire session, but only to
-    the action in question.
-   </para>
+        <para>&pk; (以前は PolicyKit として知られていたソフトウエア) は、権限を持たないユーザセッションと権限を持つシステムコンテキストとの間で仲介を行なう、アプリケーションフレームワークです。ユーザセッション内のプロセスがシステムコンテキスト内で何らかの処理を実行しようとすると、 &pk; への問い合わせが発生します。問い合わせの結果は <quote>ポリシー</quote> と呼ばれる設定ファイルによって決められ、 <quote>はい</quote>, <quote>いいえ</quote>, <quote>要認証</quote> のいずれかの結果になります。 sudo などの従来型の権限認可プログラムとは異なり、セッション全体を &root; 権限で動作させたりするようなことはなく、単にアクションのみを問い合わせる仕組みになっています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -29,34 +18,16 @@
       </dm:docmanager>
     </info>
     <sect1 xml:id="sec.security.policykit.oview">
-  <title>Conceptual Overview</title>
+  <title>考え方の概要</title>
 
-  <para>
-<!--&pk; is a framework for defining and handling
-     authorizations to grant access to privileged operations for unprivileged
-     applications.-->
-   &pk; works by limiting specific actions by users, by group, or by
-   name. It then defines how those users are allowed to perform this
-   action.
-  </para>
+  <para><!--&pk; is a framework for defining and handling authorizations to grant access to privileged operations for unprivileged applications.--> &pk; はユーザやグループ、名前で特定のアクションを制限することによって動作する仕組みです。制限を課したあとは、それらのユーザがどのようにアクションを実行するのかを指定します。</para>
 
   <remark>toms 2013-10-02: Add graphic about system architecture</remark>
 
   <sect2 xml:id="sec.security.policykit.agents">
-   <title>Available Authentication Agents</title>
-   <para>
-    When a user starts a session (using the graphical environment or on the
-    console), each session consists of the
-    <emphasis>authority</emphasis> and an <emphasis>authentication
-    agent</emphasis>. The authority is implemented as a service on the
-    system message bus, whereas the authentication agent is used to
-    authenticate the current user, which started the session. The current
-    user needs to prove their authenticity, for example, using a passphrase.
-   </para>
-   <para>
-    Each desktop environment has its own authentication agent. Usually it is
-    started automatically, whatever environment you choose.
-   </para>
+   <title>利用可能な認証エージェント</title>
+   <para>グラフィカル環境やコンソールにログインして、ユーザがセッションを開始する際、セッションが作成され、 <emphasis>権限</emphasis> と <emphasis>認証エージェント</emphasis> が結びつけられます。ここで、権限はシステムのメッセージバス内で動作するサービスとして実装されていますし、認証エージェントは現在の (セッションを開始した) ユーザを認証するために使用します。なお、ユーザはパスフレーズなどを利用して、その正当性を確認する処理を実施します。</para>
+   <para>それぞれのデスクトップ環境には、それぞれ独自の認証エージェントが用意されています。通常、これはお使いの環境が何であった場合でも、自動的に起動します。</para>
 <!--<table>
       <title>Authentication Agents for Desktop Environments</title>
       <tgroup cols="2">
@@ -93,106 +64,64 @@
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.structure">
-   <title>Structure of &pk;</title>
-   <para>
-    &pk;'s configuration depends on <emphasis>actions</emphasis> and
-    <emphasis>authorization rules</emphasis>:
-   </para>
+   <title>&pk; の構造</title>
+   <para>&pk; の設定は、 <emphasis>アクション</emphasis> と <emphasis>認可ルール</emphasis> を元にして作られています:</para>
    <variablelist>
     <varlistentry>
-     <term>Actions (file extension <filename>*.policy</filename>)</term>
+     <term>アクション (ファイルの拡張子 <filename>*.policy</filename> )</term>
      <listitem>
-      <para>
-       Written as XML files and located in
-       <filename>/usr/share/polkit-1/actions</filename>. Each file defines
-       one or more actions, and each action contains descriptions and
-       default permissions. Although a system administrator can write their
-       own rules, &pk;'s files must not be edited.
-      </para>
+      <para>XML ファイル形式で記述され、 <filename>/usr/share/polkit-1/actions</filename> 内に配置されます。それぞれのファイルは 1 つ以上のアクションを定義していて、それぞれのアクションには説明と既定のアクセス許可が設定されます。システム管理者側では独自のルールを作成することができますが、 &pk; 側が提供するファイルについては、編集してはなりません。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Authorization Rules (file extension <filename>*.rules</filename>)</term>
+     <term>認可ルール (ファイルの拡張子 <filename>*.rules</filename> )</term>
      <listitem>
-      <para>
-       Written as JavaScript files and located in two places:
-       <filename>/usr/share/polkit-1/rules.d </filename> is used for third
-       party packages and <filename>/etc/polkit-1/rules.d</filename> for
-       local configurations. Each rule file refers to the action specified
-       in the action file. A rule determines what restrictions are allowed
-       to a subset of users. For example, a rule file could overrule a
-       restrictive permission and allow some users to allow it.
-      </para>
+      <para>JavaScript ファイルとして記述され、 2 箇所に配置されます。サードパーティ製のパッケージ向けのルールは <filename>/usr/share/polkit-1/rules.d </filename> に、ローカルの設定については <filename>/etc/polkit-1/rules.d</filename> にそれぞれ配置されます。それぞれのルールファイルは、アクションファイル内で指定されている特定のアクションを参照します。ルールは、ユーザのサブセットに対して、どのような制限を許可するのかを指定します。たとえば、ルールファイルは制限の厳しいアクセス許可を上書きすることができるほか、ユーザに対して許可することもできます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.oview.commands">
-   <title>Available Commands</title>
-   <para>
-    &pk; contains several commands for specific tasks (see also the
-    specific man page for further details):
-   </para>
+   <title>利用可能なコマンド</title>
+   <para>&pk; には、特定の作業を行なうためのいくつかのコマンドが用意されています (より詳しい説明については、マニュアルページをお読みください):</para>
    <variablelist>
     <varlistentry>
-     <term><command>pkaction</command>
-     </term>
+     <term><command>pkaction</command></term>
      <listitem>
-      <para>
-       Get details about a defined action. See
-       <xref linkend="sec.security.policykit.query"/> for more
-       information.
-      </para>
+      <para>設定済みのアクションに対して、詳細を取得します。詳しくは <xref linkend="sec.security.policykit.query"/> をお読みください。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>pkcheck</command>
-     </term>
+     <term><command>pkcheck</command></term>
      <listitem>
-      <para>
-       Checks whether a process is authorized, specified by either
-       <option>--process</option> or <option>--system-bus-name</option>.
-      </para>
+      <para>指定したプロセスが認可されているかどうかを確認します。プロセスは <option>--process</option> もしくは <option>--system-bus-name</option> で指定します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>pkexec</command>
-     </term>
+     <term><command>pkexec</command></term>
      <listitem>
-      <para>
-       Allows an authorized user to execute the specific program as another
-       user.
-      </para>
+      <para>認可されたユーザが、他のユーザで特定のプログラムを実行できるようにします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>pkttyagent</command>
-     </term>
+     <term><command>pkttyagent</command></term>
      <listitem>
-      <para>
-       Starts a textual authentication agent. This agent is used if a
-       desktop environment does not have its own authentication agent.
-      </para>
+      <para>テキスト型の認証エージェントを起動します。このエージェントは、デスクトップ環境側に独自の認証エージェントが存在しない場合に、使用されます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.oview.authorizations">
-   <title>Available Policies and Supported Applications</title>
-   <para>
-    At the moment, not all applications requiring privileges use
-    &pk;. Find the most important policies available on
-    &productnamereg; below, sorted into the categories where they are
-    used.
-   </para>
+   <title>利用可能なポリシーと対応するアプリケーション</title>
+   <para>現時点では、権限を必要とする全てのアプリケーションが &pk; に対応しているわけではありません。下記には &productnamereg; で利用できる最も重要なポリシーについて、使用されるカテゴリを示しています。</para>
    <variablelist>
     <varlistentry>
      <term>PulseAudio</term>
      <listitem>
       <simplelist>
-       <member>Set scheduling priorities for the PulseAudio daemon</member>
+       <member>PulseAudio デーモンのスケジューリング優先順位の設定</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -200,15 +129,15 @@
      <term>CUPS</term>
      <listitem>
       <simplelist>
-       <member>Add, remove, edit, enable or disable printers</member>
+       <member>プリンタの追加／削除／編集／有効化／無効化</member>
       </simplelist>
      </listitem>
     </varlistentry>
     <varlistentry os="sled;osuse">
-     <term>Backup Manager</term>
+     <term>バックアップマネージャ</term>
      <listitem>
       <simplelist>
-       <member>Modify schedule</member>
+       <member>スケジュールの変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -216,8 +145,8 @@
      <term>&gnome;</term>
      <listitem>
       <simplelist>
-       <member>Modify system and mandatory values with GConf</member>
-       <member>Change the system time</member>
+       <member>システムや GConf で必須となっている値の変更</member>
+       <member>システム時刻の変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -225,7 +154,7 @@
      <term>libvirt</term>
      <listitem>
       <simplelist>
-       <member>Manage and monitor local virtualized systems</member>
+       <member>ローカルの仮想マシンの管理と監視</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -233,7 +162,7 @@
      <term>&nm;</term>
      <listitem>
       <simplelist>
-       <member>Apply and modify connections</member>
+       <member>接続の適用と変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -241,8 +170,8 @@
      <term>&pk;</term>
      <listitem>
       <simplelist>
-       <member>Read and change privileges for other users</member>
-       <member>Modify defaults</member>
+       <member>他のユーザに対する権限の読み込みと変更</member>
+       <member>既定値の変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -250,30 +179,29 @@
      <term>PackageKit</term>
      <listitem>
       <simplelist>
-       <member>Update and remove packages</member>
-       <member>Change and refresh repositories</member>
-       <member>Install local files</member>
-       <member>Rollback</member>
-       <member>Import repository keys</member>
-       <member>Accepting EULAs</member>
-       <member>Setting the network proxy</member>
+       <member>パッケージの更新と削除</member>
+       <member>リポジトリの変更と更新</member>
+       <member>ローカルファイルのインストール</member>
+       <member>ロールバック (巻き戻し)</member>
+       <member>リポジトリの鍵の取り込み</member>
+       <member>EULA の受け入れ</member>
+       <member>ネットワークプロキシの設定</member>
       </simplelist>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>System</term>
+     <term>システム</term>
      <listitem>
       <simplelist>
        <member>Wake on LAN</member>
-       <member>Mount or unmount fixed, hotpluggable and encrypted
-       devices</member>
-       <member>Eject and decrypt removable media</member>
-       <member>Enable or disable WLAN</member>
-       <member>Enable or disable Bluetooth</member>
-       <member>Device access</member>
-       <member>Stop, suspend, hibernate and restart the system</member>
-       <member>Undock a docking station</member>
-       <member>Change power-management settings</member>
+       <member>固定メディアやリムーバブルメディア、暗号化されたデバイスのマウントやマウント解除</member>
+       <member>リムーバブルメディアの取り出しと復号化</member>
+       <member>無線 LAN の有効化／無効化</member>
+       <member>Bluetooth の有効化／無効化</member>
+       <member>デバイスへのアクセス</member>
+       <member>システムの停止／サスペンド／休止／再起動</member>
+       <member>ドッキングステーションの取り外し</member>
+       <member>電源管理設定の変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -281,8 +209,8 @@
      <term>&yast;</term>
      <listitem>
       <simplelist>
-       <member>Register product</member>
-       <member>Change the system time and language</member>
+       <member>製品の登録</member>
+       <member>システムの時刻と言語の変更</member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -290,171 +218,79 @@
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.policykit.types">
-  <title>Authorization Types</title>
+  <title>認可の種類</title>
 
-  <para>
-   Every time a &pk;-enabled process carries out a privileged operation,
-   &pk; is asked whether this process is entitled to do so. &pk;
-   answers according to the policy defined for this process. The answers can
-   be <literal>yes</literal>, <literal>no</literal>, or
-   <literal>authentication needed</literal>. By default, a policy contains
-   <literal>implicit</literal> privileges, which automatically apply to all
-   users. It is also possible to specify <literal>explicit</literal>
-   privileges which apply to a specific user.
-  </para>
+  <para>&pk; が有効化されたプロセスが権限操作を行なうと、このプロセスに対して権限が設定されているかどうかを &pk; に尋ねる処理を行ないます。 &pk; はそのプロセスに対して設定されているポリシーを元にして、応答を返します。応答は <literal>はい</literal> , <literal>いいえ</literal>, <literal>要認証</literal> のいずれかとなります。既定ではポリシーには <literal>暗黙の</literal> 権限が含まれていて、それらは全てのユーザに対して自動的に適用されます。もちろん特定のユーザに対して、 <literal>明示的に</literal> 権限を指定することもできます。</para>
 
   <sect2 xml:id="sec.security.policykit.policies.implicit">
-   <title>Implicit Privileges</title>
-   <para>
-    Implicit privileges can be defined for any active and inactive sessions.
-    An active session is the one in which you are currently working. It
-    becomes inactive when you switch to another console for example. When
-    setting implicit privileges to <quote>no</quote>, no user is authorized,
-    whereas <quote>yes</quote> authorizes all users. However, usually
-    it is useful to demand authentication.
-   </para>
-   <para>
-    A user can either authorize by authenticating as &rootuser; or by
-    authenticating as self. Both authentication methods exist in four
-    variants:
-   </para>
+   <title>暗黙の権限</title>
+   <para>暗黙の権限は、任意のアクションや非動作中のセッションに対して設定することができます。動作中のセッションとは、現在作業中のセッションを意味します。たとえばコンソールを切り替えたりすると、動作中のセッションが変更されます。暗黙の権限を <quote>いいえ</quote> に設定した場合はユーザを認可せず、 <quote>はい</quote> に設定した場合は全てのユーザを認可します。しかしながら、通常は必要に応じて認証を設定するのが一般的です。</para>
+   <para>ユーザは、 &rootuser; として認証するか、もしくは自分自身として認証することによって、認可を得ることができます。いずれの認証に対しても、 4 種類の設定を行なうことができます:</para>
    <variablelist>
     <varlistentry>
-     <term>Authentication</term>
+     <term>認証</term>
      <listitem>
-      <para>
-       The user always needs to authenticate.
-      </para>
+      <para>ユーザは常に認証を行なう必要があります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>One Shot Authentication</term>
+     <term>一回限りの認証</term>
      <listitem>
-      <para>
-       The authentication is bound to the instance of the program currently
-       running. After the program is restarted, the user is required to
-       authenticate again.
-      </para>
+      <para>認証は現在実行中のプログラムのインスタンスに結びつけられます。プログラムを起動し直してしまうと、ユーザは認証をし直す必要があります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Keep Session Authentication</term>
+     <term>セッション認証の維持</term>
      <listitem>
-      <para>
-       The authentication dialog offers a check button <guimenu>Remember
-       authorization for this session</guimenu>. If checked, the
-       authentication is valid until the user logs out.
-      </para>
+      <para>認証ダイアログでは、 <guimenu>Remember authorization for this session</guimenu> (このセッションに対する認可を記憶する) というチェックボックスが表示されます。チェックを入れて進めると、認証はユーザがログアウトするまで記憶されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Keep Indefinitely Authentication</term>
+     <term>無期限認証の維持</term>
      <listitem>
-      <para>
-       The authentication dialog offers a check button <guimenu>Remember
-       authorization</guimenu>. If checked, the user needs to authenticate
-       only once.
-      </para>
+      <para>認証ダイアログでは、 <guimenu>Remember authorization</guimenu> (認可を記憶する) というチェックボックスが表示されます。チェックを入れて進めると、認証は恒久的に記憶されるようになります。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.policies.explicit">
-   <title>Explicit Privileges</title>
-   <para>
-    Explicit privileges can be granted to specific users. They can either be
-    granted without limitations, or, when using constraints, limited to an
-    active session and/or a local console.
-   </para>
-   <para>
-    It is not only possible to grant privileges to a user, a user can also
-    be blocked. Blocked users cannot carry out an action
-    requiring authorization, even though the default implicit policy allows
-    authorization by authentication.
-   </para>
+   <title>明示的な権限</title>
+   <para>明示的な権限は、特定のユーザに対して与えることができるものです。全く制限無しに許可することもできますし、何らかの制約を指定することもできます。また、動作中のセッションに限定したり、ローカルのコンソールに限定したりすることもできます。</para>
+   <para>ユーザに対して権限を許可するだけでなく、ユーザに対して権限を禁止することもできます。禁止されたユーザの場合、既定の暗黙のポリシーで認可が許可されている場合でも、認可の必要な処理を行なうことができなくなります。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.policies.default">
-   <title>Default Privileges</title>
-   <para>
-    Each application supporting &pk; comes with a default set of implicit
-    policies defined by the application's developers. Those policies are the
-    so-called <quote>upstream defaults</quote>. The privileges defined by
-    the upstream defaults are not necessarily the ones that are activated by
-    default on &suse; systems. &productname; comes with a predefined
-    set of privileges that override the upstream defaults:
-   </para>
+   <title>既定の権限</title>
+   <para>&pk; に対応する各アプリケーションには、アプリケーションの開発者が規定した既定の暗黙ポリシーセットが用意されています。これらのポリシーは <quote>提供元の既定値</quote> と呼ばれます。提供元の既定値で設定された権限は、既定の &suse; システムで有効化されていない場合もあります。 &productname; では、提供元の既定値を上書きする、独自の権限セットが設定されています:</para>
    <variablelist>
     <varlistentry>
-     <term><filename>/etc/polkit-default-privs.standard</filename>
-     </term>
+     <term><filename>/etc/polkit-default-privs.standard</filename></term>
      <listitem>
-      <para>
-       Defines privileges suitable for most desktop
-       systems<phrase os="sled">. It is active by default.</phrase>
-      </para>
+      <para>多くのデスクトップシステムで適切な権限が設定されています。 <phrase os="sled">. 既定では、こちらが有効化されます。</phrase></para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/etc/polkit-default-privs.restrictive</filename>
-     </term>
+     <term><filename>/etc/polkit-default-privs.restrictive</filename></term>
      <listitem>
-      <para>
-       Designed for machines administrated centrally<phrase os="sles">. It
-       is active by default.</phrase>
-      </para>
+      <para>中央で管理されているマシン向けの設定です。 <phrase os="sles">既定では、こちらが有効化されます。</phrase></para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    To switch between the two sets of default privileges, adjust the value
-    of <varname>POLKIT_DEFAULT_PRIVS</varname> to either
-    <literal>restrictive</literal> or <literal>standard</literal> in
-    <filename>/etc/sysconfig/security</filename>. Then run the command
-    <command>set_polkit_default_privs</command> as &rootuser;.
-   </para>
-   <para>
-    Do not modify the two files in the list above. To define your
-    own custom set of privileges, use
-    <filename>/etc/polkit-default-privs.local</filename>. For details, refer
-    to
-    <xref linkend="sec.security.policykit.change.modify_config.implicit"/>.
-   </para>
+   <para>既定の権限を切り替えたい場合は、 <filename>/etc/sysconfig/security</filename> ファイル内にある <varname>POLKIT_DEFAULT_PRIVS</varname> の値を、 <literal>restrictive</literal> もしくは <literal>standard</literal> のいずれかに設定してください。設定が終わったら、 &rootuser; で <command>set_polkit_default_privs</command> を実行します。</para>
+   <para>上述の 2 つのファイルについては、変更を行なわないでください。独自の権限セットを構築したい場合は、 <filename>/etc/polkit-default-privs.local</filename> で設定を行なってください。詳しくは <xref linkend="sec.security.policykit.change.modify_config.implicit"/> をお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.policykit.query">
-  <title>Querying Privileges</title>
+  <title>権限の問い合わせ</title>
 
-  <para>
-   To query privileges use the command <command>pkaction</command> included
-   in &pk;.
-  </para>
+  <para>権限を問い合わせたい場合は、 &pk; に含まれている <command>pkaction</command> コマンドをお使いください。</para>
 
-  <para>
-   &pk; comes with command line tools for changing privileges and
-   executing commands as another user (see
-   <xref linkend="sec.security.policykit.oview.commands"/> for a short
-   overview). Each existing policy has a speaking, unique name with which it
-   can be identified. List all available policies with the command
-   <command>pkaction</command>.
-  </para>
+  <para>&pk; には権限を変更したり、他のユーザでコマンドを実行したりする (概要は <xref linkend="sec.security.policykit.oview.commands"/> で説明しています) ためのコマンドラインツールが付属しています。また、それぞれの既存のポリシーには識別のためのユニークな名前が設定されています。利用可能なポリシーを一覧で表示したい場合は、 <command>pkaction</command> コマンドをお使いください。</para>
 
-  <para>
-   When invoked with no parameters, the command <command>pkaction</command>
-   lists all policies. By adding the
-   <option>--show-overrides</option> option, you can list all policies that
-   differ from the default values. To reset the privileges for a given
-   action to the (upstream) defaults, use the option
-   <option>--reset-defaults&nbsp;<replaceable>ACTION</replaceable></option>.
-   See <command>man pkaction</command> for more information.
-  </para>
+  <para>何もパラメータをつけずに実行すると、 <command>pkaction</command> コマンドは全てのポリシーを表示します。 <option>--show-overrides</option> オプションをつけて実行すると、既定値とは異なる全てのポリシーを表示します。特定のアクションに対して、 (提供元の) 既定値に権限を戻したい場合は、 <option>--reset-defaults&nbsp;<replaceable>アクション名</replaceable></option> のように実行してください。詳しくは <command>man pkaction</command> で表示されるマニュアルページをお読みください。</para>
 
-  <para>
-   If you want to display the needed authorization for a given policy (for
-   example, <literal>org.freedesktop.login1.reboot</literal>) use
-   <command>pkaction</command> as follows:
-  </para>
+  <para>特定のポリシー (例: <literal>org.freedesktop.login1.reboot</literal>) に対して、必要な認可情報を表示したい場合は、 <command>pkaction</command> を下記のように実行します:</para>
 
 <screen>&prompt.user;pkaction -v --action-id org.freedesktop.login1.reboot
 org.freedesktop.login1.reboot:
@@ -467,48 +303,23 @@ org.freedesktop.login1.reboot:
   implicit inactive: auth_admin_keep
   implicit active:   yes</screen>
 
-  <para>
-   The keyword <literal>auth_admin_keep</literal> means that users need to
-   enter a passphrase.
-  </para>
+  <para><literal>auth_admin_keep</literal> というキーワードは、ユーザに対してパスフレーズの入力を求めることを意味しています。</para>
 
   <note>
-   <title>Restrictions of <command>pkaction</command> on &productname;</title>
-   <para>
-    <command>pkaction</command> always operates on the upstream defaults.
-    Therefore it cannot be used to list or restore the defaults shipped with
-    &productname;. To do so, refer to
-    <xref linkend="sec.security.policykit.change.defaults"/>.
-   </para>
+   <title>&productname; における <command>pkaction</command> の制限事項について</title>
+   <para><command>pkaction</command> コマンドは、常に提供元の既定値に対して操作を行ないます。そのため、 &productname; で提供されている既定値を一覧で表示したり、既定値に戻したりすることはできません。詳しくは <xref linkend="sec.security.policykit.change.defaults"/> をお読みください。</para>
   </note>
  </sect1>
  <sect1 xml:id="sec.security.policykit.change.modify_config">
-  <title>Modifying Configuration Files</title>
+  <title>設定ファイルの修正</title>
 
-  <para>
-   Adjusting privileges by modifying configuration files is useful when you
-   want to deploy the same set of policies to different machines, for
-   example to the computers of a specific team. It is possible to change
-   implicit and explicit privileges by modifying configuration files.
-  </para>
+  <para>複数のマシンに対して同じポリシーセットを配置するような場合、たとえば特定のチーム内のコンピュータを設定するような場合は、設定ファイルを変更して権限を調整するのが便利です。暗黙の権限や明示的な権限についても、設定ファイルを変更することで実現することができます。</para>
 
   <sect2 xml:id="sec.security.policykit.change.modify_config.actions">
-   <title>Adding Action Rules</title>
-   <para>
-    The available actions depend on what additional packages you have
-    installed on your system. For a quick overview, use
-    <command>pkaction</command> to list all defined rules.
-   </para>
-   <para>
-    To get an idea, the following example describes how the command
-    <command>gparted</command> (<quote>&gnome; Partition Editor</quote>)
-    is integrated into &pk;.
-   </para>
-   <para>
-    The file
-    <filename>/usr/share/polkit-1/actions/org.opensuse.policykit.gparted.policy</filename>
-    contains the following content:
-   </para>
+   <title>アクションルールの追加</title>
+   <para>お使いのシステムでどのようなアクションが利用できるのかは、どのパッケージをインストールしているのかによって決まります。概要を表示したい場合は、 <command>pkaction</command> を押して、定義済みの全てのルールを一覧で表示させてください。</para>
+   <para>下記では、例として <command>gparted</command> コマンド ( <quote>&gnome; パーティションエディタ</quote> ) における &pk; との連携例を示しています。</para>
+   <para><filename>/usr/share/polkit-1/actions/org.opensuse.policykit.gparted.policy</filename> ファイルには、下記のような内容が書かれています:</para>
 <screen>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
@@ -532,65 +343,26 @@ org.freedesktop.login1.reboot:
 &lt;/policyconfig&gt;</screen>
    <calloutlist>
     <callout arearefs="co.polkit.actions.policyconfig">
-     <para>
-      Root element of the policy file.
-     </para>
+     <para>ポリシーファイルのルート要素です。</para>
     </callout>
     <callout arearefs="co.polkit.actions.action">
-     <para>
-      Contains one single action.
-     </para>
+     <para>アクションが 1 つだけ含まれています。</para>
     </callout>
     <callout arearefs="co.polkit.actions.defaults">
-     <para>
-      The <literal>defaults</literal> element contains several permissions
-      used in remote sessions like SSH, VNC (element
-      <literal>allow_inactive</literal>), when logged directly into the
-      machine on a TTY or X display (element
-      <literal>allow_active</literal>), or for both (element
-      <literal>allow_any</literal>). The value <literal>auth_admin</literal>
-      indicates authentication is required as an administrative user.
-     </para>
+     <para><literal>defaults</literal> 要素には、 SSH や VNC などを介したリモートセッション (<literal>allow_inactive</literal> 要素) のほか、 TTY や X ディスプレイによる直接ログイン (<literal>allow_active</literal> 要素) 、そしてその両方 (<literal>allow_any</literal> 要素) に対するアクセス許可が書かれています。 <literal>auth_admin</literal> という値は、管理者ユーザとしての認証が必要であることを表わしています。</para>
     </callout>
     <callout arearefs="co.polkit.actions.annotate">
-     <para>
-      The <literal>annotate</literal> element contains specific information
-      regarding how &pk; performs an action. In this case, it contains
-      the path to the executable and states whether a GUI is allowed to open
-      a X display.
-     </para>
+     <para><literal>annotate</literal> 要素には、 &pk; がアクションを実行する際の方法に関わる設定が書かれています。この例では、実行ファイルのパスと GUI から X ディスプレイを開く設定が書かれています。</para>
     </callout>
    </calloutlist>
-   <para>
-    To add your own policy, create a <filename>.policy</filename> file with
-    the structure above, add the appropriate value into the
-    <literal>id</literal> attribute, and define the default permissions.
-   </para>
+   <para>独自のポリシーを追加したい場合は、上記のような構造で <filename>.policy</filename> ファイルを作成し、 <literal>id</literal> 属性に適切な値を設定して、既定のアクセス許可を記述してください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.change.modify_config.authrules">
-   <title>Adding Authorization Rules</title>
-   <para>
-    Your own authorization rules overrule the default settings. To add your
-    own settings, store your files under
-    <filename>/etc/polkit-1/rules.d/</filename>.
-   </para>
-   <para>
-    The files in this directory start with a two-digit number, followed by a
-    descriptive name, and end with <filename>.rules</filename>. Functions
-    inside these files are executed in the order they have been sorted in.
-    For example, <filename>00-foo.rules</filename> is sorted (and hence
-    executed) before <filename>60-bar.rules</filename> or even
-    <filename>90-default-privs.rules</filename>.
-   </para>
-   <para>
-    Inside the file, the script checks for the specified action ID, which is
-    defined in the <filename>.policy</filename> file. For example, if you
-    want to allow the command <command>gparted</command> to be executed by
-    any member of the <systemitem class="groupname">admin</systemitem>
-    group, check for the action ID
-    <literal>org.opensuse.policykit.gparted</literal>:
-   </para>
+   <title>認可ルールの追加</title>
+   <para>独自の認可ルールを作成することで、既定の設定を上書きして動作させることができます。独自の設定を作成する場合は、 <filename>/etc/polkit-1/rules.d/</filename> ディレクトリ内にファイルを作成してください。</para>
+   <para>このディレクトリにファイルを配置する場合、ファイル名は 2 桁の数字ではじめ、その後ろにわかりやすい名前を続けて、末尾は <filename>.rules</filename> で終わらせます。これらのファイル内の関数は、並べ替えられた順に実行されます。たとえば <filename>00-foo.rules</filename> ファイルは <filename>60-bar.rules</filename> や <filename>90-default-privs.rules</filename> ファイルの前に実行されます。</para>
+   <para>ファイル内では、アクション ID (<filename>.policy</filename> ファイルで定義されている値) が特定のものであるかどうかをチェックします。たとえば <command>gparted</command> というコマンドを <systemitem class="groupname">admin</systemitem> グループ内の任意のユーザに対して許可したい場合は、 <literal>org.opensuse.policykit.gparted</literal> のアクション ID に対して、下記のような処理を記述します:</para>
 <screen>/* Allow users in admin group to run GParted without authentication */
 polkit.addRule(function(action, subject) {
     if (action.id == "org.opensuse.policykit.gparted" &amp;&amp;
@@ -598,181 +370,99 @@ polkit.addRule(function(action, subject) {
         return polkit.Result.YES;
     }
 });</screen>
-   <para>
-    Find the description of all classes and methods of the functions in the
-    &pk; API at
-    <link xlink:href="http://www.freedesktop.org/software/polkit/docs/latest/ref-api.html"/>.
-   </para>
+   <para>&pk; API 内で提供されている全てのクラスとメソッドについて、詳しくは <link xlink:href="http://www.freedesktop.org/software/polkit/docs/latest/ref-api.html"/> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.policykit.change.modify_config.implicit">
-   <title>Modifying Configuration Files for Implicit Privileges</title>
-   <para>
-    &productname; ships with two sets of default authorizations, located
-    in <filename>/etc/polkit-default-privs.standard</filename> and
-    <filename>/etc/polkit-default-privs.restrictive</filename>. For more
-    information, refer to
-    <xref linkend="sec.security.policykit.policies.default"/>.
-   </para>
-   <para>
-    Custom privileges are defined in
-    <filename>/etc/polkit-default-privs.local</filename>. Privileges defined
-    here will always take precedence over the ones defined in the other
-    configuration files. To define your custom set of privileges,
-    do the following:
-   </para>
+   <title>暗黙の権限に対する設定ファイルの変更</title>
+   <para>&productname; には、 2 種類の既定の認可ファイルが用意されています。それぞれ <filename>/etc/polkit-default-privs.standard</filename> と <filename>/etc/polkit-default-privs.restrictive</filename> というパスになっています。詳しくは <xref linkend="sec.security.policykit.policies.default"/> をお読みください。</para>
+   <para>独自の権限については、 <filename>/etc/polkit-default-privs.local</filename> ファイル内で定義します。ここで定義された権限は、その他の設定ファイル内に書かれているものよりも常に優先して適用されます。独自の権限セットを定義したい場合は、下記のようにして行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Open <filename>/etc/polkit-default-privs.local</filename>. To define a
-      privilege, add a line for each policy with the following format:
-     </para>
-<screen><replaceable>&lt;privilege_identifier&gt;</replaceable>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<replaceable>&lt;any session&gt;</replaceable>:<replaceable>&lt;inactive session&gt;</replaceable>:<replaceable>&lt;active session&gt;</replaceable></screen>
-     <para>
-      For example:
-     </para>
+     <para><filename>/etc/polkit-default-privs.local</filename> ファイルを開きます。権限を定義するには、下記のような形式で各ポリシー向けの行を記述します:</para>
+<screen><replaceable>&lt;権限の識別子&gt;</replaceable>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<replaceable>&lt;任意のセッション&gt;</replaceable>:<replaceable>&lt;非動作中のセッション&gt;</replaceable>:<replaceable>&lt;動作中のセッション&gt;</replaceable></screen>
+     <para>たとえば、下記のように指定します:</para>
 <screen>org.freedesktop.policykit.modify-defaults&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;auth_admin_keep_always</screen>
-     <para>
-      The following values are valid for the
-      <replaceable>SESSION</replaceable> placeholders:
-     </para>
+     <para>それぞれの <replaceable>セッション</replaceable> 内では、下記のような値を指定することができます:</para>
      <variablelist>
       <varlistentry>
-       <term><literal>yes</literal>
-       </term>
+       <term><literal>yes</literal></term>
        <listitem>
-        <para>
-         grant privilege
-        </para>
+        <para>権限を許可します</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>no</literal>
-       </term>
+       <term><literal>no</literal></term>
        <listitem>
-        <para>
-         block
-        </para>
+        <para>権限を拒否します</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_self</literal>
-       </term>
+       <term><literal>auth_self</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with own password every time the
-         privilege is requested
-        </para>
+        <para>権限を要求した際、自分自身のパスワードを入力させます</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_self_keep_session</literal>
-       </term>
+       <term><literal>auth_self_keep_session</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with own password once per session,
-         privilege is granted for the whole session
-        </para>
+        <para>権限を初めて要求した際、自分自身のパスワードを入力させます。いったん権限が許可されると、その許可はセッション内でずっと有効化されます</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_self_keep_always</literal>
-       </term>
+       <term><literal>auth_self_keep_always</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with own password once, privilege is
-         granted for the current and for future sessions
-        </para>
+        <para>権限を初めて要求した際、自分自身のパスワードを入力させます。いったん権限が許可されると、その許可は永続的に有効化されます</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_admin</literal>
-       </term>
+       <term><literal>auth_admin</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with &rootuser; password every time
-         the privilege is requested
-        </para>
+        <para>権限を要求した際、 &rootuser; のパスワードを入力させます</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_admin_keep_session</literal>
-       </term>
+       <term><literal>auth_admin_keep_session</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with &rootuser; password once per
-         session, privilege is granted for the whole session
-        </para>
+        <para>権限を初めて要求した際、 &rootuser; のパスワードを入力させます。いったん権限が許可されると、その許可はセッション内でずっと有効化されます</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><literal>auth_admin_keep_always</literal>
-       </term>
+       <term><literal>auth_admin_keep_always</literal></term>
        <listitem>
-        <para>
-         user needs to authenticate with &rootuser; password once,
-         privilege is granted for the current and for future sessions
-        </para>
+        <para>権限を初めて要求した際、 &rootuser; のパスワードを入力させます。いったん権限が許可されると、その許可は永続的に有効化されます</para>
        </listitem>
       </varlistentry>
      </variablelist>
     </step>
     <step>
-     <para>
-      Run as &rootuser; for changes to take effect:
-     </para>
+     <para>あとは設定を反映させるため、 &rootuser; で下記を実行します:</para>
 <screen># /sbin/set_polkit_default_privs</screen>
     </step>
     <step>
-     <para>
-      Optionally check the list of all privilege identifiers with the
-      command <command>pkaction</command>.
-     </para>
+     <para>必要であれば、 <command>pkaction</command> コマンドを利用して、全ての権限識別子を一覧で表示させて確認します。</para>
     </step>
    </procedure>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.policykit.change.defaults">
-  <title>Restoring the Default Privileges</title>
+  <title>既定の権限の復元</title>
 
-  <para>
-   &productname; comes with a predefined set of privileges that is
-   activated by default and thus overrides the upstream defaults. For
-   details, refer to
-   <xref linkend="sec.security.policykit.policies.default"/>.
-  </para>
+  <para>&productname; には、既定で有効化されている権限セット集が存在していて、提供元の既定値を上書きして動作しています。詳細については <xref linkend="sec.security.policykit.policies.default"/> をお読みください。</para>
 
-  <para>
-   Since the graphical &pk; tools and the command line tools always
-   operate on the upstream defaults, &productname; includes an additional
-   command-line tool, <command>set_polkit_default_privs</command>. It resets
-   privileges to the values defined in
-   <filename>/etc/polkit-default-privs.*</filename>. However, the command
-   <command>set_polkit_default_privs</command> will only reset policies that
-   are set to the upstream defaults.
-  </para>
+  <para>グラフィカルな &pk; ツールとコマンドラインのツールは、いずれも提供元の既定値に対して動作する仕組みで、 &productname; でも追加のコマンドラインである <command>set_polkit_default_privs</command> を用意しています。このコマンドは、 <filename>/etc/polkit-default-privs.*</filename> 内に設定されている値に権限をリセットするためのものです。ただし、 <command>set_polkit_default_privs</command> コマンドを実行すると、提供元の既定値を設定してポリシーをリセットすることになります。</para>
 
   <procedure>
-   <title>Restoring the &productname; Defaults</title>
+   <title>&productname; の既定値の復元</title>
    <step>
-    <para>
-     Make sure <filename>/etc/polkit-default-privs.local</filename> does not
-     contain any overrides of the default policies.
-    </para>
+    <para><filename>/etc/polkit-default-privs.local</filename> ファイル内に、既定値を上書きするような設定が含まれていないことを確認します。</para>
     <important>
-     <title>Custom Policy Configuration</title>
-     <para>
-      Policies defined in
-      <filename>/etc/polkit-default-privs.local</filename> will be applied
-      on top of the defaults during the next step.
-     </para>
+     <title>独自のポリシー設定について</title>
+     <para><filename>/etc/polkit-default-privs.local</filename> 内にポリシーの設定が含まれていると、次の手順では既定値に上書きする形でそれらが適用されます。</para>
     </important>
    </step>
    <step>
-    <para>
-     To reset all policies to the upstream defaults first and then apply the
-     &productname; defaults:
-    </para>
+    <para>まずは提供元の既定値に戻したあと、 &productname; の既定値を適用します:</para>
 <screen>&prompt.sudo;rm -f /var/lib/polkit/* &amp;&amp; set_polkit_default_privs</screen>
    </step>
   </procedure>
