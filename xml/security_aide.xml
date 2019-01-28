@@ -4,19 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.aide">
- <title>Intrusion Detection with &aide;</title>
+ <title>&aide; を利用した侵入検知</title>
  <info>
       <abstract>
-        <para>
-    Securing your systems is a mandatory task for any mission-critical
-    system administrator. Because it is impossible to always guarantee that
-    the system is not compromised, it is very important to do extra checks
-    regularly (for example with
-    <systemitem class="daemon">cron</systemitem>) to ensure that the system
-    is still under your control. This is where &aide;, the
-    <emphasis>Advanced Intrusion Detection Environment</emphasis>, comes
-    into play.
-   </para>
+        <para>システムの機密を保持することは、代替のきかないシステムの管理者にとっては必須の課題となります。常にシステムが安全な状態にあることは誰も保証できませんので、定期的に (たとえば <systemitem class="daemon">cron</systemitem> などで) 追加のチェックを行ない、システムが正しく制御されていることを確認することが重要となります。このような要件を満たすことができるのが &aide; (<emphasis>Advanced Intrusion Detection Environment</emphasis>; 高度な侵入検知環境) です。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -24,378 +15,223 @@
       </dm:docmanager>
     </info>
     <sect1 xml:id="sec.aide.why">
-  <title>Why Use &aide;?</title>
+  <title>&aide; を使用する理由</title>
 
-  <para>
-   An easy check that often can reveal unwanted changes can be done by means
-   of RPM. The package manager has a built-in verify function that checks
-   all the managed files in the system for changes. To verify of all files,
-   run the command <command>rpm -Va</command>. However, this command will
-   also display changes in configuration files and you will need to do some
-   filtering to detect important changes.
-  </para>
+  <para>RPM を使用すれば、不用意な変更が加わっているのかを簡易的に調べることができます。パッケージマネージャには、システム内に存在し、管理下にあるファイルに対して、チェックを行なう機能が用意されています。全てのファイルをチェックしたい場合は、 <command>rpm -Va</command> コマンドを実行してください。ただし、このコマンドは設定ファイルなどに対しても変更を検知してしまうため、想定通りに変更されているファイルについては、一覧から取り除いていく作業が必要となってしまいます。</para>
 
-  <para>
-   An additional problem to the method with RPM is that an intelligent
-   attacker will modify <command>rpm</command> itself to hide any changes
-   that might have been done by some kind of root-kit which allows the
-   attacker to mask its intrusion and gain root privilege. To solve this,
-   you should implement a secondary check that can also be run completely
-   independent of the installed system.
-  </para>
+  <para>また、 RPM コマンドを使用して調べる方法には、根本的な問題も存在しています。それは、攻撃者が <command>rpm</command> コマンドそのものを書き換えることで、本来は変更されているものとして表示しなければならないものを隠蔽することができてしまう、という問題です。これにより、ルートキットなどの不正なソフトウエアを潜り込ませることができてしまい、不正に root 権限を得ることができてしまいます。この問題を解決するには、インストール済みのシステムからは完全に独立した、もう 1 つのチェックシステムが必要となります。</para>
  </sect1>
  <sect1 xml:id="sec.aide.setup">
-  <title>Setting Up an &aide; Database</title>
+  <title>&aide; データベースの設定</title>
 
   <important>
-   <title>Initialize &aide; Database After Installation</title>
-   <para>
-    Before you install your system, verify the checksum of your medium (see
-    <xref linkend="sec.installation_troubleshooting.checking_media"/>) to make sure you do not use
-    a compromised source. After you have installed the system, initialize
-    the &aide; database. To make sure that all went well during and
-    after the installation, do an installation directly on the console,
-    without any network attached to the computer. Do not leave the computer
-    unattended or connected to any network before &aide; creates its
-    database.
-   </para>
+   <title>インストール後の &aide; データベースの準備について</title>
+   <para>システムをインストールする前に、まずはお使いのメディアのチェックサムを検証し、不正なソフトウエアを使用していないことをご確認ください (詳しくは <xref linkend="sec.installation_troubleshooting.checking_media"/> をお読みください) 。システムをインストールしたあとは、 &aide; のデータベースの準備を行ないます。なお、インストール中やインストール後に問題なく動作するよう、インストールはコンソールから直接実施するものとし、ネットワークには接続しないでください。また、 &aide; でデータベースの作成が完了するまで、コンソールを誰にでもアクセスできる状態で放置したり、ネットワークに接続したりしないでください。</para>
   </important>
 
-  <para>
-   AIDE is not installed by default on &productname;. To install it,
-   either use <menuchoice><guimenu>Computer</guimenu> <guimenu>Install
-   Software</guimenu></menuchoice>, or enter <literal>zypper install
-   aide</literal> on the command line as &rootuser;.
-  </para>
+  <para>AIDE は &productname; の既定ではインストールされません。インストールを行なうには、 <menuchoice><guimenu>Computer</guimenu> <guimenu>Install Software</guimenu></menuchoice> を使用するか、 &rootuser; で <literal>zypper install aide</literal> を実行してインストールしてください。</para>
 
-  <para>
-   To tell &aide; which attributes of which files should be checked, use
-   the <filename>/etc/aide.conf</filename> configuration file. It must be
-   modified to become the actual configuration. The first section handles
-   general parameters like the location of the &aide; database file. More
-   relevant for local configurations are the <systemitem>Custom
-   Rules</systemitem> and the <systemitem>Directories and Files</systemitem>
-   sections. A typical rule looks like the following:
-  </para>
+  <para>&aide; がファイルをチェックする際、どのような属性をチェック対象にしたいのかを設定したい場合は、 <filename>/etc/aide.conf</filename> 設定ファイルを変更してください。最初のセクションでは、 &aide; のデータベースファイルの場所など、一般的なパラメータを設定します。それに続く <systemitem>Custom Rules</systemitem> と <systemitem>Directories and Files</systemitem> の各セクションが重要な設定となります。既定のルールでは、下記のような値が設定されています:</para>
 
 <screen>Binlib     = p+i+n+u+g+s+b+m+c+md5+sha1</screen>
 
-  <para>
-   After defining the variable <literal>Binlib</literal>, the respective
-   check boxes are used in the files section. Important options include the
-   following:
-  </para>
+  <para>変数 <literal>Binlib</literal> の定義が終わったら、同じセクション内に存在する他の設定も、必要に応じて変更してください。主なオプションには下記のようなものがあります:</para>
 
   <table xml:id="tab.aide.options">
-   <title>Important &aide; Check Boxes</title>
+   <title>主な &aide; のチェック項目</title>
    <tgroup cols="2">
     <thead>
      <row>
       <entry>
-       <para>
-        Option
-       </para>
+       <para>オプション</para>
       </entry>
       <entry>
-       <para>
-        Description
-       </para>
+       <para>説明</para>
       </entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry>
-       <para>
-        p
-       </para>
+       <para>p</para>
       </entry>
       <entry>
-       <para>
-        Check for the file permissions of the selected files or directories.
-       </para>
+       <para>選択したファイルやディレクトリのパーミッションのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        i
-       </para>
+       <para>i</para>
       </entry>
       <entry>
-       <para>
-        Check for the inode number. Every file name has a unique inode
-        number that should not change.
-       </para>
+       <para>inode 番号のチェック (それぞれのファイルには、必ずユニークな inode 番号が割り当てられていて、通常は変更されることはありません) 。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        n
-       </para>
+       <para>n</para>
       </entry>
       <entry>
-       <para>
-        Check for the number of links pointing to the relevant file.
-       </para>
+       <para>そのファイルに対して作成されているリンク数のチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        u
-       </para>
+       <para>u</para>
       </entry>
       <entry>
-       <para>
-        Check if the owner of the file has changed.
-       </para>
+       <para>ファイルの所有者が変更されていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        g
-       </para>
+       <para>g</para>
       </entry>
       <entry>
-       <para>
-        Check if the group of the file has changed.
-       </para>
+       <para>ファイルのグループ設定が変更されていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        s
-       </para>
+       <para>s</para>
       </entry>
       <entry>
-       <para>
-        Check if the file size has changed.
-       </para>
+       <para>ファイルのサイズが変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        b
-       </para>
+       <para>b</para>
       </entry>
       <entry>
-       <para>
-        Check if the block count used by the file has changed.
-       </para>
+       <para>このファイルが使用するブロックカウント数が変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        m
-       </para>
+       <para>m</para>
       </entry>
       <entry>
-       <para>
-        Check if the modification time of the file has changed.
-       </para>
+       <para>ファイルの修正日時が変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        c
-       </para>
+       <para>c</para>
       </entry>
       <entry>
-       <para>
-        Check if the files access time has changed.
-       </para>
+       <para>ファイルのアクセス日時が変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        S
-       </para>
+       <para>S</para>
       </entry>
       <entry>
-       <para>
-        Check for a changed file size.
-       </para>
+       <para>ファイルサイズが変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        I
-       </para>
+       <para>I</para>
       </entry>
       <entry>
-       <para>
-        Ignore changes of the file name.
-       </para>
+       <para>ファイル名の変更を無視するかどうか。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        md5
-       </para>
+       <para>md5</para>
       </entry>
       <entry>
-       <para>
-        Check if the md5 checksum of the file has changed. We recommend
-        to use sha256 or sha512.
-       </para>
+       <para>ファイルに対する md5 チェックサムが変わっていないかどうかのチェック。 sha256 もしくは sha512 の使用をお勧めします。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        sha1
-       </para>
+       <para>sha1</para>
       </entry>
       <entry>
-       <para>
-        Check if the sha1 (160 Bit) checksum of the file has changed. We
-        recommend to use sha256 or sha512.
-       </para>
+       <para>ファイルに対する sha1 (160 ビット) チェックサムが変わっていないかどうかのチェック。 sha256 もしくは sha512 の使用をお勧めします。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        sha256
-       </para>
+       <para>sha256</para>
       </entry>
       <entry>
-       <para>
-        Check if the sha256 checksum of the file has changed.
-       </para>
+       <para>ファイルに対する sha256 チェックサムが変わっていないかどうかのチェック。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        sha512
-       </para>
+       <para>sha512</para>
       </entry>
       <entry>
-       <para>
-        Check if the sha512 checksum of the file has changed.
-       </para>
+       <para>ファイルに対する sha512 チェックサムが変わっていないかどうかのチェック。</para>
       </entry>
      </row>
     </tbody>
    </tgroup>
   </table>
 
-  <para>
-   This is a configuration that checks for all files in
-   <filename>/sbin</filename> with the options defined in
-   <literal>Binlib</literal> but omits the
-   <filename>/sbin/conf.d/</filename> directory:
-  </para>
+  <para>下記は <filename>/sbin</filename> ディレクトリ内にある全てのファイルをチェックするための設定で、 <literal>Binlib</literal> オプション内で指定したチェックを実施するものの、 <filename>/sbin/conf.d/</filename> ディレクトリについてはチェックを省略する指定です:</para>
 
 <screen>/sbin  Binlib
 !/sbin/conf.d</screen>
 
-  <para>
-   To create the &aide; database, proceed as follows:
-  </para>
+  <para>&aide; データベースを作成するには、下記の手順を実施します:</para>
 
   <procedure xml:id="pro.aide.setup.db">
    <step>
-    <para>
-     Open <filename>/etc/aide.conf</filename>.
-    </para>
+    <para><filename>/etc/aide.conf</filename> ファイルを開きます。</para>
    </step>
    <step>
-    <para>
-     Define which files should be checked with which check boxes. For a
-     complete list of available check boxes, see
-     <filename>/usr/share/doc/packages/aide/manual.html</filename>. The
-     definition of the file selection needs some knowledge about regular
-     expressions. Save your modifications.
-    </para>
+    <para>チェック項目を設定して、どのファイルをチェック対象とするのかを設定します。チェック項目全ての一覧については、 <filename>/usr/share/doc/packages/aide/manual.html</filename> ファイルをお読みください。なお、ファイルを指定する際には、正規表現に関するいくつかの知識が必要となります。設定が終わったら、ファイルを保存してください。</para>
    </step>
    <step>
-    <para>
-     To check whether the configuration file is valid, run:
-    </para>
+    <para>設定ファイルの書式が正しいことを確認するには、下記のように実行します:</para>
 <screen>&prompt.root;aide --config-check</screen>
-    <para>
-     Any output of this command is a hint that the configuration is not
-     valid. For example, if you get the following output:
-    </para>
+    <para>このコマンドの出力結果を読むことで、設定ファイルの誤っている箇所のヒントが得られます。たとえば下記のような出力が表示された場合を想定します:</para>
 <screen>&prompt.root;aide --config-check
 35:syntax error:!
 35:Error while reading configuration:!
 Configuration error</screen>
-    <para>
-     The error is to be expected in line 36 of
-     <filename>/etc/aide.conf</filename>. Note that the error message
-     contains the last successfully read line of the configuration file.
-    </para>
+    <para>上記のエラーメッセージからすると、 <filename>/etc/aide.conf</filename> の 36 行目にエラーがあることになります。このとき、エラーメッセージの前の表示される行番号は、最後に正しく処理できた行の番号を示していることに注意してください。</para>
    </step>
    <step>
-    <para>
-     Initialize the &aide; database. Run the command:
-    </para>
+    <para>&aide; のデータベースを準備します。下記のように実行します:</para>
 <screen>&prompt.root;aide -i</screen>
    </step>
    <step>
-    <para>
-     Copy the generated database to a save location like a CD-R or DVD-R, a
-     remote server or a flash disk for later use.
-    </para>
+    <para>生成されたデータベースを、 CD-R や DVD-R 、もしくはリモートのサーバやフラッシュメモリなどにコピーしておいて、後から参照できるようにしておきます。</para>
     <important>
      <title/>
-     <para>
-      This step is essential as it avoids compromising your database. It is
-      recommended to use a medium which can be written only once to prevent
-      the database being modified. <emphasis>Never</emphasis> leave the
-      database on the computer which you want to monitor.
-     </para>
+     <para>このコピー作業は、データベースそれ自身を不正に書き換えられないようにするために重要な作業となります。データベースが不正に書き換えられたりしないよう、一度だけ書き込むことのできるメディアを使用しておくことをお勧めします。また、監視したいコンピュータ内には、データベースを <emphasis>残してはなりません</emphasis> 。</para>
     </important>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.aide.check">
-  <title>Local &aide; Checks</title>
+  <title>ローカルの &aide; チェック</title>
 
-  <para>
-   To perform a file system check, proceed as follows:
-  </para>
+  <para>ファイルシステムのチェックを行なうには、下記のようにして行ないます:</para>
 
   <procedure>
    <step>
-    <para>
-     Rename the database:
-    </para>
+    <para>データベースのファイル名を変更します:</para>
 <screen>&prompt.root;mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db</screen>
    </step>
    <step>
-    <para>
-     After any configuration change, you always need to re-initialize the
-     &aide; database and subsequently move the newly generated database.
-     It is also a good idea to make a backup of this database. See
-     <xref linkend="sec.aide.setup"/> for more information.
-    </para>
+    <para>何らかの設定変更を行なった場合は、 &aide; のデータベースを再準備して、新しく生成されたほうのデータベースに移動を行なう必要があります。この時点でのデータベースをバックアップしておいてもよいでしょう。詳しくは <xref linkend="sec.aide.setup"/> をお読みください。</para>
    </step>
    <step>
-    <para>
-     Perform the check with the following command:
-    </para>
+    <para>あとは下記のコマンドを実行すると、チェックを行なうことができます:</para>
 <screen>&prompt.root;aide --check</screen>
    </step>
   </procedure>
 
-  <para>
-   If the output is empty, everything is fine. If &aide; found changes,
-   it displays a summary of changes, for example:
-  </para>
+  <para>何も出力が表示されない場合は、全く何も問題が見つからなかったことを表わしています。 &aide; が何らかの変更を検知すると、下記のように概要を表示します:</para>
 
 <screen>&prompt.root;aide --check
 AIDE found differences between database and filesystem!!
@@ -406,11 +242,7 @@ Summary:
   Removed files:                0
   Changed files:                1 </screen>
 
-  <para>
-   To learn about the actual changes, increase the verbose level of the
-   check with the parameter <literal>-V</literal>. For the previous example,
-   this could look like the following:
-  </para>
+  <para>実際に変更されたファイル名の一覧を表示したい場合は、 <literal>-V</literal> オプションをつけて冗長に出力するように指定してください。上記の出力例の場合、冗長に出力すると下記のようになります:</para>
 
 <screen>&prompt.root;aide --check -V
 AIDE found differences between database and filesystem!!
@@ -438,117 +270,59 @@ File: /etc/passwd
   Mtime    : 2009-02-18 15:11:02              , 2009-02-18 15:11:47
   Ctime    : 2009-02-18 15:11:02              , 2009-02-18 15:11:47</screen>
 
-  <para>
-   In this example, the file <filename>/etc/passwd</filename> was touched to
-   demonstrate the effect.
-  </para>
+  <para>この例では、 <filename>/etc/passwd</filename> ファイルのタイムスタンプが変わっていることが分かります。</para>
  </sect1>
  <sect1 xml:id="sec.aide.independent">
-  <title>System Independent Checking</title>
+  <title>システムから独立したチェック</title>
 
-  <para>
-   To avoid risk, it is advisable to also run the &aide; binary from a
-   trusted source. This excludes the risk that some attacker also modified
-   the aide binary to hide its traces.
-  </para>
+  <para>&aide; 自身が不正に書き換えられたりする問題を避けるため、 &aide; のプログラムを信頼できるソースから取得して、実行しておくこともできます。これにより、攻撃者が &aide; 自身を書き換えて、警告を出さないようにしてしまう問題を回避することができます。</para>
 
-  <para>
-   To accomplish this task, &aide; must be run from a rescue system that
-   is independent of the installed system. With &productname; it is
-   relatively easy to extend the rescue system with arbitrary programs, and
-   thus add the needed functionality.
-  </para>
+  <para>&aide; 自身を信頼できるソースから実行するには、 &aide; をインストール済みのシステム内で実行するのではなく、レスキューシステム内から実行しなければなりません。 &productname; では、容易に拡張可能なレスキューシステムを提供していますので、ここから簡単に &aide; を実行することができます。</para>
 
-  <para>
-   Before you can start using the rescue system, you need to provide two
-   packages to the system. These are included with the same syntax as you
-   would add a driver update disk to the system. For a detailed description
-   about the possibilities of linuxrc that are used for this purpose, see
-   <link xlink:href="http://en.opensuse.org/SDB:Linuxrc"/>. In the
-   following, one possible way to accomplish this task is discussed.
-  </para>
+  <para>レスキューシステムを起動する前に、 2 種類のパッケージを用意する必要があります。これらはシステムに対するドライバ更新ディスクと同じ書式で設定することができます。 linuxrc の設定方法に関する詳細は、 <link xlink:href="https://ja.opensuse.org/SDB:Linuxrc"/> をお読みください。下記の手順では、実現可能な方法のうちの 1 つを説明しています。</para>
 
   <procedure>
-   <title>Starting a Rescue System with &aide;</title>
+   <title>&aide; を利用したレスキューシステムの起動</title>
    <step>
-    <para>
-     Provide an FTP server as a second machine.
-    </para>
+    <para>まずは別のマシンに FTP サーバを準備します。</para>
    </step>
    <step>
-    <para>
-     Copy the packages <systemitem>aide</systemitem> and
-     <systemitem>mhash</systemitem> to the FTP server directory, in our case
-     <filename>/srv/ftp/</filename>. Replace the placeholders
-     <replaceable>ARCH</replaceable> and <replaceable>VERSION</replaceable>
-     with the corresponding values:
-    </para>
+    <para>FTP サーバ内のディレクトリに、 <systemitem>aide</systemitem> と <systemitem>mhash</systemitem> の各パッケージを配置します。たとえば <filename>/srv/ftp/</filename> のディレクトリに配置するものとします。下記の <replaceable>ARCH</replaceable> と <replaceable>VERSION</replaceable> の箇所は、実際のアーキテクチャ名とバージョン文字列に置き換えて実行してください:</para>
 <screen>&prompt.root;cp DVD1/suse/<replaceable>ARCH</replaceable>/aide<replaceable>VERSION</replaceable>.<replaceable>ARCH</replaceable>.rpm /srv/ftp
 &prompt.root;cp DVD1/suse/<replaceable>ARCH</replaceable>/mhash<replaceable>VERSION</replaceable>.<replaceable>ARCH</replaceable>.rpm /srv/ftp</screen>
    </step>
    <step>
-    <para>
-     Create an info file <filename>/srv/ftp/info.txt</filename> that
-     provides the needed boot parameters for the rescue system:
-    </para>
+    <para>レスキューシステムで必要な起動パラメータを記述した、 <filename>/srv/ftp/info.txt</filename> というファイルを作成します。下記の内容で保存してください:</para>
 <screen>dud:ftp://&ftpname;/aide<replaceable>VERSION</replaceable>.<replaceable>ARCH</replaceable>.rpm
 dud:ftp://&ftpname;/mhash<replaceable>VERSION</replaceable>.<replaceable>ARCH</replaceable>.rpm</screen>
-    <para>
-     Replace your FTP domain name, <replaceable>VERSION</replaceable> and
-     <replaceable>ARCH</replaceable> with the values used on your system.
-    </para>
+    <para>ここで、 FTP サーバのドメイン名はお使いの環境に合わせて変更してください。また、 <replaceable>ARCH</replaceable> と <replaceable>VERSION</replaceable> の箇所は、実際のアーキテクチャ名とバージョン文字列に置き換えて実行してください。</para>
    </step>
    <step>
-    <para>
-     Restart the server that needs to go through an &aide; check with the
-     Rescue system from your DVD. Add the following string to the boot
-     parameters:
-    </para>
+    <para>まずはお使いのシステムを再起動して、 DVD からレスキューシステムを起動して &aide; を開始します。このとき、起動パラメータには下記を指定します:</para>
 <screen>info=ftp://&ftpname;/info.txt</screen>
-    <para>
-     This parameter tells <command>linuxrc</command> to also read in all
-     information from the <filename>info.txt</filename> file.
-    </para>
+    <para>このパラメータにより、 <command>linuxrc</command> が <filename>info.txt</filename> ファイルを読み込んで、その内容をパラメータとして取り込むようになります。</para>
    </step>
   </procedure>
 
-  <para>
-   After the rescue system has booted, the &aide; program is ready for
-   use.
-  </para>
+  <para>レスキューシステムが起動したあとは、通常どおり &aide; プログラムを使用することができます。<!-- NOTE: added explanation for fonts; no Japanese fonts available at this time --> なお、レスキューシステムは日本語に対応していないため、表示は全て英語になりますので、あらかじめご了承ください。</para>
  </sect1>
  <sect1 xml:id="sec.aide.more">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   Information about &aide; is available at the following places:
-  </para>
+  <para>&aide; に関する情報は、それぞれ下記の場所にあります:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     The home page of &aide;:
-     <link xlink:href="http://aide.sourceforge.net"/>
-    </para>
+    <para>&aide; の Web ページ: <link xlink:href="http://aide.sourceforge.net"/></para>
    </listitem>
    <listitem>
-    <para>
-     In the documented template configuration
-     <filename>/etc/aide.conf</filename>.
-    </para>
+    <para>設定ファイル <filename>/etc/aide.conf</filename> 内のコメント文 (英語)</para>
    </listitem>
    <listitem>
-    <para>
-     In several files below
-     <filename>/usr/share/doc/packages/aide</filename> after installing the
-     <systemitem>aide</systemitem> package.
-    </para>
+    <para><systemitem>aide</systemitem> パッケージをインストールしてある環境下であれば、 <filename>/usr/share/doc/packages/aide</filename> 以下にもいくつかの文書があります。</para>
    </listitem>
    <listitem>
-    <para>
-     On the &aide; user mailing list at
-     <link xlink:href="https://www.ipi.fi/mailman/listinfo/aide"/>.
-    </para>
+    <para>&aide; のユーザ向けメーリングリストが、 <link xlink:href="https://www.ipi.fi/mailman/listinfo/aide"/> で提供されています。</para>
    </listitem>
   </itemizedlist>
  </sect1>
