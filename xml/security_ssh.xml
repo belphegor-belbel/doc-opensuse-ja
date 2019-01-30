@@ -4,193 +4,81 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.ssh">
- <title>SSH: Secure Network Operations</title>
+ <title>SSH: 機密を保持するネットワーク操作</title>
  <info>
   <abstract>
-   <para>
-    In networked environments, it is often necessary to access hosts from a
-    remote location. If a user sends login and password strings for
-    authentication purposes as plain text, they could be intercepted and
-    misused to gain access to that user account. This would open all the user's files to an attacker
-    and the illegal account could be used to obtain administrator or
-    <systemitem class="username">root</systemitem> access, or to penetrate
-    other systems. In the past, remote connections were established with
-    <command>telnet</command>, <command>rsh</command> or
-    <command>rlogin</command>, which offered no guards against eavesdropping
-    in the form of encryption or other security mechanisms. There are other
-    unprotected communication channels, like the traditional FTP protocol
-    and some remote copying programs like <command>rcp</command>.
-   </para>
+   <para>ネットワークによる接続が提供されている環境では、一方のホストから他方のホストにログインする必要が生じることがあります。ユーザが認証を目的としてユーザ名とパスワードを送信する際、それをそのままテキスト形式で送ってしまうと、それは容易に傍受することができてしまうため、そのアカウントになりすましてログインできるようになってしまいます。これにより、攻撃者がユーザの保持しているファイルを読み取ることができてしまうほか、管理者や <systemitem class="username">root</systemitem> のアカウントを奪取して不正なアカウントを作成することもできてしまいますし、他のコンピュータを攻撃する際の踏み台として使用することもできてしまいます。その昔は <command>telnet</command> , <command>rsh</command> , <command>rlogin</command> などのコマンドを利用して、ネットワーク上離れた場所との通信を確立していましたが、これらの方法はいずれも盗聴に対する保護が存在せず、暗号化などのセキュリティ機構も備わっていませんでした。それ以外にも、今もなお使用されている FTP などのプロトコルや、 <command>rcp</command> などのプログラムについても、暗号化が行なわれていませんでした。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
    </dm:bugtracker>
   </dm:docmanager>
  </info>
- <para>
-  The SSH suite provides the necessary protection by encrypting the
-  authentication strings (usually a login name and a password) and all the
-  other data exchanged between the hosts. With SSH, the data flow could
-  still be recorded by a third party, but the contents are encrypted and
-  cannot be reverted to plain text unless the encryption key is known. So
-  SSH enables secure communication over insecure networks, such as the
-  Internet. The SSH implementation coming with &productname; is OpenSSH.
- </para>
- <para>
-  &productname; installs the OpenSSH package by default providing the
-  commands <command>ssh</command>, <command>scp</command>, and
-  <command>sftp</command>. In the default configuration, remote access of a
-  &productname; system is only possible with the OpenSSH utilities, and
-  only if the <systemitem class="daemon">sshd</systemitem> is running and
-  the firewall permits access.
- </para>
- <para>
-  SSH on &productname; uses cryptographic hardware acceleration
-  if available. As a result, the transfer of large quantities of data
-  through an SSH connection is considerably faster than without
-  cryptographic hardware. As an additional benefit, the CPU will see a
-  significant reduction in load.
- </para>
+ <para>SSH スイートは認証文字列 (通常はユーザ名とパスワード) だけでなく、コンピュータ間でやり取りされている全てのデータを暗号化することによって、必要な保護が得られるような仕組みを提供しています。 SSH でも第三者がデータの流れを傍受することはできてしまいますが、内容は暗号化されているため、暗号鍵を知らない限り元のデータを得ることができなくなっています。そのため、 SSH はインターネットなどの機密保護のないネットワークで、通信の機密を保持するために使用されます。なお、 &productname; での SSH 実装は、 OpenSSH という名称で提供されています。</para>
+ <para>&productname; では、 <command>ssh</command> , <command>scp</command> , <command>sftp</command> の各コマンドを提供する OpenSSH パッケージが既定でインストールされます。また、既定の設定では、 &productname; システムへのリモートアクセスは OpenSSH を利用した場合にのみできるようになっていて、 <systemitem class="daemon">sshd</systemitem> を動作させ、ファイアウオールでアクセスを許可するように設定する必要があります。</para>
+ <para>&productname; での SSH は、ハードウエアアクセラレーション機能が利用できる環境であれば、それを使用するように設定されています。その結果、 SSH を介した巨大なファイルの転送は、暗号化ハードウエア無しの場合に比べてかなり高速になるように作られています。また、追加の利点として、 CPU への負荷も少なくなるようになっています。</para>
  <sect1 xml:id="sec.ssh.programm">
-  <title><command>ssh</command>&mdash;Secure Shell</title>
+  <title><command>ssh</command> &mdash;Secure SHell</title>
 
-  <para>
-   With <command>ssh</command> it is possible to log in to remote
-   systems and to work interactively. To log in to the host
-   <literal>&exampleserver;</literal> as user &exampleuser; enter one of
-   the following commands:
-  </para>
+  <para><command>ssh</command> コマンドを使用することで、ネットワーク上離れたシステムにログインして対話的な作業を行なうことができます。たとえば &exampleuser; というユーザ名で <literal>&exampleserver;</literal> というホストにログインしたい場合は、下記のいずれかのコマンドを実行します:</para>
 
 <screen>&prompt.user;ssh &exampleuser_plain;@&exampleserver;
 &prompt.user;ssh -l &exampleuser_plain; &exampleserver;</screen>
 
-  <para>
-   If the user name is the same on both machines, you can omit it. Using
-   <command>ssh &exampleserver;</command> is sufficient. The remote host
-   prompts for the remote user's password. After a successful
-   authentication, you can work on the remote command line or use
-   interactive applications, such as &yast; in text mode.
-  </para>
+  <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
 
-  <para>
-   Furthermore, <command>ssh</command> offers the possibility to run
-   non-interactive commands on remote systems using <command>ssh</command>
-   <replaceable>HOST</replaceable> <replaceable>COMMAND</replaceable>.
-   <replaceable>COMMAND</replaceable> needs to be properly quoted. Multiple
-   commands can be concatenated as on a local shell.
-  </para>
+  <para>これら加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
 <screen>&prompt.user;ssh root@&exampleserver; "dmesg -T | tail -n 25"
 &prompt.user;ssh root@&exampleserver; "cat /etc/issue &amp;&amp; uptime"</screen>
 
   <sect2 xml:id="sec.ssh.programm.x">
-   <title>Starting X Applications on a Remote Host</title>
-   <para>
-    SSH also simplifies the use of remote X applications. If you run
-    <command>ssh</command> with the <option>-X</option> option, the
-    <envar>DISPLAY</envar> variable is automatically set on the remote
-    machine and all X output is exported to the local machine over the
-    existing SSH connection. At the same time, X applications started
-    remotely cannot be intercepted by unauthorized individuals.
-   </para>
+   <title>ネットワーク上離れたホストでの X アプリケーションの起動</title>
+   <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。<command>ssh</command> コマンドに <option>-X</option> オプションを付けることで接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
   </sect2>
 
   <sect2 xml:id="sec.ssh.programm.forwarding">
-   <title>Agent Forwarding</title>
-   <para>
-    By adding the <option>-A</option> option, the ssh-agent authentication
-    mechanism is carried over to the next machine. This way, you can work
-    from different machines without having to enter a password, but only if
-    you have distributed your public key to the destination hosts and
-    properly saved it there. Refer to
-    <xref linkend="sec.ssh.authentic.key_copy"/> for details.
-   </para>
-   <para>
-    This mechanism is deactivated in the default settings, but can be
-    permanently activated at any time in the system wide configuration file
-    <filename>/etc/ssh/sshd_config</filename> by setting
-    <literal>AllowAgentForwarding yes</literal>.
-   </para>
+   <title>エージェント転送</title>
+   <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります。詳しくは <xref linkend="sec.ssh.authentic.key_copy"/> をお読みください。</para>
+   <para>この仕組みは既定の設定では無効化されていますが、 <filename>/etc/ssh/sshd_config</filename> というシステム全体の設定に <literal>AllowAgentForwarding yes</literal> を追加するだけで、いつでも恒久的に有効化することができます。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.ssh.copy">
-  <title><command>scp</command>&mdash;Secure Copy</title>
+  <title><command>scp</command> &mdash;機密を確保したファイルのコピー</title>
 
-  <para>
-   <command>scp</command> copies files to or from a remote machine.  If
-   the user name on &wsI; is different than the user name on
-   &exampleserver;, specify the latter using the
-   <option><replaceable>USER_NAME</replaceable>@host</option> format. If
-   the file should be copied into a directory other than the remote
-   user's home directory, specify it as
-   &exampleserver;:<replaceable>DIRECTORY</replaceable>. The following
-   examples show how to copy a file from a local to a remote machine and
-   vice versa.
-  </para>
+  <para><command>scp</command> は、指定したファイルをリモートのマシンとの間でコピーするプログラムです。 &wsI 内でのユーザ名と &exampleserver; 内でのユーザ名が異なる場合は、 <option><replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable></option> の形式で指定してください。また、ホームディレクトリ以外のディレクトリにファイルをコピーしたい場合は、 &exampleserver;: <replaceable>ディレクトリ</replaceable> の形式で指定してください。下記の例では、ローカルから接続先に、および接続先からローカルにそれぞれファイルをコピーしています。</para>
 
 <screen>&prompt.user;scp ~/MyLetter.tex &exampleuser_plain;@&exampleserver;:/tmp <co xml:id="co.scp.local.remote"/>
 &prompt.user;scp &exampleuser_plain;@&exampleserver;:/tmp/MyLetter.tex ~ <co xml:id="co.scp.remote.local"/></screen>
 <calloutlist>
  <callout arearefs="co.scp.local.remote">
-  <para>local to remote</para>
+  <para>ローカルから接続先に</para>
 </callout>
  <callout arearefs="co.scp.remote.local">
-  <para>remote to local</para>
+  <para>接続先からローカルに</para>
  </callout>
 </calloutlist>
   <tip>
-   <title>The <option>-l</option> Option</title>
-   <para>
-    With the <command>ssh</command> command, the option
-    <option>-l</option> can be used to specify a remote user (as an
-    alternative to the
-    <option><replaceable>USER_NAME</replaceable>@host</option>
-    format). With <command>scp</command> the option <option>-l</option>
-    is used to limit the bandwidth consumed by <command>scp</command>.
-   </para>
+   <title><option>-l</option> オプションについて</title>
+   <para><command>ssh</command> コマンドでは、 <option>-l</option> オプションを指定することで、接続先のコンピュータ内でのユーザを指定することができます (<option><replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable></option> と同じ意味になります) 。 <command>scp</command> コマンドの場合、 <option>-l</option> は <command>scp</command> が消費する帯域を制限するためのオプションを意味しています。</para>
   </tip>
 
-  <para>
-   After the correct password is entered, <command>scp</command> starts the
-   data transfer. It displays a progress bar and the time remaining for each
-   file that is copied. Suppress all output with the <option>-q</option>
-   option.
-  </para>
+  <para>正しいパスワードの入力が行なわれると、 <command>scp</command> はデータ転送を開始します。進捗表示バーと、各ファイルの転送にかかる残り時間が表示されます。 <option>-q</option> オプションを指定すると、それらの出力を省略することができます。</para>
 
-  <para>
-   <command>scp</command> also provides a recursive copying feature for
-   entire directories. The command
-  </para>
+  <para><command>scp</command> はディレクトリ全体を再帰的にコピーする用途でも使用することができます:</para>
 
 <screen>&prompt.user;scp -r src/ sun:backup/</screen>
 
-  <para>
-   copies the entire contents of the directory <filename>src</filename>
-   including all subdirectories to the <filename>~/backup</filename>
-   directory on the host &exampleserver;. If this subdirectory does not
-   exist, it is created automatically.
-  </para>
+  <para>上記のコマンドを実行すると、 <filename>src</filename> ディレクトリ内にある全てのファイルとサブディレクトリを、 &exampleserver; 内の <filename>~/backup</filename> ディレクトリにコピーします。サブディレクトリが存在していない場合は、それらは自動的に作成されます。</para>
 
-  <para>
-   The <option>-p</option> option tells <command>scp</command> to leave the
-   time stamp of files unchanged. <option>-C</option> compresses the data
-   transfer. This minimizes the data volume to transfer, but creates a
-   heavier burden on the processors of both machines.
-  </para>
+  <para><option>-p</option> オプションは、 <command>scp</command> に対してファイルのタイムスタンプを変更しないようにするオプションです。 <option>-C</option> はデータ転送を圧縮するよう指示するオプションです。これにより転送の際のデータ量を減らすことができますが、送信側・受信側両方のホストでプロセッサにかかる負荷が上昇します。</para>
  </sect1>
  <sect1 xml:id="sec.ssh.sftp">
-  <title><command>sftp</command>&mdash;Secure File Transfer</title>
+  <title><command>sftp</command> &mdash;機密を確保したファイルの転送</title>
 
   <sect2 xml:id="sec.ssh.sftp.using">
-   <title>Using <command>sftp</command></title>
-  <para>
-   If you want to copy several files from or to different locations,
-   <command>sftp</command> is a convenient alternative to
-   <command>scp</command>. It opens a shell with a set of commands similar
-   to a regular FTP shell. Type <command>help</command> at the sftp-prompt
-   to get a list of available commands. More details are available from the
-   <command>sftp</command> man page.
-  </para>
+   <title><command>sftp</command> の使用</title>
+  <para>複数のファイルをコピーしたい場合や、異なる場所からコピーを行ないたい場合は、 <command>scp</command> の代わりに <command>sftp</command> を利用したほうが便利になることがあります。このコマンドは、通常の FTP プロトコルと同様に、様々なコマンドを実行できるシェルを開くことができます。利用可能なコマンドの一覧を取得したい場合は、 sftp のプロンプトで <command>help</command> と入力してください。より詳しい詳細は、 <command>sftp</command> のマニュアルページに書かれています。</para>
 
 <screen>&prompt.user;sftp &exampleserver;
 Enter passphrase for key '/home/&exampleuser_plain;/.ssh/id_rsa':
@@ -202,23 +90,13 @@ cd path                            Change remote directory to 'path'
 [...]</screen>
   </sect2>
   <sect2 xml:id="sec.ssh.sftp.perms">
-   <title>Setting Permissions for File Uploads</title>
-   <para>
-    As with a regular FTP server, a user cannot only download,
-        but also upload files to a remote machine running an SFTP server
-        by using the <command>put</command> command. By default the
-        files will be uploaded to the remote host with the same
-        permissions as on the local host. There are two options to
-        automatically alter these permissions:
-   </para>
+   <title>ファイルアップロードのパーミッション設定</title>
+   <para>通常の FTP サーバと同様に、ユーザは SFTP を利用することで、ダウンロードだけでなくアップロードも行なうことができます。コマンドは通常の FTP サーバと同じで、 <command>put</command> コマンドを利用します。既定では、アップロードしたファイルのパーミッションは、ローカル側のパーミッションと同じに設定されます。ただし、自動的に設定されるパーミッションを変更したい場合は、下記のいずれかを実施してください:</para>
    <variablelist>
     <varlistentry>
-     <term>Setting a umask</term>
+     <term>umask の設定</term>
      <listitem>
-      <para>
-       A umask works as a filter against the permissions of the original
-       file on the local host. It can only withdraw permissions:
-      </para>
+      <para>umask はパーミッションに対するフィルタとして動作する仕組みで、元々のファイルとアップロード先のファイルとの間で、引き継いで欲しくないビットを 1 にします。なお、アクセス許可を追加することはできません。取り消すことのみ実現できます:</para>
       <table>
        <title/>
        <tgroup cols="3">
@@ -228,104 +106,62 @@ cd path                            Change remote directory to 'path'
         <thead>
          <row>
           <entry>
-           <para>
-            permissions original
-           </para>
+           <para>元々のパーミッション</para>
           </entry>
           <entry>
-           <para>
-            umask
-           </para>
+           <para>umask の値</para>
           </entry>
           <entry>
-           <para>
-            permissions uploaded
-           </para>
+           <para>アップロードされたファイルのパーミッション</para>
           </entry>
          </row>
         </thead>
         <tbody>
          <row>
           <entry>
-           <para>
-            0666
-           </para>
+           <para>0666</para>
           </entry>
           <entry>
-           <para>
-            0002
-           </para>
+           <para>0002</para>
           </entry>
           <entry>
-           <para>
-            0664
-           </para>
+           <para>0664</para>
           </entry>
          </row>
          <row>
           <entry>
-           <para>
-            0600
-           </para>
+           <para>0600</para>
           </entry>
           <entry>
-           <para>
-            0002
-           </para>
+           <para>0002</para>
           </entry>
           <entry>
-           <para>
-            0600
-           </para>
+           <para>0600</para>
           </entry>
          </row>
          <row>
           <entry>
-           <para>
-            0775
-           </para>
+           <para>0775</para>
           </entry>
           <entry>
-           <para>
-            0025
-           </para>
+           <para>0025</para>
           </entry>
           <entry>
-           <para>
-            0750
-           </para>
+           <para>0750</para>
           </entry>
          </row>
         </tbody>
        </tgroup>
       </table>
-      <para>
-       To apply a umask on an SFTP server, edit the file
-       <filename>/etc/ssh/sshd_configuration</filename>. Search for the line
-       beginning with <literal>Subsystem sftp</literal> and add the
-       <option>-u</option> parameter with the desired setting, for example:
-      </para>
+      <para>SFTP サーバ側で umask を適用するには、 <!-- NOTE: sshd_config (not sshd_configuration? --><filename>/etc/ssh/sshd_configuration</filename> ファイルを編集します。まずは <literal>Subsystem sftp</literal> で始まる行を探し、行の末尾に <option>-u</option> オプションを追加して、必要な値を指定してください。たとえば下記のようになります:</para>
 <screen>Subsystem sftp /usr/lib/ssh/sftp-server -u 0002</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Explicitly Setting the Permissions</term>
+     <term>明示的なパーミッションの指定</term>
      <listitem>
-      <para>
-       Explicitly setting the permissions sets the same permissions for all
-       files uploaded via SFTP. Specify a three-digit pattern such as
-       <literal>600</literal>, <literal>644</literal>, or
-       <literal>755</literal> with <option>-u</option>. When both
-       <option>-m</option> and <option>-u</option> are specified,
-       <literal>-u</literal> is ignored.
-      </para>
-      <para>
-       To apply explicit permissions for uploaded files on an SFTP server,
-       edit the file <filename>/etc/ssh/sshd_configuration</filename>.
-       Search for the line beginning with <literal>Subsystem sftp</literal>
-       and add the <option>-m</option> parameter with the desired setting,
-       for example:
-      </para>
+      <para>SFTP 経由でアップロードされた全てのファイルに対して、同じパーミッションを設定するように指定する方法です。 <option>-u</option> オプションと同様に、 <literal>600</literal> , <literal>644</literal> , <literal>755</literal> のような 3 桁のパーミッション値を指定してください。 <option>-m</option> と <option>-u</option> の両方が指定された場合、 <literal>-u</literal> は無視されます。</para>
+      <para>SFTP サーバ側で明示的にパーミッションを指定するには、  <!-- NOTE: sshd_config (not sshd_configuration? --><filename>/etc/ssh/sshd_configuration</filename> ファイルを編集します。まずは <literal>Subsystem sftp</literal> で始まる行を探し、行の末尾に <option>-m</option> オプションを追加して、必要な値を指定してください。たとえば下記のようになります:</para>
 <screen>Subsystem sftp /usr/lib/ssh/sftp-server -m 600</screen>
      </listitem>
     </varlistentry>
@@ -333,151 +169,55 @@ cd path                            Change remote directory to 'path'
   </sect2>
  </sect1>
  <sect1 xml:id="sec.ssh.sshdserver">
-  <title>The SSH Daemon (<systemitem class="daemon">sshd</systemitem>)</title>
+  <title>SSH デーモン ( <systemitem class="daemon">sshd</systemitem> )</title>
 
-  <para>
-   To work with the SSH client programs <command>ssh</command> and
-   <command>scp</command>, a server (the SSH daemon) must be running in the
-   background, listening for connections on <literal>TCP/IP port
-   22</literal>. The daemon generates three key pairs when starting for the
-   first time. Each key pair consists of a private and a public key.
-   Therefore, this procedure is called public key-based. To
-   guarantee the security of the communication via SSH, access to the
-   private key files must be restricted to the system administrator. The
-   file permissions are set accordingly by the default installation. The
-   private keys are only required locally by the SSH daemon and must not be
-   given to anyone else. The public key components (recognizable by the name
-   extension <filename>.pub</filename>) are sent to the client requesting
-   the connection. They are readable for all users.
-  </para>
+  <para><command>ssh</command> や <command>scp</command> などのクライアント側プログラムを動作させるには、サーバ側で SSH デーモンを動作させておかなければなりません。 SSH デーモンは通常、裏で動く仕組みで、 <literal>TCP/IP ポート 22</literal> で接続を待ち受けています。デーモンは初回の起動時に 3 種類の鍵対を作成しますが、それぞれの鍵対には公開鍵と機密鍵が含まれています。そのため、この処理は公開鍵ベースの鍵の生成と呼ばれます。また、 SSH を介した通信の機密が保たれるようにするため、機密鍵を含むファイルへのアクセスは、システム管理者にのみ許可するように設定しなければなりません。ただし、ファイルへのアクセス権は自動的に設定されます。さらに、機密鍵はローカルの SSH デーモンのみが使用するものであり、それ以外のユーザに公開してはなりません。逆に公開鍵 (ファイル名の拡張子が <filename>.pub</filename> になっているもの) は、接続を行なうクライアントに送信されるものであり、全てのユーザから読み込むことができるようになっています。</para>
 
-  <para>
-   A connection is initiated by the SSH client. The waiting SSH daemon and
-   the requesting SSH client exchange identification data to compare the
-   protocol and software versions, and to prevent connections through the
-   wrong port. Because a child process of the original SSH daemon replies to
-   the request, several SSH connections can be made simultaneously.
-  </para>
+  <para>接続は SSH クライアント側から行ないます。その後、待ち受けている SSH デーモンと SSH クライアントとの間でプロトコルとソフトウエアバージョンを含む識別情報を交換し、誤ったポートからの接続が行なわれないようにします。 SSH デーモンの子プロセスが要求に応答する仕組みであるため、複数の SSH 接続を同時に受け付けることができるようになっています。</para>
 
-  <para>
-   For the communication between SSH server and SSH client, OpenSSH supports
-   versions&nbsp;1 and 2 of the SSH protocol. Version&nbsp;2 of the
-   SSH protocol is used by default. Override this to use version&nbsp;1
-   of protocol with the <option>-1</option> option.
-  </para>
+  <para>SSH サーバと SSH クライアントとの間での通信において、 OpenSSH では SSH プロトコルのバージョン 1 とバージョン 2 の両方に対応しています。 SSH プロトコルではバージョン 2 が既定で使用されますが、 <option>-1</option> オプションを指定することで、バージョン 1 を強制的に使用することができます。</para>
 
-  <para>
-   When using version&nbsp;1 of SSH, the server sends its public host key
-   and a server key, which is regenerated by the SSH daemon every hour. Both
-   allow the SSH client to encrypt a freely chosen session key, which is
-   sent to the SSH server. The SSH client also tells the server which
-   encryption method (cipher) to use. Version&nbsp;2 of the SSH protocol
-   does not require a server key. Both sides use an algorithm according to
-   Diffie-Hellman to exchange their keys.
-  </para>
+  <para>SSH プロトコルのバージョン 1 を使用している場合、サーバ側ではホスト側の公開鍵と、 1 時間に 1 回再生成されるサーバ鍵を送信します。 SSH クライアント側では、任意に選択したセッション鍵を両方の鍵で暗号化して、 SSH サーバ側に送信します。 SSH クライアント側では、サーバに対して使用する暗号化方式を指定します。 SSH プロトコルのバージョン 2 では、サーバ鍵を必要としません。サーバとクライアントは、いずれも Diffie-Hellman の仕組みに従って鍵を交換します。</para>
 
-  <para>
-   The private host and server keys are absolutely required to decrypt the
-   session key and cannot be derived from the public parts. Only the
-   contacted SSH daemon can decrypt the session key using its private keys.
-   This initial connection phase can be watched closely by turning on
-   verbose debugging using the <option>-v</option> option of the SSH client.
-  </para>
+  <para>セッション鍵を解読するには、ホスト鍵とサーバ鍵の両方の機密鍵必要となるほか、機密鍵は公開鍵からは生成できないものです。そのため、通信相手となっている SSH デーモンのみがセッション鍵を解読できることになります。このような接続当初の動作は、 SSH クライアント側で <option>-v</option> オプションを指定して冗長出力を行なうことで、より詳しく表示することができます。</para>
 
 
   <tip>
-   <title>Viewing the SSH Daemon Log File</title>
-   <para>
-    To watch the log entries from the <systemitem class="daemon">sshd</systemitem> use the following command:
-   </para>
+   <title>SSH デーモンのログファイルの表示について</title>
+   <para><systemitem class="daemon">sshd</systemitem> が生成したログの出力を読みたい場合は、下記のコマンドを使用します:</para>
    <screen>&prompt.sudo;journalctl -u sshd</screen>
   </tip>
 
 
   <sect2>
-   <title>Maintaining SSH Keys</title>
-  <para>
-   It is recommended to back up the private and public keys stored in
-   <filename>/etc/ssh/</filename> in a secure, external location. In this
-   way, key modifications can be detected or the old ones can be used again
-   after having installed a new system.
-  </para>
+   <title>SSH 鍵の管理</title>
+  <para><filename>/etc/ssh/</filename> 内にある機密鍵と公開鍵の両方を、機密の保持される外部のデバイスにバックアップしておくことをお勧めします。バックアップを採取しておくことで、鍵が不正に書き換えられた際の検出ができるほか、新しくシステムをインストールし直すような場合にも対応することができます。</para>
 
   <tip>
-   <title>Existing SSH Host Keys</title>
-   <para>
-    If you install &productname; on a machine with existing Linux
-    installations, the installation routine automatically imports the SSH
-    host key with the most recent access time from an existing installation.
-   </para>
+   <title>既存の SSH ホスト鍵</title>
+   <para>&productname; を既存の Linux インストールが存在する環境にインストールする場合、インストールルーチンは既存の SSH ホスト鍵を検索して、最も新しいアクセス日時のものを自動的に取り込むことができるようになっています。</para>
   </tip>
 
-  <para>
-   When establishing a secure connection with a remote host for the first
-   time, the client stores all public host keys in
-   <filename>~/.ssh/known_hosts</filename>. This prevents any
-   man-in-the-middle attacks&mdash;attempts by foreign SSH servers to use
-   spoofed names and IP addresses. Such attacks are detected either by a
-   host key that is not included in <filename>~/.ssh/known_hosts</filename>,
-   or by the server's inability to decrypt the session key in the absence of
-   an appropriate private counterpart.
-  </para>
+  <para>初めて特定のホストに接続すると、クライアントは公開鍵を <filename>~/.ssh/known_hosts</filename> 内に保存します。これにより、ネットワーク内で不正な鍵を使用させて、攻撃者に容易に機密メッセージを解読させてしまうような、中間者攻撃を防ぐことができます。このような攻撃が行なわれた場合、 <filename>~/.ssh/known_hosts</filename> 内に保存されているホスト鍵が変更されていることが検出されるか、もしくはサーバ側でメッセージが解読できないことで判明します。</para>
 
-  <para>
-   If the public keys of a host have changed (that needs to be verified
-   before connecting to such a server), the offending keys can be
-   removed with <command>ssh-keygen -r
-   <replaceable>HOSTNAME</replaceable></command>.
-  </para>
+  <para>何らかの理由でホストの公開鍵が変わってしまった場合、クライアントはサーバへの接続前にその旨のメッセージを受け取ります。以前の鍵を削除したい場合は、 <command>ssh-keygen -r <replaceable>ホスト名</replaceable></command> を実行してください。</para>
   </sect2>
   <sect2 xml:id="sec.ssh.sshdserver.rotating">
-   <title>Rotating Host Keys</title>
-   <para>
-    As of version 6.8, OpenSSH comes with a protocol extension that
-    supports host key rotation.  It makes sense to replace keys, if you
-    are still using weak keys such as 1024-bit RSA keys.  It is strongly
-    recommended to replace such a key and go for 2048-bit DSA keys or
-    something even better.  The client will then use the
-    <quote>best</quote> host key.
-   </para>
+   <title>ホスト鍵のローテーション</title>
+   <para>OpenSSH バージョン 6.8 以降では、ホスト鍵の移行 (rotation) に対応するプロトコル拡張が提供されています。これは鍵を置き換える際に使用するためのもので、たとえば 1024 ビット RSA 鍵のような弱い鍵を使用していて、 2048 ビット DSA 鍵などのような強い鍵に置き換えるような場合に有用な仕組みです。クライアント側では、対応可能な <quote>最適の</quote> 鍵を使用するようになります。</para>
    <tip>
-    <title>Restarting sshd</title>
-    <para>
-     After installing new host keys on the server, restart sshd.
-    </para>
+    <title>sshd の再起動について</title>
+    <para>サーバ側で新しいホスト鍵をインストールした場合は、 sshd を再起動してください。</para>
    </tip>
-   <para>
-    This protocol extension can
-    inform a client of all the new host keys on the server, if the user
-    initiates a connection with <command>ssh</command>.  Then, the
-    software on the client updates
-    <filename>~/.ssh/known_hosts</filename>, and the user is not
-    required to accept new keys of previously known and trusted hosts
-    manually.  The local <filename>known_hosts</filename> file will
-    contain all the host keys of the remote hosts, in addition to the
-    one that authenticated the host during this session.
-   </para>
-   <para>
-    Once the administrator of the server knows that all the clients have
-    fetched the new keys, they can remove the old keys. The protocol
-    extension ensures that the obsolete keys will be removed from the
-    client's configuration, too. The key removal occurs while initiating
-    an <command>ssh</command> session.
-   </para>
-   <para>
-    For more information, see:
-   </para>
+   <para>このプロトコル拡張は、ユーザが <command>ssh</command> で接続を開始した際、クライアントに対してサーバ内にある新しいホスト鍵を通知することができる仕組みです。クライアント側のソフトウエアでは、その通知を受け取ると <filename>~/.ssh/known_hosts</filename> ファイルを更新し、ユーザに対して新しい鍵の問い合わせを行なったりすることなく、新しい鍵を信頼することができます。つまり、 <filename>known_hosts</filename> ファイルには、初回の接続時にユーザに問い合わせた鍵に加えて、接続先のホスト内にある全てのホスト鍵が含まれることになります。</para>
+   <para>サーバの管理者側では、クライアント側の全員が新しい鍵を使用するようになったことを確認できれば、古いほうの鍵を削除することができます。このプロトコル拡張では、クライアント側で保存されている古い鍵を削除させることもできます。この鍵の削除処理は、 <command>ssh</command> セッション内で行なわれます。</para>
+   <para>さらに詳しい情報を知りたい場合は、下記を参照してください:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      <link xlink:href="http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html"/>
-     </para>
+     <para><link xlink:href="http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html"/> (英語)</para>
     </listitem>
     <listitem>
-     <para>
-      <link xlink:href="http://heise.de/-2540907"/>
-      (<quote>Endlich neue Schlüssel für SSH-Server</quote>, German only)
-     </para>
+     <para><link xlink:href="http://heise.de/-2540907"/> ( <quote>Endlich neue Schlüssel für SSH-Server</quote> (ドイツ語のみ))</para>
     </listitem>
    </itemizedlist>
   </sect2>
@@ -486,114 +226,44 @@ cd path                            Change remote directory to 'path'
  <!-- ================================================================ -->
 
 <sect1 xml:id="sec.ssh.authentic">
-  <title>SSH Authentication Mechanisms</title>
+  <title>SSH 認証の仕組み</title>
 
-  <para>
-   In its simplest form, authentication is done by entering the user's
-   password just as if logging in locally. However, having to memorize
-   passwords of several users on remote machines is inefficient. What is
-   more, these passwords may change. On the other hand&mdash;when
-   granting &rootuser; access&mdash;an administrator needs to be able
-   to quickly revoke such a permission without having to change the
-   &rootuser; password.
-  </para>
+  <para>最も簡単な構成では、ログイン時にユーザのパスワードを入力させて認証を行ないます。しかしながら、複数のコンピュータを利用しているような場合、いちいちパスワードを覚えておくのは非効率ですし、面倒です。また、これらのパスワードは管理上の理由などで変更を行なわなければならないこともあります。それだけでなく、 &rootuser; のアクセスを許可するような場合、管理者側では &rootuser; のパスワードを変更することなく、素早く個別の許可を取り消す措置を備えていなければならない場合もあります。</para>
 
-  <para>
-   To accomplish a login that does not require to enter the remote
-   user's password, SSH uses another key pair, which needs to be generated
-   by the user. It consists of a public (<filename>id_rsa.pub</filename> or
-   <filename>id_dsa.pub</filename>) and a private key
-   (<filename>id_rsa</filename> or <filename>id_dsa</filename>).
-  </para>
+  <para>このような要件に対応するため、接続先のパスワードを入力することなくログインできる仕組みが用意されています。ユーザ側で鍵対を生成して、この鍵対を認証の代用として使用する方法です。この鍵対には公開鍵 ( <filename>id_rsa.pub</filename> もしくは <filename>id_dsa.pub</filename> ) と機密鍵 ( <filename>id_rsa</filename> もしくは <filename>id_dsa</filename> ) が含まれています。</para>
 
-  <para>
-   To be able to log in without having to specify the remote user's
-   password, the public key of the <quote>SSH user</quote> must be
-   in <filename>~/.ssh/authorized_keys</filename>. This approach also
-   ensures that the remote user has got full control: adding the key
-   requires the remote user's password and removing the key revokes the
-   permission to log in from remote.
-  </para>
+  <para>接続先のユーザのパスワードを指定せずにログインできるようにするには、生成した公開鍵を、接続先のユーザのホームディレクトリ以下にある <filename>~/.ssh/authorized_keys</filename> というファイルに保存しておかなければなりません。このファイルに保存する際には、このユーザのパスワードを知っておかなければなりませんし、公開鍵を削除すればアクセスも拒否されるようになることから、アカウントに対する完全な制御を実現できることになります。</para>
 
-  <para>
-   For maximum security such a key should be protected by a passphrase which
-   needs to be entered every time you use <command>ssh</command>,
-   <command>scp</command>, or <command>sftp</command>. Contrary to the
-   simple authentication, this passphrase is independent from the remote
-   user and therefore always the same.
-  </para>
+  <para>生成した鍵対そのものに対する機密を保護するため、鍵対にはパスフレーズを設定しておいて、 <command>ssh</command> , <command>scp</command> , <command>sftp</command> のような各コマンドを使用する際に、パスフレーズを入力するように設定しておくことをお勧めします。通常のパスワード認証とは異なり、接続先のホストのユーザのパスワードとは連動していないものですので、自由に管理することができます。</para>
 
-  <para>
-   An alternative to the key-based authentication described above, SSH also
-   offers a host-based authentication. With host-based authentication, users
-   on a trusted host can log in to another host on which this feature is
-   enabled using the same user name. &productname; is set up for using
-   key-based authentication, covering setting up host-based authentication
-   on &productname; is beyond the scope of this manual.
-  </para>
+  <para>上述のとおり鍵対を利用した認証方法のほかに、 SSH ではホストベースの認証にも対応しています。ホストベースの認証では、信頼されているホスト内のユーザは、同じユーザに対して同機能が有効化されている接続先にログインすることができるようになります。 &productname; では鍵対ベースの認証を設定しますので、本マニュアルでは説明していません。</para>
 
   <note>
 <!-- fix for bug #398647 -->
-   <title>File Permissions for Host-Based Authentication</title>
-   <para>
-    If the host-based authentication is to be used, the file
-    <filename>/usr/lib/ssh/ssh-keysign</filename> (32-bit systems) or
-    <filename>/usr/lib64/ssh/ssh-keysign</filename> (64-bit systems) should
-    have the setuid bit set, which is not the default setting in
-    &productname;. In such case, set the file permissions manually. You
-    should use <filename>/etc/permissions.local</filename> for this purpose,
-    to make sure that the setuid bit is preserved after security updates of
-    <package>openssh</package>.
-   </para>
+   <title>ホストベースの認証でのファイルパーミッションについて</title>
+   <para>ホストベースの認証を使用している場合、 <filename>/usr/lib/ssh/ssh-keysign</filename> (32 ビットシステムの場合) もしくは <filename>/usr/lib64/ssh/ssh-keysign</filename> (64 ビットシステムの場合) に対して、 setuid ビットを設定する必要があります。既定の &productname; ではそのような設定を行なっていませんので、必要であれば手作業で設定を行なってください。なお、 <filename>/etc/permissions.local</filename> ファイルで必要な設定を行なうことで、 <package>openssh</package> 自身に対する更新が提供された場合でも、パーミッションを設定し直す必要が無くなります。</para>
   </note>
 
   <sect2 xml:id="sec.ssh.authentic.gen_key">
-   <title>Generating an SSH Key</title>
+   <title>SSH 鍵の生成</title>
    <procedure>
     <step>
-     <para>
-      To generate a key with default parameters (RSA, 2048 bits), enter the
-      command <command>ssh-keygen</command>.
-     </para>
+     <para>既定のパラメータ (RSA, 2048 ビット) で鍵対を生成するには、 <command>ssh-keygen</command> と入力して実行します。</para>
     </step>
     <step>
-     <para>
-      Accept the default location to store the key
-      (<filename>~/.ssh/id_rsa</filename>) by pressing
-      <keycap function="enter"/> (strongly recommended) or enter an
-      alternative location.
-     </para>
+     <para>生成された鍵対の保存先を尋ねられますので、 <keycap function="enter"/> を押して既定の保存先 ( <filename>~/.ssh/id_rsa</filename> ) に保存するか、もしくは独自の場所を指定して保存します。</para>
     </step>
     <step>
-     <para>
-      Enter a passphrase consisting of 10 to 30 characters. The same rules
-      as for creating safe passwords apply. It is strongly advised to
-      refrain from specifying no passphrase.
-     </para>
+     <para>パスフレーズを 10 文字から 30 文字程度の範囲で指定します。パスワードと同じルールで設定することをお勧めします。また、パスフレーズの省略はお勧めできません。</para>
     </step>
    </procedure>
-   <para>
-    You should make absolutely sure that the private key is not accessible
-    by anyone other than yourself (always set its permissions to
-    <literal>0600</literal>). The private key must never fall into the hands
-    of another person.
-   </para>
-   <para>
-    To change the password of an existing key pair, use the command
-    <command>ssh-keygen -p</command>.
-   </para>
+   <para>機密鍵については、自分自身以外には決してアクセスされることの無いよう、注意して保存を行なってください (パーミッションは <literal>0600</literal> に設定しておくべきです) 。また、機密鍵が他者に渡るようなことが決して起こらないようにもしてください。</para>
+   <para>既存の鍵対に対するパスフレーズを変更するには、 <command>ssh-keygen -p</command> を実行します。</para>
   </sect2>
 
   <sect2 xml:id="sec.ssh.authentic.key_copy">
-   <title>Copying an SSH Key</title>
-   <para>
-    To copy a public SSH key to <filename>~/.ssh/authorized_keys</filename>
-    of a user on a remote machine, use the command
-    <command>ssh-copy-id</command>. To copy your personal key
-    stored under <filename>~/.ssh/id_rsa.pub</filename> you may use the
-    short form. To copy DSA keys or keys of other users, you need
-    to specify the path:
-   </para>
+   <title>SSH 鍵のコピー</title>
+   <para>SSH の公開鍵を接続先の <filename>~/.ssh/authorized_keys</filename> にコピーする際、 <command>ssh-copy-id</command> コマンドを使用することができます。生成した鍵を <filename>~/.ssh/id_rsa.pub</filename> 内に保存していれば、簡単にコピーを行なうことができます。 DSA 鍵を使用しているような場合や、異なるファイル名に保存している場合は、パスを指定して実行する必要があります:</para>
   <screen>&prompt.user;<prompt>~/.ssh/id_rsa.pub</prompt>
 ssh-copy-id -i &exampleuser_plain;@&exampleserver;
 
@@ -602,92 +272,43 @@ ssh-copy-id -i ~/.ssh/id_dsa.pub  &exampleuser_plain;@&exampleserver;
 
 &prompt.user;<prompt>~notme/.ssh/id_rsa.pub</prompt>
 ssh-copy-id -i ~notme/.ssh/id_rsa.pub  &exampleuser_plain;@&exampleserver;</screen>
-   <para>
-    To successfully copy the key, you need to enter the remote
-    user's password. To remove an existing key, manually edit
-    <filename>~/.ssh/authorized_keys</filename>.
-   </para>
+   <para>鍵のコピーを行なうには、接続先のユーザのパスワードを入力する必要があります。また、鍵を削除したい場合は、 <filename>~/.ssh/authorized_keys</filename> ファイルを手作業で編集してください。</para>
   </sect2>
 
   <sect2 xml:id="sec.ssh.authentic.agent">
-   <title>Using the <command>ssh-agent</command></title>
-   <para>
-    When doing lots of secure shell operations it is cumbersome to type the
-    SSH passphrase for each such operation. Therefore, the SSH package
-    provides another tool, <command>ssh-agent</command>, which retains the
-    private keys for the duration of an X or terminal session. All other
-    windows or programs are started as clients to the
-    <command>ssh-agent</command>. By starting the agent, a set of
-    environment variables is set, which will be used by
-    <command>ssh</command>, <command>scp</command>, or
-    <command>sftp</command> to locate the agent for automatic login. See
-    the <command>ssh-agent</command> man page for details.
-   </para>
-   <para>
-    After the <command>ssh-agent</command> is started, you need to add your
-    keys by using <command>ssh-add</command>. It will prompt for the
-    passphrase. After the password has been provided once, you can use the
-    secure shell commands within the running session without having to
-    authenticate again.
-   </para>
+   <title><command>ssh-agent</command> の使用</title>
+   <para>Secure SHell で何度も作業を行なうような場合、いちいちパスワードやパスフレーズを入力するのは面倒です。そのため、 SSH パッケージにはもう 1 つのツールである <command>ssh-agent</command> が提供されています。これは X セッションや端末セッションが有効である間、機密鍵を保持することができる仕組みです。その他のウインドウやプログラムは、 <command>ssh-agent</command> に対するクライアントとして起動します。 <command>ssh-agent</command> を起動することで様々な環境変数が設定され、 <command>ssh</command> , <command>scp</command> , <command>sftp</command> で自動ログインを行なうことができるよう、エージェントの場所を通知することができます。詳しい説明については、 <command>ssh-agent</command> のマニュアルページをお読みください。</para>
+   <para><command>ssh-agent</command> を起動したあとは、 <command>ssh-add</command> コマンドで鍵を追加していきます。このとき、パスフレーズの入力を求められます。パスフレーズをいったん入力してしまえば、再度認証を行なうことなく Secure SHell のコマンドを使用することができるようになります。</para>
    <sect3 xml:id="sec.ssh.authentic.agent.x">
-    <title>Using <command>ssh-agent</command> in an X Session</title>
-    <para>
-     On &productname;, the <command>ssh-agent</command> is automatically
-     started by the &gnome; display manager. To also invoke
-     <command>ssh-add</command> to add your keys to the agent at the
-     beginning of an X session, do the following:
-    </para>
+    <title>X セッション内での <command>ssh-agent</command> の使用</title>
+    <para>&productname; では、 &gnome; ディスプレイマネージャ経由でログインすることで、自動的に <command>ssh-agent</command> が起動されます。あとは <command>ssh-add</command> コマンドを実行して、 X セッションの冒頭で鍵を追加していくことになりますが、この処理をログイン時に自動的に実施したい場合は、下記のようにして実行します:</para>
     <procedure>
      <step>
-      <para>
-       Log in as the desired user and check whether the file
-       <filename>~/.xinitrc</filename> exists.
-      </para>
+      <para>まずは目的のユーザでログインして、 <filename>~/.xinitrc</filename> ファイルが存在していないかどうかを確認します。</para>
      </step>
      <step>
-      <para>
-       If it does not exist, use an existing template or copy it from
-       <filename>/etc/skel</filename>:
-      </para>
+      <para>存在していない場合は、 <filename>/etc/skel</filename> 内にある雛形を使用して設定するか、もしくはシンプルにコピーして使用します:</para>
 <screen>if [ -f ~/.xinitrc.template ]; then mv ~/.xinitrc.template ~/.xinitrc; \
 else cp /etc/skel/.xinitrc.template ~/.xinitrc; fi</screen>
      </step>
      <step>
-      <para>
-       If you have copied the template, search for the following lines and
-       uncomment them. If <filename>~/.xinitrc</filename> already existed,
-       add the following lines (without comment signs).
-      </para>
+      <para>雛形をコピーしたあとは、下記のような行を探してコメント文字 (#) を外します。 <filename>~/.xinitrc</filename> が既に存在しているような場合は、下記のような行を追加します (コメント文字 (#) は外して記入してください) 。</para>
 <screen># if test -S "$SSH_AUTH_SOCK" -a -x "$SSH_ASKPASS"; then
 #       ssh-add &lt; /dev/null
 # fi</screen>
      </step>
      <step>
-      <para>
-       When starting a new X session, you will be prompted for your SSH
-       passphrase.
-      </para>
+      <para>新しい X セッションを開始すると、 SSH 鍵に対するパスフレーズの入力を求められます。</para>
      </step>
     </procedure>
    </sect3>
    <sect3 xml:id="sec.ssh.authentic.agent.terminal">
-    <title>Using <command>ssh-agent</command> in a Terminal Session</title>
-    <para>
-     In a terminal session you need to manually start the
-     <command>ssh-agent</command> and then call <command>ssh-add</command>
-     afterward. There are two ways to start the agent. The first example
-     given below starts a new Bash shell on top of your existing shell. The
-     second example starts the agent in the existing shell and modifies the
-     environment as needed.
-    </para>
+    <title>端末セッション内での <command>ssh-agent</command> の使用</title>
+    <para>端末セッションの場合は、 <command>ssh-agent</command> を手作業で起動して、後から <command>ssh-add</command> を実行する必要があります。 <command>ssh-agent</command> の起動方法には 2 種類のものがあります。 1 行目の例は既存のシェルから <command>ssh-agent</command> を起動して、その中で新しいシェルを起動する方法、 2 行目の例は既存のシェル内で <command>ssh-agent</command> を起動して、必要に応じて環境を書き換える方法です。</para>
 <screen>&prompt.user;ssh-agent -s /bin/bash
 eval $(ssh-agent)
     </screen>
-    <para>
-     After the agent has been started, run <command>ssh-add</command> to
-     provide the agent with your keys.
-    </para>
+    <para>エージェントを起動したら、 <command>ssh-add</command> を実行して鍵を追加していってください。</para>
    </sect3>
   </sect2>
 
@@ -702,128 +323,70 @@ eval $(ssh-agent)
 -->
  </sect1>
  <sect1 xml:id="sec.ssh.port-forwarding">
-  <title>Port Forwarding</title>
+  <title>ポート転送</title>
 
-  <para>
-   <command>ssh</command> can also be used to redirect TCP/IP connections.
-   This feature, also called <literal>SSH tunneling</literal>, redirects TCP
-   connections to a certain port to another machine via an encrypted
-   channel.
-  </para>
+  <para><command>ssh</command> は TCP/IP 接続を転送するような用途でも使用することができます。この機能は <literal>SSH トンネリング</literal> とも呼ばれ、暗号化された通信を介して TCP の接続を別のマシン内にある特定のポートに転送することができます。</para>
 
-  <para>
-   With the following command, any connection directed to &wsI; port 25
-   (SMTP) is redirected to the SMTP port on &exampleserver;. This is
-   especially useful for those using SMTP servers without SMTP-AUTH or
-   POP-before-SMTP features. From any arbitrary location connected to a
-   network, e-mail can be transferred to the <quote>home</quote> mail server
-   for delivery.
-  </para>
+  <para>下記のコマンドを実行することで、 <!-- NOTE: wrong explanation? --> ローカルの TCP ポート 25 (SMTP) への接続を行なうと、 &wsI; への暗号化接続を介して &exampleserver; の TCP ポート 25 (SMTP) に接続するようになります。これは特に、 SMTP-AUTH や POP-before-SMTP のような機能を持たない SMTP サーバを使用するような場合に有用です。 <!-- NOTE: bind adress must be set to "0.0.0.0" in order to be connected from network, i.e. "-L 0.0.0.0:25:&exampleserver;:25" -->このようにポート転送を行なうことで、電子メールを <quote>自宅の</quote> メールサーバに配送するような構成を構築することができます。</para>
 
 <screen>&prompt.root;ssh -L 25:&exampleserver;:25 &wsI;</screen>
 
-  <para>
-   Similarly, all POP3 requests (port&nbsp;110) on &wsI; can be
-   forwarded to the POP3 port of &exampleserver; with this command:
-  </para>
+  <para>上記と同様に、全ての POP3 接続 (ポート 110) を &exampleserver; に転送したい場合は、下記のように実行します:</para>
 
 <screen>&prompt.root;ssh -L 110:&exampleserver;:110 &wsI;</screen>
 
-  <para>
-   Both commands must be executed as &rootuser;, because the connection
-   is made to privileged local ports. E-mail is sent and retrieved by
-   normal users in an existing SSH connection. The SMTP and POP3 host
-   must be set to <literal>localhost</literal> for this to
-   work. Additional information can be found in the manual pages for
-   each of the programs described above and in the OpenSSH package
-   documentation under
-   <filename>/usr/share/doc/packages/openssh</filename>.
-  </para>
+  <para>いずれのコマンドも特権ポートを使用していることから、 &rootuser; で実行しなければなりません。いったんコマンドを実行すれば、一般ユーザからもそのポートを使用して電子メールを送受信できるようになります。この場合、電子メールソフトウエア側のサーバ設定は <literal>localhost</literal> を指定します。上記で説明したそれぞれのプログラムのオプションに関する説明は、 <filename>/usr/share/doc/packages/openssh</filename> 内にある OpenSSH のパッケージドキュメンテーション内にあります。</para>
  </sect1>
   <sect1 xml:id="sec.security.ssh.moreinfo">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
   <para/>
 
   <variablelist>
    <varlistentry>
-    <term><link xlink:href="http://www.openssh.com"/>
-    </term>
+    <term><link xlink:href="http://www.openssh.com"/></term>
     <listitem>
-     <para>
-      The home page of OpenSSH
-     </para>
+     <para>OpenSSH の Web ページ</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://en.wikibooks.org/wiki/OpenSSH"/>
-    </term>
+    <term><link xlink:href="http://en.wikibooks.org/wiki/OpenSSH"/></term>
     <listitem>
-     <para>
-      The OpenSSH Wikibook
-     </para>
+     <para>OpenSSH Wikibook (英語)</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>man sshd</command>
-    </term>
+    <term><command>man sshd</command></term>
     <listitem>
-     <para>
-      The man page of the OpenSSH daemon
-     </para>
+     <para>OpenSSH デーモンのマニュアルページ</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>man ssh_config</command>
-    </term>
+    <term><command>man ssh_config</command></term>
     <listitem>
-     <para>
-      The man page of the OpenSSH SSH client configuration files
-     </para>
+     <para>OpenSSH のクライアント側設定ファイルのマニュアルページ</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>man scp</command>
-    </term>
-    <term><command>man sftp</command>
-    </term>
-    <term><command>man slogin</command>
-    </term>
-    <term><command>man ssh</command>
-    </term>
-    <term><command>man ssh-add</command>
-    </term>
-    <term><command>man ssh-agent</command>
-    </term>
-    <term><command>man ssh-copy-id</command>
-    </term>
-    <term><command>man ssh-keyconvert</command>
-    </term>
-    <term><command>man ssh-keygen</command>
-    </term>
-    <term><command>man ssh-keyscan</command>
-    </term>
+    <term><command>man scp</command></term>
+    <term><command>man sftp</command></term>
+    <term><command>man slogin</command></term>
+    <term><command>man ssh</command></term>
+    <term><command>man ssh-add</command></term>
+    <term><command>man ssh-agent</command></term>
+    <term><command>man ssh-copy-id</command></term>
+    <term><command>man ssh-keyconvert</command></term>
+    <term><command>man ssh-keygen</command></term>
+    <term><command>man ssh-keyscan</command></term>
     <listitem>
-     <para>
-      Man pages of several binary files to securely copy files
-      (<command>scp</command>, <command>sftp</command>), to log in
-      (<command>slogin</command>, <command>ssh</command>), and to manage
-      keys.
-     </para>
+     <para>ファイルコピー ( <command>scp</command> , <command>sftp</command> ) やログイン ( <command>slogin</command> , <command>ssh</command> ) 、鍵管理などのコマンドに対するマニュアルページ。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>
-     <filename>/usr/share/doc/packages/openssh/README.SUSE</filename>
-    </term>
-    <term>
-     <filename>/usr/share/doc/packages/openssh/README.FIPS</filename>
-    </term>
+    <term><filename>/usr/share/doc/packages/openssh/README.SUSE</filename></term>
+    <term><filename>/usr/share/doc/packages/openssh/README.FIPS</filename></term>
     <listitem>
-     <para>
-      &suse; package specific documentation; changes in defaults with respect to
-      upstream, notes on FIPS mode etc.
-     </para>
+     <para>&suse; 固有のパッケージドキュメンテーション; FIPS モードなど、提供元からの既定値の変更点などを説明しています。</para>
     </listitem>
    </varlistentry>
   </variablelist>
