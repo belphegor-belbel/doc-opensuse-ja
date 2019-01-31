@@ -4,152 +4,85 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.firewall">
- <title>Masquerading and Firewalls</title>
+ <title>マスカレードとファイアウオール</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
- <para>
-  Whenever Linux is used in a network environment, you can use the
-  kernel functions that allow the manipulation of network packets to
-  maintain a separation between internal and external network areas. The
-  Linux <systemitem>netfilter</systemitem> framework provides the means
-  to establish an effective firewall that keeps different networks
-  apart. Using iptables&mdash;a generic table structure for the
-  definition of rule sets&mdash;precisely controls the packets allowed to
-  pass a network interface. Such a packet filter can be set up using
-  &firewalld; and its graphical interface <command>firewall-config</command>.
- </para>
+ <para>Linux マシンがネットワーク内に配置されていれば、カーネルの機能を利用してネットワークパケットの制御を行ない、内部ネットワークと外部ネットワークを区別して扱ったり、パケットそのものを書き換えたりすることができます。 Linux では <systemitem>netfilter</systemitem> フレームワークが提供されていて、これによって様々なネットワークを個別に扱う効率的なファイアウオールを構築することができます。この <systemitem>netfilter</systemitem> フレームワークのフロントエンドが iptables で、ルールセットを定義するための汎用的なテーブル構造を作成することができます。これにより、ネットワークインターフェイスからの通過を許可するパケットを、正確に制御することができます。また、 &firewalld; やそのグラフィカルインターフェイスである <command>firewall-config</command> を利用することでも、パケットフィルタを構築することができます。</para>
  <!--idx-->
 
  <sect1 xml:id="sec.security.firewall.iptables">
-  <title>Packet Filtering with iptables</title>
+  <title>iptables によるパケットフィルタリング</title>
 
-  <para>
-   This section discusses the low-level details of packet filtering. The
-   components <systemitem>netfilter</systemitem> and
-   <systemitem>iptables</systemitem> are responsible for the filtering and
-   manipulation of network packets and for network address translation (NAT).
-   The filtering criteria and any actions associated with them are stored in
-   chains, which must be matched one after another by individual network
-   packets as they arrive. The chains to match are stored in tables. The
-   <command>iptables</command> command allows you to alter these tables and
-   rule sets.
-  </para>
+  <para>本章では、パケットフィルタリングに関してパケット寄りの詳細を説明しています。 <systemitem>netfilter</systemitem> と <systemitem>iptables</systemitem> のコンポーネントは、ネットワークパケットのフィルタリングや内容の変更、そしてネットワークアドレス変換 (NAT) に関する制御を行なう仕組みです。フィルタリングの判断条件とそれに付属する制御内容はチェインという形で保持され、パケットが届くごとにそれぞれ 1 つずつ判断を行ないます。 <command>iptables</command> コマンドでは、これらのテーブルやルールの制御を行なうことができます。</para>
 
-  <para>
-   The Linux kernel maintains three tables, each for a particular category
-   of functions of the packet filter:
-  </para>
+  <para>Linux カーネルでは 3 種類のテーブルを管理しています。これらはそれぞれ別々のフィルタ機能に対応しています:</para>
 
   <variablelist>
    <varlistentry>
     <term>filter</term>
     <listitem>
-     <para>
-      This table holds the bulk of the filter rules, because it implements
-      the <emphasis>packet filtering</emphasis> mechanism in the stricter
-      sense, which determines whether packets are let through
-      (<literal>ACCEPT</literal>) or discarded (<literal>DROP</literal>),
-      for example.
-     </para>
+     <para>このテーブルは、狭い意味での <emphasis>パケットフィルタリング</emphasis> を行なうために提供されているテーブルで、様々なフィルタリングルールを設定して使用します。このテーブルでは、パケットの通過を許可する ( <literal>ACCEPT</literal> ) か拒否する ( <literal>DROP</literal> ) かを指定するなどして、ルールを構成します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>nat</term>
     <listitem>
-     <para>
-      This table defines any changes to the source and target addresses of
-      packets. Using these functions also allows you to implement
-      <emphasis>masquerading</emphasis>, which is a special case of NAT used
-      to link a private network with the Internet.
-     </para>
+     <para>このテーブルは、パケットの発信元と送信先のアドレスをそれぞれ変更するために使用するテーブルです。これらの機能を利用することで、プライベートネットワークをインターネットに接続する際に使用する、 <emphasis>マスカレード</emphasis> と呼ばれる処理を実現することができます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>mangle</term>
     <listitem>
-     <para>
-      The rules held in this table make it possible to manipulate values
-      stored in IP headers (such as the type of service).
-     </para>
+     <para>このテーブルは、 IP ヘッダなどに含まれている様々な値 (Type Of Service など) を制御するために使用するテーブルです。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   These tables contain several predefined chains to match packets:
-  </para>
+  <para>これらのテーブルに対して、それぞれ下記に示すチェインが用意されています:</para>
 
   <variablelist>
    <varlistentry>
     <term>PREROUTING</term>
     <listitem>
-     <para>
-      This chain is applied to all incoming packets.
-     </para>
+     <para>このチェインは、届いた全てのパケットを処理するためのチェインです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>INPUT</term>
     <listitem>
-     <para>
-      This chain is applied to packets destined for the system's internal
-      processes.
-     </para>
+     <para>このチェインは、このシステムが送信先となっている全てのパケットを処理するためのチェインです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>FORWARD</term>
     <listitem>
-     <para>
-      This chain is applied to packets that are only routed through the
-      system.
-     </para>
+     <para>このチェインは、このシステムを通過していく全てのパケットを処理するためのチェインです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>OUTPUT</term>
     <listitem>
-     <para>
-      This chain is applied to packets originating from the system itself.
-     </para>
+     <para>このチェインは、このシステムから発信される全てのパケットを処理するためのチェインです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>POSTROUTING</term>
     <listitem>
-     <para>
-      This chain is applied to all outgoing packets.
-     </para>
+     <para>このチェインは、発信される全てのパケットを処理するためのチェインです。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   <xref linkend="fig.fire.table"/> illustrates the paths along which a
-   network packet may travel on a given system. For the sake of simplicity,
-   the figure lists tables as parts of chains, but in reality these chains
-   are held within the tables themselves.
-  </para>
+  <para><xref linkend="fig.fire.table"/> の図には、 Linux システム内におけるパケットの流通経路を示しています。単純化する目的でチェインの中にテーブルを記述していますが、実際にはこれらのチェインはテーブル内に含まれる形になっています。</para>
 
-  <para>
-   In the simplest case, an incoming packet destined for the system itself
-   arrives at the <literal>eth0</literal> interface. The packet is first
-   referred to the <literal>PREROUTING</literal> chain of the
-   <literal>mangle</literal> table then to the <literal>PREROUTING</literal>
-   chain of the <literal>nat</literal> table. The following step, concerning
-   the routing of the packet, determines that the actual target of the
-   packet is a process of the system itself. After passing the
-   <literal>INPUT</literal> chains of the <literal>mangle</literal> and the
-   <literal>filter</literal> table, the packet finally reaches its target,
-   provided that the rules of the <literal>filter</literal> table allow this.
-  </para>
+  <para>最もわかりやすい例として、 <literal>eth0</literal> のインターフェイスに対して、このシステム宛のパケットが届いた場合を考えてみます。パケットは最初、 <literal>mangle</literal> テーブル内の <literal>PREROUTING</literal> チェインで処理され、その後 <literal>nat</literal> テーブル内の <literal>PREROUTING</literal> チェインで処理が行なわれます。その後、パケットの経路 (ルーティング) を判断する処理を行ない、パケットの送信先が自分自身であるかどうかを判断します。今回は自分自身が宛先なので、 <literal>mangle</literal> および <literal>filter</literal> の <literal>INPUT</literal> チェインで処理されたあと、 <literal>filter</literal> テーブル内で許可される設定になっていれば、対応するプログラムに渡されることになります。</para>
 
   <figure xml:id="fig.fire.table">
-   <title>iptables: A Packet's Possible Paths</title>
+   <title>iptables: パケットの流通経路</title>
    <mediaobject>
     <imageobject role="fo">
      <imagedata width="75%" fileref="fire_tables.svg" format="SVG"/>
@@ -161,353 +94,129 @@
   </figure>
  </sect1>
  <sect1 xml:id="sec.security.firewall.masq">
-  <title>Masquerading Basics</title>
+  <title>基本的なマスカレード処理</title>
 
-  <para>
-   Masquerading is the Linux-specific form of NAT (network address
-   translation) and can be used to connect a small LAN with the
-   Internet.  LAN hosts use IP
-   addresses from the private range (see
-   <xref linkend="sec.network.addresses.route"/>) and on the Internet
-   official IP addresses are used. To be able to connect
-   to the Internet, a LAN host's private address is translated to an official
-   one. This is done on the router, which acts as the gateway between the
-   LAN and the Internet. The underlying principle is a simple one: The
-   router has more than one network interface, typically a network card and
-   a separate interface connecting with the Internet. While the latter links
-   the router with the outside world, one or several others link it with the
-   LAN hosts. With these hosts in the local network connected to the network
-   card (such as <literal>eth0</literal>) of the router, they can send any
-   packets not destined for the local network to their default gateway or
-   router.
-  </para>
+  <para>マスカレードとは Linux 固有の NAT (Network Address Translation; ネットワークアドレス変換) の一形態で、小規模な LAN をインターネットに接続する際に使用するものです。 LAN 内のホストにはプライベート IP アドレスの範囲 (詳しくは <xref linkend="sec.network.addresses.route"/> をお読みください) 内にあるアドレスを割り当ててあり、インターネット側にはプロバイダなどから割り当てられたアドレスを使用している場合、インターネットに接続するには、 LAN 側の IP アドレスをインターネット側のアドレスに変換する作業が必要となります。通常、この処理は LAN とインターネットを結ぶルータが行なうべき作業です。一般的な構成は非常にシンプルで、ルータには複数のネットワークインターフェイス (通常はネットワークカード) があり、それとは別にインターネットに接続しているインターフェイスが用意されています。 LAN 内のコンピュータは、このルータをデフォルトゲートウエイとして設定することで、外部 (つまりインターネット) の世界に出て行くことができるようになっています。</para>
 
   <important>
-   <title>Using the Correct Network Mask</title>
-   <para>
-    When configuring your network, make sure both the broadcast address and
-    the netmask are the same for all local hosts. Failing to do so prevents
-    packets from being routed properly.
-   </para>
+   <title>ネットマスクの設定について</title>
+   <para>ネットワークを設定する際、ブロードキャストアドレスとネットマスクは、 LAN 内の全てのコンピュータで同じ値を設定する必要があります。設定の異なるコンピュータが存在すると、正しい経路を見つけられなくなってしまうことがあります。</para>
   </important>
 
-  <para>
-   As mentioned, whenever one of the LAN hosts sends a packet destined for
-   an Internet address, it goes to the default router. However, the router
-   must be configured before it can forward such packets. For security
-   reasons, this is not enabled in a default installation. To enable it, add
-   the line <literal>net.ipv4.ip_forward = 1</literal> in the file
-   <filename>/etc/sysctl.conf</filename>. Alternatively do this via &yast;,
-   for example by calling <command>yast routing ip-forwarding on</command>.
-  </para>
+  <para>上述のとおり、 LAN 内のコンピュータがインターネットアドレス宛にパケットを送信する場合、デフォルトゲートウエイとして設定したルータに対して通信が行なわれます。ただし、ルータとして動作するにはあらかじめパケットを転送できるように設定しなければなりません。セキュリティ上の理由から、既定のインストールでは転送機能は有効化されません。有効化を行なうには、 <filename>/etc/sysctl.conf</filename> ファイル内に <literal>net.ipv4.ip_forward = 1</literal> という行を追加してください。 &yast; から設定を行ないたい場合は、 <command>yast routing ip-forwarding on</command> と入力して実行してください。</para>
 
-  <para>
-   The target host of the connection can see your router, but knows nothing
-   about the host in your internal network where the packets originated.
-   This is why the technique is called masquerading. Because of the address
-   translation, the router is the first destination of any reply packets.
-   The router must identify these incoming packets and translate their
-   target addresses, so packets can be forwarded to the correct host in the
-   local network.
-  </para>
+  <para>接続先の (インターネット側の) ホストからは、ルータまでは到達可能であるものの、本来のパケット送信元である内部ネットワーク内のコンピュータまでは到達できないようにしています。このような仕組みをマスカレード (仮装や変装などの意味) と言います。アドレス変換の仕組みにより、ルータは応答パケットに対する第一の送信先となります。ルータ側ではこのパケットがどれに紐付くものであるのかを探して、本来の (LAN 側の) 送信元に配送します。</para>
 
-  <para>
-   With the routing of inbound traffic depending on the masquerading table,
-   there is no way to open a connection to an internal host from the
-   outside. For such a connection, there would be no entry in the table. In
-   addition, any connection already established has a status entry assigned
-   to it in the table, so the entry cannot be used by another connection.
-  </para>
+  <para>内部側のネットワークパケットの配送はマスカレード処理用のテーブルに従って行なわれるため、外側 (インターネット側) から内側 (LAN 側) に接続を開くことはできなくなっています。これは、外部から内部に接続しようとしても、テーブル内に対応する項目が存在しないためです。これに加えて、既に確立されている接続に対しては、テーブル内でその状態を管理するようにもなっています。これにより、他の接続で使用されてしまうようなことがないようになっています。</para>
 
-  <para>
-   As a consequence of all this, you might experience some problems with
-   several application protocols, such as ICQ, cucme, IRC (DCC, CTCP), and
-   FTP (in PORT mode). Web browsers, the standard FTP program, and many
-   other programs use the PASV mode. This passive mode is much less
-   problematic as far as packet filtering and masquerading are concerned.
-  </para>
+  <para>このような構造になっていることから、 ICQ, cucme, IRC (DCC, CTCP), FTP (PORT モード) などのプロトコルを使用した場合、接続がうまくいかない場合があります。 Web ブラウザや標準的な FTP プログラムなど、多数のプログラムは PASV モードを使用しますので、フィルタリングやマスカレードという観点では問題が発生しにくくなっています。</para>
  </sect1>
  <sect1 xml:id="sec.security.firewall.fw">
-  <title>Firewalling Basics</title>
+  <title>基本的なファイアウオール処理</title>
 
-  <para>
-   <emphasis>Firewall</emphasis> is probably the term most widely used to
-   describe a mechanism that controls the data flow between networks.
-   Strictly speaking, the mechanism described in this section is called a
-   <emphasis>packet filter</emphasis>. A packet filter regulates the data flow
-   according to certain criteria, such as protocols, ports, and IP addresses.
-   This allows you to block packets that, according to their addresses, are
-   not supposed to reach your network. To allow public access to your Web
-   server, for example, explicitly open the corresponding port. However, a
-   packet filter does not scan the contents of packets with legitimate
-   addresses, such as those directed to your Web server. For example, if
-   incoming packets were intended to compromise a CGI program on your Web
-   server, the packet filter would still let them through.
-  </para>
+  <para><emphasis>ファイアウオール</emphasis> とはおそらく、ネットワーク間を流れるデータを制御する仕組みとして最もよく使われている用語でしょう。厳密に言うと、本章で説明している内容は <emphasis>パケットフィルタ</emphasis> と呼ばれる仕組みです。パケットフィルタはプロトコルやポート、 IP アドレスなどの条件を元に、データの流れを管理するための仕組みです。この仕組みによって、ネットワークに対して届いて欲しくないパケットを防ぐことができます。たとえば Web サーバなど、一般的に広くアクセスを許すサービスを提供するような場合、明示的に対応するポートを開くように設定する必要があります。しかしながら、一般にパケットフィルタではパケットの内容までは判断できませんので、アドレス情報などが間違っていない限り、 Web サーバとの通信はできてしまいます。つまり、 Web サーバ内で動作する CGI プログラムを不正に操作するようなパケットが届いたとしても、パケットフィルタではそれを防ぐことができず、通過させてしまうことになります。</para>
 
-  <para>
-   A more effective but more complex mechanism is the combination of several
-   types of systems, such as a packet filter interacting with an application
-   gateway or proxy. In this case, the packet filter rejects any packets
-   destined for disabled ports. Only packets directed to the application
-   gateway are accepted. This gateway or proxy pretends to be the actual
-   client of the server. In a sense, such a proxy could be considered a
-   masquerading host on the protocol level used by the application. One
-   example for such a proxy is Squid, an HTTP and FTP proxy server. To use
-   Squid, the browser must be configured to communicate via the proxy. Any
-   HTTP pages or FTP files requested are served from the proxy cache and
-   objects not found in the cache are fetched from the Internet by the
-   proxy.
-  </para>
+  <para>より効率的で複雑な構成を取るとすれば、アプリケーションゲートウエイやプロキシなどとパケットフィルタを組み合わせて、多階層の防御を行なう方法があります。この場合、パケットフィルタは許可していないポート宛の通信を拒否し、それを通過したパケットのみがアプリケーションゲートウエイやプロキシに渡されます。このゲートウエイやプロキシは、サーバとクライアントとの間の仲介役として動作し、アプリケーションが使用するプロトコルを直接解釈してやり取りを行ないます。このようなアプリケーションゲートウエイやプロキシとして代表的なものが Squid です。こちらは HTTP/FTP のプロキシサーバとして動作するもので、 HTTP ページや FTP ファイルへのアクセスは、プロキシキャッシュ内に記憶していればその内容をそのまま提供し、キャッシュ内に存在していなければ直接アクセスしてページを提供することができます。</para>
 
-  <para>
-   The following section focuses on the packet filter that comes with
-   &productname;. For further information about packet filtering and
-   firewalling, read the <link xlink:href="http://www.tldp.org/HOWTO/Firewall-HOWTO.html">Firewall
-   HOWTO</link>.
-  </para>
+  <para>下記の章では、 &productname; に付属しているパケットフィルタ機能について説明しています。パケットフィルタやファイアウオールに関する詳細は、 <link xlink:href="http://www.tldp.org/HOWTO/Firewall-HOWTO.html">Firewall HOWTO</link> (英語) でも提供されています。</para>
  </sect1>
  <sect1 xml:id="sec.security.firewall.firewalld">
   <title>&firewalld;</title>
 
-  <para>
-   &firewalld; is a daemon that maintains the system's
-   <command>iptables</command> rules and offers a D-Bus interface for
-   operating on them. It comes with a command line utility
-   <command>firewall-cmd</command> and a graphical user interface
-   <command>firewall-config</command> for interacting with it. Since
-   &firewalld; is running in the background and provides a well defined
-   interface it allows other applications to request changes to the iptables
-   rules, for example to set up virtual machine networking.
-  </para>
+  <para>&firewalld; はシステム内にある <command>iptables</command> のルールを管理し、 D-Bus インターフェイス経由で操作することのできるデーモンです。対応するコマンドラインユーティリティ <command>firewall-cmd</command> と、グラフィカルユーザインターフェイス <command>firewall-config</command> がそれぞれ用意されています。 &firewalld; は裏で動作する仕組みであることから、たとえば仮想マシンのネットワーク設定を行なうなど、 iptables のルールに対してアプリケーション側から変更要求を送信することができるようになっています。</para>
 
-  <para>
-   &firewalld; implements different security zones. A number of predefined
-   zones like <literal>internal</literal> and <literal>public</literal> exist.
-   The administrator can define additional custom zones if desired. Each
-   zone contains its own set of iptables rules. Each network interface is a
-   member of exactly one zone. Individual connections can also be assigned to
-   a zone based on the source addresses.
-  </para>
+  <para>&firewalld; ではセキュリティゾーンと呼ばれる仕組みを提供しています。既定の設定では、 <literal>internal</literal> (内部) や <literal>public</literal> (公共) などのゾーンが用意されています。それ以外のゾーンが必要な場合でも、管理者側で自由に設定することができます。各ゾーンにはそれぞれ対応する iptables のルールを設定することができます。また、ネットワークインターフェイスはいずれか 1 つのゾーンに属するように設定するほか、発信元のアドレスをベースにして接続ごとにゾーンを割り当てることもできます。</para>
 
-  <para>
-   Each zone represents a certain level of trust. For example the
-   <literal>public</literal> zone is not trusted, because other computers in
-   this network are not under your control (suitable for Internet or wireless
-   hotspot connections). On the other hand the <literal>internal</literal> zone
-   is used for networks that <emphasis>are</emphasis> under your control, like a
-   home or company network. By utilizing zones this way, a host can offer
-   different kinds of services to trusted networks and untrusted networks in a
-   defined way.
-  </para>
+  <para>それぞれのゾーンは信頼レベルを表わしていて、たとえば <literal>public</literal> はインターネットや無線ホットスポットに対して設定すべきゾーンで、最も信頼レベルの低いネットワークを表わしています。逆に <literal>internal</literal> は、家庭内のネットワークや企業内のネットワークなど、最も信頼できるネットワークを表わしています。このように信頼レベルを分けることで、接続されるネットワークごとに異なるルールを適用できるようにしています。</para>
 
-  <para>
-   For more information about the predefined zones and their meaning in
-   &firewalld;, refer to its manual at
-   <link xlink:href="http://www.firewalld.org/documentation/zone/predefined-zones.html"/>.
-  </para>
+  <para>&firewalld; の既定で設定されているゾーンとその意味について、詳しくは <link xlink:href="http://www.firewalld.org/documentation/zone/predefined-zones.html"/>  (英語) にあるマニュアルをお読みください。</para>
 
   <note>
-    <title>No Zone Assigned Behavior</title>
-    <para>
-     The initial state for network interfaces is to be assigned to no zone at
-     all. In this case the network interface will be implicitly handled in the
-     default zone, which can be determined by calling <command>firewall-cmd
-      --get-default-zone</command>. If not configured otherwise, the default
-     zone is the <literal>public</literal> zone.
-    </para>
+    <title>ゾーンを割り当てない場合の処理について</title>
+    <para>ネットワークインターフェイスに対する設定を行なっていない場合、そのインターフェイスには何もゾーンが割り当てられません。この場合、 <command>firewall-cmd --get-default-zone</command> で表示される既定のゾーンが割り当てられます。既定のゾーンを何も設定していない場合、既定値は <literal>public</literal> (公共) になっています。</para>
   </note>
 
-  <para>
-   The &firewalld; packet filtering model allows any outgoing connections to
-   pass. Outgoing connections are connections that are actively established by
-   the local host. Incoming connections that are established by remote hosts are
-   blocked if the respective service is not allowed in the zone in
-   question. Therefore, each of the interfaces with incoming traffic must be
-   placed in a suitable zone to allow for the desired services to be
-   accessible. For each of the zones, define the services or protocols you
-   need.
-  </para>
+  <para>&firewalld; のパケットフィルタリングでは、接続の開始側については基本的に許可される設定になっています。接続の開始側とは、手元のコンピュータから相手のコンピュータに対して、接続を始める種類の接続を意味しています。逆に、接続を受け入れる側の場合は、ゾーンの設定で明示的に許可を指定しない限り、アクセスが拒否されるようになっています。そのため、何らかのサービスの接続を受け入れるインターフェイスに対しては、適切なゾーンを指定しておいて、ゾーン内で必要なサービスの許可を設定してください。</para>
 
-  <para>
-   An important concept of &firewalld; is the distinction between two separate
-   configurations: the <emphasis>runtime</emphasis> and the
-   <emphasis>permanent</emphasis> configuration. The runtime configuration
-   represents the currently active rules, while the permanent configuration
-   represents the saved rules that will be applied when restarting
-   &firewalld;. This allows to add temporary rules that will be discarded after
-   restarting &firewalld;, or to experiment with new rules while being able to
-   revert back to the original state. When you are changing the configuration,
-   you need to be aware of which configuration you're editing. How this is done
-   is discussed in <xref linkend="sec.security.firewall.firewalld.configurations"/>.
-  </para>
+  <para>&firewalld; では、もう 1 つ重要な考え方があります。それは <emphasis>一時的な</emphasis> 設定と <emphasis>恒久的な</emphasis> 設定です。一時的な設定とは現在動作中のルールそのものを表わしていて、恒久的な設定とは次回の &firewalld; の再起動で適用される、保存済みのルールを表わしています。これにより、次に &firewalld; を再起動するまでの間、一時的に適用するルールを設定することができますので、実験的にルールを追加してみて、うまくいかなければ元に戻すと言ったことが容易に実現できるようになっています。なお、設定を変更する際には、どちらの設定を編集しているのかをよくお確かめください。こちらについての詳細は、 <xref linkend="sec.security.firewall.firewalld.configurations"/> で説明しています。</para>
 
-  <para>
-   If you want to perform the &firewalld; configuration using the graphical
-   user interface <command>firewall-config</command> then refer to its <link xlink:href="http://www.firewalld.org/documentation/utilities/firewall-config.html">documentation</link>.
-   In the following section we will be looking at how to perform typical
-   &firewalld; configuration tasks using <command>firewall-cmd</command> on the
-   command line.
-  </para>
+  <para>&firewalld; をグラフィカルユーザインターフェイス <command>firewall-config</command> で操作したい場合は、 <link xlink:href="http://www.firewalld.org/documentation/utilities/firewall-config.html">ドキュメンテーション</link> をお読みになることをお勧めします。以下の章では、コマンドライン経由で利用する <command>firewall-cmd</command> を使用して、 &firewalld; の制御を行なっています。</para>
 
   <sect2 xml:id="sec.security.firewall.firewalld.nm" os="sles;sled">
-   <title>Configuring the Firewall with &nm;</title>
-   <para>
-    The &nm; supports a basic configuration of <emphasis>firewalld</emphasis>
-    by selecting zones.
-   </para>
-   <para>
-    When editing a wired or wireless connection, go to the
-    <emphasis>Identity</emphasis> tab in the configuration window and
-    use the <literal>Firewall Zone</literal> drop-down box.
-   </para>
+   <title>&nm; によるファイアウオールの設定</title>
+   <para>&nm; ではゾーンを選択することで、 <emphasis>firewalld</emphasis> の基本的な設定を行なうことができます。</para>
+   <para>有線もしくは無線接続を編集する際、設定ウインドウ内の <emphasis>Identity</emphasis> タブを選択し、 <literal>Firewall Zone</literal> のドロップダウンボックスから選択を行なってください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.firewall.firewalld.cmd">
-   <title>Configuring the Firewall on the Command Line</title>
+   <title>コマンドラインからのファイアウオール設定</title>
    <sect3>
-    <title>Firewall Startup</title>
+    <title>ファイアウオールの設定</title>
 
-    <para>
-     &firewalld; will be installed and enabled by default. It is a regular
-     &systemd; service that can be configured via <command>systemctl</command>
-     or the &yast; Services Manager.
-    </para>
+    <para>&firewalld; は既定でインストールされ、有効化されます。 &firewalld; は通常の &systemd; サービスとして設定されていますので、 <command>systemctl</command> や &ycc_runlevel; で設定することができます。</para>
 
     <important>
-     <title>Automatic Firewall Configuration</title>
-     <para> After the installation, &yast; automatically starts &firewalld; and
-     leaves all interfaces in the default <literal>public</literal> zone. If a
-     server application is configured and activated on the system, &yast; can
-     adjust the firewall rules via the options <guimenu>Open Ports on Selected
-     Interface in Firewall</guimenu> or <guimenu>Open Ports on
-     Firewall</guimenu> in the server configuration modules. Some server module
-     dialogues include a <guimenu>Firewall Details</guimenu> button for
-     activating additional services and ports.
-     </para>
+     <title>自動的なファイアウオール設定について</title>
+     <para>インストールを行なうと、 &yast; は &firewalld; を自動的に起動して、全てのインターフェイスを既定値の <literal>public</literal> ゾーンに割り当てます。何らかのサーバアプリケーションをインストールしていて、システム内で有効化している場合は、 &yast; 側で <guimenu>ファイアウオールでポートを開くインターフェイス</guimenu> でインターフェイスを選択するか、もしくは <guimenu>ファイアウオールでポートを開く</guimenu> を選択することで、自動的にファイアウオールの設定を行なうことができます。また、サーバモジュールによっては、 <guimenu>ファイアウオールの詳細</guimenu> ボタンを押すことで、追加のサービスやポートを開くように設定することもできます。</para>
     </important>
    </sect3>
 
    <sect3 xml:id="sec.security.firewall.firewalld.configurations">
-    <title>Runtime Versus Permanent Configuration</title>
+    <title>一時的な設定と恒久的な設定の違い</title>
 
-    <para>
-     By default all <command>firewall-cmd</command> commands operate on the
-     runtime configuration. You can apply most operations to the permanent
-     configuration <emphasis>only</emphasis> by adding the
-     <literal>--permanent</literal> parameter. When doing so the change will
-     only affect the permanent configuration and will not be effective
-     immediately in the runtime configuration. There is currently no way to add
-     a rule to both runtime and permanent configurations in a single invocation.
-     To achieve this you can apply all necessary changes to the runtime
-     configuration and when all is working as expected issue the following
-     command:
-    </para>
+    <para>既定では、 <command>firewall-cmd</command> は一時的な設定に対して作用し、恒久的な設定は変更しません。恒久的に設定を変更したい場合は、 <literal>--permanent</literal> オプションを追加してください。なお、 <literal>--permanent</literal> オプションを指定した場合、一時的な設定には反映されず、即時に反映されることもありません。現時点では両方に対して一回で設定する機能は用意されていませんが、一時的な設定を恒久的な設定にコピーすることは可能です。コピーを行なうには、下記のように実行します:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --runtime-to-permanent</command></screen>
 
-    <para>
-     This will write all current runtime rules into the permanent configuration.
-     Any temporary modifications you or other programs may have made to the
-     firewall in other contexts are made permanent this way. If you're unsure
-     about this, you can also take the opposite approach to be on the safe side:
-     Add new rules to the permanent configuration and reload &firewalld; to
-     make them active.
-    </para>
+    <para>上記を実行することで、現時点での一時的な設定を恒久的な設定として書き込むことができます。これにより、コマンドラインやその他のプログラムなどで一時的な設定に書き込んだ場合でも、それを恒久的に保存することができるようになります。ただし、より安全に作業を行ないたい場合は、恒久的な設定に新しいルールを追加して、 &firewalld; を再起動することで有効化することもできます。</para>
 
     <note>
-     <para>
-      Some configuration items, like the default zone, are shared by both the
-      runtime and permanent configurations. Changing them will reflect in both
-      configurations at once.
-     </para>
+     <para>なお、既定のゾーンなどの一部の設定は、一時的な設定と恒久的な設定で異なる管理を行なっていません。これらの設定を変更した場合は、両方の設定に対して反映されます。</para>
     </note>
 
-    <para>
-     To revert the runtime configuration to the permanent configuration and
-     thereby discard any temporary changes, two possibilities exist, either via
-     the &firewalld; command line interface or via &systemd;:
-    </para>
+    <para>逆に、一時的に設定を変更していて、その変更を取り消したい場合は、下記のいずれかを実行してください。前者は &firewalld; のコマンドラインインターフェイスを介して、後者は &systemd; を介して実施しています:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --reload</command></screen>
 
     <screen>&prompt.root;<command>systemctl reload firewalld</command></screen>
 
-    <para>
-     For brevity the examples in the following sections will always operate on
-     the runtime configuration, if applicable. Adjust them accordingly if you
-     want to make them permanent.
-    </para>
+    <para>以下の章では、記述を簡略化する目的で、常に一時的な設定に対して作業を行なっています。恒久的な設定に書き込みたい場合は、対応するオプションを付与して実行してください。</para>
    </sect3>
 
    <sect3>
-    <title>Assignment of Interfaces to Zones</title>
+    <title>インターフェイスのゾーンへの割り当て</title>
 
-    <para>
-     You can list all network interfaces currently assigned to a zone like this:
-    </para>
+    <para>ゾーンが割り当てられている全てのネットワークインターフェイスを表示したい場合は、下記のように実行します:</para>
     <screen>&prompt.root;<command>firewall-cmd --zone=public --list-interfaces</command>
 eth0</screen>
 
-    <para>
-     Similarly you can query which zone a specific interface is assigned to:
-    </para>
+    <para>同様に、インターフェイス名を指定してゾーンを問い合わせることもできます:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --get-zone-of-interface=eth0</command>
 public</screen>
 
-    <para>
-     The following command lines assign an interface to a zone. The variant
-     using <literal>--add-interface</literal> will only work if
-     <literal>eth0</literal> is not already assigned to another zone. The
-     variant using <literal>--change-interface</literal> will always work,
-     removing <literal>eth0</literal> from its current zone if necessary:
-    </para>
+    <para>下記のコマンドラインは、インターフェイスをゾーンに割り当てるコマンドラインです。なお、 <literal>--add-interface</literal> は <literal>eth0</literal> がどのゾーンにも割り当てられていない場合にのみ、動作します。 <literal>--change-interface</literal> は、既にゾーンに割り当てられている場合でも、どのゾーンにも割り当てられていない場合でも、動作します。この場合、既にゾーンへの割り当てが存在していると、そのゾーンに対する割り当てを外す動作になります:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --zone=internal --add-interface=eth0</command>
 &prompt.root;<command>firewall-cmd --zone=internal --change-interface=eth0</command></screen>
 
-    <para>
-      Any operations without an explicit <literal>--zone</literal> argument will
-      implicitly operate on the default zone. This pair of commands can be used
-      for getting and setting the default zone assignment:
-    </para>
+    <para>なお、明示的に <literal>--zone</literal> オプションでゾーンを指定しない場合は、既定のゾーンが指定されたものとして扱われます。下記のコマンドは、それぞれ既定のゾーンが何であるのかを問い合わせ、既定のゾーンを特定のゾーンに設定するコマンドです:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --get-default-zone</command>
 dmz
 &prompt.root;<command>firewall-cmd --set-default-zone=public</command></screen>
 
     <important>
-     <para>
-      Any network interfaces not explicitly assigned to a zone will be
-      automatically part of the default zone. Changing the default zone will
-      reassign all those network interfaces immediately for the permanent and
-      runtime configurations. You should never use a trusted zone like
-      <literal>internal</literal> as the default zone, to avoid unexpected
-      exposure to threats. For example hotplugged network interfaces like USB
-      ethernet interfaces would automatically become part of the trusted zone in
-      such cases.
-     </para>
+     <para>特定のゾーンに割り当てられていないネットワークインターフェイスは、自動的に既定のゾーンに割り当てられているものとして扱われます。また、既定のゾーンの変更は即時に反映され、かつ恒久的にも保存されます。そのため、 <literal>internal</literal> などのセキュリティの低いゾーンを既定のゾーンに設定したりしてはなりません。これにより、お使いのコンピュータを不用意に危険にさらすことになってしまいます。たとえば USB イーサネットなどのホットプラグ型インターフェイスを接続した場合、既定のゾーンが <literal>internal</literal> ゾーンであるとすると、接続を開始した直後からネットワークの接続を信頼してしまうことになります。</para>
 
-     <para>
-      Also note that interfaces that are not explicitly part of any zone will
-      not appear in the zone interface list. There is currently no command to
-      list unassigned interfaces. Due to this it is best to avoid unassigned
-      network interfaces during regular operation.
-     </para>
+     <para>また、ゾーンのインターフェイス一覧には、明示的にゾーンが指定されているもの以外は表示されないことにも注意してください。現時点では、ゾーンの割り当てのないインターフェイスを表示するコマンドはありません。このような理由から、通常使用するネットワークインターフェイスについては、必ずゾーンを割り当てるようにしておいてください。</para>
     </important>
    </sect3>
 
    <sect3 xml:id="sec.security.firewall.firewalld.cmd.ports">
-    <title>Making Network Services Accessible</title>
+    <title>ネットワークサービスにアクセスできるようにする設定</title>
 
-    <para>
-     &firewalld; has a concept of <emphasis>services</emphasis>. A service
-     consists of definitions of ports and protocols. These definitions
-     logically belong together in the context of a given network service like
-     a Web or mail server protocol. The following commands can be used to get
-     information about predefined services and their details:
-    </para>
+    <para>&firewalld; には <emphasis>サービス</emphasis> という考え方があります。サービスは 1 つ以上のポートやプロトコルの定義から構成されるもので、 Web やメールサーバのプロトコルなどのように、まとめて使用することになるポートやプロトコルを一括で指定できるように構成しているものです。下記のコマンドでは、サービス名を指定してその詳細情報を取得しています:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --get-services</command>
 [...] dhcp dhcpv6 dhcpv6-client dns docker-registry [...]
@@ -519,138 +228,66 @@ dhcp
   modules:
   destination:</screen>
 
-    <para>
-     These service definitions can be used for easily making the associated
-     network functionality accessible in a zone. This command line will open the
-     http Web server port in the internal zone, for example:
-    </para>
+    <para>これらのサービス定義は、ゾーン内で特定の機能をまとめて有効化したい場合に使用します。たとえば下記のようにコマンドを入力して実行すると、 <literal>internal</literal> ゾーンに対して http (Web サーバ) のポートを開くことができます:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --add-service=http --zone=internal</command></screen>
 
-    <para>
-     The removal of a service from a zone is performed using the counterpart
-     command <literal>--remove-service</literal>. You can also define custom
-     services using the <literal>--new-service</literal> subcommand. Refer to
-     <link xlink:href="http://www.firewalld.org/documentation/howto/add-a-service.html"/>
-     for more details on how to do this.
-    </para>
+    <para>特定のゾーンに対してサービスの許可を取り消したい場合は、逆のサブコマンドである <literal>--remove-service</literal> を使用します。新しくサービスを定義したい場合は、 <literal>--new-service</literal> サブコマンドを使用します。詳しくは <link xlink:href="http://www.firewalld.org/documentation/howto/add-a-service.html"/> (英語) をお読みください。</para>
 
-    <para>
-     If you just want to open a single port by number, you can use the following
-     approach. This will open TCP port 8000 in the internal zone:
-    </para>
+    <para>ポート番号を直接指定してポートを開きたい場合は、下記のように入力して実行します。下記の例では、 <literal>internal</literal> ゾーンに対して TCP ポート 8000 を開きます:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --add-port=8000/tcp --zone=internal</command></screen>
 
-    <para>
-     For removal use the counterpart command <literal>--remove-port</literal>.
-    </para>
+    <para>ポートを閉じたい場合は、逆のサブコマンドである <literal>--remove-port</literal> をお使いください。</para>
 
     <tip>
-     <title>Temporarily Opening a Service or Port</title>
-     <para>
-      &firewalld; supports a <literal>--timeout</literal> parameter that allows
-      to open a service or port for a limited time duration. This can be helpful
-      for quick testing and makes sure that closing the service or port will not
-      be forgotten. To allow the <literal>imap</literal> service in the
-      <literal>internal</literal> zone for 5 minutes, you would call
-     </para>
+     <title>一時的にサービスやポートを開く設定について</title>
+     <para>&firewalld; には特定のサービスやポートを指定した時間内のみ開くことのできる、 <literal>--timeout</literal> というパラメータが用意されています。これは簡易的なテストに有用な仕組みで、サービスやポートを閉じ忘れることを防止することができます。たとえば <literal>internal</literal> ゾーンに対して 5 分間だけ <literal>imap</literal> サービスを許可したい場合は、下記のように実行します:</para>
      <screen>&prompt.root;<command>firewall-cmd --add-service=imap --zone=internal --timeout=5m</command></screen>
     </tip>
 
    </sect3>
 
    <sect3>
-    <title>Lockdown Mode</title>
+    <title>ロックダウンモード</title>
 
-    <para>
-     &firewalld; offers a <emphasis>lockdown mode</emphasis> that prevents
-     changes to the firewall rules while it is active. Since applications can
-     automatically change the firewall rules via the D-Bus interface, and
-     depending on the PolicyKit rules regular users may be able to do the same,
-     it can be helpful to prevent changes in some situations. You can find more
-     information about this at
-     <link xlink:href="https://fedoraproject.org/wiki/Features/FirewalldLockdown"/>.
-    </para>
+    <para>&firewalld; には、そのファイアウオールのルールが有効な間は変更を禁止することのできる、 <emphasis>ロックダウンモード</emphasis> が用意されています。アプリケーション側からは D-Bus インターフェイスを介して自動的にファイアウオールのルールを変更することができてしまうほか、 PolicyKit のルールに従って一般ユーザからも同じことを実施できてしまいますので、状況によっては変更の防止が有用となることがあります。詳しくは <link xlink:href="https://fedoraproject.org/wiki/Features/FirewalldLockdown"/> をお読みください。</para>
 
-    <para>
-     It is important to understand that the lockdown mode feature
-     provides no real security, but merely protection against accidental or
-     benign attempts to change the firewall. The way the lockdown mode is
-     currently implemented in &firewalld; provides no security against malicious
-     intent. as is pointed out at
-     <link xlink:href="http://seclists.org/oss-sec/2017/q3/139"/>.
-    </para>
+    <para>なお、ロックダウンモードは実際のセキュリティを提供するものではなく、不用意に設定を変更してしまったりする行為を防止するための仕組みです。 &firewalld; でのロックダウンモードは、不正アクセスからの防御にはなっていないことに注意してください。詳しくは <link xlink:href="http://seclists.org/oss-sec/2017/q3/139"/> (英語) をお読みください。</para>
 
    </sect3>
 
    <sect3>
-    <title>Adding Custom <command>iptables</command> Rules</title>
+    <title>独自の <command>iptables</command> ルールの追加</title>
 
-    <para>
-     &firewalld; claims exclusive control over the host's
-     <systemitem>netfilter</systemitem> rules. You should never modify
-     firewall rules using other tools like <command>iptables</command>. Doing
-     so could confuse &firewalld; and break security or functionality.
-    </para>
+    <para>&firewalld; はコンピュータ内の <systemitem>netfilter</systemitem> ルールに対して、排他的にアクセスすることによって成り立っています。そのため、 <command>iptables</command> のようなコマンドで、ファイアウオールのルールを直接書き換えたりすべきではありません。これにより、 &firewalld; の動作が不安定になってしまったり、セキュリティや機能性が損なわれてしまう危険性があります。</para>
 
-    <para>
-     If you need to add custom firewall rules that aren't covered by
-     &firewalld; features then there are two ways to do so. To directly pass
-     raw <command>iptables</command> syntax you can use the
-     <literal>--direct</literal> option. It expects the table, chain, and
-     priority as initial arguments and the rest of the command line is passed
-     as is to <command>iptables</command>. The following example adds a
-     connection tracking rule for the forwarding filter table:
-    </para>
+    <para>&firewalld; ではカバーしていない独自のファイアウオールルールを追加する必要がある場合は、 2 種類ある方法のうちのいずれかを実施してください。 1 つは <command>iptables</command> で設定する内容をそのまま &firewalld; に投げる方法で、この場合は <literal>--direct</literal> オプションを指定します。このとき、 <command>iptables</command> を実行する際のテーブルやチェイン、優先度に関する指定を行なう必要があります。下記の例では、 FORWARD チェインに対して独自の追跡 (tracking) ルールを追加しています:</para>
 
     <screen>&prompt.root;<command>firewall-cmd  --direct --add-rule ipv4 filter FORWARD 0 -i eth0 -o eth1 \
     -p tcp --dport 80 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT</command></screen>
 
-    <para>
-     Additionally, &firewalld; implements so called <emphasis>rich
-     rules</emphasis>, an extended syntax for specifying
-     <command>iptables</command> rules in an easier way. You can find the
-     syntax specification at
-     <link xlink:href="http://www.firewalld.org/documentation/man-pages/firewalld.richlanguage.html"/>.
-     The following example drops all IPv4 packets originating from a certain
-     source address:
-    </para>
+    <para>それ以外にも、 &firewalld; では <emphasis>リッチルール</emphasis> と呼ばれる仕組みにも対応しています。この方法のほうが <command>iptables</command> のルールを簡単に指定することができます。詳しくは <link xlink:href="http://www.firewalld.org/documentation/man-pages/firewalld.richlanguage.html"/> (英語) をお読みください。下記の例では、特定の発信元アドレスからの IPv4 パケットを drop (処理せず落とす) する設定を行なっています:</para>
 
     <screen>&prompt.root;<command>firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" \
     source address="192.168.2.4" drop'</command></screen>
    </sect3>
 
    <sect3>
-    <title>Routing, Forwarding, and Masquerading</title>
+    <title>ルーティング／フォワード／マスカレード</title>
 
-    <para>
-     &firewalld; is not designed to run as a fully fledged router. The
-     basic functionality for typical home router setups is available. For a
-     corporate production router you should not use &firewalld;, however, but
-     use dedicated router and firewall devices instead. The following provides
-     just a few pointers on what to look for to utilize routing in &firewalld;:
-    </para>
+    <para>&firewalld; は完全機能のルータとして動作するようには設計されていません。ですが、一般的な家庭用ルータ程度の設定であれば可能です。企業内の本番環境で使用されるようなルータの場合は、 &firewalld; を使用すべきではありません。ルータやファイアウオールとして専用に設計された機器をお使いください。下記の章では、 &firewalld; 内でルーティングを扱うにあたっての、いくつかの情報源を示しています:</para>
 
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       First of all IP forwarding needs to be enabled as outlined in
-       <xref linkend="sec.security.firewall.masq"/>.
-      </para>
+      <para>IP プロトコルの経路制御を有効化するのに必要な情報は、 <xref linkend="sec.security.firewall.masq"/> に概要があります。</para>
      </listitem>
      <listitem>
-      <para>
-       To enable IPv4 masquerading, for example in the
-       <literal>internal</literal> zone, issue the following command.
-      </para>
+      <para><literal>internal</literal> ゾーンに対して IPv4 マスカレードを有効化するには、下記のコマンドを実行します。</para>
       <screen>&prompt.root;<command>firewall-cmd --zone=internal --add-masquerade</command></screen>
      </listitem>
      <listitem>
-      <para>
-       &firewalld; can also enable port forwarding. The following command will
-       forward local TCP connections on port 80 to another host:
-      </para>
+      <para>&firewalld; ではポート転送の設定も行なうことができます。たとえば下記のコマンドを実行すると、ポート 80 宛に届いた通信を他のホストに転送することができます:</para>
       <screen>&prompt.root;<command>firewall-cmd --zone=public \
     --add-forward-port=port=80:proto=tcp:toport=80:toaddr=192.168.1.10</command></screen>
      </listitem>
@@ -659,59 +296,23 @@ dhcp
   </sect2>
 
   <sect2 xml:id="sec.security.firewall.firewalld.rpcports">
-   <title>Accessing Services Listening on Dynamic Ports</title>
+   <title>動的にポートを割り当てるタイプのサービスへのアクセス</title>
 
-   <para>
-    Some network services do not listen on predefined port numbers. Instead
-    they operate based on the <literal>portmapper</literal> or
-    <literal>rpcbind</literal> protocol. We will use the term
-    <literal>rpcbind</literal> from here on. When one of these services
-    starts, it chooses a random local port and talks to
-    <literal>rpcbind</literal> to make the port number known.
-    <literal>rpcbind</literal> itself is listening on a well known port.
-    Remote systems can then query <literal>rpcbind</literal> about the network
-    services it knows about and on which ports they are listening. Not many
-    programs use this approach anymore today. Popular examples are
-    Network Information Services (NIS; <command>ypserv</command> and
-    <command>ypbind</command>) and the Network File System (NFS) version 3.
-   </para>
+   <para>ネットワークサービスによっては、特定のポート番号で待ち受けていないものがあります。この場合、 <literal>portmapper</literal> や <literal>rpcbind</literal> のプロトコルをベースにして動作しています (以降は <literal>rpcbind</literal> と表現します) 。これらのサービスが開始されると、ローカル側のポートをランダムに選択したあと、 <literal>rpcbind</literal> と通信を行なって、このポートを既知のものとして使用するようにします。 <literal>rpcbind</literal> それ自身は特定の (既知の) ポート上で動作します。ネットワーク上離れたシステムからは、 <literal>rpcbind</literal> に対して問い合わせを行ない、どのポートで動作しているのかを確認します。現在、この仕組みはそれほど多くのプログラムで使用していないものですが、 Network Information Services (NIS; <command>ypserv</command> および <command>ypbind</command> ) と Network File System (NFS) バージョン 3 で使用されています。</para>
 
    <note>
-    <title>About NFSv4</title>
-    <para>
-     The newer NFSv4 only requires the single well known
-     TCP port 2049. For protocol version 4.0 the kernel parameter
-     <literal>fs.nfs.nfs_callback_tcpport</literal> may need to be set
-     to a static port (see <xref linkend="ex.security.firewall.nfscallback"/>).
-     Starting with protocol version 4.1 this setting has also become
-     unnecessary.
-    </para>
+    <title>NFSv4 について</title>
+    <para>新しい NFSv4 では、 TCP ポート 2049 という既知のポート単独で動作するようになっています。プロトコルバージョン 4.0 では、カーネルのパラメータ <literal>fs.nfs.nfs_callback_tcpport</literal> で固定のポートを指定する必要があります (詳しくは <xref linkend="ex.security.firewall.nfscallback"/> をお読みください) 。プロトコルバージョン 4.1 以降であれば、この設定も不要となっています。</para>
    </note>
 
-   <para>
-    The dynamic nature of the <literal>rpcbind</literal> protocol makes
-    it difficult to make the affected services behind the firewall accessible.
-    &firewalld; does not support these services by itself. For manual configuration,
-    see <xref linkend="sec.security.firewall.firewalld.rpcports.static"/>.
-    Alternatively, &productname; provides a helper script. For details, see
-    <xref linkend="sec.security.firewall.firewalld.rpcports.helper"/>.
-   </para>
+   <para><literal>rpcbind</literal> プロトコルを使用する仕組みでは、動的にポートが設定されるため、ファイアウオール経由でサービスにアクセスできるようにすることが難しくなっています。 &firewalld; では、それ単体でこれらのサービスに対応することができません。手作業で作業を行なう場合は、 <xref linkend="sec.security.firewall.firewalld.rpcports.static"/> をお読みください。それ以外にも、 &productname; にはヘルパースクリプトが用意されています。詳しくは <xref linkend="sec.security.firewall.firewalld.rpcports.helper"/> をお読みください。</para>
 
    <sect3 xml:id="sec.security.firewall.firewalld.rpcports.static">
-    <title>Configuring Static Ports</title>
-    <para>
-     One possibility is to configure all involved network services to use
-     fixed port numbers. Once this is done, the fixed ports can be opened in
-     &firewalld; and everything should work. The actual port numbers used are
-     at your discretion but should not clash with any well known port numbers
-     assigned to other services. See <xref linkend="tab.security.firewall.sysconfigports"/>
-     for a list of the available configuration items for NIS and NFSv3
-     services. Note that depending on your actual NIS or NFS configuration,
-     not all of these ports may be required for your setup.
-    </para>
+    <title>ポートを固定するための設定</title>
+    <para>問題を解決するための方法のうちの 1 つとして、各ネットワークサービスの使用するポートを固定する方法があります。これを設定することで、 &firewalld; でポートを開くように設定することができるようになり、全てが問題なく動作するようになります。ポート番号の指定は自由に決めることができますが、他のサービスで使用されてしまうことを防ぐため、既知の (いわゆる well-known な) ポート範囲以外から設定しておくことをお勧めします。 NIS や NFSv3 のサービスに対する設定項目の一覧については、 <xref linkend="tab.security.firewall.sysconfigports"/> をお読みください。ただし、 NIS や NFS の設定によっては、これら全てのポートを設定する必要がない場合もあります。</para>
 
     <table xml:id="tab.security.firewall.sysconfigports">
-     <title>Important Sysconfig Variables for Static Port Configuration</title>
+     <title>ポートを固定させるための主な sysconfig 変数</title>
      <tgroup cols="3">
       <colspec colnum="1" colname="1" colwidth="3000*"/>
       <colspec colnum="2" colname="2" colwidth="1000*"/>
@@ -719,170 +320,86 @@ dhcp
       <thead>
        <row>
         <entry>
-         <para>
-          File Path
-         </para>
+         <para>ファイルパス</para>
         </entry>
         <entry>
-         <para>
-          Variable Name
-         </para>
+         <para>変数名</para>
         </entry>
         <entry>
-         <para>
-          Example Value
-         </para>
+         <para>値の例</para>
         </entry>
        </row>
       </thead>
       <tbody>
        <row>
-        <entry morerows="4">
-         <filename>
-          /etc/sysconfig/nfs
-         </filename>
-        </entry>
-        <entry>
-         MOUNTD_PORT
-        </entry>
-        <entry>
-         21001
-        </entry>
+        <entry morerows="4"><filename> /etc/sysconfig/nfs </filename></entry>
+        <entry>MOUNTD_PORT</entry>
+        <entry>21001</entry>
        </row>
        <row>
-        <entry>
-         STATD_PORT
-        </entry>
-        <entry>
-         21002
-        </entry>
+        <entry>STATD_PORT</entry>
+        <entry>21002</entry>
        </row>
        <row>
-        <entry>
-         LOCKD_TCPPORT
-        </entry>
-        <entry>
-         21003
-        </entry>
+        <entry>LOCKD_TCPPORT</entry>
+        <entry>21003</entry>
        </row>
        <row>
-        <entry>
-         LOCKD_UDPPORT
-        </entry>
-        <entry>
-         21003
-        </entry>
+        <entry>LOCKD_UDPPORT</entry>
+        <entry>21003</entry>
        </row>
        <row>
-        <entry>
-         RQUOTAD_PORT
-        </entry>
-        <entry>
-         21004
-        </entry>
+        <entry>RQUOTAD_PORT</entry>
+        <entry>21004</entry>
        </row>
        <row>
-        <entry>
-         <filename>
-          /etc/sysconfig/ypbind
-         </filename>
-        </entry>
-        <entry>
-         YPBIND_OPTIONS
-        </entry>
-        <entry>
-         -p 24500
-        </entry>
+        <entry><filename> /etc/sysconfig/ypbind </filename></entry>
+        <entry>YPBIND_OPTIONS</entry>
+        <entry>-p 24500</entry>
        </row>
        <row>
-        <entry morerows="2">
-         <filename>
-          /etc/sysconfig/ypserv
-         </filename>
-        </entry>
-        <entry>
-         YPXFRD_ARGS
-        </entry>
-        <entry>
-         -p 24501
-        </entry>
+        <entry morerows="2"><filename> /etc/sysconfig/ypserv </filename></entry>
+        <entry>YPXFRD_ARGS</entry>
+        <entry>-p 24501</entry>
        </row>
        <row>
-        <entry>
-         YPSERV_ARGS
-        </entry>
-        <entry>
-         -p 24502
-        </entry>
+        <entry>YPSERV_ARGS</entry>
+        <entry>-p 24502</entry>
        </row>
        <row>
-        <entry>
-         YPPASSWDD_ARGS
-        </entry>
-        <entry>
-         --port 24503
-        </entry>
+        <entry>YPPASSWDD_ARGS</entry>
+        <entry>--port 24503</entry>
        </row>
       </tbody>
      </tgroup>
     </table>
 
-    <para>
-     You will need to restart any related services that are affected by these
-     static port configurations for the changes to take effect. You can see
-     the currently assigned rpcbind ports by using the command
-     <command>rpcinfo -p</command>. On success only the statically configured
-     ports should show up there.
-    </para>
+    <para>設定を反映させるには、対応するサービスをそれぞれ再起動する必要があります。なお、 <command>rpcinfo -p</command> と入力して実行することで、割り当てられた rpcbind のポートを表示することもできます。正しく設定がされていれば、ここに固定のポートが表示されるはずです。</para>
 
-    <para>
-     Apart from the port configuration for network services running in
-     userspace there are also ports that are used by the Linux kernel directly
-     when it comes to NFS. One of these ports is
-     <literal>nfs_callback_tcpport</literal>. It is only required for NFS
-     protocol versions older than 4.1. There is a sysctl named
-     <literal>fs.nfs.nfs_callback_tcpport</literal> to configure this port.
-     This sysctl node only appears dynamically when NFS mounts are active.
-     Therefore it is best to configure the port via kernel module
-     parameters. This can be achieved by creating a file as shown in
-     <xref linkend="ex.security.firewall.nfscallback"/>.
-    </para>
+    <para>ユーザスペース内で動作しているネットワーク向けのポート設定とは別に、 Linux カーネルが NFS に対して直接使用するポートも存在しています。これらのポートのうちの 1 つは <literal>nfs_callback_tcpport</literal> と呼ばれます。このポートは、バージョン 4.1 以前の NFS プロトコルでのみ必要となります。ここで使用するポートは、 sysctl の <literal>fs.nfs.nfs_callback_tcpport</literal> で設定することができます。この sysctl ノードは、 NFS マウントが有効な場合にのみ動的に現われます。そのため、この設定はカーネルモジュールのパラメータとして設定しておくことが最適です。これは <xref linkend="ex.security.firewall.nfscallback"/> で示している設定で実現することができます。</para>
 
     <example xml:id="ex.security.firewall.nfscallback">
-     <title>Callback Port Configuration for the <literal>nfs</literal> Kernel Module in <filename>/etc/modprobe.d/60-nfs.conf</filename></title>
+     <title><filename>/etc/modprobe.d/60-nfs.conf</filename> 内での <literal>nfs</literal> カーネルモジュールに対するコールバックポートの設定</title>
 <screen>options nfs callback_tcpport=21005
 </screen>
     </example>
 
-    <para>
-     To make this change effective it is easiest to reboot the machine.
-     Otherwise all NFS services need to be stopped and the
-     <literal>nfs</literal> kernel module needs to be reloaded. To verify the
-     active NFS callback port, check the output of
-     <command>cat /sys/module/nfs/parameters/callback_tcpport</command>.
-    </para>
+    <para>この設定を反映させるのに最も簡単な方法は、マシンの再起動です。マシンを再起動しないで適用するには、 NFS 関連のサービスを全て停止させて <literal>nfs</literal> カーネルモジュールを読み込みなおす必要があります。なお、現時点での NFS コールバックポートを確認したい場合は、 <command>cat /sys/module/nfs/parameters/callback_tcpport</command> と入力して実行してください。</para>
 
-    <para>
-     For easy handling of the now statically configured RPC ports, it is useful
-     to create a new &firewalld; service definition. This service definition
-     will group all related ports and, for example, makes it easy to make them
-     accessible in a specific zone. In
-     <xref linkend="ex.security.firewall.newrpcservice"/> this is done for the
-     NFS ports as they have been configured in the accompanying examples.
-    </para>
+    <para>このようにして RPC 関連のポートを固定化したら、あとは新しい &firewalld; サービス定義を作成して、使用するようにすると便利です。このサービス定義は関連する全てのポートを含むもので、これによって一括でポートを許可するように設定することができます。 <xref linkend="ex.security.firewall.newrpcservice"/> には、新しくサービスを定義して、それらの固定ポートをサービス内に設定し、使用するまでの手順を示しています。</para>
 
     <example xml:id="ex.security.firewall.newrpcservice">
-     <title>Commands to Define a new &firewalld; RPC Service for NFS</title>
+     <title>NFS 向けの新しい &firewalld; RPC サービスの設定コマンド</title>
 <screen>&prompt.root;<command>firewall-cmd --permanent --new-service=nfs-rpc</command>
 &prompt.root;<command>firewall-cmd --permanent --service=nfs-rpc --set-description="NFS related, statically configured RPC ports"</command>
-# add UDP and TCP ports for the given sequence
+# TCP/UDP ポートをサービスに追加する
 &prompt.root;<command>for port in 21001 21002 21003 21004; do
     firewall-cmd --permanent --service=nfs-rpc --add-port ${port}/udp --add-port ${port}/tcp
 done</command>
-# the callback port is TCP only
+# コールバックポートは TCP のみ
 &prompt.root;<command>firewall-cmd --permanent --service=nfs-rpc --add-port 21005/tcp</command>
 
-# show the complete definition of the new custom service
+# 新しく定義したサービスの詳細表示
 &prompt.root;<command>firewall-cmd --info-service=nfs-rpc --permanent -v</command>
 nfs-rpc
   summary:
@@ -893,41 +410,26 @@ nfs-rpc
   modules:
   destination:
 
-# reload firewalld to make the new service definition available
+# firewalld を再読み込みさせて、新しいサービス定義を利用できるようにする
 &prompt.root;<command>firewall-cmd --reload</command>
 
-# the new service definition can now be used to open the ports e.g. in the internal zone
+# 新しいサービス定義を internal ゾーンに追加する
 &prompt.root;<command>firewall-cmd --add-service=nfs-rpc --zone=internal</command>
 </screen>
     </example>
    </sect3>
 
    <sect3 xml:id="sec.security.firewall.firewalld.rpcports.helper">
-    <title>Using <package>firewall-rpcbind-helper</package> for Configuring Static Ports</title>
-    <para>
-     The steps to configure static ports as shown in the previous section can
-     be simplified by using the &suse; helper tool
-     <command>firewall-rpc-helper.py</command>. Install it with
-     <command>zypper in firewalld-rpcbind-helper</command>.
-    </para>
-    <para>
-     The tool allows interactive configuration of the service patterns
-     discussed in the previous section. It can also display current port
-     assignments and can be used for scripting. For details, see
-     <command>firewall-rpc-helper.py --help</command>.
-    </para>
+    <title>固定のポートを設定するための <package>firewall-rpcbind-helper</package> の使用</title>
+    <para>上記の章で示した固定のポートを設定するための手順は、 &suse; が提供する <command>firewall-rpc-helper.py</command> というツールを使用することで、より簡単に行なうことができます。このツールは、 <command>zypper in firewalld-rpcbind-helper</command> でインストールすることができます。</para>
+    <para>このツールは、上記の章で実施したサービス設定を対話に設定するツールです。このほか、現時点でのポートの割り当てを表示することができるほか、スクリプト内で使用することもできるようになています。詳しくは <command>firewall-rpc-helper.py --help</command> を実行して出力された内容をお読みください。</para>
    </sect3>
   </sect2>
  </sect1>
 
  <sect1 xml:id="sec.security.firewall.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   The most up-to-date information and other documentation about the &firewalld;
-   package is found in <filename>/usr/share/doc/packages/firewalld</filename>.
-   The home page of the netfilter and iptables project, <link xlink:href="http://www.netfilter.org"/>, provides a large collection of
-   documents about iptables in general in many languages.
-  </para>
+  <para>&firewalld; パッケージに対する最新の情報と、その他のドキュメンテーションについては、 <filename>/usr/share/doc/packages/firewalld</filename> 内で提供されています。 netfilter および iptables プロジェクトの Web ページは <link xlink:href="http://www.netfilter.org"/> にあります。こちらには、多数の言語に対応した iptables 関連の文書が多数用意されています。</para>
  </sect1>
 </chapter>
