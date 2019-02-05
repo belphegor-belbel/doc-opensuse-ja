@@ -71,25 +71,10 @@ cd /etc/openvpn
 
   -->
 <!-- ====================================================================== -->
- <title>Configuring a VPN Server</title>
+ <title>VPN サーバの設定</title>
  <info>
       <abstract>
-        <para>
-    Today, Internet connections are cheap and available almost
-    everywhere. However, not all connections are secure.
-    Using a Virtual Private Network (VPN), you can create a secure network
-    within an insecure network such as the Internet or Wi-Fi. It can be
-    implemented in different ways and serves several purposes. In this chapter,
-    we focus on the
-    <link xlink:href="http://www.openvpn.net">OpenVPN</link> implementation
-    to link branch offices via secure wide area networks (WANs).
-<!--
-   There are diverse other implementations, for example ipsec (implemented by
-   the strongswan, and raccon [ipsec-tools package] packages).
-
-   Also SSH contains support for VPNs.
-   -->
-        </para>
+        <para>今やインターネット接続は安価であり、どこででも使用できるようになっています。しかしながら、全ての接続で機密が守られる保証はありません。この場合、仮想プライベートネットワーク (Virtual Private Network; VPN) を構築することで、インターネットや Wi-Fi などの機密が守られないネットワークを経由して、社内や家庭内などにアクセスすることができるようになります。この VPN には様々な実装があり、様々な目的で使用されます。本章では <link xlink:href="http://www.openvpn.net">OpenVPN</link> と呼ばれる、インターネットと社内／家庭内を結ぶ実装について説明しています。 <!-- There are diverse other implementations, for example ipsec (implemented by the strongswan, and raccon [ipsec-tools package] packages). Also SSH contains support for VPNs. --></para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -148,78 +133,45 @@ cd /etc/openvpn
 
   -->
  <sect1 xml:id="sec.security.vpn.overview">
-  <title>Conceptual Overview</title>
+  <title>考え方の概要</title>
 
-  <para>
-   This section defines some terms regarding VPN and gives a brief overview
-   of some scenarios.
-  </para>
+  <para>本章では VPN に関するいくつかの用語を使用していますので、まずはその説明から行ないます。</para>
 
   <sect2 xml:id="sec.security.vpn.terminology">
-   <title>Terminology</title>
+   <title>用語</title>
    <variablelist>
     <varlistentry>
-     <term>Endpoint</term>
+     <term>エンドポイント</term>
      <listitem>
-      <para>
-       The two <quote>ends</quote> of a tunnel, the source or destination
-       client.
-      </para>
+      <para>VPN の接続の <quote>両端</quote> を表わす用語です。 VPN サーバとクライアントの両方を意味しています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Tap Device</term>
+     <term>TAP デバイス</term>
      <listitem>
-      <para>
-       A tap device simulates an Ethernet device (layer 2 packets in the OSI
-       model, such as IP packets). A tap device is used for creating a
-       network bridge. It works with Ethernet frames.
-      </para>
+      <para>TAP デバイスはイーサネットデバイス (OSI モデルにおけるレイヤ 2) <!-- NOTE: "such as IP packets"? -->を疑似するデバイスです。 TAP デバイスはブリッジ型の VPN 接続で使用され、イーサネットのフレームを転送します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Tun Device</term>
+     <term>TUN デバイス</term>
      <listitem>
-      <para>
-       A tun device simulates a point-to-point network (layer 3 packets in
-       the OSI model, such as Ethernet frames). A tun device is used with
-       routing and works with IP frames.
-      </para>
+      <para>TUN デバイスは IP ネットワーク (OSI モデルにおけるレイヤ 3) <!-- NOTE: "such as Ethernet frames"? -->を疑似するデバイスです。 TUN デバイスはルーティング型の VPN で使用され、 IP のフレームを転送します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Tunnel</term>
+     <term>トンネル</term>
      <listitem>
-      <para>
-       Linking two locations through a primarily public network. From a more
-       technical viewpoint, it is a connection between the client's device
-       and the server's device. Usually a tunnel is encrypted, but it does
-       need to be by definition.
-      </para>
+      <para>2 つのエンドポイントを結ぶ通信経路を意味する用語です。もっと技術的な観点で言うと、クライアント側のデバイスとサーバ側のデバイスの接続を意味します。通常、トンネルは暗号化されていますが、暗号化されていなくてもトンネルと表現します。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.security.vpn.scenarios">
-   <title>VPN Scenarios</title>
-   <para>
-    Whenever you set up a VPN connection, your IP packets are transferred
-    over a secured <emphasis>tunnel</emphasis>. A tunnel can use either a
-    <emphasis>tun</emphasis> or <emphasis>tap</emphasis> device. They are
-    virtual network kernel drivers which implement the transmission of
-    Ethernet frames or IP frames/packets.
-   </para>
-   <para>
-    Any user space program, such as OpenVPN, can attach itself to a tun or tap
-    device to receive packets sent by your operating system. The program is
-    also able to write packets to the device.
-   </para>
-   <para>
-    There are many solutions to set up and build a VPN connection. This
-    section focuses on the OpenVPN package. Compared to other VPN software,
-    OpenVPN can be operated in two modes:
-   </para>
+   <title>VPN のシナリオ</title>
+   <para>VPN で接続を行なうと、 IP パケットは <emphasis>トンネル</emphasis> を介して伝送されるようになります。トンネルは <emphasis>TUN</emphasis> または <emphasis>TAP</emphasis> のいずれかを使用します。 TUN/TAP は仮想ネットワークに対応するカーネルドライバで、イーサネットや IP フレーム (パケット) の伝送を行ないます。</para>
+   <para>ユーザスペース側のプログラム (OpenVPN) では、 TUN/TAP のデバイスに接続して、オペレーティングシステムとの間でパケットの送受信を行ないます。</para>
+   <para>一般的に言うと、 VPN には様々なソリューションが存在し、構成も様々なものが存在しています。本章では OpenVPN パッケージを利用した場合の説明を行なっています。 OpenVPN では、他の VPN ソフトウエアとは異なり、下記に示す 2 種類のモードに対応しています:</para>
 <!--
     More information:
     * http://openvpn.net/index.php/documentation/howto.html#vpntype
@@ -228,24 +180,16 @@ cd /etc/openvpn
     -->
    <variablelist>
     <varlistentry>
-     <term>Routed VPN</term>
+     <term>ルーティング型 VPN</term>
      <listitem>
-      <para>
-       Routing is an easy solution to set up. It is more efficient and
-       scales better than a bridged VPN. Furthermore, it allows the user to
-       tune MTU (Maximum Transfer Unit) to raise efficiency. However, in a
-       heterogeneous environment, if you do not have a Samba server on the
-       gateway, NetBIOS broadcasts do not work. If you need IPv6, the drivers
-       for the tun devices on both ends must support this protocol explicitly.
-       This scenario is depicted in <xref linkend="fig.vpn.scenario-routed-1"/>.
-      </para>
+      <para>ルーティング型 VPN は構築が簡単な方式です。ブリッジ型 VPN よりも効率的で大規模環境にも向きます。それに加えて、さらに効率を高めるために MTU (最大伝送単位; Maximum Transfer Unit) を調整することもできます。しかしながら、ゲートウエイ側で Samba サーバを動作させない限り、 NetBIOS ブロードキャストが動作しないという仕様上の問題があり、異種混合型の環境では都合が悪いことがあります。なお、 IPv6 を必要とする場合は、双方のエンドポイントで TUN デバイスに対して明示的に設定を行なう必要があります。この方式の構成は <xref linkend="fig.vpn.scenario-routed-1"/> のようになります。</para>
       <remark>
        FIXME: This para is a bit involved and terse for an introduction. Maybe
        it could be fixed to provide some more context around what the Samba and
        NetBIOS thing means. - sknorr, 2016-07-21
       </remark>
       <figure xml:id="fig.vpn.scenario-routed-1">
-       <title>Routed VPN</title>
+       <title>ルーティング型 VPN</title>
        <mediaobject>
         <imageobject role="html">
          <imagedata fileref="vpn_routed1.png" width="80%"/>
@@ -258,17 +202,9 @@ cd /etc/openvpn
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Bridged VPN</term>
+     <term>ブリッジ型 VPN</term>
      <listitem>
-      <para>
-       Bridging is a more complex solution. It is recommended when you need
-       to browse Windows file shares across the VPN without setting up a
-       Samba or WINS server. Bridged VPN is also needed to use
-       non-IP protocols (such as IPX) or applications relying on network
-       broadcasts. However, it is less efficient than routed VPN. Another
-       disadvantage is that it does not scale well. This scenario is
-       depicted in the following figures.
-      </para>
+      <para>ブリッジ型は少し複雑な方式です。 Samba や WINS サーバなどの設定を行なうことなく、 VPN を介して Windows のファイル共有を参照できるようにしたい場合は、お勧めの方式です。ブリッジ型の VPN は IP プロトコル以外 (IPX など) を環境でも利用できるほか、ブロードキャストパケットを使用する様々なアプリケーションでも利用することができます。しかしながら、ルーティング型 VPN と比べると効率は悪く、大規模環境にも向きません。この方式の構成を下記の図に示します。</para>
 <!--<example>
             <title>Scenario 2</title>
           <screen>     [ machine2 (client) ]&#x2d;&#x2d;eth0&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;>[switch/router]->..
@@ -282,7 +218,7 @@ cd /etc/openvpn
      [ machine1 (server) ]&#x2d;&#x2d;eth0&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;>[switch/router]->..</screen>
           </example>-->
       <figure xml:id="fig.vpn.scenario-briged-1">
-       <title>Bridged VPN - Scenario 1</title>
+       <title>ブリッジ型 VPN - シナリオ 1</title>
        <mediaobject>
         <imageobject role="html">
          <imagedata fileref="vpn_bridged1.png" width="80%"/>
@@ -311,7 +247,7 @@ cd /etc/openvpn
 
           </example>-->
       <figure xml:id="fig.vpn.scenario-briged-2">
-       <title>Bridged VPN - Scenario 2</title>
+       <title>ブリッジ型 VPN - シナリオ 2</title>
        <mediaobject>
         <imageobject role="html">
          <imagedata fileref="vpn_bridged2.png" width="80%"/>
@@ -340,7 +276,7 @@ cd /etc/openvpn
      [ machine1 (server) ]&#x2d;&#x2d;eth0&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;&#x2d;>[switch/router]->..</screen>
           </example>-->
       <figure xml:id="fig.vpn.scenario-briged-3">
-       <title>Bridged VPN - Scenario 3</title>
+       <title>ブリッジ型 VPN - シナリオ 3</title>
        <mediaobject>
         <imageobject role="html">
          <imagedata fileref="vpn_bridged3.png" width="80%"/>
@@ -353,33 +289,17 @@ cd /etc/openvpn
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    The major difference between bridging and routing is that a routed VPN
-    cannot IP-broadcast while a bridged VPN can.
-   </para>
+   <para>ブリッジ型とルーティング型の大きな違いは、ルーティング型の場合は IP ブロードキャストを通すことができないのに対して、ブリッジ型の場合はそれができるという点があります。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.vpn.simplest">
-  <title>Setting Up a Simple Test Scenario</title>
+  <title>シンプルな構成の構築例</title>
 
-  <para>
-   In the following example, we will create a point-to-point VPN tunnel. The
-   example demonstrates how to create a VPN tunnel between one client and a
-   server. It is assumed that your VPN server will use private IP addresses
-   like <systemitem class="ipaddress"><replaceable>IP_OF_SERVER</replaceable></systemitem>
-   and your client will use the IP address
-   <systemitem class="ipaddress"><replaceable>IP_OF_CLIENT</replaceable></systemitem>.
-   Make sure you select addresses which do not conflict with other IP addresses.
-  </para>
+  <para>下記の例では、一対一の VPN トンネルを作成します。この例を読むことで、クライアントとサーバとの間で、どのようにして VPN トンネルが作られるのかを知ることができます。なお、 VPN サーバ側のアドレスは <systemitem class="ipaddress"><replaceable>サーバの_IP</replaceable></systemitem> 、 VPN クライアント側のアドレスは <systemitem class="ipaddress"><replaceable>クライアントの_IP</replaceable></systemitem> として、いずれもプライベート IP アドレスを使用しているものとします。なお、実際の構築にあたっては、他の IP アドレスと重複しないものを選んでください。</para>
 
   <warning>
-   <title>Use Only for Testing</title>
-   <para>
-    This following scenario is provided as an example meant for familiarizing
-    yourself with VPN technology. <emphasis>Do not</emphasis> use this as a
-    real world scenario, as it can compromise the security and safety of your IT
-    infrastructure!
-   </para>
+   <title>セキュリティ面の考慮について</title>
+   <para>下記のシナリオは VPN 技術の仕組みを説明するために用意しているものであります。 VPN 技術はその仕組み上、社外からのアクセスを受け入れる仕組みであるため、誤った設定を行なってしまうと、家庭内や社内のネットワークを危険にさらすことにも繋がります。実際に使用するにあたっては、よくご確認のうえ実施してください。</para>
    <remark>
     I see why it impacts security. But why is safety mentioned? Will the
     servers implode? - sknorr, 2016-07-21
@@ -387,76 +307,47 @@ cd /etc/openvpn
   </warning>
 
   <tip>
-   <title>Names for Configuration File</title>
-   <para>
-    To simplify working with OpenVPN configuration files, we recommend the
-    following:
-   </para>
+   <title>設定ファイルの名前について</title>
+   <para>OpenVPN の設定ファイルを簡単に扱うことができるようにするため、下記のような構成をお勧めします:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Place your OpenVPN configuration files in the directory
-      <filename>/etc/openvpn</filename>.
-     </para>
+     <para>OpenVPN の設定ファイルは、 <filename>/etc/openvpn</filename> 以下に配置してください。</para>
     </listitem>
     <listitem>
-     <para>
-      Name your configuration files
-      <filename><replaceable>MY_CONFIGURATION</replaceable>.conf</filename>.
-     </para>
+     <para>1 つのファイル内に全ての設定を書き込む場合は、 <filename><replaceable>MY_CONFIGURATION</replaceable>.conf</filename> のようなファイルを作成して書き込んでください。</para>
     </listitem>
     <listitem>
-     <para>
-      If there are multiple files that belong to the same configuration, place
-      them in a subdirectory like
-      <filename>/etc/openvpn/<replaceable>MY_CONFIGURATION</replaceable></filename>.
-     </para>
+     <para>複数のファイルを利用して 1 つの構成を作り上げる場合は、 <filename>/etc/openvpn/<replaceable>MY_CONFIGURATION</replaceable></filename> のようなサブディレクトリを作成して、その中にファイルを置いてください。</para>
     </listitem>
    </itemizedlist>
   </tip>
 
   <sect2 xml:id="sec.security.vpn.simplest.vpnserv">
-   <title>Configuring the VPN Server</title>
-   <para>
-    To configure a VPN server, proceed as follows:
-   </para>
+   <title>VPN サーバの設定</title>
+   <para>VPN サーバの構築は下記のようにして行ないます:</para>
    <procedure xml:id="pro.security.vpn.simplest.vpnserv">
-    <title>VPN Server Configuration</title>
+    <title>VPN サーバの設定</title>
     <step>
-     <para>
-      Install the package <systemitem class="resource">openvpn</systemitem>
-      on the machine that will later become your VPN server.
-     </para>
+     <para>VPN サーバとして動作させたいマシンに、 <systemitem class="resource">openvpn</systemitem> パッケージをインストールします。</para>
     </step>
     <step>
-     <para>
-      Open a shell, become &rootuser; and create the VPN secret key:
-     </para>
+     <para>シェルを開いて &rootuser; になり、下記のように実行して VPN の機密鍵を作成します:</para>
 <screen>&prompt.root;openvpn --genkey --secret /etc/openvpn/secret.key</screen>
     </step>
     <step>
-     <para>
-      Copy the secret key to your client:
-     </para>
-<screen>&prompt.root;scp /etc/openvpn/secret.key root@<replaceable>IP_OF_CLIENT</replaceable>:/etc/openvpn/</screen>
+     <para>機密鍵をクライアントにコピーします:</para>
+<screen>&prompt.root;scp /etc/openvpn/secret.key root@<replaceable>クライアントの_IP</replaceable>:/etc/openvpn/</screen>
     </step>
     <step>
-     <para>
-      Create the file <filename>/etc/openvpn/server.conf</filename> with the
-      following content:
-     </para>
+     <para>下記のような内容で、サーバ側の設定ファイル <filename>/etc/openvpn/server.conf</filename> を作成します:</para>
 <!-- FIXME: Document what ifconfig does here. Also, document the tun device
 below better. - sknorr, 2016-07-22 -->
 <screen>dev tun
-ifconfig <replaceable>IP_OF_SERVER</replaceable> <replaceable>IP_OF_CLIENT</replaceable>
+ifconfig <replaceable>サーバの_IP</replaceable> <replaceable>クライアントの_IP</replaceable>
 secret secret.key</screen>
     </step>
     <step>
-     <para>
-      Set up a tun device configuration by creating a file called
-      <filename>/etc/sysconfig/network/ifcfg-tun0</filename> with the following
-      content:
-     </para>
+     <para><filename>/etc/sysconfig/network/ifcfg-tun0</filename> というファイル名のファイル (TUN デバイスの設定) を作成して、下記の内容を記述します:</para>
 <screen>STARTMODE='manual'
 BOOTPROTO='static'
 TUNNEL='tun'
@@ -465,69 +356,38 @@ TUNNEL_SET_GROUP='nobody'
 LINK_REQUIRED=no
 PRE_UP_SCRIPT='systemd:openvpn@server'
 PRE_DOWN_SCRIPT='systemd:openvpn@service'</screen>
-     <para>
-      The notation <literal>openvpn@server</literal> points to the OpenVPN
-      server configuration file located at
-      <filename>/etc/openvpn/server.conf</filename>. For more information, see
-      <filename>/usr/share/doc/packages/openvpn/README.SUSE</filename>.
-     </para>
+     <para>途中、 <literal>openvpn@server</literal> という記述がありますが、これは OpenVPN 内のサーバ設定 <filename>/etc/openvpn/server.conf</filename> を参照するための設定です。詳しい情報については、 <filename>/usr/share/doc/packages/openvpn/README.SUSE</filename> をお読みください。</para>
     </step>
     <step xml:id="st.security.vpn.simplest.vpnserv.yast">
-     <para>
-      If you use a firewall, start &yast; and open UDP port 1194
-      (<menuchoice><guimenu>Security and
-      Users</guimenu><guimenu>Firewall</guimenu><guimenu>Allowed
-      Services</guimenu></menuchoice>).
-     </para>
+     <para>ファイアウオールを使用している場合は、 &yast; を開いて <menuchoice><guimenu>セキュリティとユーザ</guimenu><guimenu>ファイアウオール</guimenu><guimenu>サービス</guimenu></menuchoice> を選び、 UDP ポート 1194 を開くように設定します。</para>
     </step>
     <step>
-     <para>
-      Start the OpenVPN server service by setting the tun device to
-      <literal>up</literal>:
-     </para>
+     <para>TUN デバイスを起動して、 OpenVPN のサービスを開始します:</para>
      <screen>&prompt.sudo;<command>wicked ifup tun0</command></screen>
-     <para>
-      You should see the confirmation:
-     </para>
+     <para>下記のように表示されれば成功です:</para>
      <screen>tun0            up</screen>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.security.vpn.simplest.vpnclient">
-   <title>Configuring the VPN Clients</title>
-   <para>
-    To configure the VPN client, do the following:
-   </para>
+   <title>VPN クライアントの設定</title>
+   <para>VPN クライアントの構築は下記のようにして行ないます:</para>
    <procedure>
-    <title>VPN Client Configuration</title>
+    <title>VPN クライアントの設定</title>
     <step>
-     <para>
-      Install the package <systemitem class="resource">openvpn</systemitem>
-      on your client VPN machine.
-     </para>
+     <para>VPN クライアントとして動作させたいマシンに、 <systemitem class="resource">openvpn</systemitem> パッケージをインストールします。</para>
     </step>
     <step>
-     <para>
-      Create <filename>/etc/openvpn/client.conf</filename> with the
-      following content:
-     </para>
-<screen>remote <replaceable>DOMAIN_OR_PUBLIC_IP_OF_SERVER</replaceable>
+     <para>下記のような内容で、クライアント側の設定ファイル <filename>/etc/openvpn/client.conf</filename> を作成します:</para>
+<screen>remote <replaceable>サーバのグローバル_IP_もしくはドメイン名</replaceable>
 dev tun
-ifconfig <replaceable>IP_OF_CLIENT</replaceable> <replaceable>IP_OF_SERVER</replaceable>
+ifconfig <replaceable>クライアントの_IP</replaceable> <replaceable>サーバの_IP</replaceable>
 secret secret.key</screen>
-     <para>
-      Replace the placeholder <replaceable>IP_OF_CLIENT</replaceable> in the
-      first line with either the domain name, or the public IP address of
-      your server.
-     </para>
+     <para><!-- NOTE: not IP_OF_CLIENT, but DOMAIN_OR_PUBLIC_IP_OF_SERVER? --> <replaceable>サーバのグローバル_IP_もしくはドメイン名</replaceable> の箇所には、サーバのグローバル IP アドレス、もしくはドメイン名とホスト名を入力します。</para>
     </step>
     <step>
-     <para>
-      Set up a tun device configuration by creating a file called
-      <filename>/etc/sysconfig/network/ifcfg-tun0</filename> with the following
-      content:
-     </para>
+     <para><filename>/etc/sysconfig/network/ifcfg-tun0</filename> というファイル名のファイル (TUN デバイスの設定) を作成して、下記の内容を記述します:</para>
 <screen>STARTMODE='manual'
 BOOTPROTO='static'
 TUNNEL='tun'
@@ -538,432 +398,214 @@ PRE_UP_SCRIPT='systemd:openvpn@client'
 PRE_DOWN_SCRIPT='systemd:openvpn@client'</screen>
     </step>
     <step>
-     <para>
-      If you use a firewall, start &yast; and open UDP port 1194 as
-      described in <xref linkend="st.security.vpn.simplest.vpnserv.yast"/>
-      of <xref linkend="pro.security.vpn.simplest.vpnserv"/>.
-     </para>
+     <para>ファイアウオールを使用している場合は、 <xref linkend="pro.security.vpn.simplest.vpnserv"/> 内の <xref linkend="st.security.vpn.simplest.vpnserv.yast"/> で説明している手順に従って、 UDP ポート 1194 を開くように設定します。</para>
     </step>
     <step>
-     <para>
-      Start the OpenVPN server service by setting the tun device to
-      <literal>up</literal>:
-     </para>
+     <para>TUN デバイスを起動して、 OpenVPN のサービスを開始します:</para>
      <screen>&prompt.sudo;<command>wicked ifup tun0</command></screen>
-     <para>
-      You should see the confirmation:
-     </para>
+     <para>下記のように表示されれば成功です:</para>
      <screen>tun0            up</screen>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.security.vpn.simplest.use">
-   <title>Testing the VPN Example Scenario</title>
-   <para>
-    After OpenVPN has successfully started, test the availability of the tun
-    device with the following command:
-   </para>
+   <title>シンプルな構成のテスト</title>
+   <para>OpenVPN のサービスを正常に動作させることができたら、あとは下記のコマンドを利用して TUN デバイスが正常に動作しているかどうかを確認します:</para>
 <screen>ip addr show tun0</screen>
-   <para>
-    To verify the VPN connection, use <command>ping</command> on both client
-    and server side to see if they can reach each other. Ping the server
-    from the client:
-   </para>
-<screen>ping -I tun0 <replaceable>IP_OF_SERVER</replaceable></screen>
-   <para>
-    Ping the client from the server:
-   </para>
-<screen>ping -I tun0 <replaceable>IP_OF_CLIENT</replaceable></screen>
+   <para>VPN の接続を確認するには、クライアントとサーバの両方で <command>ping</command> コマンドを使用し、互いに通信ができていることを確認します。サーバからクライアントに ping を行ないたい場合は、下記のように実行します:</para>
+<screen>ping -I tun0 <replaceable>サーバの_IP</replaceable></screen>
+   <para>逆に、クライアントからサーバに対して ping を行ないたい場合は、下記のように実行します:</para>
+<screen>ping -I tun0 <replaceable>クライアントの_IP</replaceable></screen>
   </sect2>
  </sect1>
 <!-- ====================================================================== -->
  <sect1 xml:id="sec.security.vpn.ca">
-  <title>Setting Up Your VPN Server Using a Certificate Authority</title>
+  <title>証明機関を利用した VPN サーバの構築</title>
 
-  <para>
-   The example in
-   <xref linkend="sec.security.vpn.simplest" xrefstyle="select:label number"/>
-   is useful for testing, but not for daily work. This section explains how
-   to build a VPN server that allows more than one connection at the same
-   time. This is done with a public key infrastructure (PKI). A PKI consists
-   of a pair of public and private keys for the server and each client, and
-   a master certificate authority (CA), which is used to sign every server
-   and client certificate.
-  </para>
+  <para><xref linkend="sec.security.vpn.simplest" xrefstyle="select:label number"/> で説明している構築例はテストには便利であるものの、本格的な使用に耐えるものではありません。本章では、同時に複数の接続を受け入れることのできる VPN サーバを構築する方法について、説明を行なっています。これは公開鍵基盤 (PKI; Public Key Infrastructure) を利用して実現するもので、それぞれのサーバやクライアントに別々の鍵対 (公開鍵と機密鍵) を発行して、それを証明機関 (CA; Certificate Authority) で署名してもらうことによって、正当性を設定する方法です。</para>
 
-  <para>
-   This setup involves the following basic steps:
-  </para>
+  <para>この構成で設定を行なうには、下記の手順を実施する必要があります:</para>
 
   <procedure>
    <step>
-    <para>
-     <xref linkend="sec.security.vpn.certs"/>
-    </para>
+    <para><xref linkend="sec.security.vpn.certs"/></para>
    </step>
    <step>
-    <para>
-     <xref linkend="sec.security.vpn.config-server"/>
-    </para>
+    <para><xref linkend="sec.security.vpn.config-server"/></para>
    </step>
    <step>
-    <para>
-     <xref linkend="sec.security.vpn.config-clients"/>
-    </para>
+    <para><xref linkend="sec.security.vpn.config-clients"/></para>
    </step>
   </procedure>
 
   <sect2 xml:id="sec.security.vpn.certs">
-   <title>Creating Certificates</title>
-   <para>
-    Before a VPN connection can be established, the client must authenticate
-    the server certificate. Conversely, the server must also authenticate
-    the client certificate. This is called <emphasis>mutual
-    authentication</emphasis>. To create such certificates, use the
-    &yast; CA module. See <xref linkend="cha.security.yast_ca"/> for more
-    details.
-   </para>
-   <para>
-    To create a VPN root, server, and client CA, proceed as follows:
-   </para>
+   <title>証明機関の作成</title>
+   <para>VPN の接続を確立する前に、クライアントとサーバとの間を互いに認証しなければなりません。これを <emphasis>相互認証</emphasis> と呼びます。証明書を作成するにあたっては、 &yast; 証明機関モジュールを使用することができます。詳しくは <xref linkend="cha.security.yast_ca"/> をお読みください。</para>
+   <para>VPN の証明機関を作成し、サーバとクライアントの証明書を作成するには、下記の手順で行ないます:</para>
    <procedure xml:id="pro.security.vpn.serverca">
-    <title>Creating a VPN Server Certificate</title>
+    <title>VPN サーバ証明書の作成</title>
     <step xml:id="st.security.vpn.serverca.vpnrootca">
-     <para>
-      Prepare a common VPN Certificate Authority (CA):
-     </para>
+     <para>まずは VPN 用の証明機関 (CA) を作成します:</para>
      <substeps performance="required">
       <step>
-       <para>
-        Start the &yast; CA module.
-       </para>
+       <para><!-- NOTE: yast2 CA module was obsolete since 15.0? --> &yast; の証明機関モジュールを起動します。</para>
       </step>
       <step>
-       <para>
-        Click <guimenu>Create Root CA</guimenu>.
-       </para>
+       <para><guimenu>ルート証明機関の作成</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Enter a <guimenu>CA Name</guimenu> and a <guimenu>Common
-        Name</guimenu>, for example <literal>VPN-Server-CA</literal>.
-       </para>
+       <para><guimenu>証明機関名</guimenu> と <guimenu>共通名</guimenu> をそれぞれ入力します。たとえば <literal>VPN-Server-CA</literal> のように入力します。</para>
       </step>
       <step>
-       <para>
-        Fill out the other boxes like e-mail addresses, organization, etc.
-        and proceed with <guimenu>Next</guimenu>.
-       </para>
+       <para>電子メールアドレスや組織など、その他の項目を必要に応じて入力し、 <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Enter your password twice and proceed with <guimenu>Next</guimenu>.
-       </para>
+       <para>パスワードを 2 回入力し、 <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Review the summary. &yast; displays the current settings for
-        confirmation. Click <guimenu>Create</guimenu>. The root CA is
-        created and displayed in the overview.
-       </para>
+       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで証明機関が作成され、概要に表示されるようになります。</para>
       </step>
      </substeps>
     </step>
     <step xml:id="st.security.vpn.serverca.vpnserverca">
-     <para>
-      Create a VPN server certificate:
-     </para>
+     <para>続けて VPN のサーバ側の証明書を作成します:</para>
      <substeps performance="required">
       <step>
-       <para>
-        Select the root CA you created in
-        <xref linkend="st.security.vpn.serverca.vpnrootca"/> and click
-        <guimenu>Enter CA</guimenu>.
-       </para>
+       <para><xref linkend="st.security.vpn.serverca.vpnrootca"/> の手順で作成した証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        When prompted, enter the <guimenu>CA Password</guimenu>.
-       </para>
+       <para><guimenu>証明機関のパスワードの入力</guimenu> を求められたら、パスワードを入力します。</para>
       </step>
       <step>
-       <para>
-        Click the <guimenu>Certificate</guimenu> tab and click <menuchoice>
-        <guimenu>Add</guimenu> <guimenu>Add Server Certificate</guimenu>
-        </menuchoice>.
-       </para>
+       <para><guimenu>証明書</guimenu> タブを選択して <menuchoice> <guimenu>追加</guimenu> <guimenu>サーバ証明書の追加</guimenu> </menuchoice> を押します。</para>
       </step>
       <step>
-       <para>
-        Specify a <guimenu>Common Name</guimenu>, for example,
-        <systemitem class="fqdomainname">openvpn.example.com</systemitem>
-        and proceed with <guimenu>Next</guimenu>.
-       </para>
+       <para><guimenu>共通名</guimenu> に名前を入力 (例: <systemitem class="fqdomainname">openvpn.example.com</systemitem>) して、 <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Specify your password and confirm it. Then click <guimenu>Advanced
-        options</guimenu>.
-       </para>
-       <para>
-        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
-        <guimenu>Key Usage</guimenu> </menuchoice> list and check one of the
-        following sets:
-       </para>
+       <para><guimenu>パスワード</guimenu> と <guimenu>パスワードの確認</guimenu> にそれぞれパスワードを入力して、 <guimenu>詳細オプション</guimenu> を押します。</para>
+       <para>ツリー表示から <menuchoice> <guimenu>詳細設定</guimenu> <guimenu>Key Usage</guimenu> </menuchoice> を選択し、下記のいずれかの組み合わせで選択を行ないます:</para>
        <itemizedlist mark="bullet" spacing="normal">
         <listitem>
-         <para>
-          <option>digitalSignature</option> and
-          <option>keyEncipherment</option>, or,
-         </para>
+         <para><option>digitalSignature</option> と <option>keyEncipherment</option> の両方を選択</para>
         </listitem>
         <listitem>
-         <para>
-          <option>digitalSignature</option> and
-          <option>keyAgreement</option>
-         </para>
+         <para><option>digitalSignature</option> と <option>keyAgreement</option> の両方を選択</para>
         </listitem>
        </itemizedlist>
-       <para>
-        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
-        <guimenu>extendedKeyUsage</guimenu> </menuchoice> and type
-        <option>serverAuth</option> for a server certificate.
-       </para>
+       <para>さらにツリー構造から <menuchoice> <guimenu>熟練者設定</guimenu> <guimenu>extendedKeyUsage</guimenu> </menuchoice> を選択して、サーバ証明書の場合は <option>serverAuth</option> と入力します。</para>
        <important>
-        <title>Avoiding Man-in-the-Middle Attacks</title>
-        <para>
-         If you are using the method <option>remote-cert-tls server</option> or
-         <option>remote-cert-tls client</option> to verify certificates, limit
-         the number of times a key can be used. This mitigates
-         man-in-the-middle attacks.
-        </para>
-        <para>
-         For more information, see
-         <link xlink:href="http://openvpn.net/index.php/open-source/documentation/howto.html#mitm"/>.
-        </para>
+        <title>中間者攻撃の危険性について</title>
+        <para>証明書を検証する際、 <option>remote-cert-tls server</option> や <option>remote-cert-tls client</option> の方式を選択している場合、鍵の使用回数を制限するように設定してください。これにより、中間者攻撃を防ぐことができます。</para>
+        <para>詳しくは <link xlink:href="http://openvpn.net/index.php/open-source/documentation/howto.html#mitm"/> をお読みください。</para>
        </important>
-       <para>
-        Finish with <guimenu>Ok</guimenu> and proceed with
-        <guimenu>Next</guimenu>.
-       </para>
+       <para><guimenu>Ok</guimenu> を押して閉じ、 <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Review the summary. &yast; displays the current settings for
-        confirmation. Click <guimenu>Create</guimenu>. When the VPN server
-        certificate is created, it is displayed in the
-        <guimenu>Certificates</guimenu> tab.
-       </para>
+       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで VPN サーバの証明書が作成され、 <guimenu>証明書</guimenu> の一覧に表示されるようになります。</para>
       </step>
      </substeps>
     </step>
     <step xml:id="st.security.vpn.serverca.vpnclientca">
-     <para>
-      Create VPN client certificates:
-     </para>
+     <para>続けて VPN のクライアント側の証明書を作成します:</para>
      <substeps performance="required">
       <step>
-       <para>
-        Make sure you are on the <guimenu>Certificates</guimenu> tab.
-       </para>
+       <para><guimenu>証明書</guimenu> タブを選択します。</para>
       </step>
       <step>
-       <para>
-        Click <menuchoice> <guimenu>Add</guimenu> <guimenu>Add Client
-        Certificate</guimenu> </menuchoice>.
-       </para>
+       <para><menuchoice> <guimenu>追加</guimenu> <guimenu>クライアント証明書の追加</guimenu> </menuchoice> を押します。</para>
       </step>
       <step>
-       <para>
-        Enter a <guimenu>Common Name</guimenu>, for example,
-        <systemitem class="fqdomainname">client1.example.com</systemitem>.
-       </para>
+       <para><guimenu>共通名</guimenu> に名前を入力します (例: <systemitem class="fqdomainname">client1.example.com</systemitem>) 。</para>
       </step>
       <step>
-       <para>
-        Enter the e-mail addresses for your client, for example,
-        <systemitem class="resource">user1@client1.example.com</systemitem>,
-        and click <guimenu>Add</guimenu>. Proceed with
-        <guimenu>Next</guimenu>.
-       </para>
+       <para>クライアントに対する電子メールアドレスを入力し (例: <systemitem class="resource">user1@client1.example.com</systemitem>) 、 <guimenu>追加</guimenu> を押します。電子メールアドレスを追加したら <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Enter your password twice and click <guimenu>Advanced
-        options</guimenu>.
-       </para>
-       <para> Switch to <menuchoice>
-                  <guimenu>Advanced Settings</guimenu>
-                  <guimenu>Key Usage</guimenu>
-                </menuchoice> list and check one of the following flags: </para>
+       <para><guimenu>パスワード</guimenu> と <guimenu>パスワードの確認</guimenu> にそれぞれパスワードを入力して、 <guimenu>詳細オプション</guimenu> を押します。</para>
+       <para>ツリー表示から <menuchoice> <guimenu>詳細設定</guimenu> <guimenu>Key Usage</guimenu> </menuchoice> を選択し、下記のいずれかの組み合わせで選択を行ないます:</para>
        <itemizedlist mark="bullet" spacing="normal">
         <listitem>
-         <para>
-          <option>digitalSignature</option> or,
-         </para>
+         <para><option>digitalSignature</option> のみを選択</para>
         </listitem>
         <listitem>
-         <para>
-          <option>keyAgreement</option> or,
-         </para>
+         <para><option>keyAgreement</option> のみを選択</para>
         </listitem>
         <listitem>
-         <para>
-          <option>digitalSignature</option> and
-          <option>keyAgreement</option>.
-         </para>
+         <para><option>digitalSignature</option> と <option>keyAgreement</option> の両方を選択</para>
         </listitem>
        </itemizedlist>
-       <para>
-        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
-        <guimenu>extendedKeyUsage</guimenu> </menuchoice> and type
-        <option>clientAuth</option> for a server certificate.
-       </para>
+       <para>さらにツリー構造から <menuchoice> <guimenu>熟練者設定</guimenu> <guimenu>extendedKeyUsage</guimenu> </menuchoice> を選択して、<!-- NOTE: not "server certificate"? -->クライアント証明書の場合は <option>clientAuth</option> と入力します。</para>
       </step>
       <step>
-       <para>
-        Review the summary. &yast; displays the current settings for
-        confirmation. Click <guimenu>Create</guimenu>. The VPN client
-        certificate is created and is displayed in the
-        <guimenu>Certificates</guimenu> tab.
-       </para>
+       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで VPN クライアントの証明書が作成され、 <guimenu>証明書</guimenu> の一覧に表示されるようになります。</para>
       </step>
       <step>
-       <para>
-        If you need certificates for more clients, repeat
-        <xref linkend="st.security.vpn.serverca.vpnclientca"/>.
-       </para>
+       <para>さらに別のクライアント向けの証明書を作成したい場合は、 <xref linkend="st.security.vpn.serverca.vpnclientca"/> からの手順を繰り返します。</para>
       </step>
      </substeps>
     </step>
    </procedure>
-   <para>
-    After you have successfully finished
-    <xref linkend="pro.security.vpn.serverca"/> you have a VPN root CA, a
-    VPN server CA, and one or more VPN client CAs. To finish the task,
-    proceed with the following procedure:
-   </para>
+   <para><xref linkend="pro.security.vpn.serverca"/> の手順を実施することで、証明機関の証明書と VPN サーバの証明書、そして VPN クライアントの証明書をそれぞれ作成することができました。あとはそれぞれ作成した証明書を取り出す作業を行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Choose the <guimenu>Certificates</guimenu> tab.
-     </para>
+     <para><guimenu>証明書</guimenu> タブを選択します。</para>
     </step>
     <step>
-     <para>
-      Export the VPN server certificate in two formats: PEM and unencrypted
-      key in PEM.
-     </para>
+     <para>VPN サーバの証明書を、証明書と機密鍵の 2 つのファイルに分けてエクスポート (取り出) します。</para>
      <substeps performance="required">
       <step xml:id="st.security.vpn.selectserverca">
-       <para>
-        Select your VPN server certificate
-        (<systemitem class="fqdomainname">openvpn.example.com</systemitem>
-        in our example) and choose <menuchoice> <guimenu>Export</guimenu>
-        <guimenu>Export to File</guimenu> </menuchoice>.
-       </para>
+       <para>VPN サーバの証明書 (この例では <systemitem class="fqdomainname">openvpn.example.com</systemitem>) を選択し、 <menuchoice> <guimenu>エクスポート</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
       </step>
       <step xml:id="st.security.vpn.selectsaveca">
-       <para>
-        Select <guimenu>Only the Certificate in PEM Format</guimenu>, enter
-        your VPN server certificate password and save the file to
-        <filename>/etc/openvpn/server_crt.pem</filename>.
-       </para>
+       <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択したあと、設定した証明書のパスワードを入力して、 <filename>/etc/openvpn/server_crt.pem</filename> に保存します。</para>
       </step>
       <step>
-       <para>
-        Repeat <xref linkend="st.security.vpn.selectserverca"/> and
-        <xref linkend="st.security.vpn.selectsaveca"/>, but choose the
-        format <guimenu>Only the Key Unencrypted in PEM Format</guimenu>.
-<!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=910133-->
-        Save the file to <filename>/etc/openvpn/server_key.pem</filename>.
-       </para>
+       <para><xref linkend="st.security.vpn.selectserverca"/> と <xref linkend="st.security.vpn.selectsaveca"/> の手順を繰り返しますが、このとき <guimenu>鍵だけを暗号化せずに PEM 形式で</guimenu> を選択して行ないます。 <!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=910133--> このとき、保存先のファイルは <filename>/etc/openvpn/server_key.pem</filename> とします。</para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>
-      Export the VPN client certificates and choose an export format, PEM or
-      PKCS12 (preferred). For each client:
-     </para>
+     <para>VPN クライアントの証明書を、証明書と機密鍵の 2 つのファイルに分けてエクスポートする (取り出す) か、 PKCS12 (推奨) 形式でエクスポートします。クライアントごとに下記を実施してください:</para>
      <substeps performance="required">
       <step xml:id="st.security.vpn.selectclient.ca">
-       <para>
-        Select your VPN client certificate
-        (<systemitem class="fqdomainname">client1.example.com</systemitem>
-        in our example) and choose <menuchoice> <guimenu>Export</guimenu>
-        <guimenu>Export to File</guimenu> </menuchoice>.
-       </para>
+       <para>VPN クライアントの証明書 (この例では <systemitem class="fqdomainname">client1.example.com</systemitem>) を選択し、 <menuchoice> <guimenu>エクスポート</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
       </step>
 <!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=909494-->
       <step>
-       <para> Select <guimenu>Like PKCS12 and Include the CA
-                  Chain</guimenu>, enter your VPN client certificate key
-                password and provide a PKCS12 password. Enter a
-                  <guimenu>File Name</guimenu>, click
-                  <guimenu>Browse</guimenu> and save the file to
-                  <filename>/etc/openvpn/client1.p12</filename>. </para>
+       <para><guimenu>関連する証明機関を繋げた PKCS #12 形式で</guimenu> を選択したあと、設定した証明書のパスワードを入力して、 <guimenu>ファイル名</guimenu> を指定します。今回は <filename>/etc/openvpn/client1.p12</filename> に保存します。</para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>
-      Copy the files to your client (in our example,
-      <systemitem class="fqdomainname">client1.example.com</systemitem>).
-     </para>
+     <para>ファイルをクライアント (今回の例では <systemitem class="fqdomainname">client1.example.com</systemitem>) にコピーします。</para>
     </step>
     <step>
-     <para>
-      Export the VPN CA (in our example
-      <systemitem>VPN-Server-CA</systemitem>):
-     </para>
+     <para>続けて、 VPN 用の証明機関 (今回の例では <systemitem>VPN-Server-CA</systemitem>) の証明書をエクスポートします:</para>
      <substeps performance="required">
       <step>
-       <para>
-        Switch to the <guimenu>Description</guimenu> tab.
-       </para>
+       <para><guimenu>説明</guimenu> タブに切り替えます。</para>
       </step>
       <step>
-       <para>
-        Select <menuchoice> <guimenu>Advanced</guimenu> <guimenu>Export to
-        File</guimenu> </menuchoice>.
-       </para>
+       <para><menuchoice> <guimenu>詳細設定</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
       </step>
       <step>
-       <para>
-        Mark <guimenu>Only the Certificate in PEM Format</guimenu> and save
-        the file to <filename>/etc/openvpn/vpn_ca.pem</filename>.
-       </para>
+       <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択し、 <filename>/etc/openvpn/vpn_ca.pem</filename> に保存します。</para>
       </step>
      </substeps>
     </step>
    </procedure>
-   <para>
-    If desired, the client PKCS12 file can be converted into the PEM format
-    using this command:
-   </para>
+   <para>必要であれば、クライアント側の PKCS12 ファイルを PEM 形式に変換することができます:</para>
 <screen>openssl pkcs12 -in client1.p12 -out client1.pem</screen>
-   <para>
-    Enter your client password to create the
-    <filename>client1.pem</filename> file. The PEM file contains the client
-    certificate, client key, and the CA certificate. You can split this
-    combined file using a text editor and create three separate files. The
-    file names can be used for the <option>ca</option>,
-    <option>cert</option>, and <option>key</option> options in the OpenVPN
-    configuration file (see <xref linkend="ex.vpn.serv-config"/>).
-   </para>
+   <para><filename>client1.pem</filename> を作成するにあたっては、クライアント側の証明書のパスワードを入力する必要があります。この PEM ファイルにはクライアントの証明書のほか、鍵と証明機関の証明書が含まれています。あとはテキストエディタなどを使用すれば、これらを 3 つのファイルに分割することもできます。作成したファイルは、 OpenVPN 設定ファイル内の <option>ca</option> , <option>cert</option> , <option>key</option> の各設定で指定することができます。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.vpn.config-server">
-   <title>Configuring the VPN Server</title>
-   <para>
-    As the basis of your configuration file, copy
-    <filename>/usr/share/doc/packages/openvpn/sample-config-files/server.conf</filename>
-    to <filename>/etc/openvpn/</filename>. Then customize it to your needs.
-   </para>
+   <title>VPN サーバの設定</title>
+   <para>サーバ側の設定に際しては、 <filename>/usr/share/doc/packages/openvpn/sample-config-files/server.conf</filename> にある雛形を <filename>/etc/openvpn/</filename> にコピーしたあと、必要に応じて修正を行なうことをお勧めします。</para>
    <example xml:id="ex.vpn.serv-config">
-    <title>VPN Server Configuration File</title>
+    <title>VPN サーバの設定ファイル</title>
 <screen># /etc/openvpn/server.conf
 port 1194 <co xml:id="co.vpn.servconfig.port"/>
 proto udp <co xml:id="co.vpn.servconfig.proto"/>
@@ -997,43 +639,23 @@ verb 4</screen>
    </example>
    <calloutlist>
     <callout arearefs="co.vpn.servconfig.port">
-     <para>
-      The TCP/UDP port on which OpenVPN listens. You need to open the port
-      in the firewall, see <xref linkend="cha.security.firewall"/>. The
-      standard port for VPN is 1194, so you can usually leave that as
-      it is.
-     </para>
+     <para>OpenVPN が待ち受ける TCP/UDP ポートを指定します。なお、ここで指定するポートは、ファイアウオール側で開いておく必要があります。ファイアウオールに関する詳細は <xref linkend="cha.security.firewall"/> をお読みください。標準ではポート 1194 を使用しますが、今回はそのまま使用するものとします。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.proto">
-     <para>
-      The protocol, either UDP or TCP.
-     </para>
+     <para>プロトコルを指定します。 UDP もしくは TCP のいずれかを指定します。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.dev">
-     <para>
-      The tun or tap device. For the difference between these, see
-      <xref linkend="sec.security.vpn.terminology"/>.
-     </para>
+     <para>デバイスの種類を TUN もしくは TAP から選択して指定します。これらの違いについての詳細は <xref linkend="sec.security.vpn.terminology"/> をお読みください。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.security">
-     <para>
-      The following lines contain the relative or absolute path to the root
-      server CA certificate (<literal>ca</literal>), the root CA key
-      (<literal>cert</literal>), and the private server key
-      (<literal>key</literal>). These were generated in
-      <xref linkend="sec.security.vpn.certs"/>.
-     </para>
+     <para>これ以降の行には、証明機関の証明書 ( <literal>ca</literal> ) と <!-- NOTE: not "root CA key" but "server cert"? --> サーバ証明書 ( <literal>cert</literal> ) 、そしてサーバ証明書の鍵 ( <literal>key</literal> ) をそれぞれ指定しています。これらのファイルは <xref linkend="sec.security.vpn.certs"/> で生成したものです。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.remote-cert-tls">
-     <para> Require that peer certificates have been signed with an
-            explicit key usage and extended key usage based on RFC3280
-            TLS rules. There is a description of how to make a server
-            use this explicit key in <xref linkend="pro.security.vpn.serverca"/>. </para>
+     <para>相手側に要求する証明書の種類を指定しています。この場合、 RFC3280 TLS rules で規定されている key usage と extended key usage (鍵の用途) について、明確な署名のある証明書のみを受け入れる設定です。鍵の用途を指定した証明書の作成について、詳しくは <xref linkend="pro.security.vpn.serverca"/> をお読みください。</para>
     </callout>
 <!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=910148-->
     <callout arearefs="co.vpn.servconfig.dh">
-     <para> The Diffie-Hellman parameters. Create the required file with
-            the following command: </para>
+     <para>Diffie-Hellman パラメータを指定します。ここで指定するファイルは、下記のコマンドで生成することができます:</para>
 <screen>openssl dhparam -out /etc/openvpn/dh2048.pem 2048</screen>
 <!--taroth 2014-12-19: check with fschilling, I get the following:
       /etc/openvpn/dh2048.pem: No such file or directory - taroth
@@ -1041,77 +663,35 @@ verb 4</screen>
       https://bugzilla.suse.com/show_bug.cgi?id=909494 ;)-->
     </callout>
     <callout arearefs="co.vpn.servconfig.server">
-     <para>
-      Supplies a VPN subnet. The server can be reached by
-      <systemitem class="ipaddress">&subnetI;.1</systemitem>.
-     </para>
+     <para>VPN サブネットを指定します。サーバ自身は <systemitem class="ipaddress">&subnetI;.1</systemitem> を使用します。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.pool">
-     <para>
-      Records a mapping of clients and its virtual IP address in the given
-      file. Useful when the server goes down and (after the restart) the
-      clients get their previously assigned IP address.
-     </para>
+     <para>クライアントと仮想 IP アドレスの対応付けに関する情報を、指定したファイルに記録する指定です。これは特に、サーバ側を再起動するような場合、再起動後もクライアントに対して同じアドレスを割り当てたい場合に有用です。</para>
     </callout>
     <callout arearefs="co.vpn.serverconf.privilege">
-     <para>
-      For security reasons, run the OpenVPN daemon with reduced privileges. To
-      do so, specify that it should use the group and user
-      <systemitem>nobody</systemitem>.
-     </para>
+     <para>セキュリティ上の理由から、 OpenVPN に対する権限は制限しておくことをお勧めします。権限を制限するには、ユーザおよびグループを <systemitem>nobody</systemitem> に設定します。</para>
     </callout>
     <callout arearefs="co.vpn.servconfig.misc">
-     <para> Several other configuration options&mdash;see the comment in the
-            example configuration file:
-              <filename>/usr/share/doc/packages/openvpn/sample-config-files</filename>. </para>
+     <para>その他の設定です。詳しくは <filename>/usr/share/doc/packages/openvpn/sample-config-files</filename> にあるサンプル設定ファイル内のコメント (英語) をお読みください。</para>
     </callout>
     <callout arearefs="co.vpn.serverconfig.status">
-     <para>
-      Enable this option to write short status updates with statistical data
-      (<quote>operational status dump</quote>) to the named file.
-      By default, this is not enabled.
-     </para>
-     <para>
-      All output is written to the system journal which can be displayed with
-      <command>journalctl</command>. If you have more than one configuration
-      file (for example, one for home and another for work), it is recommended
-      to include the device name into the file name. This avoids overwriting
-      output files accidentally. In this case, it is
-      <systemitem>tun0</systemitem>, taken from the <option>dev</option>
-      directive&mdash;see <xref linkend="co.vpn.servconfig.dev"/>.
-     </para>
+     <para>このオプションを有効にすることで、指定したファイルに状態に関する概要情報と統計情報 ( <quote>operational status dump</quote> ) を出力するようになります。既定では有効化されていません。</para>
+     <para>全ての出力は、 <command>journalctl</command> で表示することのできるシステムジャーナルに書き込まれます。複数の設定ファイルが存在するような場合 (たとえば一方は自宅用、他方は仕事用など) は、ファイル名にデバイス名を入れておくことをお勧めします。これにより、不用意にファイルが上書きされてしまうことが無くなります。この例の場合は <option>dev</option> に書かれているとおり、 <systemitem>tun0</systemitem> がデバイス名となります。詳しくは <xref linkend="co.vpn.servconfig.dev"/> をお読みください。</para>
     </callout>
     <callout arearefs="co.vpn.serverconfig.log-append">
-     <para>
-      By default, log messages go to syslog. Overwrite this behavior by
-      removing the hash character. In that case, all messages go to
-      <filename>/var/log/openvpn-server.log</filename>. Do not forget to
-      configure a logrotate service. See <command>man 8 logrotate</command>
-      for further details.
-     </para>
+     <para>既定では、ログメッセージは syslog に出力されます。この動作を変更したい場合は、この行にあるコメント文字 (#) を削除してください。コメント文字を削除すると、全てのメッセージが <filename>/var/log/openvpn-server.log</filename> に書き込まれるようになります。なお、 logrotate サービスの設定を忘れずに実施するようにしてください。詳しくは <command>man 8 logrotate</command> をお読みください。</para>
     </callout>
    </calloutlist>
-   <para>
-    After having completed this configuration, you can see log messages of
-    your OpenVPN server under <filename>/var/log/openvpn.log</filename>.
-    After having started it for the first time, it should finish with:
-   </para>
+   <para>設定作業が終わったら、 OpenVPN サーバのログが <filename>/var/log/openvpn.log</filename> に出力されます。初回の起動時には、下記のように出力されるはずです:</para>
 <screen>... Initialization Sequence Completed</screen>
-   <para>
-    If you do not see this message, check the log carefully for any hints of
-    what is wrong in your configuration file.
-   </para>
+   <para>上記のようなメッセージが表示されない場合は、ログファイルをよく読んで、設定ファイル内のどの箇所が誤っているのかをご確認ください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.vpn.config-clients">
-   <title>Configuring the VPN Clients</title>
-   <para>
-    As the basis of your configuration file, copy
-    <filename>/usr/share/doc/packages/openvpn/sample-config-files/client.conf</filename>
-    to <filename>/etc/openvpn/</filename>. Then customize it to your needs.
-   </para>
+   <title>VPN クライアントの設定</title>
+   <para>クライアント側の設定に際しては、 <filename>/usr/share/doc/packages/openvpn/sample-config-files/client.conf</filename> にある雛形を <filename>/etc/openvpn/</filename> にコピーしたあと、必要に応じて修正を行なうことをお勧めします。</para>
    <example>
-    <title>VPN Client Configuration File</title>
+    <title>VPN クライアントの設定ファイル</title>
 <screen># /etc/openvpn/client.conf
 client <co xml:id="co.vpn.clientconf.client"/>
 dev tun <co xml:id="co.vpn.clientconf.dev"/>
@@ -1136,54 +716,28 @@ pkcs12 client1.p12
 comp-lzo <co xml:id="co.vpn.clientconf.compr"/></screen>
     <calloutlist>
      <callout arearefs="co.vpn.clientconf.client">
-      <para>
-       Specifies that this machine is a client.
-      </para>
+      <para>このマシンをクライアントとして動作させる宣言です。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.dev">
-      <para>
-       The network device. Both clients and server must use the same device.
-      </para>
+      <para>ネットワークデバイスを指定します。クライアントとサーバの両方で、同じデバイスを使用しなければなりません。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.proto">
-      <para>
-       The protocol. Use the same settings as on the server.
-      </para>
+      <para>プロトコルを指定します。こちらもクライアントとサーバの両方で、同じプロトコルを設定しなければなりません。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.remote-cert-tls">
-      <para>
-       This is security option for clients which ensures that the host
-       they connect to is a designated server.
-      </para>
+      <para>こちらはクライアント向けのセキュリティオプションで、接続先のコンピュータが目的のサーバかどうかを確認することができます。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.remote">
-      <para>
-       Replace the placeholder <replaceable>IP_OR_HOST_NAME</replaceable>
-       with the respective host name or IP address of your VPN server. After
-       the host name, the port of the server is given. You can have multiple
-       lines of <literal>remote</literal> entries pointing to different VPN
-       servers. This is useful for load balancing between different VPN
-       servers.
-      </para>
+      <para><replaceable>IP_OR_HOST_NAME</replaceable> の箇所を OpenVPN サーバのホスト名もしくは IP アドレスに置き換えてください。ホスト名もしくは IP アドレスの後ろには、サーバ側のポート番号を指定します。複数の VPN サーバのうちのいずれかを選択して接続したい場合は、 <literal>remote</literal> を複数行指定してもかまいません。この場合、複数の VPN サーバを負荷分散として使用することになります。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.privileges">
-      <para>
-       For security reasons, run the OpenVPN daemon with reduced privileges. To
-       do so, specify that it should use the group and user
-       <systemitem>nobody</systemitem>.
-      </para>
+      <para>セキュリティ上の理由から、 OpenVPN に対する権限は制限しておくことをお勧めします。権限を制限するには、ユーザおよびグループを <systemitem>nobody</systemitem> に設定します。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.security">
-      <para>
-       Contains the client files. For security reasons, use a separate pair of
-       files for each client.
-      </para>
+      <para>クライアント向けに発行された鍵を指定します。セキュリティ上の理由から、クライアントごとに異なる鍵を使用してください。</para>
      </callout>
      <callout arearefs="co.vpn.clientconf.compr">
-      <para>
-       Turn on compression. Only use this parameter if compression is enabled
-       on the server as well.
-      </para>
+      <para>圧縮を有効化しています。このパラメータは、サーバ側でも有効化しておかなければなりません。</para>
      </callout>
     </calloutlist>
    </example>
@@ -1317,40 +871,24 @@ nameserver &dnsip;</screen>
  <xi:include href="security_vpnserver_yast.xml" os="sles;osuse"/>
 
  <sect1 xml:id="sec.security.vpn.moreinfo">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para os="sled;osuse">
-   For more information on setting up a VPN connection using &nm;, see
-   <xref linkend="sec.nm.vpn"/>.
-  </para>
+  <para os="sled;osuse">&nm; を利用した VPN 接続の設定方法については、 <xref linkend="sec.nm.vpn"/> をお読みください。</para>
 
-  <para>
-   For more information about VPN in general, see:
-  </para>
+  <para>一般的な VPN に関する情報をご希望の場合は、下記をご覧ください:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <link xlink:href="http://www.openvpn.net"/>: the OpenVPN home page
-    </para>
+    <para><link xlink:href="http://www.openvpn.net"/> : OpenVPN の Web ページ</para>
    </listitem>
    <listitem>
-    <para>
-     <command>man</command> <option>openvpn</option>
-    </para>
+    <para><command>man</command> <option>openvpn</option></para>
    </listitem>
    <listitem>
-    <para>
-     <filename>/usr/share/doc/packages/openvpn/sample-config-files/</filename>:
-     example configuration files for different scenarios.
-    </para>
+    <para><filename>/usr/share/doc/packages/openvpn/sample-config-files/</filename> : 様々な用途に対応した設定ファイルの例があります。</para>
    </listitem>
    <listitem>
-    <para>
-     <filename>/usr/src/linux/Documentation/networking/tuntap.txt</filename>,
-     to install the <systemitem class="resource">kernel-source</systemitem>
-     package.
-    </para>
+    <para><filename>/usr/src/linux/Documentation/networking/tuntap.txt</filename> : TUN/TAP インターフェイスの説明 (英語) です。なお、このファイルは <systemitem class="resource">kernel-source</systemitem> パッケージ内に含まれています。</para>
    </listitem>
   </itemizedlist>
  </sect1>
