@@ -19,26 +19,11 @@
  2013-02-21: No changes for SP3 according to mc
 -->
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.yast_ca">
- <title>Managing X.509 Certification</title>
+ <title><!-- NOTE: YaST CA module is not available after Leap 15.0 -->X.509 証明書の管理</title>
  <info>
       <abstract>
-        <para>
-    An increasing number of authentication mechanisms are based on
-    cryptographic procedures. Digital certificates that assign cryptographic
-    keys to their owners play an important role in this context. These
-    certificates are used for communication and can also be found, for
-    example, on company ID cards. The generation and administration of
-    certificates is mostly handled by official institutions that offer this
-    as a commercial service. In some cases, however, it may make sense to
-    carry out these tasks yourself. For example, if a company does not want
-    to pass personal data to third parties.
-   </para>
-        <para>
-    &yast; provides two modules for certification, which offer basic
-    management functions for digital X.509 certificates. The following
-    sections explain the basics of digital certification and how to use
-    &yast; to create and administer certificates of this type.
-   </para>
+        <para>認証方式の多くは、暗号化をベースにした仕組みを採用しています。デジタル証明書は、認証にあたって暗号鍵から所有者を確認する重要な役割を果たしています。これらの証明書は通信用途のほか、企業内の ID カードでも使用されています。証明書の生成とその管理は一般に、商用サービスとして公式機関が提供するものですが、必要であればそれらの作業を自分自身で行なうことができます。たとえば企業内では、社外に機密情報を公開しないようにする目的で、自前で証明書を発行したりすることがあります。</para>
+        <para>&yast; では X.509 証明書の基本的な管理機能に対応する、 2 種類のモジュールを提供しています。本章では、デジタル証明書の基本的な内容の説明と、 &yast; を利用して証明書の作成や管理を行なう方法について説明しています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -47,35 +32,21 @@
     </info>
 
  <sect1 xml:id="sec.security.yast_ca.intro">
-  <title>The Principles of Digital Certification</title>
+  <title>デジタル証明書の仕組み</title>
 
-  <para>
-   Digital certification uses cryptographic processes to encrypt and protect
-   data from access by unauthorized people. The user data is encrypted using
-   a second data record, or <emphasis>key</emphasis>. The key is applied to
-   the user data in a mathematical process, producing an altered data record
-   in which the original content can no longer be identified. Asymmetrical
-   encryption is now in general use (<emphasis>public key
-   method</emphasis>). Keys always occur in pairs:
-  </para>
+  <para>デジタル証明書は暗号処理で使用するもので、データを暗号化することによって、第三者による不正アクセスを防止する仕組みです。元のデータは <emphasis>鍵</emphasis> と呼ばれるもう 1 つのデータによって暗号化されます。鍵を利用してデータに対して数学的な処理を行ない、元のデータがわからないようにデータを置き換えます。このような暗号化では一般に、非対称型の暗号化 (<emphasis>公開鍵方式</emphasis>) を使用しますが、この場合は下記の 2 種類の鍵が使用されます:</para>
 
   <variablelist>
    <varlistentry>
-    <term>Private Key</term>
+    <term>機密鍵</term>
     <listitem>
-     <para>
-      The private key must be kept safely by the key owner. Accidental
-      publication of the private key compromises the key pair and renders it
-      useless.
-     </para>
+     <para>機密鍵は鍵の所有者のみが持っていなければならないものです。何らかの事故で機密鍵が暴露されてしまうと、その鍵はもはや安全であるとは呼べず、その価値を失います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Public Key</term>
+    <term>公開鍵</term>
     <listitem>
-     <para>
-      The key owner circulates the public key for use by third parties.
-     </para>
+     <para>公開鍵は公開すべき鍵で、暗号化に際して最初に相手に渡すべき鍵でもあります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -97,210 +68,110 @@
 -->
 
   <sect2 xml:id="sec.security.yast_ca.intro.keyauth">
-   <title>Key Authenticity</title>
-   <para>
-    Because the public key process is in widespread use, there are many
-    public keys in circulation. Successful use of this system requires that
-    every user be sure that a public key actually belongs to the assumed
-    owner. The assignment of users to public keys is confirmed by
-    trustworthy organizations with public key certificates. Such
-    certificates contain the name of the key owner, the corresponding public
-    key, and the electronic signature of the person issuing the certificate.
-   </para>
-   <para>
-    Trustworthy organizations that issue and sign public key certificates
-    are usually part of a certification infrastructure.  This is
-    responsible for the other aspects of certificate management, such as
-    publication, withdrawal, and renewal of certificates. An infrastructure
-    of this kind is generally called a <emphasis>public key
-    infrastructure</emphasis> or <emphasis>PKI</emphasis>. One familiar PKI
-    is the <emphasis>OpenPGP</emphasis> standard in which users publish
-    their certificates themselves without central authorization points.
-    These certificates become trustworthy when signed by other parties in
-    the <quote>web of trust.</quote>
-   </para>
-   <para>
-    The <emphasis>X.509 Public Key Infrastructure</emphasis> (PKIX) is an
-    alternative model defined by the <emphasis>IETF</emphasis> (Internet
-    Engineering Task Force) that serves as a model for almost all
-    publicly-used PKIs today. In this model, authentication is made by
-    <emphasis>certificate authorities</emphasis> (CA) in a hierarchical tree
-    structure. The root of the tree is the root CA, which certifies all
-    sub-CAs. The lowest level of sub-CAs issue user certificates. The user
-    certificates are trustworthy by certification that can be traced to the
-    root CA.
-   </para>
-   <para>
-    The security of such a PKI depends on the trustworthiness of the CA
-    certificates. To make certification practices clear to PKI customers,
-    the PKI operator defines a <emphasis>certification practice
-    statement</emphasis> (CPS) that defines the procedures for certificate
-    management. This should ensure that the PKI only issues trustworthy
-    certificates.
-   </para>
+   <title>鍵の正当性</title>
+   <para>公開鍵による暗号化は幅広く使用されていて、数多くの公開鍵が存在しています。ただし、この仕組みをうまく運用するには、一方のユーザから他方のユーザの公開鍵を確かめる方法が必要となります。このような公開鍵の確認は、それ自身が公開鍵を持つ、信頼できる組織によって行なわれます。これを <quote>証明書</quote> といい、この中には鍵の所有者の名前のほか、対応する公開鍵と発行機関による署名が付属しています。</para>
+   <para>公開鍵の証明書を発行し、署名する信頼できる機関は通常、証明書インフラストラクチャの一部として機能します。この機関は証明書の公開や取り消し、更新などの証明書関連の作業に対して責任を負います。このような仕組みを <emphasis>公開鍵インフラストラクチャ</emphasis> や <emphasis>PKI</emphasis> と呼びます。 PKI としてよく知られている仕組みは <emphasis>OpenPGP</emphasis> 標準で、こちらは中央の機関を用意することなく、証明書を公開できる仕組みになっています。</para>
+   <para><emphasis>X.509 公開鍵インフラストラクチャ</emphasis> (PKIX) は <emphasis>IETF</emphasis> (Internet Engineering Task Force) が定義した代替モデルで、今やほとんど全てで幅広く使用されているモデルとして採用されています。このモデルでは、認証機能はツリー構造をもつ <emphasis>証明機関</emphasis> (CA) が担うものとされます。このツリー構造の根にあたるのがルート証明機関で、全ての副証明機関に対する証明書を発行します。最も枝に近い証明機関がユーザに対する証明書を発行します。これにより、ユーザの証明書はルート証明機関から間接的に証明できることになります。</para>
+   <para>このような PKI の仕組みは、証明機関の証明書に依存しています。証明書の発行に際するルールを明確にする目的で、 PKI のオペレータは <emphasis>Certification Practice Statement</emphasis> (CPS) を公開し、具体的な証明書発行手順を公開しています。これにより、 PKI は信頼に足る証明書だけを発行できるようにしています。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.intro.x509">
-   <title>X.509 Certificates</title>
-   <para>
-    An X.509 certificate is a data structure with several fixed fields and,
-    optionally, additional extensions. The fixed fields mainly contain the
-    name of the key owner, the public key, and the data relating to the
-    issuing CA (name and signature). For security reasons, a certificate
-    should only have a limited period of validity, so a field is also
-    provided for this date. The CA guarantees the validity of the
-    certificate in the specified period. The CPS usually requires the PKI
-    (the issuing CA) to create and distribute a new certificate before
-    expiration.
-   </para>
-   <para>
-    The extensions can contain any additional information. An application is
-    only required to be able to evaluate an extension if it is identified as
-    <emphasis>critical</emphasis>. If an application does not recognize a
-    critical extension, it must reject the certificate. Some extensions are
-    only useful for a specific application, such as signature or encryption.
-   </para>
-   <para>
-    <xref linkend="tab.yast.ca.intro.x509" xrefstyle="select:label nopage"/>
-    shows the fields of a basic X.509 certificate in version 3.
-   </para>
+   <title>X.509 証明書</title>
+   <para>X.509 証明書は、いくつかの固定の項目と拡張からなるデータ構造です。固定の項目には、主に鍵の所有者の名前や公開鍵、発行者である証明機関に関する情報 (名前と署名) が含まれています。セキュリティ上の理由から、証明書には有効期間が設定されますので、そのための日時情報も含まれています。証明機関は、その期間内に限って有効性を保証します。 CPS では通常、 有効期間が切れる前に新しい証明書を作成し、配布することを PKI (発行者である証明機関) に求めています。</para>
+   <para>拡張には任意の追加情報が含まれています。アプリケーション側では、 <emphasis>critical</emphasis> (重要) であると書かれている項目のみを評価できるようにする必要があります。アプリケーションが critical と書かれた項目を解釈できない場合、証明書を拒否しなければなりません。拡張によっては、署名や暗号化など、特定のアプリケーションのみで意味を持つものもあります。</para>
+   <para><xref linkend="tab.yast.ca.intro.x509" xrefstyle="select:label nopage"/> には、 X.509 証明書バージョン 3 の基本項目を示しています。</para>
    <table xml:id="tab.yast.ca.intro.x509">
-    <title>X.509v3 Certificate</title>
+    <title>X.509v3 証明書</title>
     <tgroup cols="2">
      <thead>
       <row>
        <entry>
-        <para>
-         Field
-        </para>
+        <para>項目</para>
        </entry>
        <entry>
-        <para>
-         Content
-        </para>
+        <para>内容</para>
        </entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry>
-        <para>
-         Version
-        </para>
+        <para>バージョン</para>
        </entry>
        <entry>
-        <para>
-         The version of the certificate, for example, v3
-        </para>
+        <para>証明書のバージョン (例: v3)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Serial Number
-        </para>
+        <para>シリアル番号</para>
        </entry>
        <entry>
-        <para>
-         Unique certificate ID (an integer)
-        </para>
+        <para>ユニークな証明書の ID (整数)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Signature
-        </para>
+        <para>署名</para>
        </entry>
        <entry>
-        <para>
-         The ID of the algorithm used to sign the certificate
-        </para>
+        <para>証明書に署名する際に使用したアルゴリズムの ID</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Issuer
-        </para>
+        <para>発行者</para>
        </entry>
        <entry>
-        <para>
-         Unique name (DN) of the issuing authority (CA)
-        </para>
+        <para>発行者 (証明機関) のユニーク名 (DN)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Validity
-        </para>
+        <para>有効期間</para>
        </entry>
        <entry>
-        <para>
-         Period of validity
-        </para>
+        <para>有効な期間</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Subject
-        </para>
+        <para>サブジェクト</para>
        </entry>
        <entry>
-        <para>
-         Unique name (DN) of the owner
-        </para>
+        <para>所有者のユニーク名 (DN)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Subject Public Key Info
-        </para>
+        <para>サブジェクトの公開鍵情報</para>
        </entry>
        <entry>
-        <para>
-         Public key of the owner and the ID of the algorithm
-        </para>
+        <para>所有者の公開鍵とアルゴリズムの ID</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Issuer Unique ID
-        </para>
+        <para>発行者ユニーク ID</para>
        </entry>
        <entry>
-        <para>
-         Unique ID of the issuing CA (optional)
-        </para>
+        <para>発行者 (証明機関) のユニーク ID (任意)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Subject Unique ID
-        </para>
+        <para>サブジェクトユニーク ID</para>
        </entry>
        <entry>
-        <para>
-         Unique ID of the owner (optional)
-        </para>
+        <para>所有者のユニーク ID (任意)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Extensions
-        </para>
+        <para>拡張</para>
        </entry>
        <entry>
-        <para>
-         Optional additional information, such as <quote>KeyUsage</quote> or
-         <quote>BasicConstraints</quote>
-        </para>
+        <para><quote>KeyUsage</quote> (鍵の用途) や <quote>BasicConstraints</quote> (基本制約) などの任意の追加情報</para>
        </entry>
       </row>
      </tbody>
@@ -309,130 +180,77 @@
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.intro.crl">
-   <title>Blocking X.509 Certificates</title>
-   <para>
-    If a certificate becomes untrustworthy before it has expired, it must be
-    blocked immediately. This can become necessary if, for example, the
-    private key has accidentally been made public. Blocking certificates is
-    especially important if the private key belongs to a CA rather than a
-    user certificate. In this case, all user certificates issued by the
-    relevant CA must be blocked immediately. If a certificate is blocked,
-    the PKI (the responsible CA) must make this information available to all
-    those involved using a <emphasis>certificate revocation list</emphasis>
-    (CRL).
-   </para>
-   <para>
-    These lists are supplied by the CA to public CRL distribution points
-    (CDPs) at regular intervals. The CDP can optionally be named as an
-    extension in the certificate, so a checker can fetch a current CRL for
-    validation purposes. One way to do this is the <emphasis>online
-    certificate status protocol</emphasis> (OCSP). The authenticity of the
-    CRLs is ensured with the signature of the issuing CA.
-    <xref linkend="tab.yast.ca.intro.crl" xrefstyle="select:label       nopage"/>
-    shows the basic parts of a X.509 CRL.
-   </para>
+   <title>X.509 証明書の取り消し</title>
+   <para>証明書に書かれた有効期間が過ぎるよりも前に、何らかの理由で証明書が信頼できないものになった場合、その証明書は即時に使用を停止しなければなりません。このような状況になる理由としては、たとえば機密鍵が漏洩してしまったりした場合などがあります。証明書の使用停止は、ユーザの証明書よりも証明機関そのものの機密鍵が漏洩してしまったりした場合に、特に重要となります。証明機関の機密鍵が漏洩してしまった場合、そこで発行されたユーザの証明書や証明機関の証明書は、全て使用を停止しなければなりません。証明書の使用を停止した場合、 PKI (証明書を発行した証明機関) はその情報を <emphasis>証明書失効リスト</emphasis> (CRL) を介して公開しなければなりません。</para>
+   <para>このリストは証明機関が提供するもので、公開の CRL 配布ポイント (CDP) で定期的に更新されます。 CDP は証明書内の拡張項目として提供することができますので、これによって誰もが証明書が取り消されていないかどうかを確認できることになります。この方式に対応するプロトコルの 1 つとして、 <emphasis>Online Certificate Status Protocol</emphasis> (OCSP) と呼ばれるものがあります。 CRL 自身の正当性は、発行元の証明機関からの署名によって付与されます。 <xref linkend="tab.yast.ca.intro.crl" xrefstyle="select:label nopage"/> には、 X.509 CRL の基本的な構成を示しています。</para>
    <table xml:id="tab.yast.ca.intro.crl">
-    <title>X.509 Certificate Revocation List (CRL)</title>
+    <title>X.509 証明書失効リスト (Certificate Revocation List; CRL)</title>
     <tgroup cols="2">
      <thead>
       <row>
        <entry>
-        <para>
-         Field
-        </para>
+        <para>項目</para>
        </entry>
        <entry>
-        <para>
-         Content
-        </para>
+        <para>内容</para>
        </entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry>
-        <para>
-         Version
-        </para>
+        <para>バージョン</para>
        </entry>
        <entry>
-        <para>
-         The version of the CRL, such as v2
-        </para>
+        <para>CRL のバージョン (例: v2)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Signature
-        </para>
+        <para>署名</para>
        </entry>
        <entry>
-        <para>
-         The ID of the algorithm used to sign the CRL
-        </para>
+        <para>CRL に署名する際に使用したアルゴリズムの ID</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Issuer
-        </para>
+        <para>発行者</para>
        </entry>
        <entry>
-        <para>
-         Unique name (DN) of the publisher of the CRL (usually the issuing
-         CA)
-        </para>
+        <para>CRL 発行者 (通常は証明書の発行元の証明機関) のユニーク名 (DN)</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         This Update
-        </para>
+        <para>更新日時</para>
        </entry>
        <entry>
-        <para>
-         Time of publication (date, time) of this CRL
-        </para>
+        <para>この CRL の公開日時</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Next Update
-        </para>
+        <para>次回更新日時</para>
        </entry>
        <entry>
-        <para>
-         Time of publication (date, time) of the next CRL
-        </para>
+        <para>次回の CRL 更新日時</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         List of revoked certificates
-        </para>
+        <para>失効済み証明書リスト</para>
        </entry>
        <entry>
-        <para>
-         Every entry contains the serial number of the certificate, the time
-         of revocation, and optional extensions (CRL entry extensions)
-        </para>
+        <para>各項目には証明書のシリアル番号と失効日時、そして任意指定の拡張 (CRL 項目拡張) が含まれます</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Extensions
-        </para>
+        <para>拡張</para>
        </entry>
        <entry>
-        <para>
-         Optional CRL extensions
-        </para>
+        <para>任意指定の CRL 拡張</para>
        </entry>
       </row>
      </tbody>
@@ -441,72 +259,34 @@
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.intro.repository">
-   <title>Repository for Certificates and CRLs</title>
-   <para>
-    The certificates and CRLs for a CA must be made publicly accessible using
-    a <emphasis>repository</emphasis>. Because the signature protects the
-    certificates and CRLs from being forged, the repository itself does not
-    need to be secured in a special way. Instead, it tries to grant the
-    simplest and fastest access possible. For this reason, certificates are
-    often provided on an LDAP or HTTP server. Find explanations about LDAP in
-    <xref linkend="cha.security.ldap"/>.  <xref os="sles;osuse" linkend="cha.apache2"/> contains information about the HTTP server.
-   </para>
+   <title>証明書と CRL のリポジトリ</title>
+   <para>証明機関が発行する証明書や CRL は、 <emphasis>リポジトリ</emphasis> と呼ばれる場所で公開され、一般的にアクセスできなければなりません。署名の仕組みにより証明書や CRL が偽造される心配は解決されていることから、リポジトリ自身へのアクセスは特別な暗号化方式を必要としません。その代わり、できる限りシンプルかつ高速に応答する必要があります。このような要件があることから、証明書は LDAP や HTTP サーバで提供されることがあります。 LDAP に関する詳細は <xref linkend="cha.security.ldap"/> を、 HTTP サーバに関する詳細は <xref os="sles;osuse" linkend="cha.apache2"/> をそれぞれお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.intro.ldap">
-   <title>Proprietary PKI</title>
-   <para>
-    &yast; contains modules for the basic management of X.509
-    certificates. This mainly involves the creation of CAs, sub-CAs, and
-    their certificates. The services of a PKI go far beyond simply creating
-    and distributing certificates and CRLs. The operation of a PKI requires
-    a well-conceived administrative infrastructure allowing continuous
-    update of certificates and CRLs. This infrastructure is provided by
-    commercial PKI products and can also be partly automated. &yast;
-    provides tools for creating and distributing CAs and certificates, but
-    cannot currently offer this background infrastructure. To set up a small
-    PKI, you can use the available &yast; modules. However, you should
-    use commercial products to set up an <quote>official</quote> or
-    commercial PKI.
-   </para>
+   <title>プロプライエタリ PKI</title>
+   <para>&yast; には X.509 証明書に対する基本的な管理機能を含むモジュールが含まれています。このモジュールでは、証明機関や副証明機関の作成のほか、証明機関からの証明書の発行も含まれています。実際の PKI では、証明書や CRL を作成したり配布したりする作業以外にも、様々なことを行なっています。たとえば PKI の運用には、熟慮された管理インフラストラクチャが必要となり、これによって証明書や CRL の継続的な更新を行なうことができるようになっています。このインフラストラクチャは商用の PKI 製品で提供されているもので、部分的にのみ自動化することができます。 &yast; では証明機関や証明書の作成や配布を行なう機能が提供されていますが、それ以外のインフラストラクチャについては現在提供しておりません。小規模な PKI を構築する際には &yast; をお使いいただけますが、 <quote>公的な</quote> 証明機関や商用の証明機関を作成したい場合は、商用製品をお使いください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.security.yast_ca.module">
-  <title>&yast; Modules for CA Management</title>
+  <title>証明機関を管理するための &yast; モジュール</title>
 
-  <para>
-   &yast; provides two modules for basic CA management. The primary
-   management tasks with these modules are explained here.
-  </para>
+  <para>&yast; には基本的な証明機関管理に関わる 2 種類のモジュールが提供されています。ここでは、これらのモジュールが提供する主な管理作業について説明しています。</para>
 
   <sect2 xml:id="sec.security.yast_ca.module.rootca">
-   <title>Creating a Root CA</title>
-   <para>
-    <phrase os="sles">After a default installation, &productname;
-    contains already a root CA named YaST_Default_CA. Use this module to
-    create additional root CAs.</phrase> The first step when setting up a
-    PKI is to create a root CA. Do the following:
-   </para>
+   <title>ルート証明機関の作成</title>
+   <para><phrase os="sles">既定のインストールでは、 &productname; には YaST_Default_CA という名称のルート証明機関が含まれています。このモジュールを使用することで、追加のルート証明機関を作成することができます。 </phrase> PKI を構築する際の最初に行なう作業は、ルート証明機関の作成です。下記のようにして行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and go to <menuchoice><guimenu>Security and
-      Users</guimenu><guimenu>CA Management</guimenu></menuchoice>.
-     </para>
+     <para>&yast; を起動して <menuchoice><guimenu>セキュリティとユーザ</guimenu><guimenu>証明機関の管理</guimenu></menuchoice> を選択します。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Create Root CA</guimenu>.
-     </para>
+     <para><guimenu>ルート証明機関の作成</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Enter the basic data for the CA in the first dialog, shown in
-      <xref linkend="fig.yast.ca.ca_basic" xrefstyle="select:label nopage"/>.
-      The text boxes have the following meanings:
-     </para>
+     <para>最初のダイアログ (<xref linkend="fig.yast.ca.ca_basic" xrefstyle="select:label nopage"/>) では、証明機関に対する基本的なデータを入力します。テキストボックスにはそれぞれ下記のような意味があります:</para>
      <figure xml:id="fig.yast.ca.ca_basic">
-      <title>&yast; CA Module&mdash;Basic Data for a Root CA</title>
+      <title>&yast; 証明機関モジュール&mdash;証明機関に対する基本データ</title>
       <mediaobject>
        <imageobject role="fo">
         <imagedata fileref="yast2_ca_basic.png" width="75%" format="PNG"/>
@@ -518,200 +298,109 @@
      </figure>
      <variablelist>
       <varlistentry>
-       <term><guimenu>CA Name</guimenu>
-       </term>
+       <term><guimenu>証明機関名</guimenu></term>
        <listitem>
-        <para>
-         Enter the technical name of the CA. Directory names, among other
-         things, are derived from this name, which is why only the
-         characters listed in the help can be used. The technical name is
-         also displayed in the overview when the module is started.
-        </para>
+        <para>証明機関に対する技術名称を入力します。この名前を元にディレクトリ名などが設定されます。そのため、ヘルプ内に示されている文字だけを使用することができます。技術名は、モジュール起動時の概要内にも表示されます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>Common Name</guimenu>
-       </term>
+       <term><guimenu>共通名</guimenu></term>
        <listitem>
-        <para>
-         Enter the name for use in referring to the CA.
-        </para>
+        <para>証明機関に対して設定する名前を入力します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>E-Mail Addresses</guimenu>
-       </term>
+       <term><guimenu>電子メールアドレス</guimenu></term>
        <listitem>
-        <para>
-         Several e-mail addresses can be entered that can be seen by the CA
-         user. This can be helpful for inquiries.
-        </para>
+        <para>証明書のユーザから参照することのできる電子メールアドレス (複数可) を指定します。これは特に、問い合わせの際に使用されます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>Country</guimenu>
-       </term>
+       <term><guimenu>国</guimenu></term>
        <listitem>
-        <para>
-         Select the country where the CA is operated.
-        </para>
+        <para>その証明機関を運用している国を選択します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>Organization</guimenu>, <guimenu>Organizational Unit</guimenu>,
-         <guimenu>Locality</guimenu>, <guimenu>State</guimenu>
-       </term>
+       <term><guimenu>組織</guimenu> , <guimenu>部署</guimenu> , <guimenu>市区町村</guimenu> , <guimenu>都道府県</guimenu></term>
        <listitem>
-        <para>
-         Optional values
-        </para>
+        <para>任意指定の値です。</para>
        </listitem>
       </varlistentry>
      </variablelist>
-     <para>
-      Proceed with <guimenu>Next</guimenu>.
-     </para>
+     <para><guimenu>次へ</guimenu> を押して進みます。</para>
     </step>
     <step>
-     <para>
-      Enter a password in the second dialog. This password is always
-      required when using the CA&mdash;when creating a sub-CA or
-      generating certificates. The text boxes have the following meaning:
-     </para>
+     <para>2 番目のダイアログでは、まずパスワードを入力します。このパスワードは、証明機関から証明書を発行する際に必ず入力を求められるものです。それ以外のテキストボックスには、下記のような意味があります:</para>
      <variablelist>
       <varlistentry>
-       <term><guimenu>Key Length</guimenu>
-       </term>
+       <term><guimenu>鍵長</guimenu></term>
        <listitem>
-        <para>
-         <guimenu>Key Length</guimenu> contains a meaningful default and
-         does not generally need to be changed unless an application cannot
-         deal with this key length. The higher the number the more secure
-         your password is.
-        </para>
+        <para><guimenu>鍵長</guimenu> には多くの環境で一般的な既定値が設定されているため、アプリケーション側でその鍵長に対応していないような場合を除いて、一般的に変更すべきではありません。また、大きい値ほどパスワードの機密を強く守ることができます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>Valid Period (days)</guimenu>
-       </term>
+       <term><guimenu>有効期間 (日)</guimenu></term>
        <listitem>
-        <para>
-         The <guimenu>Valid Period</guimenu> in the case of a CA defaults to
-         3650 days (roughly ten years). This long period makes sense because
-         the replacement of a deleted CA involves an enormous administrative
-         effort.
-        </para>
+        <para><guimenu>有効期間</guimenu> の既定値は 3650 日(おおよそ 10 年) になっています。このような長い期間を設定することにより、面倒な管理労力をできる限り減らすことができるようになります。</para>
        </listitem>
       </varlistentry>
      </variablelist>
-     <para>
-      Clicking <guimenu>Advanced Options</guimenu> opens a dialog for
-      setting different attributes from the X.509 extensions
-      (<xref linkend="fig.yast.ca.extensions"/>). These values have rational
-      default settings and should only be changed if you are really sure of
-      what you are doing. Proceed with <guimenu>Next</guimenu>.
-     </para>
+     <para><guimenu>詳細オプション</guimenu> を押すと、 X.509 の証明書に設定する様々な属性を指定することができます ( <xref linkend="fig.yast.ca.extensions"/> ) 。これらの値にはそれぞれ合理的な既定値が設定されているため、どうしても必要な場合にのみ設定してください。設定が終わったら <guimenu>次へ</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Review the summary. &yast; displays the current settings for
-      confirmation. Click <guimenu>Create</guimenu>. The root CA is created
-      then appears in the overview.
-     </para>
+     <para>概要が表示されます。 &yast; では、確認用に設定を表示します。証明機関を作成するには、 <guimenu>作成</guimenu> を押します。これでルート証明機関が作成され、概要に表示されるようになります。</para>
     </step>
    </procedure>
    <tip>
-    <para>
-     In general, it is best not to allow user certificates to be issued by
-     the root CA. It is better to create at least one sub-CA and create the
-     user certificates from there. This has the advantage that the root CA
-     can be kept isolated and secure, for example, on an isolated computer
-     on secure premises. This makes it very difficult to attack the root CA.
-    </para>
+    <para>一般的には、ルート証明機関から直接ユーザの証明書を発行するのは適切ではありません。少なくとも 1 段階以上の副証明機関を作成して、その副証明機関からユーザの証明書を発行してください。これにより、ルート証明機関を分離しておくことができますので、たとえば独立したマシン内などのような場所に保管ができるようになります。マシンを独立させることで、ルート証明機関への攻撃も困難にすることができます。</para>
    </tip>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.changepw">
-   <title>Changing Password</title>
+   <title>パスワードの変更</title>
 <!-- Documenting FATE #300161 -->
-   <para>
-    If you need to change your password for your CA, proceed as follows:
-   </para>
+   <para>証明機関に対するパスワードを変更したい場合は、下記のようにして行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Select the required root CA and click <guimenu>Enter CA</guimenu>.
-     </para>
+     <para>対応する証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Enter the password if you entered a CA the first time. &yast;
-      displays the CA key information in the <guimenu>Description</guimenu>
-      tab (see
-      <xref linkend="fig.yast.ca.usage" xrefstyle="select:label nopage"/>).
-     </para>
+     <para>証明機関に対して初めて入る場合は、パスワードを入力します。パスワードを入力すると、 &yast; は証明機関の鍵に関する情報を <guimenu>説明</guimenu> タブ内に表示します (<xref linkend="fig.yast.ca.usage" xrefstyle="select:label nopage"/> をご覧ください) 。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Advanced</guimenu> and select <guimenu>Change CA
-      Password</guimenu>. A dialog opens.
-     </para>
+     <para><guimenu>詳細設定</guimenu> を押して、 <guimenu>証明機関のパスワードの変更</guimenu> を選びます。</para>
     </step>
     <step>
-     <para>
-      Enter the old and the new password.
-     </para>
+     <para>既存のパスワードと新しく設定するパスワードをそれぞれ入力します。</para>
     </step>
     <step>
-     <para>
-      Finish with <guimenu>OK</guimenu>
-     </para>
+     <para>完了するには <guimenu>OK</guimenu> を押します。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.subca">
-   <title>Creating or Revoking a Sub-CA</title>
-   <para>
-    A sub-CA is created in the same way as a root CA.
-   </para>
+   <title>副証明機関の作成および取り消し</title>
+   <para>副証明機関は、ルート証明機関と同じ方法で作成することができます。</para>
    <note>
-    <para>
-     The validity period for a sub-CA must be fully within the validity
-     period of the <quote>parent</quote> CA. A sub-CA is always created
-     after the <quote>parent</quote> CA, therefore, the default value leads
-     to an error message. To avoid this, enter a permissible value for the
-     period of validity.
-    </para>
+    <para>副証明機関に設定する有効期間は、 <quote>親の</quote> 証明機関の有効期間内でなければなりません。また、副証明機関は <quote>親の</quote> 証明機関よりも後に作成されるものであることから、既定値をそのまま使用してしまうとエラーになります。そのため、有効期間の設定は親の証明機関にあわせて設定してください。</para>
    </note>
-   <para>
-    Do the following:
-   </para>
+   <para>下記のようにして行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Select the required root CA and click <guimenu>Enter CA</guimenu>.
-     </para>
+     <para>対応する証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Enter the password if you are entering a CA for the first time.
-      &yast; displays the CA key information in the tab
-      <guimenu>Description</guimenu> (see
-      <xref linkend="fig.yast.ca.usage" xrefstyle="select:label nopage"/>).
-     </para>
+     <para>証明機関に対して初めて入る場合は、パスワードを入力します。パスワードを入力すると、 &yast; は証明機関の鍵に関する情報が <guimenu>説明</guimenu> タブ内に表示されます (<xref linkend="fig.yast.ca.usage" xrefstyle="select:label nopage"/> をご覧ください) 。</para>
      <figure xml:id="fig.yast.ca.usage">
-      <title>&yast; CA Module&mdash;Using a CA</title>
+      <title>&yast; 証明機関モジュール&mdash;証明機関の使用</title>
       <mediaobject>
        <imageobject role="fo">
         <imagedata fileref="yast2_ca_usage.png" width="75%" format="PNG"/>
@@ -723,93 +412,45 @@
      </figure>
     </step>
     <step>
-     <para>
-      Click <guimenu>Advanced</guimenu> and select <guimenu>Create
-      SubCA</guimenu>. This opens the same dialog as for creating a root CA.
-     </para>
+     <para><guimenu>詳細設定</guimenu> を押して、 <guimenu>下位証明機関の作成</guimenu> を選びます。</para>
     </step>
     <step>
-     <para>
-      Proceed as described in
-      <xref linkend="sec.security.yast_ca.module.rootca"/>.
-     </para>
+     <para>あとは <xref linkend="sec.security.yast_ca.module.rootca"/> に示されている手順のとおりに作業を行ないます。</para>
 <!-- FATE #2612 -->
-     <para>
-      It is possible to use one password for all your CAs. Enable
-      <guimenu>Use CA Password as Certificate Password</guimenu> to give
-      your sub-CAs the same password as your root CA. This helps to reduce
-      the amount of passwords for your CAs.
-     </para>
+     <para>お使いの全ての証明機関に対して、同じパスワードを設定することもできます。副証明機関に対して、証明機関と同じパスワードを設定したい場合は、 <guimenu>証明機関のパスワードを証明書のパスワードとして使用する</guimenu> を選択してください。これにより、証明機関のパスワード入力の手間を省くことができます。</para>
      <note>
-      <title>Check your Valid Period</title>
-      <para>
-       Take into account that the valid period must be lower than the valid
-       period in the root CA.
-      </para>
+      <title>有効期間の設定について</title>
+      <para>ここで設定する有効期間は、ルート証明機関の有効期間よりも短くしなければなりません。</para>
      </note>
     </step>
     <step>
-     <para>
-      Select the <guimenu>Certificates</guimenu> tab. Reset compromised or
-      otherwise unwanted sub-CAs here, using <guimenu>Revoke</guimenu>.
-      Revocation alone is not enough to deactivate a sub-CA. You must also
-      publish revoked sub-CAs in a CRL. The creation of CRLs is described in
-      <xref linkend="sec.security.yast_ca.module.crl"/>.
-     </para>
+     <para><guimenu>証明書</guimenu> タブを選択します。機密が漏洩してしまって危険な副証明機関や、誤って作成した副証明機関がある場合は、ここから <guimenu>取り消し</guimenu> を押すことで証明書を取り消すことができます。ただし、証明書の取り消しだけではなく、そこから作成した CRL を公開することで、証明書の無効化が実現できることに注意してください。 CRL の作成に関する詳細は、 <xref linkend="sec.security.yast_ca.module.crl"/> をお読みください。</para>
     </step>
     <step>
-     <para>
-      Finish with <guimenu>OK</guimenu>.
-     </para>
+     <para>完了するには <guimenu>OK</guimenu> を押して閉じます。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.clientserver">
-   <title>Creating or Revoking User Certificates</title>
-   <para>
-    Creating client and server certificates is very similar to creating CAs
-    in <xref linkend="sec.security.yast_ca.module.rootca"/>. The same
-    principles apply here. In certificates intended for e-mail signature,
-    the e-mail address of the sender (the private key owner) should be
-    contained in the certificate to enable the e-mail program to assign the
-    correct certificate.
-   </para>
-   <para>
-    For certificate assignment during encryption, it is necessary for the
-    e-mail address of the recipient (the public key owner) to be included in
-    the certificate. In the case of server and client certificates, the host
-    name of the server must be entered in the <guimenu>Common Name</guimenu>
-    field. The default validity period for certificates is 365 days.
-   </para>
-   <para>
-    To create client and server certificates, do the following:
-   </para>
+   <title>ユーザ証明書の作成と取り消し</title>
+   <para>クライアントやサーバに対する証明書の作成は、 <xref linkend="sec.security.yast_ca.module.rootca"/> で示している証明機関の作成に非常に似ていて、考え方についても同様です。証明機関と異なるのは、たとえば電子メールの署名に使用する証明書であれば、電子メールを扱うソフトウエアから正しい値を取れるよう、送信者の電子メールアドレス (機密鍵の所有者) が証明書の中に含まれていなければならない、くらいの違いです。</para>
+   <para>暗号化に使用する証明書の場合、受信者の電子メールアドレス (公開鍵の所有者) が証明書の中に含まれていなければなりません。サーバやクライアントの証明書の場合は、そのホスト名が証明書内の <guimenu>共通名</guimenu> 項目に含まれていなければなりません。なお、既定の証明書の有効期間は 365 日です。</para>
+   <para>クライアントやサーバに対する証明書を作成するには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Select the required root CA and click <guimenu>Enter CA</guimenu>.
-     </para>
+     <para>対応する証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Enter the password if you are entering a CA for the first time.
-      &yast; displays the CA key information in the
-      <guimenu>Description</guimenu> tab.
-     </para>
+     <para>証明機関に対して初めて入る場合は、パスワードを入力します。パスワードを入力すると、 &yast; は証明機関の鍵に関する情報が <guimenu>説明</guimenu> タブ内に表示されます。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Certificates</guimenu> (see
-      <xref linkend="fig.yast.ca.cert" xrefstyle="select:label nopage"/>).
-     </para>
+     <para><guimenu>証明書</guimenu> を選択します (<xref linkend="fig.yast.ca.cert" xrefstyle="select:label nopage"/> をご覧ください) 。</para>
      <figure xml:id="fig.yast.ca.cert">
-      <title>Certificates of a CA</title>
+      <title>証明機関の証明書</title>
       <mediaobject>
        <imageobject role="fo">
         <imagedata fileref="yast2_ca_cert.png" width="70%" format="PNG"/>
@@ -821,122 +462,64 @@
      </figure>
     </step>
     <step>
-     <para>
-      Click <menuchoice> <guimenu>Add</guimenu> <guimenu>Add Server
-      Certificate</guimenu> </menuchoice> and create a server certificate.
-     </para>
+     <para>サーバ証明書を作成するには、 <menuchoice> <guimenu>追加</guimenu> <guimenu>サーバ証明書の追加</guimenu> </menuchoice> を押します。</para>
     </step>
     <step>
-     <para>
-      Click <menuchoice> <guimenu>Add</guimenu> <guimenu>Add Client
-      Certificate</guimenu> </menuchoice> and create a client certificate.
-      Do not forget to enter an e-mail address.
-     </para>
+     <para>クライアント証明書を作成するには、 <menuchoice> <guimenu>追加</guimenu> <guimenu>クライアント証明書の追加</guimenu> </menuchoice> を押します。このとき、電子メールアドレスを忘れずに入力するようにしてください。</para>
     </step>
     <step>
-     <para>
-      Finish with <guimenu>OK</guimenu>
-     </para>
+     <para>完了するには <guimenu>OK</guimenu> を押します。</para>
     </step>
    </procedure>
-   <para>
-    To revoke compromised or otherwise unwanted certificates, do the
-    following:
-   </para>
+   <para>機密鍵が漏洩したり、誤って作成してしまったりした証明書を取り消すには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Select the required root CA and click <guimenu>Enter CA</guimenu>.
-     </para>
+     <para>対応する証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Enter the password if you are entering a CA for the first time.
-      &yast; displays the CA key information in the
-      <guimenu>Description</guimenu> tab.
-     </para>
+     <para>証明機関に対して初めて入る場合は、パスワードを入力します。パスワードを入力すると、 &yast; は証明機関の鍵に関する情報が <guimenu>説明</guimenu> タブ内に表示されます。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Certificates</guimenu> (see
-      <xref linkend="sec.security.yast_ca.module.subca"/>).
-     </para>
+     <para><guimenu>証明書</guimenu> を選択します (<xref linkend="sec.security.yast_ca.module.subca"/> をご覧ください) 。</para>
     </step>
     <step>
-     <para>
-      Select the certificate to revoke and click <guimenu>Revoke</guimenu>.
-     </para>
+     <para>取り消したい証明書を選んで、 <guimenu>取り消し</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Choose a reason to revoke this certificate.
-     </para>
+     <para>証明書を取り消す (失効する) 理由を選択します。</para>
     </step>
     <step>
-     <para>
-      Finish with <guimenu>OK</guimenu>.
-     </para>
+     <para>完了するには <guimenu>OK</guimenu> を押して閉じます。</para>
     </step>
    </procedure>
    <note>
-    <para>
-     Revocation alone is not enough to deactivate a certificate. Also
-     publish revoked certificates in a CRL.
-     <xref linkend="sec.security.yast_ca.module.crl"/> explains how to
-     create CRLs. Revoked certificates can be completely removed after
-     publication in a CRL with <guimenu>Delete</guimenu>.
-    </para>
+    <para>ただし、証明書の取り消しだけではなく、そこから作成した CRL を公開することで、ようやく証明書の無効化が実現できることに注意してください。 CRL の作成に関する詳細は <xref linkend="sec.security.yast_ca.module.crl"/> で説明しています。取り消された証明書は、 CRL の公開後に <guimenu>削除</guimenu> を押すことで、完全に削除することができます。</para>
    </note>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.defaults">
-   <title>Changing Default Values</title>
-   <para>
-    The previous sections explained how to create sub-CAs, client
-    certificates, and server certificates. Special settings are used in the
-    extensions of the X.509 certificate. These settings have been given
-    rational defaults for every certificate type and do not normally need to
-    be changed. However, it may be that you have special requirements for
-    these extensions. In this case, it may make sense to adjust the
-    defaults. Otherwise, start from scratch every time you create a
-    certificate.
-   </para>
+   <title>既定値の変更</title>
+   <para>ここまでの章では、副証明機関やクライアント、サーバに対する証明書の作成方法について説明してきました。 X.509 証明書の拡張内では、特殊な設定が使用されますが、これらの設定にはそれぞれの用途に応じた既定値が設定されています。通常はこれらの設定を変更する必要はありませんが、特別な要件でそれらを変更する必要がある場合があります。本章では、これらの既定値を変更する方法について説明しています。</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Enter the required root CA, as described in
-      <xref linkend="sec.security.yast_ca.module.subca"/>.
-     </para>
+     <para>まずは <xref linkend="sec.security.yast_ca.module.subca"/> の手順に従って、対応する証明機関に入ります。</para>
     </step>
     <step>
-     <para>
-      Click <menuchoice> <guimenu>Advanced</guimenu> <guimenu>Edit
-      Default</guimenu></menuchoice>.
-     </para>
+     <para><menuchoice> <guimenu>詳細設定</guimenu> <guimenu>既定値の編集</guimenu></menuchoice> を押します。</para>
     </step>
     <step>
-     <para>
-      Choose type of certificate to change and proceed with
-      <guimenu>Next</guimenu>.
-     </para>
+     <para>変更したい証明書の種類を選択して、 <guimenu>次へ</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      The dialog for changing the defaults as shown in
-      <xref linkend="fig.yast.ca.extensions"/> opens.
-     </para>
+     <para><xref linkend="fig.yast.ca.extensions"/> に示されているとおり、既定値を変更するためのダイアログが表示されます。</para>
      <figure xml:id="fig.yast.ca.extensions">
-      <title>&yast; CA Module&mdash;Extended Settings</title>
+      <title>&yast; 証明機関モジュール&mdash;詳細設定</title>
       <mediaobject>
        <imageobject role="fo">
         <imagedata fileref="yast2_ca_extensions.png" width="75%" format="PNG"/>
@@ -948,177 +531,99 @@
      </figure>
     </step>
     <step>
-     <para>
-      Change the associated value on the right side and set or delete the
-      critical setting with <guimenu>critical</guimenu>.
-     </para>
+     <para>左側で項目を選んで右側に値を入力します。必要に応じて <guimenu>critical</guimenu> のチェックボックスを変更してもかまいません。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Next</guimenu> to see a short summary.
-     </para>
+     <para><guimenu>次へ</guimenu> を押すと、短い概要が表示されます。</para>
     </step>
     <step>
-     <para>
-      Finish your changes with <guimenu>Save</guimenu>.
-     </para>
+     <para>あとは <guimenu>保存</guimenu> を押すと、変更を保存することができます。</para>
     </step>
    </procedure>
    <note>
-    <para>
-     All changes to the defaults only affect objects created after this
-     point. Already-existing CAs and certificates remain unchanged.
-    </para>
+    <para>既定値の変更は、その変更以降に作成したものに対してのみ適用されます。既に作成済みの証明機関や証明書については、変更されません。</para>
    </note>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.crl">
-   <title>Creating Certificate Revocation Lists (CRLs)</title>
-   <para>
-    If compromised or otherwise unwanted certificates need to be excluded
-    from further use, they must first be revoked. The procedure for this is
-    explained in <xref linkend="sec.security.yast_ca.module.subca"/> (for
-    sub-CAs) and <xref linkend="sec.security.yast_ca.module.clientserver"/>
-    (for user certificates). After this, a CRL must be created and published
-    with this information.
-   </para>
-   <para>
-    The system maintains only one CRL for each CA. To create or update this
-    CRL, do the following:
-   </para>
+   <title>証明書取り消しリスト (Certificate Revocation Lists; CRL) の作成</title>
+   <para>証明書に書かれた有効期間が過ぎるよりも前に、何らかの理由で証明書が信頼できないものになった場合、その証明書は即時に使用を停止しなければなりません。証明書の使用停止については <xref linkend="sec.security.yast_ca.module.subca"/> (副証明機関用) と <xref linkend="sec.security.yast_ca.module.clientserver"/> (ユーザ証明書用) で説明していますが、これらを行なった後は、その取り消し情報をもとにして、 CRL を作成して公開しなければなりません。</para>
+   <para>システムでは各証明機関に対して 1 つの CRL のみを管理します。この CRL を作成もしくは更新したい場合は、下記のようにして行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open the CA module.
-     </para>
+     <para>&yast; を起動して証明機関モジュールを起動します。</para>
     </step>
     <step>
-     <para>
-      Enter the required CA, as described in
-      <xref linkend="sec.security.yast_ca.module.subca"/>.
-     </para>
+     <para>まずは <xref linkend="sec.security.yast_ca.module.subca"/> の手順に従って、対応する証明機関に入ります。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>CRL</guimenu>. The dialog that opens displays a summary
-      of the last CRL of this CA.
-     </para>
+     <para><guimenu>CRL</guimenu> を選択します。この証明機関が直近に発行した CRL に関する情報が表示されます。</para>
     </step>
     <step>
-     <para>
-      Create a new CRL with <guimenu>Generate CRL</guimenu> if you have
-      revoked new sub-CAs or certificates since its creation.
-     </para>
+     <para>副証明機関やクライアント／サーバに対する証明書を、その有効期間が切れる前に取り消したあと、 <guimenu>CRL の生成</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      Specify the period of validity for the new CRL (default: 30 days).
-     </para>
+     <para>新しく作成する CRL の有効期間 (既定値: 30 日) を指定します。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>OK</guimenu> to create and display the CRL. Afterward,
-      you must publish this CRL.
-     </para>
+     <para><guimenu>OK</guimenu> を押すと CRL を作成して表示することができます。あとは作成した CRL を公開します。</para>
     </step>
    </procedure>
    <note>
-    <para>
-     Applications that evaluate CRLs reject every certificate if the CRL is
-     not available or has expired. As a PKI provider, it is your duty always
-     to create and publish a new CRL before the current CRL expires (period
-     of validity). &yast; does not provide a function for automating this
-     procedure.
-    </para>
+    <para>CRL を解釈するアプリケーション側では、 CRL にアクセスできない場合や、 CRL の有効期間が切れてしまっているような場合、証明書の受付を拒否することになります。 PKI 提供者の観点では、その時点での CRL の有効期間が満了する前に新しい CRL を作成して公開することが義務となっています。残念ながら、 &yast; ではそのような処理を自動化する仕組みまでは用意していません。</para>
    </note>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.exportldap">
-   <title>Exporting CA Objects to LDAP</title>
-   <para>
-    The executing computer should be configured with the &yast; LDAP
-    client for LDAP export. This provides LDAP server information at runtime
-    that can be used when completing dialog fields. Otherwise (although
-    export may be possible), all LDAP data must be entered manually. You
-    must always enter several passwords (see
-    <xref linkend="tab.yast.ca.ldap.password"/>).
-   </para>
+   <title>証明機関のオブジェクトに対する LDAP へのエクスポート</title>
+   <para>LDAP エクスポート (公開) を実施するには、 &yast; の LDAP クライアントモジュールを利用して設定を行なうことができます。この場合、この設定内容を元にエクスポート処理を行なうことができます。設定していない場合は、全ての LDAP データを手作業で指定しなければならなくなります。また、パスワードについてはいずれの場合であっても入力しなければなりません (詳しくは <xref linkend="tab.yast.ca.ldap.password"/> をご覧ください) 。</para>
    <table xml:id="tab.yast.ca.ldap.password">
-    <title>Passwords during LDAP Export</title>
+    <title>LDAP エクスポート時のパスワード</title>
     <tgroup cols="2">
      <thead>
       <row>
        <entry>
-        <para>
-         Password
-        </para>
+        <para>パスワード</para>
        </entry>
        <entry>
-        <para>
-         Meaning
-        </para>
+        <para>意味</para>
        </entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry>
-        <para>
-         LDAP Password
-        </para>
+        <para>LDAP パスワード</para>
        </entry>
        <entry>
-        <para>
-         Authorizes the user to make entries in the LDAP tree.
-        </para>
+        <para>LDAP ツリー内に項目を作成する際に使用するユーザのパスワードです。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         Certificate Password
-        </para>
+        <para>証明書のパスワード</para>
        </entry>
        <entry>
-        <para>
-         Authorizes the user to export the certificate.
-        </para>
+        <para>証明書を公開するために使用する証明書のパスワードです。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         New Certificate Password
-        </para>
+        <para>新しい証明書のパスワード</para>
        </entry>
        <entry>
-        <para>
-         The PKCS12 format is used during LDAP export. This format forces
-         the assignment of a new password for the exported certificate.
-        </para>
+        <para>LDAP エクスポートでは、 PKCS12 形式を使用します。この形式の場合、証明書を保存するにあたって新しいパスワードを設定しなければならなくなっています。</para>
        </entry>
       </row>
      </tbody>
     </tgroup>
    </table>
-   <para>
-    Certificates, CAs, and CRLs can be exported to LDAP.
-   </para>
+   <para>証明書、証明機関、証明書失効リスト (CRL) をそれぞれ LDAP にエクスポートすることができます。</para>
    <variablelist>
     <varlistentry>
-     <term>Exporting a CA to LDAP</term>
+     <term>証明機関の LDAP へのエクスポート</term>
      <listitem>
-      <para>
-       To export a CA, enter the CA as described in
-       <xref linkend="sec.security.yast_ca.module.subca"/>. Select
-       <menuchoice> <guimenu>Extended</guimenu><guimenu>Export to
-       LDAP</guimenu></menuchoice> in the subsequent dialog, which opens the
-       dialog for entering LDAP data. If your system has been configured
-       with the &yast; LDAP client, the fields are already partly
-       completed. Otherwise, enter all the data manually. Entries are made
-       in LDAP in a separate tree with the attribute
-       <quote>caCertificate</quote>.
-      </para>
+      <para>証明機関をエクスポートするには、まず <xref linkend="sec.security.yast_ca.module.subca"/> の手順に従って証明機関に入ります。あとは表示されたダイアログ内で <menuchoice> <guimenu>詳細設定</guimenu><guimenu>LDAP にエクスポート</guimenu></menuchoice> を選択して、 LDAP データを入力するダイアログを表示させます。既に &yast; LDAP クライアントで設定済みの場合は、ほとんどの項目に自動的に入力されているはずです。それ以外の場合は、それぞれの項目を手作業で入力してください。証明機関の項目は、 LDAP ツリー内の専用のツリーとして作成され、 <quote>caCertificate</quote> という属性が設定されます。</para>
 <!---
       <para>
        An alternative method for sub-CAs is to export from the
@@ -1135,135 +640,56 @@
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Exporting a Certificate to LDAP</term>
+     <term>証明書の LDAP へのエクスポート</term>
      <listitem>
-      <para>
-       Enter the CA containing the certificate to export then select
-       <guimenu>Certificates</guimenu>. Select the required certificate from
-       the certificate list in the upper part of the dialog and select
-       <menuchoice> <guimenu>Export</guimenu><guimenu>Export to
-       LDAP</guimenu></menuchoice>. The LDAP data is entered here in the
-       same way as for CAs. The certificate is saved with the corresponding
-       user object in the LDAP tree with the attributes
-       <quote>userCertificate</quote> (PEM format) and
-       <quote>userPKCS12</quote> (PKCS12 format).
-      </para>
+      <para>証明書を含む証明機関に入って、 <guimenu>証明書</guimenu> を選択します。あとはエクスポートしたい証明書を選んで、 <menuchoice> <guimenu>詳細設定</guimenu><guimenu>LDAP にエクスポート</guimenu></menuchoice> を選択します。 LDAP に関するデータは、証明機関の場合と同じです。証明書は LDAP ツリー内の対応するユーザ内に書き込まれ、それぞれ <quote>userCertificate</quote> (PEM 形式) および <quote>userPKCS12</quote> (PKCS12 形式) の属性に保存されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Exporting a CRL to LDAP</term>
+     <term>証明書失効リスト (CRL) の LDAP へのエクスポート</term>
      <listitem>
-      <para>
-       Enter the CA containing the CRL to export and select
-       <guimenu>CRL</guimenu>. If desired, create a new CRL and click
-       <guimenu>Export</guimenu>. The dialog that opens displays the export
-       parameters. You can export the CRL for this CA either once or in
-       periodical time intervals. Activate the export by selecting
-       <guimenu>Export to LDAP</guimenu> and enter the respective LDAP data.
-       To do this at regular intervals, select the <guimenu>Repeated
-       Recreation and Export</guimenu> radio button and change the interval,
-       if appropriate.
-      </para>
+      <para>証明書を含む証明機関に入って、 <guimenu>CRL</guimenu> を選択します。必要であれば新しい CRL を作成して、 <guimenu>エクスポート</guimenu> を押します。表示されたダイアログでは、エクスポートに関するパラメータ設定を行ないます。この証明機関に対する CRL を一度だけエクスポートするか、一定時間おきに公開するかを選択することができます。あとは <guimenu>LDAP にエクスポート</guimenu> を選択して、 LDAP の情報を入力してください。定期的に公開する場合は、 <guimenu>再発行を繰り返してエクスポート</guimenu> のラジオボタンを選択して、更新間隔を指定してください。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.exportfile">
-   <title>Exporting CA Objects as a File</title>
-   <para>
-    If you have set up a repository on the computer for administering CAs,
-    you can use this option to create the CA objects directly as a file at
-    the correct location. Different output formats are available, such as
-    PEM, DER, and PKCS12. In the case of PEM, it is also possible to choose
-    whether a certificate should be exported with or without key and whether
-    the key should be encrypted. In the case of PKCS12, it is also possible
-    to export the certification path.
-   </para>
-   <para>
-    Export a file in the same way for certificates, CAs as with LDAP,
-    described in <xref linkend="sec.security.yast_ca.module.exportldap"/>,
-    except you should select <guimenu>Export as File</guimenu> instead of
-    <guimenu>Export to LDAP</guimenu>. This then takes you to a dialog for
-    selecting the required output format and entering the password and file
-    name. The certificate is stored at the required location after clicking
-    <guimenu>OK</guimenu>.
-   </para>
-   <para>
-    For CRLs click <guimenu>Export</guimenu>, select <guimenu>Export to
-    file</guimenu>, choose the export format (PEM or DER) and enter the
-    path. Proceed with <guimenu>OK</guimenu> to save it to the respective
-    location.
-   </para>
+   <title>証明機関のオブジェクトに対するファイルへのエクスポート</title>
+   <para>証明機関の管理用にコンピュータ内にリポジトリを設定してある場合は、このオプションを使用することで、証明機関のオブジェクトを指定の場所に保存することができます。エクスポートでは PEM, DER, PKCS12 など、さまざまな出力形式に対応しています。 PEM 形式の場合、鍵を含めて証明書をエクスポートするかどうかや、鍵を暗号化するかどうかを選択することもできます。 PKCS12 の場合は、関連する証明機関の証明書を含めるかどうかを選択することができます。</para>
+   <para>証明書や証明機関のファイルへのエクスポートは、 <xref linkend="sec.security.yast_ca.module.exportldap"/> で説明している LDAP へのエクスポートとほぼ同じです。ただし、 <guimenu>LDAP にエクスポート</guimenu> ではなく <guimenu>ファイルにエクスポート</guimenu> を選択する点が異なります。あとは出力形式とパスワード、出力先のファイルパスを指定するダイアログが表示されますので、必要な項目を入力して <guimenu>OK</guimenu> を押してください。</para>
+   <para>CRL の場合は、 <guimenu>エクスポート</guimenu> を押して <guimenu>ファイルにエクスポート</guimenu> を選択し、出力形式 (PEM もしくは DER) を選んで出力先のファイルパスを入力します。最後に <guimenu>OK</guimenu> を押すと、指定した場所に出力が行なわれます。</para>
    <tip>
-    <para>
-     You can select any storage location in the file system. This option can
-     also be used to save CA objects on a transport medium, such as a flash
-     disk. The <filename>/media</filename> directory generally holds any
-     type of drive except the hard disk of your system.
-    </para>
+    <para>出力先には、ファイルシステム内の任意の場所を選択することができます。必要であれば、たとえば証明書のオブジェクトを USB メモリなどに保存することもできます。このような可搬メディアの場合は、 <filename>/media</filename> ディレクトリ内からアクセスすることができます。</para>
    </tip>
   </sect2>
 
   <sect2 xml:id="sec.security.yast_ca.module.import">
-   <title>Importing Common Server Certificates</title>
-   <para>
-    If you have exported a server certificate with &yast; to your media
-    on an isolated CA management computer, you can import this certificate
-    on a server as a <emphasis>common server certificate</emphasis>. Do this
-    during installation or at a later point with &yast;.
-   </para>
+   <title>共通サーバ証明書のインポート</title>
+   <para>証明書の管理用として構成したコンピュータで、 &yast; を利用してサーバの証明書を可搬メディアにエクスポートしたあとは、そのメディアをサーバ側に接続して <emphasis>共通サーバ証明書</emphasis> として証明書をインポート (取り込む) することができます。この作業はインストール時でもインストール後でも &yast; で実施することができます。</para>
    <note>
-    <para>
-     You need one of the PKCS12 formats to import your certificate
-     successfully.
-    </para>
+    <para>なお、証明書を正しく取り込むには、 PKCS12 形式のいずれかを使用する必要があります。</para>
    </note>
-   <para>
-    The general server certificate is stored in
-    <command>/etc/ssl/servercerts</command> and can be used there by any
-    CA-supported service. When this certificate expires, it can easily be
-    replaced using the same mechanisms. To get things functioning with the
-    replaced certificate, restart the participating services.
-   </para>
+   <para>一般的なサーバ証明書は <command>/etc/ssl/servercerts</command> 内に保存され、証明機関の仕組みに対応した任意のサービスから使用することができます。この証明書の有効期間が切れた場合は、同じ手順で簡単に置き換えることができます。なお、証明書の置き換えを行なった後は、対応するサービスを再起動するとよいでしょう。</para>
    <tip>
-    <para>
-     If you select <guimenu>Import</guimenu> here, you can select the source
-     in the file system. This option can also be used to import certificates
-     from removable media, such as a flash disk.
-    </para>
+    <para>下記の手順で <guimenu>インポート</guimenu> を押すと、ファイルシステム内からファイルを選択してインポートすることになります。この仕組みでは、 USB メモリなどの可搬デバイスも使用することができます。</para>
    </tip>
-   <para>
-    To import a common server certificate, do the following:
-   </para>
+   <para>共通サーバ証明書をインポートするには、下記の手順で行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Start &yast; and open <guimenu>Common Server Certificate</guimenu>
-      under <guimenu>Security and Users</guimenu>
-     </para>
+     <para>&yast; を起動して <guimenu>セキュリティとユーザ</guimenu> 内にある <guimenu>汎用サーバ証明書</guimenu> を選択します。</para>
     </step>
     <step>
-     <para>
-      View the data for the current certificate in the description field
-      after &yast; has been started.
-     </para>
+     <para>&yast; が起動すると、現時点での証明書に関する情報が表示されます。</para>
     </step>
     <step>
-     <para>
-      Select <guimenu>Import</guimenu> and the certificate file.
-     </para>
+     <para><guimenu>インポート</guimenu> を押して、証明書のファイルを選択します。</para>
     </step>
     <step>
-     <para>
-      Enter the password and click <guimenu>Next</guimenu>. The certificate
-      is imported then displayed in the description field.
-     </para>
+     <para>パスワードを入力して <guimenu>次へ</guimenu> を押します。すると証明書が取り込まれ、新しい証明書の概要が表示されるようになります。</para>
     </step>
     <step>
-     <para>
-      Close &yast; with <guimenu>Finish</guimenu>.
-     </para>
+     <para>あとは <guimenu>完了</guimenu> を押して &yast; を閉じてください。</para>
     </step>
    </procedure>
   </sect2>
