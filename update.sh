@@ -2,7 +2,6 @@
 
 # This script requires:
 # * "msgmerge", "msginit" from gettext-tools package
-# * 
 
 LANGCODE=ja
 
@@ -14,20 +13,24 @@ do
   PO=$DIR/po/`basename $i`.$LANGCODE.po
   XML=$DIR/xml/`basename $i`
 
-  echo -n Updating POT: `basename $i`..
-  $DIR/xml_po.pl --xml2pot $i > $POT
-  echo done.
+  if [ "`basename $i`" != "common_legal.xml" ]; then
+    echo -n Updating POT: `basename $i`..
+    $DIR/xml_po.pl --xml2pot $i > $POT
+    echo done.
 
-  echo -n Updating PO: `basename $i`..
-  if [ -f $PO ]; then
-    msgmerge -U $PO $POT
+    echo -n Updating PO: `basename $i`..
+    if [ -f $PO ]; then
+      msgmerge -U $PO $POT
+    else
+      msginit -i $POT --no-translator -o $PO
+    fi
+    echo done.
+
+    echo -n Updating XML: `basename $i`..
+    $DIR/xml_po.pl --po2xml $i $PO > $XML
+    echo done.
   else
-    msginit -i $POT --no-translator -o $PO
+    echo Skipping common_legal.
   fi
-  echo done.
-
-  echo -n Updating XML: `basename $i`..
-  $DIR/xml_po.pl --po2xml $i $PO > $XML
-  echo done.
 done
 
