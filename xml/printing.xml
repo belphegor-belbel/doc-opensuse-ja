@@ -220,7 +220,7 @@ Resolution/Output Resolution: 150dpi 300dpi *600dpi</screen>
   <sect2 xml:id="sec.print.special.browsing">
    <title>ネットワークプリンタの参照</title>
    <para>CUPS サーバは、共有されているプリンタとその状態に関する情報を、ネットワークに対して定期的に提供します。クライアントはこの情報を元にして、たとえば印刷ダイアログ内のプリンタ情報を更新します。これを <quote>ブラウジング</quote> (参照) と呼びます。</para>
-   <para>CUPS サーバは、自身の印刷キューに関する情報をネットワーク側に提供する際、従来から用意されている CUPS ブラウジングプロトコルのほか、 Bonjour/DNS-SD も利用することができます。印刷キューに関する情報を参照できるようにするには、全てのクライアントで <systemitem class="daemon">cups-browsed</systemitem> サービスを動作させる必要があります。 <systemitem class="daemon">cups-browsed</systemitem> は既定では起動するように設定されていませんので、今すぐ起動するには <command>sudo systemctl start cups-browsed</command> を、システムの起動時に自動的に開始するように設定するには <command>sudo systemctl enable cups-browsed</command> を、全てのクライアントで実行してください。</para>
+   <para>CUPS サーバは、自身の印刷キューに関する情報をネットワーク側に提供する際、以前より用意されている CUPS ブラウジングプロトコルのほか、 Bonjour/DNS-SD も利用することができます。印刷キューに関する情報を参照できるようにするには、全てのクライアントで <systemitem class="daemon">cups-browsed</systemitem> サービスを動作させる必要があります。 <systemitem class="daemon">cups-browsed</systemitem> は既定では起動するように設定されていませんので、今すぐ起動するには <command>sudo systemctl start cups-browsed</command> を、システムの起動時に自動的に開始するように設定するには <command>sudo systemctl enable cups-browsed</command> を、全てのクライアントで実行してください。</para>
    <para><systemitem class="daemon">cups-browsed</systemitem> を開始しても印刷キューが現われない場合、 CUPS サーバが印刷キューを Bonjour/DNS-SD で情報公開しているものと思われます。この場合は、全てのクライアントで <systemitem class="resource">avahi</systemitem> パッケージをインストールし、 <command>sudo systemctl start avahi-daemon</command> を実行して関連するサービスを起動しておく必要があります。</para>
   </sect2>
 
@@ -337,7 +337,7 @@ printer: printing disabled</screen>
       <para arch="zseries" os="sles">&zseries; のイーサネットデバイスは、既定ではブロードキャストの受信を行なわないようになっています。</para>
       <para>下記のコマンドを実行して、 <replaceable>ホスト</replaceable> にある <command>lpd</command> (ポート <literal>631</literal> ) に接続できるかどうかを確認します:</para>
 <screen>&prompt.user;netcat -z <replaceable>ホスト</replaceable> 631 &amp;&amp; echo ok || echo failed</screen>
-      <para><command>cupsd</command> への接続が確立できない (<quote>failed</quote> と出力される) 場合は、プリンタ側で <command>cupsd</command> が正しく動作していないか、基本的なネットワークの問題であることが分かります。また、 <command>lpstat -h</command> <replaceable>ホスト</replaceable> -l -t のように実行すると、 <replaceable>ホスト</replaceable> にある全ての<command>cupsd</command> のキューに対して、おそらくは非常に長い状態情報が表示されます。これが問題なく出力されれば、 <command>cupsd</command> は問題なく動作していない、問い合わせを受け付けることができるようになっているものと考えられます。</para>
+      <para><command>cupsd</command> への接続が確立できない (<quote>failed</quote> と出力される) 場合は、プリンタ側で <command>cupsd</command> が正しく動作していないか、基本的なネットワークの問題であることが分かります。また、 <command>lpstat -h</command> <replaceable>ホスト</replaceable> -l -t のように実行すると、 <replaceable>ホスト</replaceable> にある全ての<command>cupsd</command> のキューに対して、 (おそらく非常に長い) 状態情報が表示されます。これが問題なく出力されれば、 <command>cupsd</command> は問題なく動作していない、問い合わせを受け付けることができるようになっているものと考えられます。</para>
       <para>次のコマンドは、 <replaceable>ホスト</replaceable> 内にある <replaceable>キュー</replaceable> に対して、改行文字 1 文字を含むだけの印刷ジョブを受け付けるかどうかを試しています。これで出力されるものは何もなく、単に空白のページが出力されるはずです。</para>
 <screen>&prompt.user;echo -en "\r" \
 | lp -d queue -h <replaceable>ホスト</replaceable></screen>
@@ -347,7 +347,7 @@ printer: printing disabled</screen>
      <term>ネットワークプリンタや印刷サーバ機のトラブルシューティング</term>
      <listitem>
       <para>印刷サーバ機内で動作しているスプーラは、複数の印刷ジョブを取り扱う必要があることから、場合によっては問題が発生することがあります。ただ、この問題は印刷サーバ機側の問題であることから、この問題を解決する方法はありません。ただし、印刷サーバ機に接続されているプリンタに TCP で直接アクセスして、スプーラを使用せずに印刷できる機器もあります。詳しくは <xref linkend="sec.print.net"/> をお読みください。</para>
-      <para>このような方法でアクセスする場合、印刷サーバ機はデータ転送の形態を変換する (TCP/IP ネットワークとローカルのプリンタ接続) だけのコンバータとして動作することになります。この方法を使用するには、印刷サーバ機どどのような TCP ポートを利用できるのかを調べる必要があります。プリンタが接続されていて印刷サーバ機の電源が投入されている場合、 <systemitem>nmap</systemitem> パッケージ内にある<command>nmap</command> ユーティリティを使用することで、判断を行なうことができます。なお、実行にあたっては、印刷サーバ機の電源を投入してからしばらく待って実行してください。たとえば <command>nmap&nbsp;</command> <replaceable>IP アドレス</replaceable> のように実行すると、下記のような出力が現われます:</para>
+      <para>このような方法でアクセスする場合、印刷サーバ機はデータ転送の形態を変換する (TCP/IP ネットワークとローカルのプリンタ接続) だけのコンバータとして動作することになります。この方法を使用するには、印刷サーバ機側でどのような TCP ポートを利用できるのかを調べる必要があります。プリンタが接続されていて印刷サーバ機の電源が投入されている場合、 <systemitem>nmap</systemitem> パッケージ内にある<command>nmap</command> ユーティリティを使用することで、判断を行なうことができます。なお、実行にあたっては、印刷サーバ機の電源を投入してからしばらく待って実行してください。たとえば <command>nmap&nbsp;</command> <replaceable>IP アドレス</replaceable> のように実行すると、下記のような出力が現われます:</para>
 <screen>Port       State       Service
 23/tcp     open        telnet
 80/tcp     open        http

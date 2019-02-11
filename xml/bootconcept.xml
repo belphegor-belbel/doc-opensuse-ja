@@ -76,7 +76,7 @@
    </sect3>
    <sect3 xml:id="sec.boot.proc.initialization.zsystems" arch="zseries">
     <title>IBM &zseries; における初期化とブートローダの処理フェーズ</title>
-    <para>IBM &zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなければなりません。 <command>zipl</command> では様々なファイルシステムを読み込むことができますが、 &slea; の既定のファイルシステム (btrfs) やスナップしょっふからの起動には対応していません。そのため、 &productname; は 2 ステージから構成される起動処理を使用して、起動時から btrfs に対応できるようにしています:</para>
+    <para>IBM &zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなければなりません。 <command>zipl</command> では様々なファイルシステムを読み込むことができますが、 &slea; の既定のファイルシステム (btrfs) やスナップショットからの起動には対応していません。そのため、 &productname; は 2 ステージから構成される起動処理を使用して、起動時から btrfs に対応できるようにしています:</para>
     <procedure>
      <step>
       <para><command>zipl</command> は ext2 でフォーマットされたパーティション <filename>/boot/zipl</filename> から起動します。このパーティションには最小限のカーネルのほか、メモリに読み込まれる initramfs が含まれています。 initramfs には btrfs のドライバなどと共に &grub; が含まれ、これによってそのカーネルに <literal>initgrub</literal> を渡して &grub; を起動します。</para>
@@ -97,7 +97,7 @@
     <title><systemitem>initramfs</systemitem> ファイル</title>
     <para><systemitem>initramfs</systemitem> (INITial RAM File System; 初期 RAM ファイルシステム) は小さな cpio アーカイブで、カーネルが RAM ディスク内に読み込むことができる仕組みです。これは <filename>/boot/initrd</filename> に配置されるもので、 <command>dracut</command> というツールで作成することができます (詳しくは <command>man 8 dracut</command> をお読みください) 。</para>
     <para><systemitem>initramfs</systemitem> は最小限の Linux 環境を提供するもので、実際のルートファイルシステムをマウントするまでの間に、プログラムを実行する仕組みを提供します。この最小限の Linux 環境は BIOS や UEFI のルーチンからメモリ内に読み込まれ、メモリ以外には特定のハードウエア要件を持ちません。また、 <systemitem>initramfs</systemitem> には <systemitem>init</systemitem> と呼ばれる実行ファイルが存在していなければなりません。このプログラムはルートファイルシステムの &systemd; デーモンを読み込んで、続きの起動処理を実行させる役割を持ちます。</para>
-    <para>ルートファイルシステムがマウントできるようになり、オペレーティングシステムが開始できるようになるには、カーネルはルートファイルシステムの存在するデバイスにアクセスするためのドライバを読み込む必要があります。これらのドライバは特殊なハードディスク向けのドライバであったり、ネットワーク経由でアクセスする場合はネットワークドライバである場合もあります。ルートファイルシステムに対して必要なモジュールは、 <systemitem>initramfs</systemitem> 内にある <systemitem>init</systemitem> が読み込みます。必要なモジュールが読み込まれると、 <systemitem class="service">udev</systemitem> が <systemitem>initramfs</systemitem> に対して必要なデバイスを提供するようになります。その後ルートファイルシステムの切り替えが行なわれ、再度デバイスの再生成が行なわれます。これは &systemd; のユニットである <filename>systemd-udev-trigger.service</filename> が行ないます。</para>
+    <para>ルートファイルシステムがマウントできるようになり、オペレーティングシステムが開始できるようになるには、カーネルはルートファイルシステムの存在するデバイスにアクセスするためのドライバを読み込む必要があります。これらのドライバは特殊なハードディスク向けのドライバであったり、ネットワーク経由でアクセスする場合はネットワークドライバであったりする場合もあります。ルートファイルシステムに対して必要なモジュールは、 <systemitem>initramfs</systemitem> 内にある <systemitem>init</systemitem> が読み込みます。必要なモジュールが読み込まれると、 <systemitem class="service">udev</systemitem> が <systemitem>initramfs</systemitem> に対して必要なデバイスを提供するようになります。その後ルートファイルシステムの切り替えが行なわれ、再度デバイスの生成が行なわれます。これは &systemd; のユニットである <filename>systemd-udev-trigger.service</filename> が行ないます。</para>
 
     <sect4 xml:id="sec.boot.initrd.regenerate">
      <title>initramfs の再生成</title>
