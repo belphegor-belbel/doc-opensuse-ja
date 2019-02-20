@@ -4,181 +4,99 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="cha.apparmor.commandline">
- <title>Building Profiles from the Command Line</title>
+ <title>コマンドラインからのプロファイル構築</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  &aareg; provides the user the ability to use a command line interface
-  rather than a graphical interface to manage and configure the system
-  security. Track the status of &aa; and create, delete, or modify
-  &aa; profiles using the &aa; command line tools.
- </para>
+    <para>&aareg; には、システムのセキュリティを管理するにあたって、グラフィカルなインターフェイスだけでなく、コマンドラインインターフェイスも用意されています。 &aa; のコマンドラインツールでは、 &aa; の状態確認のほか、プロファイルの作成や削除、修正などを行なうことができます。</para>
  <tip>
-  <title>Background Information</title>
-  <para>
-   Before starting to manage your profiles using the &aa; command line
-   tools, check out the general introduction to &aa; given in
-   <xref linkend="cha.apparmor.concept"/> and
-   <xref linkend="cha.apparmor.profiles"/>.
-  </para>
+  <title>背景となる情報について</title>
+  <para>&aa; のコマンドラインツールでプロファイルを管理し始める前に、まずは <xref linkend="cha.apparmor.concept"/> と <xref linkend="cha.apparmor.profiles"/> にある &aa; の一般的な情報をお読みください。</para>
  </tip>
  <sect1 xml:id="sec.apparmor.commandline.status">
-  <title>Checking the &aa; Status</title>
+  <title>&aa; の状態確認</title>
 
-  <para>
-   &aa; can be in any one of three states:
-  </para>
+  <para>&aa; は下記に示す 3 種類の状態のいずれかになります:</para>
 
   <variablelist>
    <varlistentry>
-    <term>Unloaded</term>
+    <term>未読み込み (Unloaded)</term>
     <listitem>
-     <para>
-      &aa; is not activated in the kernel.
-     </para>
+     <para>&aa; がカーネル内に読み込まれていない状態です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Running</term>
+    <term>動作中 (Running)</term>
     <listitem>
-     <para>
-      &aa; is activated in the kernel and is enforcing &aa; program
-      policies.
-     </para>
+     <para>&aa; がカーネル内に読み込まれていて、 &aa; がプログラムポリシーを強制している状態です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Stopped</term>
+    <term>停止済み (Stopped)</term>
     <listitem>
-     <para>
-      &aa; is activated in the kernel, but no policies are enforced.
-     </para>
+     <para>&aa; がカーネル内に読み込まれていますが、何もポリシーを適用していない状態です。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Detect the state of &aa; by inspecting
-   <filename>/sys/kernel/security/apparmor/profiles</filename>. If
-   <command>cat /sys/kernel/security/apparmor/profiles</command> reports a
-   list of profiles, &aa; is running. If it is empty and returns nothing,
-   &aa; is stopped. If the file does not exist, &aa; is unloaded.
-  </para>
+  <para><filename>/sys/kernel/security/apparmor/profiles</filename> ファイルに書かれた内容を読むことで、 &aa; の状態を検知することができます。 <command>cat /sys/kernel/security/apparmor/profiles</command> を実行すると、プロファイルの一覧と &aa; の動作状態が表示されます。中身が空であった場合、 &aa; は停止していることになります。また、ファイルが存在していない場合は、未読み込みの状態であることを示しています。</para>
 
-  <para>
-   Manage &aa; with <command>systemctl</command>. It lets you perform the
-   following operations:
-  </para>
+  <para>&aa; は <command>systemctl</command> コマンドで管理することができます。下記のとおり入力して実行することで、それぞれの処理を実行することができます:</para>
 
   <variablelist>
    <varlistentry>
-    <term><command>sudo systemctl start apparmor</command>
-    </term>
+    <term><command>sudo systemctl start apparmor</command></term>
     <listitem>
-     <para>
-      Behavior depends on the state of &aa;. If it is not activated,
-      <option>start</option> activates and starts it, putting it in the
-      running state. If it is stopped, <option>start</option> causes the
-      re-scan of &aa; profiles usually found in
-      <filename>/etc/apparmor.d</filename> and puts &aa; in the running
-      state. If &aa; is already running, <option>start</option> reports a
-      warning and takes no action.
-     </para>
+     <para>その時点での &aa; の状態に応じて動作が変わります。未読み込みの状態であった場合、 <option>start</option> コマンドを実行すると &aa; を読み込んで起動し、動作中の状態にします。停止済みの状態であった場合は、通常は <filename>/etc/apparmor.d</filename> ディレクトリ内にある &aa; プロファイルを読み込み直して、動作中の状態にします。既に &aa; が動作中であった場合は、警告メッセージを表示して何もしません。</para>
      <note>
-      <title>Already Running Processes</title>
-      <para>
-       Already running processes need to be restarted to apply the &aa;
-       profiles on them.
-      </para>
+      <title>既に動作中のプロセスについて</title>
+      <para>既に動作中のプロセスに対して &aa; のプロファイルを適用するには、それらを再起動する必要があります。</para>
      </note>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>sudo systemctl stop apparmor</command>
-    </term>
+    <term><command>sudo systemctl stop apparmor</command></term>
     <listitem>
-     <para>
-      Stops &aa; if it is running by removing all profiles from kernel
-      memory, effectively disabling all access controls, and putting &aa;
-      into the stopped state. If the &aa; is already stopped,
-      <option>stop</option> tries to unload the profiles again, but nothing
-      happens.
-     </para>
+     <para>&aa; が動作中であった場合は、すべてのプロファイルをカーネルのメモリから削除して、すべてのアクセス制御を無効化したあと、停止状態に移行します。 &aa; が既に停止していた場合も同様の処理を行なおうとしますが、特に何も起こりません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>sudo systemctl reload apparmor</command>
-    </term>
+    <term><command>sudo systemctl reload apparmor</command></term>
     <listitem>
-     <para>
-      Causes the &aa; module to re-scan the profiles in
-      <filename>/etc/apparmor.d</filename> without unconfining running
-      <remark>sknorr, 2014-08-26: "unconfining"? Sounds terrible. Would
-       "freeing" be an option?
-       tbazant, 2014-09-08: No, it's a used term, related to 'unconfined' state
-       </remark>
-      processes. Freshly created profiles are enforced and recently deleted
-      ones are removed from the <filename>/etc/apparmor.d</filename>
-      directory.
-     </para>
+     <para>既に動作中で制限を設定しているプロセスに影響を与えることなく、 &aa; のモジュールに対してプロファイルの再スキャンを求めます。 <remark>sknorr, 2014-08-26: "unconfining"? Sounds terrible. Would "freeing" be an option? tbazant, 2014-09-08: No, it's a used term, related to 'unconfined' state </remark> これにより、 <filename>/etc/apparmor.d</filename> ディレクトリ内にある新しいプロファイルが適用されるほか、削除されたプロファイルがあればメモリ内からも削除されます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 </sect1>
  <sect1 xml:id="sec.apparmor.commandline.build">
-  <title>Building &aa; Profiles</title>
+  <title>&aa; プロファイルの構築</title>
 
-  <para>
-   The &aa; module profile definitions are stored in the
-   <filename>/etc/apparmor.d</filename> directory as plain text files. For a
-   detailed description of the syntax of these files, refer to
-   <xref linkend="cha.apparmor.profiles"/>.
-  </para>
+  <para>&aa; のプロファイル定義は <filename>/etc/apparmor.d</filename> ディレクトリ内に存在していて、プロファイル自身はテキストファイルで記述されています。これらのファイルの書式について、詳しくは <xref linkend="cha.apparmor.profiles"/> をお読みください。</para>
 
-  <para>
-   All files in the <filename>/etc/apparmor.d</filename> directory are
-   interpreted as profiles and are loaded as such. Renaming files in that
-   directory is not an effective way of preventing profiles from being
-   loaded. You must remove profiles from this directory to prevent them from
-   being read and evaluated effectively, or call
-   <command>aa-disable</command> on the profile, which will create a
-   symbolic link in <filename>/etc/apparmor.d/disabled/</filename>.
-  </para>
+  <para><filename>/etc/apparmor.d</filename> ディレクトリ内にあるすべてのファイルはプロファイルとして扱われ、読み込まれます。ディレクトリ内でのファイル名の変更は、プロファイルを削除するにあたっては不適切です。特定のプロファイルを読み込まれないように設定したい場合は、このディレクトリからファイルを削除するか、プロファイルに対して <command>aa-disable</command> を実行してください。これにより、 <filename>/etc/apparmor.d/disabled/</filename> 内にシンボリックリンクが作成されます。</para>
 
-  <para>
-   You can use a text editor, such as <command>vi</command>, to access and
-   make changes to these profiles. The following sections contain detailed
-   steps for building profiles:
-  </para>
+  <para>プロファイルを読み書きしたい場合は、 <command>vi</command> のようなテキストエディタをお買いください。下記の章には、プロファイルを作成するための説明が書かれています:</para>
 
   <variablelist>
    <varlistentry>
-    <term>Adding or Creating &aa; Profiles</term>
+    <term>&aa; プロファイルの追加と作成</term>
     <listitem>
-     <para>
-      Refer to <xref linkend="sec.apparmor.commandline.add"/>
-     </para>
+     <para><xref linkend="sec.apparmor.commandline.add"/> をお読みください</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Editing &aa; Profiles</term>
+    <term>&aa; プロファイルの編集</term>
     <listitem>
-     <para>
-      Refer to <xref linkend="sec.apparmor.commandline.edit"/>
-     </para>
+     <para><xref linkend="sec.apparmor.commandline.edit"/> をお読みください</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Deleting &aa; Profiles</term>
+    <term>&aa; プロファイルの削除</term>
     <listitem>
-     <para>
-      Refer to
-      <xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.commandline.del"/>
-     </para>
+     <para><xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.commandline.del"/> をお読みください。</para>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -196,688 +114,289 @@
    -->
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.add">
-  <title>Adding or Creating an &aa; Profile</title>
+  <title>&aa; プロファイルの追加と作成</title>
 
-  <para>
-   To add or create an &aa; profile for an application, you can use a
-   systemic or stand-alone profiling method, depending on your needs. Learn
-   more about these two approaches in
-   <xref linkend="sec.apparmor.commandline.profiling"/>.
-  </para>
+  <para>特定のアプリケーションに対して &aa; のプロファイルを追加もしくは作成するにあたっては、一括プロファイル作成と単独プロファイル作成のいずれかの方式をとることができます。この 2 種類の方式について、詳しい説明は <xref linkend="sec.apparmor.commandline.profiling"/> をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.edit">
-  <title>Editing an &aa; Profile</title>
+  <title>&aa; プロファイルの編集</title>
 
-  <para>
-   The following steps describe the procedure for editing an &aa;
-   profile:
-  </para>
+  <para>&aa; のプロファイルを編集するには、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     If you are not currently logged in as &rootuser;, enter
-     <command>su</command> in a terminal window.
-    </para>
+    <para>&rootuser; でログインしていない場合は、端末ウインドウ内で <command>su</command> と入力して実行します。</para>
    </step>
    <step>
-    <para>
-     Enter the &rootuser; password when prompted.
-    </para>
+    <para>&rootuser; のパスワード入力を求められた場合は、そのパスワードを入力します。</para>
    </step>
    <step>
-    <para>
-     Go to the profile directory with <command>cd
-     /etc/apparmor.d/</command>.
-    </para>
+    <para><command>cd /etc/apparmor.d/</command> と入力して実行し、プロファイルのディレクトリに移動します。</para>
    </step>
    <step>
-    <para>
-     Enter <command>ls</command> to view all profiles currently installed.
-    </para>
+    <para><command>ls</command> と入力して実行すると、現在インストールされているすべてのプロファイルの一覧を表示することができます。</para>
    </step>
    <step>
-    <para>
-     Open the profile to edit in a text editor, such as vim.
-    </para>
+    <para>編集したいプロファイルをテキストエディタ (例: vim) で開きます。</para>
    </step>
    <step>
-    <para>
-     Make the necessary changes, then save the profile.
-    </para>
+    <para>必要な変更を行なったあと、ファイルを保存して終了します。</para>
    </step>
    <step>
-    <para>
-     Restart &aa; by entering <command>systemctl reload
-     apparmor</command> in a terminal window.
-    </para>
+    <para>端末ウインドウ内で <command>systemctl reload apparmor</command> と入力して実行し、 &aa; を再起動します。</para>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.unload">
-  <title>Unloading Unknown &aa; Profiles</title>
+  <title>不要な &aa; プロファイルの読み込み解除</title>
   <warning>
-   <title>Danger of Unloading Wanted Profiles</title>
-   <para>
-    <command>aa-remove-unknown</command> will unload all profiles that
-    are not stored in <filename>/etc/apparmor.d</filename>, for example
-    automatically generated LXD profiles. This may compromise the
-    security of the system. Use the <option>-n</option> parameter to
-    list all profiles that will be unloaded.
-   </para>
+   <title>不要な読み込み解除の危険性について</title>
+   <para><command>aa-remove-unknown</command> を実行すると、 <filename>/etc/apparmor.d</filename> ディレクトリ内に存在しないすべてのプロファイル (たとえば自動生成された LXD プロファイルなど) の読み込みが解除されます。これにより、システムのセキュリティが危険にさらされる場合があります。読み込みを解除する前に <option>-n</option> パラメータを付けて実行し、どのプロファイルの読み込みが解除されるのかを調べてから実行しておくことをお勧めします。</para>
   </warning>
-  <para>
-   To unload all profiles that are no longer in
-   <filename>/etc/apparmor.d/</filename> &aa; profiles, run:
-  </para>
+  <para><filename>/etc/apparmor.d/</filename> ディレクトリ内に存在していないすべての &aa; プロファイルについて、それらの読み込みを解除したい場合は、下記のように入力して実行します:</para>
   <screen>&prompt.sudo;<command>aa-remove-unknown</command></screen>
-  <para>
-   You can print a list of profiles that will be removed:
-  </para>
+  <para>読み込みが解除されるプロファイルの一覧を表示したい場合は、下記のようにします:</para>
   <screen>&prompt.sudo;<command>aa-remove-unknown -n</command></screen>
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.del">
-  <title>Deleting an &aa; Profile</title>
-  <para>
-   The following steps describe the procedure for deleting an &aa;
-   profile.
-  </para>
+  <title>&aa; プロファイルの削除</title>
+  <para>&aa; のプロファイルを削除するには、下記の手順を実施します:</para>
   <procedure>
    <step>
-    <para>
-     Remove the &aa; definition from the kernel:
-    </para>
-    <screen>&prompt.sudo;<command>apparmor_parser -R /etc/apparmor.d/<replaceable>PROFILE</replaceable></command></screen>
+    <para>まずはカーネルから &aa; の定義を削除します:</para>
+    <screen>&prompt.sudo;<command>apparmor_parser -R /etc/apparmor.d/<replaceable>プロファイルのファイル名</replaceable></command></screen>
    </step>
    <step>
-    <para>
-     Remove the definition file:
-    </para>
-    <screen>&prompt.sudo;<command>rm /etc/apparmor.d/<replaceable>PROFILE</replaceable></command>
-    &prompt.sudo;<command>rm /var/lib/apparmor/cache/<replaceable>PROFILE</replaceable></command></screen>
+    <para>プロファイルのファイルそのものを削除します:</para>
+    <screen>&prompt.sudo;<command>rm /etc/apparmor.d/<replaceable>プロファイルのファイル名</replaceable></command>
+    &prompt.sudo;<command>rm /var/lib/apparmor/cache/<replaceable>プロファイルのファイル名</replaceable></command></screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.profiling">
-  <title>Two Methods of Profiling</title>
+  <title>2 種類のプロファイル作成方法</title>
 
-  <para>
-   Given the syntax for &aa; profiles in
-   <xref xrefstyle="SectTitleOnPage" linkend="cha.apparmor.profiles"/>, you
-   could create profiles without using the tools. However, the effort
-   involved would be substantial. To avoid such a situation, use the &aa;
-   tools to automate the creation and refinement of profiles.
-  </para>
+  <para><xref xrefstyle="SectTitleOnPage" linkend="cha.apparmor.profiles"/> に &aa; のプロファイル文法に関する説明があるとおり、 &aa; ツールを使用せずにプロファイルを作成することもできます。しかしながら、何もない状態からプロファイルを作成するのは手間がかかります。そのため、 &aa; の各種ツールを利用して、プロファイルを自動作成したり、自動的に調整したりする機能を利用することをお勧めします。</para>
 
-  <para>
-   There are two ways to approach &aa; profile creation. Tools are
-   available for both methods.
-  </para>
+  <para>&aa; のプロファイルを作成するにあたっては、下記に示す 2 種類の方法があります。いずれの方法であっても、ツールを利用して行なうことができます。</para>
 
   <variablelist>
    <varlistentry>
-    <term>Stand-Alone Profiling</term>
+    <term>単独プロファイル作成</term>
     <listitem>
-     <para>
-      A method suitable for profiling small applications that have a finite
-      runtime, such as user client applications like mail clients. For more
-      information, refer to
-      <xref linkend="sec.apparmor.commandline.profiling.stand-alone"/>.
-     </para>
+     <para>電子メールクライアントなど、アプリケーション自体が比較的小規模で、かつ必要に応じて起動したり終了したりするようなものにお勧めです。詳しくは <xref linkend="sec.apparmor.commandline.profiling.stand-alone"/> をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Systemic Profiling</term>
+    <term>一括プロファイル作成</term>
     <listitem>
-     <para>
-      A method suitable for profiling many programs at once
-      and for profiling applications that may run for days, weeks, or
-      continuously across reboots, such as network server applications like
-      Web servers and mail servers. For more information, refer to
-      <xref linkend="sec.apparmor.commandline.profiling.systemic"/>.
-     </para>
+     <para>多数のプログラムに対してプロファイルを一括作成するような場合に適切であるほか、 Web サーバやメールサーバなどのように、常に動作し続け、システムを再起動した後にも、すぐに動作させる必要があるもののような場合にも適切です。詳しくは <xref linkend="sec.apparmor.commandline.profiling.systemic"/> をお読みください。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Automated profile development becomes more manageable with the &aa;
-   tools:
-  </para>
+  <para>プロファイルを自動生成することで、 &aa; のツールによる管理がよりやりやすくなります:</para>
 
   <procedure>
    <step>
-    <para>
-     Decide which profiling method suits your needs.
-    </para>
+    <para>まずは要件にあったプロファイル方法を選びます。</para>
    </step>
    <step>
-    <para>
-     Perform a static analysis. Run either <command>aa-genprof</command> or
-     <command>aa-autodep</command>, depending on the profiling method
-     chosen.
-    </para>
+    <para>静的な分析を行ないます。選択した方法にあわせて、 <command>aa-genprof</command> もしくは <command>aa-autodep</command> のいずれかを実行します。</para>
    </step>
    <step>
-    <para>
-     Enable dynamic learning. Activate learning mode for all profiled
-     programs.
-    </para>
+    <para>動的な学習を有効化します。プロファイルを作成したすべてのプログラムに対して、学習モードを有効化します。</para>
    </step>
   </procedure>
 
   <sect2 xml:id="sec.apparmor.commandline.profiling.stand-alone">
-   <title>Stand-Alone Profiling</title>
-   <para>
-    Stand-alone profile generation and improvement is managed by a program
-    called <command>aa-genprof</command>. This method is easy because
-    <command>aa-genprof</command> takes care of everything, but is limited
-    because it requires <command>aa-genprof</command> to run for the entire
-    duration of the test run of your program (you cannot reboot the machine
-    while you are still developing your profile).
-   </para>
-   <para>
-    To use <command>aa-genprof</command> for the stand-alone method of
-    profiling, refer to
-    <xref linkend="sec.apparmor.commandline.profiling.summary.genprof"/>.
-   </para>
+   <title>単独プロファイル作成</title>
+   <para>単独でプロファイルを作成して改善していく場合は、 <command>aa-genprof</command> と呼ばれるプログラムを利用します。この方法では、 <command>aa-genprof</command> が様々な作業を代行してもらえるため、作業が簡単になる一方、プログラムを起動してから終了するまでの間、 <command>aa-genprof</command> を実行し続けなければならない、という制限が発生します (つまり、プロファイルの作成中はマシンの再起動を行なうこともできなくなります) 。</para>
+   <para>単独プロファイル作成で <command>aa-genprof</command> を使用する場合は、 <xref linkend="sec.apparmor.commandline.profiling.summary.genprof"/> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.apparmor.commandline.profiling.systemic">
-   <title>Systemic Profiling</title>
-   <para>
-    This method is called <emphasis>systemic profiling</emphasis> because it
-    updates all of the profiles on the system at once, rather than focusing
-    on the one or few targeted by <command>aa-genprof</command> or
-    stand-alone profiling. With systemic profiling, profile construction and
-    improvement are somewhat less automated, but more flexible. This method
-    is suitable for profiling long-running applications whose behavior
-    continues after rebooting, or many programs at once.
-   </para>
-   <para>
-    Build an &aa; profile for a group of applications as follows:
-   </para>
+   <title>一括プロファイル作成</title>
+   <para>この方法は、 <command>aa-genprof</command> で行なう単独 (もしくは少数) のプロファイル作成とは異なり、システム内にある複数のプロファイルを一括で更新することから、 <emphasis>一括プロファイル作成</emphasis> と呼ばれています。一括プロファイル作成ではプロファイルの構築と改善を自動化することができず、手作業が発生しますが、より柔軟に対応することができます。この方法は、システムが再起動しても動作し続ける長期稼働型のアプリケーションや、多数のプログラムに対して一括でプロファイルを作成したい場合に便利です。</para>
+   <para>一括で &aa; のプロファイルを作成するには、下記の手順で行ないます:</para>
    <procedure>
     <step>
-     <para>
-      Create profiles for the individual programs that make up your
-      application.
-     </para>
-     <para>
-      Although this approach is systemic, &aa; only monitors those
-      programs with profiles and their children. To get &aa; to consider
-      a program, you must at least have <command>aa-autodep</command> create
-      an approximate profile for it. To create this approximate profile,
-      refer to
-      <xref linkend="sec.apparmor.commandline.profiling.summary.autodep"/>.
-     </para>
+     <para>まずはお使いのアプリケーションの各プログラムに対して、プロファイルを作成します。</para>
+     <para>この方式を使用する際には、あらかじめプログラムに対する &aa; のプロファイルを作成しておかなければなりません。これは、 &aa; がプロファイルのあるプログラムのみを監視するためです。これに対応させるために、 <command>aa-autodep</command> を利用して、プログラムに対する近似プロファイルを作成してください。詳しくは <xref linkend="sec.apparmor.commandline.profiling.summary.autodep"/> をお読みください。</para>
     </step>
     <step>
-     <para>
-      Put relevant profiles into learning or complain mode.
-     </para>
-     <para>
-      Activate learning or complain mode for all profiled programs by
-      entering
-     </para>
+     <para>対応するプロファイルを学習 (不平) モードに設定します。</para>
+     <para>プロファイルの存在するすべてのプログラムに対して、プロファイルを学習 (不平) モードに切り替えたい場合は、 <!-- NOTE: this sentence is from next paragraph -->端末内で &rootuser; になり、 <!-- NOTE: end --> 下記のように実行します:</para>
 <screen>&prompt.sudo;aa-complain /etc/apparmor.d/*</screen>
-     <para>
-      in a terminal window while logged in as &rootuser;. This
-      functionality is also available through the &yast; Profile Mode
-      module, described in
-      <xref linkend="sec.apparmor.yast.manage.profmodes"/>.
-     </para>
-     <para>
-      When in learning mode, access requests are not blocked, even if the
-      profile dictates that they should be. This enables you to run through
-      several tests (as shown in
-      <xref linkend="st.apparmor.commandline.profiling.systemic.exec"/>) and
-      learn the access needs of the program so it runs properly. With this
-      information, you can decide how secure to make the profile.
-     </para>
-     <para>
-      Refer to
-      <xref linkend="sec.apparmor.commandline.profiling.summary.complain"/>
-      for more detailed instructions for using learning or complain mode.
-     </para>
+     <para>この機能は、 &yast; のプロファイルモジュールでも設定することができます。詳しくは <xref linkend="sec.apparmor.yast.manage.profmodes"/> をお読みください。</para>
+     <para>学習モードの場合、プロファイル側で明示的に禁止されている場合であっても、実際にアクセス制限が発動されることはありません。これにより、<xref linkend="st.apparmor.commandline.profiling.systemic.exec"/> で示しているとおり、様々なテストを実施して、プログラムにとって必要なアクセス権を正しく検出することができるようになります。また、この情報を利用することで、プロファイル内でどこまでの許可を与えればよいのかがわかるようにもなります。</para>
+     <para>学習 (不平) モードへの切り替えについて、詳しくは <xref linkend="sec.apparmor.commandline.profiling.summary.complain"/> をお読みください。</para>
     </step>
     <step xml:id="st.apparmor.commandline.profiling.systemic.exec">
-     <para>
-      Exercise your application.
-     </para>
-     <para>
-      Run your application and exercise its functionality. How much to
-      exercise the program is up to you, but you need the program to access
-      each file representing its access needs. Because the execution is not
-      being supervised by <command>aa-genprof</command>, this step can go on
-      for days or weeks and can span complete system reboots.
-     </para>
+     <para>対象のアプリケーションを様々にテストします。</para>
+     <para>アプリケーション内にある様々な機能を動作させて試します。どれだけプログラムを試せばよいのかはプログラム次第ですが、少なくともプログラム側からアクセスする必要のあるファイルに対して、一通りアクセスするようにしてください。なお、処理は <command>aa-genprof</command> の監視下で動作しているわけではありませんので、何日も何週間も動作させたままでかまいませんし、システムを再起動してもかまいません。</para>
     </step>
     <step xml:id="st.apparmor.commandline.profiling.systemic.log">
-     <para>
-      Analyze the log.
-     </para>
-     <para>
-      In systemic profiling, run <command>aa-logprof</command> directly
-      instead of letting <command>aa-genprof</command> run it (as in
-      stand-alone profiling). The general form of
-      <command>aa-logprof</command> is:
-     </para>
-<screen>&prompt.sudo;aa-logprof [ -d <replaceable>/path/to/profiles</replaceable> ] [ -f <replaceable>/path/to/logfile</replaceable> ]</screen>
-     <para>
-      Refer to
-      <xref linkend="sec.apparmor.commandline.profiling.summary.logprof"/>
-      for more information about using <command>aa-logprof</command>.
-     </para>
+     <para>ログを分析します。</para>
+     <para>一括プロファイル作成では、単独プロファイル時のように <command>aa-genprof</command> から <command>aa-logprof</command> を実行するのではなく、 <command>aa-logprof</command> を直接実行します。 <command>aa-logprof</command> は下記のように入力して実行します:</para>
+<screen>&prompt.sudo;aa-logprof [ -d <replaceable>プロファイルのパス</replaceable> ] [ -f <replaceable>/ログファイルのパス</replaceable> ]</screen>
+     <para><command>aa-logprof</command> の使用方法について、詳しくは <xref linkend="sec.apparmor.commandline.profiling.summary.logprof"/> をお読みください。</para>
     </step>
     <step>
-     <para>
-      Repeat
-      <xref linkend="st.apparmor.commandline.profiling.systemic.exec"/> and
-      <xref linkend="st.apparmor.commandline.profiling.systemic.log"/>.
-     </para>
-     <para>
-      This generates optimal profiles. An iterative approach captures
-      smaller data sets that can be trained and reloaded into the policy
-      engine. Subsequent iterations generate fewer messages and run faster.
-     </para>
+     <para><xref linkend="st.apparmor.commandline.profiling.systemic.exec"/> と <xref linkend="st.apparmor.commandline.profiling.systemic.log"/> を繰り返し実施します。</para>
+     <para>これにより、最適なプロファイルを作成することができるようになります。このように繰り返し実施することで、分析対象のログファイルを小さくすることができますので、より素早くプロファイルに反映できるようになります。また、繰り返すたびにログの出力も減るはずですので、処理も高速化されます。</para>
     </step>
     <step>
-     <para>
-      Edit the profiles.
-     </para>
-     <para>
-      You should review the profiles that have been generated. You
-      can open and edit the profiles in
-      <filename>/etc/apparmor.d/</filename> using a text editor.
-     </para>
+     <para>プロファイルを編集します。</para>
+     <para>生成されたプロファイルの内容を確認します。具体的には、テキストエディタなどで <filename>/etc/apparmor.d/</filename> ディレクトリ内のファイルを開いて、必要であれば編集を行ないます。</para>
     </step>
     <step>
-     <para>
-      Return to enforce mode.
-     </para>
-     <para>
-      This is when the system goes back to enforcing the rules of the
-      profiles, not only logging information. This can be done manually by
-      removing the <literal>flags=(complain)</literal> text from the
-<!-- could also be a symbolic link in /etc/apparmor.d/force-complain/ -->
-      profiles or automatically by using the <command>aa-enforce</command>
-      command, which works identically to the <command>aa-complain</command>
-      command, except it sets the profiles to enforce mode. This
-      functionality is also available through the &yast; Profile Mode
-      module, described in
-      <xref linkend="sec.apparmor.yast.manage.profmodes"/>.
-     </para>
-     <para>
-      To ensure that all profiles are taken out of complain mode and put
-      into enforce mode, enter <command>aa-enforce
-      /etc/apparmor.d/*</command>.
-     </para>
+     <para>強制モードに戻します。</para>
+     <para>強制モードに戻すことで、プロファイルのルールに対して、その違反を記録するだけでなく、違反を明示的に禁止することができるようになります。この作業は、プロファイルをテキストエディタなどで開いて、 <literal>flags=(complain)</literal> と書かれた箇所を削除して保存するか、もしくは <command>aa-enforce</command> コマンドを使用することで行なうことができます (<command>aa-enforce</command> コマンドは、<command>aa-complain</command> と同じように使用することができるもので、強制モードに移行させることができます) 。また、この作業は &yast; のプロファイルモジュールでも実施することができます。詳しくは <xref linkend="sec.apparmor.yast.manage.profmodes"/> をお読みください。</para>
+     <para>すべてのプロファイルを不平モードから強制モードに移行させたい場合は、 <command>aa-enforce /etc/apparmor.d/*</command> と入力して実行します。</para>
     </step>
     <step>
-     <para>
-      Re-scan all profiles.
-     </para>
-     <para>
-      To have &aa; re-scan all of the profiles and change the enforcement
-      mode in the kernel, enter <command>systemctl reload
-      apparmor</command>.
-     </para>
+     <para>再度すべてのプロファイルをスキャンします。</para>
+     <para>&aa; に対してすべてのプロファイルを再スキャンさせ、カーネル内を強制モードに変更するには、 <command>systemctl reload apparmor</command> と入力して実行します。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.apparmor.commandline.profiling.summary">
-   <title>Summary of Profiling Tools</title>
-   <para>
-    All of the &aa; profiling utilities are provided by the
-    <systemitem>apparmor-utils</systemitem> RPM package and are stored in
-    <filename>/usr/sbin</filename>. Each tool has a different purpose.
-   </para>
+   <title>プロファイル作成ツールの概要</title>
+   <para>&aa; におけるプロファイルユーティリティは、 <systemitem>apparmor-utils</systemitem> パッケージ内にすべて含まれていて、 <filename>/usr/sbin</filename> 内にインストールされます。それぞれのツールの概要は下記のとおりです。</para>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.autodep">
-    <title>aa-autodep&mdash;Creating Approximate Profiles</title>
-    <para>
-     This creates an approximate profile for the program or application
-     selected. You can generate approximate profiles for binary executables
-     and interpreted script programs. The resulting profile is called
-     <quote>approximate</quote> because it does not necessarily contain all
-     of the profile entries that the program needs to be properly confined
-     by &aa;. The minimum <command>aa-autodep</command> approximate
-     profile has, at minimum, a base include directive, which contains basic
-     profile entries needed by most programs. For certain types of programs,
-     <command>aa-autodep</command> generates a more expanded profile. The
-     profile is generated by recursively calling <command>ldd(1)</command>
-     on the executables listed on the command line.
-    </para>
-    <para>
-     To generate an approximate profile, use the
-     <command>aa-autodep</command> program. The program argument can be
-     either the simple name of the program, which
-     <command>aa-autodep</command> finds by searching your shell's path
-     variable, or it can be a fully qualified path. The program itself can
-     be of any type (ELF binary, shell script, Perl script, etc.).
-     <command>aa-autodep</command> generates an approximate profile to
-     improve through the dynamic profiling that follows.
-    </para>
-    <para>
-     The resulting approximate profile is written to the
-     <filename>/etc/apparmor.d</filename> directory using the &aa;
-     profile naming convention of naming the profile after the absolute path
-     of the program, replacing the forward slash (<literal>/</literal>)
-     characters in the path with period (<literal>.</literal>) characters.
-     The general syntax of <command>aa-autodep</command> is to enter the
-     following in a terminal window:
-    </para>
-<screen>&prompt.sudo;aa-autodep [ -d <replaceable>/PATH/TO/PROFILES</replaceable> ] [<replaceable>PROGRAM1</replaceable> <replaceable>PROGRAM2</replaceable>...]</screen>
-    <para>
-     If you do not enter the program name or names, you are prompted for
-     them. <replaceable>/path/to/profiles</replaceable> overrides the
-     default location of <filename>/etc/apparmor.d</filename>, should you
-     keep profiles in a location other than the default.
-    </para>
-    <para>
-     To begin profiling, you must create profiles for each main executable
-     service that is part of your application (anything that might start
-     without being a child of another program that already has a profile).
-     Finding all such programs depends on the application in question. Here
-     are several strategies for finding such programs:
-    </para>
+    <title>aa-autodep: 近似プロファイルの作成</title>
+    <para>このプログラムは、選択したプログラムやアプリケーションに対応する、近似プロファイルを作成するツールです。バイナリ実行ファイルやインタプリタ型のスクリプトプログラムに対応しています。生成されたプロファイルは、 &aa; で適切に制限を設定するにあたって、完全なものではないことから、 <quote>近似</quote> プロファイルと呼ばれます。 <command>aa-autodep</command> で生成される近似プロファイルには、ほとんどのプログラムで必要な項目を列挙した、基本的な include ディレクティブのみが含まれる最小限のプロファイルとなります。また、特定の種類のプログラムであれば、 <command>aa-autodep</command> はさらに詳しいプロファイルを生成します。コマンドラインで指定したプログラムに対して <command>ldd(1)</command> を再帰的に呼び出し、プロファイルを生成しようとします。</para>
+    <para>近似プロファイルを生成するには <command>aa-autodep</command> プログラムを使用します。パラメータとしてプログラム名を単純に指定した場合は、 <command>aa-autodep</command> がシェルの PATH 環境変数を展開してプログラムを探します。フルパスを指定してもかまいません。また、プログラムそれ自身は任意のものでかまいません (ELF バイナリであっても、シェルや Perl のスクリプトであってもかまいません) 。 <command>aa-autodep</command> は、後続の動的プロファイル作成で改善を行なうための、ベースとなる近似プロファイルを生成します。</para>
+    <para>生成された近似プロファイルは、 <filename>/etc/apparmor.d</filename> ディレクトリ内に、 &aa; のプロファイル命名規約に従って出力されます。具体的には、スラッシュ ( <literal>/</literal> ) をピリオド  ( <literal>.</literal> ) に置き換えたファイル名になります。 <command>aa-autodep</command> のコマンドの書式は下記のとおりです:</para>
+<screen>&prompt.sudo;aa-autodep [ -d <replaceable>プロファイルのパス</replaceable> ] [<replaceable>プログラム_1</replaceable> <replaceable>プログラム_2</replaceable>...]</screen>
+    <para>プログラム名を入力しない場合は、入力を求められます。また、 <replaceable>プロファイルのパス</replaceable> を指定した場合は、既定のプロファイル保存先である <filename>/etc/apparmor.d</filename> を変更し、既定の場所以外にプロファイルを保存することができます。</para>
+    <para>プロファイル作成を開始するにあたっては、まずお使いのアプリケーションを構成するメインの実行ファイル (プロファイルが存在しておらず、他のプログラムから呼び出されることのない実行ファイル) に対して、プロファイルを作成しなければなりません。このような条件に該当するプログラムを、お使いのアプリケーション内ですべて見つけてから、プロファイルを作成してください。このようなプログラムを見つける方法には、下記のような方法があります:</para>
     <variablelist>
      <varlistentry>
-      <term>Directories</term>
+      <term>ディレクトリ</term>
       <listitem>
-       <para>
-        If all the programs to profile are in one directory and there are no
-        other programs in that directory, the simple command
-        <command>aa-autodep</command>
-        <replaceable>/path/to/your/programs/*</replaceable> creates basic
-        profiles for all programs in that directory.
-       </para>
+       <para>プロファイルを作成すべきプログラムが特定の 1 つのディレクトリ内にのみ存在し、それ以外には存在しない場合であれば、 <command>aa-autodep</command> <replaceable>プログラムのパス/*</replaceable> のように実行することで、そのディレクトリ内にあるすべてのプログラムに対して、近似プロファイルを作成することができます。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>pstree -p</term>
       <listitem>
-       <para>
-        You can run your application and use the standard Linux
-        <command>pstree</command> command to find all processes running.
-        Then manually hunt down the location of these programs and run the
-        <command>aa-autodep</command> for each one. If the programs are in
-        your path, <command>aa-autodep</command> finds them for you. If they
-        are not in your path, the standard Linux command
-        <command>find</command> might be helpful in finding your programs.
-        Execute <command>find / -name '</command>
-        <replaceable>MY_APPLICATION</replaceable>' -print to determine an
-        application's path (<replaceable>MY_APPLICATION</replaceable> being
-        an example application). You may use wild cards if appropriate.
-       </para>
+       <para>アプリケーションを起動したあと、標準的な Linux コマンドである <command>pstree</command> を使用することで、動作中のすべてのプロセスを取得することができます。あとはプログラムがどこに配置されているのかを突き止めて、それぞれに対して <command>aa-autodep</command> を実行します。なお、プログラムがお使いのパス内に存在している状態であれば、 <command>aa-autodep</command> を実行するだけで、実際のコマンドパスを自動的に検索させることができます。パス内に存在していない場合は、標準的な Linux コマンドである <command>find</command> を使用して、プログラムパスを探してください。たとえば <command>find / -name '</command> <replaceable>アプリケーション名</replaceable> ' -print のように実行することで、アプリケーションのパスを取得することができます。また、必要であればワイルドカードを使用してもかまいません。</para>
       </listitem>
      </varlistentry>
     </variablelist>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.complain">
-    <title>aa-complain&mdash;Entering Complain or Learning Mode</title>
-    <para>
-     The complain or learning mode tool (<command>aa-complain</command>)
-     detects violations of &aa; profile rules, such as the profiled
-     program accessing files not permitted by the profile. The violations
-     are permitted, but also logged. To improve the profile, turn complain
-     mode on, run the program through a suite of tests to generate log
-     events that characterize the program's access needs, then postprocess
-     the log with the &aa; tools to transform log events into improved
-     profiles.
-    </para>
-    <para>
-     Manually activating complain mode (using the command line) adds a flag
-     to the top of the profile so that <literal>/bin/foo</literal> becomes
-     <literal>/bin/foo flags=(complain)</literal>. To use complain mode,
-<!-- or create a symbolic link in force-complain -->
-     open a terminal window and enter one of the following lines as
-     &rootuser;:
-    </para>
+    <title>aa-complain: 不平モード (学習モード) への突入</title>
+    <para>不平モード (学習モード) ツール ( <command>aa-complain</command> ) は、指定した &aa; のプロファイルルールのモードを変更するツールです。不平モードに設定したプロファイルに対しては、ルールへの違反が許容されるものの、ログに記録されるようになります。これはプロファイルを改善していくための仕組みで、いったん不平モードを設定した後、さまざまなプログラム処理を実施して、プログラムのアクセス要件をログに記録させて、そのログを元にプロファイルを改善する流れを取ります。</para>
+    <para>コマンドラインから不平モードを手作業で有効化すると、プロファイルの冒頭にフラグを設定し、 <literal>/bin/foo</literal> のような項目が <literal>/bin/foo flags=(complain)</literal> のようになります。不平モードを使用するには、 <!-- or create a symbolic link in force-complain --> 端末ウインドウを開いて、 &rootuser; で下記のように入力して実行します:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       If the example program (<replaceable>PROGRAM1</replaceable>) is in
-       your path, use:
-      </para>
-<screen>&prompt.sudo;aa-complain [<replaceable>PROGRAM1</replaceable> <replaceable>PROGRAM2</replaceable> ...]</screen>
+      <para>プログラム ( <replaceable>プログラム_1</replaceable> ) がパス内に存在する場合は、下記のように実行します:</para>
+<screen>&prompt.sudo;aa-complain [<replaceable>プログラム_1</replaceable> <replaceable>プログラム_2</replaceable> ...]</screen>
      </listitem>
      <listitem>
-      <para>
-       If the program is not in your path, specify the entire path as
-       follows:
-      </para>
-<screen>&prompt.sudo;aa-complain /sbin/<replaceable>PROGRAM1</replaceable></screen>
+      <para>プログラムがパス内に存在しない場合は、下記のようにフルパスで指定します:</para>
+<screen>&prompt.sudo;aa-complain /sbin/<replaceable>プログラム_1</replaceable></screen>
      </listitem>
      <listitem>
-      <para>
-       If the profiles are not in <filename>/etc/apparmor.d</filename>, use
-       the following to override the default location:
-      </para>
-<screen>&prompt.sudo;aa-complain <replaceable>/path/to/profiles/</replaceable><replaceable>PROGRAM1</replaceable></screen>
+      <para>また、プロファイルが <filename>/etc/apparmor.d</filename> 内に存在しない場合は、下記のように配置場所を指定します:</para>
+<screen>&prompt.sudo;aa-complain <replaceable>プロファイルのパス</replaceable><replaceable>プログラム_1</replaceable></screen>
      </listitem>
      <listitem>
-      <para>
-       Specify the profile for <replaceable>/sbin/program1</replaceable> as
-       follows:
-      </para>
-<screen>&prompt.sudo;aa-complain /etc/apparmor.d/sbin.<replaceable>PROGRAM1</replaceable></screen>
+      <para><replaceable>/sbin/program1</replaceable> のプロファイルを指定したい場合は、下記のように入力して実行します:</para>
+<screen>&prompt.sudo;aa-complain /etc/apparmor.d/sbin.<replaceable>プログラム_1</replaceable></screen>
      </listitem>
     </itemizedlist>
-    <para>
-     Each of the above commands activates the complain mode for the profiles
-     or programs listed. If the program name does not include its entire
-     path, <command>aa-complain</command> searches <envar>$PATH</envar> for
-     the program. For example, <command>aa-complain /usr/sbin/*</command>
-     finds profiles associated with all of the programs in
-     <filename>/usr/sbin</filename> and puts them into complain mode.
-     <command>aa-complain /etc/apparmor.d/*</command> puts all of the
-     profiles in <filename>/etc/apparmor.d</filename> into complain mode.
-    </para>
+    <para>上述のコマンドはいずれも、指定したプロファイルやプログラムを不平モードに切り替える処理を行ないます。プログラムの指定の際、これをフルパスで指定しないと、 <command>aa-complain</command> は <envar>$PATH</envar> 内を検索して、プログラムの場所を判断します。たとえば <command>aa-complain /usr/sbin/*</command> のように入力して実行すると、 <filename>/usr/sbin</filename> 内に存在するすべてのプログラムに対して、対応するプロファイルを検索し、それらすべてを不平モードに設定します。また、 <command>aa-complain /etc/apparmor.d/*</command> のように入力して実行すると、 <filename>/etc/apparmor.d</filename> 内にあるすべてのプロファイルを不平モードに切り替えます。</para>
     <tip>
-     <title>Toggling Profile Mode with &yast;</title>
-     <para>
-      &yast; offers a graphical front-end for toggling complain and
-      enforce mode. See <xref linkend="sec.apparmor.yast.manage.profmodes"/>
-      for information.
-     </para>
+     <title>&yast; を利用したプロファイルの切り替えについて</title>
+     <para>&yast; には、不平モードと強制モードを切り替えることのできるグラフィカルなフロントエンドが用意されています。詳しくは <xref linkend="sec.apparmor.yast.manage.profmodes"/> をお読みください。</para>
     </tip>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.decode">
-    <title>aa-decode&mdash;Decoding Hex-encoded Strings in &aa; Log Files</title>
-    <para>
-     <command>aa-decode</command> will decode hex-encoded strings in the
-     &aa; log output. It can also process the audit log on standard
-     input, convert any hex-encoded &aa; log entries, and display them on
-     standard output.
-    </para>
+    <title>aa-decode: &aa; ログファイル内にある 16 進数にエンコードされた文字列のデコード</title>
+    <para><command>aa-decode</command> は、 &aa; のログ出力内に存在する 16 進数で書かれた文字列をデコードすることができます。標準入力から監査ログを入力させることもできますし、 &aa; のログ内にある 16 進数の文字列をデコードして、標準出力に書き出すこともできます。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.disable">
-    <title>aa-disable&mdash;Disabling an &aa; Security Profile</title>
-    <para>
-     Use <command>aa-disable</command> to disable the enforcement mode for
-     one or more &aa; profiles. This command will unload the profile from
-     the kernel, and prevent the profile from being loaded on &aa;
-     start-up. Use <command>aa-enforce</command> or
-     <command>aa-complain</command> utilities to change this behavior.
-    </para>
+    <title>aa-disable: &aa; セキュリティプロファイルの無効化</title>
+    <para><command>aa-disable</command> コマンドは、 1 つもしくは複数の &aa; プロファイルの強制モードを無効化するために使用します。このコマンドを実行すると、カーネルからプロファイルの読み込みを解除して開放し、 &aa; の起動時にもプロファイルが読み込まれないようにします。この動作を変更したい場合は、 <command>aa-enforce</command> もしくは <command>aa-complain</command> の各ツールをお使いください。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.easyprof">
-    <title>aa-easyprof&mdash;Easy Profile Generation</title>
-    <para>
-     <command>aa-easyprof</command> provides an easy-to-use interface for
-     &aa; profile generation. <command>aa-easyprof</command> supports the
-     use of templates and profile groups to quickly profile an application.
-     While <command>aa-easyprof</command> can help with profile generation,
-     its utility is dependent on the quality of the templates, profile
-     groups and abstractions used. Also, this tool may create a profile that
-     is less restricted than when creating a profile manually or with
-     <command>aa-genprof</command> and <command>aa-logprof</command>.
-    </para>
-    <para>
-     For more information, see the man page of
-     <command>aa-easyprof</command> (8).
-    </para>
+    <title>aa-easyprof: 簡易プロファイル生成</title>
+    <para><command>aa-easyprof</command> は &aa; のプロファイル生成に対して、簡易的なインターフェイスを提供する仕組みです。 <command>aa-easyprof</command> ではテンプレート (雛形) やグループ化の仕組みを使用して、アプリケーションのプロファイルを素早く作成することができます。 <command>aa-easyprof</command> はプロファイル生成の支援を行ないますが、これは使用するテンプレートの品質とプロファイルのグループ、および抽象に依存しています。また、このツールは手作業でプロファイルを作成する場合や、 <command>aa-genprof</command> と <command>aa-logprof</command> を利用してプロファイルを作成する場合に比べると、制限の緩いプロファイルを作成することになります。</para>
+    <para>詳しくは <command>aa-easyprof</command> (8) のマニュアルページをお読みください。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.enforce">
-    <title>aa-enforce&mdash;Entering Enforce Mode</title>
-    <para>
-     The enforce mode detects violations of &aa; profile rules, such as
-     the profiled program accessing files not permitted by the profile. The
-     violations are logged and not permitted. The default is for enforce
-     mode to be enabled. To log the violations only, but still permit them,
-     use complain mode.
-    </para>
-    <para>
-     Manually activating enforce mode (using the command line) removes the
-     complain flag from the top of the profile so that <literal>/bin/foo
-     flags=(complain)</literal> becomes <literal>/bin/foo</literal>. To use
-     enforce mode, open a terminal window and enter one of the following
-     lines.
-    </para>
+    <title>aa-enforce: 強制モードへの突入</title>
+    <para>強制モードでは、プロファイルで許可されていないファイルへのアクセスが禁止されるなど、 &aa; のプロファイルルールへの違反を検知することができます。このモードでは、違反はログに記録されるだけでなく、許可もされません。そのため、普段使用する場合は強制モードの適用を推奨します。違反を記録するのみで禁止したくない場合は、不平モードに設定してください。</para>
+    <para>コマンドラインから強制モードを手作業で設定すると、プロファイルの冒頭にあるフラグを削除し、 <literal>/bin/foo flags=(complain)</literal> のような項目が <literal>/bin/foo</literal> のようになります。強制モードを使用するには、端末ウインドウを開いて、 &rootuser; で下記のいずれかのように入力して実行します:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       If the example program (<replaceable>PROGRAM1</replaceable>) is in
-       your path, use:
-      </para>
-<screen>&prompt.sudo;aa-enforce [<replaceable>PROGRAM1</replaceable> <replaceable>PROGRAM2</replaceable> ...]</screen>
+      <para>プログラム ( <replaceable>プログラム_1</replaceable> ) がパス内に存在する場合は、下記のように実行します:</para>
+<screen>&prompt.sudo;aa-enforce [<replaceable>プログラム_1</replaceable> <replaceable>プログラム_2</replaceable> ...]</screen>
      </listitem>
      <listitem>
-      <para>
-       If the program is not in your path, specify the entire path, as
-       follows:
-      </para>
-<screen>&prompt.sudo;aa-enforce /sbin/<replaceable>PROGRAM1</replaceable></screen>
+      <para>プログラムがパス内に存在しない場合は、下記のようにフルパスで指定します:</para>
+<screen>&prompt.sudo;aa-enforce /sbin/<replaceable>プログラム_1</replaceable></screen>
      </listitem>
      <listitem>
-      <para>
-       If the profiles are not in
-       <replaceable>/etc/apparmor.d</replaceable>, use the following to
-       override the default location:
-      </para>
-<screen>&prompt.sudo;aa-enforce -d <replaceable>/path/to/profiles/     program1</replaceable></screen>
+      <para>また、プロファイルが <replaceable>/etc/apparmor.d</replaceable> 内に存在しない場合は、下記のように配置場所を指定します:</para>
+<screen>&prompt.sudo;aa-enforce -d <replaceable>プロファイルのパス     プログラム_1</replaceable></screen>
      </listitem>
      <listitem>
-      <para>
-       Specify the profile for <replaceable>/sbin/program1</replaceable> as
-       follows:
-      </para>
-<screen>&prompt.sudo;aa-enforce /etc/apparmor.d/sbin.<replaceable>PROGRAM1</replaceable></screen>
+      <para><replaceable>/sbin/program1</replaceable> のプロファイルを指定したい場合は、下記のように入力して実行します:</para>
+<screen>&prompt.sudo;aa-enforce /etc/apparmor.d/sbin.<replaceable>プログラム_1</replaceable></screen>
      </listitem>
     </itemizedlist>
-    <para>
-     Each of the above commands activates the enforce mode for the profiles
-     and programs listed.
-    </para>
-    <para>
-     If you do not enter the program or profile names, you are prompted to
-     enter one. <replaceable>/path/to/profiles</replaceable> overrides the
-     default location of <filename>/etc/apparmor.d</filename>.
-    </para>
-    <para>
-     The argument can be either a list of programs or a list of profiles. If
-     the program name does not include its entire path,
-     <command>aa-enforce</command> searches <envar>$PATH</envar> for the
-     program.
-    </para>
+    <para>上述のコマンドはいずれも、指定したプロファイルやプログラムを強制モードに切り替える処理を行ないます。</para>
+    <para>プログラム名やプロファイル名を入力しない場合は、入力を求められます。また、 <replaceable>プロファイルのパス</replaceable> を指定した場合は、既定のプロファイル保存先である <filename>/etc/apparmor.d</filename> を変更し、既定の場所以外にあるプロファイルを使用することができます。</para>
+    <para>パラメータには、複数のプログラムやプロファイルを指定することができます。また、プログラムの指定の際、これをフルパスで指定しないと、 <command>aa-complain</command> は <envar>$PATH</envar> 内を検索して、プログラムの場所を判断します。</para>
     <tip>
-     <title>Toggling Profile Mode with &yast;</title>
-     <para>
-      &yast; offers a graphical front-end for toggling complain and
-      enforce mode. See <xref linkend="sec.apparmor.yast.manage.profmodes"/>
-      for information.
-     </para>
+     <title>&yast; を利用したプロファイルの切り替えについて</title>
+     <para>&yast; には、不平モードと強制モードを切り替えることのできるグラフィカルなフロントエンドが用意されています。詳しくは <xref linkend="sec.apparmor.yast.manage.profmodes"/> をお読みください。</para>
     </tip>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.exec">
-    <title>aa-exec&mdash;Confining a Program with the Specified Profile</title>
-    <para>
-     Use <command>aa-exec</command> to launch a program confined by a
-     specified profile and/or profile namespace. If both a profile and
-     namespace are specified, the program will be confined by the profile in
-     the new namespace. If only a profile namespace is specified, the
-     profile name of the current confinement will be used. If neither a
-     profile nor namespace is specified, the command will be run using the
-     standard profile attachment&mdash;as if you did not use the
-     <command>aa-exec</command> command.
-    </para>
-    <para>
-     For more information on the command's options, see its manual page
-     <command>man 8 aa-exec</command>.
-    </para>
+    <title>aa-exec: 指定したプロファイルによるプログラムの制限</title>
+    <para><command>aa-exec</command> は指定したプロファイルやプロファイルネームスペースで、特定のプログラムを起動するためのツールです。プロファイルとネームスペースの両方を指定した場合、プログラムは新しいネームスペース内のプロファイルで制限を受けることになります。ネームスペースのみを指定した場合は、現在の制限内にあるプロファイル名を使用します。いずれも指定しない場合は、コマンドは標準的なプロファイル適用をそのまま使用します (つまり、 <command>aa-exec</command> コマンドを使用せずに起動した場合と同じ動作になります) 。</para>
+    <para>子マントのオプションについて、詳しくは <command>man 8 aa-exec</command> にあるマニュアルページをお読みください。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.genprof">
-    <title>aa-genprof&mdash;Generating Profiles</title>
-    <para>
-     <command>aa-genprof</command> is &aa;'s profile generating utility.
-     It runs <command>aa-autodep</command> on the specified program,
-     creating an approximate profile (if a profile does not already exist
-     for it), sets it to complain mode, reloads it into &aa;, marks the
-     log, and prompts the user to execute the program and exercise its
-     functionality. Its syntax is as follows:
-    </para>
-<screen>&prompt.sudo;aa-genprof [ -d <replaceable>/path/to/profiles</replaceable> ]  <replaceable>PROGRAM</replaceable></screen>
-    <para>
-     To create a profile for the Apache Web server program httpd2-prefork,
-     do the following as &rootuser;:
-    </para>
+    <title>aa-genprof: プロファイルの生成</title>
+    <para><command>aa-genprof</command> は &aa; におけるプロファイル生成ユーティリティです。プロファイルが存在しない場合は、指定したプログラムに対して <command>aa-autodep</command> を実行して近似プロファイルを作成したあと、プロファイルを不平モードに設定して &aa; を再読み込みさせ、ログに印を付けます。その後、ユーザに対してプログラムを実行し、その機能を一通り試すように依頼します。コマンドの書式は下記のとおりです:</para>
+<screen>&prompt.sudo;aa-genprof [ -d <replaceable>プロファイルのパス</replaceable> ]  <replaceable>プログラム</replaceable></screen>
+    <para>Apache Web サーバである httpd2-prefork に対してプロファイルを作成したい場合は、 &rootuser; で下記のように実行します:</para>
     <procedure>
      <step>
-      <para>
-       Enter <command>systemctl stop apache2</command>.
-      </para>
+      <para><command>systemctl stop apache2</command> と入力して実行します。</para>
      </step>
      <step>
-      <para>
-       Next, enter <command>aa-genprof httpd2-prefork</command>.
-      </para>
-      <para>
-       Now <command>aa-genprof</command> does the following:
-      </para>
+      <para>続けて <command>aa-genprof httpd2-prefork</command> と入力して実行します。</para>
+      <para>すると、 <command>aa-genprof</command> は下記のような処理を行ないます:</para>
       <orderedlist spacing="normal">
        <listitem>
-        <para>
-         Resolves the full path of httpd2-prefork using your shell's path
-         variables. You can also specify a full path. On &productname;,
-         the default full path is
-         <phrase><filename>/usr/sbin/httpd2-prefork</filename></phrase>.
-        </para>
+        <para>お使いのシェルの PATH 環境変数を利用して httpd2-prefork のフルパスを取得します。もちろん最初からフルパスで指定してもかまいません。 &productname; では、このプログラムのフルパスは <phrase><filename>/usr/sbin/httpd2-prefork</filename></phrase> であるはずです。</para>
        </listitem>
        <listitem>
-        <para>
-         Checks to see if there is an existing profile for httpd2-prefork.
-         If there is one, it updates it. If not, it creates one using the
-         <command>aa-autodep</command> as described in
-         <xref linkend="sec.apparmor.commandline.profiling.summary"/>.
-        </para>
+        <para>まずは httpd-prefork に対して、既存のプロファイルが存在していないかどうかを確認します。プロファイルが存在した場合はそれを更新しようとします。存在しない場合は、 <xref linkend="sec.apparmor.commandline.profiling.summary"/> で説明している <command>aa-autodep</command> を使用して、プロファイルを作成します。</para>
        </listitem>
        <listitem>
-        <para>
-         Puts the profile for this program into learning or complain mode so
-         that profile violations are logged, but are permitted to proceed. A
-         log event looks like this (see
-         <filename>/var/log/audit/audit.log</filename>):
-        </para>
+        <para>指定したプログラムに対するプロファイルを学習 (不平) モードに設定し、プロファイルへの違反を記録するだけで、禁止を行なわないようにします。違反の記録は、たとえば下記のようになります (<filename>/var/log/audit/audit.log</filename> 内に記録されます):</para>
 <screen>type=APPARMOR_ALLOWED msg=audit(1189682639.184:20816): \
 apparmor="DENIED" operation="file_mmap" parent=2692 \
 profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \
 name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \
 requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</screen>
-        <para>
-         If you are not running the audit daemon, the &aa; events are
-         logged directly to &systemd; journal (see
-         <xref linkend="cha.journalctl"/>):
-        </para>
+        <para>監査デーモンを動作させていない場合、 &aa; のイベントは &systemd; ジャーナルに直接記録されます (詳しくは <xref linkend="cha.journalctl"/> をお読みください):</para>
 <screen>Sep 13 13:20:30 K23 kernel: audit(1189682430.672:20810): \
 apparmor="DENIED" operation="file_mmap" parent=2692 \
 profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \
 name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \
 requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</screen>
-        <para>
-         They also can be viewed using the <command>dmesg</command> command:
-        </para>
+        <para><command>dmesg</command> コマンドを利用して表示することもできます:</para>
 <screen>audit(1189682430.672:20810): apparmor="DENIED" \
 operation="file_mmap" parent=2692 \
 profile="/usr/sbin/httpd2-prefork//HANDLING_UNTRUSTED_INPUT" \
@@ -885,93 +404,45 @@ name="/var/log/apache2/access_log-20140116" pid=28730 comm="httpd2-prefork" \
 requested_mask="::r" denied_mask="::r" fsuid=30 ouid=0</screen>
        </listitem>
        <listitem>
-        <para>
-         Marks the log with a beginning marker of log events to consider.
-         For example:
-        </para>
+        <para>ログ内に印を付けて、作業の開始位置判断とします。たとえば下記のように出力されます:</para>
 <screen>
 Sep 13 17:48:52 figwit root: GenProf: e2ff78636296f16d0b5301209a04430d</screen>
        </listitem>
       </orderedlist>
      </step>
      <step>
-      <para>
-       When prompted by the tool, run the application to profile in another
-       terminal window and perform as many of the application functions as
-       possible. Thus, the learning mode can log the files and directories
-       to which the program requires access to function properly.
-       For example, in a new terminal window, enter <command>systemctl start
-       apache2</command>.
-      </para>
+      <para>ツール側から問い合わせメッセージが表示されたら、もう 1 つの端末ウインドウを開いてプロファイルを作成するアプリケーションを起動し、可能な限り様々な処理を実施させます。これにより、学習モード下でプログラムが必要とする様々なファイルやディレクトリなどにアクセスすることになります。この例では、たとえば新しい端末ウインドウを開いて、 <command>systemctl start apache2</command> と入力し実行します。</para>
      </step>
      <step>
-      <para>
-       Select from the following options that are available in the
-       <command>aa-genprof</command> terminal window after you have executed
-       the program function:
-      </para>
+      <para>様々なプログラムの機能を利用したあとは、 <command>aa-genprof</command> の端末ウインドウ内で下記のような入力を行なうことができます:</para>
       <itemizedlist mark="bullet" spacing="normal">
        <listitem>
-        <para>
-         <keycap>S</keycap> runs <command>aa-genprof</command> on the system
-         log from where it was marked when <command>aa-genprof</command> was
-         started and reloads the profile. If system events exist in the log,
-         &aa; parses the learning mode log files. This generates a series
-         of questions that you must answer to guide
-         <command>aa-genprof</command> in generating the security profile.
-        </para>
+        <para><keycap>S</keycap> と入力すると、 <command>aa-genprof</command> は先ほど印を付けた箇所以降のシステムログを検索する処理を実施します。ログ内に何らかのシステムイベントが見つかった場合、 &aa; はそれらを読み込んで判断します。これにより、セキュリティプロファイルを生成するにあたっての様々な質問を生成します。</para>
        </listitem>
        <listitem>
-        <para>
-         <keycap>F</keycap> exits the tool.
-        </para>
+        <para><keycap>F</keycap> と入力すると、ツールを終了することができます。</para>
        </listitem>
       </itemizedlist>
       <note>
-       <para>
-        If requests to add hats appear, proceed to
-        <xref linkend="cha.apparmor.hat"/>.
-       </para>
+       <para>ハット (hat) を追加するように求められた場合は、 <xref linkend="cha.apparmor.hat"/> をお読みください。</para>
       </note>
      </step>
      <step>
-      <para>
-       Answer two types of questions:
-      </para>
+      <para>あとは下記に示す 2 種類の質問に答えていきます:</para>
       <itemizedlist mark="bullet" spacing="normal">
        <listitem>
-        <para>
-         A resource is requested by a profiled program that is not in the
-         profile (see
-         <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/>).
-        </para>
+        <para>プロファイル対象のプログラムから特定のリソースへのアクセスが要求されたものの、プロファイル内には許可が書かれていないもの (詳しくは <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/> をお読みください) 。</para>
        </listitem>
        <listitem>
-        <para>
-         A program is executed by the profiled program and the security
-         domain transition has not been defined (see
-         <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/>).
-        </para>
+        <para>プロファイル対象のプログラムからプログラムが実行されたものの、セキュリティドメイン遷移が定義されていないもの (詳しくは <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/> をお読みください) 。</para>
        </listitem>
       </itemizedlist>
-      <para>
-       Each of these categories results in a series of questions that you
-       must answer to add the resource or program to the profile.
-       <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/>
-       and
-       <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/>
-       provide examples of each one. Subsequent steps describe your options
-       in answering these questions.
-      </para>
+      <para>いずれの分類の質問であっても、プロファイル内にリソースやプログラムを追加するために回答しなければならない質問になります。 <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/> や <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/> には、それぞれ質問の例が示されています。続く手順では、それぞれの質問に対する回答方法を示しています。</para>
       <itemizedlist mark="bullet" spacing="normal">
        <listitem>
-        <para>
-         Dealing with execute accesses is complex. You must decide how to
-         proceed with this entry regarding which execute permission type to
-         grant to this entry:
-        </para>
+        <para>実行権限の取り扱いは複雑です。それぞれ表示された内容に対して、どのような実行権限を与えるのかを決定しなければなりません:</para>
         <example xml:id="ex.apparmor.commandline.profiling.summary.genprof.learn">
-         <title>Learning Mode Exception: Controlling Access to Specific Resources</title>
+         <title>学習モードの例外: 特定のリソースへのアクセス制御</title>
 <screen>Reading log entries from /var/log/audit/audit.log.
 Updating AppArmor profiles in /etc/apparmor.d.
 
@@ -986,120 +457,60 @@ Severity: unknown
          <varlistentry>
           <term>Inherit (ix)</term>
           <listitem>
-           <para>
-            The child inherits the parent's profile, running with the same
-            access controls as the parent. This mode is useful when a
-            confined program needs to call another confined program without
-            gaining the permissions of the target's profile or losing the
-            permissions of the current profile. This mode is often used when
-            the child program is a <emphasis>helper application</emphasis>,
-            such as the <command>/usr/bin/mail</command> client using
-            <command>less</command> as a pager.
-           </para>
+           <para>子プロセスに対して親と同じプロファイルを適用し、親と同じアクセス権限を継承するように指定します。このモードは、制限を受けているプログラムから他のプログラムを呼び出す際、新しい許可を設定したくない場合や、既にある許可を失いたくない場合に指定します。このモードは、たとえば <command>/usr/bin/mail</command> のメールクライアントが <command>less</command> をページャとして使用する場合など、 <emphasis>ヘルパーアプリケーション</emphasis> のようなプログラムを呼び出す際にしばしば用いられます。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Profile (px/Px)</term>
           <listitem>
-           <para>
-            The child runs using its own profile, which must be loaded into
-            the kernel. If the profile is not present, attempts to execute
-            the child fail with permission denied. This is most useful if
-            the parent program is invoking a global service, such as DNS
-            lookups or sending mail with your system's MTA.
-           </para>
-           <para>
-            Choose the <guimenu>profile with clean exec</guimenu> (Px)
-            option to scrub the environment of environment variables that
-            could modify execution behavior when passed to the child
-            process.
-           </para>
+           <para>子プロセスに対して、カーネル内に読み込まなければならない独自のプロファイルを適用するように指定します。プロファイルが存在しない場合、子プロセスの実行はアクセス拒否として失敗します。これは、親プログラムから DNS の参照やお使いのシステムの MTA を介したメール送信など、グローバルサービスを実行するような場合に有用です。</para>
+           <para><guimenu>profile with clean exec</guimenu> (クリーン実行付きプロファイル) (Px) を選択すると、子プロセスに環境変数を渡す際、その実行に影響があるような環境変数を削除して実行することができます。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Child (cx/Cx)</term>
           <listitem>
-           <para>
-            Sets up a transition to a subprofile. It is like px/Px
-            transition, except to a child profile.
-           </para>
-           <para>
-            Choose the <guimenu>profile with clean exec</guimenu> (Cx)
-            option to scrub the environment of environment variables that
-            could modify execution behavior when passed to the child
-            process.
-           </para>
+           <para>サブプロファイルへの遷移を設定します。 px/Px での遷移と同様ですが、子プロファイルへの遷移という点が異なります。</para>
+           <para><guimenu>profile with clean exec</guimenu> (クリーン実行付きプロファイル) (Cx) を選択すると、子プロセスに環境変数を渡す際、その実行に影響があるような環境変数を削除して実行することができます。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Unconfined (ux/Ux)</term>
           <listitem>
-           <para>
-            The child runs completely unconfined without any &aa; profile
-            applied to the executed resource.
-           </para>
-           <para>
-            Choose the <guimenu>unconfined with clean exec</guimenu> (Ux)
-            option to scrub the environment of environment variables that
-            could modify execution behavior when passed to the child
-            process. Note that running unconfined profiles introduces a
-            security vulnerability that could be used to evade &aa;. Only
-            use it as a last resort.
-           </para>
+           <para>子プロセスに対して &aa; のプロファイルを一切適用せず、リソースに対する制限を一切行なわないようにします。</para>
+           <para><guimenu>unconfined with clean exec</guimenu> (クリーン実行付き無制限) (Ux) を選択すると、子プロセスに環境変数を渡す際、その実行に影響があるような環境変数を削除して実行することができます。ただし、制限を取り外してしまうことはセキュリティ面での脆弱性を生む行為であり、危険であることに注意してください。そのため、それ以外の選択肢ではどうしても解決できない場合にのみ、指定してください。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>mmap (m)</term>
           <listitem>
-           <para>
-            This permission denotes that the program running under the
-            profile can access the resource using the mmap system call with
-            the flag <envar>PROT_EXEC</envar>. This means that the data
-            mapped in it can be executed. You are prompted to include this
-            permission if it is requested during a profiling run.
-           </para>
+           <para>この許可を設定すると、そのプロファイルが適用されるプログラムに対して、 mmap システムコールの際に <envar>PROT_EXEC</envar> フラグを設定できるようになります。これにより、データとして割り当てたメモリを実行することができるようになります。プロファイル生成時に求められた場合にのみ、この許可を設定してください。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Deny</term>
           <listitem>
-           <para>
-            Adds a <literal>deny</literal> rule to the profile, and
-            permanently prevents the program from accessing the specified
-            directory path entries. &aa; then continues to the next
-            event.
-           </para>
+           <para>プロファイルに対して <literal>deny</literal> ルールを追加して、指定したディレクトリパス項目に対するアクセスを明示的に禁止するようにします。 &aa; はそのまま次のイベントの処理に移ります。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Abort</term>
           <listitem>
-           <para>
-            Aborts <command>aa-logprof</command>, losing all rule changes
-            entered so far and leaving all profiles unmodified.
-           </para>
+           <para><command>aa-logprof</command> を中止し、ここまでに入力したルール変更を破棄して終了します。プロファイルの修正は行ないません。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Finish</term>
           <listitem>
-           <para>
-            Closes <command>aa-logprof</command>, saving all rule changes
-            entered so far and modifying all profiles.
-           </para>
+           <para><command>aa-logprof</command> を終了し、ここまでに入力したルール変更を保存し、プロファイルの修正を行ないます。</para>
           </listitem>
          </varlistentry>
         </variablelist>
        </listitem>
        <listitem>
-        <para>
-         <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/>
-         shows &aa; suggest allowing a globbing pattern
-         <filename>/var/run/nscd/*</filename> for reading, then using an
-         abstraction to cover common Apache-related access rules.
-        </para>
+        <para><xref linkend="ex.apparmor.commandline.profiling.summary.genprof.perms"/> には、 &aa; がグロブパターン <filename>/var/run/nscd/*</filename> を利用して読み込みアクセスを許可し、一般的な Apache 関連のアクセスルールをカバーするため、抽象を使用しようとしている様子を示しています。</para>
         <example xml:id="ex.apparmor.commandline.profiling.summary.genprof.perms">
-         <title>Learning Mode Exception: Defining Permissions for an Entry</title>
+         <title>学習モードの例外: 項目に対する許可の設定</title>
 <screen>Profile:  /usr/sbin/httpd2-prefork
 Path:     /var/run/nscd/dbSz9CTr
 Mode:     r
@@ -1124,148 +535,80 @@ Severity: 9
 Adding #include &lt;abstractions/apache2-common&gt; to profile.
 </screen>
         </example>
-        <para>
-         &aa; provides one or more paths or includes. By entering the
-         option number, select the desired options then proceed to the next
-         step.
-        </para>
+        <para>&aa; には様々なパスやインクルードが用意されています。選択肢の番号を入力することで必要なオプションを選択し、次のステップに進むことができます。</para>
         <note>
-         <para>
-          Not all of these options are always presented in the &aa; menu.
-         </para>
+         <para>&aa; のメニューでは、一部の選択肢のみが表示される場合もあります。</para>
         </note>
         <variablelist>
          <varlistentry>
-          <term><literal>#include</literal>
-          </term>
+          <term><literal>#include</literal></term>
           <listitem>
-           <para>
-            This is the section of an &aa; profile that refers to an
-            include file, which procures access permissions for programs. By
-            using an include, you can give the program access to directory
-            paths or files that are also required by other programs. Using
-            includes can reduce the size of a profile. It is good practice
-            to select includes when suggested.
-           </para>
+           <para>これは &aa; プロファイル内の記述で、他のファイルを参照するように設定するためのディレクティブです。これにより、他のファイル内に書かれているアクセス権を振り込むことができるようになります。また、 include を使用することで、複数のプログラムでアクセス許可の設定を共有することもできます。この仕組みにより、プロファイルのサイズを小さくすることにも繋がります。 include を使用するように提案された場合は、提案を受け入れるのがよいでしょう。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
-          <term>Globbed Version</term>
+          <term>グロブ版</term>
           <listitem>
-           <para>
-            This is accessed by selecting <guimenu>Glob</guimenu> as
-            described in the next step. For information about globbing
-            syntax, refer to <xref linkend="sec.apparmor.profiles.glob"/>.
-           </para>
+           <para>次の手順で説明しているように、 <guimenu>Glob</guimenu> を選択することでアクセスすることができます。グロブの書式に関する詳細は、 <xref linkend="sec.apparmor.profiles.glob"/> をお読みください。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
-          <term>Actual Path</term>
+          <term>実際のパス</term>
           <listitem>
-           <para>
-            This is the literal path to which the program needs access so
-            that it can run properly.
-           </para>
+           <para>プログラムが必要とするパスを直接指定して、正しく動作するように設定します。</para>
           </listitem>
          </varlistentry>
         </variablelist>
-        <para>
-         After you select the path or include, process it as an entry into
-         the &aa; profile by selecting <guimenu>Allow</guimenu> or
-         <guimenu>Deny</guimenu>. If you are not satisfied with the
-         directory path entry as it is displayed, you can also
-         <guimenu>Glob</guimenu> it.
-        </para>
-        <para>
-         The following options are available to process the learning mode
-         entries and build the profile:
-        </para>
+        <para>パスまたはインクルードの設定を行なった後は、 <guimenu>Allow</guimenu> (許可) または <guimenu>Deny</guimenu> (拒否) を選択して、対応する項目を &aa; のプロファイルに追加します。表示されたディレクトリパスの項目で問題があるとお考えの場合は、 <guimenu>Glob</guimenu> (グロブ) を選択することもできます。</para>
+        <para>学習モードで生成された項目を処理し、プロファイルにする方法には、下記のものがあります:</para>
         <variablelist>
          <varlistentry>
-          <term>Select <keycap function="enter"/>
-          </term>
+          <term>単に <keycap function="enter"/> を押す</term>
           <listitem>
-           <para>
-            Allows access to the selected directory path.
-           </para>
+           <para>選択したディレクトリパスに対して、アクセスを許可します。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Allow</term>
           <listitem>
-           <para>
-            Allows access to the specified directory path entries. &aa;
-            suggests file permission access. For more information, refer to
-            <xref linkend="sec.apparmor.profiles.perm"/>.
-           </para>
+           <para>選択したディレクトリパスの項目に対して、アクセスを許可します。 &aa; では、アクセスモードの提案も行ないます。詳しくは <xref linkend="sec.apparmor.profiles.perm"/> をお読みください。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Deny</term>
           <listitem>
-           <para>
-            Prevents the program from accessing the specified directory path
-            entries. &aa; then continues to the next event.
-           </para>
+           <para>指定したディレクトリパスの項目に対して、プログラムからのアクセスを拒否します。 &aa; はそのまま次のイベントの処理に移ります。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>New</term>
           <listitem>
-           <para>
-            Prompts you to enter your own rule for this event, allowing you
-            to specify a regular expression. If the expression does not
-            actually satisfy the event that prompted the question in the
-            first place, &aa; asks for confirmation and lets you reenter
-            the expression.
-           </para>
+           <para>このイベントに対応するルールを独自に作成します。ここでは、正規表現による指定にも対応しています。表現の指定がイベントの要件と合致しない場合、 &aa; は確認メッセージを表示して再入力を求めます。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Glob</term>
           <listitem>
-           <para>
-            Select a specific path or create a general rule using wild cards
-            that match a broader set of paths. To select any of the offered
-            paths, enter the number that is printed in front of the path
-            then decide how to proceed with the selected item.
-           </para>
-           <para>
-            For more information about globbing syntax, refer to
-            <xref linkend="sec.apparmor.profiles.glob"/>.
-           </para>
+           <para>ワイルドカードを利用して幅広くマッチするルールを作成します。提示されたパスのうちのいずれかを選択するには、パスの前に示されている数字を入力して進めます。</para>
+           <para>グロブの書式に関する詳細は、 <xref linkend="sec.apparmor.profiles.glob"/> をお読みください。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Glob w/Ext</term>
           <listitem>
-           <para>
-            This modifies the original directory path while retaining the
-            file name extension. For example,
-            <filename>/etc/apache2/file.ext</filename> becomes
-            <filename>/etc/apache2/*.ext</filename>, adding the wild card
-            (asterisk) in place of the file name. This allows the program to
-            access all files in the suggested directory that end with the
-            <literal>.ext</literal> extension.
-           </para>
+           <para>元のディレクトリパス情報を変更して、ファイル名の拡張子だけをマッチングルールとして残すグロブを生成します。たとえば <filename>/etc/apache2/file.ext</filename> というファイルへのアクセスであった場合、ファイル名の部分だけをワイルドカードにして <filename>/etc/apache2/*.ext</filename> のような形式に変更します。これにより、特定のディレクトリ内にある同じ拡張子 (<literal>.ext</literal>) のファイルすべてに対して、許可するルールを作成することができます。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Abort</term>
           <listitem>
-           <para>
-            Aborts <command>aa-logprof</command>, losing all rule changes
-            entered so far and leaving all profiles unmodified.
-           </para>
+           <para><command>aa-logprof</command> を中止し、ここまでに入力したルール変更を破棄して終了します。プロファイルの修正は行ないません。</para>
           </listitem>
          </varlistentry>
          <varlistentry>
           <term>Finish</term>
           <listitem>
-           <para>
-            Closes <command>aa-logprof</command>, saving all rule changes
-            entered so far and modifying all profiles.
-           </para>
+           <para><command>aa-logprof</command> を終了し、ここまでに入力したルール変更を保存し、プロファイルの修正を行ないます。</para>
           </listitem>
          </varlistentry>
         </variablelist>
@@ -1273,45 +616,18 @@ Adding #include &lt;abstractions/apache2-common&gt; to profile.
       </itemizedlist>
      </step>
      <step>
-      <para>
-       To view and edit your profile using <command>vi</command>, enter
-       <command>vi /etc/apparmor.d/</command>
-       <replaceable>PROFILENAME</replaceable> in a terminal window. To
-       enable syntax highlighting when editing an &aa; profile in vim,
-       use the commands <command>:syntax on</command> then <command>:set
-       syntax=apparmor</command>. For more information about vim and syntax
-       highlighting, refer to
-       <xref linkend="sec.apparmor.commandline.profiling.summary.vim"/>.
-      </para>
+      <para><command>vi</command> を利用してプロファイルの表示や編集を行ないたい場合は、端末ウインドウ内で <command>vi /etc/apparmor.d/</command> <replaceable>プロファイル名</replaceable> のように入力して実行してください。 vim 内で &aa; のプロファイルを編集するにあたり、文法ハイライト機能を有効化したい場合は、 <command>:syntax on</command> と入力してから <command>:set syntax=apparmor</command> と入力します。 vim および文法ハイライト機能に関する詳細については、 <xref linkend="sec.apparmor.commandline.profiling.summary.vim"/> をお読みください。</para>
      </step>
      <step>
-      <para>
-       Restart &aa; and reload the profile set including the newly
-       created one using the <command>systemctl reload
-       apparmor</command> command.
-      </para>
+      <para><command>systemctl reload apparmor</command> コマンドを実行し、 &aa; を再起動して、プロファイルセットを再読み込みします。これにより、新しく作成したプロファイルが読み込まれるようになります。</para>
      </step>
     </procedure>
-    <para>
-     Like the graphical front-end for building &aa; profiles, the
-     &yast; Add Profile Wizard, <command>aa-genprof</command> also
-     supports the use of the local profile repository under
-     <filename>/etc/apparmor/profiles/extras</filename>
-<!-- path will change in &aa; ;-) 3.0 -->
-     and the remote &aa; profile repository.
-    </para>
-    <para>
-     To use a profile from the local repository, proceed as follows:
-    </para>
+    <para>グラフィカルなフロントエンドを利用して &aa; のプロファイルを作成する場合と同様に、 &yast; のプロファイル追加ウイザードや <command>aa-genprof</command> でも、 <filename>/etc/apparmor/profiles/extras</filename> <!-- path will change in &aa; ;-) 3.0 --> 内にあるローカルプロファイルやリモートの &aa; プロファイルリポジトリの使用に対応しています。</para>
+    <para>ローカルリポジトリにあるプロファイルを使用するには、下記のようにして行ないます:</para>
     <procedure>
      <step>
-      <para>
-       Start <command>aa-genprof</command> as described above.
-      </para>
-      <para>
-       If <command>aa-genprof</command> finds an inactive local profile, the
-       following lines appear on your terminal window:
-      </para>
+      <para>上述の手順で <command>aa-genprof</command> を起動します。</para>
+      <para><command>aa-genprof</command> が無効化されているローカルプロファイルを検出すると、端末ウインドウ内に下記のような内容が表示されます:</para>
 <screen>Profile: /usr/bin/opera
 
  [1 - Inactive local profile for /usr/bin/opera]
@@ -1319,151 +635,52 @@ Adding #include &lt;abstractions/apache2-common&gt; to profile.
 [(V)iew Profile] / (U)se Profile / (C)reate New Profile / Abo(r)t / (F)inish</screen>
      </step>
      <step>
-      <para>
-       To use this profile, press <keycap>U</keycap>
-       (<guimenu>Use Profile</guimenu>) and follow the profile generation
-       procedure outlined above.
-      </para>
-      <para>
-       To examine the profile before activating it, press
-       <keycap>V</keycap> (<guimenu>View Profile</guimenu>).
-      </para>
-      <para>
-       To ignore the existing profile, press <keycap>C</keycap>
-       (<guimenu>Create New Profile</guimenu>) and follow the profile
-       generation procedure outlined above to create the profile from
-       scratch.
-      </para>
+      <para>提示されたプロファイルを使用するには <keycap>U</keycap> ( <guimenu>Use Profile</guimenu> ) と入力し、上述のプロファイル生成手順に従って続けます。</para>
+      <para>有効化する前にプロファイルの内容を確認したい場合は、 <keycap>V</keycap> ( <guimenu>View Profile</guimenu> ) と入力します。</para>
+      <para>既存のプロファイルを無視したい場合は、 <keycap>C</keycap> ( <guimenu>Create New Profile</guimenu> ) と入力して、上述のプロファイル生成手順で、何もない状態からプロファイルを作成していきます。</para>
      </step>
      <step>
-      <para>
-       Leave <command>aa-genprof</command> by pressing <keycap>F</keycap>
-       (<guimenu>Finish</guimenu>) when you are done and save your changes.
-      </para>
+      <para>すべての作業が終わったら、 <keycap>F</keycap> ( <guimenu>Finish</guimenu> ) と入力すると、変更点を保存して終了することができます。</para>
      </step>
     </procedure>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.logprof">
-    <title>aa-logprof&mdash;Scanning the System Log</title>
-    <para>
-     <command>aa-logprof</command> is an interactive tool used to review the
-     complain and enforce mode events found in the log entries in
-     <filename>/var/log/audit/audit.log</filename>, or directly in the
-     &systemd; journal (see <xref linkend="cha.journalctl"/>), and
-     generate new entries in &aa; security profiles.
-    </para>
-    <para>
-     When you run <command>aa-logprof</command>, it begins to scan the log
-     files produced in complain and enforce mode and, if there are new
-     security events that are not covered by the existing profile set, it
-     gives suggestions for modifying the profile.
-     <command>aa-logprof</command> uses this information to observe program
-     behavior.
-    </para>
-    <para>
-     If a confined program forks and executes another program,
-     <command>aa-logprof</command> sees this and asks the user which
-     execution mode should be used when launching the child process. The
-     execution modes <emphasis>ix</emphasis>, <emphasis>px</emphasis>,
-     <emphasis>Px</emphasis>, <emphasis>ux</emphasis>,
-     <emphasis>Ux</emphasis>, <emphasis>cx</emphasis>,
-     <emphasis>Cx</emphasis>, and named profiles, are options for starting
-     the child process. If a separate profile exists for the child process,
-     the default selection is <emphasis>Px</emphasis>. If one does not
-     exist, the profile defaults to <emphasis>ix</emphasis>. Child processes
-     with separate profiles have <command>aa-autodep</command> run on them
-     and are loaded into &aa;, if it is running.
-    </para>
-    <para>
-     When <command>aa-logprof</command> exits, profiles are updated with the
-     changes. If &aa; is active, the updated profiles are reloaded and,
-     if any processes that generated security events are still running in
-     the null-XXXX profiles (unique profiles temporarily created in complain
-     mode), those processes are set to run under their proper profiles.
-    </para>
-    <para>
-     To run <command>aa-logprof</command>, enter
-     <command>aa-logprof</command> into a terminal window while logged in as
-     &rootuser;. The following options can be used for
-     <command>aa-logprof</command>:
-    </para>
+    <title>aa-logprof: システムログのスキャン</title>
+    <para><command>aa-logprof</command> は不平モードや強制モードで記録され、 <filename>/var/log/audit/audit.log</filename> 内もしくは &systemd; ジャーナル (詳しくは <xref linkend="cha.journalctl"/> を参照) 内に直接保存されているログを処理して、 &aa; のセキュリティプロファイル内の新しい項目を生成することができる対話型ツールです。</para>
+    <para><command>aa-logprof</command> を実行すると、まずは不平モードや強制モードで記録されたログファイルを読み込んで処理し、既存のプロファイルセット内でカバーされていない新しいセキュリティイベントが見つかった場合に、既存のプロファイルを変更するための確認メッセージを表示します。 <command>aa-logprof</command> では、ログファイル内の情報からプログラムの挙動を確認します。</para>
+    <para>制限を受けているプログラムが fork() したり他のプログラムを起動したりした場合、 <command>aa-logprof</command> はそれを検出すると、 fork() したプログラムや他のプログラムに対して適用すべき実行モードを尋ねます。実行モードは <emphasis>ix</emphasis> , <emphasis>px</emphasis> , <emphasis>Px</emphasis> , <emphasis>ux</emphasis> , <emphasis>Ux</emphasis> , <emphasis>cx</emphasis> , <emphasis>Cx</emphasis> のいずれか、もしくは名前付きプロファイルで、指定した実行モードで子プロセスを開始することになります。子プロセス向けのプロファイルが個別に存在する場合は、既定の選択肢は <emphasis>Px</emphasis> になります。逆に、プロファイルが存在しない場合は <emphasis>ix</emphasis> になります。個別のプロファイルが存在する子プロセスに対しては、 <command>aa-autodep</command> が実行され、動作中であれば &aa; 内に読み込まれるようになります。</para>
+    <para><command>aa-logprof</command> が終了すると、プロファイルは変更した内容に応じて更新されます。 &aa; が有効化されていれば、更新されたプロファイルが読み込まれ。セキュリティイベントを生成したプロセスが現在も null-XXXX プロファイル (不平モードで作成される一時的なプロファイル) で動作していれば、対応する適切なプロファイルが適用されるようになります。</para>
+    <para><command>aa-logprof</command> を実行するには、 &rootuser; でログインしている状態で、端末ウインドウ内で <command>aa-logprof</command> と入力します。また、 <command>aa-logprof</command> では下記のようなオプションを指定することができます:</para>
     <variablelist>
      <varlistentry>
-      <term><command>aa-logprof -d</command><replaceable>/path/to/profile/directory/</replaceable>
-      </term>
+      <term><command>aa-logprof -d</command> <replaceable>プロファイルディレクトリのパス</replaceable></term>
       <listitem>
-       <para>
-        Specifies the full path to the location of the profiles if the
-        profiles are not located in the standard directory,
-        <filename>/etc/apparmor.d/</filename>.
-       </para>
+       <para>プロファイルが標準ディレクトリ <filename>/etc/apparmor.d/</filename> 以外の場所にある場合は、上記のようにしてフルパスを指定します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term><command>aa-logprof -f</command><replaceable>/path/to/logfile/</replaceable>
-      </term>
+      <term><command>aa-logprof -f</command> <replaceable>ログファイルのパス</replaceable></term>
       <listitem>
-       <para>
-        Specifies the full path to the location of the log file if the log
-        file is not located in the default directory or
-        <filename>/var/log/audit/audit.log</filename>.
-       </para>
+       <para>ログファイルが標準ディレクトリパス <filename>/var/log/audit/audit.log</filename> 以外の場所にある場合は、上記のようにしてログファイルのフルパスを指定します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term><command>aa-logprof -m "string marker in logfile"</command>
-      </term>
+      <term><command>aa-logprof -m "ログファイル内に記録するマーカー文字列"</command></term>
       <listitem>
-       <para>
-        Marks the starting point for <command>aa-logprof</command> to look
-        in the system log. <command>aa-logprof</command> ignores all events
-        in the system log before the specified mark. If the mark contains
-        spaces, it must be surrounded by quotes to work correctly. For
-        example:
-       </para>
+       <para>システムログ内に、 <command>aa-logprof</command> が後から参照できるように、開始点の印を付けます。 <command>aa-logprof</command> は、指定した印以前のイベントはすべて無視します。なお、印内にスペースが含まれている場合は、正しく引用符で括らなければなりません。たとえば下記のようになります:</para>
 <screen>&prompt.root;aa-logprof -m "17:04:21"</screen>
-       <para>
-        or
-       </para>
+       <para>もしくは</para>
 <screen>&prompt.root;aa-logprof -m e2ff78636296f16d0b5301209a04430d</screen>
       </listitem>
      </varlistentry>
     </variablelist>
-    <para>
-     <command>aa-logprof</command> scans the log, asking you how to handle
-     each logged event. Each question presents a numbered list of &aa;
-     rules that can be added by pressing the number of the item on the list.
-    </para>
-    <para>
-     By default, <command>aa-logprof</command> looks for profiles in
-     <filename>/etc/apparmor.d/</filename>. Often running
-     <command>aa-logprof</command> as &rootuser; is enough to update the
-     profile. However, there might be times when you need to search archived
-     log files, such as if the program exercise period exceeds the log
-     rotation window (when the log file is archived and a new log file is
-     started). If this is the case, you can enter <command>zcat -f `ls
-     -1tr</command> <replaceable>/path/to/logfile*</replaceable>` |
-     aa-logprof -f -.
-    </para>
+    <para><command>aa-logprof</command> はログを読み込んでから、それぞれのイベントに対して処理方法を尋ねます。それぞれの質問には番号付きのリストが示され、プロファイル内にどれを追加すべきなのかを尋ねます。</para>
+    <para>既定では、 <command>aa-logprof</command> は <filename>/etc/apparmor.d/</filename> 内にプロファイルがあるものとして検索します。また、 <command>aa-logprof</command> でプロファイルを更新する場合、 &rootuser; での実行であれば十分です。ただし、長期にわたるログを読み込ませる場合など、過去の分も含めた複数のログファイルを処理させたい場合は、 <command>zcat -f `ls -1tr</command> <replaceable>ログファイルのパス/*</replaceable> ` | aa-logprof -f - のように実行してください。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.logprof_ex1">
-    <title>aa-logprof Example 1</title>
-    <para>
-     The following is an example of how <command>aa-logprof</command>
-     addresses httpd2-prefork accessing the file
-     <filename>/etc/group</filename>. <literal>[]</literal> indicates the
-     default option.
-    </para>
-    <para>
-     In this example, the access to <command>/etc/group</command> is part of
-     httpd2-prefork accessing name services. The appropriate response is
-     <literal>1</literal>, which includes a predefined set of &aa; rules.
-     Selecting <literal>1</literal> to <literal>#include</literal> the name
-     service package resolves all of the future questions pertaining to DNS
-     lookups and makes the profile less brittle in that any changes to
-     DNS configuration and the associated name service profile package can
-     be made once, rather than needing to revise many profiles.
-    </para>
+    <title>aa-logprof 例 1</title>
+    <para>下記の例では、 httpd2-prefork が <filename>/etc/group</filename> ファイルへのアクセスを行なう際、 <command>aa-logprof</command> 側でどのような対応を行なうのかについて説明しています。なお、 <literal>[]</literal> は既定値を表わしています。</para>
+    <para>この例では、 <command>/etc/group</command> へのアクセスは httpd2-prefork による名前サービスの処理時に発生します。適切な回答は <literal>1</literal> で、これによってあらかじめ定義された &aa; ルールを取り込むことができるようになります。 <literal>1</literal> を選択すると、 <literal>#include</literal> によって名前サービス向けのルール一式が取り込まれ、以後に発生する DNS 関連のイベントすべてを解決することができるようになります。また、 DNS 関連の設定が変わったような場合でも、このファイルを修正すれば済むことになりますので、関連する多数のプロファイルを編集せずに済むことになります。</para>
 <screen>
 Profile:  /usr/sbin/httpd2-prefork
 Path:     /etc/group
@@ -1473,105 +690,62 @@ New Mode: r
  2 - /etc/group
 [(A)llow] / (D)eny / (N)ew / (G)lob / Glob w/(E)xt / Abo(r)t / (F)inish
 </screen>
-    <para>
-     Select one of the following responses:
-    </para>
+    <para>下記のいずれかの回答をすることができます:</para>
     <variablelist>
      <varlistentry>
-      <term>Select <keycap function="enter"/>
-      </term>
+      <term>単に <keycap function="enter"/> を押す</term>
       <listitem>
-       <para>
-        Triggers the default action, which is, in this example, allowing
-        access to the specified directory path entry.
-       </para>
+       <para>既定の動作を実行します。この例では、表示されているディレクトリパスに対して、アクセスを許可します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Allow</term>
       <listitem>
-       <para>
-        Allows access to the specified directory path entries. &aa;
-        suggests file permission access. For more information about this,
-        refer to <xref linkend="sec.apparmor.profiles.perm"/>.
-       </para>
+       <para>表示されているディレクトリパスに対して、アクセスを許可します。詳しくは <xref linkend="sec.apparmor.profiles.perm"/> をお読みください。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Deny</term>
       <listitem>
-       <para>
-        Permanently prevents the program from accessing the specified
-        directory path entries. &aa; then continues to the next event.
-       </para>
+       <para>表示されているディレクトリパスに対して、恒久的にアクセスを拒否します。 &aa; はそのまま次のイベントの処理に移ります。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>New</term>
       <listitem>
-       <para>
-        Prompts you to enter your own rule for this event, allowing you to
-        specify whatever form of regular expression you want. If the
-        expression entered does not actually satisfy the event that prompted
-        the question in the first place, &aa; asks for confirmation and
-        lets you reenter the expression.
-       </para>
+       <para>このイベントに対応するルールを独自に作成します。ここでは、正規表現による指定にも対応しています。表現の指定がイベントの要件と合致しない場合、 &aa; は確認メッセージを表示して再入力を求めます。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Glob</term>
       <listitem>
-       <para>
-        Select either a specific path or create a general rule using wild
-        cards that matches on a broader set of paths. To select any of the
-        offered paths, enter the number that is printed in front of the
-        paths then decide how to proceed with the selected item.
-       </para>
-       <para>
-        For more information about globbing syntax, refer to
-        <xref linkend="sec.apparmor.profiles.glob"/>.
-       </para>
+       <para>ワイルドカードを利用して幅広くマッチするルールを作成します。提示されたパスのうちのいずれかを選択するには、パスの前に示されている数字を入力して進めます。</para>
+       <para>グロブの書式に関する詳細は、 <xref linkend="sec.apparmor.profiles.glob"/> をお読みください。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Glob w/Ext</term>
       <listitem>
-       <para>
-        This modifies the original directory path while retaining the file
-        name extension. For example,
-        <filename>/etc/apache2/file.ext</filename> becomes
-        <filename>/etc/apache2/*.ext</filename>, adding the wild card
-        (asterisk) in place of the file name. This allows the program to
-        access all files in the suggested directory that end with the
-        <literal>.ext</literal> extension.
-       </para>
+       <para>元のディレクトリパス情報を変更して、ファイル名の拡張子だけをマッチングルールとして残すグロブを生成します。たとえば <filename>/etc/apache2/file.ext</filename> というファイルへのアクセスであった場合、ファイル名の部分だけをワイルドカードにして <filename>/etc/apache2/*.ext</filename> のような形式に変更します。これにより、特定のディレクトリ内にある同じ拡張子 (<literal>.ext</literal>) のファイルすべてに対して、許可するルールを作成することができます。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Abort</term>
       <listitem>
-       <para>
-        Aborts <command>aa-logprof</command>, losing all rule changes
-        entered so far and leaving all profiles unmodified.
-       </para>
+       <para><command>aa-logprof</command> を中止し、ここまでに入力したルール変更を破棄して終了します。プロファイルの修正は行ないません。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>Finish</term>
       <listitem>
-       <para>
-        Closes <command>aa-logprof</command>, saving all rule changes
-        entered so far and modifying all profiles.
-       </para>
+       <para><command>aa-logprof</command> を終了し、ここまでに入力したルール変更を保存し、プロファイルの修正を行ないます。</para>
       </listitem>
      </varlistentry>
     </variablelist>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.logprof_ex2">
-    <title>aa-logprof Example 2</title>
-    <para>
-     For example, when profiling vsftpd, see this question:
-    </para>
+    <title>aa-logprof 例 2</title>
+    <para>この例では、 vsftpd に対するプロファイル作成時の質問を示しています:</para>
 <screen>Profile:  /usr/sbin/vsftpd
 Path:     /y2k.jpg
 <!-- will probably be displayed as /path/to/chroot/y2k.jpg nowadays
@@ -1583,171 +757,47 @@ New Mode: r
 
 (A)llow / [(D)eny] / (N)ew / (G)lob / Glob w/(E)xt / Abo(r)t / (F)inish
 </screen>
-    <para>
-     Several items of interest appear in this question. First, note that
-     vsftpd is asking for a path entry at the top of the tree, even though
-     vsftpd on &productname;
-<!-- without chroot_relative, you'll get /path/to/chroot/y2k.jpg, so you need to rewrite the whole section -->
-     serves FTP files from <filename>/srv/ftp</filename> by default. This is
-     because vsftpd uses chroot and, for the portion of the code inside the
-     chroot jail, &aa; sees file accesses in terms of the chroot
-     environment rather than the global absolute path.
-    </para>
-    <para>
-     The second item of interest is that you should grant FTP read
-     access to all JPEG files in the directory, so you could use
-     <guimenu>Glob w/Ext</guimenu> and use the suggested path of
-     <literal>/*.jpg</literal>. Doing so collapses all previous rules
-     granting access to individual <literal>.jpg</literal> files and
-     forestalls any future questions pertaining to access to
-     <filename>.jpg</filename> files.
-    </para>
-    <para>
-     Finally, you should grant more general access to FTP files. If
-     you select <guimenu>Glob</guimenu> in the last entry,
-     <command>aa-logprof</command> replaces the suggested path of
-     <filename>/y2k.jpg</filename> with <filename>/*</filename>.
-     Alternatively, you should grant even more access to the entire
-     directory tree, in which case you could use the <guimenu>New</guimenu>
-     path option and enter <literal>/**.jpg</literal> (which would grant
-     access to all <literal>.jpg</literal> files in the entire directory
-     tree) or <filename>/**</filename> (which would grant access to all
-     files in the directory tree).
-    </para>
-    <para>
-     These items deal with read accesses. Write accesses are similar, except
-     that it is good policy to be more conservative in your use of regular
-     expressions for write accesses. Dealing with execute accesses is more
-     complex. Find an example in
-     <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/>.
-    </para>
-    <para>
-     In the following example, the <filename>/usr/bin/mail</filename> mail
-     client is being profiled and <command>aa-logprof</command> has
-     discovered that <command>/usr/bin/mail</command> executes
-     <command>/usr/bin/less</command> as a helper application to
-     <quote>page</quote> long mail messages. Consequently, it presents this
-     prompt:
-    </para>
+    <para>この質問には、いくつかの興味深い点があります。まず vsftpd がルートディレクトリに対するアクセス許可を求めています。ところが、 &productname; では、 vsftpd は既定で <filename>/srv/ftp</filename> 内のコンテンツを提供しているはずです。 <!-- without chroot_relative, you'll get /path/to/chroot/y2k.jpg, so you need to rewrite the whole section --> これは、 vsftpd が chroot 環境 (jail) で動作していることによるもので、プログラム上のコードではルートディレクトリにアクセスしているつもりであるため、 &aa; のログファイル内でも元のパスではなく、ルートディレクトリであるかのように表示されてしまいます。</para>
+    <para>次に興味深い点はファイル名です。 FTP クライアントから、ディレクトリ内にあるすべての JPEG ファイルに対するアクセスを許可したい場合は、 <guimenu>Glob w/Ext</guimenu> を選んで <literal>/*.jpg</literal> に変更して処理を進めます。これにより、個別の <literal>.jpg</literal> ファイルに対していちいち許可を設定する必要がなくなるほか、将来的に <literal>.jpg</literal> ファイルが増えたような場合でも、問題なく対応できることになります。</para>
+    <para>最後に興味深い点は、 FTP ファイル全体に対する点です。 <guimenu>Glob</guimenu> を選んで、 <command>aa-logprof</command> からの提案を <filename>/y2k.jpg</filename> から <filename>/*</filename> に変更します。それ以外にも、ディレクトリツリー全体に対してアクセスを許可してしまう方法もあります。この場合は <guimenu>New</guimenu> を選んで <literal>/**.jpg</literal> のように入力します。これにより、ディレクトリツリー全体に対して、すべての <literal>.jpg</literal> ファイルへのアクセスを許可します。それ以外にも、 <filename>/**</filename> と指定する方法もあります。この場合は、ディレクトリツリー全体のすべてのファイルに対して、アクセスを許可することになります。</para>
+    <para>ここまでは、読み込みアクセスに関する話題を扱ってきました。書き込みアクセスについても同様に対応することができますが、書き込みアクセスを付与するにあたっては、より保守的に (制限を厳しくする方向に) 設定しておくことをお勧めします。また、実行アクセスについてはさらに複雑です。詳しい例については <xref linkend="ex.apparmor.commandline.profiling.summary.genprof.learn"/> をお読みください。</para>
+    <para>下記の例では、 <filename>/usr/bin/mail</filename> に対してプロファイルを作成していて、 <command>/usr/bin/mail</command> が <command>/usr/bin/less</command> をヘルパーアプリケーションとして起動した際の質問の例です。 <command>/usr/bin/less</command> は、長いメールメッセージを <quote>ページ分割</quote> するために使用しています:</para>
 <screen>
 /usr/bin/nail -&gt; /usr/bin/less
 (I)nherit / (P)rofile / (C)hild / (N)ame / (U)nconfined / (X)ix / (D)eny
 </screen>
     <note>
-     <para>
-      The actual executable file for <filename>/usr/bin/mail</filename>
-      turns out to be <filename>/usr/bin/nail</filename>, which is not a
-      typographical error.
-     </para>
+     <para><filename>/usr/bin/mail</filename> の実際の実行ファイルが <filename>/usr/bin/nail</filename> となっていますが、これはスペルミスなどではなく、実際に存在するプログラム名です。</para>
     </note>
-    <para>
-     The program <filename>/usr/bin/less</filename> appears to be a
-     simple one for scrolling through text that is more than one screen
-     long and that is in fact what <filename>/usr/bin/mail</filename> is
-     using it for. However, <command>less</command> is actually a large
-     and powerful program that uses many other helper applications, such
-     as <command>tar</command> and <command>rpm</command>.
-    </para>
+    <para>プログラム <filename>/usr/bin/less</filename> は非常にシンプルなプログラムで、 1 画面以上にわたる長いテキストをスクロールしながら読むことができるプログラムです。このような便利な仕組みであることから、 <filename>/usr/bin/mail</filename> でも使用されているわけです。なお、 <command>less</command> はシンプルな仕組みでありながらも、同時に巨大でパワフルなプログラムでもあり、 <command>tar</command> や <command>rpm</command> などのプログラムをさらに呼び出すこともできます。</para>
     <tip>
-     <para>
-      Run <command>less</command> on a tar file or an RPM file and it shows
-      you the inventory of these containers.
-     </para>
+     <para>tar ファイルや RPM ファイルに対して <command>less</command> を実行すると、その中に含まれている内容を表示することができます。</para>
     </tip>
-    <para>
-     You do not want to run <command>rpm</command> automatically when
-     reading mail messages (that leads directly to a Microsoft*
-     Outlook&ndash;style virus attack, because RPM has the power to
-     install and modify system programs), so, in this case, the best choice
-     is to use <guimenu>Inherit</guimenu>. This results in the less program
-     executed from this context running under the profile for
-     <filename>/usr/bin/mail</filename>. This has two consequences:
-    </para>
+    <para>ですが、メールメッセージを読む際には、 <command>rpm</command> コマンドを自動的に実行してしまうのは危険です。なぜなら、 RPM プログラムにはシステムにプログラムをインストールしたり、プログラムを修正したりする機能が含まれるため、 Microsoft* Outlook でよく見つかるようなウイルス感染の経路になってしまうためです。そのため、ここで選ぶべき選択肢は <guimenu>Inherit</guimenu> (継承) になります。継承を指定すると、 <filename>/usr/bin/mail</filename> から実行される状況下で less プログラムを実行する場合、 <filename>/usr/bin/mail</filename> のプロファイルを適用し続けることになります。これには下記の 2 つの意味が含まれます:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       You need to add all of the basic file accesses for
-       <filename>/usr/bin/less</filename> to the profile for
-       <filename>/usr/bin/mail</filename>.
-      </para>
+      <para><filename>/usr/bin/less</filename> に対する基本的なファイルアクセス設定を、 <filename>/usr/bin/mail</filename> のプロファイル内に追加する必要があります。</para>
      </listitem>
      <listitem>
-      <para>
-       You can avoid adding the helper applications, such as
-       <command>tar</command> and <command>rpm</command>, to the
-       <filename>/usr/bin/mail</filename> profile so that when
-       <filename>/usr/bin/mail</filename> runs
-       <filename>/usr/bin/less</filename> in this context, the less program
-       is far less dangerous than it would be without &aa; protection.
-       Another option is to use the Cx execute modes. For more information
-       on execute modes, see <xref linkend="sec.apparmor.profiles.exec"/>.
-      </para>
+      <para><command>tar</command> や <command>rpm</command> などのヘルパーアプリケーションを <filename>/usr/bin/mail</filename> に登録することを避けることで、 <filename>/usr/bin/mail</filename> が <filename>/usr/bin/less</filename> を実行しても、 &aa; が存在すれば非常に安全に動作することになります。もう 1 つの選択肢としては Cx 実行モードがあります。実行モードに関する詳細は、 <xref linkend="sec.apparmor.profiles.exec"/> をお読みください。</para>
      </listitem>
     </itemizedlist>
-    <para>
-     In other circumstances, you might instead want to use the
-     <guimenu>Profile</guimenu> option. This has the following effects on
-     <command>aa-logprof</command>:
-    </para>
+    <para>その他の状況下では、 <guimenu>Profile</guimenu> オプションを選択する必要があるかもしれません。この場合は、 <command>aa-logprof</command> に対して下記のような効果があります:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       The rule written into the profile uses px/Px, which forces the
-       transition to the child's own profile.
-      </para>
+      <para>現在のプロファイル内に px/Px モードのルールが書き込まれ、子プロセスに対する独自のプロファイルに遷移するようになります。</para>
      </listitem>
      <listitem>
-      <para>
-       <command>aa-logprof</command> constructs a profile for the child and
-       starts building it, in the same way that it built the parent profile,
-       by assigning events for the child process to the child's profile and
-       asking the <command>aa-logprof</command> user questions. The profile
-       will also be applied if you run the child as a stand-alone program.
-      </para>
+      <para><command>aa-logprof</command> が子プロセスに対するプロファイルを作成し、構築を開始します。これは親プロセスのプロファイルと同じ方法で行なわれ、親プロセスのイベントは親のプロファイルに、子プロセスのイベントは子のプロファイルにそれぞれ保存されるようになります。 <command>aa-logprof</command> での質問は、両方をあわせて表示します。このプロファイルは、単独のプログラムを子として実行した場合にも当てはまります。</para>
      </listitem>
     </itemizedlist>
-    <para>
-     If a confined program forks and executes another program,
-     <command>aa-logprof</command> sees this and asks the user which
-     execution mode should be used when launching the child process. The
-     execution modes of inherit, profile, unconfined, child, named profile,
-     or an option to deny the execution are presented.
-    </para>
-    <para>
-     If a separate profile exists for the child process, the default
-     selection is profile. If a profile does not exist, the default is
-     inherit. The inherit option, or <literal>ix</literal>, is described in
-     <xref linkend="sec.apparmor.profiles.perm"/>.
-    </para>
-    <para>
-     The profile option indicates that the child program should run in its
-     own profile. A secondary question asks whether to sanitize the
-     environment that the child program inherits from the parent. If you
-     choose to sanitize the environment, this places the execution modifier
-     <literal>Px</literal> in your &aa; profile. If you select not to
-     sanitize, <literal>px</literal> is placed in the profile and no
-     environment sanitizing occurs. The default for the execution mode is
-     <literal>Px</literal> if you select profile execution mode.
-    </para>
-    <para>
-     The unconfined execution mode is not recommended and should only be
-     used in cases where there is no other option to generate a profile for
-     a program reliably. Selecting unconfined opens a warning dialog asking
-     for confirmation of the choice. If you are sure and choose
-     <guimenu>Yes</guimenu>, a second dialog ask whether to sanitize the
-     environment. To use the execution mode <literal>Ux</literal> in your
-     profile, select <guimenu>Yes</guimenu>. To use the execution mode
-     <literal>ux</literal> in your profile instead, select
-     <guimenu>No</guimenu>. The default value selected is
-     <literal>Ux</literal> for unconfined execution mode.
-    </para>
+    <para>制限を受けているプログラムが fork() したり他のプログラムを起動したりした場合、 <command>aa-logprof</command> はそれを検出すると、 fork() したプログラムや他のプログラムに対して適用すべき実行モードを尋ねます。実行モードは継承 (<emphasis>ix</emphasis>) , プロファイル (<emphasis>px</emphasis> , <emphasis>Px</emphasis>) , 無制限 (<emphasis>ux</emphasis> , <emphasis>Ux</emphasis>) , 子プロセス (<emphasis>cx</emphasis> , <emphasis>Cx</emphasis>) , 名前付きプロファイルのほか、実行拒否を設定することもできます。</para>
+    <para>子プロセス向けのプロファイルが個別に存在する場合は、既定の選択肢はプロファイル (<emphasis>Px</emphasis>) になります。逆に、プロファイルが存在しない場合は継承 (<emphasis>ix</emphasis>) になります。許可の詳細については、 <xref linkend="sec.apparmor.profiles.perm"/> をお読みください。</para>
+    <para>プロファイル (<emphasis>px</emphasis> , <emphasis>Px</emphasis>) を選択した場合、子プロセス側のプログラムでは、独自のプロファイルを使用して実行します。この場合、親プロセスから子プロセスに対して環境変数を継承するにあたって、危険性のある変数の内容を削除するかどうかを尋ねます。削除するよう選択した場合は、プロファイル内に <literal>Px</literal> が書き込まれ、削除しないように選択した場合は、プロファイル内に <literal>px</literal> が書き込まれます。なお、プロファイル実行モードを選択した場合の既定値は <literal>Px</literal> です。</para>
+    <para>無制限実行モードは非推奨であり、そのプログラムに対するプロファイルをどうやっても作成することができず、それ以外の選択肢が存在しない場合にのみ選択すべきものです。無制限実行モードを選択すると、警告メッセージが表示されて確認を求められますので、 <guimenu>Yes</guimenu> を入力して進めてください。また、危険性のある変数の内容を削除するかどうかを尋ねます。削除するよう選択した場合は、プロファイル内に <literal>Ux</literal> が書き込まれ、削除しないように選択した場合は、プロファイル内に <literal>ux</literal> が書き込まれます。なお、無制限実行モードを選択した場合の既定値は <literal>Ux</literal> です。</para>
     <important>
-     <title>Running Unconfined</title>
-     <para>
-      Selecting <literal>ux or Ux</literal> is very dangerous and provides
-      no enforcement of policy (from a security perspective) of the
-      resulting execution behavior of the child program.
-     </para>
+     <title>無制限での実行について</title>
+     <para><literal>ux</literal> や <literal>Ux</literal> の使用は非常に危険です。子プロセスの実行に際して、セキュリティ面でのポリシー強制が一切働かなくなります。</para>
     </important>
    </sect3>
 <!-- that all said:
@@ -1755,69 +805,32 @@ New Mode: r
          What about merging them?
          -->
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.unconfined">
-    <title>aa-unconfined&mdash;Identifying Unprotected Processes</title>
-    <para>
-     The <command>aa-unconfined</command> command examines open network
-     ports on your system, compares that to the set of profiles loaded on
-     your system, and reports network services that do not have &aa;
-     profiles. It requires &rootuser; privileges and that it not be
-     confined by an &aa; profile.
-    </para>
-    <para>
-     <command>aa-unconfined</command> must be run as &rootuser; to
-     retrieve the process executable link from the
-     <filename>/proc</filename> file system. This program is susceptible to
-     the following race conditions:
-    </para>
+    <title>aa-unconfined: 保護されていないプロセスの識別</title>
+    <para><command>aa-unconfined</command> コマンドは、お使いのシステムで開いているネットワークポートを調べ、システム内に読み込まれているプロファイルセットと比較を行ない、 &aa; のプロファイルのないネットワークサービスを報告します。このコマンドの実行にあたっては &rootuser; の権限が必要となるほか、 &aa; のプロファイルで制限を受けていない状況下で実行する必要があります。</para>
+    <para><command>aa-unconfined</command> は <filename>/proc</filename> ファイルシステムから実行ファイルの情報を取得する仕組みであるため、 &rootuser; で実行しなければなりません。また、下記のような競合状態が発生する可能性があります:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       An unlinked executable is mishandled
-      </para>
+      <para>コマンドの実行時に削除された実行ファイルがある場合、その扱いを誤ることがあります</para>
      </listitem>
      <listitem>
 <!-- bnc#880080: netstat vs. ss/ip -->
-      <para>
-       A process that dies between <command>netstat(8)</command> and further
-       checks is mishandled
-      </para>
+      <para><command>netstat(8)</command> を実行してから後続のチェックを行なうまでに、プロセスが終了したような場合、その扱いを誤ることがあります</para>
      </listitem>
     </itemizedlist>
     <note>
-     <para>
-      This program lists processes using TCP and UDP only. In short, this
-      program is unsuitable for forensics use and is provided only as an aid
-      to profiling all network-accessible processes in the lab.
-     </para>
+     <para>このプログラムは TCP と UDP を使用するプロセスのみを一覧表示します。その他のプロトコルを利用する通信については無視されます。そのため、フォレンジック用途にはお使いいただけません。検証環境内で、ネットワークにアクセスするプロセスに対してプロファイルを作成する用途にのみお使いください。</para>
     </note>
    </sect3>
    <sect3 xml:id="commandline.profiling.summary.aa-notify">
     <title>aa-notify</title>
-    <para>
-     <command>aa-notify</command> is a handy utility that displays &aa;
-     notifications in your desktop environment. This is very convenient if
-     you do not want to inspect the &aa; log file, but rather let the
-     desktop inform you about events that violate the policy. To enable
-     &aa; desktop notifications, run <command>aa-notify</command>:
-    </para>
-<screen>&prompt.sudo;aa-notify -p -u <replaceable>USERNAME</replaceable> --display <replaceable>DISPLAY_NUMBER</replaceable></screen>
-    <para>
-     where <replaceable>USERNAME</replaceable> is your user name under which
-     you are logged in, and <replaceable>DISPLAY_NUMBER</replaceable> is the
-     X Window display number you are currently using, such as
-     <literal>:0</literal>. The process is run in the background, and shows
-     a notification each time a deny event happens.
-    </para>
+    <para><command>aa-notify</command> は、お使いのデスクトップ環境内に &aa; の通知を表示することのできる、便利なユーティリティです。 &aa; のログファイルを直接調査したくなく、代わりにポリシーに違反した通知のみをデスクトップに表示したい場合に有用です。 &aa; のデスクトップ通知機能を有効化するには、下記のように入力して <command>aa-notify</command> を実行します:</para>
+<screen>&prompt.sudo;aa-notify -p -u <replaceable>ユーザ名</replaceable> --display <replaceable>ディスプレイ番号</replaceable></screen>
+    <para>ここで、 <replaceable>ユーザ名</replaceable> には現在ログインしているユーザのユーザ名を、 <replaceable>ディスプレイ番号</replaceable> には現在使用しているディスプレイのディスプレイ番号 (例: <literal>:0</literal>) をそれぞれ指定します。プログラムは裏で動作する仕組みで、拒否イベントが発生するたびに通知が表示されます。</para>
     <tip>
-     <para>
-      The active X Window display number is saved in the
-      <literal>$DISPLAY</literal> variable, so you can use
-      <literal>--display $DISPLAY</literal> to avoid finding out the current
-      display number.
-     </para>
+     <para>なお、現在使用している X Window のディスプレイ番号は、 <literal>$DISPLAY</literal> という環境変数に保存されていますので、 <literal>--display $DISPLAY</literal> と入力することで、現在のディスプレイをそのまま使用することができます。</para>
     </tip>
     <figure>
-     <title><command>aa-notify Message in GNOME</command></title>
+     <title><command>GNOME 内での aa-notify メッセージ</command></title>
      <mediaobject>
       <imageobject role="fo">
        <imagedata format="PNG" fileref="aa-notify.png" width="75%"/>
@@ -1827,192 +840,112 @@ New Mode: r
       </imageobject>
      </mediaobject>
     </figure>
-    <para>
-     With the <option>-s <replaceable>DAYS</replaceable></option> option,
-     you can also configure <command>aa-notify</command> to display a
-     summary of notifications for the specified number of past days. For
-     more information on <command>aa-notify</command>, see its man page
-     <command>man 8 aa-notify</command>.
-    </para>
+    <para>なお、 <option>-s <replaceable>日数</replaceable></option> というオプションを指定すると、指定した過去日数分の通知概要を表示することができます。 <command>aa-notify</command> の詳細については、 <command>man 8 aa-notify</command> で表示されるマニュアルページをお読みください。</para>
    </sect3>
    <sect3 xml:id="sec.apparmor.commandline.profiling.summary.vim">
     <title>apparmor.vim</title>
-    <para>
-     A syntax highlighting file for the vim text editor highlights various
-     features of an &aa; profile with colors. Using vim and the &aa;
-     syntax mode for vim, you can see the semantic implications of your
-     profiles with color highlighting. Use vim to view and edit your profile
-     by typing vim at a terminal window.
-    </para>
-    <para>
-     To enable the syntax coloring when you edit an &aa; profile in vim,
-     use the commands <literal>:syntax on</literal> then <literal>:set
-     syntax=apparmor</literal>. To make sure vim recognizes the edited file
-     type correctly as an &aa; profile, add
-    </para>
+    <para>vim テキストエディタ向けの文法ハイライト機能を利用することで、 &aa; のプロファイル内にある様々な機能を色付きで表示することができます。 vim と vim 向けの &aa; 文法モードでは、プロファイルの意味を色で識別することができますので、端末ウインドウ内で入力を行ないながら内容を確認することができます。</para>
+    <para>vim で &aa; のプロファイルを編集している際、文法ハイライト機能を有効にするには、 <literal>:syntax on</literal> を実行してから <literal>:set syntax=apparmor</literal> を実行します。また、 vim 側でファイルを正しく &aa; のプロファイルとして認識しているかどうかを調べるには、下記の内容をプロファイルの末尾に入力します:</para>
 <screen># vim:ft=apparmor</screen>
-    <para>
-     at the end of the profile.
-    </para>
+    <para><!-- NOTE: already translated i nprevious paragraph. --></para>
     <tip>
-     <para>
-      <command>vim</command> comes with &aa; highlighting automatically
-      enabled for files in <filename>/etc/apparmor.d/</filename>.
-     </para>
+     <para>なお、 <command>vim</command> を利用した場合、 <filename>/etc/apparmor.d/</filename> ディレクトリ内のファイルを編集すると、自動的に文法ハイライト機能が有効化されます。</para>
     </tip>
-    <para>
-     When you enable this feature, vim colors the lines of the profile for
-     you:
-    </para>
+    <para>この機能を利用した場合は、 vim ではプロファイルの内容を下記のように表示します:</para>
     <variablelist>
      <varlistentry>
-      <term>Blue</term>
+      <term>青</term>
       <listitem>
-       <para>
-        Comments
-       </para>
+       <para>コメント</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>White</term>
+      <term>白</term>
       <listitem>
-       <para>
-        Ordinary read access lines
-       </para>
+       <para>通常の読み込みアクセスの行</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Brown</term>
+      <term>茶</term>
       <listitem>
-       <para>
-        Capability statements and complain flags
-       </para>
+       <para>ケーパビリティの項目および不平モードのフラグ</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Yellow</term>
+      <term>黄</term>
       <listitem>
-       <para>
-        Lines that grant write access
-       </para>
+       <para>書き込み権のあるアクセスの行</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Green</term>
+      <term>緑</term>
       <listitem>
-       <para>
-        Lines that grant execute permission (either ix or px)
-       </para>
+       <para>実行許可 (ix もしくは px) を与えている行</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Red</term>
+      <term>赤</term>
       <listitem>
-       <para>
-        Lines that grant unconfined access (ux)
-       </para>
+       <para>無制限アクセス (ux) を設定している行</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Red background</term>
+      <term>赤い背景</term>
       <listitem>
-       <para>
-        Syntax errors that will not load properly into the &aa; modules
-       </para>
+       <para>正しく &aa; モジュールに読み込むことのできない、文法エラーのある行</para>
       </listitem>
      </varlistentry>
     </variablelist>
-    <para>
-     Use the <systemitem>apparmor.vim</systemitem> and
-     <systemitem>vim</systemitem> man pages and the <option>:help
-     syntax</option> from within the vim editor for further vim help about
-     syntax highlighting. The &aa; syntax is stored in
-     <filename>/usr/share/vim/current/syntax/apparmor.vim.</filename>
-    </para>
+    <para>vim での文法ハイライト機能について、詳しくは <systemitem>apparmor.vim</systemitem> および <systemitem>vim</systemitem> の各マニュアルページ、もしくは vim エディタ内から <option>:help syntax</option> と入力して実行することで表示される、ヘルプをお読みください。また、文法ハイライトに関わる設定は、 <filename>/usr/share/vim/current/syntax/apparmor.vim.</filename> 内にあります。</para>
    </sect3>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.apparmor.commandline.filenames">
-  <title>Important File Names and Directories</title>
+  <title>主なファイル名とディレクトリ</title>
 
-  <para>
-   The following list contains the most important files and directories used
-   by the &aa; framework. If you intend to manage and troubleshoot your
-   profiles manually, make sure that you know about these files and
-   directories:
-  </para>
+  <para>下記の一覧には、 &aa; フレームワークで使用される最も重要なファイルとディレクトリが列挙されています。プロファイルを手作業で管理もしくはトラブルシューティングしたい場合は、下記のファイルやディレクトリについて知っておく必要があります:</para>
 
   <variablelist>
    <varlistentry>
-    <term><filename>/sys/kernel/security/apparmor/profiles</filename>
-    </term>
+    <term><filename>/sys/kernel/security/apparmor/profiles</filename></term>
     <listitem>
-     <para>
-      Virtualized file representing the currently loaded set of profiles.
-     </para>
+     <para>現在読み込まれているプロファイルセットを表示することのできる、仮想ファイルです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/etc/apparmor/</filename>
-    </term>
+    <term><filename>/etc/apparmor/</filename></term>
     <listitem>
-     <para>
-      Location of &aa; configuration files.
-     </para>
+     <para>&aa; の設定ファイルの配置場所です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/etc/apparmor/profiles/extras/</filename>
-    </term>
+    <term><filename>/etc/apparmor/profiles/extras/</filename></term>
     <listitem>
-     <para>
-      A local repository of profiles shipped with &aa;, but not enabled
-      by default.
-     </para>
+     <para>&aa; に同梱されているプロファイルのローカルリポジトリです。既定では有効化されていません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/etc/apparmor.d/</filename>
-    </term>
+    <term><filename>/etc/apparmor.d/</filename></term>
     <listitem>
-     <para>
-      Location of profiles, named with the convention of replacing the
-      <literal>/</literal> in paths with <literal>.</literal> (not for the
-      root <literal>/</literal>) so profiles are easier to manage. For
-      example, the profile for the program
-      <filename>/usr/sbin/smbd</filename> is named
-      <filename>usr.sbin.smbd</filename>.
-     </para>
+     <para>プロファイルを保存するためのディレクトリです。なお、パス内の <literal>/</literal> を <literal>.</literal> に置き換えたファイル名 (ただしルートディレクトリを表わす冒頭の <literal>/</literal> は除きます) で作成するのが慣習となっています。これにより、プロファイルのファイル名を分かりやすくしています。たとえば <filename>/usr/sbin/smbd</filename> というプログラム向けのプロファイルは、 <filename>usr.sbin.smbd</filename> というファイル名になっています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/etc/apparmor.d/abstractions/</filename>
-    </term>
+    <term><filename>/etc/apparmor.d/abstractions/</filename></term>
     <listitem>
-     <para>
-      Location of abstractions.
-     </para>
+     <para>抽象を保存しておくためのディレクトリです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/etc/apparmor.d/program-chunks/</filename>
-    </term>
+    <term><filename>/etc/apparmor.d/program-chunks/</filename></term>
     <listitem>
-     <para>
-      Location of program chunks.
-     </para>
+     <para>プログラムチャンクを保存しておくためのディレクトリです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/*/attr/current</filename>
-    </term>
+    <term><filename>/proc/*/attr/current</filename></term>
     <listitem>
-     <para>
-      Check this file to review the confinement status of a process and the
-      profile that is used to confine the process. The <command>ps</command>
-      <option>auxZ</option> command retrieves this information
-      automatically.
-     </para>
+     <para>このファイルの内容を出力することで、そのプロセスに対する制限状況と、適用されているプロファイルを表示することができます。また、 <command>ps</command> <option>auxZ</option> のように入力して実行すると、この情報を自動的に取得することができます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
