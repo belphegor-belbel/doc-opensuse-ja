@@ -4,23 +4,14 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.apparmor.managing">
- <title>Managing Profiled Applications</title>
+ <title>プロファイルを作成したアプリケーションの管理</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  After creating profiles and immunizing your applications,
-  &productnamereg; becomes more efficient and better protected as long as
-  you perform &aareg; profile maintenance (which involves analyzing log
-  files, refining your profiles, backing up your set of profiles and keeping
-  it up-to-date). You can deal with these issues before they become a
-  problem by setting up event notification by e-mail, updating profiles from
-  system log entries by running the aa-logprof tool, and dealing with
-  maintenance issues.
- </para>
+    <para>&aareg; でアプリケーションのプロファイルを作成して予防接種を実施し、プロファイルをメンテナンス (ログファイルの分析からプロファイルの更新、プロファイルのバックアップや最新状態への維持) を行なうことで、 &productnamereg; は非常に効率的かつ堅牢なシステムにすることができます。また、電子メールへのイベント通知を設定し、 aa-logprof ツールを利用してログを調査し、プロファイルを更新することで、様々な問題が顕在化する前に対応を取ることができます。</para>
 <!-- fs 2011-11-09 - see bnc #722915
      (reporting is not available in 12.1 (aa-eventd isn't maintained upstream,
       and doesn't understand the (not-so-)new audit.log format))
@@ -1764,102 +1755,43 @@ b) desktop notifications
  </sect1>
 -->
  <sect1 xml:id="sec.apparmor.managing.react">
-  <title>Reacting to Security Event Rejections</title>
+  <title>アクセス拒否イベントへの対応</title>
 
-  <para>
-   When you receive a security event rejection, examine the access violation
-   and determine if that event indicated a threat or was part of normal
-   application behavior. Application-specific knowledge is required to make
-   the determination. If the rejected action is part of normal application
-   behavior, run <command>aa-logprof</command> at the command line.
-  </para>
+  <para>何らかのアクセス拒否イベントが見つかった場合、まずはその内容がセキュリティ上の脅威によるものなのか、もしくは通常のアプリケーションの動作として発生したものなのかを判断します。この判断にあたっては、アプリケーション固有の知識が必要となります。もしもアクセス拒否イベントが通常のアプリケーション動作として発生したものであった場合は、コマンドラインで <command>aa-logprof</command> を実行してください。</para>
 
-  <para>
-   If the rejected action is not part of normal application behavior, this
-   access should be considered a possible intrusion attempt (that was
-   prevented) and this notification should be passed to the person
-   responsible for security within your organization.
-  </para>
+  <para>アクセス拒否イベントが通常のアプリケーション動作では無いものである場合は、 &aa; の仕組みで未然に防止することができたものの、それは悪意のある侵入である可能性があります。このような状況が発生した場合は、組織内のセキュリティ責任者に連絡を取って、対応を検討することをお勧めします。</para>
  </sect1>
  <sect1 xml:id="sec.apparmor.managing.maintain">
-  <title>Maintaining Your Security Profiles</title>
+  <title>セキュリティプロファイルの管理</title>
 
-  <para>
-   In a production environment, you should plan on maintaining profiles for
-   all of the deployed applications. The security policies are an integral
-   part of your deployment. You should plan on taking steps to back up and
-   restore security policy files, plan for software changes, and allow any
-   needed modification of security policies that your environment dictates.
-  </para>
+  <para>本番環境においては、配置済みのすべてのアプリケーションに対して、プロファイルをメンテナンスするよう計画すべきです。セキュリティポリシーの策定と、それに伴うプロファイルの作成を、配置作業の一環として実施すべきです。また、セキュリティポリシーファイルのバックアップと復元のほか、お使いの環境でのソフトウエアの仕様変更の計画や、それに伴うセキュリティポリシーの修正についても、検討を行なうべきです。</para>
 
   <sect2 xml:id="sec.apparmor.managing.maintain.backup">
-   <title>Backing Up Your Security Profiles</title>
-   <para>
-    Backing up profiles might save you from having to re-profile all your
-    programs after a disk crash. Also, if profiles are changed, you can
-    easily restore previous settings by using the backed up files.
-   </para>
-   <para>
-    Back up profiles by copying the profile files to a specified directory.
-   </para>
+   <title>セキュリティプロファイルのバックアップ</title>
+   <para>プロファイルをバックアップしておくことで、ディスク障害が発生してもプログラムのプロファイルを作り直す必要が無くなります。また、プロファイルを変更した場合でも、バックアップから復元することで、容易に以前の状態に戻ることができます。</para>
+   <para>ポリシーのバックアップ作業は、特定のディレクトリ内にプロファイルをコピーするだけです。</para>
    <procedure>
     <step>
-     <para>
-      You should first archive the files into one file. To do this, open a
-      terminal window and enter the following as &rootuser;:
-     </para>
+     <para>まずはプロファイルを 1 つのファイルにまとめます。これを行なうには、端末ウインドウを開いて、 &rootuser; になって下記を実行します:</para>
 <screen>&prompt.sudo;tar zclpf profiles.tgz /etc/apparmor.d</screen>
-     <para>
-      The simplest method to ensure that your security policy files are
-      regularly backed up is to include the directory
-      <filename>/etc/apparmor.d</filename> in the list of directories that
-      your backup system archives.
-     </para>
+     <para>また、システムを定期的にバックアップしている場合は、バックアップ対象のディレクトリに <filename>/etc/apparmor.d</filename> を追加しておくことで、お使いのバックアップ内にプロファイルを入れておくことができます。</para>
     </step>
     <step>
-     <para>
-      You can also use <command>scp</command> or a file manager like
-      Nautilus to store the files on some kind of storage media, the
-      network, or another computer.
-     </para>
+     <para><command>scp</command> や Nautilus のようなファイルマネージャを使用することで、他のストレージメディアやネットワーク、その他のコンピュータなどにコピーすることもできます。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.apparmor.managing.maintain.change">
-   <title>Changing Your Security Profiles</title>
-   <para>
-    Maintenance of security profiles includes changing them if you decide
-    that your system requires more or less security for its applications. To
-    change your profiles in &aa;, refer to
-    <xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.yast.edit"/>.
-   </para>
+   <title>セキュリティプロファイルの変更</title>
+   <para>セキュリティプロファイルのメンテナンス作業には、アプリケーションに対するセキュリティを強めたり弱めたりして、システムを適切に保護する作業が含まれます。 &aa; 内でプロファイルを変更する方法について、詳しくは <xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.yast.edit"/> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.apparmor.managing.maintain.change.new_software">
-   <title>Introducing New Software into Your Environment</title>
-   <para>
-    When you add a new application version or patch to your system, you
-    should always update the profile to fit your needs. You have several
-    options, depending on your company's software deployment strategy. You
-    can deploy your patches and upgrades into a test or production
-    environment. The following explains how to do this with each method.
-   </para>
-   <para>
-    If you intend to deploy a patch or upgrade in a test environment, the
-    best method for updating your profiles is to run
-    <command>aa-logprof</command> in a terminal as &rootuser;. For
-    detailed instructions, refer to
-    <xref xrefstyle="HeadingOnPage" linkend="sec.apparmor.commandline.profiling.summary.logprof"/>.
-   </para>
-   <para>
-    If you intend to deploy a patch or upgrade directly into a production
-    environment, the best method for updating your profiles is to monitor
-    the system frequently to determine if any new rejections should be added
-    to the profile and update as needed using <command>aa-logprof</command>.
-    For detailed instructions, refer to
-    <xref xrefstyle="HeadingOnPage" linkend="sec.apparmor.commandline.profiling.summary.logprof"/>.
-   </para>
+   <title>お使いの環境に対する新規ソフトウエアの導入</title>
+   <para>システム内にインストールされているアプリケーションのバージョンを上げた場合や、修正を適用した場合、お使いの要件にあわせてプロファイルを更新する必要があります。更新方法にはいくつかのものがありますが、組織内の配置戦略にあわせて決定してください。また、テスト環境や本番環境に対して、修正やアップグレードを配置することもできます。以下では、これらそれぞれの方法について、どのようにすべきなのかについて説明しています。</para>
+   <para>テスト環境に修正やアップグレードを適用しようとしている場合は、端末を開いて &rootuser; になり、 <command>aa-logprof</command> を実行してプロファイルを更新するのが最適な方法です。詳しい手順については <xref xrefstyle="HeadingOnPage" linkend="sec.apparmor.commandline.profiling.summary.logprof"/> をお読みください。</para>
+   <para>本番環境に直接修正やアップグレードを適用しようとしている場合は、 <command>aa-logprof</command> を利用してシステムを頻繁に監視し、プロファイルに更新すべき内容が無いかどうかを細かく調べて、必要であれば追加するのが最適な方法です。詳しい手順については <xref xrefstyle="HeadingOnPage" linkend="sec.apparmor.commandline.profiling.summary.logprof"/> をお読みください。</para>
   </sect2>
  </sect1>
 </chapter>
