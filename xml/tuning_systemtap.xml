@@ -44,7 +44,7 @@
   </varlistentry>
  </variablelist>-->
 <!--taroth 2013-11-22: http://doccomments.provo.novell.com/admin/viewcomment/14466-->
- <title>&stap;&mdash;Filtering and Analyzing System Data</title>
+ <title>&stap;: システムデータのフィルタリングと分析</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -61,18 +61,7 @@
     http://sourceware.org/systemtap/documentation.html
     http://sourceware.org/systemtap/langref/
 -->
- <para>
-  &stap; provides a command line interface and a scripting language to
-  examine the activities of a running Linux system, particularly the kernel,
-  in fine detail. &stap; scripts are written in the &stap; scripting
-  language, are then compiled to C-code kernel modules and inserted into the
-  kernel. The scripts can be designed to extract, filter and summarize data,
-  thus allowing the diagnosis of complex performance problems or functional
-  problems. &stap; provides information similar to the output of tools
-  like <command>netstat</command>, <command>ps</command>,
-  <command>top</command>, and <command>iostat</command>. However, more
-  filtering and analysis options can be used for the collected information.
- </para>
+ <para>&stap; は、稼働中の Linux システムで動作状況を調査するためのコマンドラインインターフェイスとスクリプト言語を提供する仕組みです。特にカーネルの動作状況を詳細に収集することができます。 &stap; のスクリプトは &stap; スクリプト言語で記述され、これを C 言語のカーネルモジュールにコンパイルして、カーネル内に挿入します。スクリプトはデータを抽出するだけでなく、フィルタや要約を行なうこともできるため、複雑な性能問題や機能面の問題を分析することができるようになっています。また、 &stap; では <command>netstat</command> , <command>ps</command> , <command>top</command> , <command>iostat</command> などのツールの出力に似た情報を提供しますが、収集した情報に対してフィルタリングや分析などのオプションを適用することができます。</para>
 <!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later-->
 <!--<para>
   There are two different setups for using &stap;:
@@ -103,127 +92,43 @@
   </varlistentry>
  </variablelist>-->
  <sect1 xml:id="sec.tuning.systemtap.concept">
-  <title>Conceptual Overview</title>
+  <title>考え方の概要</title>
 
-  <para>
-   Each time you run a &stap; script, a &stap; session is started.
-   Several passes are done on the script before it is allowed to run.
-   Then, the script is compiled into a kernel module and loaded. If the
-   script has been executed before and no system components have changed
-   (for example, different compiler or kernel versions, library paths, or
-   script contents), &stap; does not compile the script again. Instead,
-   it uses the <filename>*.c</filename> and <filename>*.ko</filename> data
-   stored in the &stap; cache (<filename>~/.systemtap</filename>).
-  </para>
-  <para>
-   The module is unloaded when the tap has finished running. For an example, see
-   the test run in <xref linkend="sec.tuning.systemtap.setup"/> and the
-   respective explanation.
-<!--taroth 2011-10-17: systemtap 1.5, orginal linkend: sec.tuning.systemtap.setup.classic-->
-  </para>
+  <para>&stap; スクリプトを動作させると、 &stap; セッションが起動します。また、スクリプトが実行されるまでの間に、いくつかのパスが実行されます。その後、スクリプトはカーネルモジュールとしてコンパイルされ、読み込まれます。スクリプトを以前に実行していて、システムコンポーネント (コンパイラやカーネルのバージョン、ライブラリパスやスクリプトの内容) に変更がない場合、 &stap; は再度スクリプトをコンパイルするようなことはありません。その代わり、 &stap; のキャッシュ ( <filename>~/.systemtap</filename> ) 内に保存されている <filename>*.c</filename> と <filename>*.ko</filename> のデータを使用します。</para>
+  <para>タップの動作が完了すると、モジュールの読み込みも解除されます。たとえば <xref linkend="sec.tuning.systemtap.setup"/> にあるテストスクリプトと、対応する説明をお読みください。 <!--taroth 2011-10-17: systemtap 1.5, orginal linkend: sec.tuning.systemtap.setup.classic--></para>
 
   <sect2 xml:id="sec.tuning.systemtap.concept.scripts">
-   <title>&stap; Scripts</title>
-   <para>
-    &stap; usage is based on &stap; scripts
-    (<filename>*.stp</filename>). They tell &stap; which type of
-    information to collect, and what to do once that information is
-    collected. The scripts are written in the &stap; scripting language
-    that is similar to AWK and C. For the language definition, see
-    <link xlink:href="http://sourceware.org/systemtap/langref/"/>. A lot of
-    useful example scripts are available from
-    <link xlink:href="http://www.sourceware.org/systemtap/examples/"/>.
-   </para>
-   <para>
-    The essential idea behind a &stap; script is to name
-    <literal>events</literal>, and to give them <literal>handlers</literal>.
-    When &stap; runs the script, it monitors for certain events. When an
-    event occurs, the Linux kernel runs the handler as a sub-routine, then
-    resumes. Thus, events serve as the triggers for handlers to run.
-    Handlers can record specified data and print it in a certain manner.
-   </para>
-   <para>
-    The &stap; language only uses a few data types (integers, strings,
-    and associative arrays of these), and full control structures (blocks,
-    conditionals, loops, functions). It has a lightweight punctuation
-    (semicolons are optional) and does not need detailed declarations (types
-    are inferred and checked automatically).
-   </para>
-   <para>
-    For more information about &stap; scripts and their syntax, refer to
-    <xref linkend="sec.tuning.systemtap.syntax"/> and to the
-    <command>stapprobes</command> and <command>stapfuncs</command> man
-    pages, that are available with the
-    <systemitem class="resource">systemtap-docs</systemitem> package.
-   </para>
+   <title>&stap; スクリプト</title>
+   <para>&stap; は &stap; スクリプト ( <filename>*.stp</filename> ) を利用して行なう仕組みです。スクリプト内では収集する情報の種類のほか、収集後に何をすべきかを指定しています。スクリプトは &stap; スクリプト言語と呼ばれる、 AWK や C 言語に似た言語で作成します。言語の詳しい定義については <link xlink:href="http://sourceware.org/systemtap/langref/"/> (英語) をお読みください。また、スクリプト例については <link xlink:href="http://www.sourceware.org/systemtap/examples/"/> をご覧ください。</para>
+   <para>&stap; スクリプトの考え方のベースとして、 <literal>イベント</literal> とそれに対応した <literal>ハンドラ</literal> があります。 &stap; がスクリプトを実行すると、 &stap; はまず特定のイベントを待機します。そのイベントが発生すると、 Linux カーネルはサブルーチンとして指定されたハンドラを実行し、元の処理に戻ります。このような仕組みであることから、イベントはスクリプトを実行する際のトリガー (起動条件) と考えることができます。また、ハンドラは指定したデータをそのまま記録することができるほか、特定の書式でそれを出力することもできます。</para>
+   <para>&stap; 言語にはいくつかのデータ型 (整数, 文字列, およびそれらの連想配列) と、完全な制御構造 (ブロック, 条件分岐, ループ, 関数) が用意されています。また、文法は軽量な構造で、文末のセミコロンは省略することができますし、詳細なデータ型指定を行なう必要もありません (データ型は自動的に推測およびチェックされます) 。</para>
+   <para>&stap; スクリプトとその文法に関する詳細については、 <xref linkend="sec.tuning.systemtap.syntax"/> のほか、 <command>stapprobes</command> と <command>stapfuncs</command> の各マニュアルページをお読みください。マニュアルページは <systemitem class="resource">systemtap-docs</systemitem> パッケージ内に含まれています。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.systemtap.concept.tapsets">
-   <title>Tapsets</title>
-   <para>
-    <remark>sknorr, 2014-08-21: "tapsets are a library" sounds wrong... to
-     me, it would make more sense if there was a "library of tapsets," i.e. a
-     collection of systemtap scripts.</remark>
-    Tapsets are a library of pre-written probes and functions that can be
-    used in &stap; scripts. When a user runs a &stap; script,
-    &stap; checks the script's probe events and handlers against the
-    tapset library. &stap; then loads the corresponding probes and
-    functions before translating the script to C. Like &stap; scripts
-    themselves, tapsets use the file name extension
-    <filename>*.stp</filename>.
-<!--The standard library of tapsets is located in /usr/share/systemtap/tapset/ by default.-->
-   </para>
-   <para>
-    However, unlike &stap; scripts, tapsets are not meant for direct
-    execution. They constitute the library from which other scripts can pull
-    definitions. Thus, the tapset library is an abstraction layer designed
-    to make it easier for users to define events and functions. Tapsets
-    provide aliases for functions that users could want to specify as an
-    event. Knowing the proper alias is often easier than remembering
-    specific kernel functions that might vary between kernel versions.
-   </para>
+   <title>タップセット</title>
+   <para><remark>sknorr, 2014-08-21: "tapsets are a library" sounds wrong... to me, it would make more sense if there was a "library of tapsets," i.e. a collection of systemtap scripts.</remark> タップセットは、あらかじめ記述されたプローブや関数を含むライブラリで、 &stap; のスクリプト内から使用することができます。 &stap; のスクリプトを実行すると、 &stap; はスクリプト内のプローブイベントとハンドラが、タップセットライブラリ内に存在していないかどうかを確認します。 &stap; はスクリプトを C 言語に翻訳する前に、対応するプローブや関数を読み込みます。 &stap; スクリプト自身のように、タップセットにも同じファイル拡張子 <filename>*.stp</filename> が設定されています。 <!--The standard library of tapsets is located in /usr/share/systemtap/tapset/ by default.--></para>
+   <para>ただし、 &stap; スクリプトとは異なり、タップセットは直接実行するためのものではありません。タップセットは他のスクリプトに定義を与える存在であり、タップセットライブラリはユーザに対して、イベントや関数の定義をやりやすくするために設計されているものです。タップセットは関数に対して別名を提供し、ユーザ側からイベントとして指定することができるようになります。そのため、カーネルのバージョンによって異なるようなカーネルの関数を、より簡単に指定することができるようになります。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.systemtap.concept.cmd">
-   <title>Commands and Privileges</title>
-   <para>
-    The main commands associated with &stap; are <command>stap</command>
-    and <command>staprun</command>. To execute them, you either need
-    &rootuser; privileges or must be a member of the
-    <systemitem class="groupname">stapdev</systemitem> or
-    <systemitem class="groupname">stapusr</systemitem> group.
-   </para>
+   <title>コマンドと権限</title>
+   <para>&stap; に付属するメインのコマンドは、 <command>stap</command> と <command>staprun</command> の 2 種類です。これらを実行するには &rootuser; の権限を使用するか、もしくは <systemitem class="groupname">stapdev</systemitem> または <systemitem class="groupname">stapusr</systemitem> のメンバーである必要があります。</para>
    <variablelist>
     <varlistentry>
-     <term><command>stap</command>
-     </term>
+     <term><command>stap</command></term>
      <listitem>
-      <para>
-       &stap; front-end. Runs a &stap; script (either from file, or
-       from standard input). It translates the script into C code, compiles
-       it, and loads the resulting kernel module into a running Linux
-       kernel. Then, the requested system trace or probe functions are
-       performed.
-      </para>
+      <para>&stap; のフロントエンドです。 &stap; スクリプトのファイルを指定するか、もしくは標準入力から読み込むことで実行することができます。スクリプトは C 言語のコードに翻訳され、コンパイルされて動作中の Linux カーネル内でモジュールとして読み込みが行なわれます。これにより、必要なシステムトレースやプローブ関数を実行することができるようになります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>staprun</command>
-     </term>
+     <term><command>staprun</command></term>
      <listitem>
-      <para>
-       &stap; back-end. Loads and unloads kernel modules produced by the
-       &stap; front-end.
-<!--runs instrumentation modules-->
-      </para>
+      <para>&stap; のバックエンドです。 &stap; のフロントエンドが作成したカーネルモジュールを、読み込んだり読み込みを解除したりすることができます。 <!--runs instrumentation modules--></para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    For a list of options for each command, use <option>--help</option>. For
-    details, refer to the <command>stap</command> and the
-    <command>staprun</command> man pages.
-   </para>
+   <para>それぞれのコマンドに対するオプションを知りたい場合は、 <option>--help</option> オプションを指定して実行してください。詳しくは <command>stap</command> と <command>staprun</command> の各マニュアルページをお読みください。</para>
 <!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later-->
 <!--  <para>
     Apart from the commands above which are used in a setup where you build
@@ -239,101 +144,55 @@
     <command>stap-server</command> and <command>stap-client</command> man
     pages.
    </para>-->
-<para>
- <!-- bsc#992981 -->
-    To avoid giving &rootuser; access to users solely to enable them to work
-    with &stap;, use one of the following &stap; groups. They are not available
-    by default on &productname;, but you can create the groups and modify the
-    access rights accordingly.  Also adjust the permissions of the
-    <command>staprun</command> command if the security implications are
-    appropriate for your environment.
-   </para>
+<para><!-- bsc#992981 --> &rootuser; の権限を与えずに一般ユーザの権限で &stap; を実行させたい場合は、対象のユーザを下記の &stap; グループのいずれかに所属するように設定してください。これらのグループは既定の &productname; では作成されていませんので、必要に応じて作成し、アクセス権を調整してください。また、お使いの環境でセキュリティへの影響に問題がなければ、 <command>staprun</command> コマンドのパーミッションを調整してもかまいません。</para>
    <variablelist>
     <varlistentry>
-     <term><systemitem class="groupname">stapdev</systemitem>
-     </term>
+     <term><systemitem class="groupname">stapdev</systemitem></term>
      <listitem>
-      <para>
-       Members of this group can run &stap; scripts with
-       <command>stap</command>, or run &stap; instrumentation modules
-       with <command>staprun</command>. As running <command>stap</command>
-       involves compiling scripts into kernel modules and loading them into
-       the kernel, members of this group still have effective &rootuser;
-       access.
-      </para>
+      <para>このグループのメンバーであれば、 <command>stap</command> コマンドで &stap; スクリプトを実行することができるほか、 <command>staprun</command> コマンドで計装モジュールを実行することもできます。なお、 <command>stap</command> コマンドの実行には、スクリプトをカーネルモジュールにコンパイルする処理と、コンパイルしたカーネルモジュールをカーネルに読み込む処理が含まれますので、実質的には &rootuser; のアクセスと同等の権限を持つことになります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem class="groupname">stapusr</systemitem>
-     </term>
+     <term><systemitem class="groupname">stapusr</systemitem></term>
      <listitem>
-      <para>
-       Members of this group are only allowed to run &stap;
-       instrumentation modules with <command>staprun</command>. In addition,
-       they can only run those modules from
-       <filename>/lib/modules/<replaceable>KERNEL_VERSION</replaceable>/systemtap/</filename>.
-       This directory must be owned by &rootuser; and must only be
-       writable for the &rootuser; user.
-      </para>
+      <para>このグループのメンバーは、 <command>staprun</command> コマンドで計装モジュールを実行する権限のみを持ちます。これに加えて、 <filename>/lib/modules/<replaceable>カーネルバージョン</replaceable>/systemtap/</filename> 内にあるモジュールのみを実行することができます。このディレクトリは &rootuser; が所有しなければならず、かつ &rootuser; ユーザのみが書き込むことができるようにしなければなりません。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.tuning.systemtap.concept.dir">
-   <title>Important Files and Directories</title>
-   <para>
-    The following list gives an overview of the &stap; main files and
-    directories.
-   </para>
+   <title>主要なファイルとディレクトリ</title>
+   <para>下記では、 &stap; で使用される主なファイルとディレクトリについて、概要を説明しています。</para>
    <variablelist>
     <varlistentry>
-     <term><filename>/lib/modules/<replaceable>KERNEL_VERSION</replaceable>/systemtap/</filename>
-     </term>
+     <term><filename>/lib/modules/<replaceable>カーネルバージョン</replaceable>/systemtap/</filename></term>
      <listitem>
-      <para>
-       Holds the &stap; instrumentation modules.
-      </para>
+      <para>&stap; の計装モジュールが含まれるディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/usr/share/systemtap/tapset/</filename>
-     </term>
+     <term><filename>/usr/share/systemtap/tapset/</filename></term>
      <listitem>
-      <para>
-       Holds the standard library of tapsets.
-      </para>
+      <para>タップセットの標準ライブラリが含まれるディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/usr/share/doc/packages/systemtap/examples</filename>
-     </term>
+     <term><filename>/usr/share/doc/packages/systemtap/examples</filename></term>
      <listitem>
-      <para>
-       Holds several example &stap; scripts for various purposes.
-       Only available if the
-       <systemitem class="resource">systemtap-docs</systemitem> package is
-       installed.
-      </para>
+      <para>様々な用途に対応した &stap; スクリプトの例を配置しているディレクトリです。なお、このディレクトリは <systemitem class="resource">systemtap-docs</systemitem> パッケージをインストールした場合にのみ作成されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>~/.systemtap/cache</filename>
-     </term>
+     <term><filename>~/.systemtap/cache</filename></term>
      <listitem>
-      <para>
-       Data directory for cached &stap; files.
-      </para>
+      <para>キャッシュされた &stap; ファイルを含むデータディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/tmp/stap*</filename>
-     </term>
+     <term><filename>/tmp/stap*</filename></term>
      <listitem>
-      <para>
-       Temporary directory for &stap; files, including translated C code
-       and kernel object.
-      </para>
+      <para>&stap; ファイルの一時ディレクトリです。 C 言語に変換されたコードのほか、カーネルオブジェクトなどが含まれます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -402,28 +261,13 @@
   </sect2>
  </sect1>
  <sect1 xml:id="sec.tuning.systemtap.setup">
-  <title>Installation and Setup</title>
+  <title>インストールと設定</title>
 
-  <para>
-<!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later-->
-<!--Depending on your preferred setup, check the sections below for an
-   overview of the packages you need.-->
-   As &stap; needs information about the kernel, some additional
-   kernel-related packages must be installed. For each kernel you want to
-   probe with &stap;, you need to install a set of the following
-   packages. This set should exactly match the kernel version and flavor
-   (indicated by <literal>*</literal> in the overview below).
-  </para>
+  <para><!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later--> <!--Depending on your preferred setup, check the sections below for an overview of the packages you need.--> &stap; を動作させるにはカーネルに関する情報が必要となることから、カーネル関連の追加パッケージをインストールしなければなりません。また、 &stap; でプローブを設定したいカーネルごとに、それぞれ下記のパッケージをインストールする必要があります。さらに、下記のパッケージをインストールする場合は、プローブを設定したいカーネルのフレーバー (下記では <literal>*</literal> と記してあります) とバージョンが厳密に一致したパッケージをインストールする必要があります。</para>
 
   <important>
-   <title>Repository for Packages with Debugging Information</title>
-   <para>
-    If you subscribed your system for online updates, you can find
-    <quote>debuginfo</quote> packages in the
-    <literal>*-Debuginfo-Updates</literal> online installation repository
-    relevant for &productname; &productnumber;. Use &yast; to
-    enable the repository.
-   </para>
+   <title>デバッグ情報 (debuginfo) パッケージのリポジトリについて</title>
+   <para>お使いのシステムでオンライン更新を有効にしていれば、 &productname; &productnumber; に対応する <literal>*-Debuginfo-Updates</literal> という名前のオンラインリポジトリ内に、 <quote>debuginfo</quote> パッケージが存在しています。このリポジトリを有効にするには、 &yast; をお使いください。</para>
   </important>
 
 <!--taroth 2011-10-17: commenting for now (systemtap 1.5): original location of the para-->
@@ -441,79 +285,48 @@
    <title>Classic Setup and Initial Test</title>
 -->
 
-  <para>
-<!--For this setup,...-->
-   For the classic &stap; setup, install the following packages (using
-   either &yast; or <command>zypper</command>).
-  </para>
+  <para><!--For this setup,...--> 従来型の &stap; 設定を行なう場合は、下記のパッケージをインストールしてください (&yast; もしくは <command>zypper</command> を利用してインストールします。</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <systemitem class="resource">systemtap</systemitem>
-    </para>
+    <para><systemitem class="resource">systemtap</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">systemtap-server</systemitem>
-    </para>
+    <para><systemitem class="resource">systemtap-server</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">systemtap-docs</systemitem> (optional)
-    </para>
+    <para><systemitem class="resource">systemtap-docs</systemitem> (任意)</para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">kernel-*-base</systemitem>
-    </para>
+    <para><systemitem class="resource">kernel-*-base</systemitem></para>
    </listitem>
 <!--taroth 2011-10-07: just for the records: debuginfo pkgs are
            internally available from DVD3-->
    <listitem>
-    <para>
-     <systemitem class="resource">kernel-*-debuginfo</systemitem>
-    </para>
+    <para><systemitem class="resource">kernel-*-debuginfo</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">kernel-*-devel</systemitem>
-    </para>
+    <para><systemitem class="resource">kernel-*-devel</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">kernel-source-*</systemitem>
-    </para>
+    <para><systemitem class="resource">kernel-source-*</systemitem></para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">gcc</systemitem>
-    </para>
+    <para><systemitem class="resource">gcc</systemitem></para>
    </listitem>
   </itemizedlist>
 
 <!--taroth 2011-10-17: moved para here, change to original location after update
     for systemtap 1.5 is done-->
 
-  <para>
-   To get access to the man pages and to a helpful collection of example
-   &stap; scripts for various purposes, additionally install the
-   <systemitem class="resource">systemtap-docs</systemitem> package.
-  </para>
+  <para>マニュアルページや &stap; のスクリプト例など、様々な目的でのヘルプ情報を必要とする場合は、これらに加えて <systemitem class="resource">systemtap-docs</systemitem> パッケージもインストールしてください。</para>
 
-  <para>
-   To check if all packages are correctly installed on the machine and if
-   &stap; is ready to use, execute the following command as
-   &rootuser;.
-  </para>
+  <para>マシン内に必要なパッケージを全てインストールできていて、 &stap; を使用するための準備が整っているかどうかを確認するには、下記のコマンドを &rootuser; で実行します:</para>
 
-<screen>&prompt.root;stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'</screen>
+<screen>&prompt.root;stap -v -e 'probe vfs.read {printf("read performed
+"); exit()}'</screen>
 
-  <para>
-   It probes the currently used kernel by running a script and returning an
-   output. If the output is similar to the following, &stap; is
-   successfully deployed and ready to use:
-  </para>
+  <para>上記のコマンドを実行すると、スクリプトを実行して現在動作しているカーネルに対してプローブを設定し、出力を返します。出力が下記のような内容になっていれば、 &stap; は問題なく配置できたことになります:</para>
 
 <screen><?dbsuse-fo font-size="0.71em"?>Pass <co xml:id="co.tuning.stap.pass1"/>: parsed user script and 59 library script(s) in 80usr/0sys/214real ms.
 Pass <co xml:id="co.tuning.stap.pass2"/>: analyzed script: 1 probe(s), 11 function(s), 2 embed(s), 1 global(s) in
@@ -528,57 +341,23 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
 
   <calloutlist>
    <callout arearefs="co.tuning.stap.pass1">
-    <para>
-     Checks the script against the existing tapset library in
-     <filename>/usr/share/systemtap/tapset/</filename> for any tapsets used.
-     Tapsets are scripts that form a library of pre-written probes and
-     functions that can be used in &stap; scripts.
-    </para>
+    <para>スクリプトと <filename>/usr/share/systemtap/tapset/</filename> 内にある既存のタップセットライブラリをチェックしています。タップセットとはあらかじめ作成されたプローブや関数を集めたライブラリで、 &stap; スクリプト内から使用できる仕組みです。</para>
    </callout>
    <callout arearefs="co.tuning.stap.pass2">
-    <para>
-     Examines the script for its components.
-    </para>
+    <para>スクリプトのコンポーネントを調べています。</para>
    </callout>
    <callout arearefs="co.tuning.stap.pass3">
-    <para>
-     Translates the script to C. Runs the system C compiler to create a
-     kernel module from it. Both the resulting C code
-     (<filename>*.c</filename>) and the kernel module
-     (<filename>*.ko</filename>) are stored in the &stap; cache,
-     <filename>~/.systemtap</filename>.
-    </para>
+    <para>スクリプトを C 言語に変換しています。その後、作成された C 言語のソースコードを C コンパイラに通して、カーネルモジュールを作成しています。変換後の C 言語ソースコード ( <filename>*.c</filename> ) とカーネルモジュール ( <filename>*.ko</filename> ) が、 <filename>~/.systemtap</filename> にある &stap; キャッシュ内に保管されます。</para>
    </callout>
    <callout arearefs="co.tuning.stap.pass4">
-    <para>
-     Loads the module and enables all the probes (events and handlers) in
-     the script by hooking into the kernel. The event being probed is a
-     Virtual File System (VFS) read. As the event occurs on any processor, a
-     valid handler is executed (prints the text <literal>read
-     performed</literal>) and closed with no errors.
-    </para>
+    <para>モジュールを読み込んだあと、スクリプト内に指定されている全てのプローブ (イベントおよびハンドラ) をカーネル内のフックとして設置し、有効化しています。この例で使用しているプローブは、仮想ファイルシステム (Virtual File System; VFS) の読み込み処理になります。任意のプロセッサ内で対象のイベントが発生すると、対応するハンドラが実行 (この例では、 <literal>read performed</literal> と表示しています) され、エラー無しに終了しています。</para>
    </callout>
    <callout arearefs="co.tuning.stap.pass5">
-    <para>
-     After the &stap; session is terminated, the probes are disabled, and
-     the kernel module is unloaded.
-    </para>
+    <para>&stap; のセッションが終了すると、プローブは無効化され、カーネルモジュールの読み込みも解除されます。</para>
    </callout>
   </calloutlist>
 
-  <para>
-   In case any error messages appear during the test, check the output for
-   hints about any missing packages and make sure they are installed
-   correctly. Rebooting and loading the appropriate kernel may also be
-   needed.
-   <remark>jw 2010-09-23, while I am at it: I have two useful smoke tests,
-     to verify if an installation is working, see
-     http://docserv.suse.de/HOWTO/systemtap
-     If you install systemtap on an older system, the debuginfo and devel
-     packages are likely to be newer than your installed kernel. Finding the
-     correct versions for a given kernel might be challenging. I usually
-     circumvent this by upgrading the kernel.  </remark>
-  </para>
+  <para>テスト時に何らかのエラーメッセージが表示された場合、まずは出力された内容をご確認ください。出力された内容に必要なパッケージに関する情報が書かれている場合は、まず必要なパッケージが正しくインストールされていることを確認してください。また、カーネルをインストールした場合は、システムを再起動して新しいカーネルを読み込む必要があります。  <remark>jw 2010-09-23, while I am at it: I have two useful smoke tests, to verify if an installation is working, see http://docserv.suse.de/HOWTO/systemtap If you install systemtap on an older system, the debuginfo and devel packages are likely to be newer than your installed kernel. Finding the correct versions for a given kernel might be challenging. I usually circumvent this by upgrading the kernel. </remark></para>
 
 <!-- </sect2>-->
 
@@ -1236,581 +1015,271 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
   </sect2>-->
  </sect1>
  <sect1 xml:id="sec.tuning.systemtap.syntax">
-  <title>Script Syntax</title>
+  <title>スクリプトの文法</title>
 
-  <para>
-   &stap; scripts consist of the following two components:
-  </para>
+  <para>&stap; のスクリプトは、下記に示す 2 つのコンポーネントから構成されています:</para>
 
   <variablelist>
    <varlistentry>
-    <term><xref linkend="sec.tuning.systemtap.syntax.events" xrefstyle="select:title"/>
-    </term>
+    <term><xref linkend="sec.tuning.systemtap.syntax.events" xrefstyle="select:title"/></term>
     <listitem>
-     <para>
-      Name the kernel events at the associated handler should be executed.
-      Examples for events are entering or exiting a certain function, a
-      timer expiring, or starting or terminating a session.
-     </para>
+     <para>カーネル内のどのイベントでスクリプトを実行するのかを表わしている箇所です。特定の関数内に入ったタイミングや特定の関数を出たタイミング、もしくはタイマーの経過後やセッションの開始および停止などに設定することができます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><xref linkend="sec.tuning.systemtap.syntax.handlers" xrefstyle="select:title"/>
-    </term>
+    <term><xref linkend="sec.tuning.systemtap.syntax.handlers" xrefstyle="select:title"/></term>
     <listitem>
-     <para>
-      Series of script language statements that specify the work to be done
-      whenever a certain event occurs. This normally includes extracting
-      data from the event context, storing them into internal variables, or
-      printing results.
-     </para>
+     <para>特定のイベントが発生した際に実行すべきスクリプトを表わしている箇所です。これは通常、イベント内の情報を抽出したり、それらを内部の変数に格納したり、結果を出力したりする処理を行ないます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   An event and its corresponding handler is collectively called a
-   <literal>probe</literal>. &stap; events are also called <literal>probe
-   points</literal>. A probe's handler is also called a <literal>probe
-   body</literal>.
-  </para>
+  <para>イベントとそれに対応するハンドラをまとめて、 <literal>プローブ</literal> と呼びます。 &stap; のイベントは <literal>プローブポイント</literal> 、対応するハンドラは <literal>プローブボディ</literal> とも呼びます。</para>
 
-  <para>
-   Comments can be inserted anywhere in the &stap; script in various
-   styles: using either <literal>#</literal>, <literal>/* */</literal>, or
-   <literal>//</literal> as marker.
-  </para>
+  <para>コメントは &stap; スクリプト内の任意の箇所に配置することができます。コメントの書式は、 <literal>#</literal>, <literal>/* */</literal> , <literal>//</literal> のいずれかです。</para>
 
   <sect2 xml:id="sec.tuning.systemtap.syntax.probe">
-   <title>Probe Format</title>
-   <para>
-    A &stap; script can have multiple probes. They must be written in the
-    following format:
-   </para>
-<screen>probe <replaceable>EVENT</replaceable> {<replaceable>STATEMENTS</replaceable>}</screen>
-   <para>
-    Each probe has a corresponding statement block. This statement block
-    must be enclosed in <literal>{ }</literal> and contains the statements
-    to be executed per event.
-   </para>
+   <title>プローブの書式</title>
+   <para>&stap; のスクリプトには複数のプローブを設定することができます。プローブは下記の書式で作成します:</para>
+<screen>probe <replaceable>イベント名</replaceable> {<replaceable>ステートメント</replaceable>}</screen>
+   <para>それぞれのプローブには対応するステートメントブロックを設定します。ステートメントブロックは <literal>{ }</literal> で括らなければならず、かつイベントごとに実行すべきステートメントを含むものとします。</para>
    <example xml:id="ex.tuning.stap.simple">
-    <title>Simple &stap; Script</title>
-    <para>
-     The following example shows a simple &stap; script.
-    </para>
+    <title>シンプルな &stap; スクリプト</title>
+    <para>下記はシンプルな &stap; スクリプトの例です。</para>
 <screen>probe<co xml:id="co.tuning.stap.probe"/> begin<co xml:id="co.tuning.stap.event.begin"/>
 {<co xml:id="co.tuning.stap.handler.start"/>
-   printf<co xml:id="co.tuning.stap.handler.function.printf"/> ("hello world\n")<co xml:id="co.tuning.stap.handler.string"/>
+   printf<co xml:id="co.tuning.stap.handler.function.printf"/> ("hello world
+")<co xml:id="co.tuning.stap.handler.string"/>
    exit ()<co xml:id="co.tuning.stap.handler.function.exit"/>
 }<co xml:id="co.tuning.stap.handler.end"/></screen>
     <calloutlist>
      <callout arearefs="co.tuning.stap.probe">
-      <para>
-       Start of the probe.
-      </para>
+      <para>プローブの開始位置です。</para>
      </callout>
      <callout arearefs="co.tuning.stap.event.begin">
-      <para>
-       Event <literal>begin</literal> (the start of the &stap; session).
-      </para>
+      <para>イベント <literal>begin</literal> (&stap; セッションの開始) の指定です。</para>
      </callout>
      <callout arearefs="co.tuning.stap.handler.start">
-      <para>
-       Start of the handler definition, indicated by <literal>{</literal>.
-      </para>
+      <para><literal>{</literal> で示されているとおり、ハンドラ定義の開始位置です。</para>
      </callout>
      <callout arearefs="co.tuning.stap.handler.function.printf">
-      <para>
-       First function defined in the handler: the <literal>printf</literal>
-       function.
-      </para>
+      <para>ハンドラ内での最初の関数です。この例では <literal>printf</literal> 関数を使用しています。</para>
      </callout>
      <callout arearefs="co.tuning.stap.handler.string">
-      <para>
-       String to be printed by the <literal>printf</literal> function,
-       followed by a line break (<literal>/n</literal>).
-      </para>
+      <para><literal>printf</literal> 関数で出力すべき文字列を指定しています。末尾には改行 ( <literal>/n</literal> ) が書かれています。</para>
      </callout>
      <callout arearefs="co.tuning.stap.handler.function.exit">
-      <para>
-       Second function defined in the handler: the <literal>exit()</literal>
-       function. Note that the &stap; script will continue to run until
-       the <literal>exit()</literal> function executes. If you want to stop
-       the execution of the script before, stop it manually by pressing
-       <keycombo> <keycap function="control"/> <keycap>C</keycap>
-       </keycombo>.
-      </para>
+      <para>ハンドラ内での 2 つめの関数です。この例では <literal>exit()</literal> 関数を使用しています。なお、 &stap; スクリプトは <literal>exit()</literal> 関数を実行するまでは、動作し続けることに注意してください。この関数を実行する前にスクリプトの実行を停止したい場合は、 <keycombo> <keycap function="control"/> <keycap>C</keycap> </keycombo> を押します。</para>
      </callout>
      <callout arearefs="co.tuning.stap.handler.end">
-      <para>
-       End of the handler definition, indicated by <literal>}</literal>.
-      </para>
+      <para><literal>}</literal> で示されているとおり、ハンドラ定義の終了位置です。 </para>
      </callout>
     </calloutlist>
-    <para>
-     The event <literal>begin</literal>
-     <xref linkend="co.tuning.stap.event.begin" xrefstyle="select:label nopage"/>
-     (the start of the &stap; session) triggers the handler enclosed in
-     <literal>{ }</literal>. Here, that is the <literal>printf</literal>
-     function
-     <xref linkend="co.tuning.stap.handler.function.printf" xrefstyle="select:label nopage"/>.
-     In this case, it prints <literal>hello world</literal> followed by a
-     new line
-     <xref linkend="co.tuning.stap.handler.string" xrefstyle="select:label nopage"/>.
-     Then, the script exits.
-    </para>
+    <para>イベント <literal>begin</literal> <xref linkend="co.tuning.stap.event.begin" xrefstyle="select:label nopage"/> (&stap; セッションの開始) が発生すると、 <literal>{ }</literal> で括られたハンドラを実行します。ここでは、 <literal>printf</literal> 関数 <xref linkend="co.tuning.stap.handler.function.printf" xrefstyle="select:label nopage"/> になります。この場合、 <literal>hello world</literal> という文字列に加えて改行 <xref linkend="co.tuning.stap.handler.string" xrefstyle="select:label nopage"/> を出力しています。出力が終わると、スクリプトは終了します。</para>
    </example>
-   <para>
-    If your statement block holds several statements, &stap; executes
-    these statements in sequence&mdash;you do not need to insert special
-    separators or terminators between multiple statements. A statement block
-    can also be nested within another statement blocks. Generally, statement
-    blocks in &stap; scripts use the same syntax and semantics as in the
-    C programming language.
-   </para>
+   <para>ステートメント内に複数の記述が存在する場合、 &stap; ではそれらを順次実行します。言い換えると、複数のステートメントを記述するにあたって、特殊な区切り文字や終端などを入れる必要はありません。 &stap; 内では一般に、ステートメントブロックは C プログラミング言語と同じ書式になっています。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.systemtap.syntax.events">
-   <title>&stap; Events (Probe Points)</title>
-   <para>
-    &stap; supports several built-in events.
-   </para>
-   <para>
-    The general event syntax is a dotted-symbol sequence. This allows a
-    breakdown of the event namespace into parts. Each component identifier
-    may be parameterized by a string or number literal, with a syntax like a
-    function call. A component may include a <literal>*</literal> character,
-    to expand to other matching probe points. A probe point may be followed
-    by a <literal>?</literal> character, to indicate that it is optional,
-    and that no error should result if it fails to expand.
-    <remark>tonyj 2010-05-8: Maybe an example? There are lots of them in
-     syscalls.stp tapset (/usr/share/ systemptap/tapset/syscalls.stp). - taroth
-     2010-05-10: for next revision, no time left now</remark>
-    Alternately, a probe point may be followed by a <literal>!</literal>
-    character to indicate that it is both optional and sufficient.
-   </para>
-   <para>
-    &stap; supports multiple events per probe&mdash;they need to be
-    separated by a comma (<literal>,</literal>). If multiple events are
-    specified in a single probe, &stap; will execute the handler when any
-    of the specified events occur.
-   </para>
-   <para>
-    In general, events can be classified into the following categories:
-   </para>
+   <title>&stap; イベント (プローブポイント)</title>
+   <para>&stap; にはいくつかの内蔵イベントが用意されています。</para>
+   <para>一般的なイベント名はドットで区切った <!-- NOTE: to understand easily; DNS-like --> DNS のような命名体系になっています。この仕組みにより、名前をツリー構造で管理できるようになっています。また、ドット区切り内の各コンポーネントには、文字列や数値によるパラメータを設定できるようになっていて、見た目では関数のような表現になっています。また、コンポーネントに <literal>*</literal> を指定した場合、複数のプローブポイントにマッチするようなイベント名にすることができます。また、プローブポイントの後には <literal>?</literal> が付けられることもあります。この場合、それが任意指定のものであることを示し、展開に失敗した場合もエラーが無視されるようになります。 <remark>tonyj 2010-05-8: Maybe an example? There are lots of them in syscalls.stp tapset (/usr/share/ systemptap/tapset/syscalls.stp). - taroth 2010-05-10: for next revision, no time left now</remark> また、プローブポイントの後ろに <literal>!</literal> を付けた場合、任意指定でかつ十分な存在であることを示します。</para>
+   <para>&stap; では 1 つのプローブに対して複数のイベントを設定することができます。複数のイベントを指定する場合、イベント間は ( <literal>,</literal> ) で区切ります。また、 1 つのプローブに対して複数のイベントが指定された場合、 &stap; はいずれかのイベントが発生した場合に、指定のハンドラを実行することになります。</para>
+   <para>一般的には、イベントは下記のような分類に分けることができます:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      Synchronous events: Occur when any process executes an instruction at
-      a particular location in kernel code. This gives other events a
-      reference point (instruction address) from which more contextual data
-      may be available.
-     </para>
-     <para>
-      An example for a synchronous event is
-      <literal>vfs.<replaceable>FILE_OPERATION</replaceable></literal>: The
-      entry to the <replaceable>FILE_OPERATION</replaceable> event for
-      Virtual File System (VFS). For example, in
-      <xref linkend="sec.tuning.systemtap.setup"/>, <literal>read</literal>
-      is the <replaceable>FILE_OPERATION</replaceable> event used for VFS.
-<!--taroth 2011-10-17: sysemtap 1.5, original linkend-->
-<!-- <xref  linkend="sec.tuning.systemtap.setup.classic"/>-->
-<!--If you also
-      want to monitor the exit of the <replaceable>FILE_OPERATION</replaceable>
-      operation, append a <literal>.return</literal> to the event (for example,
-       <literal>vfs.read.return</literal>).-->
-     </para>
+     <para>同期型イベント: 任意のプロセスが、カーネルコード内の特定の箇所に達した場合に発生するイベントです。これは他のイベントに対して参照ポイント (インストラクションアドレス) を与え、ここから多くのコンテキスト情報を取得できるようになります。</para>
+     <para>同期型イベントの例として、 <literal>vfs.<replaceable>ファイル操作</replaceable></literal> があります。これは仮想ファイルシステム (Virtual File System; VFS) 内の <replaceable>ファイル操作</replaceable> イベントを表わすもので、たとえば <xref linkend="sec.tuning.systemtap.setup"/>  では、 <literal>read</literal> が <replaceable>ファイル操作</replaceable> の箇所にあたります。 <!--taroth 2011-10-17: sysemtap 1.5, original linkend--> <!-- <xref linkend="sec.tuning.systemtap.setup.classic"/>--> <!--If you also want to monitor the exit of the <replaceable>FILE_OPERATION</replaceable> operation, append a <literal>.return</literal> to the event (for example, <literal>vfs.read.return</literal>).--></para>
     </listitem>
     <listitem>
-     <para>
-      Asynchronous events: Not tied to a particular instruction or location
-      in code. This family of probe points consists mainly of counters,
-      timers, and similar constructs.
-     </para>
-     <para>
-      Examples for asynchronous events are: <literal>begin</literal> (start
-      of a &stap; session&mdash;when a &stap; script is run,
-      <literal>end</literal> (end of a &stap; session), or timer events.
-      Timer events specify a handler to be executed periodically, like
-      <literal>example
-      timer.s(<replaceable>SECONDS</replaceable>)</literal>, or
-      <literal>timer.ms(<replaceable>MILLISECONDS</replaceable>)</literal>.
-     </para>
-     <para>
-      When used together with other probes that collect information,
-      timer events allow you to print periodic updates and see how that
-      information changes over time.
-     </para>
+     <para>非同期型イベント: 特定のインストラクションやカーネルコード内の位置に結びつかないイベントです。このようなプローブポイントとしては、カウンターやタイマーなどの構造があります。</para>
+     <para>非同期型イベントの例としては、 <literal>begin</literal>  (&stap; セッションの開始) や <literal>end</literal> (&stap; セッションの終了) のほか、タイマーイベントがあります。タイマーイベントは定期的に実行すべきハンドラを指定するためのもので、たとえば <literal>example timer.s(<replaceable>秒</replaceable>)</literal> や <literal>timer.ms(<replaceable>ミリ秒</replaceable>)</literal> のように指定します。</para>
+     <para>タイマーイベントは、他のプローブと併用することで、定期的なデータ更新を行なうことができるようになるほか、時間が経過するたびに変化していくような情報を追跡することができるようになります。</para>
     </listitem>
    </itemizedlist>
    <example xml:id="ex.tuning.stap.async">
-    <title>Probe with Timer Event</title>
-    <para>
-     For example, the following probe would print the text <quote>hello
-     world</quote> every 4 seconds:
-    </para>
+    <title>タイマーイベントのプローブ</title>
+    <para>たとえば下記のようなプローブを設定すると、 <quote>hello world</quote> を 4 秒間隔で出力します:</para>
 <screen>probe timer.s(4)
 {
-   printf("hello world\n")
+   printf("hello world
+")
 }</screen>
    </example>
-   <para>
-    For detailed information about supported events, refer to the
-    <command>stapprobes</command> man page. The <citetitle>See
-    Also</citetitle> section of the man page also contains links to other
-    man pages that discuss supported events for specific subsystems and
-    components.
-   </para>
+   <para>対応するイベントの詳細について、詳しくは <command>stapprobes</command> のマニュアルページをお読みください。マニュアルページ内の <citetitle>See Also</citetitle> セクションには、特定のサブシステムやコンポーネントに対するイベントを含む、他のマニュアルページへのリンクが書かれています。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.systemtap.syntax.handlers">
-   <title>&stap; Handlers (Probe Body)</title>
-   <para>
-    Each &stap; event is accompanied by a corresponding handler defined
-    for that event, consisting of a statement block.
-   </para>
+   <title>&stap; ハンドラ (プローブボディ)</title>
+   <para>&stap; イベントには対応するハンドラが指定されます。ハンドラ内では、ステートメントブロックから構成される処理を記述します。</para>
    <sect3 xml:id="sec.tuning.systemtap.syntax.handlers.functions">
-    <title>Functions</title>
-    <para>
-     If you need the same set of statements in multiple probes, you can
-     place them in a function for easy reuse. Functions are defined by the
-     keyword <literal>function</literal> followed by a name. They take any
-     number of string or numeric arguments (by value) and may return a
-     single string or number.
-    </para>
-<screen>function <replaceable>FUNCTION_NAME</replaceable>(<replaceable>ARGUMENTS</replaceable>) {<replaceable>STATEMENTS</replaceable>}
-probe <replaceable>EVENT</replaceable> {<replaceable>FUNCTION_NAME</replaceable>(<replaceable>ARGUMENTS</replaceable>)}</screen>
-    <para>
-     The statements in <replaceable>FUNCTION_NAME</replaceable> are executed
-     when the probe for <replaceable>EVENT</replaceable> executes. The
-     <replaceable>ARGUMENTS</replaceable> are optional values passed into
-     the function.
-    </para>
-    <para>
-     Functions can be defined anywhere in the script. They may take any
-    </para>
-    <para>
-     One of the functions needed very often was already introduced in
-     <xref linkend="ex.tuning.stap.simple"/>: the <literal>printf</literal>
-     function for printing data in a formatted way. When using the
-     <literal>printf</literal> function, you can specify how arguments
-     should be printed by using a format string. The format string is
-     included in quotation marks and can contain further format specifiers,
-     introduced by a <literal>%</literal> character.
-    </para>
-    <para>
-     Which format strings to use depends on your list of arguments. Format
-     strings can have multiple format specifiers&mdash;each matching a
-     corresponding argument. Multiple arguments can be separated by a comma.
-    </para>
+    <title>関数</title>
+    <para>複数のプローブ内で同じステートメントを実行する必要がある場合は、それらの共通部分を関数として取り出して、再利用しやすくすることをお勧めします。関数はキーワード <literal>function</literal> に続いて関数名を指定することで、定義を行なうことができます。また、任意の数の文字列や数値 (いずれも値渡し) をパラメータとして取ることができ、返り値は単一の文字列もしくは数値を設定することができます。</para>
+<screen>function <replaceable>関数名</replaceable>(<replaceable>パラメータ</replaceable>) {<replaceable>ステートメント</replaceable>}
+probe <replaceable>イベント</replaceable> {<replaceable>関数名</replaceable>(<replaceable>パラメータ</replaceable>)}</screen>
+    <para>上記の例では、 <replaceable>イベント</replaceable> のハンドラが実行されると、 <replaceable>関数名</replaceable> の関数が実行されます。 <replaceable>パラメータ</replaceable> は任意指定のもので、関数に渡すパラメータを指定します。</para>
+    <para>関数はスクリプト内の任意の場所に記述することができます。</para>
+    <para>よく使用する関数の例として、既に <xref linkend="ex.tuning.stap.simple"/> で紹介を行なっている <literal>printf</literal> 関数があります。この関数は書式を指定してデータを出力するための関数で、書式ではどれだけの数のパラメータを出力するのか、およびどのように整形して出力するのかを指定します。書式文字列は二重引用符で括り、書式指定は <literal>%</literal> 文字で書き始めます。</para>
+    <para>どのような書式指定文字列を使用するのかは、そのパラメータに依存して決まります。書式指定文字列は複数個指定することができ、その際にはパラメータをカンマ区切りで指定します。</para>
     <example xml:id="ex.tuning.stap.printf.formatspec">
-     <title><literal>printf</literal> Function with Format Specifiers</title>
-<screen>printf ("<co xml:id="co.tuning.stap.formatstring.start"/>%s<co xml:id="co.tuning.stap.string.spec"/>(%d<co xml:id="co.tuning.stap.int.spec"/>) open\n<co xml:id="co.tuning.stap.formatstring.end"/>", execname(), pid())</screen>
+     <title>書式指定を伴う <literal>printf</literal> 関数</title>
+<screen>printf ("<co xml:id="co.tuning.stap.formatstring.start"/>%s<co xml:id="co.tuning.stap.string.spec"/>(%d<co xml:id="co.tuning.stap.int.spec"/>) open
+<co xml:id="co.tuning.stap.formatstring.end"/>", execname(), pid())</screen>
      <calloutlist>
       <callout arearefs="co.tuning.stap.formatstring.start">
-       <para>
-        Start of the format string, indicated by <literal>"</literal>.
-       </para>
+       <para><literal>"</literal> で示されているとおり、書式指定文字列の開始位置です。</para>
       </callout>
       <callout arearefs="co.tuning.stap.string.spec">
-       <para>
-        String format specifier.
-       </para>
+       <para>文字列の書式指定です。</para>
       </callout>
       <callout arearefs="co.tuning.stap.int.spec">
-       <para>
-        Integer format specifier.
-       </para>
+       <para>整数の書式指定です。</para>
       </callout>
       <callout arearefs="co.tuning.stap.formatstring.end">
-       <para>
-        End of the format string, indicated by <literal>"</literal>.
-       </para>
+       <para><literal>"</literal> で示されているとおり、書式指定文字列の終了位置です。</para>
       </callout>
      </calloutlist>
     </example>
-    <para>
-     The example above prints the current executable name
-     (<literal>execname()</literal>) as a string and the process ID
-     (<literal>pid()</literal>) as an integer in brackets. Then, a space,
-     the word <literal>open</literal> and a line break follow:
-    </para>
+    <para>上記の例では、実行ファイル名 ( <literal>execname()</literal> ) を文字列で、プロセス ID ( <literal>pid()</literal> ) を括弧内に整数で、それぞれ出力する指定になっています。その後ろは固定でスペースを入れ、 <literal>open</literal> と出力して改行を行ないます:</para>
 <screen>[...]
 vmware-guestd(2206) open
 hald(2360) open
 [...]
    </screen>
-    <para>
-     Apart from the two functions <literal>execname()</literal>and
-     <literal>pid()</literal>) used in
-     <xref linkend="ex.tuning.stap.printf.formatspec"/>, a variety of other
-     functions can be used as <literal>printf</literal> arguments.
-    </para>
-    <para>
-     Among the most commonly used &stap; functions are the following:
-    </para>
+    <para><xref linkend="ex.tuning.stap.printf.formatspec"/> で使用している <literal>execname()</literal> や <literal>pid()</literal> のほかにも、 <literal>printf</literal> のパラメータとしては様々な関数を指定することができます。</para>
+    <para>&stap; で最もよく使用される関数は下記のとおりです:</para>
     <variablelist>
      <varlistentry>
       <term>tid()</term>
       <listitem>
-       <para>
-        ID of the current thread.
-       </para>
+       <para>現在のスレッドの ID を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>pid()</term>
       <listitem>
-       <para>
-        Process ID of the current thread.
-       </para>
+       <para>現在のスレッドのプロセス ID を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>uid()</term>
       <listitem>
-       <para>
-        ID of the current user.
-       </para>
+       <para>現在のユーザのユーザ ID を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>cpu()</term>
       <listitem>
-       <para>
-        Current CPU number.
-       </para>
+       <para>現在の CPU 番号を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>execname()</term>
       <listitem>
-       <para>
-        Name of the current process.
-       </para>
+       <para>現在のプロセスの名前を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>gettimeofday_s()</term>
       <listitem>
-       <para>
-        Number of seconds since Unix epoch (January 1, 1970).
-       </para>
+       <para>Unix エポック (1970 年 1 月 1 日) からの経過秒数を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>ctime()</term>
       <listitem>
-       <para>
-        Convert time into a string.
-       </para>
+       <para>時刻を文字列に変換します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>pp()</term>
       <listitem>
-       <para>
-        String describing the probe point currently being handled.
-       </para>
+       <para>現在処理しているプローブポイントの文字列表現を返します。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>thread_indent()</term>
       <listitem>
-       <para>
-        Useful function for organizing print results. It (internally) stores
-        an indentation counter for each thread (<literal>tid()</literal>).
-        The function takes one argument, an indentation delta, indicating
-        how many spaces to add or remove from the thread's indentation
-        counter. It returns a string with some generic trace data along with
-        an appropriate number of indentation spaces. The generic data
-        returned includes a time stamp (number of microseconds since the
-        initial indentation for the thread), a process name, and the thread
-        ID itself. This allows you to identify what functions were called,
-        who called them, and how long they took.
-       </para>
-       <para>
-        Call entries and exits often do not immediately precede each other
-        (otherwise it would be easy to match them). In between a first call
-        entry and its exit, usually other call entries and exits
-        are made. The indentation counter helps you match an entry with its
-        corresponding exit as it indents the next function call in case it
-        is <emphasis>not</emphasis> the exit of the previous one. For an
-        example &stap; script using <literal>thread_indent()</literal>
-        and the respective output, refer to the <citetitle>&stap;
-        Tutorial</citetitle>:
-        <link xlink:href="http://sourceware.org/systemtap/tutorial/Tracing.html#fig:socket-trace"/>.
-       </para>
+       <para>出力結果を読みやすくするための便利な関数です。これは各スレッド ( <literal>tid()</literal> ) に対して (内部的な) インデントカウンタを保存するものです。この関数には 1 つだけパラメータを指定しますが、このパラメータはインデント差 (スレッドのインデントカウンタの増減値) を指定します。返り値は一般的なトレースデータと、インデントカウンタの値に対応した数のスペースを含む文字列になります。一般的なトレースデータには、タイムスタンプ (スレッドの初期インデントからの経過マイクロ秒) のほか、プロセス名とスレッド ID それ自身が含まれます。これにより、どの関数を誰が呼び出したのか、およびそれにどれだけの時間を要したのかがわかるようになっています。</para>
+       <para><!-- NOTE: changed to more explanatory thing --> システムコールの開始と終了は、見た目ではわかりにくくなってしまうことがあります。たとえば一方のシステムコールが他方のシステムコールを呼び出していて、そのいずれにもプローブを設定しているような場合、開始と終了が入れ子になってしまい、出力がわかりにくくなってしまいます。このインデントカウンタの仕組みを使用することで、入れ子の形で呼び出されているシステムコールの出力を字下げ (インデント) して、読みやすくする効果を生み出します。 <literal>thread_indent()</literal> を利用した &stap; スクリプトとその出力例について、詳しくは <link xlink:href="http://sourceware.org/systemtap/tutorial/Tracing.html#fig:socket-trace"/> にある <citetitle>&stap; Tutorial</citetitle> (英語) をお読みください。</para>
       </listitem>
      </varlistentry>
     </variablelist>
-    <para>
-     For more information about supported &stap; functions, refer to the
-     <command>stapfuncs</command> man page.
-    </para>
+    <para>提供されている &stap; 関数に関する詳細な情報については、 <command>stapfuncs</command> のマニュアルページをお読みください。</para>
    </sect3>
    <sect3 xml:id="sec.tuning.systemtap.syntax.handlers.others">
-    <title>Other Basic Constructs</title>
-    <para>
-     Apart from functions, you can use other common constructs in
-     &stap; handlers, including variables, conditional statements (like
-     <literal>if</literal>/<literal>else</literal>, <literal>while</literal>
-     loops, <literal>for</literal> loops, arrays or command line arguments.
-    </para>
+    <title>その他の基本構造</title>
+    <para>関数のほかに、 &stap; ハンドラ内ではその他の一般的な構造を作成することができます。具体的には変数や条件分岐 (<literal>if</literal> / <literal>else</literal>) 、 <literal>while</literal> ループや <literal>for</literal> ループ、そして配列やコマンドラインパラメータなどがあります。</para>
     <sect4 xml:id="sec.tuning.systemtap.syntax.handlers.others.variables">
-     <title>Variables</title>
-     <para>
-      Variables may be defined anywhere in the script. To define one, simply
-      choose a name and assign a value from a function or expression to it:
-     </para>
+     <title>変数</title>
+     <para>変数はスクリプト内の任意の場所に定義することができます。変数を定義したい場合は、単純に名前を選んで関数や表現を代入するだけです:</para>
 <screen>foo = gettimeofday( )</screen>
-     <para>
-      Then you can use the variable in an expression. From the type of
-      values assigned to the variable, &stap; automatically infers the
-      type of each identifier (string or number). Any inconsistencies will
-      be reported as errors. In the example above, <literal>foo</literal>
-      would automatically be classified as a number and could be printed via
-      <literal>printf()</literal> with the integer format specifier
-      (<literal>%d</literal>).
-     </para>
-     <para>
-      However, by default, variables are local to the probe they are used
-      in: They are initialized, used and disposed of at each handler
-      evocation. To share variables between probes, declare them global
-      anywhere in the script. To do so, use the <literal>global</literal>
-      keyword outside of the probes:
-     </para>
+     <para>代入した後は、任意の箇所で変数を使用するだけです。 &stap; では、変数の代入元のデータ型 (文字列もしくは数値) に従って、変数のデータ型を自動継承します。何らかの矛盾が発生した場合、それらはエラーとして報告されます。上記の例では、 <literal>foo</literal> は代入元に従って数値型として設定され、 <literal>printf()</literal> 関数の整数書式指定子 ( <literal>%d</literal> ) で出力できる変数になります。</para>
+     <para>ただし、既定では変数は全てプローブ内ローカルになります。プローブ内ローカルであることから、変数はハンドラの実行のたびに初期化され、使用され、廃棄されることになります。プローブ間で変数を共有したい場合は、グローバル変数としてスクリプト内に定義してください。グローバル変数を定義するには、プローブの外で <literal>global</literal> キーワードを指定して宣言します:</para>
      <example>
-      <title>Using Global Variables</title>
+      <title>グローバル変数の使用</title>
 <screen>global count_jiffies, count_ms
 probe timer.jiffies(100) { count_jiffies ++ }
 probe timer.ms(100) { count_ms ++ }
 probe timer.ms(12345)
 {
   hz=(1000*count_jiffies) / count_ms
-  printf ("jiffies:ms ratio %d:%d =&gt; CONFIG_HZ=%d\n",
+  printf ("jiffies:ms ratio %d:%d =&gt; CONFIG_HZ=%d
+",
     count_jiffies, count_ms, hz)
   exit ()
   }</screen>
-      <para>
-       This example script computes the CONFIG_HZ setting of the kernel by
-       using timers that count jiffies and milliseconds, then computing
-       accordingly. (A jiffy is the duration of one tick of the system timer
-       interrupt. It is not an absolute time interval unit, since its
-       duration depends on the clock interrupt frequency of the particular
-       hardware platform). With the <literal>global</literal> statement it
-       is possible to use the variables <literal>count_jiffies</literal> and
-       <literal>count_ms</literal> also in the probe
-       <literal>timer.ms(12345)</literal>. With <literal>++</literal> the
-       value of a variable is incremented by <literal>1</literal>.
-      </para>
+      <para>上記の例では、 jiffies とミリ秒によるタイマーを利用して、カーネルの CONFIG_HZ の設定を計算しています。 jiffy/jiffies はシステムのタイマー割り込みの回数を数えるもので、プロセッサのクロック周波数によって間隔が変化するものであることから、これを実時間で割ることで、クロック周波数を計算しています。ここでの <literal>global</literal> 定義は <literal>count_jiffies</literal> と <literal>count_ms</literal> ですが、これらはそれぞれのタイマー値を保存しておくためのものです。また、 <literal>++</literal> という演算子は、変数の値を <literal>1</literal> だけ足す意味です。</para>
      </example>
     </sect4>
     <sect4 xml:id="sec.tuning.systemtap.syntax.handlers.others.conditional">
-     <title>Conditional Statements</title>
-     <para>
-      There are several conditional statements that you can use in
-      &stap; scripts. The following are probably the most common:
-     </para>
+     <title>条件分岐</title>
+     <para>&stap; スクリプト内で使用できる条件分岐には、いくつかのものがあります。一般的に最もよく使用されるものを下記に示します:</para>
      <variablelist>
       <varlistentry>
-       <term>If/Else Statements</term>
+       <term>If/Else ステートメント</term>
        <listitem>
-        <para>
-         They are expressed in the following format:
-        </para>
-<screen>if (<replaceable>CONDITION</replaceable>)<co xml:id="co.tuning.systemtap.cond.if"/><replaceable>STATEMENT1</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement1"/>
-else<co xml:id="co.tuning.systemtap.cond.else"/><replaceable>STATEMENT2</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement2"/></screen>
-        <para>
-         The <literal>if</literal> statement compares an integer-valued
-         expression to zero. If the condition expression
-         <xref linkend="co.tuning.systemtap.cond.if" xrefstyle="select:label nopage"/>
-         is non-zero, the first statement
-         <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/>
-         is executed. If the condition expression is zero, the second
-         statement
-         <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/>
-         is executed. The else clause
-         (<xref linkend="co.tuning.systemtap.cond.else" xrefstyle="select:label nopage"/>
-         and
-         <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/>)
-         is optional. Both
-         <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/>
-         and
-         <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/>
-         can also be statement blocks.
-        </para>
+        <para>下記のように記述します:</para>
+<screen>if (<replaceable>条件</replaceable>)<co xml:id="co.tuning.systemtap.cond.if"/><replaceable>ステートメント_1</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement1"/>
+else<co xml:id="co.tuning.systemtap.cond.else"/><replaceable>ステートメント_2</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement2"/></screen>
+        <para><literal>if</literal> ステートメントは、整数表現がゼロであるかどうかを調べます。 <xref linkend="co.tuning.systemtap.cond.if" xrefstyle="select:label nopage"/> の結果がゼロ以外であった場合、最初のステートメント <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/> が実行されます。逆に、ゼロであった場合は、 2 番目のステートメント <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> が実行されます。 else 句 ( <xref linkend="co.tuning.systemtap.cond.else" xrefstyle="select:label nopage"/> および <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> ) は任意指定で、指定しても指定しなくてもかまいません。また、 <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/> と <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> には、ステートメントブロックを指定することもできます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>While Loops</term>
+       <term>While ループ</term>
        <listitem>
-        <para>
-         They are expressed in the following format:
-        </para>
-<screen>while (<replaceable>CONDITION</replaceable>)<co xml:id="co.tuning.systemtap.cond.while"/><replaceable>STATEMENT</replaceable><co xml:id="co.tuning.systemtap.cond.while.statement"/></screen>
-        <para>
-         As long as <literal>condition</literal> is non-zero, the statement
-         <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/>
-         is executed.
-         <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/>
-         can also be a statement block. It must change a value so
-         <literal>condition</literal> will eventually be zero.
-        </para>
+        <para>下記のように記述します:</para>
+<screen>while (<replaceable>条件</replaceable>)<co xml:id="co.tuning.systemtap.cond.while"/><replaceable>ステートメント</replaceable><co xml:id="co.tuning.systemtap.cond.while.statement"/></screen>
+        <para><replaceable>条件</replaceable> がゼロ以外であった場合、 <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/> を実行します。 <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/> はステートメントブロックでもかまいません。最終的に <replaceable>条件</replaceable> がゼロになるまで、繰り返し実行します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>For Loops</term>
+       <term>For ループ</term>
        <listitem>
-        <para>
-         They are a shortcut for <literal>while</literal> loops and are
-         expressed in the following format:
-        </para>
-<screen>for (<replaceable>INITIALIZATION</replaceable><co xml:id="co.tuning.systemtap.cond.for.init"/>; <replaceable>CONDITIONAL</replaceable><co xml:id="co.tuning.systemtap.cond.for.cond"/>; <replaceable>INCREMENT</replaceable><co xml:id="co.tuning.systemtap.cond.for.increment"/>) statement</screen>
-        <para>
-         The expression specified in
-         <xref linkend="co.tuning.systemtap.cond.for.init" xrefstyle="select:label nopage"/>
-         is used to initialize a counter for the number of loop iterations
-         and is executed before execution of the loop starts. The execution
-         of the loop continues until the loop condition
-         <xref linkend="co.tuning.systemtap.cond.for.cond" xrefstyle="select:label nopage"/>
-         is false. (This expression is checked at the beginning of each loop
-         iteration). The expression specified in
-         <xref linkend="co.tuning.systemtap.cond.for.increment" xrefstyle="select:label nopage"/>
-         is used to increment the loop counter. It is executed at the end of
-         each loop iteration.
-        </para>
+        <para><literal>while</literal> ループのショートカットとして規定されているもので、下記のように記述します:</para>
+<screen>for (<replaceable>初期化</replaceable><co xml:id="co.tuning.systemtap.cond.for.init"/>; <replaceable>条件</replaceable><co xml:id="co.tuning.systemtap.cond.for.cond"/>; <replaceable>増加処理</replaceable><co xml:id="co.tuning.systemtap.cond.for.increment"/>) <replaceable>ステートメント</replaceable></screen>
+        <para><xref linkend="co.tuning.systemtap.cond.for.init" xrefstyle="select:label nopage"/> に記述したステートメントはカウンタの初期化用に使用すべき箇所で、ループの開始前に実行されます。ループは <xref linkend="co.tuning.systemtap.cond.for.cond" xrefstyle="select:label nopage"/> のステートメントの結果が false になるまで繰り返されます (判断処理はループの処理前に行なわれます) 。また、 <xref linkend="co.tuning.systemtap.cond.for.increment" xrefstyle="select:label nopage"/> はループカウンタの増加処理で使用すべき箇所です。こちらはループ処理後に実行されます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Conditional Operators</term>
+       <term>比較演算子</term>
        <listitem>
-        <para>
-         The following operators can be used in conditional statements:
-        </para>
+        <para>条件の指定では、下記の演算子を使用することができます:</para>
         <formalpara>
          <title>==:</title>
-         <para>
-          Is equal to
-         </para>
+         <para>等しいかどうか</para>
         </formalpara>
         <formalpara>
          <title>!=:</title>
-         <para>
-          Is not equal to
-         </para>
+         <para>等しくないかどうか</para>
         </formalpara>
         <formalpara>
          <title>&gt;=:</title>
-         <para>
-          Is greater than or equal to
-         </para>
+         <para>前のほうが後より大きいかどうか、もしくは等しいかどうか</para>
         </formalpara>
         <formalpara>
          <title>&lt;=:</title>
-         <para>
-          Is less than or equal to
-         </para>
+         <para>前のほうが後より小さいかどうか、もしくは等しいかどうか</para>
         </formalpara>
        </listitem>
       </varlistentry>
@@ -1820,26 +1289,19 @@ else<co xml:id="co.tuning.systemtap.cond.else"/><replaceable>STATEMENT2</replace
   </sect2>
  </sect1>
  <sect1 xml:id="sec.tuning.systemtap.example">
-  <title>Example Script</title>
+  <title>スクリプト例</title>
 
-  <para>
-   If you have installed the
-   <systemitem class="resource">systemtap-docs</systemitem> package, you can
-   find several useful &stap; example scripts in
-   <filename>/usr/share/doc/packages/systemtap/examples</filename>.
-  </para>
+  <para><systemitem class="resource">systemtap-docs</systemitem> パッケージをインストールしていれば、 <filename>/usr/share/doc/packages/systemtap/examples</filename> 内に &stap; のスクリプト例がいくつか用意されています。</para>
 
-  <para>
-   This section describes a rather simple example script in more detail:
-   <filename>/usr/share/doc/packages/systemtap/examples/network/tcp_connections.stp</filename>.
-  </para>
+  <para>本章では、 <filename>/usr/share/doc/packages/systemtap/examples/network/tcp_connections.stp</filename> にあるシンプルなスクリプト例を詳しく説明します:</para>
 
   <example>
-   <title>Monitoring Incoming TCP Connections with <literal>tcp_connections.stp</literal></title>
+   <title><literal>tcp_connections.stp</literal> での着信 TCP 接続の監視</title>
 <screen>#! /usr/bin/env stap
 
 probe begin {
-  printf("%6s %16s %6s %6s %16s\n",
+  printf("%6s %16s %6s %6s %16s
+",
          "UID", "CMD", "PID", "PORT", "IP_SOURCE")
 }
 
@@ -1847,165 +1309,83 @@ probe kernel.function("tcp_accept").return?,
       kernel.function("inet_csk_accept").return? {
   sock = $return
   if (sock != 0)
-    printf("%6d %16s %6d %6d %16s\n", uid(), execname(), pid(),
+    printf("%6d %16s %6d %6d %16s
+", uid(), execname(), pid(),
            inet_get_local_port(sock), inet_get_ip_source(sock))
 }</screen>
   </example>
 
-  <para>
-   This &stap; script monitors the incoming TCP connections and helps to
-   identify unauthorized or unwanted network access requests in real time.
-   It shows the following information for each new incoming TCP connection
-   accepted by the computer:
-  </para>
+  <para>この &stap; スクリプトは着信側の TCP 接続を監視して、リアルタイムに望まない接続を識別する仕組みを提供するものです。それぞれコンピュータが受け入れた着信側 TCP 接続に対して、下記のような情報を表示します:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     User ID (<literal>UID</literal>)
-    </para>
+    <para>ユーザ ID ( <literal>UID</literal> )</para>
    </listitem>
    <listitem>
-    <para>
-     Command accepting the connection (<literal>CMD</literal>)
-    </para>
+    <para>接続を受け付けたコマンド ( <literal>CMD</literal> )</para>
    </listitem>
    <listitem>
-    <para>
-     Process ID of the command (<literal>PID</literal>)
-    </para>
+    <para>コマンドのプロセス ID ( <literal>PID</literal> )</para>
    </listitem>
    <listitem>
-    <para>
-     Port used by the connection (<literal>PORT</literal>)
-    </para>
+    <para>接続に使用しているポート ( <literal>PORT</literal> )</para>
    </listitem>
    <listitem>
-    <para>
-     IP address from which the TCP connection originated
-     (<literal>IP_SOUCE</literal>)
-    </para>
+    <para>TCP 接続の発信元 ( <literal>IP_SOUCE</literal> )</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   To run the script, execute
-  </para>
+  <para>スクリプトを実行するには、下記のように入力して実行します:</para>
 
 <screen>stap&nbsp;/usr/share/doc/packages/systemtap/examples/network/tcp_connections.stp</screen>
 
-  <para>
-   and follow the output on the screen. To manually stop the script, press
-   <keycombo> <keycap function="control"/> <keycap>C</keycap> </keycombo>.
-  </para>
+  <para>すると、画面内に出力が表示されるようになります。スクリプトを手作業で停止するには、 <keycombo> <keycap function="control"/> <keycap>C</keycap> </keycombo> を押します。</para>
  </sect1>
 <!--taroth 2013-11-22: http://doccomments.provo.novell.com/admin/viewcomment/14466-->
  <sect1 xml:id="sec.tuning.systemtap.userspace">
-  <title>User Space Probing</title>
+  <title>ユーザスペースプローブ</title>
 
-  <para>
-   <remark>taroth 2013-12-05: this will need adjustment for SLE 12 where user-space probes
-   will use uprobes/uretprobes instead (which are in mainline) - according to tonyj everything
-   except itrace is supposed to work</remark>
-   For debugging user space applications (like DTrace can do),
-   &productname; &productnumber; supports user space probing with
-   &stap;: Custom probe points can be inserted in any user space
-   application. Thus, &stap; lets you use both kernel space and user space
-   probes to debug the behavior of the whole system.
-  </para>
+  <para><remark>taroth 2013-12-05: this will need adjustment for SLE 12 where user-space probes will use uprobes/uretprobes instead (which are in mainline) - according to tonyj everything except itrace is supposed to work</remark> DTrace のようにユーザスペースで動作するアプリケーションをデバッグする目的で、 &productname; &productnumber; では、 &stap; でユーザスペースのプローブを行なうことができます。ユーザスペースのプローブでは、アプリケーション内の任意の場所にプローブポイントを設置することができます。これにより、 &stap; はカーネルスペースとユーザスペースの両方を調査できることになり、結果としてシステム全体を調査できるようになっています。</para>
 
-  <para>
-   To get the required utrace infrastructure and the uprobes kernel module
-   for user space probing, you need to install the
-   <systemitem class="resource">kernel-trace</systemitem> package in
-   addition to the packages listed in
-   <xref linkend="sec.tuning.systemtap.setup"/>.
-  </para>
+  <para>ユーザスペースのプローブを設置する際に必要となる utrace インフラストラクチャと uprobe カーネルモジュールを取得するには、 <xref linkend="sec.tuning.systemtap.setup"/> に示されているパッケージに加え、 <systemitem class="resource">kernel-trace</systemitem> パッケージをインストールする必要があります。</para>
 
-  <para>
-   <command>utrace</command> implements a framework for controlling
-   user space tasks. It provides an interface that can be used by various
-   tracing <quote>engines</quote>, implemented as loadable kernel modules.
-   The engines register callback functions for specific events, then attach
-   to whichever thread they want to trace. As the callbacks are made from
-   <quote>safe</quote> places in the kernel, this allows for great leeway in
-   the kinds of processing the functions can do. Various events can be
-   watched via utrace, for example, system call entry and exit, fork(),
-   signals being sent to the task, etc. More details about the utrace
-   infrastructure are available at
-   <link xlink:href="http://sourceware.org/systemtap/wiki/utrace"/>.
-  </para>
+  <para><command>utrace</command> はユーザスペースの処理を制御するためのフレームワークを実装するものです。様々なトレーシング <quote>エンジン</quote> で使用することのできるインターフェイスを提供し、これ自身は読み込み可能なカーネルモジュールとして提供されます。エンジンは特定のイベントに対してコールバック関数を登録し、トレース対象のスレッドに結びつけられます。コールバックはカーネル内の <quote>安全な</quote> 場所から行なわれるため、関数が実行できる処理の種類に大きな余裕ができることになります。 utrace では、たとえばシステムコールの開始と終了、 fork() やタスクに送信されるシグナルなど、様々なイベントを監視することができます。 utrace のインフラストラクチャについて、詳しくは <link xlink:href="http://sourceware.org/systemtap/wiki/utrace"/> (英語) をお読みください。</para>
 
-  <para>
-   &stap; includes support for probing the entry into and return from a
-   function in user space processes, probing predefined markers in
-   user space code, and monitoring user-process events.
-  </para>
+  <para>&stap; では、ユーザスペースプロセス内での関数の開始および終了のプローブに対応しているほか、コード内にマーカーを設定してプローブしたり、特定のプロセス内イベントを監視したりすることもできます。</para>
 
-  <para>
-   To check if the currently running kernel provides the needed utrace
-   support, use the following command:
-  </para>
+  <para>現在実行しているカーネルが utrace に対応しているかどうかを調べるには、下記のコマンドを実行します:</para>
 
 <screen>&prompt.sudo;grep CONFIG_UTRACE /boot/config-`uname -r`</screen>
 
-  <para>
-   For more details about user space probing, refer to
-   <link xlink:href="https://sourceware.org/systemtap/SystemTap_Beginners_Guide/userspace-probing.html"/>.
-  </para>
+  <para>ユーザスペースのプローブについて、詳しくは <link xlink:href="https://sourceware.org/systemtap/SystemTap_Beginners_Guide/userspace-probing.html"/> (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.tuning.systemtap.more">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   This chapter only provides a short &stap; overview. Refer to the
-   following links for more information about &stap;:
-  </para>
+  <para>本章では、 &stap; の概要部までしか減給できていません。 &stap; に関する詳細な情報を得たい場合は、それぞれ下記を参照してください (英語のみの提供である場合もあります):</para>
 
   <variablelist>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/"/>
-    </term>
+    <term><link xlink:href="http://sourceware.org/systemtap/"/></term>
     <listitem>
-     <para>
-      &stap; project home page.
-     </para>
+     <para>&stap; プロジェクトの Web ページです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/wiki/"/>
-    </term>
+    <term><link xlink:href="http://sourceware.org/systemtap/wiki/"/></term>
     <listitem>
-     <para>
-      Huge collection of useful information about &stap;, ranging from
-      detailed user and developer documentation to reviews and comparisons
-      with other tools, or Frequently Asked Questions and tips. Also
-      contains collections of &stap; scripts, examples and usage stories
-      and lists recent talks and papers about &stap;.
-     </para>
+     <para>&stap; に関する便利な情報を数多く集めているサイトです。ユーザに対する詳しい説明から開発者向けの資料のほか、他のツールとの比較やレビュー、よくある質問とその回答 (FAQ) やヒントなどが書かれています。また、 &stap; スクリプトの例もあり、使用例や &stap; に関する直近の対話、ペーパーなども用意されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/documentation.html"/>
-    </term>
+    <term><link xlink:href="http://sourceware.org/systemtap/documentation.html"/></term>
     <listitem>
-     <para>
-      Features a <citetitle>&stap; Tutorial</citetitle>, a
-      <citetitle>&stap; Beginner's Guide</citetitle>, a <citetitle>Tapset
-      Developer's Guide</citetitle>, and a <citetitle>&stap; Language
-      Reference</citetitle> in PDF and HTML format. Also lists the relevant
-      man pages.
-     </para>
+     <para>PDF および HTML 形式で、 <citetitle>&stap; Tutorial</citetitle> (&stap; チュートリアル), <citetitle>&stap; Beginner's Guide</citetitle> (&stap; 初心者ガイド), <citetitle>Tapset Developer's Guide</citetitle> (タップセット開発者ガイド), <citetitle>&stap; Language Reference</citetitle> (&stap; 言語リファレンス) などが用意されています。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   You can also find the &stap; language reference and &stap; tutorial
-   in your installed system under
-   <filename>/usr/share/doc/packages/systemtap</filename>. Example &stap;
-   scripts are available from the <filename>example</filename> subdirectory.
-  </para>
+  <para>なお、 &stap; の言語リファレンスとチュートリアルについては、 <filename>/usr/share/doc/packages/systemtap</filename> ディレクトリ内にも用意されています。また、スクリプトの例については、上記の <filename>example</filename> サブディレクトリをご覧ください。</para>
 
 <!--http://sourceware.org/systemtap/wiki/
     http://en.wikipedia.org/wiki/Systemtap
