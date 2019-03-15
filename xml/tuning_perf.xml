@@ -12,40 +12,23 @@ Tony Jones, Mel Gorman.
 
 -->
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.perf">
- <title>Hardware-Based Performance Monitoring with Perf</title>
+ <title>Perf を利用したハードウエアベースの監視</title>
  <info>
   <abstract>
-   <para>
-    Perf is an interface to access the performance monitoring unit (PMU) of a
-    processor and to record and display software events such as page faults.
-    It supports system-wide, per-thread, and &kvm; virtualization guest
-    monitoring.
-   </para>
+   <para>Perf はプロセッサに搭載された性能監視ユニット (PMU) にアクセスするためのインターフェイスで、ページフォルトなどのソフトウエア全てを記録し、表示することができます。また、システム全体やスレッド単位、そして &kvm; の仮想化ゲストの監視にも対応しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
   </dm:docmanager>
  </info>
- <para>
-  You can store resulting information in a report.
-  This report contains information about, for example, instruction pointers or
-  what code a thread was executing.
- </para>
- <para>
-  Perf consists of two parts:
- </para>
+ <para>収集された情報はレポート内に保存することができます。このレポートにはインストラクションポインタに関する情報のほか、その時点でスレッドが実行していたコードの内容などが含まれています。</para>
+ <para>Perf は下記の 2 種類の部品から構成されています:</para>
  <itemizedlist>
   <listitem>
-   <para>
-    Code integrated into the Linux kernel that is responsible for instructing
-    the hardware.
-   </para>
+   <para>ハードウエアに対して指示を与える、 Linux カーネル内に統合されたコード。</para>
   </listitem>
   <listitem>
-   <para>
-    The <command>perf</command> user space utility that allows you to use the
-    kernel code and helps you analyze gathered data.
-   </para>
+   <para>カーネルコードを使用することができ、収集したデータの分析を支援するための <command>perf</command> ユーザスペースユーティリティ。</para>
   </listitem>
  </itemizedlist>
  <remark>
@@ -55,83 +38,49 @@ Tony Jones, Mel Gorman.
  </remark>
 
  <sect1 xml:id="sec.perf.concept">
-  <title>Hardware-Based Monitoring</title>
+  <title>ハードウエアベースの監視</title>
 
-  <para>
-   Performance monitoring means collecting information related to how an
-   application or system performs.
-   This information can be obtained either through software-based means or from
-   the CPU or chipset.
-   Perf integrates both of these methods.
-  </para>
-  <para>
-   Many modern processors contain a performance monitoring unit (PMU).
-   The design and functionality of a PMU is CPU-specific.
-   For example, the number of registers, counters and features supported will
-   vary by CPU implementation.
-  </para>
-  <para>
-   Each PMU model consists of a set of registers: the performance monitor
-   configuration (PMC) and the performance monitor data (PMD).
-   Both can be read, but only PMCs are writable.
-   These registers store configuration information and data.
-  </para>
+  <para>性能監視とは、アプリケーションやシステムがどのような処理を行なったのかについて、関連する情報を収集することを意味します。この情報はソフトウエアベースの手段のほか、 CPU やチップセットなどを介して取得することができます。 Perf では、これらの方式の両方を統合する仕組みです。</para>
+  <para>多くの新しいプロセッサには、性能監視ユニット (Performance Monitoring Unit (PMU)) が搭載されています。 PMU の設計と機能は CPU ごとに異なります。たとえばレジスタの数や対応するカウンタ、機能などは CPU 側の実装によって異なります。</para>
+  <para>それぞれの PMU のレジスタを分類すると、性能監視設定 (Performance Monitor Configuration; PMC) と性能監視データ (Performance Monitor Data (PMD)) に分けられます。どちらのレジスタとも読み込みは可能ですが、書き込みに関しては PMC にのみ行なうことができます。これらのレジスタには、設定情報とデータが記憶されています。</para>
  </sect1>
 
  <sect1 xml:id="sec.perf.sample-count">
-  <title>Sampling and Counting</title>
-  <para>
-   Perf supports several profiling modes:
-  </para>
+  <title>サンプリングとカウンティング</title>
+  <para>Perf にはいくつかのプロファイルモードが用意されています:</para>
   <itemizedlist>
    <listitem>
     <formalpara>
-     <title>Counting</title>
-     <para>
-      Count the number of occurrences of an event.
-     </para>
+     <title>カウンティング</title>
+     <para>イベントの発生回数を数えるモードです。</para>
     </formalpara>
    </listitem>
    <listitem>
     <formalpara>
-     <title>Event-Based Sampling</title>
-     <para>
-      A less exact way of counting: A sample is recorded whenever a certain
-      threshold number of events has occurred.
-     </para>
+     <title>イベントベースのサンプリング</title>
+     <para>あまり正確ではない計数方法です。ある一定回数のイベント発生が起こるたびにサンプルを記録するモードです。</para>
     </formalpara>
    </listitem>
    <listitem>
     <formalpara>
-     <title>Time-Based Sampling</title>
-     <para>
-      A less exact way of counting: A sample is recorded in a defined frequency.
-     </para>
+     <title>時間ベースのサンプリング</title>
+     <para>あまり正確ではない計数方法です。一定の時間間隔でサンプルを記録するモードです。</para>
     </formalpara>
    </listitem>
    <listitem>
     <formalpara>
      <!-- See FATE# 315868 -->
-     <title>Instruction-Based Sampling (&amd64; only)</title>
-     <para>
-      The processor follows instructions appearing in a given interval and
-      samples which events they produce.
-      This allows following up on individual instructions and seeing which of
-      them is critical to performance.
-     </para>
+     <title>インストラクションベースのサンプリング (&amd64; のみ)</title>
+     <para>プロセッサは、指定された間隔で現われるインストラクションに従い、生成されるイベントを採取します。これにより、個別のインストラクションをたどることができますので、性能面で何が問題なのかを確認することができるようになります。</para>
     </formalpara>
    </listitem>
   </itemizedlist>
  </sect1>
 
  <sect1 xml:id="sec.perf.install">
-  <title>Installing Perf</title>
+  <title>Perf のインストール</title>
 
-  <para>
-   The Perf kernel code is already included with the default kernel.
-   To be able to use the user space utility, install the package
-   <package>perf</package>.
-  </para>
+  <para>Perf のカーネルコードは既定のカーネル内に含まれています。ユーザスペース側のユーティリティを使用するには、 <package>perf</package> パッケージをインストールしてください。</para>
   <!--
     On System z, there may be some more work involved, as you need to
     "activate the cpu measurement facility":
@@ -141,293 +90,152 @@ Tony Jones, Mel Gorman.
  </sect1>
 
  <sect1 xml:id="sec.perf.subcommand">
-  <title>Perf Subcommands</title>
+  <title>Perf のサブコマンド</title>
 
-  <para>
-   To gather the required information, the <command>perf</command> tool has
-   several subcommands. This section gives an overview of the most often used
-   commands.
-  </para>
-  <para>
-   To see help in the form of a man page for any of the subcommands, use either
-   <command>perf help</command><replaceable>SUBCOMMAND</replaceable>
-   or
-   <command>man perf-</command><replaceable>SUBCOMMAND</replaceable>.
-  </para>
+  <para>必要な情報を収集する目的で、 <command>perf</command> ツールにはいくつかのサブコマンドが用意されています。本章では、最もよく使用するサブコマンドについて、概要を説明しています。</para>
+  <para>サブコマンドに対するヘルプを表示したい場合は、<command>perf help</command> <replaceable>サブコマンド</replaceable> もしくは <command>man perf-</command> <replaceable>サブコマンド</replaceable> のように入力して実行してください。</para>
 
   <variablelist>
    <varlistentry>
     <term><command>perf stat</command></term>
     <listitem>
-     <para>
-      Start a program and create a statistical overview that is displayed after
-      the program quits.
-      <command>perf stat</command> is used to count events.
-     </para>
+     <para>プログラムを起動し、終了時に統計情報の概要を生成します。 <command>perf stat</command> はイベントの発生回数を数えるために使用します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>perf record</command></term>
     <listitem>
-     <para>
-      Start a program and create a report with performance counter information.
-      The report is stored as <filename>perf.data</filename> in the current
-      directory.
-      <command>perf record</command> is used to sample events.
-     </para>
+     <para>プログラムを起動し、パフォーマンスカウンタ情報のレポートを作成します。レポートはカレントディレクトリ内の <filename>perf.data</filename> ファイルに保存されます。 <command>perf record</command> はイベントのサンプリングで使用します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>perf report</command></term>
     <listitem>
-     <para>
-      Display a report that was previously created with
-      <command>perf record</command>.
-     </para>
+     <para><command>perf record</command> で作成したレポートを表示します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>perf annotate</command></term>
     <listitem>
-     <para>
-      Display a report file and an annotated version of the executed
-      code.
-      If debug symbols are installed, you will also see the source code
-      displayed.
-     </para>
+     <para>レポートファイルを表示するとともに、実行されていたコードの注釈付きバージョンを表示します。デバッグシンボルがインストールされていれば、ソースコードも表示されます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>perf list</command></term>
     <listitem>
-     <para>
-      List event types that Perf can report with the current kernel and with
-      your CPU.
-      You can filter event types by category&mdash;for example, to see hardware
-      events only, use <command>perf list hw</command>.
-     </para>
-     <para>
-      The man page for <command>perf_event_open</command> has short descriptions
-      for the most important events.
-      For example, to find a description of the event
-      <systemitem>branch-misses</systemitem>, search for
-      <literal>BRANCH_MISSES</literal> (note the spelling differences):
-     </para>
+     <para>現在のカーネルと CPU で Perf がレポートすることのできる、イベントの種類を一覧表示します。イベントの種類は分類でフィルタリングすることができます。たとえばハードウエアイベントのみを表示したい場合は、 <command>perf list hw</command> のように入力して実行します。</para>
+     <para><command>perf_event_open</command> に対するマニュアルページには、最も重要なイベントに関する短い説明が書かれています。たとえば <systemitem>branch-misses</systemitem> というイベントに対する説明を読むには、 <literal>BRANCH_MISSES</literal> を検索してください (大文字で、ハイフンをアンダースコアにしていることに注意してください):</para>
 <screen>&prompt.user;<command>man</command> perf_event_open | <command>grep</command> -A5 <replaceable>BRANCH_MISSES</replaceable></screen>
-     <para>
-      Sometimes, events may be ambiguous.
-      Note that the lowercase hardware event names are not the name of raw
-      hardware events but instead the name of aliases created by Perf.
-      These aliases map to differently named but similarly defined hardware
-      events on each supported processor.
-     </para>
-     <para>
-      For example, the <systemitem>cpu-cycles</systemitem> event is mapped to
-      the hardware event <systemitem>UNHALTED_CORE_CYCLES</systemitem> on
-      Intel processors.
-      On AMD processors, however, it is mapped to the hardware event
-      <systemitem>CPU_CLK_UNHALTED</systemitem>.
-     </para>
-     <para>
-      Perf also allows measuring raw events specific to your hardware.
-      To look up their descriptions, see the
-      Architecture Software Developer's Manual of your CPU vendor.
-      The relevant documents for &x86-64; processors are linked to in
-      <xref linkend="sec.perf.more"/>.
-     </para>
+     <para>イベントによっては名前がわかりにくいものもあります。ハードウエアイベント名のうち、小文字のものはハードウエアイベントを直接指し示すものではなく、 Perf が独自に別名として作成したものであることに注意してください。このような別名定義により、対応する様々なプロセッサで名前の異なる似通ったイベントを統一的に収集できるようになっています。</para>
+     <para>たとえば <systemitem>cpu-cycles</systemitem> というイベントは、 Intel プロセッサでは <systemitem>UNHALTED_CORE_CYCLES</systemitem> というハードウエアイベントにマップされていますが、 AMD プロセッサでは <systemitem>CPU_CLK_UNHALTED</systemitem> というハードウエアイベントにマップされています。</para>
+     <para>Perf では、ハードウエア固有のイベントの計数にも対応しています。それらの説明を読みたい場合は、 CPU の製造元が提供するアーキテクチャソフトウエア開発者マニュアル (Architecture Software Developer's Manual) をお読みください。 &x86-64; プロセッサでの対応文書については、 <xref linkend="sec.perf.more"/> にリンクがあります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>perf top</command></term>
     <listitem>
-     <para>
-      Display system activity as it happens.
-     </para>
+     <para>発生したシステムの動作状況を表示します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><command>perf trace</command></term>
      <listitem>
-      <para>
-      This command behaves similarly to <command>strace</command>.
-      With this subcommand, you can see which system calls are executed by a
-      particular thread or process and which signals it receives.
-     </para>
+      <para>このコマンドは <command>strace</command> に似た動作をする仕組みで、特定のスレッドやプロセスでどのシステムコールが実行されているのかと、シグナルの受信状況を表示することができます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
 
  <sect1 xml:id="sec.perf.event">
-  <title>Counting Particular Types of Event</title>
-  <para>
-   To count the number of occurrences of an event, such as those displayed by
-   <command>perf list</command>, use:
-  </para>
-<screen>&prompt.root;<command>perf</command> stat -e <replaceable>EVENT</replaceable> -a</screen>
-  <para>
-   To count multiple types of events at once, list them separated by commas.
-   For example, to count <systemitem>cpu-cycles</systemitem> and
-   <systemitem>instructions</systemitem>, use:
-  </para>
+  <title>特定の種類のイベントのカウント</title>
+  <para>イベント (<command>perf list</command> で表示されるイベント) の発生回数を数えるには、下記のように入力して実行します:</para>
+<screen>&prompt.root;<command>perf</command> stat -e <replaceable>イベント名</replaceable> -a</screen>
+  <para>複数のイベントを一括で数えたい場合は、それらをカンマ区切りで指定します。たとえば <systemitem>cpu-cycles</systemitem> と <systemitem>instructions</systemitem> をまとめて数えるには、下記のように入力して実行します:</para>
 <screen>&prompt.root;<command>perf</command> stat -e cpu-cycles,instructions -a</screen>
-  <para>
-   To stop the session, press
-   <keycombo><keycap function="control"/><keycap>C</keycap></keycombo>.
-  </para>
+  <para>セッションを停止するには、 <keycombo><keycap function="control"/><keycap>C</keycap></keycombo> を押します。</para>
   <remark>
     Input from Tony Jones: "perhaps cover case where #events &gt; #pmus so kernel
     time slices (i.e [xx.yy%] in output)" - sknorr, 2015-10-30
   </remark>
-  <para>
-   You can also count the number of occurrences of an event within a particular
-   time:
-  </para>
-<screen>&prompt.root;<command>perf</command> stat -e <replaceable>EVENT</replaceable> -a -- sleep <replaceable>TIME</replaceable></screen>
-  <para>
-   Replace <replaceable>TIME</replaceable> by a value in seconds.
-  </para>
+  <para>一定時間内でのイベント発生回数を数えることもできます:</para>
+<screen>&prompt.root;<command>perf</command> stat -e <replaceable>イベント名</replaceable> -a -- sleep <replaceable>時間</replaceable></screen>
+  <para><replaceable>時間</replaceable> の箇所は秒単位で指定してください。</para>
  </sect1>
 
  <sect1 xml:id="sec.perf.command">
-  <title>Recording Events Specific to Particular Commands</title>
-  <para>
-   There are various ways to sample events specific to a particular command:
-  </para>
+  <title>特定のコマンド固有のイベント記録</title>
+  <para>特定のコマンドに固有のイベントを採取する方法には、いくつかのものがあります:</para>
   <itemizedlist>
    <listitem>
-     <para>
-      To create a report for a newly invoked command, use:
-     </para>
-<screen>&prompt.root;<command>perf</command> record <replaceable>COMMAND</replaceable></screen>
-     <para>
-      Then, use the started process normally.
-      When you quit the process, the Perf session will also stop.
-     </para>
+     <para>新しく起動したコマンドに対してレポートを作成するには、下記のようにします:</para>
+<screen>&prompt.root;<command>perf</command> record <replaceable>コマンド</replaceable></screen>
+     <para>起動したコマンドは通常通りに処理を行なうだけです。コマンドのプロセスが終了すると、 Perf のセッションも終了します。</para>
    </listitem>
    <listitem>
-     <para>
-      To create a report for the entire system while a newly invoked command is
-      running, use:
-     </para>
-<screen>&prompt.root;<command>perf</command> record -a <replaceable>COMMAND</replaceable></screen>
-     <para>
-      Then, use the started process normally.
-      When you quit the process, the Perf session will also stop.
-     </para>
+     <para>新しく起動したコマンドが実行されている間、システム全体で発生したイベントのレポートを作成するには、下記のようにします:</para>
+<screen>&prompt.root;<command>perf</command> record -a <replaceable>コマンド</replaceable></screen>
+     <para>起動したコマンドは通常通りに処理を行なうだけです。コマンドのプロセスが終了すると、 Perf のセッションも終了します。</para>
    </listitem>
    <listitem>
-     <para>
-      To create a report for an already running process, use:
-     </para>
+     <para>動作中のプロセスに対するレポートを作成するには、下記のようにします:</para>
 <screen>&prompt.root;<command>perf</command> record -p <replaceable>PID</replaceable></screen>
-     <para>
-      Replace <replaceable>PID</replaceable> with a process ID.
-      To stop the session, press
-      <keycombo><keycap function="control"/><keycap>C</keycap></keycombo>.
-     </para>
+     <para>ここで、 <replaceable>PID</replaceable> にはプロセス ID を指定します。セッションを停止するには、 <keycombo><keycap function="control"/><keycap>C</keycap></keycombo> を押します。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   Now you can view the gathered data (<filename>perf.data</filename>)
-   using:
-  </para>
+  <para>収集されたデータ ( <filename>perf.data</filename> ) を表示するには、下記のように入力して実行します:</para>
 <screen>&prompt.user;<command>perf</command> report</screen>
-  <para>
-   This will open a pseudo-graphical interface.
-   <!-- `perf report` recommends ? for Help, but H works too. `perf annotate`
-   only allows H, while ? opens a search window.
-   => Use the one that works for both, since you can switch between
-   both modes without quitting. - sknorr, 2015-10-14 -->
-   To receive help, press <keycap>H</keycap>.
-   To quit, press <keycap>Q</keycap>.
-  </para>
+  <para>すると、擬似的なグラフィカルインターフェイスが起動されます。 <!-- `perf report` recommends ? for Help, but H works too. `perf annotate` only allows H, while ? opens a search window. => Use the one that works for both, since you can switch between both modes without quitting. - sknorr, 2015-10-14 --> ヘルプを表示したい場合は <keycap>H</keycap> を、終了したい場合は <keycap>Q</keycap> をそれぞれ押してください。</para>
   <remark>Some more information about interpreting data from this utility might
   be helpful... - sknorr, 2015-10-14</remark>
   <remark>Feedback on this from Mel Gorman: "[D]o not get into this. You could
     write a small book on the subject and still not cover all the details."
     - sknorr, 2015-10-16
   </remark>
-  <para>
-   If you prefer a graphical interface, try the GTK+ interface of Perf:
-  </para>
+  <para>グラフィカルインターフェイスを使用したい場合は、 Perf の GTK+ インターフェイスをお試しください:</para>
 <screen>&prompt.user;<command>perf</command> report --gtk</screen>
-  <para>
-    However, note that the GTK+ interface is very limited in functionality.
-    <remark>
-      It provides a scrollable list and tabs and not much else.
-      - sknorr, 2015-10-30
-    </remark>
-  </para>
+  <para>ただし、 GTK+ インターフェイスの機能は非常に限られたものであることに注意してください。<remark> It provides a scrollable list and tabs and not much else. - sknorr, 2015-10-30 </remark></para>
  </sect1>
 
  <sect1 xml:id="sec.perf.more">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   This chapter only provides a short overview. Refer to the following links
-   for more information:
-  </para>
+  <para>本章では非常に短い説明しか記載していません。下記に示すリンク先で様々な情報が提供されています (英語のみの提供となります):</para>
 
   <variablelist>
    <varlistentry>
-    <term><link xlink:href="https://perf.wiki.kernel.org/index.php/Main_Page"/>
-    </term>
+    <term><link xlink:href="https://perf.wiki.kernel.org/index.php/Main_Page"/></term>
     <listitem>
-     <para>
-      The project home page.
-      It also features a tutorial on using <command>perf</command>.
-     </para>
+     <para>プロジェクトの Web ページです。 <command>perf</command> を使用する際のチュートリアルも用意されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://www.brendangregg.com/perf.html"/>
-    </term>
+    <term><link xlink:href="http://www.brendangregg.com/perf.html"/></term>
     <listitem>
-     <para>
-      Unofficial page with many one-line examples of how to use
-      <command>perf</command>.
-     </para>
+     <para><command>perf</command> の様々な使用例を含む、非公式ページです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://web.eece.maine.edu/~vweaver/projects/perf_events/"/>
-    </term>
+    <term><link xlink:href="http://web.eece.maine.edu/~vweaver/projects/perf_events/"/></term>
     <listitem>
-     <para>
-      Unofficial page with several resources, mostly relating to the Linux
-      kernel code of Perf and its API.
-      This page includes, for example, a CPU compatibility table and a
-      programming guide.
-     </para>
+     <para>様々なりソースを含む非公式ページです。主に Perf の Linux カーネルコードと、その API に関連した情報が書かれています。たとえば CPU の互換性テーブルやプログラミングガイドなどがあります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="https://www-ssl.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3b-part-2-manual.pdf"/>
-    </term>
+    <term><link xlink:href="https://www-ssl.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3b-part-2-manual.pdf"/></term>
     <listitem>
-     <para>
-      The <citetitle>Intel Architectures Software Developer's Manual,
-      Volume 3B</citetitle>.
-     </para>
+     <para><citetitle>Intel Architectures Software Developer's Manual, Volume 3B</citetitle> です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="https://support.amd.com/TechDocs/24593.pdf"/>
-    </term>
+    <term><link xlink:href="https://support.amd.com/TechDocs/24593.pdf"/></term>
     <listitem>
-     <para>
-      The <citetitle>AMD Architecture Programmer's Manual, Volume 2</citetitle>.
-     </para>
+     <para><citetitle>AMD Architecture Programmer's Manual, Volume 2</citetitle> です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><xref linkend="cha.tuning.oprofile"/>
-    </term>
+    <term><xref linkend="cha.tuning.oprofile"/></term>
     <listitem>
-     <para>
-      Consult this chapter for other performance optimizations.
-     </para>
+     <para>性能を最適化したい場合は、この章もお読みください。</para>
     </listitem>
    </varlistentry>
   </variablelist>
