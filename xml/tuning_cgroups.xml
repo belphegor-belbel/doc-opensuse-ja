@@ -5,14 +5,10 @@
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.cgroups">
 
- <title>Kernel Control Groups</title>
+ <title>カーネルコントロールグループ</title>
  <info>
   <abstract>
-   <para>
-    Kernel Control Groups (<quote>cgroups</quote>) are a kernel feature
-    that allows assigning and limiting hardware resources for processes.
-    Processes can also be organized in a hierarchical tree structure.
-   </para>
+   <para>カーネルコントロールグループ ( <quote>cgroups</quote> ) は、プロセスに対してハードウエアの資源を割り当てたり、制限したりするための仕組みです。この機能を利用することで、プロセスをツリー構造で管理することもできるようになります。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
@@ -21,198 +17,101 @@
  </info>
 
  <sect1 xml:id="sec.tuning.cgroups.overview">
-  <title>Overview</title>
-  <para>
-   Every process is assigned exactly one cgroups. cgroups are ordered
-   in a hierarchical tree structure. Resource limitations can be set
-   for single processes or for whole branches of the hierarchy tree.
-   Limitations for CPU, memory, disk I/O, or network bandwidth usage
-   can be set.
-  </para>
-  <para>
-   On &productname;, &systemd; is using cgroups to organize all
-   processes in groups, which &systemd; calls slices. &systemd; also
-   provides an interface for setting cgroup properties.
-  </para>
-  <para>
-   The command <command>systemd-cgls</command> displays the hierarchy
-   tree.
-  </para>
-  <para>
-   This chapter is an overview. For more details, refer to the listed
-   references.
-  </para>
+  <title>概要</title>
+  <para>それぞれのプロセスは正確に 1 つの cgroup に割り当てられます。 cgroup は階層構造のツリーとして管理されます。リソースに対する制限は特定の 1 つのプロセスに対して設定することができるほか、特定の階層ツリー全体に対して設定することもできます。制限には CPU やメモリのほか、ディスクの I/O やネットワーク帯域などを割り当てることができます。</para>
+  <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; では、 cgroup の設定を行なうためのインターフェイスが用意されています。</para>
+  <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
+  <para>本章は概要のみを説明しています。詳しい説明については、列挙されている参照先をお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec.tuning.cgroups.usage">
-  <title>Setting Hardware Limits</title>
+  <title>ハードウエア制限の設定</title>
 
-  <para>
-   Limitations to <literal>cgroups</literal> can be set with the
-   <command>systemctl set-property</command> command. The syntax is:
-  </para>
-  <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>NAME</replaceable> <replaceable>PROPERTY1</replaceable>=<replaceable>VALUE</replaceable> [<replaceable>PROPERTY2</replaceable>=<replaceable>VALUE</replaceable>]</command></screen>
-  <para>
-   Optionally, use the <option>--runtime</option> option. With this
-   option, set limits are not persisting after the next reboot.
-  </para>
-  <para>
-   Replace <replaceable>NAME</replaceable> with a &systemd; service
-   slice, scope, socket, mount, or swap name. Replace properties with
-   one or more of the following:
-  </para>
+  <para><literal>cgroup</literal> に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
+  <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>名前</replaceable> <replaceable>プロパティ_1</replaceable>=<replaceable>値</replaceable> [<replaceable>プロパティ_2</replaceable>=<replaceable>値</replaceable>]</command></screen>
+  <para>必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
+  <para>なお、 <replaceable>名前</replaceable> には &systemd; のスライス名やスコープ名、ソケット名やマウント名、スワップ名を指定します。また、プロパティには下記のものがあります:</para>
   <variablelist>
    <varlistentry>
-    <term><literal>CPUAccounting=</literal><option>[yes|no]</option></term>
+    <term><literal>CPUAccounting=</literal> <option>[yes|no]</option></term>
     <listitem>
-     <para>
-      Turns on CPU usage accounting. This property takes
-      <literal>yes</literal> and <literal>no</literal> as arguments.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>CPU 使用率の算出を行なうかどうかを指定します。値には <literal>yes</literal> (はい) または <literal>no</literal> (いいえ) のいずれかを指定することができます。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property user.slice CPUAccounting=yes</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>CPUQuota=</literal><replaceable>PERCENTAGE</replaceable></term>
+    <term><literal>CPUQuota=</literal> <replaceable>パーセント値</replaceable></term>
     <listitem>
-     <para>
-      Assigns a CPU time to processes. The value is a percentage
-      followed by a <literal>%</literal> as suffix. This requires
-      <literal>CPUAccounting=yes</literal>.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>プロセスに対して CPU 時間の割り当てを行ないます。この値はパーセント単位で指定し、末尾に <literal>%</literal> を付けて指定します。この設定を使用するには、 <literal>CPUAccounting=yes</literal> を設定する必要があります。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property user.slice CPUQuota=50%</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>MemoryAccounting=</literal><option>[yes|no]</option></term>
+    <term><literal>MemoryAccounting=</literal> <option>[yes|no]</option></term>
     <listitem>
-     <para>
-      Turns on memory usage accounting. This property takes
-      <literal>yes</literal> and <literal>no</literal> as arguments.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>メモリ使用率の算出を行なうかどうかを指定します。値には <literal>yes</literal> (はい) または <literal>no</literal> (いいえ) のいずれかを指定することができます。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property user.slice MemoryAccounting=yes</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>MemoryLow=</literal><replaceable>BYTES</replaceable></term>
+    <term><literal>MemoryLow=</literal> <replaceable>容量</replaceable></term>
     <listitem>
-     <para>
-      Unused memory from processes below this limit will not be
-      reclaimed for other use. Use suffixes K, M, G or T for
-      <replaceable>BYTES</replaceable>. This requires
-      <literal>MemoryAccounting=yes</literal>.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>プロセス内の未使用メモリが指定した容量より少ない場合、メモリを他の用途に再利用しないようにします。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を使用するには、 <literal>MemoryAccounting=yes</literal> を設定する必要があります。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryLow=512M</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>MemoryHigh=</literal><replaceable>BYTES</replaceable></term>
+    <term><literal>MemoryHigh=</literal> <replaceable>容量</replaceable></term>
     <listitem>
-     <para>
-      If more memory above this limit is used, memory is aggressively
-      taken away from the processes. Use suffixes K, M, G or T for
-      <replaceable>BYTES</replaceable>. This requires
-      <literal>MemoryAccounting=yes</literal>.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>この制限以上にメモリを使用した場合、プロセスからできる限り積極的にメモリを取り除こうとする動きをします。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を使用するには、 <literal>MemoryAccounting=yes</literal> を設定する必要があります。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryHigh=2G</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>MemoryMax=</literal><replaceable>BYTES</replaceable></term>
+    <term><literal>MemoryMax=</literal> <replaceable>容量</replaceable></term>
     <listitem>
-     <para>
-      Set a maximum limit for used memory. Processes will be killed if
-      they use more memory than allowed. Use suffixes K, M, G or T for
-      <replaceable>BYTES</replaceable>. This requires
-      <literal>MemoryAccounting=yes</literal>.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>メモリの最大値を設定することができます。プロセスがこの値を超えてメモリを確保した場合、プロセスは kill されます。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を使用するには、 <literal>MemoryAccounting=yes</literal> を設定する必要があります。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryMax=4G</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><literal>DeviceAllow=</literal></term>
     <listitem>
-     <para>
-      Allow read (<literal>r</literal>), write (<literal>w</literal>)
-      and mknod (<literal>m</literal>) access. The command takes a
-      device node specifier and separated by a white space a list of
-      <literal>r</literal>, <literal>w</literal> or
-      <literal>m</literal>.
-     </para>
-     <para>
-      Example:
-     </para>
+     <para>読み込み ( <literal>r</literal> ), 書き込み ( <literal>w</literal> ), mknod ( <literal>m</literal> ) のアクセスを許可します。このコマンドの場合、デバイスノードの指定と、スペースを入れて <literal>r</literal> , <literal>w</literal>, <literal>m</literal> の一覧を指定する必要があります。</para>
+     <para>例:</para>
      <screen>&prompt.root;<command>systemctl set-property system.slice DeviceAllow="/dev/sdb1 r"</command></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>DevicePolicy=</literal><option>[auto|closed|strict]</option></term>
+    <term><literal>DevicePolicy=</literal> <option>[auto|closed|strict]</option></term>
     <listitem>
-     <para>
-      When set to <literal>strict</literal>, only access to devices
-      that are listed in <literal>DeviceAllow</literal> is allowed.
-      <literal>closed</literal> additionally allows access to standard
-      pseudo devices including <filename>/dev/null</filename>,
-      <filename>/dev/zero</filename>, <filename>/dev/full</filename>,
-      <filename>/dev/random</filename>, and
-      <filename>/dev/urandom</filename>.
-      <literal>auto</literal> allows access to all devices if no
-      specific rule is defined in <literal>DeviceAllow</literal>.
-      <literal>auto</literal> is the default setting.
-     </para>
+     <para><literal>strict</literal> に設定した場合、 <literal>DeviceAllow</literal> に列挙したデバイスにのみアクセスを許可するようになります。 <literal>closed</literal> を指定すると、 <filename>/dev/null</filename> , <filename>/dev/zero</filename> , <filename>/dev/full</filename> , <filename>/dev/random</filename> , <filename>/dev/urandom</filename> などの標準疑似デバイスにもアクセスを許可するようになります。 <literal>auto</literal> を設定した場合は、 <literal>DeviceAllow</literal> でルールが設定されない場合、全てのデバイスへのアクセスが許可されるようになります。既定値は <literal>auto</literal> です。</para>
     </listitem>
    </varlistentry>
   </variablelist>
-  <para>
-   For more details and a complete list of properties, see <command>man
-   systemd.resource-control</command>.
-  </para>
+  <para>プロパティに対する詳細と完全な一覧については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.tuning.cgroups.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Kernel documentation (package <systemitem>kernel-source</systemitem>):
-     files in <filename>/usr/src/linux/Documentation/cgroups</filename>.
-    </para>
+    <para>カーネルのドキュメンテーション <filename>/usr/src/linux/Documentation/cgroups</filename> (<systemitem>kernel-source</systemitem> パッケージ内)</para>
    </listitem>
    <listitem>
-    <para>
-     <link xlink:href="http://lwn.net/Articles/604609/"/>&mdash;Brown,
-     Neil: Control Groups Series (2014, 7 parts).
-    </para>
+    <para><link xlink:href="http://lwn.net/Articles/604609/"/>: Brown, Neil: Control Groups Series (2014 年, 7 部構成)</para>
    </listitem>
    <listitem>
-    <para>
-     <link xlink:href="http://lwn.net/Articles/243795/"/>&mdash;Corbet,
-     Jonathan: Controlling memory use in containers (2007).
-    </para>
+    <para><link xlink:href="http://lwn.net/Articles/243795/"/>: Corbet, Jonathan: Controlling memory use in containers (2007 年)</para>
    </listitem>
    <listitem>
-    <para>
-     <link xlink:href="http://lwn.net/Articles/236038/"/>&mdash;Corbet,
-     Jonathan: Process containers (2007).
-    </para>
+    <para><link xlink:href="http://lwn.net/Articles/236038/"/>: Corbet, Jonathan: Process containers (2007 年)</para>
    </listitem>
   </itemizedlist>
  </sect1>
