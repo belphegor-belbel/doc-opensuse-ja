@@ -9,23 +9,10 @@
  Info Provider: Thomas Renniger <trenn@suse.de>
 -->
 
- <title>Power Management</title>
+ <title>電源管理</title>
  <info>
       <abstract>
-        <para>
-    Power management aims at reducing operating costs for energy and cooling
-    systems while at the same time keeping the performance of a system at a
-    level that matches the current requirements. Thus, power management is
-    always a matter of balancing the actual performance needs and power
-    saving options for a system. Power management can be implemented and
-    used at different levels of the system. A set of specifications for
-    power management functions of devices and the operating system interface
-    to them has been defined in the Advanced Configuration and Power
-    Interface (ACPI). As power savings in server environments can primarily
-    be achieved at the processor level, this chapter introduces some
-    main concepts and highlights some tools for analyzing and influencing
-    relevant parameters.
-   </para>
+        <para>電源管理機能は、電力や冷却システムに対する運用コストを下げるためのものだけでなく、それと同時に現在の要件に適合したレベルの性能を維持するために必要な機能です。そのため電源管理機能は、必要な性能の維持と省電力のバランスを常に取る必要があることになります。電源管理機能はシステム内の様々なレベルで実装され使用されています。デバイスやオペレーティングシステムの電源管理機能の仕様集は、 Advanced Configuration and Power Interface (ACPI) として規定されています。サーバ環境での省電力は主にプロセッサレベルで実現されていますが、本章では主な考え方と分析に使用するツール類、そして影響するパラメータについて説明しています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -34,173 +21,81 @@
     </info>
 
  <sect1 xml:id="sec.tuning.power.cpu">
-  <title>Power Management at CPU Level</title>
+  <title>CPU レベルでの電源管理</title>
 
-  <para>
-   At the CPU level, you can control power usage in various ways. For
-   example by using idling power states (C-states), changing CPU frequency
-   (P-states), and throttling the CPU (T-states). The following sections
-   give a short introduction to each approach and its significance for power
-   savings. Detailed specifications can be found at
-   <link xlink:href="http://www.acpi.info/spec.htm"/>.
-  </para>
+  <para>CPU のレベルでは、様々な方法で電力使用量を制御することができます。たとえばアイドル (待機) 状態での電力使用量の調整 (C-ステート) や、 CPU の動作周波数変更 (P-ステート) 、そして CPU の減速 (T-ステート) があります。下記のセクションには、それぞれのアプローチに対する簡潔な説明と、電力使用量にもたらす影響度合いを示しています。</para>
 
   <sect2 xml:id="sec.tuning.power.cpu.cstates">
-   <title>C-States (Processor Operating States)</title>
-   <para>
-    Modern processors have several power saving modes called
-    <literal>C-states</literal>. They reflect the capability of an idle
-    processor to turn off unused components to save power.
-   </para>
-   <para>
-    When a processor is in the <literal>C0</literal> state, it is executing
-    instructions. A processor running in any other C-state is idle. The
-    higher the C number, the deeper the CPU sleep mode: more components are
-    shut down to save power. Deeper sleep states can save large amounts of
-    energy. Their downside is that they introduce latency. This means, it
-    takes more time for the CPU to go back to <literal>C0</literal>.
-    Depending on workload (threads waking up, triggering CPU usage and then
-    going back to sleep again for a short period of time) and hardware (for
-    example, interrupt activity of a network device), disabling the deepest
-    sleep states can significantly increase overall performance. For details
-    on how to do so, refer to
-    <xref linkend="sec.tuning.power.tools.cpupower.idle-info"/>.
-   </para>
-   <para>
-    Some states also have submodes with different power saving latency
-    levels. Which C-states and submodes are supported depends on the
-    respective processor. However, <literal>C1</literal> is always
-    available.
-   </para>
-   <para>
-    <xref linkend="tab.tuning.power.cstates"/> gives an overview of the most
-    common C-states.
-   </para>
+   <title>C-ステート (プロセッサの待機状態)</title>
+   <para>新しいプロセッサであれば、 <literal>C-ステート</literal> と呼ばれる省電力モードに対応しています。この設定は、使用していないコンポーネントの電源を落としておくことで、待機状態のプロセッサの消費電力を減らすための仕組みです。</para>
+   <para>プロセッサが <literal>C0</literal> 状態に設定されている場合、そのプロセッサは何らかの処理を実行していることになります。 <literal>C0</literal> 以外の状態であれば、アイドル (待機) 状態にあることになります。 C の後ろの番号が大きければ大きいほど、より CPU が深く休眠し、より多くのコンポーネントを休止させることで、電力の消費を抑えていることになります。ただし、 C の後ろの番号が大きければ大きいほど、遅延を生み出す結果になります。つまり、 CPU が <literal>C0</literal> に戻るまでに時間が必要になります。処理内容 (スレッドが起動して CPU の使用を開始し、再度休眠状態に入るまでの時間など) やハードウエア (たとえばネットワークデバイスの割り込み状況) にも依存しますが、深い休眠状態を無効化すれば、全体の性能は高くなります。 C-ステートの設定方法について、詳しくは <xref linkend="sec.tuning.power.tools.cpupower.idle-info"/> をお読みください。</para>
+   <para>また、ステートによってはサブモードが規定され、さらに細かい省電力レベルが用意されていることもあります。 C-ステートやサブモードの対応状況は、プロセッサによって異なります。ただし、 <literal>C1</literal> については必ず提供されています。</para>
+   <para><xref linkend="tab.tuning.power.cstates"/> には、主な C-ステートの概要を示しています。</para>
    <table xml:id="tab.tuning.power.cstates">
-    <title>C-States</title>
+    <title>C-ステート</title>
     <tgroup cols="2">
      <thead>
       <row>
        <entry>
-        <para>
-         Mode
-        </para>
+        <para>モード</para>
        </entry>
        <entry>
-        <para>
-         Definition
-        </para>
+        <para>定義</para>
        </entry>
       </row>
      </thead>
      <tbody>
       <row>
        <entry>
-        <para>
-         C0
-        </para>
+        <para>C0</para>
        </entry>
        <entry>
-        <para>
-         Operational state. CPU fully turned on.
-        </para>
+        <para>動作状態を表わします。 CPU の機能が全て有効化されています。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         C1
-        </para>
+        <para>C1</para>
        </entry>
        <entry>
-        <para>
-         First idle state. Stops CPU main internal clocks via software. Bus
-         interface unit and APIC are kept running at full speed.
-        </para>
+        <para>最初のアイドル状態です。ソフトウエアを介して CPU のメイン内部クロックを停止させている状態です。バスインターフェイスユニットと APIC はフルスピードで動作し続けています。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         C2
-        </para>
+        <para>C2</para>
        </entry>
        <entry>
-        <para>
-         Stops CPU main internal clocks via hardware. State in which the
-         processor maintains all software-visible states, but may take
-         longer to wake up through interrupts.
-        </para>
+        <para>ハードウエアを介して CPU のメイン内部クロックを停止させている状態です。ソフトウエアから参照できる全ての状態を維持していますが、割り込みでの再動作にはしばらくの時間を要するようになります。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         C3
-        </para>
+        <para>C3</para>
        </entry>
        <entry>
-        <para>
-         Stops all CPU internal clocks. The processor does not need to keep
-         its cache coherent, but maintains other states. Some processors
-         have variations of the C3 state that differ in how long it takes to
-         wake the processor through interrupts.
-        </para>
+        <para>全ての CPU 内部クロックを停止させている状態です。プロセッサ内のキャッシュの一貫性 (コヒーレンシー) についても維持を行なう必要のない状態ですが、その他の状態については維持し続けています。また、プロセッサによっては C3 ステートのバリエーションが用意され、割り込みによる再動作にかかる時間が異なる設定が用意されているものがあります。</para>
        </entry>
       </row>
      </tbody>
     </tgroup>
    </table>
-   <para>
-    To avoid needless power consumption, it is recommended to test your
-    workloads with deep sleep states enabled versus deep sleep states
-    disabled. For more information, refer to
-    <xref linkend="sec.tuning.power.tools.cpupower.idle-info"/> or the
-    <command>cpupower-idle-set(1)</command> man page.
-   </para>
+   <para>不要な電力消費を避けるため、深い休眠状態を有効化した場合と無効化した場合で、必要な負荷に対する処理速度を確認しておくことをお勧めします。詳しくは <xref linkend="sec.tuning.power.tools.cpupower.idle-info"/> を参照するか、もしくは <command>cpupower-idle-set(1)</command> のマニュアルページをお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.power.cpu.pstates">
-   <title>P-States (Processor Performance States)</title>
-   <para>
-    While a processor operates (in C0 state), it can be in one of several
-    CPU performance states <literal>(P-states)</literal>. Whereas C-states
-    are idle states (all but C0), <literal>P-states</literal> are
-    operational states that relate to CPU frequency and voltage.
-   </para>
-   <para>
-    The higher the P-state, the lower the frequency and voltage at which the
-    processor runs. The number of P-states is processor-specific and the
-    implementation differs across the various types. However,
-    <literal>P0</literal> is always the highest-performance state (except for <xref linkend="sec.tuning.cpu.power.turbo"/>). Higher
-    P-state numbers represent slower processor speeds and lower power
-    consumption. For example, a processor in <literal>P3</literal> state runs
-    more slowly and uses less power than a processor running in the
-    <literal>P1</literal> state. To operate at any P-state, the processor
-    must be in the <literal>C0</literal> state, which means that it is
-    working and not idling. The CPU P-states are also defined in the ACPI
-    specification, see <link xlink:href="http://www.acpi.info/spec.htm"/>.
-   </para>
-   <para>
-    C-states and P-states can vary independently of one another.
-   </para>
+   <title>P-ステート (プロセッサの性能状態)</title>
+   <para>プロセッサが動作している状態 (C0 ステート) にある場合、 CPU はいずれかの性能状態 <literal>(P-ステート)</literal> にあります。 C0 を除く C-ステートがアイドル (待機) 状態を表わすのに対して、 <literal>P-ステート</literal> は CPU の動作周波数と電圧に関連する動作状態を表わします。</para>
+   <para>P の後ろの数値が大きければ大きいほど、より低い動作周波数および電圧でプロセッサが動作していることになります。 P-ステートの番号体系と実装には様々なものがありますが、 <literal>P0</literal> は (<xref linkend="sec.tuning.cpu.power.turbo"/> を除く) 最高の性能状態を表わす意味になっています。 P の後ろの番号が大きいほど、プロセッサの速度が落ちていて、かつ電力消費も少ないモードであることになります。たとえば <literal>P3</literal> の状態は、 <literal>P1</literal> の状態に比べて遅く、省電力で動作しています。また、 P-ステートは <literal>C0</literal> ステートで動作している (つまり、全ての機能を動作させ、休眠状態に無い) 場合にのみ使用されるものでもあります。 CPU の P-ステートは ACPI 仕様でも定義されています。詳しくは <link xlink:href="http://www.acpi.info/spec.htm"/> をお読みください。</para>
+   <para>なお、 C-ステートと P-ステートは、互いに独立して提供される仕組みです。</para>
   </sect2>
 
 
   <sect2 xml:id="sec.tuning.cpu.power.turbo">
-   <title>Turbo Features</title>
+   <title>Turbo 機能</title>
 <!--taroth 2011-09-22: terminology: AMD: Turbo CORE, Intel: Turbo Boost-->
-   <para>
-    Turbo features allow to dynamically <literal>overtick</literal> active CPU
-    cores while other cores are in deep sleep states. This increases the performance
-    of active threads while still
-    complying with Thermal Design Power (TDP) limits.
-   </para>
-   <para>
-    However, the conditions under which a CPU core can use turbo frequencies
-    are architecture-specific. Learn how to evaluate the efficiency of those
-    new features in <xref linkend="sec.tuning.power.tools.cpupower"/>.
-   </para>
+   <para>Turbo 機能を利用することで、動作中の CPU コアの動作速度を動的に <literal>引き上げ</literal> ながら、動作していない CPU コアを深い休眠状態にすることができます。これにより、熱設計電力 (Thermal Design Power (TDP)) の制限を守りながら、動作中のスレッドの性能を上げることができます。</para>
+   <para>しかしながら、 CPU コアが Turbo 機能に対応できるかどうかは、アーキテクチャによって異なります。このような新しい機能の効率を調べたい場合は、 <xref linkend="sec.tuning.power.tools.cpupower"/> を参照してください。</para>
   </sect2>
  </sect1>
 
@@ -247,76 +142,35 @@
   </para>-->
 
   <sect1 xml:id="sec.tuning.power.governors">
-   <title>In-Kernel Governors</title>
-  <para> The in-kernel governors belong to the Linux kernel &cpufreq; infrastructure and can be
-   used to dynamically scale processor frequencies at runtime. You can think of the governors as a
-   sort of preconfigured power scheme for the CPU. The &cpufreq; governors use P-states to
-   change frequencies and lower power consumption. The dynamic governors can switch between CPU
-   frequencies, based on CPU usage, to allow for power savings while not sacrificing performance.
-  </para>
-   <para>
-    The following governors are available with the &cpufreq; subsystem:
-   </para>
+   <title>カーネル内ガバナー</title>
+  <para>カーネル内のガバナー (統治する仕組み) は、 Linux カーネルの &cpufreq; インフラストラクチャに属するもので、動作中に動的にプロセッサの動作周波数を変更するために使用することができます。ガバナーは CPU 側であらかじめ設定された電力スキームを表わすものとして考えることができます。 &cpufreq; は P-ステートを使用して周波数や消費電力を統治します。動的なガバナーの仕組みによって、 CPU の周波数を使用されている状況に応じて切り替えることができます。これにより、性能への影響を少なくしたまま、省電力を実現できることになります。</para>
+   <para>&cpufreq; サブシステムでは、下記のガバナーが提供されています:</para>
    <variablelist>
     <varlistentry>
-     <term>Performance Governor</term>
+     <term>Performance ガバナー</term>
      <listitem>
-      <para>
-       The CPU frequency is statically set to the highest possible for
-       maximum performance. Consequently, saving power is not the focus of
-       this governor.
-      </para>
-      <para>See also <xref linkend="sec.tuning.power.options.p-states"/>.
-      </para>
+      <para>最大限の性能を発揮するため、 CPU の動作周波数を設定可能な最大値に固定します。そのため、このガバナーでは電力消費量の削減は行なわないことになります。</para>
+      <para><xref linkend="sec.tuning.power.options.p-states"/> もお読みください。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Powersave Governor</term>
+     <term>Powersave ガバナー</term>
      <listitem>
-      <para>
-       The CPU frequency is statically set to the lowest possible. This can
-       have severe impact on the performance, as the system will never rise
-       above this frequency no matter how busy the processors are. An important
-       exception is the <literal>intel_pstate</literal> which defaults to the
-       <literal>powersave</literal> mode. This is due to a hardware-specific
-       decision but functionally it operates similarly to the
-       <literal>on-demand</literal> governor.
-      </para>
-      <para>
-       However, using this governor often does not lead to the expected
-       power savings as the highest savings can usually be achieved at idle
-       through entering C-states. With the powersave governor, processes run
-       at the lowest frequency and thus take longer to finish. This means it
-       takes longer until the system can go into an idle C-state.
-      </para>
-      <para>
-       Tuning options: The range of minimum frequencies available to the
-       governor can be adjusted (for example, with the
-       <command>cpupower</command> command line tool).
-      </para>
+      <para>CPU の動作周波数を設定可能な最小値に固定します。これにより、プロセッサがどれだけ忙しい状態であっても、周波数を上げることがなくなりますので、性能には大きな影響が現われます。ただし、 <literal>intel_pstate</literal> については例外で、既定値が <literal>powersave</literal> モードになっていますが、こちらはハードウエア固有の仕組みによって設定されているものであり、実際には <literal>on-demand</literal> ガバナーのように動作することに注意してください。</para>
+      <para>また、このガバナーを利用して最大限の省電力を実現しようとしても、実環境では C-ステートによる待機時の電力消費削減のほうが効果が大きくなってしまい、期待通りの省電力にはならないことがありますので、あらかじめご注意ください。さらに、 Powersave のガバナーでは周波数が低くなることから、処理にかかる時間も長くなります。つまり、 C-ステートの変化も遅くなります。</para>
+      <para>チューニングオプション: ガバナーで調整する最小限の周波数を設定することができます (<command>cpupower</command> コマンドラインツールなどで行なうことができます) 。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>On-demand Governor</term>
+     <term>On-demand ガバナー</term>
      <listitem>
-      <para>
-       The kernel implementation of a dynamic CPU frequency policy: The
-       governor monitors the processor usage. When it exceeds a
-       certain threshold, the governor will set the frequency to the highest
-       available. If the usage is less than the threshold, the next lowest
-       frequency is used. If the system continues to be underemployed, the
-       frequency is again reduced until the lowest available frequency is
-       set.
-      </para>
+      <para>動的な CPU 周波数制御を行なうカーネル実装です。このガバナーではプロセッサの使用状況を確認して、ある特定の閾値を超過すると指定可能な最大の周波数に設定します。逆に使用状況が閾値を下回ると、指定可能な次の低い周波数に設定します。さらに使用されない状態が続くと、最も低い周波数になるまで少しずつ低く設定します。</para>
      </listitem>
     </varlistentry>
    </variablelist>
    <important>
-   <title>Drivers and In-kernel Governors</title>
-   <para>Not all drivers use the in-kernel governors to dynamically scale power frequency at
-    runtime. For example, the <literal>intel_pstate</literal> driver adjusts power frequency itself. Use
-    the <command>cpupower frequency-info</command> command to find out which driver your system
-    uses.</para>
+   <title>ドライバとカーネル内ガバナーの関係性について</title>
+   <para>全てのドライバがカーネル内のガバナーを利用して動的な周波数調整を行なっているわけではありません。たとえば <literal>intel_pstate</literal> ドライバでは、独自に周波数を調整しています。お使いのドライバが何であるのかを調べたい場合は、 <command>cpupower frequency-info</command> と入力して実行してください。</para>
    <!--taroth 2015-12-03: commenting on behalf on trenn-->
    <!--<para>By default, <literal>intel_pstate</literal> uses a similar policy like the
     powersave governor. However, you can also make <literal>intel_pstate</literal> statically set
@@ -358,34 +212,15 @@
  </sect1>
 -->
  <sect1 xml:id="sec.tuning.power.tools.cpupower">
-  <title>The <systemitem class="resource">cpupower</systemitem> Tools</title>
-   <para>The <command>cpupower</command> tools are designed to give an overview
-   of <emphasis>all</emphasis> CPU power-related parameters that are supported
-   on a given machine, including turbo (or boost) states.  Use the tool set to
-   view and modify settings of the kernel-related &cpufreq; and cpuidle systems
-   and other settings not related to frequency scaling or idle states. The
-   integrated monitoring framework can access both kernel-related parameters
-   and hardware statistics. Therefore, it is ideally suited for performance
-   benchmarks. It also helps you to identify the dependencies between turbo and
-   idle states.
-   </para>
-   <para> After installing the <systemitem class="resource">cpupower</systemitem> package, view the
-   available <command>cpupower</command> subcommands with
-   <command>cpupower&nbsp;--help</command>. Access the general man page with
-   <command>man&nbsp;cpupower</command>, and the man pages of the subcommands with
-   <command>man&nbsp;cpupower-<replaceable>SUBCOMMAND</replaceable></command>.
-   </para>
+  <title><systemitem class="resource">cpupower</systemitem> ツール</title>
+   <para><command>cpupower</command> ツールは、 Turbo 機能 (もしくはブースト機能) を含め、マシン内で利用できる <emphasis>全ての</emphasis> CPU 消費電力関連のパラメータを取得したり設定したりすることのできるツールとして設計されています。このツールを使用することで、カーネル関連の &cpufreq; や cpuidle システムのほか、周波数調整やアイドル状態とは直接関係のない様々な設定を表示したり、変更したりすることができます。また、統合されている監視フレームワークでは、カーネル関連のパラメータとハードウエアの統計情報の両方にアクセスする機能を提供します。そのため、性能のベンチマークを行なう用途に適した仕組みです。このほか、 Turbo やアイドル状態の依存関係の調査を行なうこともできます。</para>
+   <para><systemitem class="resource">cpupower</systemitem> パッケージをインストールしたら、 <command>cpupower&nbsp;--help</command> を実行することで、利用可能な <command>cpupower</command> のサブコマンド一覧を表示することができます。また、全体のマニュアルページには <command>man&nbsp;cpupower</command> と入力して実行することで評議することができるほか、サブコマンド向けのマニュアルページを表示したい場合は、 <command>man&nbsp;cpupower-<replaceable>サブコマンド</replaceable></command> と入力して実行してください。</para>
 
    <sect2 xml:id="sec.tuning.power.tools.cpupower.freq-info">
-    <title>Viewing Current Settings with <command>cpupower</command></title>
-    <para>
-     The <command>cpupower&nbsp;frequency-info</command> command shows the
-     statistics of the cpufreq driver used in the kernel. Additionally, it
-     shows if turbo (boost) states are supported and enabled in the BIOS.
-     Run without any options, it shows an output similar to the following:
-    </para>
+    <title><command>cpupower</command> による現在設定の表示</title>
+    <para><command>cpupower&nbsp;frequency-info</command> のように入力して実行すると、カーネル内で使用されている cpufreq ドライバの統計情報を表示することができます。これに加えて、 BIOS 内で Turbo (ブースト) 機能が有効化されているかどうかも表示することができます。何もオプションを指定しないで実行すると、下記のような出力が現われます:</para>
     <example>
-     <title>Example Output of <command>cpupower frequency-info</command></title>
+     <title><command>cpupower frequency-info</command> の出力例</title>
      <screen>&prompt.root;cpupower frequency-info
 analyzing CPU 0:
   driver: intel_pstate
@@ -406,20 +241,13 @@ analyzing CPU 0:
     3600 MHz max turbo 2 active cores
     3800 MHz max turbo 1 active cores</screen>
     </example>
-    <para>
-     To get the current values for all CPUs, use
-     <command>cpupower&nbsp;-c&nbsp;all&nbsp;frequency-info</command>.
-    </para>
+    <para>全ての CPU に対する現在の値を表示するには、 <command>cpupower&nbsp;-c&nbsp;all&nbsp;frequency-info</command> コマンドを使用します。</para>
    </sect2>
    <sect2 xml:id="sec.tuning.power.tools.cpupower.idle-info">
-    <title>Viewing Kernel Idle Statistics with <command>cpupower</command></title>
-    <para>
-     The <command>idle-info</command> subcommand shows the statistics of the
-     cpuidle driver used in the kernel. It works on all architectures that
-     use the cpuidle kernel framework.
-    </para>
+    <title><command>cpupower</command> によるカーネル内のアイドル状態の表示</title>
+    <para><command>idle-info</command> サブコマンドは、カーネル内で使用されている cpuidle ドライバの統計情報を表示することができます。 cpuidle カーネルフレームワークを使用していれば、どのようなアーキテクチャでも動作します。</para>
     <example>
-     <title>Example Output of <command>cpupower idle-info</command></title>
+     <title><command>cpupower idle-info</command> の出力例</title>
      <screen>&prompt.root;cpupower idle-info
 CPUidle driver: intel_idle
 CPUidle governor: menu
@@ -458,15 +286,10 @@ Latency: 109
 Usage: 62593595
 Duration: 324631233978</screen>
     </example>
-    <para>
-     After finding out which processor idle states are supported with
-     <command>cpupower idle-info</command>, individual states can be
-     disabled using the <command>cpupower idle-set</command> command.
-     Typically one wants to disable the deepest sleep state, for example:
-    </para>
+    <para>プロセッサがどのアイドル状態に対応しているのかを <command>cpupower idle-info</command> で調べたあとは、 <command>cpupower idle-set</command> コマンドを使用することで、個別のステートを無効化することができます。一般的には最も深い休眠状態を無効化することになるかと思いますが、このような場合は下記のように入力して実行します:</para>
 <screen>&prompt.root;cpupower idle-set -d 5</screen>
 <!--taroth 2015-12-01: the -D option is only available since SLE 12 SP1 GMC, *not* for SLE 12   -->
-    <para>Or, for disabling all CPUs with latencies equal to or higher than <literal>80</literal>:</para>
+    <para>レイテンシが <literal>80</literal> と等しいか、それより大きいものを全て無効化したい場合は、下記のように入力して実行します:</para>
     <screen>&prompt.root;cpupower idle-set -D 80</screen>
 
     <!--taroth 2015-12-01: on behalf of trenn, commented the following para for now,
@@ -477,27 +300,13 @@ Duration: 324631233978</screen>
     so, check for performance or power impact.</para>-->
    </sect2>
    <sect2 xml:id="sec.tuning.power.tools.cpupower.monitor">
-    <title>Monitoring Kernel and Hardware Statistics with <command>cpupower</command></title>
-    <para>
-     Use the <command>monitor</command> subcommand to report processor topology, and monitor frequency
-     and idle power state statistics over a certain period of time. The
-     default interval is <literal>1</literal> second, but it can be changed
-     with the <option>-i</option>. Independent processor sleep states and
-     frequency counters are implemented in the tool&mdash;some retrieved
-     from kernel statistics, others reading out hardware registers. The
-     available monitors depend on the underlying hardware and the system.
-     List them with <command>cpupower&nbsp;monitor&nbsp;-l</command>.
-     For a description of the individual monitors, refer to the
-     cpupower-monitor man page.
-    </para>
-    <para>
-     The <command>monitor</command> subcommand allows you to execute
-     performance benchmarks. To compare kernel statistics with hardware
-     statistics for specific workloads, concatenate the respective command, for example:</para>
+    <title><command>cpupower</command> によるカーネルとハードウエアの統計情報の表示</title>
+    <para><command>monitor</command> サブコマンドを使用することで、プロセッサのトポロジ情報を表示することができるほか、特定の時間内における周波数やアイドル状態の統計を表示することができます。既定の間隔は <literal>1</literal> 秒ですが、 <option>-i</option> オプションを使用することで自由に変更することができます。また、ツール内ではプロセッサのスリープ (休眠) 状態と周波数のカウンタは独立して実装されています。これらのうちのいくつかはカーネルの統計情報から、残りはハードウエアレジスタから取得しています。利用可能な監視機能は、お使いのハードウエアとシステムによって異なります。利用可能な監視機能を表示したい場合は、 <command>cpupower&nbsp;monitor&nbsp;-l</command> と入力して実行してください。また、各モニタに関する詳細は、 cpupower-monitor のマニュアルページをお読みください。</para>
+    <para><command>monitor</command> サブコマンドでは、性能を測定するためのベンチマーク機能にも対応しています。特定の処理におけるハードウエアの統計情報を比較したい場合は、その処理のコマンドを末尾に付けて実行します。たとえば下記のようになります:</para>
 
      <screen><command>cpupower</command> <option>monitor</option> db_test.sh</screen>
     <example xml:id="ex.cpupower.monitor">
-     <title>Example <command>cpupower monitor</command> Output</title>
+     <title><command>cpupower monitor</command> の出力例</title>
 <screen>&prompt.root;cpupower monitor
 |Mperf                   || Idle_Stats
  <co xml:id="co.cpupower.mon.mperf"/>&nbsp;                        <co xml:id="co.cpupower.mon.idle"/>&nbsp;
@@ -509,90 +318,29 @@ CPU | C0   | Cx   | Freq || POLL | C1   | C2   | C3
      </screen>
      <calloutlist>
       <callout arearefs="co.cpupower.mon.mperf">
-       <para>
-        Mperf shows the average frequency of a CPU, including boost
-        frequencies, over time. Additionally, it shows the
-        percentage of time the CPU has been active (<literal>C0</literal>)
-        or in any sleep state (<literal>Cx</literal>). As the turbo states are managed by the
-        BIOS, it is impossible to get the frequency values at a given
-        instant. On modern processors with turbo features the Mperf monitor
-        is the only way to find out about the frequency a certain CPU has
-        been running in.
-       </para>
+       <para>Mperf はブーストした周波数を含む、 CPU の平均動作周波数を表示します。これに加えて、 CPU が動作中 ( <literal>C0</literal> ) であった割合と、休眠中であった割合 ( <literal>Cx</literal> ) を、時間比で表示することができます。 Turbo 機能は BIOS で管理されている機能であるため、その場での周波数を取得することができませんが、 Mperf 監視を使用することで、過去にどのような動作状況であったのかを確認することができます。</para>
       </callout>
       <callout arearefs="co.cpupower.mon.idle">
-       <para>
-        Idle_Stats shows the statistics of the cpuidle kernel subsystem. The
-        kernel updates these values every time an idle state is entered or
-        left. Therefore there can be some inaccuracy when cores are in an
-        idle state for some time when the measure starts or ends.
-       </para>
+       <para>Idle_Stats は cpuidle カーネルサブシステムの統計情報を表示します。カーネルはアイドル状態に入ったり出たりするごとに、それらの値を更新していきます。なお、測定の開始と終了時にはアイドル状態の変化が発生するため、その分だけ値が不正確になることに注意してください。</para>
       </callout>
      </calloutlist>
-     <para>
-      Apart from the (general) monitors in the example above, other
-      architecture-specific monitors are available. For detailed
-      information, refer to the <command>cpupower-monitor</command> man
-      page.
-     </para>
+     <para>上述の (一般的な) 監視機能とは別に、アーキテクチャ依存の監視機能も使用することができます。詳しい説明については、 <command>cpupower-monitor</command> のマニュアルページをお読みください。</para>
     </example>
-    <para>
-     By comparing the values of the individual monitors, you can find
-     correlations and dependencies and evaluate how well the power saving
-     mechanism works for a certain workload. In
-     <xref linkend="ex.cpupower.monitor" xrefstyle="select:label"/> you can
-     see that CPU <literal>0</literal> is idle (the value of
-     <literal>Cx</literal> is near 100%), but runs at a very high frequency.
-     This is because the CPUs <literal>0</literal> and <literal>1</literal>
-     have the same frequency values which means that there is a dependency
-     between them.
-    </para>
+    <para>個別のモニタで出力された値を比較することで関係性や依存性を見つけることができるほか、特定の処理に対してどれだけ省電力機能が正しく働いたのかを確認することもできます。たとえば <xref linkend="ex.cpupower.monitor" xrefstyle="select:label"/> では CPU <literal>0</literal> がほぼアイドル状態 (つまり <literal>Cx</literal> がほぼ 100%) になっていますが、それにも関わらず非常に高い動作周波数になってしまっています。これは CPU <literal>0</literal> と <literal>1</literal> が同じ周波数しか設定できないことによるもので、これを依存性と称しています。</para>
    </sect2>
    <sect2 xml:id="sec.tuning.power.tools.cpupower.freq-set">
-    <title>Modifying Current Settings with <command>cpupower</command></title>
-    <para>
-     You can use
-     <command>cpupower&nbsp;frequency-set</command> command as &rootuser; to
-     modify current settings. It allows you to set values for the minimum or
-     maximum CPU frequency the governor may select or to create a new
-     governor. With the <option>-c</option> option, you can also specify for
-     which of the processors the settings should be modified. That makes it
-     easy to use a consistent policy across all processors without adjusting
-     the settings for each processor individually. For more details and the
-     available options, see the man page
-     <literal>cpupower-frequency-set</literal> or run
-     <command>cpupower&nbsp;frequency-set</command>
-     <option>--help</option>.
-    </para>
+    <title><command>cpupower</command> による設定の変更</title>
+    <para>&rootuser; で <command>cpupower&nbsp;frequency-set</command> コマンドを実行することで、現在の設定を変更することができます。ガバナーが設定する最小／最大 CPU 動作周波数のほか、新しいガバナーを作成することもできます。また <option>-c</option> オプションを指定することで、どのプロセッサに対する設定を変更するのかを指定することもできます。これにより、個別のプロセッサに対して調整を行なうことなく、全てのプロセッサに対して一貫したポリシーを適用できるようになっています。詳細と利用可能なオプションにについて、詳しくは <literal>cpupower-frequency-set</literal> のマニュアルページをお読みになるか、 <command>cpupower&nbsp;frequency-set</command> <option>--help</option> と入力して実行してください。</para>
    </sect2>
   </sect1>
 
   <sect1 xml:id="sec.tuning.power.tools.powertop" os="sled;osuse">
-   <title>Monitoring Power Consumption with &powertop;</title>
-    <para>
-    You can monitor system power consumption with &powertop;. It helps you to
-    identify the reasons for unnecessary high power consumption (for example,
-    processes that are mainly responsible for waking up a processor from its
-    idle state) and to optimize your system settings to avoid these. It
-    supports both Intel and AMD processors. <phrase os="sles;sled">The
-    <systemitem class="resource">powertop</systemitem> package is available
-    from the &sle; SDK.</phrase>
-   </para>
-   <para os="sles;sled">
-    The SDK is a module for &sle; and is available via an online channel from
-    the &scc;.  Alternatively, go to <link xlink:href="http://download.suse.com/"/>, search for <literal>&sle;
-    Software Development Kit</literal> and download it from there.
-    Refer to <xref linkend="cha.add-ons"/> for details.
-   </para>
-   <para>
-    &powertop; combines various sources of information (analysis of
-    programs, device drivers, kernel options, amounts and sources of
-    interrupts waking up processors from sleep states) and shows them in one
-    screen. <xref linkend="ex.tuning.power.powertop"/> shows which
-    information categories are available:
-   </para>
+   <title>&powertop; による電力消費状況の監視</title>
+    <para>&powertop; を使用することで、システムの電力消費状況を監視することができます。この情報をもとにして、不用意に電力消費を高めている理由 (たとえば休眠状態にあるプロセッサを活動状態に戻しているプロセス) を調べて、お使いのシステムにおる性能上の問題点を解決する支援を行なうことができます。このプログラムは Intel および AMD のプロセッサに対応しています。 <phrase os="sles;sled">なお、 <systemitem class="resource">powertop</systemitem> パッケージは &sle; SDK 内に含まれています。</phrase></para>
+   <para os="sles;sled">SDK は &sle; 向けのモジュールであり、 &scc; からのオンラインチャネルを通じて取得することができます。それ以外にも、 <link xlink:href="http://download.suse.com/"/> で <literal>&sle; Software Development Kit</literal> と入力して検索を行なうことでも、ダウンロードすることができます。詳しくは <xref linkend="cha.add-ons"/> をお読みください。</para>
+   <para>&powertop; は様々な情報源からのデータを組み合わせて 1 画面に表示します。これにはプログラムやデバイスドライバの分析のほか、カーネルオプションやプロセッサを休眠状態から起こした割り込みの量および割り込みの発生源に関する情報などが含まれます。 <xref linkend="ex.tuning.power.powertop"/> には、どのような分野の情報を表示しているのかを示しています:</para>
    <example xml:id="ex.tuning.power.powertop">
-    <title>Example &powertop; Output</title>
+    <title>&powertop; の出力例</title>
 <screen>Cn               Avg  residency       P-states   (frequencies)
 <co xml:id="co.powertop.cstates"/>&nbsp;                <co xml:id="co.powertop.avg"/>&nbsp;     <co xml:id="co.powertop.residency"/>&nbsp;             <co xml:id="co.powertop.pstates"/>&nbsp;           <co xml:id="co.powertop.freq"/>
 C0 (cpu running)        (11.6%)       2.00 Ghz       0.1%
@@ -619,103 +367,48 @@ echo min_power &gt; /sys/class/scsi_host/host0/link_power_management_policy
 or press the S key.</screen>
     <calloutlist>
      <callout arearefs="co.powertop.cstates">
-      <para>
-       The column shows the C-states. When working, the CPU is in state
-       <literal>0</literal>, when resting it is in some state greater than
-       <literal>0</literal>, depending on which C-states are available and
-       how deep the CPU is sleeping.
-      </para>
+      <para>この列には C-ステートの情報が表示されています。 CPU が動作中である場合、ステートは <literal>0</literal> に、休眠状態にある場合は <literal>0</literal> より大きいステートになります。これは利用可能な C-ステートの数や、休眠状態の状況によって変化します。</para>
      </callout>
      <callout arearefs="co.powertop.avg">
-      <para>
-       The column shows average time in milliseconds spent in the particular
-       C-state.
-      </para>
+      <para>この列には、それぞれの C-ステートが設定されていた時間の累計を示しています。</para>
      </callout>
      <callout arearefs="co.powertop.residency">
-      <para>
-       The column shows the percentages of time spent in various C-states.
-       For considerable power savings during idle, the CPU should be in
-       deeper C-states most of the time. In addition, the longer the average
-       time spent in these C-states, the more power is saved.
-      </para>
+      <para>この列には、それぞれの C-ステートが設定されていた時間の割合を示しています。アイドル時に電力消費を減らすには、より深い C-ステートになるようにします。これに加えて、深い C-ステートに長い時間とどまり続けるようにします。</para>
      </callout>
      <callout arearefs="co.powertop.pstates">
-      <para>
-       The column shows the frequencies the processor and kernel driver
-       support on your system.
-      </para>
+      <para>この列には、プロセッサの動作周波数と、お使いのシステムで対応するカーネルドライバを表示しています。</para>
      </callout>
      <callout arearefs="co.powertop.freq">
-      <para>
-       The column shows the amount of time the CPU cores stayed in different
-       frequencies during the measuring period.
-      </para>
+      <para>この列には、一定の時間内にそれぞれの周波数にどれだけの時間設定されていたのかを割合で表示しています。</para>
      </callout>
      <callout arearefs="co.powertop.wakeups">
-      <para>
-       Shows how often the CPU is awoken per second (number of interrupts).
-       The lower the number, the better. The <literal>interval</literal>
-       value is the &powertop; refresh interval which can be controlled
-       with the <option>-t</option> option. The default time to gather data
-       is 5 seconds.
-      </para>
+      <para>1 秒あたり CPU がどれだけの頻度で休眠状態から起こされたのかを表示しています (割り込みの回数と同じ意味です) 。その数値が少なければ少ないほど、よりよいシステムであると言えます。 <literal>interval</literal> は &powertop; の更新間隔を示す値で、コマンドラインオプションの <option>-t</option> で指定することができます。既定の収集間隔は 5 秒です。</para>
      </callout>
      <callout arearefs="co.powertop.power">
-      <para>
-       When running &powertop; on a laptop, this line displays the ACPI
-       information on how much power is currently being used and the
-       estimated time until discharge of the battery. On servers, this
-       information is not available.
-      </para>
+      <para>&powertop; をラップトップで動作させている場合、この行には ACPI の情報が表示され、現在使用している電力量と、バッテリーが完全に放電されるまでの予測時間が表示されます。サーバの場合、ここには何も表示されません。</para>
      </callout>
      <callout arearefs="co.powertop.culprits">
-      <para>
-       Shows what is causing the system to be more active than needed.
-       &powertop; displays the top items causing your CPU to awake during
-       the sampling period.
-      </para>
+      <para>何がシステムを必要以上に休眠状態から起こしているのかを示しています。 &powertop; では、一定のサンプリング間隔内で最も休眠中の CPU を起こした項目の上位を表示します。</para>
      </callout>
      <callout arearefs="co.powertop.suggestions">
-      <para>
-       Suggestions on how to improve power usage for this machine.
-      </para>
+      <para>このマシンで電力消費を改善するためのヒントを表示しています。</para>
      </callout>
     </calloutlist>
    </example>
-   <para>
-    For more information, refer to the &powertop; project page at
-    <link xlink:href="https://01.org/powertop"/>.
-   </para>
+   <para>詳しくは <link xlink:href="https://01.org/powertop"/> (英語) にある &powertop; プロジェクトのページをお読みください。</para>
   </sect1>
 
  <sect1 xml:id="sec.tuning.power.options">
-  <title>Special Tuning Options</title>
+  <title>特殊なチューニングオプション</title>
 
-  <para>
-   The following sections highlight important settings.
-  </para>
+  <para>下記の章では、主な設定について説明しています。</para>
 
   <sect2 xml:id="sec.tuning.power.options.p-states">
-   <title>Tuning Options for P-States</title>
-   <para>
-    The &cpufreq; subsystem offers several tuning options for P-states:
-    You can switch between the different governors, influence minimum or
-    maximum CPU frequency to be used or change individual governor
-    parameters.
-   </para>
-   <para>
-    To switch to another governor at runtime, use
-    <command>cpupower&nbsp;frequency-set</command> with the <option>-g</option> option. For
-    example, running the following command (as &rootuser;) will activate the
-    performance governor:
-   </para>
+   <title>P-ステート向けのチューニングオプション</title>
+   <para>&cpufreq; サブシステムでは、 P-ステート向けのチューニングオプションがいくつか提供されています。オプションにはガバナーの切り替えのほか、使用すべき最小／最大の CPU 周波数と、ガバナー別のパラメータの変更などがあります。</para>
+   <para>ガバナーを変更したい場合は、 <command>cpupower&nbsp;frequency-set</command> コマンドに <option>-g</option> オプションを付けて実行します。たとえば &rootuser; で下記のように入力して実行すると、 Performance ガバナーに切り替えることができます:</para>
 <screen>&prompt.root;cpupower frequency-set -g performance</screen>
-   <para>
-    To set values for the minimum or maximum CPU frequency the governor may
-    select, use the <option>-d</option> or <option>-u</option> option,
-    respectively.
-   </para>
+   <para>ガバナーが使用すべき最小および最大の CPU 周波数を指定したい場合は、それぞれ <option>-d</option> や <option>-u</option> のオプションで設定します。</para>
    <!--taroth 2015-12-01: on behalf of trenn, commented the following para for now,
     because it will only be made available in an online update-->
    <!--<para>
@@ -806,94 +499,44 @@ or press the S key.</screen>
  </sect1>
 
  <sect1 xml:id="sec.tuning.power.trouble">
-  <title>Troubleshooting</title>
+  <title>トラブルシューティング</title>
 
   <variablelist>
    <varlistentry>
-    <term>BIOS options enabled?</term>
+    <term>BIOS オプションが有効化されていますか？</term>
     <listitem>
-     <para>
-      To use C-states or P-states, check your BIOS options:
-     </para>
+     <para>C-ステートや P-ステートを使用するには、 BIOS 側での確認が必要です:</para>
      <itemizedlist mark="bullet" spacing="normal">
       <listitem>
-       <para>
-        To use C-states, make sure to enable <literal>CPU C State</literal>
-        or similar options to benefit from power savings at idle.
-       </para>
+       <para>C-ステートを使用するには、まず <literal>CPU C State</literal> などのオプションを有効化して、アイドル時の省電力を有効化する必要があります。</para>
       </listitem>
       <listitem>
-       <para>
-        To use P-states and the &cpufreq; governors, make sure to enable
-        <literal>Processor Performance States</literal> options or similar.
-       </para>
+       <para>P-ステートや &cpufreq; のガバナーを使用するには、 <literal>Processor Performance States</literal> などのオプションを設定します。</para>
       </listitem>
       <listitem>
-       <para>
-        Even if P-states and C-states are available, it is possible that the
-        platform firmware is managing CPU frequencies which may be sub-optimal.
-        For example, if <literal>pcc-cpufreq</literal> is loaded then the
-        OS is only giving hints to the firmware, which is free to ignore the
-        hints. This can be addressed by selecting "OS Management" or similar
-        for CPU frequency managed in the BIOS. After reboot, an alternative
-        driver will be used but the performance impact should be carefully
-        measured.
-       </para>
+       <para>P-ステートや C-ステートが利用可能である場合でも、プラットフォーム側のファームウエアで CPU の動作周波数を管理していることがあります。これは準最適とも呼べる仕組みで、たとえば <literal>pcc-cpufreq</literal> を読み込むことで、 OS 側からファームウエアにヒントを提示することができます。ファームウエア側ではその情報が無視される場合もあります。このような仕組みは、 BIOS のセットアップで CPU の周波数を "OS Management" などの選択を行なうことで、解決できることもあります。 BIOS 側で設定を変更すれば、代替ドライバが使用されるようになりますので、そこから最適化をやり直すことができます。</para>
       </listitem>
 
      </itemizedlist>
-     <para>
-      In case of a CPU upgrade, make sure to upgrade your BIOS, too. The
-      BIOS needs to know the new CPU and its frequency stepping to
-      pass this information on to the operating system.
-     </para>
+     <para>CPU をアップグレードしているような場合は、 BIOS 側についてもアップグレードを行なう必要があることがあります。 BIOS 側でも新しい CPU に対応させる必要があり、周波数の設定などもここから採取することがあるためです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Log file information?</term>
+    <term>ログファイル内に何か現われていませんか？</term>
     <listitem>
-     <para>
-      Check the &systemd; journal (see <xref linkend="cha.journalctl"/>)
-      for any output regarding the &cpufreq; subsystem. Only severe
-      errors are reported there.
-     </para>
-     <para>
-      If you suspect problems with the &cpufreq; subsystem on your
-      machine, you can also enable additional debug output. To do so, either
-      use <command>cpufreq.debug=7</command> as boot parameter or execute
-      the following command as &rootuser;:
-     </para>
+     <para>まずは &systemd; のジャーナル (詳しくは <xref linkend="cha.journalctl"/> をお読みください) をお読みのうえ、 &cpufreq; サブシステムに関する出力が現われていないかどうかを確認してください。ただし、ここには致命的なエラーのみが記録されます。</para>
+     <para>お使いのマシンで &cpufreq; サブシステムの問題を調査したい場合は、デバッグ出力を有効化して調べる方法があります。デバッグ出力を有効化するには、カーネルのコマンドラインパラメータに <command>cpufreq.debug=7</command> を指定するか、もしくは下記のコマンドを &rootuser; で実行します:</para>
 <screen>&prompt.root;echo 7 &gt; /sys/module/cpufreq/parameters/debug</screen>
-     <para>
-      This will cause &cpufreq; to log more information to
-      <command>dmesg</command> on state transitions, which is useful for
-      diagnosis. But as this additional output of kernel messages can be
-      rather comprehensive, use it only if you are fairly sure that a
-      problem exists.
-     </para>
+     <para>このコマンドを実行すると、 &cpufreq; での状態遷移など、さらに詳しい情報を <command>dmesg</command> に出力するようになります。これを元に調査を行なってください。ただし、かなり広範囲なログの出力を行ないますので、明らかに問題があるような場合にのみお使いになることをお勧めします。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
 
  <sect1 xml:id="sec.tuning.power.more">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
-  <para>
-   Platforms with a Baseboard Management Controller (BMC) may have additional
-   power management configuration options accessible via the service
-   processor. These configurations are vendor specific and therefore not
-   subject of this guide. For more information, refer to the manuals provided
-   by your vendor.
-   <!-- For example, <citetitle>HP ProLiant Server Power Management
-   on SUSE Linux Enterprise Server 11&mdash;Integration Note </citetitle>
-   provides detailed information how the HP platform specific power management
-   features interact with the Linux kernel. The paper is available from <link
-   xlink:href="http://h18004.www1.hp.com/products/servers/technology/whitepapers/os-techwp.html"/>. -->
-  </para>
-  <para os="sled">
-   For more information about &powertop;, refer to
-   <link xlink:href="https://01.org/powertop"/>.
-  </para>
+  <para>Baseboard Management Controller (BMC) の搭載されたプラットフォームであれば、このサービスプロセッサを通じて様々な電力管理設定にアクセスすることができます。これらの設定は製造元ごとに異なるものであるため、本章では説明していません。詳しくは製造元が提供するマニュアルをお読みください。<!-- For example, <citetitle>HP ProLiant Server Power Management on SUSE Linux Enterprise Server 11&mdash;Integration Note </citetitle> provides detailed information how the HP platform specific power management features interact with the Linux kernel. The paper is available from <link xlink:href="http://h18004.www1.hp.com/products/servers/technology/whitepapers/os-techwp.html"/>. --></para>
+  <para os="sled">&powertop; に関する詳細は、 <link xlink:href="https://01.org/powertop"/> (英語) をお読みください。</para>
  </sect1>
 </chapter>
