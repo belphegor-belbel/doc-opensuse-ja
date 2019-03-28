@@ -16,178 +16,94 @@
       http://blogs.techrepublic.com.com/opensource/?p=64&tag=rbxccnbtr1
  -->
 <!-- apache is similar -->
- <title>Tuning the Network</title>
+ <title>ネットワークのチューニング</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  The network subsystem is complex and its tuning highly depends on
-  the system use scenario and on external factors such as software
-  clients or hardware components (switches, routers, or gateways) in your
-  network. The Linux kernel aims more at reliability and low latency than
-  low overhead and high throughput. Other settings can mean less security,
-  but better performance.
- </para>
+    <para>ネットワークサブシステムは複雑な構造であるため、チューニングはシステムの用途に大きく依存するほか、ソフトウエアクライアントやハードウエアコンポーネント (スイッチ、ルータ、ゲートウエイ) などの外部要素にも依存します。 Linux カーネルでは、オーバーヘッドを低くしたり高いスループットを提供したりする代わりに、信頼性と遅延の少なさを主眼に置いてします。また、その他の設定はセキュリティを低下させますが、性能を改善することができるようになっています。</para>
  <sect1 xml:id="sec.tuning.network.buffers">
-  <title>Configurable Kernel Socket Buffers</title>
+  <title>カーネルのソケットバッファの設定</title>
 
-  <para>
-   Networking is largely based on the TCP/IP protocol and a socket interface
-   for communication; for more information about TCP/IP, see
-   <xref linkend="cha.network"/>. The Linux kernel handles data it receives
-   or sends via the socket interface in socket buffers. These kernel socket
-   buffers are tunable.
-  </para>
+  <para>ネットワーク通信は、TCP/IP プロトコルをベースにして行なわれていて、実際の処理はソケットインターフェイスを使用するのが一般的です。 TCP/IP に関する詳細については、 <xref linkend="cha.network"/> をお読みください。 Linux カーネルでは、ソケットインターフェイスを介して、バッファ内に受信したデータや送信すべきデータを蓄積し、必要な送受信を行ないます。これらのカーネルのソケットバッファについては、チューニングによる調整を行なうことができます。</para>
 
 <!-- http://www.psc.edu/networking/projects/tcptune/#Linux :-->
 
   <important>
-   <title>TCP Autotuning</title>
-   <para>
-    Since kernel version 2.6.17 full autotuning with 4 MB maximum buffer
-    size exists. This means that manual tuning usually will not
-    improve networking performance considerably. It is often the best not to
-    touch the following variables, or, at least, to check the outcome of
-    tuning efforts carefully.
-   </para>
-   <para>
-    If you update from an older kernel, it is recommended to remove manual
-    TCP tunings in favor of the autotuning feature.
-   </para>
+   <title>TCP の自動チューニングについて</title>
+   <para>カーネルバージョン 2.6.17 もしくはそれ以降のバージョンでは、最大バッファサイズ 4 MB で自動チューニングを行なうようになっています。この仕組みにより、手作業でチューニングを行なったとしても、通常はネットワーク性能を改善できないことを意味しています。また下記の変数についても、通常は変更せずにそのままにしておくことが最適です。変更を行なう場合は、チューニング作業による影響をよく確認しておくことをお勧めします。</para>
+   <para>また、古いバージョンのカーネルから更新した場合は、手作業で行なっていた TCP のチューニングを削除し、自動チューニングに任せることをお勧めします。</para>
   </important>
 
-  <para>
-   The special files in the <filename>/proc</filename> file system can
-   modify the size and behavior of kernel socket buffers; for general
-   information about the <filename>/proc</filename> file system, see
-   <xref linkend="sec.util.proc"/>. Find networking related files in:
-  </para>
+  <para><filename>/proc</filename> ファイルシステム内にある特殊なファイルを使用することで、カーネルのソケットバッファのサイズや動作を変更することができます。 <filename>/proc</filename> ファイルシステムに関する一般的な情報については、 <xref linkend="sec.util.proc"/> をお読みください。このうち、ネットワーク関連のファイルは下記の中に含まれています:</para>
 
 <screen>/proc/sys/net/core
 /proc/sys/net/ipv4
 /proc/sys/net/ipv6</screen>
 
-  <para>
-   General <systemitem>net</systemitem> variables are explained in the
-   kernel documentation
-   (<filename>linux/Documentation/sysctl/net.txt</filename>). Special
-   <systemitem>ipv4</systemitem> variables are explained in
-   <filename>linux/Documentation/networking/ip-sysctl.txt</filename> and
-   <filename>linux/Documentation/networking/ipvs-sysctl.txt</filename>.
-  </para>
+  <para>一般的な <systemitem>net</systemitem> 関係の変数は、カーネルのドキュメンテーション ( <filename>linux/Documentation/sysctl/net.txt</filename> ) 内に説明があります。また、 <systemitem>ipv4</systemitem> 以下の変数は、 <filename>linux/Documentation/networking/ip-sysctl.txt</filename> と <filename>linux/Documentation/networking/ipvs-sysctl.txt</filename> 内に説明があります。</para>
 
-  <para>
-   In the <filename>/proc</filename> file system, for example, it is
-   possible to either set the Maximum Socket Receive Buffer and Maximum
-   Socket Send Buffer for all protocols, or both these options for the TCP
-   protocol only (in <filename>ipv4</filename>) and thus overriding the
-   setting for all protocols (in <filename>core</filename>).
-  </para>
+  <para><filename>/proc</filename> ファイルシステム内では、たとえば全てのプロトコルに対する最大ソケット受信バッファサイズや最大ソケット送信バッファサイズを設定することができます。この場合、これらを TCP プロトコルにのみ適用することができる (<filename>ipv4</filename> 内) ほか、全てのプロトコルに対して上書きで設定することのできるもの (<filename>core</filename> 内) もあります。</para>
 
   <variablelist>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_moderate_rcvbuf</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_moderate_rcvbuf</filename></term>
     <listitem>
-     <para>
-      If <filename>/proc/sys/net/ipv4/tcp_moderate_rcvbuf</filename> is set
-      to <literal>1</literal>, autotuning is active and buffer size is
-      adjusted dynamically.
-     </para>
+     <para><filename>/proc/sys/net/ipv4/tcp_moderate_rcvbuf</filename> を <literal>1</literal> に設定すると、自動チューニング機能が有効化され、バッファサイズが動的に調整されるようになります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_rmem</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_rmem</filename></term>
     <listitem>
-     <para>
-      The three values setting the minimum, initial, and maximum size of the
-      Memory Receive Buffer per connection. They define the actual memory
-      usage, not only TCP window size.
-     </para>
+     <para>3 種類の値を設定する変数で、 1 接続あたりのメモリ内の受信バッファの最小値／初期値／最大値をそれぞれ設定します。ここでは TCP のウインドウサイズだけでなく、実際のメモリ使用量を調整することにもなります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_wmem</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_wmem</filename></term>
     <listitem>
-     <para>
-      The same as <filename>tcp_rmem</filename>, but for Memory Send Buffer
-      per connection.
-     </para>
+     <para><filename>tcp_rmem</filename> と同じような変数ですが、こちらは 1 接続あたりのメモリ内の送信バッファを設定します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/core/rmem_max</filename>
-    </term>
+    <term><filename>/proc/sys/net/core/rmem_max</filename></term>
     <listitem>
-     <para>
-      Set to limit the maximum receive buffer size that applications can
-      request.
-     </para>
+     <para>アプリケーション側から要求することのできる、最大の受信バッファサイズを制限するための変数です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/core/wmem_max</filename>
-    </term>
+    <term><filename>/proc/sys/net/core/wmem_max</filename></term>
     <listitem>
-     <para>
-      Set to limit the maximum send buffer size that applications can
-      request.
-     </para>
+     <para>アプリケーション側から要求することのできる、最大の送信バッファサイズを制限するための変数です。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Via <filename>/proc</filename> it is possible to disable TCP features
-   that you do not need (all TCP features are switched on by default). For
-   example, check the following files:
-  </para>
+  <para><filename>/proc</filename> を利用することで、不要な TCP 機能を無効化することができます (既定では全ての TCP 機能が有効化されています) 。たとえば下記のようなファイルがあります:</para>
 
   <variablelist>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_timestamps</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_timestamps</filename></term>
     <listitem>
-     <para>
-      TCP time stamps are defined in RFC1323.
-     </para>
+     <para>TCP のタイムスタンプ機能は、 RFC1323 で規定されているものです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_window_scaling</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_window_scaling</filename></term>
     <listitem>
-     <para>
-      TCP window scaling is also defined in RFC1323.
-     </para>
+     <para>TCP のウインドウスケーリングについても、 RFC1323 で規定されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><filename>/proc/sys/net/ipv4/tcp_sack</filename>
-    </term>
+    <term><filename>/proc/sys/net/ipv4/tcp_sack</filename></term>
     <listitem>
-     <para>
-      Select acknowledgments (SACKS).
-     </para>
+     <para>選択的確認応答 (SACK) の設定を行ないます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Use <command>sysctl</command> to read or write variables of the
-   <filename>/proc</filename> file system. <command>sysctl</command> is
-   preferable to <command>cat</command> (for reading) and
-   <command>echo</command> (for writing), because it also reads settings
-   from <filename>/etc/sysctl.conf</filename> and, thus, those settings
-   survive reboots reliably. With <command>sysctl</command> you can read all
-   variables and their values easily; as &rootuser; use the following
-   command to list TCP related settings:
-  </para>
+  <para><command>sysctl</command> コマンドを使用することで、 <filename>/proc</filename> ファイルシステム内の変数を読み込んだり書き込んだりすることができます。 <command>sysctl</command> コマンドは <filename>/etc/sysctl.conf</filename> ファイルから設定を読み込む仕組みであり、これによってシステムを再起動しても設定を再適用することができるため、 <command>cat</command> (読み込み) や <command>echo</command> (書き込み) を利用して <filename>/proc</filename> ファイルシステムにアクセスするよりは、 <command>sysctl</command> コマンドを使用することをお勧めします。 <command>sysctl</command> コマンドでの変数の読み込みや書き込みは簡単で、たとえば下記のように入力して実行することで、 TCP 関連の変数を全て表示することができます:</para>
 
 <screen>&prompt.sudo;sysctl -a | grep tcp</screen>
 
@@ -195,31 +111,16 @@
   cf. id="sec.tuning.taskscheduler.cfs.tuning" -->
 
   <note>
-   <title>Side-Effects of Tuning Network Variables</title>
-   <para>
-    Tuning network variables can affect other system resources such as CPU
-    or memory use.
-<!-- (p.124)-->
-<!--
-          Also see "Tuning TCP behavior", ibm p. 130
-      -->
-   </para>
+   <title>ネットワーク変数のチューニングによる副次的な影響について</title>
+   <para>ネットワーク変数のチューニングによって、 CPU やメモリなどの他のシステムリソースに影響がある場合があります。 <!-- (p.124)--> <!-- Also see "Tuning TCP behavior", ibm p. 130 --></para>
   </note>
  </sect1>
  <sect1 xml:id="sec.tuning.network.analyzing">
-  <title>Detecting Network Bottlenecks and Analyzing Network Traffic</title>
+  <title>ネットワーク内でのボトルネックの発見とネットワークトラフィックの分析</title>
 
-  <para>
-   Before starting with network tuning, it is important to isolate network
-   bottlenecks and network traffic patterns. There are some tools that can
-   help you with detecting those bottlenecks.
-  </para>
+  <para>ネットワークのチューニングを行なう前に、あらかじめネットワーク内にボトルネックが存在していないかを確認し、ネットワークのトラフィックパターンについても調べておくことが重要です。これらを実施するために、いくつかのツールが提供されています。</para>
 
-  <para>
-   The following tools can help analyzing your network traffic:
-   <command>netstat</command>, <command>tcpdump</command>, and
-   <command>wireshark</command>. Wireshark is a network traffic analyzer.
-  </para>
+  <para>ネットワークトラフィックを分析するには、 <command>netstat</command> , <command>tcpdump</command> , <command>wireshark</command> などのツールをお使いいただくことができます。 Wireshark はネットワークトラフィックアナライザです。</para>
  </sect1>
 <!-- ibm 33:
       offload depends on the adapater's features.
@@ -230,130 +131,54 @@
      Obviously in ha and xen guides...
  -->
  <sect1 xml:id="sec.tuning.network.netfilter">
-  <title>Netfilter</title>
+  <title>netfilter</title>
 
-  <para>
-   The Linux firewall and masquerading features are provided by the
-   Netfilter kernel modules. This is a highly configurable rule based
-   framework. If a rule matches a packet, Netfilter accepts or denies it or
-   takes special action (<quote>target</quote>) as defined by rules such as
-   address translation.
-  </para>
+  <para>Linux におけるファイアウオール機能やマスカレード機能は、 netfilter と呼ばれるカーネルモジュールが提供する機能です。このモジュールは、ルールベースのフレームワークら介して、高度に設定することができます。あるパケットが指定したルールに該当した場合、 netfilter ではパケットを受け付けるか拒否するかを選択することができるほか、特殊なアクション ( <quote>ターゲット</quote> と呼びます) を指定して、アドレス変換などの処理を行なうこともできます。</para>
 
-  <para>
-   There are quite a lot of properties Netfilter can take into account.
-   Thus, the more rules are defined, the longer packet processing may last.
-   Also advanced connection tracking could be rather expensive and, thus,
-   slowing down overall networking.
-  </para>
+  <para>netfilter には多数の設定項目が存在しています。そのため、ルールを多く設定すればするほど、パケットの処理にも時間がかかることになります。また、高度な接続追跡機能を使用すると、より CPU 負荷がかかることになりますので、ネットワーク全体の処理の低下にも繋がります。</para>
 
 <!-- : security vs. performance -->
 
-  <para>
-   When the kernel queue becomes full, all new packets are dropped, causing
-   existing connections to fail. The 'fail-open' feature allows a user to
-   temporarily disable the packet inspection and maintain the connectivity
-   under heavy network traffic. For reference, see <link xlink:href="https://home.regit.org/netfilter-en/using-nfqueue-and-libnetfilter_queue/"/>.
-  </para>
+  <para>カーネル側のキューがいっぱいになると、新しく届いたパケットが廃棄されるようになります。これにより、既存の接続が正しく動作しなくなってしまいます。 '故障時開' (fail-open) の機能を使用すると、ネットワークトラフィックが多すぎる場合、一時的にパケットの調査を無効化して接続を維持することができるようになります。詳しくは <link xlink:href="https://home.regit.org/netfilter-en/using-nfqueue-and-libnetfilter_queue/"/> (英語) をお読みください。</para>
 
-  <para>
-   For more information, see the home page of the Netfilter and iptables
-   project, <link xlink:href="http://www.netfilter.org"/>
-  </para>
+  <para>詳しくは netfilter/iptables プロジェクトの Web ページ <link xlink:href="http://www.netfilter.org"/> (英語) をご覧ください。</para>
  </sect1>
  <sect1 xml:id="sec.tuning.network.rps">
-  <title>Improving the Network Performance with Receive Packet Steering (RPS)</title>
+  <title>Receive Packet Steering (RPS) によるネットワーク性能の改善</title>
 
-  <para>
-   Modern network interface devices can move so many packets that the host
-   can become the limiting factor for achieving maximum performance.
-   To keep up, the system must be able to distribute the work across
-   multiple CPU cores.
-  </para>
+  <para>新しいネットワークインターフェイスを使用している場合、多数のパケットを取り扱うことになることから、ホスト側が性能面のボトルネックとなる場合があります。これらのパケットを問題なく扱うことができるようにするため、システム側では複数の CPU コアに分散させて処理を行なわなければなりません。</para>
 
-  <para>
-   Some modern network interfaces can help distribute the work to multiple
-   CPU cores through the implementation of multiple transmission and
-   multiple receive queues in hardware. However, others are only equipped
-   with a single queue and the driver must deal with all incoming packets in
-   a single, serialized stream. To work around this issue, the operating
-   system must "parallelize" the stream to distribute the work across
-   multiple CPUs. On &productname; this is done via Receive Packet
-   Steering (RPS). RPS can also be used in virtual environments.
-  </para>
+  <para>新しいネットワークインターフェイスの場合、ハードウエア側に実装された複数の送受信キューを使用することで、複数の CPU コアに処理を分散させることができます。ハードウエア側にそのような仕組みが用意されておらず、単一のキューしか用意されていない場合、ドライバは単一の直列化されたストリームを介して、全ての到着パケットを処理しなければならなくなります。この問題に対応するには、オペレーティングシステムがストリームを "並列化" して、複数の CPU に処理を分散させなければなりません。このような分散処理の仕組みが Receive Packet Steering (RPS) です。 RPS は仮想環境でも使用することができます。</para>
 
-  <para>
-   RPS creates a unique hash for each data stream using IP addresses and
-   port numbers. The use of this hash ensures that packets for the same data
-   stream are sent to the same CPU, which helps to increase performance.
-  </para>
+  <para>RPS は各データストリームに対して、 IP アドレスとポート番号をベースにしたユニークなハッシュを作成します。このハッシュを使用することで、同じデータストリームを同じ CPU で処理できるようにし、性能を向上させることができるようになっています。</para>
 
-  <para>
-   RPS is configured per network device receive queue and interface. The
-   configuration file names match the following scheme:
-  </para>
+  <para>RPS はネットワークデバイスの受信キューおよびインターフェイスごとに設定することができます。設定のファイル名は、下記のようになっています:</para>
 
-<screen>/sys/class/net/<replaceable>&lt;device&gt;</replaceable>/queues/<replaceable>&lt;rx-queue&gt;</replaceable>/rps_cpus</screen>
+<screen>/sys/class/net/<replaceable>デバイス名</replaceable>/queues/<replaceable>受信キュー名</replaceable>/rps_cpus</screen>
 
-  <para>
-   <replaceable>&lt;device&gt;</replaceable> stands for the network
-   device, such as <literal>eth0</literal>, <literal>eth1</literal>.
-   <replaceable>&lt;rx-queue&gt;</replaceable> stands for the receive queue,
-   such as <literal>rx-0</literal>, <literal>rx-1</literal>.
-  </para>
+  <para><replaceable>デバイス名</replaceable> にはネットワークデバイスのデバイス名が入ります。たとえば <literal>eth0</literal> , <literal>eth1</literal> のような名前になります。また、 <replaceable>受信キュー名</replaceable> には、受信キューの名前が入ります。たとえば <literal>rx-0</literal> , <literal>rx-1</literal> のような名前になります。</para>
 
-  <para>
-   If the network interface hardware only supports a single receive queue,
-   only <literal>rx-0</literal> will exist. If it supports multiple receive
-   queues, there will be an rx-<replaceable>N</replaceable> directory for
-   each receive queue.
-  </para>
+  <para>ネットワークインターフェイスが単一の受信キューしか提供していない場合は、 <literal>rx-0</literal> のみが存在することになります。複数の受信キューに対応している場合は、 rx- <replaceable>N</replaceable> のディレクトリが複数存在していることになります。</para>
 
-  <para>
-   These configuration files contain a comma-delimited list of CPU bitmaps.
-   By default, all bits are set to <literal>0</literal>. With this setting
-   RPS is disabled and therefore the CPU that handles the interrupt will
-   also process the packet queue.
-  </para>
+  <para>下記の設定ファイルには、 <!-- NOTE: "comma-delimited"? --> CPU をビットマップ形式で指定します。既定では全てのビットが <literal>0</literal> になっています。この設定では、 RPS が無効化されているため、割り込みを処理した CPU がパケットキューの処理をも行なうことになります。</para>
 
-  <para>
-   To enable RPS and enable specific CPUs to process packets for the receive
-   queue of the interface, set the value of their positions in the bitmap to
-   <literal>1</literal>. For example, to enable CPUs 0-3 to process packets
-   for the first receive queue for eth0, set the bit positions
-   0-3 to 1 in binary: <literal>00001111</literal>. This representation then
-   needs to be converted to hex&mdash;which results in <literal>F</literal> in
-   this case. Set this hex value with the following command:
-  </para>
+  <para>RPS を有効化し、特定の CPU がインターフェイスの受信キューを処理するように設定するには、その CPU のビットを <literal>1</literal> に設定します。たとえば CPU 0 から 3 までを eth0 の最初の受信キューの処理に使用したい場合は、ビット 0 から 3 までを 1 にした値、つまり 2 進数で <literal>00001111</literal> を設定します。なお、実際の設定作業は、 16 進数で指定します。この場合は <literal>F</literal> を設定することになります。このことから、設定作業は下記のようになります:</para>
 
 <screen>&prompt.sudo;echo "f" &gt; /sys/class/net/eth0/queues/rx-0/rps_cpus</screen>
 
-  <para>
-   If you wanted to enable CPUs 8-15:
-  </para>
+  <para>CPU 8 から 15 までを有効化したい場合は、下記のように設定します:</para>
 
-<screen>1111 1111 0000 0000 (binary)
-15     15    0    0 (decimal)
-F       F    0    0 (hex)</screen>
+<screen>1111 1111 0000 0000 (2 進数)
+15     15    0    0 (10 進数)
+F       F    0    0 (16 進数)</screen>
 
-  <para>
-   The command to set the hex value of <literal>ff00</literal> would be:
-  </para>
+  <para>生成できた 16 進数値は <literal>ff00</literal> になりますので、下記のコマンドで設定します:</para>
 
 <screen>&prompt.sudo;echo "ff00" &gt; /sys/class/net/eth0/queues/rx-0/rps_cpus</screen>
 
-  <para>
-   On NUMA machines, best performance can be achieved by configuring RPS to
-   use the CPUs on the same NUMA node as the interrupt for the interface's
-   receive queue.
-  </para>
+  <para>NUMA マシンの場合、 RPS を設定して、インターフェイスの受信キューの割り込みの処理と同じ NUMA ノードの CPU で処理を行なうようにすると、最適な性能を発揮できるようになります。</para>
 
-  <para>
-   On non-NUMA machines, all CPUs can be used. If the interrupt rate is very
-   high, excluding the CPU handling the network interface can boost
-   performance. The CPU being used for the network interface can be
-   determined from <filename>/proc/interrupts</filename>. For example:
-  </para>
+  <para>非 NUMA マシンの場合、全ての CPU を使用することができます。割り込みの割合が非常に大きい場合、ネットワークインターフェスを処理している CPU を除外することで、性能を発揮できるようになります。ネットワークインターフェイスを処理している CPU は、 <filename>/proc/interrupts</filename> ファイルから判断することができます。たとえば下記のようになります:</para>
 
 <screen>&prompt.sudo;cat /proc/interrupts
             CPU0       CPU1       CPU2       CPU3
@@ -361,39 +186,23 @@ F       F    0    0 (hex)</screen>
   51:  113915241          0          0          0      Phys-fasteoi   eth0
 ...</screen>
 
-  <para>
-   In this case, <literal>CPU 0</literal> is the only CPU processing
-   interrupts for <literal>eth0</literal>, since only
-   <literal>CPU0</literal> contains a non-zero value.
-  </para>
+  <para>この場合、 <literal>eth0</literal> の割り込みを処理しているのは <literal>CPU 0</literal> になります。これは、 <literal>CPU0</literal> のみが 0 より大きくなっているためです。</para>
 
-  <para>
-   On &x86; and &x86-64; platforms, <command>irqbalance</command> can be used
-   to distribute hardware interrupts across CPUs. See <command>man 1
-   irqbalance</command> for more details.
-  </para>
+  <para>&x86; および &x86-64; プラットフォームの場合、 <command>irqbalance</command> を使用することで、ハードウエア割り込みを CPU 間に分散させることができます。詳しくは <command>man 1 irqbalance</command> をお読みください。</para>
  </sect1>
 <!-- tuning NFS performance:
       http://blogs.techrepublic.com.com/opensource/?p=64&tag=rbxccnbtr1
  -->
 <!-- apache is similar -->
  <sect1 xml:id="sec.tuning.network.info">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Eduardo Ciliendo, Takechika Kunimasa: <quote>Linux Performance and
-     Tuning Guidelines</quote> (2007), esp. sections 1.5, 3.5, and 4.7:
-     <link xlink:href="http://www.redbooks.ibm.com/redpapers/abstracts/redp4285.html"/>
-    </para>
+    <para>Eduardo Ciliendo 氏, Takechika Kunimasa 氏による <quote>Linux Performance and Tuning Guidelines</quote> (2007), 特にセクション 1.5, 3.5, 4.7 をお読みください: <link xlink:href="http://www.redbooks.ibm.com/redpapers/abstracts/redp4285.html"/> (英語)</para>
    </listitem>
    <listitem>
-    <para>
-     John Heffner, Matt Mathis: <quote>Tuning TCP for Linux 2.4 and
-     2.6</quote> (2006):
-     <link xlink:href="http://www.psc.edu/networking/projects/tcptune/#Linux"/>
-    </para>
+    <para>John Heffner 氏, Matt Mathis 氏による <quote>Tuning TCP for Linux 2.4 and 2.6</quote> (2006): <link xlink:href="http://www.psc.edu/networking/projects/tcptune/#Linux"/> (英語)</para>
    </listitem>
   </itemizedlist>
  </sect1>
