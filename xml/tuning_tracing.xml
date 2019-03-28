@@ -4,47 +4,24 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.tracing">
- <title>Tracing Tools</title>
+ <title>トレーシングツール</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  &productname; comes with several tools that help you obtain useful
-  information about your system. You can use the information for various
-  purposes, for example, to debug and find problems in your program, to
-  discover places causing performance drops, or to trace a running process to
-  find out what system resources it uses. <phrase os="sles;sled">Most of the
-  tools are part of the installation media. In some cases, they need to be
-  installed from the &sdk;, which is a separate download.</phrase>
- </para>
+    <para>&productname; には、お使いのシステムに関して情報の採取を行なうためのツールがいくつか用意されています。この情報採取では、たとえばプログラム内での問題を解析 (デバッグ) したり検出したり、性能面での問題点となっている箇所の発見や、プログラムの動作中に使用しているシステムリソースを見つけたりすることができます。<phrase os="sles;sled">これらのツールのうちのほとんどは、インストールメディア内に含まれていますが、場合によっては &sdk; 内に含まれているものもあり、この場合は個別にダウンロードを行なう必要があります。</phrase></para>
  <note>
-  <title>Tracing and Impact on Performance</title>
-  <para>
-   While a running process is being monitored for system or library calls,
-   the performance of the process is heavily reduced. You are advised to use
-   tracing tools only for the time you need to collect the data.
-  </para>
+  <title>トレーシングによる性能面への影響について</title>
+  <para>動作中のプロセスに対してシステムコールやライブラリコールの監視を行なうと、そのプロセスの性能が大幅に落ちることになります。そのため、トレーシングツールの使用は、データ収集の際にのみ実施することをお勧めします。</para>
  </note>
  <sect1 xml:id="sec.tuning.tracing.strace">
-  <title>Tracing System Calls with strace</title>
+  <title>strace によるシステムコールの追跡</title>
 
-  <para>
-   The <command>strace</command> command traces system calls of a process
-   and signals received by the process. <command>strace</command> can either
-   run a new command and trace its system calls, or you can attach
-   <command>strace</command> to an already running command. Each line of the
-   command's output contains the system call name, followed by its arguments
-   in parentheses and its return value.
-  </para>
+  <para><command>strace</command> コマンドは、プロセスが使用したシステムコールと、プロセスが受信したシグナルを追跡するためのコマンドです。 <command>strace</command> では新しくプロセスを起動してシステムコールを追跡することができるほか、既に実行されているコマンドに接続して、システムコールを追跡することもできます。コマンドの出力の各行にはシステムコールの名前のほか、括弧でくくられたパラメータの一覧と返り値も表示されます。</para>
 
-  <para>
-   To run a new command and start tracing its system calls, enter the
-   command to be monitored as you normally do, and add
-   <command>strace</command> at the beginning of the command line:
-  </para>
+  <para>新しくコマンドを起動してシステムコールの追跡を開始したい場合は、通常のコマンドラインの前に <command>strace</command> を入れて実行します:</para>
 
 <screen>&prompt.user;strace ls
 execve("/bin/ls", ["ls"], [/* 52 vars */]) = 0
@@ -63,7 +40,11 @@ open("/lib64/librt.so.1", O_RDONLY)     = 3
 [...]
 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) \
 = 0x7fd780f79000
-write(1, "Desktop\nDocuments\nbin\ninst-sys\n", 31Desktop
+write(1, "Desktop
+Documents
+bin
+inst-sys
+", 31Desktop
 Documents
 bin
 inst-sys
@@ -73,11 +54,7 @@ munmap(0x7fd780f79000, 4096)            = 0
 close(2)                                = 0
 exit_group(0)                           = ?</screen>
 
-  <para>
-   To attach <command>strace</command> to an already running process, you
-   need to specify the <option>-p</option> with the process ID
-   (<systemitem>PID</systemitem>) of the process that you want to monitor:
-  </para>
+  <para>既に起動しているプロセスに対して <command>strace</command> を接続するには、接続先のプロセスのプロセス ID ( <systemitem>PID</systemitem> ) を <option>-p</option> パラメータで指定します:</para>
 
 <screen>&prompt.user;strace -p `pidof cron`
  Process 1261 attached
@@ -107,11 +84,7 @@ exit_group(0)                           = ?</screen>
   [...]
 </screen>
 
-  <para>
-   The <option>-e</option> option understands several sub-options and
-   arguments. For example, to trace all attempts to open or write to a
-   particular file, use the following:
-  </para>
+  <para><option>-e</option> オプションはいくつかのサブオプションを指定するための仕組みです。たとえばファイルに対する open や write だけを追跡したい場合は、下記のように入力して実行します:</para>
 
 <screen>&prompt.user;strace -e trace=open,write ls ~
 open("/etc/ld.so.cache", O_RDONLY)       = 3
@@ -123,13 +96,13 @@ open("/lib64/libpthread.so.0", O_RDONLY) = 3
 [...]
 open("/usr/lib/locale/cs_CZ.utf8/LC_CTYPE", O_RDONLY) = 3
 open(".", O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC) = 3
-write(1, "addressbook.db.bak\nbin\ncxoffice\n"..., 311) = 311
+write(1, "addressbook.db.bak
+bin
+cxoffice
+"..., 311) = 311
 </screen>
 
-  <para>
-   To trace only network related system calls, use <option>-e
-   trace=network</option>:
-  </para>
+  <para>ネットワーク関連のシステムコールのみを追跡したい場合は、 <option>-e trace=network</option> を指定します:</para>
 
 <screen>&prompt.user;strace -e trace=network -p 26520
 Process 26520 attached - interrupt to quit
@@ -141,10 +114,7 @@ sendto(50, "\24\0\0\0\26\0\1\3~p\315K\0\0\0\0\0\0\0\0", 20, 0,
 {sa_family=AF_NETLINK, pid=0, groups=00000000}, 12) = 20
 [...]</screen>
 
-  <para>
-   The <option>-c</option> calculates the time the kernel spent on each
-   system call:
-  </para>
+  <para><option>-c</option> オプションを指定すると、それぞれのシステムコールでカーネルが費やした時間を計算することができます:</para>
 
 <screen>&prompt.user;strace -c find /etc -name xorg.conf
 /etc/X11/xorg.conf
@@ -166,9 +136,7 @@ sendto(50, "\24\0\0\0\26\0\1\3~p\315K\0\0\0\0\0\0\0\0", 20, 0,
 ------ ----------- ----------- --------- --------- ----------------
 100.00    0.000559                  3633        33 total</screen>
 
-  <para>
-   To trace all child processes of a process, use <option>-f</option>:
-  </para>
+  <para>子プロセスについても追跡を行ないたい場合は、 <option>-f</option> を指定します:</para>
 
 <screen>&prompt.user;strace -f rcapache2 status
 execve("/usr/sbin/rcapache2", ["rcapache2", "status"], [/* 81 vars */]) = 0
@@ -193,20 +161,14 @@ mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) \
 [pid  4830] open("/dev/tty", O_RDWR|O_NONBLOCK) = 3
 [pid  4830] close(3)
 [...]
-read(255, "\n\n# Inform the caller not only v"..., 8192) = 73
+read(255, "
+
+# Inform the caller not only v"..., 8192) = 73
 rt_sigprocmask(SIG_BLOCK, NULL, [], 8)  = 0
 rt_sigprocmask(SIG_BLOCK, NULL, [], 8)  = 0
 exit_group(0)</screen>
 
-  <para>
-   If you need to analyze the output of <command>strace</command> and the
-   output messages are too long to be inspected directly in the console
-   window, use <option>-o</option>. In that case, unnecessary messages, such
-   as information about attaching and detaching processes, are suppressed.
-   You can also suppress these messages (normally printed on the standard
-   output) with <option>-q</option>. To add time stamps at the beginning of each line
-   with a system call, use <option>-t</option>:
-  </para>
+  <para><command>strace</command> の出力を分析したいものの、コンソールウインドウ内に表示してしまうと長すぎるような場合は、 <option>-o</option> オプションをお使いください。この場合、プロセスへの接続や接続終了などのメッセージが省略されます。また、通常は標準出力に書かれるようなメッセージについても、 <option>-q</option> を指定することで省略することができます。このほか、それぞれのシステムコールの行に対して、行頭に時刻を表示させたい場合は、 <option>-t</option> を指定します:</para>
 
 <screen>&prompt.user;strace -t -o strace_sleep.txt sleep 1; more strace_sleep.txt
 08:44:06 execve("/bin/sleep", ["sleep", "1"], [/* 81 vars */]) = 0
@@ -220,28 +182,14 @@ exit_group(0)</screen>
 08:44:07 close(2)                       = 0
 08:44:07 exit_group(0)                  = ?</screen>
 
-  <para>
-   The behavior and output format of strace can be largely controlled. For
-   more information, see the relevant manual page (man 1 strace).
-  </para>
+  <para>strace の動作や出力形式は、様々に制御を行なうことができます。詳しくは strace のマニュアルページ (man 1 strace) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.tuning.tracing.ltrace">
-  <title>Tracing Library Calls with ltrace</title>
+  <title>ltrace によるライブラリコールの追跡</title>
 
-  <para>
-   <command>ltrace</command> traces dynamic library calls of a process. It
-   is used in a similar way to <command>strace</command>, and most of their
-   parameters have a very similar or identical meaning. By default,
-   <command>ltrace</command> uses <filename>/etc/ltrace.conf</filename> or
-   <filename>~/.ltrace.conf</filename> configuration files. You can,
-   however, specify an alternative one with the <option>-F
-   <replaceable>CONFIG_FILE</replaceable></option> option.
-  </para>
+  <para><command>ltrace</command> はプロセスの動的なライブラリコールを追跡することができます。 <command>strace</command> と同様の用途で使用するツールであり、ほとんどのパラメータは非常に似通っているか、同じ意味になっています。既定では <command>ltrace</command> は、 <filename>/etc/ltrace.conf</filename> もしくは <filename>~/.ltrace.conf</filename> にある設定ファイルを使用します。それ以外の設定ファイルを使用したい場合は、 <option>-F <replaceable>設定ファイル</replaceable></option> オプションを指定してください。</para>
 
-  <para>
-   In addition to library calls, <command>ltrace</command> with the
-   <option>-S</option> option can trace system calls as well:
-  </para>
+  <para><command>ltrace</command> で <option>-S</option> オプションを指定すると、ライブラリコールに加えて システムコールについても追跡を行なうことができます:</para>
 
 <screen>&prompt.user;ltrace -S -o ltrace_find.txt find /etc -name \
 xorg.conf; more ltrace_find.txt
@@ -259,15 +207,11 @@ __fprintf_chk(0x7f1327821780, 1, 0x420cf7, 0x7fff25227af0, 0x62e031
 &lt;unfinished ...&gt;
 SYS_fstat(1, 0x7fff25227230)                               = 0
 SYS_mmap(0, 4096, 3, 34, 0xffffffff)                       = 0x7f1327e72000
-SYS_write(1, "/etc/X11/xorg.conf\n", 19)                   = 19
+SYS_write(1, "/etc/X11/xorg.conf
+", 19)                   = 19
 [...]</screen>
 
-  <para>
-   You can change the type of traced events with the <option>-e</option>
-   option. The following example prints library calls related to
-   <systemitem>fnmatch</systemitem> and <systemitem>strlen</systemitem>
-   functions:
-  </para>
+  <para><option>-e</option> オプションを指定することで、追跡するイベントの種類を変更することができます。下記の例では、 <systemitem>fnmatch</systemitem> と <systemitem>strlen</systemitem> に関連したライブラリコールを表示しています:</para>
 
 <screen>&prompt.user;ltrace -e fnmatch,strlen find /etc -name xorg.conf
 [...]
@@ -279,270 +223,127 @@ fnmatch("xorg.conf", "Xresources", 0)            = 1
 strlen("xorg.conf.install")                      = 17
 [...]</screen>
 
-  <para>
-   To display only the symbols included in a specific library, use
-   <option>-l <replaceable>/path/to/library</replaceable></option>:
-  </para>
+  <para>特定のライブラリ内に含まれているシンボルのみを表示したい場合は、 <option>-l <replaceable>ライブラリのパス</replaceable></option> オプションを指定します:</para>
 
 <screen>&prompt.user;ltrace -l /lib64/librt.so.1 sleep 1
 clock_gettime(1, 0x7fff4b5c34d0, 0, 0, 0)                  = 0
 clock_gettime(1, 0x7fff4b5c34c0, 0xffffffffff600180, -1, 0) = 0
 +++ exited (status 0) +++</screen>
 
-  <para>
-   You can make the output more readable by indenting each nested call by
-   the specified number of space with the <option>-n
-   <replaceable>NUM_OF_SPACES</replaceable></option>.
-  </para>
+  <para>入れ子になった呼び出し構造を読みやすくするため、 <option>-n <replaceable>スペース数</replaceable></option> というオプションを指定すると、インデントを設定することもできます。</para>
  </sect1>
  <sect1 xml:id="sec.tuning.tracing.valgrind">
-  <title>Debugging and Profiling with Valgrind</title>
+  <title>Valgrind によるデバッグとプロファイリング</title>
 
-  <para>
-   Valgrind is a set of tools to debug and profile your programs so that
-   they can run both faster and with less errors. Valgrind can detect problems
-   related to memory management and threading, or can also serve as a
-   framework for building new debugging tools. It is well known that this
-   tool can incur high overhead, causing, for example, higher runtimes or
-   changing the normal program behavior under concurrent workloads based on timing.
-  </para>
+  <para>Valgrind はプログラムをデバッグしたりプロファイルしたりするためのツール集で、これによってより高速に、エラーのないプログラムを作ることができるようになります。 Valgrind はメモリ管理やスレッドに関する問題点を検出することができるほか、新しいデバッグツールを作成するためのフレームワークとしても使用することができます。ただし、このツールはオーバーヘッドが大きく、複数の処理を同時に実行するような状況では、通常よりもずっと遅い速度になってしまうことに注意する必要があります。</para>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.install" os="sles;sled">
-   <title>Installation</title>
-   <para>
-    Valgrind is not shipped with standard &productname; distribution. To
-    install it on your system, you need to obtain &sdk;, and either
-    install it and run
-   </para>
-   <para>
-    <command>zypper</command> <option>install
-    <replaceable>VALGRIND</replaceable></option>
-   </para>
-   <para>
-    or browse through the &sdk; directory tree, locate the Valgrind
-    package and install it with
-   </para>
-   <para>
-    <command>rpm</command> <option>-i</option>
-    valgrind-<replaceable>VERSION_ARCHITECTURE</replaceable>.rpm
-   </para>
-   <para>
-    The SDK is a module for &sle; and is available via an online channel from
-    the &scc;.  Alternatively download it from <link xlink:href="http://download.suse.com/"/>. (Search for <literal>&sle;
-    Software Development Kit</literal>). Refer to <xref linkend="cha.add-ons"/> for details.
-   </para>
+   <title>インストール</title>
+   <para>Valgrind は &productname; の標準ディストリビューションには含まれていません。お使いのシステムにインストールするには、 &sdk; を取得してから下記のように入力して実行します:</para>
+   <para><command>zypper</command> <option>install <replaceable>VALGRIND</replaceable></option></para>
+   <para>もしくは、 &sdk; のディレクトリツリーから直接インストールすることもできます。 Valgrind のパッケージを見つけたら、下記のように入力して実行することで、インストールを行なうことができます:</para>
+   <para><command>rpm</command> <option>-i</option> valgrind- <replaceable>バージョン／アーキテクチャ</replaceable> .rpm</para>
+   <para>SDK は &sle; 向けのモジュールで、 &scc; のオンラインチャンネルから取得することができます。それ以外にも、 <link xlink:href="http://download.suse.com/"/> でダウンロードすることもできます (<literal>&sle; Software Development Kit</literal> で検索してください) 。詳しくは <xref linkend="cha.add-ons"/> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.supparch">
-   <title>Supported Architectures</title>
-   <para>
-    &productname; supports Valgrind on the following architectures:
-   </para>
+   <title>対応するアーキテクチャ</title>
+   <para>&productname; の Valgrind では、下記のアーキテクチャに対応しています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      &x86-64;
-     </para>
+     <para>&x86-64;</para>
     </listitem>
     <listitem>
-     <para>
-      &ppc;
-     </para>
+     <para>&ppc;</para>
     </listitem>
     <listitem>
-     <para>
-      &zseries;
-     </para>
+     <para>&zseries;</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.core">
-   <title>General Information</title>
-   <para>
-    The main advantage of Valgrind is that it works with existing compiled
-    executables. You do not need to recompile or modify your programs to
-    use it. Run Valgrind like this:
-   </para>
-   <para>
-    <command>valgrind</command> <replaceable>VALGRIND_OPTIONS</replaceable>
-    your-prog <replaceable>YOUR-PROGRAM-OPTIONS</replaceable>
-   </para>
-   <para>
-    Valgrind consists of several tools, and each provides specific
-    functionality. Information in this section is general and valid
-    regardless of the used tool. The most important configuration option is
-    <option>--tool</option>. This option tells Valgrind which tool to run.
-    If you omit this option, <systemitem>memcheck</systemitem> is selected
-    by default. For example, to run <command>find ~</command>
-    <option>-name</option> .bashrc with Valgrind's
-    <systemitem>memcheck</systemitem> tools, enter the following in the
-    command line:
-   </para>
-   <para>
-    <command>valgrind</command> <option>--tool</option>=memcheck find ~ -name
-    .bashrc
-   </para>
-   <para>
-    A list of standard Valgrind tools with a brief description follows:
-   </para>
+   <title>一般的な情報</title>
+   <para>Valgrind の主な利点は、コンパイル済みの実行ファイルの問題を直接検出できる点にあります。プログラムをコンパイルし直したり、修正したりする必要はありません。 Valgrind は下記のようにして使用します:</para>
+   <para><command>valgrind</command> <replaceable>Valgrind_のオプション</replaceable> &nbsp; <replaceable>プログラム名</replaceable> &nbsp; <replaceable>プログラムのオプション</replaceable></para>
+   <para>Valgrind には、様々な機能を持つツールが含まれています。本章で説明しているのは非常に一般的なもので、ツールとは無関係に使用できるものばかりです。 Valgrind の設定オプションで最も重要なものは <option>--tool</option> で、ここではどのツールを使用するのかを指定することができます。このオプションを省略すると、既定では <systemitem>memcheck</systemitem> が選択されたものと見なされます。たとえば Valgrind の memcheck ツールで <command>find ~</command> <option>-name</option> .bashrc を実行したい場合は、下記のように入力して実行します:</para>
+   <para><command>valgrind</command> <option>--tool</option> =memcheck find ~ -name .bashrc</para>
+   <para>Valgrind で提供されているツールの一覧と、その簡潔な説明は下記のとおりです:</para>
    <variablelist>
     <varlistentry>
-     <term><systemitem>memcheck</systemitem>
-     </term>
+     <term><systemitem>memcheck</systemitem></term>
      <listitem>
-      <para>
-       Detects memory errors. It helps you tune your programs to behave
-       correctly.
-      </para>
+      <para>メモリエラーを検出します。お使いのプログラムの動作をチェックして、正しく動作するように支援するためのツールです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>cachegrind</systemitem>
-     </term>
+     <term><systemitem>cachegrind</systemitem></term>
      <listitem>
-      <para>
-       Profiles cache prediction. It helps you tune your programs to run
-       faster.
-      </para>
+      <para>キャッシュ予測のプロファイルを行ないます。お使いのプログラムをより高速に動作させるためのヒントを提示する仕組みです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>callgrind</systemitem>
-     </term>
+     <term><systemitem>callgrind</systemitem></term>
      <listitem>
-      <para>
-       Works in a similar way to <systemitem>cachegrind</systemitem> but
-       also gathers additional cache-profiling information.
-      </para>
+      <para><systemitem>cachegrind</systemitem> と同様の処理を行なうツールですが、追加でキャッシュプロファイル情報も収集します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>exp-drd</systemitem>
-     </term>
+     <term><systemitem>exp-drd</systemitem></term>
      <listitem>
-      <para>
-       Detects thread errors. It helps you tune your multi-threaded programs
-       to behave correctly.
-      </para>
+      <para>スレッドのエラーを検出します。マルチスレッド型のプログラムの動作をチェックして、正しく動作するように支援する仕組みです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>helgrind</systemitem>
-     </term>
+     <term><systemitem>helgrind</systemitem></term>
      <listitem>
-      <para>
-       Another thread error detector. Similar to
-       <systemitem>exp-drd</systemitem> but uses different techniques for
-       problem analysis.
-      </para>
+      <para>もう 1 つのスレッドエラー検出ツールです。 <systemitem>exp-drd</systemitem> に似ていますが、問題の分析に際して異なる技術を使用します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>massif</systemitem>
-     </term>
+     <term><systemitem>massif</systemitem></term>
      <listitem>
-      <para>
-       A heap profiler. Heap is an area of memory used for dynamic memory
-       allocation. This tool helps you tune your program to use less memory.
-      </para>
+      <para>ヒーププロファイラです。ヒープは動的なメモリ管理に使用するメモリ領域で、このツールは少ないメモリ量で動作するように、プログラムをチューニングする支援を行ないます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>lackey</systemitem>
-     </term>
+     <term><systemitem>lackey</systemitem></term>
      <listitem>
-      <para>
-       An example tool showing instrumentation basics.
-      </para>
+      <para>基本的な仕組みを説明するためのサンプルツールです。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.defopts">
-   <title>Default Options</title>
-   <para>
-    Valgrind can read options at start-up. There are three places which
-    Valgrind checks:
-   </para>
+   <title>既定のオプション</title>
+   <para>Valgrind はその起動時にオプションを読み込みます。 Valgrind がオプションをチェックする箇所には、下記の 3 種類のものがあります:</para>
    <orderedlist spacing="normal">
     <listitem>
-     <para>
-      The file <filename>.valgrindrc</filename> in the home directory of the
-      user who runs Valgrind.
-     </para>
+     <para>Valgrind を起動するユーザのホームディレクトリ内にある、 <filename>.valgrindrc</filename> ファイル。</para>
     </listitem>
     <listitem>
-     <para>
-      The environment variable <literal>$VALGRIND_OPTS</literal>
-     </para>
+     <para>環境変数 <literal>$VALGRIND_OPTS</literal> 。</para>
     </listitem>
     <listitem>
-     <para>
-      The file <filename>.valgrindrc</filename> in the current directory
-      where Valgrind is run from.
-     </para>
+     <para>Valgrind を起動する時点でのカレントディレクトリ内にある <filename>.valgrindrc</filename> ファイル。</para>
     </listitem>
    </orderedlist>
-   <para>
-    These resources are parsed exactly in this order, while later given
-    options take precedence over earlier processed options. Options specific
-    to a particular Valgrind tool must be prefixed with the tool name and a
-    colon. For example, if you want <systemitem>cachegrind</systemitem> to
-    always write profile data to the
-    <filename>/tmp/cachegrind_<replaceable>PID</replaceable>.log</filename>,
-    add the following line to the <filename>.valgrindrc</filename> file in
-    your home directory:
-   </para>
-   <para>
-    <literal>--cachegrind:cachegrind-out-file=/tmp/cachegrind_%p.log</literal>
-   </para>
+   <para>これらのリソースは上記の順序で処理が行なわれます。そのため、前のほうのファイルで設定を行なっていても、後ろのほうのファイル内に同じ設定があれば、上書きされることになります。また、特定の Valgrind ツールに固有のオプションを指定する場合は、ツールの名前とコロンを付けなければなりません。たとえば <systemitem>cachegrind</systemitem> に対して、プロファイルデータを <filename>/tmp/cachegrind_<replaceable>PID</replaceable>.log</filename> に書き込むように指定するには、ホームディレクトリの <filename>.valgrindrc</filename> ファイル内に、下記の内容を記述します:</para>
+   <para><literal>--cachegrind:cachegrind-out-file=/tmp/cachegrind_%p.log</literal></para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.howorks">
-   <title>How Valgrind Works</title>
-   <para>
-    Valgrind takes control of your executable before it starts. It reads
-    debugging information from the executable and related shared libraries.
-    The executable's code is redirected to the selected Valgrind tool, and
-    the tool adds its own code to handle its debugging. Then the code is
-    handed back to the Valgrind core and the execution continues.
-   </para>
-   <para>
-    For example, <systemitem>memcheck</systemitem> adds its code, which
-    checks every memory access. As a consequence, the program runs much
-    slower than in the native execution environment.
-   </para>
-   <para>
-    Valgrind simulates every instruction of your program. Therefore, it not
-    only checks the code of your program, but also all related libraries
-    (including the C library), libraries used for graphical environment, and
-    so on. If you try to detect errors with Valgrind, it also detects errors
-    in associated libraries (like C, X11, or Gtk libraries). Because you
-    probably do not need these errors, Valgrind can selectively, suppress
-    these error messages to suppression files. The
-    <option>--gen-suppressions=yes</option> tells Valgrind to report these
-    suppressions which you can copy to a file.
-   </para>
-   <para>
-    You should supply a real executable (machine code) as a Valgrind
-    argument. If your application is run, for example, from a shell or Perl
-    script, you will by mistake get error reports related to
-    <command>/bin/sh</command> (or <command>/usr/bin/perl</command>). In
-    such cases, you can use
-    <option>--trace-children=yes</option> to work
-    around this issue. However, using the executable itself will avoid any
-    confusion over this issue.
-   </para>
+   <title>Valgrind の動作原理</title>
+   <para>Valgrind は実行ファイルの起動が行なわれる前から、その制御を実施します。実行ファイルのデバッグ情報を読み込み、関連する共有ライブラリを読み込みます。実行ファイルのコードは、選択された Valgrind ツールに転送され、ツール側でデバッグ処理のためのコードを追加したあと、 Valgrind のコアに戻され、実際の実行が行なわれます。</para>
+   <para>たとえば <systemitem>memcheck</systemitem> では、それぞれのメモリアクセスに対してちぇっくを行なうコードを追加します。そのため、プログラムは通常の実行よりもずっと遅くなります。</para>
+   <para>Valgrind はプログラム内の各インストラクションを擬似します。そのため、プログラムのコードをチェックするだけでなく、関連するライブラリ (C ライブラリを含む) やグラフィカル環境で使用されるライブラリまでも、チェックすることができます。 Valgrind でエラーを検出しようとすると、関連するライブラリ (C ライブラリ, X11, Gtk ライブラリなど) のエラーも検出することになります。これらのエラーについては通常検出する必要はありませんので、省略設定ファイルを作成して Valgrind 側で省略するようにしていすることができます。 <option>--gen-suppressions=yes</option> を指定して実行すると、 Valgrind に対して省略用の設定を作成させることができます。</para>
+   <para>Valgrind のパラメータには実際の実行ファイル (マシンコード) を指定してください。シェルや Perl のスクリプトなどからお使いのアプリケーションを起動してしまうと、 <command>/bin/sh</command> (または <command>/usr/bin/perl</command> ) を起動することによる無関係なエラーが表示されることがありますので、この場合は <option>--trace-children=yes</option> を指定して、エラーを回避してください。ただし、通常は実行ファイルを直接指定して実行してください。</para>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.messages">
-   <title>Messages</title>
-   <para>
-    During its runtime, Valgrind reports messages with detailed errors and
-    important events. The following example explains the messages:
-   </para>
+   <title>メッセージ</title>
+   <para>Valgrind は、その実行中に詳細なエラーメッセージや重要なイベントを報告することがあります。下記にメッセージの出力例を示します:</para>
 <screen>&prompt.user;valgrind --tool=memcheck find ~ -name .bashrc
 [...]
 ==6558== Conditional jump or move depends on uninitialised value(s)
@@ -566,54 +367,19 @@ clock_gettime(1, 0x7fff4b5c34c0, 0xffffffffff600180, -1, 0) = 0
 ==6558==    still reachable: 2,228 bytes in 8 blocks.
 ==6558==         suppressed: 0 bytes in 0 blocks.
 ==6558== Rerun with --leak-check=full to see details of leaked memory.</screen>
-   <para>
-    The <literal>==6558==</literal> introduces Valgrind's messages and
-    contains the process ID number (PID). You can easily distinguish
-    Valgrind's messages from the output of the program itself, and decide
-    which messages belong to a particular process.
-   </para>
-   <para>
-    To make Valgrind's messages more detailed, use <option>-v</option> or
-    even <option>-v -v</option>.
-   </para>
-   <para>
-    You can make Valgrind send its messages to three different places:
-   </para>
+   <para>上記の Valgrind の出力例には <literal>==6558==</literal> が含まれていますが、これはプロセス ID 番号 (PID) を表わしています。これにより、 Valgrind のメッセージとプログラム自身の出力を区別できるようになっているほか、 Valgrind のメッセージがどのプロセスに対するものであるのかがわかるようにもなっています。</para>
+   <para>Valgrind のメッセージをより詳細に出力させたい場合は、 <option>-v</option> もしくは <option>-v -v</option> のように指定してください。</para>
+   <para>Valgrind の出力するメッセージを制御するには、下記のようにして行ないます:</para>
    <orderedlist spacing="normal">
     <listitem>
-     <para>
-      By default, Valgrind sends its messages to the file descriptor 2,
-      which is the standard error output. You can tell Valgrind to send its
-      messages to any other file descriptor with the
-      <option>--log-fd=<replaceable>FILE_DESCRIPTOR_NUMBER</replaceable></option>
-      option.
-     </para>
+     <para>既定では、 Valgrind がメッセージを送信する際、出力先をファイルディスクリプタの 2 番 (つまり標準エラー出力) に設定します。それ以外のファイルディスクリプタ番号を使用したい場合は、 <option>--log-fd=<replaceable>ファイルディスクリプタ番号</replaceable></option> のように指定してください。</para>
     </listitem>
     <listitem>
-     <para>
-      The second and probably more useful way is to send Valgrind's messages
-      to a file with
-      <option>--log-file=<replaceable>FILENAME</replaceable></option>. This
-      option accepts several variables, for example, <literal>%p</literal>
-      gets replaced with the PID of the currently profiled process. This way
-      you can send messages to different files based on their PID.
-      <literal>%q{env_var}</literal> is replaced with the value of the
-      related <literal>env_var</literal> environment variable.
-     </para>
-     <para>
-      The following example checks for possible memory errors during the
-      Apache Web server restart, while following children processes and
-      writing detailed Valgrind's messages to separate files distinguished
-      by the current process PID:
-     </para>
+     <para>おそらくはこちらの方法のほうが期待されるとは思いますが、もう 1 つの方法として、 <option>--log-file=<replaceable>ファイル名</replaceable></option> のように指定することで、ログを指定したファイルに書き込むこともできます。このオプションを指定するにあたっては、いくつかのプレースホルダを使用することができます。たとえばファイル名の一部に <literal>%p</literal> を指定すると、その部分にはプロファイル対象のプログラムのプロセス ID (PID) が埋め込まれるようになります。また、 <literal>%q{env_var}</literal> のように指定すると、 <literal>env_var</literal> という名前の環境変数の値を展開して出力することができます。</para>
+     <para>下記の例では、 Apache Web サーバの再起動時にメモリエラーが発生していないかどうかを確認している例となります。この場合、子プロセスも追跡して、詳細な Valgrind メッセージをプロセス ID ごとに分けて別々のファイルに書き込むように指定しています:</para>
 <screen>&prompt.user;valgrind -v --tool=memcheck --trace-children=yes \
 --log-file=valgrind_pid_%p.log rcapache2 restart</screen>
-     <para>
-      This process created 52 log files in the testing system, and took 75
-      seconds instead of the usual 7 seconds needed to run <command>sudo
-      systemctl restart apache2</command> without Valgrind, which is
-      approximately 10 times more.
-     </para>
+     <para>この処理を実行すると、テストで使用した環境の場合 52 個のログファイルを作成していたほか、通常であれば 7 秒程度で <command>sudo systemctl restart apache2</command> を処理できていたものの、 Valgrind を入れることによって、おおよそ 10 倍の 75 秒程度かかるようになっていました。</para>
 <screen>&prompt.user;ls -1 valgrind_pid_*log
 valgrind_pid_11780.log
 valgrind_pid_11782.log
@@ -624,69 +390,28 @@ valgrind_pid_11862.log
 valgrind_pid_11863.log</screen>
     </listitem>
     <listitem>
-     <para>
-      You may also prefer to send the Valgrind's messages over the network.
-      You need to specify the <literal>aa.bb.cc.dd</literal> IP address and
-      <literal>port_num</literal> port number of the network socket with the
-      <option>--log-socket=<replaceable>AA.BB.CC.DD:PORT_NUM</replaceable></option>
-      option. If you omit the port number, 1500 will be used.
-     </para>
-     <para>
-      It is useless to send Valgrind's messages to a network socket if no
-      application is capable of receiving them on the remote machine. That
-      is why <command>valgrind-listener</command>, a simple listener, is
-      shipped together with Valgrind. It accepts connections on the
-      specified port and copies everything it receives to the standard
-      output.
-     </para>
+     <para>Valgrind のメッセージをネットワーク経由で送信したいと思うことがあるかもしれません。そのような場合は、 <option>--log-socket=<replaceable>aa.bb.cc.dd:port_num</replaceable></option> のような形式でオプションを指定してください。ここで、 <literal>aa.bb.cc.dd</literal> には送信先の IP アドレスを、<literal>port_num</literal> には送信先のポート番号をそれぞれ指定します。ポート番号を省略した場合は、 1500 を使用します。</para>
+     <para>Valgrind のメッセージをネットワークソケット経由で送信する場合、受信側のアプリケーションを用意しないと意味がありません。 Valgrind では <command>valgrind-listener</command> と呼ばれるシンプルなリスナーが同梱されていて、指定したポートで接続を待ち受けて、受信した内容をそのまま標準出力に出力することができます。</para>
     </listitem>
    </orderedlist>
   </sect2>
 
   <sect2 xml:id="sec.tuning.tracing.valgrind.error">
-   <title>Error Messages</title>
-   <para>
-    Valgrind remembers all error messages, and if it detects a new error,
-    the error is compared against old error messages. This way Valgrind
-    checks for duplicate error messages. In case of a duplicate error, it is
-    recorded but no message is shown. This mechanism prevents you from being
-    overwhelmed by millions of duplicate errors.
-   </para>
-   <para>
-    The <option>-v</option> option will add a summary of all reports (sorted
-    by their total count) to the end of the Valgrind's execution output.
-    Moreover, Valgrind stops collecting errors if it detects either 1000
-    different errors, or 10 000 000 errors in total. If you want to suppress
-    this limit and wish to see all error messages, use
-    <option>--error-limit=no</option>.
-   </para>
-   <para>
-    Some errors usually cause other ones. Therefore, fix errors in the same
-    order as they appear and re-check the program continuously.
-   </para>
+   <title>エラーメッセージ</title>
+   <para>Valgrind では全てのエラーメッセージを記憶していて、新しいエラーを検出すると既存のエラーメッセージと比較を行ないます。この方法により、 Valgrind はエラーを繰り返し表示するような事態を防いでいます。同じエラーが発生した場合、 Valgrind は単純にそのメッセージを記録するだけで、メッセージを表示しなくなります。この仕組みにより、似たようなエラーを多数受け取って混乱を起こすことがないようになっています。</para>
+   <para><option>-v</option> オプションを指定すると、 Valgrind の実行出力の最後に全ての概要レポート (発生回数順に並べたもの) を表示することができます。これに加えて、 Valgrind では 1000 種類以上のエラーが発生した場合や、合計で 10,000,000 回以上のエラーが発生した場合、エラーの収集処理を停止する機能があります。このような制限を無効化して、全てのエラーメッセージを表示するようにしたい場合は、 <option>--error-limit=no</option> を指定してください。</para>
+   <para>エラーによっては他のエラーを引き起こす種類のものもあります。そのため、エラーを修正する場合は、その発生順に行なうものとし、プログラムを繰り返しチェックし直してください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.tuning.tracing.valgrind.moreinfo">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     For a complete list of options related to the described tracing tools,
-     see the corresponding man page (<command>man 1 strace</command>,
-     <command>man 1 ltrace</command>, and <command>man 1
-     valgrind</command>).
-    </para>
+    <para>上記のトレーシングツールに関連する全オプションの一覧を確認するには、それぞれ対応するマニュアルページ ( <command>man 1 strace</command> , <command>man 1 ltrace</command> , <command>man 1 valgrind</command> ) をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     To describe advanced usage of Valgrind is beyond the scope of this
-     document. It is very well documented, see
-     <link xlink:href="http://valgrind.org/docs/manual/manual.html">Valgrind
-     User Manual</link>. These pages are indispensable if you need more
-     advanced information on Valgrind or the usage and purpose of its
-     standard tools.
-    </para>
+    <para>Valgrind の高度な使用方法については、本書では説明していません。詳しい説明を読みたい場合は、 <link xlink:href="http://valgrind.org/docs/manual/manual.html">Valgrind User Manual</link> (英語) をお読みください。これらのページは Valgrind をより高度に使用したり、標準ツールの使い方や目的を知りたい場合には、必須の情報源です。</para>
    </listitem>
   </itemizedlist>
  </sect1>
