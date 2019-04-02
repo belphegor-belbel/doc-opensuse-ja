@@ -10,72 +10,28 @@
    <dm:bugtracker/>
   </dm:docmanager>
  </info>
- <para>
-  For network environments, it is vital to keep the computer and other devices'
-  clocks synchronized and accurate. There are several solutions to achieve
-  this, for example the widely used &ntp; (NTP) described in
-  <xref linkend="cha.ntp"/>.
- </para>
- <para>
-  The &ptp; (PTP) is a protocol capable of sub-microsecond accuracy, which is
-  better than what NTP achieves. PTP support is divided between the kernel and
-  user space. The kernel in &productname; includes support for PTP clocks,
-  which are provided by network drivers.
- </para>
+ <para>ネットワーク環境ではコンピュータやデバイス類の時刻を同期して、正確性を保つことが必要不可欠です。時刻の同期にあたってはさまざまな手法が存在しますが、その中で最もよく使用されているのが &ntp; (NTP) です。 NTP については <xref linkend="cha.ntp"/> で説明しています。</para>
+ <para>&ptp; (PTP) はマイクロ秒未満の精度に対応するプロトコルで、 NTP よりもさらに正確な時刻同期を実現することができます。 PTP はカーネルとユーザスペースのパーツから構成され、 &productname; にも PTP クロック向けの対応 (ネットワークドライバでの提供) が含まれています。</para>
  <sect1 xml:id="tuning.ptp.intro">
-  <title>Introduction to PTP</title>
+  <title>PTP の紹介</title>
 
-  <para>
-   The clocks managed by PTP follow a master-slave hierarchy. The slaves are
-   synchronized to their masters. The hierarchy is updated by the
-   <emphasis>best master clock</emphasis> (BMC) algorithm, which runs on every
-   clock. The clock with only one port can be either master or slave. Such a
-   clock is called an <emphasis>ordinary clock</emphasis> (OC). A clock with
-   multiple ports can be master on one port and slave on another. Such a clock
-   is called a <emphasis>boundary clock</emphasis> (BC). The top-level master
-   is called the <emphasis>grandmaster clock</emphasis>. The grandmaster clock
-   can be synchronized with a Global Positioning System (GPS). This way
-   disparate networks can be synchronized with a high degree of accuracy.
-  </para>
+  <para>PTP での時刻同期は、マスター／スレーブ型の階層構造を取ります。スレーブは対応するマスターに問い合わせを行ない、同期を実施します。階層構造は、それぞれのスレーブが <emphasis>best master clock</emphasis> (BMC) (<quote>最適なマスタークロック</quote> の意味) アルゴリズムを利用して更新されます。また、 1 つのポートしか持たないクロック (時刻同期を行なうマシン) は、マスターもしくはスレーブのいずれかにしか、なることができません。このようなクロックを <emphasis>ordinary clock</emphasis> (OC) (通常クロック) と呼びます。逆に、複数のポートを持つクロックは、一方をマスターに、他方をスレーブに設定することができます。このようなクロックを <emphasis>boundary clock</emphasis> (BC) (境界クロック) と呼びます。また、最上位のマスタークロックのことを、 <emphasis>grandmaster clock</emphasis> (最上位クロック) と呼びます。 Global Positioning System (GPS) を利用したクロックなどがそれにあたります。このような仕組みにより、異種混合型ネットワークでも高い精度の時刻同期を行なうことができます。</para>
 
-  <para>
-   The hardware support is the main advantage of PTP. It is supported by
-   various network switches and network interface controllers (NIC). While it
-   is possible to use non-PTP enabled hardware within the network, having
-   network components between all PTP clocks PTP hardware enabled achieves the
-   best possible accuracy.
-  </para>
+  <para>なお、 PTP ではハードウエア側の対応が含まれていることが大きな特長です。さまざまなネットワークスイッチやネットワークインターフェイスコントローラ (NIC) に、そのような仕組みが用意されています。ネットワーク内に PTP 非対応のハードウエアが存在していてもかまいませんが、全ての PTP クロックでハードウエア対応が行なわれていると、最大限の正確性を実現することができます。</para>
 
   <sect2 xml:id="tuning.ptp.linuxptp">
-   <title>PTP Linux Implementation</title>
-   <para>
-    On &productname;, the implementation of PTP is provided by the
-    <systemitem>linuxptp</systemitem> package. Install it with <command>zypper
-    install linuxptp</command>. It includes the <command>ptp4l</command> and
-    <command>phc2sys</command> programs for clock synchronization.
-    <command>ptp4l</command> implements the PTP boundary clock and ordinary
-    clock. When hardware time stamping is enabled, <command>ptp4l</command>
-    synchronizes the PTP hardware clock to the master clock. With software time
-    stamping, it synchronizes the system clock to the master clock.
-    <command>phc2sys</command> is needed only with hardware time stamping to
-    synchronize the system clock to the PTP hardware clock on the network
-    interface card (NIC).
-   </para>
+   <title>PTP の Linux 実装</title>
+   <para>&productname; では、 PTP の実装は <systemitem>linuxptp</systemitem> パッケージに含まれています。 <command>zypper install linuxptp</command> と入力して実行し、インストールを行なってください。このパッケージには、時刻同期用の <command>ptp4l</command> と <command>phc2sys</command> というプログラムが用意されています。 <command>ptp4l</command> は boundary clock の機能と ordinary clock の両方の機能を提供しています。ハードウエア側にタイムスタンプ機能が用意されていれば、 <command>ptp4l</command> は PTP のハードウエアクロックをマスタークロックに同期します。ソフトウエア側でのタイムスタンプ機能を利用する場合は、システムクロックをマスタークロックに同期します。 <command>phc2sys</command> はハードウエアタイムスタンプの際にのみ使用するもので、システムクロックをネットワークインターフェイス (NIC) に搭載されたハードウエアクロックに同期させるために使用します。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="tuning.ptp.using">
-  <title>Using PTP</title>
+  <title>PTP の使用</title>
 
   <para/>
 
   <sect2 xml:id="tuning.ptp.driver_support">
-   <title>Network Driver and Hardware Support</title>
-   <para>
-    PTP requires that the used kernel network driver supports either software
-    or hardware time stamping. Moreover, the NIC must support time stamping in
-    the physical hardware. You can verify the driver and NIC time stamping
-    capabilities with <command>ethtool</command>:
-   </para>
+   <title>ネットワークドライバとハードウエアのサポート</title>
+   <para>PTP ではカーネルのネットワークドライバに対して、ソフトウエアもしくはハードウエアのタイムスタンプ機能を必要とします。これに加えて、 NIC の物理ハードウエア側では、タイムスタンプ機能に対応していなければなりません。ドライバと NIC にタイムスタンプ機能があるかどうかを確認するには、 <command>ethtool</command> コマンドを使用します:</para>
 <screen>&prompt.sudo;ethtool -T eth0
 Time stamping parameters for eth0:
 Capabilities:
@@ -92,29 +48,19 @@ Hardware Transmit Timestamp Modes:
 Hardware Receive Filter Modes:
         none                  (HWTSTAMP_FILTER_NONE)
         all                   (HWTSTAMP_FILTER_ALL)</screen>
-   <para>
-    Software time stamping requires the following parameters:
-   </para>
+   <para>ソフトウエアタイムスタンプ機能を使用するには、下記のパラメータが表示されていなければなりません:</para>
 <screen>SOF_TIMESTAMPING_SOFTWARE
 SOF_TIMESTAMPING_TX_SOFTWARE
 SOF_TIMESTAMPING_RX_SOFTWARE</screen>
-   <para>
-    Hardware time stamping requires the following parameters:
-   </para>
+   <para>ハードウエアタイムスタンプ機能を使用するには、下記のパラメータが表示されていなければなりません:</para>
 <screen>SOF_TIMESTAMPING_RAW_HARDWARE
 SOF_TIMESTAMPING_TX_HARDWARE
 SOF_TIMESTAMPING_RX_HARDWARE</screen>
   </sect2>
 
   <sect2 xml:id="tuning.ptp.ptp41">
-   <title>Using <command>ptp4l</command></title>
-   <para>
-    <command>ptp4l</command> uses hardware time stamping by default. As
-    &rootuser;, you need to specify the network interface capable of hardware
-    time stamping with the <option>-i</option> option. The <option>-m</option>
-    tells <command>ptp4l</command> to print its output to the standard output
-    instead of the system's logging facility:
-   </para>
+   <title><command>ptp4l</command> の使用</title>
+   <para><command>ptp4l</command> は既定ではハードウエアタイムスタンプを使用します。 &rootuser; で <option>-i</option> オプションを指定して、ハードウエアタイムスタンプ機能に対応したネットワークインターフェイスを指定してください。なお、 <option>-m</option> オプションを指定すると、 <command>ptp4l</command> からの出力が、システムのログ機能経由ではなく標準出力に書き込まれるようになります:</para>
 <screen>&prompt.sudo;ptp4l -m -i eth0
 selected eth0 as PTP clock
 port 1: INITIALIZING to LISTENING on INITIALIZE
@@ -129,170 +75,71 @@ master offset -36205 s1 freq +0 path delay       10623
 master offset  -6975 s2 freq -30575 path delay   10286
 port 1: UNCALIBRATED to SLAVE on MASTER_CLOCK_SELECTED
 master offset  -4284 s2 freq -30135 path delay    9892</screen>
-   <para>
-    The <literal>master offset</literal> value represents the measured offset
-    from the master (in nanoseconds).
-   </para>
-   <para>
-    The <literal>s0</literal>, <literal>s1</literal>, <literal>s2</literal>
-    indicators show the different states of the clock servo:
-    <literal>s0</literal> is unlocked, <literal>s1</literal> is clock step, and
-    <literal>s2</literal> is locked. If the servo is in the locked state
-    (<literal>s2</literal>), the clock will not be stepped (only slowly
-    adjusted) if the <option>pi_offset_const</option> option is set to a
-    negative value in the configuration file (see <command>man 8
-    ptp4l</command> for more information).
-   </para>
-   <para>
-    The <literal>freq</literal> value represents the frequency adjustment of
-    the clock (in parts per billion, ppb).
-   </para>
-   <para>
-    The <literal>path delay</literal> value represents the estimated delay of
-    the synchronization messages sent from the master (in nanoseconds).
-   </para>
-   <para>
-    Port 0 is a Unix domain socket used for local PTP management. Port 1 is the
-    <systemitem>eth0</systemitem> interface.
-   </para>
-   <para>
-    <literal>INITIALIZING</literal>, <literal>LISTENING</literal>,
-    <literal>UNCALIBRATED</literal> and <literal>SLAVE</literal> are examples
-    of port states which change on <literal>INITIALIZE</literal>,
-    <literal>RS_SLAVE</literal>, and <literal>MASTER_CLOCK_SELECTED</literal>
-    events. When the port state changes from <literal>UNCALIBRATED</literal> to
-    <literal>SLAVE</literal>, the computer has successfully synchronized with a
-    PTP master clock.
-   </para>
-   <para>
-    You can enable software time stamping with the <option>-S</option> option.
-   </para>
+   <para><literal>master offset</literal> 以下には、マスターとの時刻差 (ナノ秒単位) が表示されます。</para>
+   <para><literal>s0</literal> , <literal>s1</literal> , <literal>s2</literal> の各表示は、クロックサーボの状態を表わしています。それぞれ <literal>s0</literal> はロック解除状態を、 <literal>s1</literal> はクロックステップを、 <literal>s2</literal> はロック済み状態を表わしています。サーボがロック済みの状態 ( <literal>s2</literal> ) にある場合、 <option>pi_offset_const</option> オプションが負の値に設定されていると、クロックをステップさせる (大きく変更する) ことは行なわず、徐々に調整するようになります (詳しくは <command>man 8 ptp4l</command> をお読みください) 。</para>
+   <para><literal>freq</literal> で示されている値は、クロックの周波数調整値 (単位は ppb で、 10 億あたりの値) を表わしています。</para>
+   <para><literal>path delay</literal> には、マスターから送信された同期メッセージの見積もり遅延時間 (単位はナノ秒) を表わしています。</para>
+   <para>Port 0 はローカルの PTP 管理向けに Unix ドメインソケットを使用する意味です。 Port 1 は <systemitem>eth0</systemitem> インターフェイスの意味です。</para>
+   <para><literal>INITIALIZING</literal> , <literal>LISTENING</literal> , <literal>UNCALIBRATED</literal> , <literal>SLAVE</literal> の表示は、それぞれ <literal>INITIALIZE</literal> , <literal>RS_SLAVE</literal> , <literal>MASTER_CLOCK_SELECTED</literal> のイベントに対するポート状態の変更例です。ポートの状態が <literal>UNCALIBRATED</literal> から <literal>SLAVE</literal> に変化すると、コンピュータは PTP のマスタークロックと同期が成功していることを表わします。</para>
+   <para><option>-S</option> オプションを指定することで、ソフトウエアのタイムスタンプ機能を使用することができるようになります。</para>
 <screen>&prompt.sudo;ptp4l -m -S -i eth3</screen>
-   <para>
-    You can also run <command>ptp4l</command> as a service:
-   </para>
+   <para><command>ptp4l</command> をサービスとして動作させる場合は、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;systemctl start ptp4l</screen>
-   <para>
-    In this case, <command>ptp4l</command> reads its options from the
-    <filename>/etc/sysconfig/ptp4l</filename> file. By default, this file tells
-    <command>ptp4l</command> to read the configuration options from
-    <filename>/etc/ptp4l.conf</filename>. For more information on
-    <command>ptp4l</command> options and the configuration file settings, see
-    <command>man 8 ptp4l</command>.
-   </para>
-   <para>
-    To enable the <command>ptp4l</command> service permanently, run the
-    following:
-   </para>
+   <para>この場合、 <command>ptp4l</command> のオプションは <filename>/etc/sysconfig/ptp4l</filename> ファイルから読み込みが行なわれます。既定では、このファイルには <command>ptp4l</command> が <filename>/etc/ptp4l.conf</filename> から設定を読み込むように指定しています。 <command>ptp4l</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 ptp4l</command> をお読みください。</para>
+   <para><command>ptp4l</command> サービスを恒久的に有効化したい場合は、下記のとおり入力して実行します:</para>
 <screen>&prompt.sudo;systemctl enable ptp4l</screen>
-   <para>
-    To disable it, run
-   </para>
+   <para>無効化したい場合は、下記のとおり入力して実行します:</para>
 <screen>&prompt.sudo;systemctl disable ptp4l</screen>
   </sect2>
 
   <sect2 xml:id="tuning.ptp.confile">
-   <title><command>ptp4l</command> Configuration File</title>
-   <para>
-    <command>ptp4l</command> can read its configuration from an optional
-    configuration file. As no configuration file is used by default, you need
-    to specify it with <option>-f</option>.
-   </para>
+   <title><command>ptp4l</command> 設定ファイル</title>
+   <para><command>ptp4l</command> は設定を設定ファイルから読み込むことができます。既定では設定ファイルを使用していませんので、設定ファイルを使用する場合は <option>-f</option> で指定する必要があります。</para>
 <screen>&prompt.sudo;ptp4l -f /etc/ptp4l.conf</screen>
-   <para>
-    The configuration file is divided into sections. The global section
-    (indicated as <literal>[global]</literal>) sets the program options, clock
-    options and default port options. Other sections are port specific, and
-    they override the default port options. The name of the section is the name
-    of the configured port&mdash;for example, <literal>[eth0]</literal>. An
-    empty port section can be used to replace the command line option.
-   </para>
+   <para>設定ファイルは 2 つのセクションに分かれています。グローバルセクション ( <literal>[global]</literal> ) 内には、プログラムのオプションとクロックのオプション、そして既定のポートオプションが含まれます。その他のセクションはポートごとに固有のもので、既定のポートオプションを上書きするためのものです。セクション名は設定されているポートの名前そのもので、たとえば <literal>[eth0]</literal> 等のようになります。ポートのセクション内に何も設定していないと、コマンドラインオプションを置き換えることができます。</para>
 <screen>[global]
 verbose               1
 time_stamping         software
 [eth0]</screen>
-   <para>
-    The example configuration file is an equivalent of the following command's
-    options:
-   </para>
+   <para>上記のように設定を行なうと、コマンドラインでは下記のような意味になります:</para>
 <screen>&prompt.sudo;ptp4l -i eth0 -m -S</screen>
-   <para>
-    For a complete list of <command>ptp4l</command> configuration options, see
-    <command>man 8 ptp4l</command>.
-   </para>
+   <para><command>ptp4l</command> で利用可能な設定オプションの一覧については、 <command>man 8 ptp4l</command> をお読みください。</para>
   </sect2>
 
   <sect2 xml:id="tuning.ptp.delay_measurement">
-   <title>Delay Measurement</title>
-   <para>
-    <command>ptp4l</command> measures time delay in two different ways:
-    <emphasis>peer-to-peer</emphasis> (P2P) or <emphasis>end-to-end</emphasis>
-    (E2E).
-   </para>
+   <title>遅延の測定</title>
+   <para><command>ptp4l</command> では遅延の測定にあたって、 2 種類の方式のうちのいずれかを使用することができます。 1 つは <emphasis>peer-to-peer</emphasis> (P2P) 、もう 1 つは <emphasis>end-to-end</emphasis> (E2E) です。</para>
    <variablelist>
     <varlistentry>
      <term>P2P</term>
      <listitem>
-      <para>
-       This method is specified with <option>-P</option>.
-      </para>
-      <para>
-       It reacts to changes in the network environment faster and is more
-       accurate in measuring the delay. It is only used in networks where each
-       port exchanges PTP messages with one other port. P2P needs to be
-       supported by all hardware on the communication path.
-      </para>
+      <para>この方式を使用するには、 <option>-P</option> オプションを指定します。</para>
+      <para>この方法は、ネットワーク環境の変更に素早く反応できる方式であるほか、遅延の測定をより正確に行なうことができます。この方法は、それぞれのポートが他のポートと PTP メッセージを交換する場合にのみ使用します。 P2P は通信パス内の全てのハードウエア側で対応している必要があります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>E2E</term>
      <listitem>
-      <para>
-       This method is specified with <option>-E</option>. This is the default.
-      </para>
+      <para>この方式を使用するには、 <option>-E</option> オプションを指定します。こちらが既定値です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Automatic method selection</term>
+     <term>自動方式選択</term>
      <listitem>
-      <para>
-       This method is specified with <option>-A</option>. The automatic option
-       starts <command>ptp4l</command> in E2E mode, and changes to P2P mode if
-       a peer delay request is received.
-      </para>
+      <para>この方式を使用するには、 <option>-A</option> オプションを指定します。自動方式選択では、まず <command>ptp4l</command> が E2E モードで動作し、その後 peer delay (対向遅延) 要求が届くと、 P2P モードに切り替える動作を行ないます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
    <important>
-    <title>Common Measurement Method</title>
-    <para>
-     All clocks on a single PTP communication path must use the same method to
-     measure the time delay. A warning will be printed if either a peer delay
-     request is received on a port using the E2E mechanism, or an E2E delay
-     request is received on a port using the P2P mechanism.
-    </para>
+    <title>一般的な測定方法について</title>
+    <para>単一の PTP 通信経路内にある全てのクロックは、遅延の測定方式を全て同じに設定しなければなりません。 E2E 方式で動作しているポートに peer delay 要求が届いた場合や、 P2P 方式で動作しているポートに E2E delay 要求が届いた場合は、警告メッセージを表示します。</para>
    </important>
   </sect2>
 
   <sect2 xml:id="tuning.ptp.pmc">
-   <title>PTP Management Client: <command>pmc</command></title>
-   <para>
-    You can use the <command>pmc</command> client to obtain more detailed
-    information about <command>ptp41</command>. It reads from the standard
-    input&mdash;or from the command line&mdash;actions specified by name and
-    management ID. Then it sends the actions over the selected transport, and
-    prints any received replies. There are three actions supported:
-    <command>GET</command> retrieves the specified information,
-    <command>SET</command> updates the specified information, and
-    <command>CMD</command> (or <command>COMMAND</command>) initiates the
-    specified event.
-   </para>
-   <para>
-    By default, the management commands are addressed to all ports. The
-    <command>TARGET</command> command can be used to select a particular clock
-    and port for the subsequent messages. For a complete list of management
-    IDs, run <command>pmc help</command>.
-   </para>
+   <title>PTP 管理クライアント: <command>pmc</command></title>
+   <para><!-- NOTE: "ptp41"?? --> <command>ptp4l</command> に関するより詳しい情報を取得したい場合は、 <command>pmc</command> クライアントをお使いください。このコマンドは標準入力やコマンドラインからの入力を受け付け、名前で指定したアクションや管理 ID を取得します。あとはアクションを選択したトランスポート経由で送信し、受信した応答を表示します。アクションには 3 種類のものがあります。 <command>GET</command> は指定した情報の取得、 <command>SET</command> は指定した情報の更新、そして <command>CMD</command> (もしくは <command>COMMAND</command> ) は指定したイベントの開始に使用します。</para>
+   <para>既定では、管理コマンドは全てのポートを対象として実行されます。 <command>TARGET</command> コマンドは特定のクロックとポートを選択して、後続のコマンドを実行させるために使用します。管理 ID の完全な一覧を表示するには、 <command>pmc help</command> と入力して実行してください。</para>
 <screen>&prompt.sudo;pmc -u -b 0 'GET TIME_STATUS_NP'
 sending: GET TIME_STATUS_NP
         90f2ca.fffe.20d7e9-0 seq 0 RESPONSE MANAGMENT TIME_STATUS_NP
@@ -304,126 +151,71 @@ sending: GET TIME_STATUS_NP
                 lastGmPhaseChange          0x0000'0000000000000000.0000
                 gmPresent                  true
                 gmIdentity                 00b058.feef.0b448a</screen>
-   <para>
-    The <option>-b</option> option specifies the boundary hops value in sent
-    messages. Setting it to zero limits the boundary to the local
-    <command>ptp4l</command> instance. Increasing the value will retrieve the
-    messages also from PTP nodes that are further from the local instance. The
-    returned information may include:
-   </para>
+   <para><option>-b</option> オプションを指定すると、送信されるメッセージに設定する境界ホップ数を指定することができます。境界ホップ数に 0 を指定すると、ローカルの <command>ptp4l</command> インスタンスに制限する意味になります。この値を増やして行くことで、ローカルから離れた遠くの PTP ノードからのメッセージを受け取れるようになります。なお、返却された情報には、下記の項目が含まれることがあります:</para>
    <variablelist>
     <varlistentry>
      <term>stepsRemoved</term>
      <listitem>
-      <para>
-       The number of communication nodes to the grandmaster clock.
-      </para>
+      <para>最上位クロックに至るまでの通信ノード数を表わしています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>offsetFromMaster, master_offset</term>
      <listitem>
-      <para>
-       The last measured offset of the clock from the master clock
-       (nanoseconds).
-      </para>
+      <para>マスタークロックとのクロック差 (ナノ秒単位) 。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>meanPathDelay</term>
      <listitem>
-      <para>
-       The estimated delay of the synchronization messages sent from the master
-       clock (nanoseconds).
-      </para>
+      <para>マスタークロックから送信された同期メッセージの遅延見積もり値 (ナノ秒単位) 。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>gmPresent</term>
      <listitem>
-      <para>
-       If <literal>true</literal>, the PTP clock is synchronized to the master
-       clock; the local clock is not the grandmaster clock.
-      </para>
+      <para><literal>true</literal> が書かれていると、 PTP のクロックはマスタークロックとの間で同期ができていて、最上位のクロックではないことを表わしています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>gmIdentity</term>
      <listitem>
-      <para>
-       This is the grandmaster's identity.
-      </para>
+      <para>最上位クロックの識別情報が表示されます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    For a complete list of <command>pmc</command> command line options, see
-    <command>man 8 pmc</command>.
-   </para>
+   <para><command>pmc</command> のコマンドラインオプションの完全な一覧について、詳しくは <command>man 8 pmc</command> と入力して実行してください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="tuning.ptp.phc2sys">
-  <title>Synchronizing the Clocks with <command>phc2sys</command></title>
+  <title><command>phc2sys</command> による時刻同期</title>
 
-  <para>
-   Use <command>phc2sys</command> to synchronize the system clock to the PTP
-   hardware clock (PHC) on the network card. The system clock is considered a
-   <emphasis>slave</emphasis>, while the network card a
-   <emphasis>master</emphasis>. PHC itself is synchronized with
-   <command>ptp4l</command> (see <xref linkend="tuning.ptp.using"/>). Use
-   <option>-s</option> to specify the master clock by device or network
-   interface. Use <option>-w</option> to wait until <command>ptp4l</command> is
-   in a synchronized state.
-  </para>
+  <para><command>phc2sys</command> を使用することで、システムクロックをネットワークカードに搭載された PTP ハードウエアクロック (PHC) に同期させることができます。この場合、システムクロックは <emphasis>スレーブ</emphasis> 、ネットワークカード側は <emphasis>マスター</emphasis> として動作することになります。 PHC それ自身は <command>ptp4l</command> (詳しくは <xref linkend="tuning.ptp.using"/> をお読みください) で同期を行ないます。なお、 <option>-s</option> を指定することで、デバイスやネットワークインターフェイスでマスタークロックを指定することができます。また <option>-w</option> を指定すると、 <command>ptp4l</command> が同期状態になるまで待機させることができます。</para>
 
 <screen>&prompt.sudo;phc2sys -s eth0 -w</screen>
 
-  <para>
-   PTP operates in <emphasis>International Atomic Time</emphasis> (TAI), while
-   the system clock uses <emphasis>Coordinated Universal Time</emphasis> (UTC).
-   If you do not specify <option>-w</option> to wait for
-   <command>ptp4l</command> synchronization, you can specify the offset in
-   seconds between TAI and UTC with <option>-O</option>:
-  </para>
+  <para>PTP は <emphasis>International Atomic Time</emphasis> (TAI) を基準に動作するのに対して、システムクロックは <emphasis>Coordinated Universal Time</emphasis> (UTC) を基準に動作します。 <command>ptp4l</command> に対して <option>-w</option> オプションを指定して待機させるように指定しない場合、 <option>-O</option> オプションで TAI と UTC の時刻差を秒単位で指定することができます:</para>
 
 <screen>&prompt.sudo;phc2sys -s eth0 -O -35</screen>
 
-  <para>
-   You can run <command>phc2sys</command> as a service as well:
-  </para>
+  <para><command>phc2sys</command> についても、同様にサービスとして動作させることができます:</para>
 
 <screen>&prompt.sudo;systemctl start phc2sys</screen>
 
-  <para>
-   In this case, <command>phc2sys</command> reads its options from the
-   <filename>/etc/sysconfig/phc2sys</filename> file. For more information on
-   <command>phc2sys</command> options, see <command>man 8 phc2sys</command>.
-  </para>
+  <para>この場合、 <command>phc2sys</command> のオプションは <filename>/etc/sysconfig/phc2sys</filename> ファイルから読み込みが行なわれます。 <command>phc2sys</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 phc2sys</command> をお読みください。</para>
 
-  <para>
-   To enable the <command>phc2sys</command> service permanently, run the
-   following:
-  </para>
+  <para><command>phc2sys</command> サービスを恒久的に有効化したい場合は、下記のとおり入力して実行します:</para>
 
 <screen>&prompt.sudo;systemctl enable phc2sys</screen>
 
-  <para>
-   To disable it, run
-  </para>
+  <para>無効化したい場合は、下記のとおり入力して実行します:</para>
 
 <screen>&prompt.sudo;systemctl disable phc2sys</screen>
 
   <sect2 xml:id="tuning.ptp.phc2sys.verify">
-   <title>Verifying Time Synchronization</title>
-   <para>
-    When PTP time synchronization is working properly and hardware time
-    stamping is used, <command>ptp4l</command> and <command>phc2sys</command>
-    output messages with time offsets and frequency adjustments periodically to
-    the system log.
-   </para>
-   <para>
-    An example of the <command>ptp4l</command> output:
-   </para>
+   <title>時刻同期の検証</title>
+   <para>PTP による時刻同期が正しく動作し、ハードウエアのタイムスタンプ機能を使用するように設定すると、 <command>ptp4l</command> と <command>phc2sys</command> は、時刻のズレに関する情報と周期的な調整に関するメッセージを、システムログ内に出力するようになります。</para>
+   <para><command>ptp4l</command> の出力例:</para>
 <screen>ptp4l[351.358]: selected /dev/ptp0 as PTP clock
 ptp4l[352.361]: port 1: INITIALIZING to LISTENING on INITIALIZE
 ptp4l[352.361]: port 0: INITIALIZING to LISTENING on INITIALIZE
@@ -439,155 +231,86 @@ ptp4l[363.223]: master offset       1043 s2 freq  -28436 path delay      8972
 [...]
 ptp4l[371.235]: master offset        285 s2 freq  -28511 path delay      9199
 ptp4l[372.235]: master offset        -78 s2 freq  -28788 path delay      9204</screen>
-   <para>
-    An example of the <command>phc2sys</command> output:
-   </para>
+   <para><command>phc2sys</command> の出力例:</para>
 <screen>phc2sys[616.617]: Waiting for ptp4l...
 phc2sys[628.628]: phc offset     66341 s0 freq      +0 delay   2729
 phc2sys[629.628]: phc offset     64668 s1 freq  -37690 delay   2726
 [...]
 phc2sys[646.630]: phc offset      -333 s2 freq  -37426 delay   2747
 phc2sys[646.630]: phc offset       194 s2 freq  -36999 delay   2749</screen>
-   <para>
-    <command>ptp4l</command> normally writes messages very frequently. You can
-    reduce the frequency with the <literal>summary_interval</literal>
-    directive. Its value is an exponent of the 2^N expression. For example, to
-    reduce the output to every 1024 (which is equal to 2^10) seconds, add the
-    following line to the <filename>/etc/ptp4l.conf</filename> file:
-   </para>
+   <para><command>ptp4l</command> は通常、メッセージを非常に頻繁に出力します。メッセージの頻度を減らしたい場合は、 <literal>summary_interval</literal> ディレクティブを使用して減らしてください。なお、設定する値には 2 の乗数を指定します。たとえば 1024 (= 2^10) 秒ごとにメッセージを出力するようにしたい場合、下記の行を <filename>/etc/ptp4l.conf</filename> ファイルに追加します:</para>
 <screen>summary_interval 10</screen>
-   <para>
-    You can also reduce the frequency of the <command>phc2sys</command>
-    command's updates with the <option>-u
-    <replaceable>SUMMARY-UPDATES</replaceable></option> option.
-   </para>
+   <para><command>phc2sys</command> についても、出力を減らすことができます。こちらの出力を減らしたい場合は、 <option>-u <replaceable>更新間隔</replaceable></option> オプションを指定してください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="tuning.ptp.examples">
-  <title>Examples of Configurations</title>
+  <title>設定例</title>
 
-  <para>
-   This section includes several examples of <command>ptp4l</command>
-   configuration. The examples are not full configuration files but rather a
-   minimal list of changes to be made to the specific files. The string
-   <replaceable>ethX</replaceable> stands for the actual network interface name
-   in your setup.
-  </para>
+  <para>本章では、 <command>ptp4l</command> の設定例をいくつか示します。設定例は設定すべき内容を網羅したものではなく、必要な箇所のみに絞った最小限のものです。なお、 <replaceable>ethX</replaceable> の箇所はお使いのネットワークインターフェイスに置き換えてご使用ください。</para>
 
   <example>
-   <title>Slave clock using software time stamping</title>
-   <para>
-    <filename>/etc/sysconfig/ptp4l</filename>:
-   </para>
+   <title>ソフトウエアタイムスタンプ機能を利用した従属クロック</title>
+   <para><filename>/etc/sysconfig/ptp4l</filename> :</para>
 <screen>OPTIONS=”-f /etc/ptp4l.conf -i ethX”</screen>
-   <para>
-    No changes made to the distribution <filename>/etc/ptp4l.conf</filename>.
-   </para>
+   <para><filename>/etc/ptp4l.conf</filename> ファイルを変更する必要はありません。</para>
   </example>
 
   <example>
-   <title>Slave clock using hardware time stamping</title>
-   <para>
-    <filename>/etc/sysconfig/ptp4l</filename>:
-   </para>
+   <title>ハードウエアタイムスタンプ機能を利用した従属クロック</title>
+   <para><filename>/etc/sysconfig/ptp4l</filename> :</para>
 <screen>OPTIONS=”-f /etc/ptp4l.conf -i ethX”</screen>
-   <para>
-    <filename>/etc/sysconfig/phc2sys</filename>:
-   </para>
+   <para><filename>/etc/sysconfig/phc2sys</filename> :</para>
 <screen>OPTIONS=”-s ethX -w”</screen>
-   <para>
-    No changes made to the distribution <filename>/etc/ptp4l.conf</filename>.
-   </para>
+   <para><filename>/etc/ptp4l.conf</filename> ファイルを変更する必要はありません。</para>
   </example>
 
   <example>
-   <title>Master clock using hardware time stamping</title>
-   <para>
-    <filename>/etc/sysconfig/ptp4l</filename>:
-   </para>
+   <title>ハードウエアタイムスタンプ機能を利用した自律クロック</title>
+   <para><filename>/etc/sysconfig/ptp4l</filename> :</para>
 <screen>OPTIONS=”-f /etc/ptp4l.conf -i ethX”</screen>
-   <para>
-    <filename>/etc/sysconfig/phc2sys</filename>:
-   </para>
+   <para><filename>/etc/sysconfig/phc2sys</filename> :</para>
 <screen>OPTIONS=”-s CLOCK_REALTIME -c ethX -w”</screen>
-   <para>
-    <filename>/etc/ptp4l.conf</filename>:
-   </para>
+   <para><filename>/etc/ptp4l.conf</filename> :</para>
 <screen>priority1 127</screen>
   </example>
 
   <example>
-   <title>Master clock using software time stamping (not generally recommended)</title>
-   <para>
-    <filename>/etc/sysconfig/ptp4l</filename>:
-   </para>
+   <title>ソフトウエアタイムスタンプ機能を利用した自律クロック (一般的には非推奨)</title>
+   <para><filename>/etc/sysconfig/ptp4l</filename> :</para>
 <screen>OPTIONS=”-f /etc/ptp4l.conf -i ethX”</screen>
-   <para>
-    <filename>/etc/ptp4l.conf</filename>:
-   </para>
+   <para><filename>/etc/ptp4l.conf</filename> :</para>
 <screen>priority1 127</screen>
   </example>
  </sect1>
  <sect1 xml:id="tuning.ptp.ntp">
-  <title>PTP and NTP</title>
+  <title>PTP と NTP</title>
 
-  <para>
-   NTP and PTP time synchronization tools can coexist, synchronizing time from
-   one to another in both directions.
-  </para>
+  <para>NTP と PTP の時刻同期ツールは同居させることができます。また、双方向の時刻同期を行なうこともできます。</para>
 
   <sect2 xml:id="tuning.ptp.ntp2ptp">
-   <title>NTP to PTP Synchronization</title>
-   <para>
-    When &chronyd; is used to synchronize the local system clock, you can
-    configure the <command>ptp4l</command> to be the grandmaster clock
-    distributing the time from the local system clock via PTP. Include the
-    <option>priority1</option> option in <filename>/etc/ptp4l.conf</filename>:
-   </para>
+   <title>NTP から PTP への同期</title>
+   <para>&chronyd; を利用してローカルのシステム時計を同期させている場合、 <command>ptp4l</command> を設定して最上位クロックとして動作させ、 PTP 経由でローカルのシステム時計を配信することができます。この場合、 <filename>/etc/ptp4l.conf</filename> の <option>priority1</option> オプションに下記を設定してください:</para>
 <screen>[global]
 priority1 127
 [eth0]</screen>
-   <para>
-    Then run <command>ptp4l</command>:
-   </para>
+   <para>あとは <command>ptp4l</command> を起動します:</para>
 <screen>&prompt.sudo;ptp4l -f /etc/ptp4l.conf</screen>
-   <para>
-    When hardware time stamping is used, you need to synchronize the PTP
-    hardware clock to the system clock with <command>phc2sys</command>:
-   </para>
+   <para>ハードウエアタイムスタンプ機能を使用している場合、 <command>phc2sys</command> を利用して、 PTP ハードウエアクロックをシステムクロックと同期させる必要があります:</para>
 <screen>&prompt.sudo;phc2sys -c eth0 -s CLOCK_REALTIME -w</screen>
   </sect2>
 
   <sect2 xml:id="tuning.ptp.ptp2ntp">
-   <title>Configuring PTP-NTP Bridge</title>
-   <para>
-    If a highly accurate PTP grandmaster is available in a network without
-    switches or routers with PTP support, a computer may operate as a PTP slave
-    and a stratum-1 NTP server. Such a computer needs to have two or more
-    network interfaces, and be close to the grandmaster or have a direct
-    connection to it. This will ensure highly accurate synchronization in the
-    network.
-   </para>
-   <para>
-    Configure the <command>ptp4l</command> and <command>phc2sys</command>
-    programs to use one network interface to synchronize the system clock using
-    PTP. Then configure &chronyd; to provide the system time using the other
-    interface:
-   </para>
+   <title>PTP-NTP ブリッジの設定</title>
+   <para>非常に精度の高い PTP 最上位クロックがネットワーク内に存在しているものの、 PTP に対応するスイッチやルータが存在していない場合、コンピュータを PTP スレーブに設定するとともに、 stratum-1 の NTP サーバとして設定することができます。このようなコンピュータには複数のネットワークインターフェイスが必要となるほか、最上位のクロックとネットワーク的に非常に近い場所に存在しているか、直結している必要があります。これにより、ネットワーク内でも非常に精度の高い同期を実現することができます。</para>
+   <para><command>ptp4l</command> と <command>phc2sys</command> のプログラムを設定して、 1 つのネットワークインターフェイスで PTP によるシステムクロックの同期を行なうようにします。あとは &chronyd; を設定して、その他のインターフェイス経由でシステム時刻を提供するようにします:</para>
 <screen>bindaddress 192.0.131.47
 hwtimestamp eth1
 local stratum 1</screen>
    <note>
-    <title>NTP and DHCP</title>
-    <para>
-     When the DHCP client command <command>dhclient</command> receives a list
-     of NTP servers, it adds them to NTP configuration by default. To prevent
-     this behavior, set
-    </para>
+    <title>NTP と DHCP について</title>
+    <para>DHCP クライアントである <command>dhclient</command> が NTP サーバの一覧を取得すると、既定では NTP の設定ファイル内にそれを追加します。このような動作を防ぐには:</para>
 <screen>NETCONFIG_NTP_POLICY=""</screen>
-    <para>
-     in the <filename>/etc/sysconfig/network/config</filename> file.
-    </para>
+    <para>上記の内容を、 <filename>/etc/sysconfig/network/config</filename> ファイルに設定してください。</para>
    </note>
   </sect2>
  </sect1>
