@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec.vt.io">
- <title>I/O Virtualization</title>
+ <title>I/O の仮想化</title>
 
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -12,154 +12,69 @@
   </dm:docmanager>
  </info>
 
- <para>
-  &vmguest;s not only share CPU and memory resources of the host system, but
-  also the I/O subsystem. Because software I/O virtualization techniques
-  deliver less performance than bare metal, hardware solutions that deliver
-  almost <quote>native</quote> performance have been developed recently.
-  &productname; supports the following I/O virtualization techniques:
- </para>
+ <para>&vmguest; はホストシステム内の CPU やメモリリソースを共有するだけでなく、 I/O サブシステムを共有することもできます。ソフトウエアによる I/O 仮想化技術はベアメタル (物理的なサーバ) に比べると性能が落ちますが、ハードウエアによる技術を使用すると、ほぼ <quote>ネイティブ</quote> に近い性能を発揮できるようになっています。 &productname; では、下記のような I/O 仮想化技術に対応しています:</para>
 
  <variablelist>
   <varlistentry xml:id="vt.io.fullv">
-   <term>Full Virtualization</term>
+   <term>完全仮想化</term>
    <listitem>
-    <para>
-     Fully Virtualized (FV) drivers emulate widely supported real devices,
-     which can be used with an existing driver in the &vmguest;. The guest is
-     also called <emphasis>Hardware Virtual Machine</emphasis> (HVM).
-     Since the physical device on the &vmhost; may differ from the emulated
-     one, the hypervisor needs to process all I/O operations before handing
-     them over to the physical device. Therefore all I/O operations need to
-     traverse two software layers, a process that not only significantly
-     impacts I/O performance, but also consumes CPU time.
-    </para>
+    <para>完全仮想化 (Fully Virtualized (FV)) ドライバでは、幅広く使用されている実在デバイスを擬似する仕組みであるため、 &vmguest; 内でも既存のドライバを使用することができます。ゲストは <emphasis>ハードウエア仮想マシン</emphasis> (Hardware Virtual Machine; HVM) も呼ぶこともあります。 &vmhost; 内の物理デバイスは擬似されているデバイスとは異なるため、ハイパーバイザはゲスト側からの全ての I/O 操作を物理デバイスに渡す際、それらを正しく処理しなければならないことを意味します。そのため、全ての I/O 操作はソフトウエア層にまで引き上げて処理を行なうことになりますので、 I/O 性能がかなり落ちてしまうだけでなく、 CPU 側にも負荷がかかることになります。</para>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="vt.io.parav">
-   <term>Paravirtualization</term>
+   <term>準仮想化</term>
    <listitem>
-    <para>
-     Paravirtualization (PV) allows direct communication between the hypervisor
-     and the &vmguest;. With less overhead involved, performance is much better
-     than with full virtualization. However, paravirtualization requires either
-     the guest operating system to be modified to support the
-     paravirtualization API or paravirtualized drivers. <phrase os="sles;sled">See <xref linkend="sec.kvm.requires.guests.virt_drivers"/>
-     for a list of guest operating systems supporting
-     paravirtualization.</phrase>
-    </para>
+    <para>準仮想化 (Paravirtualization (PV)) ではハイパーバイザと &vmguest; の間で直接的な通信を行ないます。オーバーヘッドの少ない仕組みであることから、性能は完全仮想化に比べてずっと良好になります。しかしながら、準仮想化ではゲスト側のオペレーティングシステムを修正し、準仮想化 API に対応させるようにするか、準仮想化用のドライバを使用する必要があります。 <phrase os="sles;sled">準仮想化に対応するゲスト側のオペレーティングシステムの一覧について、詳しくは <xref linkend="sec.kvm.requires.guests.virt_drivers"/> をお読みください。</phrase></para>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="vt.io.pvhvm">
    <term>PVHVM</term>
    <listitem>
-    <para>
-     This type of virtualization enhances HVM (see
-     <xref linkend="vt.io.fullv"/>) with paravirtualized (PV) drivers, and PV
-     interrupt and timer handling.
-    </para>
+    <para>この種類の仮想化では、 HVM (<xref linkend="vt.io.fullv"/> をお読みください) でありながら、準仮想化 (PV) ドライバと PV による割り込みやタイマー処理を使用します。</para>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="vt.io.vfio">
    <term>VFIO</term>
    <listitem>
-    <para>
-     VFIO stands for <emphasis>Virtual Function I/O</emphasis> and is a new
-     user-level driver framework for Linux. It replaces the traditional &kvm;
-     &pciback; device assignment. The VFIO driver exposes direct device access
-     to user space in a secure memory
-     (<xref linkend="gloss.vt.acronym.iommu"/>) protected environment.
-     With VFIO, a &vmguest; can directly access hardware devices on the
-     &vmhost; (pass-through), avoiding performance issues caused by emulation
-     in performance critical paths. This method does not allow to share
-     devices&mdash;each device can only be assigned to a single &vmguest;. VFIO
-     needs to be supported by the &vmhost; CPU, chipset and the BIOS/EFI.
-    </para>
-    <para>
-     Compared to the legacy &kvm; PCI device assignment, VFIO has the following
-     advantages:
-    </para>
+    <para>VFIO は <emphasis>Virtual Function I/O</emphasis> の略で、 Linux 向けの新しいユーザレベルドライバのフレームワークです。従来の &kvm; &pciback; デバイス割り当てを置き換えるものです。 VFIO ドライバはユーザスペースに対して、メモリの機密を保持 ( <xref linkend="gloss.vt.acronym.iommu"/> ) しながら、保護環境下で直接のデバイスアクセス機能を提供するものです。 VFIO を利用することで、 &vmguest; は &vmhoest; 内のハードウエアデバイスに、性能面のクリティカルパスの擬似による性能劣化を引き起こすことなく、直接アクセスできるようになります。ただし、この方式はデバイスの共有には使用できません。各デバイスは単一の &vmguest; にのみ割り当てることができます。また、 VFIO は &vmhost; の CPU やチップセット、 BIOS/EFI でそれぞれ対応している必要があります。</para>
+    <para>従来型の &kvm; PCI デバイス割り当てと比較して、 VFIO には下記のような利点があります:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       Resource access is compatible with secure boot.
-      </para>
+      <para>リソースへのアクセスは Secure Boot との互換性があります。</para>
      </listitem>
      <listitem>
-      <para>
-       Device is isolated and its memory access protected.
-      </para>
+      <para>デバイスは孤立した存在になり、メモリアクセスも保護されます。</para>
      </listitem>
      <listitem>
-      <para>
-       Offers a user space device driver with more flexible device ownership
-       model.
-      </para>
+      <para>より柔軟なデバイス所有者モデルを採用した、ユーザスペースのデバイスドライバが提供されています。</para>
      </listitem>
      <listitem>
-      <para>
-       Is independent of &kvm; technology, and not bound to x86 architecture
-       only.
-      </para>
+      <para>&kvm; 技術とは独立しているほか、 x86 アーキテクチャのみに固有のものでもありません。</para>
      </listitem>
     </itemizedlist>
-    <para>
-     As of <phrase os="sles;sled">&sls; 12 SP2</phrase><phrase os="osuse">openSUSE 42.2</phrase>, the USB and PCI Pass-through methods of
-     device assignment are considered deprecated and were superseded by the
-     VFIO model.
-   </para>
+    <para><phrase os="sles;sled">&sls; 12 SP2</phrase> <phrase os="osuse">openSUSE 42.2</phrase> およびそれ以降のバージョンでは、 USB と PCI のパススルーによるデバイスの割り当ては廃止予定とされ、 VFIO モデルで置き換えられています。</para>
    </listitem>
   </varlistentry>
   <varlistentry xml:id="vt.io.sriov">
    <term>SR-IOV</term>
    <listitem>
-    <para>
-     The latest I/O virtualization technique, Single Root I/O Virtualization
-     SR-IOV combines the benefits of the aforementioned
-     techniques&mdash;performance and the ability to share a device with
-     several &vmguest;s. SR-IOV requires special I/O devices, that are capable
-     of replicating resources so they appear as multiple separate devices. Each
-     such <quote>pseudo</quote> device can be directly used by a single guest.
-     However, for network cards for example the number of concurrent queues
-     that can be used is limited, potentially reducing performance for the
-     &vmguest; compared to paravirtualized drivers. On the &vmhost;, SR-IOV
-     must be supported by the I/O device, the CPU and chipset, the BIOS/EFI and
-     the hypervisor&mdash;for setup instructions see
-     <xref linkend="sec.libvirt.config.pci"/>.
-<!-- fs 2014-02-21: no list available
-     ATM &productname; supports the SRV-IOV capable network cards listed below
-     -->
-    </para>
+    <para>最新の I/O 仮想化技術で、 Single Root I/O Virtualization の略です。 SR-IOV では前述の技術の利点を組み合わせて作られています。性能を強化しているだけでなく、複数の &vmguest; でデバイスを共有する機能を備えています。 SR-IOV では、リソースを複製して複数のデバイスとしてアクセスすることのできる、特殊な I/O デバイスが必要となります。この場合、それぞれの <quote>擬似</quote> デバイスは 1 台のゲストからアクセスすることになります。しかしながら、たとえばネットワークカードなどの場合、同時に使用することのできるキュー数は制限されているため、準仮想化に比べると &vmguest; の性能が落ちる可能性があることになります。 &vmhost; 側としては、 SR-IOV が I/O デバイス側と CPU 、チップセットと BIOS/EFI 、そしてハイパーバイザでそれぞれ対応していなければなりません。詳しい設定手順については、 <xref linkend="sec.libvirt.config.pci"/> をお読みください。 <!-- fs 2014-02-21: no list available ATM &productname; supports the SRV-IOV capable network cards listed below --></para>
    </listitem>
   </varlistentry>
  </variablelist>
 
  <important xml:id="ann.vt.io.require">
-  <title>Requirements for VFIO and SR-IOV</title>
-  <para>
-   To be able to use the VFIO and SR-IOV features, the &vmhost; needs to
-   fulfill the following requirements:
-  </para>
+  <title>VFIO および SR-IOV の要件について</title>
+  <para>VFIO や SR-IOV の機能を使用できるようにするには、 &vmhost; 側が下記の要件を満たす必要があります:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     IOMMU needs to be enabled in the BIOS/EFI.
-    </para>
+    <para>BIOS や EFI で IOMMU が有効化されていること。</para>
    </listitem>
    <listitem>
-    <para>
-     For Intel CPUs, the kernel parameter <literal>intel_iommu=on</literal>
-     needs to be provided on the kernel command line. For more information,
-     see <xref linkend="sec.grub2.yast2.config.advanced.kernel_parameters"/>.
-    </para>
+    <para>Intel CPU の場合、カーネルのコマンドライン内のパラメータに <literal>intel_iommu=on</literal> を追加する必要があります。詳しくは <xref linkend="sec.grub2.yast2.config.advanced.kernel_parameters"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     The VFIO infrastructure needs to be available. This can be achieved by
-     loading the kernel module
-     <systemitem class="resource">vfio_pci</systemitem>. For more information,
-     see <xref linkend="sec.boot.systemd.advanced.kernel_modules"/>.
-    </para>
+    <para>VFIO インフラストラクチャを利用できるようにする必要があります。こちらはカーネルモジュールである <systemitem class="resource">vfio_pci</systemitem> を読み込むことで、利用できるようになります。詳しくは <xref linkend="sec.boot.systemd.advanced.kernel_modules"/> をお読みください。</para>
    </listitem>
   </itemizedlist>
  </important>
