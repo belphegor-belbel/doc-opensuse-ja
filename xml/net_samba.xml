@@ -79,7 +79,15 @@
    </varlistentry>
   </variablelist>
  </sect1>
- <sect1 xml:id="sec.samba.install">
+ <sect1 xml:id="sec.samba.server-sled" os="sled">
+  <title>Samba サーバのインストール</title>
+  <para>
+   Installing a Samba server is not supported on &sled;.
+   For information about installing and configuring a Samba server, see
+   &admin; for &sls;.
+  </para>
+ </sect1>
+ <sect1 xml:id="sec.samba.install" os="sles;osuse">
   <title>Samba サーバのインストール</title>
 
   <para>Samba サーバをインストールするには、 &yast; を起動して <menuchoice><guimenu>ソフトウエア</guimenu> <guimenu>ソフトウエア管理</guimenu></menuchoice> を選択し、表示されたウインドウ内で <menuchoice><guimenu>表示</guimenu> <guimenu>パターン</guimenu></menuchoice> を選んで <guimenu>ファイルサーバ</guimenu> を選択します。あとは <guimenu>了解</guimenu> を押して必要なパッケージをインストールします。</para>
@@ -96,14 +104,12 @@
    <para><systemitem>winbind</systemitem> は個別のサービスとして提供されているもので、パッケージとしても <systemitem>samba-winbind</systemitem> という別の名前のパッケージになっています。</para>
   </tip>
  </sect1>
- <sect1 xml:id="sec.samba.serv.inst">
+ <sect1 xml:id="sec.samba.serv.inst" os="sles;osuse">
   <title>Samba サーバの設定</title>
 
-  <para os="sles;osuse">&productnamereg; 内での Samba サーバは、 2 種類の異なる方法で設定することができます。 1 つは &yast; を利用する方法、もう 1 つは手作業で設定する方法です。手作業で設定を行なうことで、より細かい設定を行ないことができますが、 &yast; GUI ほどの利便性はありません。</para>
+  <para>&productnamereg; 内での Samba サーバは、 2 種類の異なる方法で設定することができます。 1 つは &yast; を利用する方法、もう 1 つは手作業で設定する方法です。手作業で設定を行なうことで、より細かい設定を行ないことができますが、 &yast; GUI ほどの利便性はありません。</para>
 
-  <para os="sled">Samba サーバを設定するには、 &sls; のドキュメンテーションをお読みください。</para>
-
-  <sect2 xml:id="sec.samba.yast2.conf" os="sles;osuse">
+  <sect2 xml:id="sec.samba.yast2.conf">
    <title>&yast; を利用した Samba サーバの設定</title>
    <para>Samba サーバを設定するには、 &yast; を起動して <menuchoice><guimenu>ネットワークサービス</guimenu><guimenu>Samba サーバ</guimenu></menuchoice> を選択します。</para>
    <sect3 xml:id="sec.samba.yast2.conf.inst">
@@ -115,19 +121,6 @@
       <term>ワークグループまたはドメイン名</term>
       <listitem>
        <para><guimenu>ワークグループまたはドメイン名</guimenu> では、新しいワークグループまたはドメインの名前、もしくは既存の名前を選択して <guimenu>次へ</guimenu> を押します。</para>
-<!--<figure id="fig.yast2.samba.startup">
-      <title>Samba Configuration&mdash;Workgroup or
-      Domain
-      Name</title>
-      <mediaobject>
-      <imageobject role="fo">
-      <imagedata fileref="yast2_samba_workgroup.png" width="70%" format="PNG"/>
-     </imageobject>
-      <imageobject role="html">
-      <imagedata fileref="yast2_samba_workgroup.png" width="75%" format="PNG"/>
-     </imageobject>
-     </mediaobject>
-     </figure>-->
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -140,6 +133,29 @@
     <para>詳細なサーバ設定を行ないたくない場合は、 <guimenu>OK</guimenu> を押してそのまま閉じてください。最後に表示されたポップアップボックスで <guimenu>Samba の管理者 (root) パスワード</guimenu> を入力します。</para>
     <para>全ての設定は、 <guimenu>Samba の設定</guimenu> ダイアログ内で後から変更することができます。ダイアログには <guimenu>起動</guimenu> , <guimenu>共有</guimenu> , <guimenu>識別情報</guimenu> , <guimenu>信頼するドメイン</guimenu> , <guimenu>LDAP の設定</guimenu> の各タブが用意されています。</para>
    </sect3>
+   <sect3 xml:id="sec.samba.server.new-protocol">
+    <title>Enabling Current Versions of the SMB Protocol on the Server</title>
+    <para>
+     On clients running current versions of &productname; or other recent Linux
+     versions, the insecure SMB1 protocol is disabled by default. However,
+     existing instances of Samba may be configured to only serve shares using
+     SMB1 version of the protocol.
+     To be able to interact with such clients, you need to configure Samba
+     to serve shares using at least the SMB 2.1 protocol.
+    </para>
+    <para>
+     There are setups in which only SMB1 can be used, for example, because they
+     rely on SMB1's/CIFS's Unix extensions. These extensions have not been
+     ported to newer protocol versions. If you are in this situation, consider
+     changing your setup or see <xref linkend="sec.samba.client.old-server"/>.
+    </para>
+    <para>
+     To do so, in the configuration file
+     <filename>/etc/samba/smb.conf</filename>, set the global parameter
+     <literal>server max protocol = SMB2_10</literal>. For a list of all
+     possible values, see <command>man smb.conf</command>.
+    </para>
+   </sect3>
    <sect3 xml:id="sec.samba.yast2.conf.adv">
     <title>高度な Samba の設定</title>
     <para>Samba サーバモジュールを初めて起動した場合も、初回起動時の設定を行なうと、 <xref linkend="sec.samba.yast2.conf.inst"/> にあるとおりの <guimenu>Samba の設定</guimenu> ダイアログが表示されるようになります。ここから Samba サーバの設定を変更することができます。</para>
@@ -148,53 +164,15 @@
      <title>サーバの開始</title>
      <para><guimenu>開始</guimenu> タブでは、 Samba サーバの開始方法を設定することができます。システムの起動時にサービスを開始するように設定するには、 <guimenu>システム起動時</guimenu> を選択します。手作業で開始するように設定するには、 <guimenu>手動</guimenu> を選択します。 Samba サーバの開始に関する詳細は、 <xref linkend="sec.samba.serv.start"/> をお読みください。</para>
      <para>このタブでは、ファイアウオールのポートを開く作業を行なうこともできます。ポートを開くには、 <guimenu>ファイアウオールでポートを開く</guimenu> を選択します。複数のネットワークインターフェイスを接続している場合は、 <guimenu>ファイアウオールの詳細</guimenu> を押して、 Samba サービスを提供するネットワークインターフェイスを選択することができます。インターフェイスを選択したら <guimenu>OK</guimenu> を押して閉じてください。</para>
-<!--
-      <figure id="fig.yast2.samba.startup">
-      <title>Samba Configuration&mdash;Start
-      Up</title>
-      <mediaobject>
-      <imageobject role="fo">
-      <imagedata fileref="yast2_samba_startup.png" width="70%" format="PNG"/>
-     </imageobject>
-      <imageobject role="html">
-      <imagedata fileref="yast2_samba_startup.png" width="75%" format="PNG"/>
-     </imageobject>
-     </mediaobject>
-     </figure>-->
     </sect4>
     <sect4 xml:id="sec.samba.yast2.conf.adv.shares">
      <title>共有</title>
      <para><guimenu>共有</guimenu> タブでは、有効にする Samba の共有を選択することができます。なお、 homes や printers のように、いくつかの事前設定が用意されています。共有を選択して <guimenu>状態切り替え</guimenu> を押すことで、 <guimenu>有効</guimenu> と <guimenu>無効</guimenu> の間を切り替えることができます。また、新しい共有を追加するには <guimenu>追加</guimenu> を、選択した共有を削除するには <guimenu>削除</guimenu> を押します。</para>
-<!-- <figure id="fig.yast2.samba.shares">
-      <title>Samba Configuration&mdash;Shares</title>
-      <mediaobject>
-      <imageobject role="fo">
-      <imagedata fileref="yast2_samba_shares.png" width="70%" format="PNG"/>
-     </imageobject>
-      <imageobject role="html">
-      <imagedata fileref="yast2_samba_shares.png" width="75%" format="PNG"/>
-     </imageobject>
-     </mediaobject>
-     </figure>
-      -->
      <para>ユーザが独自にディレクトリを指定して共有できるようにするには、 <guimenu>ユーザにディレクトリの共有を許可する</guimenu> を選択し、 <guimenu>許可するグループ</guimenu> 内に共有の設定を許可するグループを指定します。たとえば <systemitem>users</systemitem> のように指定した場合はローカルのグループを、 <systemitem>ドメイン\ユーザ</systemitem> のように指定した場合はドメインのグループを指定することができます。また、共有を設定するには、ファイルシステム側のアクセス権で許可しておかなければならないことにも注意してください。このほか、 <guimenu>最大共有数</guimenu> を指定することで、作成することのできる共有数の最大値を制限することができます。認証を行なわずにユーザの作成した共有にアクセスできるようにするには、 <guimenu>ゲストアクセスを許可</guimenu> を選択してください。 <!-- Bug 579993 is this option gone? --></para>
     </sect4>
     <sect4 xml:id="sec.samba.yast2.conf.adv.identity">
      <title>識別情報</title>
      <para><guimenu>識別情報</guimenu> タブでは、ホストの所属するドメイン (<guimenu>基本設定</guimenu>) やネットワーク内での代替ホスト名の使用 (<guimenu>NetBIOS ホスト名</guimenu>) を設定することができます。 <!-- [x] Retrieve WINS server via DHCP [ ] Use WINS for Hostname Resolution--> このほか、名前解決に対して Microsoft Windows Internet Name Service (WINS) を使用するよう設定することもできます。この場合は、 <guimenu>ホスト名の解決に WINS を使用する</guimenu> を選択し、 <guimenu>DHCP で WINS サーバのアドレスを取得</guimenu> を必要に応じて選択してください。 <phrase os="sles;osuse">TDB データベースではなく LDAP を使用するような場合など、</phrase> より高度なグローバル設定やユーザ認証設定を行ないたい場合は、 <guimenu>詳細設定</guimenu> を押します。</para>
-<!--<figure id="fig.yast2.samba.names">
-      <title>Samba
-      Configuration&mdash;Identity</title>
-      <mediaobject>
-      <imageobject role="fo">
-      <imagedata fileref="yast2_samba_names.png" width="75%" format="PNG"/>
-     </imageobject>
-      <imageobject role="html">
-      <imagedata fileref="yast2_samba_names.png" width="75%" format="PNG"/>
-     </imageobject>
-     </mediaobject>
-     </figure>
-      -->
     </sect4>
     <sect4 xml:id="sec.samba.yast2.conf.adv.trusted">
      <title>信頼するドメイン</title>
@@ -208,7 +186,7 @@
    </sect3>
   </sect2>
 
-  <sect2 xml:id="sec.samba.serv.inst.manual" os="sles;osuse">
+  <sect2 xml:id="sec.samba.serv.inst.manual">
    <title>手作業によるサーバの設定</title>
    <para>Samba をサーバとして使用したい場合は、 <systemitem class="resource">samba</systemitem> をインストールしてください。 Samba のメインの設定ファイルは <filename>/etc/samba/smb.conf</filename> です。このファイルは論理的に 2 つのパートから構成されていて、 <literal>[global]</literal> セクションには全体的な設定が含まれています。また、下記の既定のセクションには、個別のファイルおよびプリンタの共有が含まれています:</para>
    <itemizedlist mark="bullet" spacing="normal">
@@ -397,6 +375,77 @@
    <para><guimenu>熟練者向け設定</guimenu> を押すと、より高度な設定オプションにアクセスすることができます。たとえば <guimenu>サーバディレクトリのマウント</guimenu> の表では、サーバのホームディレクトリを認証を指定して自動的にマウントする設定を行なうことができます。この方法により、 CIFS で提供されているホームディレクトリに対して、ユーザがアクセスできるようになります。詳しくは <systemitem>pam_mount</systemitem> のマニュアルページをお読みください。</para>
    <para>全ての設定が完了したら、 <guimenu>OK</guimenu> を押して閉じることで設定を保存することができます。</para>
   </sect2>
+  <sect2 xml:id="sec.samba.client.old-server">
+   <title>Mounting SMB1 Shares on Clients</title>
+   <para>
+    The first version of the SMB network protocol, SMB1, is an old and
+    insecure protocol which has been deprecated by its originator, Microsoft.
+    For security reasons, the <command>mount</command> command on
+    &productname; will only mount SMB shares using newer protocol versions
+    by default, namely SMB 2.1, SMB 3.0, or SMB 3.02.
+   </para>
+   <para>
+    However, this change only affects <command>mount</command> and mounting via
+    <filename>/etc/fstab</filename>. SMB1 is still available by default when
+    using the following:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      The <command>smbclient</command> tool.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The Samba server software shipped with
+      <!-- NB: profiling below is intentional - we don't support using SLED
+      as a Samba server. -->
+      <phrase os="sles;sled">&sls;</phrase><phrase os="osuse">&opensuse;</phrase>.
+     </para>
+    </listitem>
+   </itemizedlist>
+   <para>
+    There are setups in which this default setting will lead to connection
+    failures, because only SMB1 can be used:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Setups using an SMB server that does not support newer SMB protocol
+      versions. Windows has offered SMB 2.1 support since Windows 7 and
+      Windows Server 2008.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Setups that rely on SMB1's/CIFS's Unix extensions. These extensions have
+      not been ported to newer protocol versions.
+     </para>
+    </listitem>
+   </itemizedlist>
+   <important>
+    <title>Decreased System Security</title>
+    <para>
+     Following the instruction below makes it possible to exploit security
+     issues. For more information about the issues, see
+     <link xlink:href="https://blogs.technet.microsoft.com/filecab/2016/09/16/stop-using-smb1/"/>.
+    </para>
+    <para>
+     As soon as possible, upgrade your server to allow for a more secure SMB
+     version.
+    </para>
+    <para os="sles;osuse">
+     For information about enabling suitable protocol versions on &productname;,
+     see <xref linkend="sec.samba.server.new-protocol"/>.
+    </para>
+   </important>
+   <para>
+    If you need to enable SMB1 shares on the current &productname;
+    kernel, add the option <option>vers=1.0</option> to the
+    <command>mount</command> command line you use:
+   </para>
+   <screen>&prompt.root;mount –t smbfs <replaceable>IP_ADDRESS</replaceable>:/<replaceable>SHARE</replaceable> /<replaceable>MOUNT_POINT</replaceable> –o username=<replaceable>USER_ID</replaceable>,workgroup=<replaceable>WORKGROUP_NAME</replaceable>,<emphasis role="bold">vers=1.0</emphasis></screen>
+  </sect2>
  </sect1>
  <sect1 xml:id="sec.samba.anmeld.serv">
   <title>ログインサーバとしての Samba</title>
@@ -449,7 +498,7 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
        <imagedata fileref="ad_sambaclient.png" width="75%" format="PNG"/>
       </imageobject>
       <imageobject role="html">
-       <imagedata fileref="ad_sambaclient.png" width="75%" format="PNG"/>
+       <imagedata fileref="ad_sambaclient.png" format="PNG"/>
       </imageobject>
      </mediaobject>
     </figure>
@@ -483,10 +532,10 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
     <title>Windows エクスプローラの <guimenu>属性の詳細</guimenu> ダイアログ</title>
     <mediaobject>
      <imageobject role="fo">
-      <imagedata fileref="samba_win_expl_advattr.png" width="30%" format="PNG"/>
+      <imagedata fileref="samba_win_expl_advattr.png" width="75%" format="PNG"/>
      </imageobject>
      <imageobject role="html">
-      <imagedata fileref="samba_win_expl_advattr.png" width="30%" format="PNG"/>
+      <imagedata fileref="samba_win_expl_advattr.png" format="PNG"/>
      </imageobject>
     </mediaobject>
    </figure>
@@ -496,10 +545,10 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
     <title>圧縮されたファイルに対する Windows エクスプローラのディレクトリ一覧表示</title>
     <mediaobject>
      <imageobject role="fo">
-      <imagedata fileref="samba_win_expl_view_compressed.png" width="30%" format="PNG"/>
+      <imagedata fileref="samba_win_expl_view_compressed.png" width="75%" format="PNG"/>
      </imageobject>
      <imageobject role="html">
-      <imagedata fileref="samba_win_expl_view_compressed.png" width="30%" format="PNG"/>
+      <imagedata fileref="samba_win_expl_view_compressed.png" format="PNG"/>
      </imageobject>
     </mediaobject>
    </figure>
@@ -537,10 +586,10 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
      <title>スナップショットを有効化した新しい Samba 共有の追加</title>
      <mediaobject>
       <imageobject role="fo">
-       <imagedata fileref="yast2_samba_snapshot.png" width="70%" format="PNG"/>
+       <imagedata fileref="yast2_samba_snapshot.png" width="75%" format="PNG"/>
       </imageobject>
       <imageobject role="html">
-       <imagedata fileref="yast2_samba_snapshot.png" width="75%" format="PNG"/>
+       <imagedata fileref="yast2_samba_snapshot.png" format="PNG"/>
       </imageobject>
      </mediaobject>
     </figure>
@@ -549,10 +598,10 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
      <title>Windows エクスプローラでの <guimenu>以前のバージョン</guimenu> タブ</title>
      <mediaobject>
       <imageobject role="fo">
-       <imagedata fileref="samba_winexpl_previous_versions.png" width="70%" format="PNG"/>
+       <imagedata fileref="samba_winexpl_previous_versions.png" width="75%" format="PNG"/>
       </imageobject>
       <imageobject role="html">
-       <imagedata fileref="samba_winexpl_previous_versions.png" width="75%" format="PNG"/>
+       <imagedata fileref="samba_winexpl_previous_versions.png" format="PNG"/>
       </imageobject>
      </mediaobject>
     </figure>
@@ -748,8 +797,52 @@ DISKSHADOW&gt; list shadows all
  <sect1 xml:id="sec.samba.info">
   <title>さらなる情報</title>
 
-  <para>Samba 向けのドキュメンテーションは、既定ではインストールされない <systemitem>samba-doc</systemitem> パッケージ内に含まれています。インストールを行ないたい場合は、 <command>zypper install samba-doc</command> を実行してください。コマンドラインで <command>apropos</command> <option>samba</option> と入力して実行するとマニュアルページの一覧を表示することができるほか、 <filename>/usr/share/doc/packages/samba</filename> ディレクトリ内には、さらなるオンライン文書と設定例が用意されています。また <filename>examples</filename> サブディレクトリ内には、コメント付きの設定サンプル ( <filename>smb.conf.SUSE</filename> ) も用意されています。このほか、 Samba 関連の情報として <filename>/usr/share/doc/packages/samba/README.SUSE</filename> ファイルもあります。</para>
-
-  <para>Samba チームが提供する Samba HOWTO (<link xlink:href="https://wiki.samba.org"/>) には、主にトラブルシューティングの情報が提供されています。これに加えて、設定をチェックするための手順を追った説明も用意されています。</para>
+  <itemizedlist>
+   <listitem>
+    <formalpara>
+     <title>Man Pages:</title>
+     <para>
+      To see a list of all man pages installed with the package
+      <package>samba</package>, run <command>apropos samba</command>.
+      Open any of the man pages with
+      <command>man <replaceable>NAME_OF_MAN_PAGE</replaceable></command>.
+     </para>
+    </formalpara>
+   </listitem>
+   <listitem>
+    <formalpara>
+     <title>&suse;-specific README file:</title>
+     <para>
+      The package <package>samba-client</package> contains the file
+      <filename>/usr/share/doc/packages/samba/README.SUSE</filename>.
+     </para>
+    </formalpara>
+   </listitem>
+   <listitem>
+    <formalpara>
+     <title>Additional Packaged Documentation:</title>
+     <para>
+      Install the package <systemitem>samba-doc</systemitem> with
+      <command>zypper install samba-doc</command>.
+     </para>
+    </formalpara>
+    <para>
+     This documentation installs into
+     <filename>/usr/share/doc/packages/samba</filename>. It contains an HTML
+     version of the man pages and a library of example configurations
+     (such as <filename>smb.conf.SUSE</filename>).
+    </para>
+   </listitem>
+   <listitem>
+    <formalpara>
+     <title>Online Documentation:</title>
+     <para>
+      The Samba wiki contains extensive
+      <citetitle>User Documentation</citetitle> at
+      <link xlink:href="https://wiki.samba.org/index.php/User_Documentation"/>.
+     </para>
+    </formalpara>
+   </listitem>
+  </itemizedlist>
  </sect1>
 </chapter>
