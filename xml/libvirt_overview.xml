@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.libvirt.overview">
- <title>Starting and Stopping &libvirtd;</title>
+ <title>&libvirtd; の開始と停止</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
@@ -12,14 +12,7 @@
   </dm:docmanager>
  </info>
 
- <para>
-  The communication between the virtualization solutions (&kvm;, &xen;, &lxc;)
-  and the libvirt API is managed by the daemon &libvirtd;. It needs to run
-  on the &vmhost;. libvirt client applications such as virt-manager, possibly
-  running on a remote machine, communicate with &libvirtd; running on the
-  &vmhost;, which services the request using native hypervisor APIs. Use the
-  following commands to start and stop &libvirtd; or check its status:
- </para>
+ <para>仮想化ソリューション (&kvm;, &xen;, &lxc;) と libvirt API との間の通信は、 &libvirtd; デーモンが管理します。このデーモンは &vmhost; 内で動作させる必要がありますが、 virt-manager などの libvirt クライアントアプリケーションはリモートのマシンでも動作させることができます。このクライアントは &vmhost; 内で動作する &libvirtd; と通信を行ない、 &libvirtd; が実際のネイティブなハイパーバイザに対して要求を送信します。 &libvirtd; の開始や停止、もしくは状態確認を行ないたい場合は、下記のように入力して実行します:</para>
  <screen>&prompt.sudo;systemctl start libvirtd
 
 &prompt.sudo;systemctl status libvirtd
@@ -34,39 +27,19 @@ Active: active (running) since Mon 2014-05-12 08:49:40 EDT; 2s ago
 [...]
 Active: inactive (dead) since Mon 2014-05-12 08:51:11 EDT; 4s ago
 [...]</screen>
- <para>
-  To automatically start &libvirtd; at boot time, either activate it using the
-  &yast; <guimenu>&ycc_runlevel;</guimenu> module or by entering the following
-  command:
- </para>
+ <para>システムの起動時に &libvirtd; を開始するように設定したい場合は、 &yast; の <guimenu>&ycc_runlevel;</guimenu> モジュールを使用するか、もしくは下記のように入力して実行します:</para>
  <screen>&prompt.sudo;systemctl enable libvirtd</screen>
 
  <important>
-  <title>Conflicting Services: <systemitem class="daemon">libvirtd</systemitem>
-  and <systemitem class="daemon">xendomains</systemitem></title>
-  <para>
-   If <systemitem class="daemon">libvirtd</systemitem> fails to start,
-   check if the service <systemitem class="daemon">xendomains</systemitem> is
-   loaded:
-  </para>
+  <title>矛盾関係にある <systemitem class="daemon">libvirtd</systemitem> と <systemitem class="daemon">xendomains</systemitem> のサービスについて</title>
+  <para><systemitem class="daemon">libvirtd</systemitem> を開始してもエラーになってしまう場合は、まず <systemitem class="daemon">xendomains</systemitem> サービスが開始されていないかどうかを確認してください:</para>
   <screen>&prompt.user;systemctl is-active xendomains
 active</screen>
-  <para>
-   If the command returns <literal>active</literal>, you need to stop
-   <systemitem class="daemon">xendomains</systemitem> before you can
-   start the <systemitem class="daemon">libvirtd</systemitem> daemon. If
-   you want <systemitem class="daemon">libvirtd</systemitem> to also start
-   after rebooting, additionally prevent <systemitem class="daemon">xendomains</systemitem> from starting automatically. Disable
-   the service:
-  </para>
+  <para>上記のコマンドが <literal>active</literal> を返した場合、 <systemitem class="daemon">libvirtd</systemitem> を開始するには、事前に <systemitem class="daemon">xendomains</systemitem> を停止させる必要があります。また、システムの起動時に <systemitem class="daemon">libvirtd</systemitem> を開始したい場合は、これに加えて <systemitem class="daemon">xendomains</systemitem> が自動的に開始されないように設定する必要もあります。具体的には、下記のように入力して実行してください:</para>
   <screen>&prompt.sudo;systemctl stop xendomains
 &prompt.sudo;systemctl disable xendomains
 &prompt.sudo;systemctl start libvirtd</screen>
-  <para>
-   <systemitem class="daemon">xendomains</systemitem> and <systemitem class="daemon">libvirtd</systemitem> provide the same service and when used
-   in parallel may interfere with one another. As an example, <systemitem class="daemon">xendomains</systemitem> may attempt to start a domU already
-   started by <systemitem class="daemon">libvirtd</systemitem>.
-  </para>
+  <para><systemitem class="daemon">xendomains</systemitem> と <systemitem class="daemon">libvirtd</systemitem> は同一のサービスを提供するものであり、同時に使用しようとすると、互いに競合する結果になります。たとえば <systemitem class="daemon">libvirtd</systemitem> によって domU が起動されている場合でも、 <systemitem class="daemon">xendomains</systemitem> を開始すると、 domU を再度起動しようとしてしまいます。</para>
  </important>
 
 
