@@ -131,7 +131,7 @@
 
   <para>インストールを行なっていない場合は、まず <package>squid</package> パッケージをインストールします。なお、 &productnamereg; の既定の状態では、 <systemitem>squid</systemitem> はインストールされません。</para>
 
-  <para>squid は &productname; 側であらかじめ設定済みです。インストールを行なったあとであれば、すぐに開始することができます。なお、開始の処理を円滑に進めるため、少なくとも 1 つ以上のネームサーバを設定し、インターネットに接続可能になるようネットワークを設定しておいてください。動的な DNS 設定でダイヤルアップ接続を行なっている場合、問題が発生する場合があります。この場合は、少なくとも 1 つ以上のネームサーバを固定で設定しておいてください。 squid では、 <filename>/etc/resolv.conf</filename> 内に DNS サーバの設定が存在しないと、開始することができません。</para>
+  <para>squid は &productname; 側であらかじめ設定済みです。インストールを行なったあとであれば、すぐに開始することができます。なお、開始の処理を円滑に進めるため、少なくとも 1 つ以上のネームサーバを設定し、インターネットに接続可能になるようネットワークを設定しておいてください。動的な DNS 設定でダイヤルアップ接続を行なっている場合、問題が発生する場合があります。この場合は、少なくとも 1 つ以上のネームサーバを固定で設定しておいてください。 squid では、 <filename>/var/run/netconfig/resolv.conf</filename> 内に DNS サーバの設定が存在しないと、開始することができません。</para>
 
   <sect2 xml:id="sec.squid.start.commands">
    <title>squid の開始</title>
@@ -212,7 +212,7 @@ Connection: close
     </listitem>
    </itemizedlist>
    <para>ローカルシステムや他のシステムから squid 経由でインターネットにアクセスできるようにするには、設定ファイル <filename>/etc/squid/squid.conf</filename> 内にある <option>http_access deny all</option> を <option>http_access allow all</option> に変更してください。ただし、この設定を実施すると、 squid は誰からもアクセスできるようになってしまうことに注意してください。アクセスできるユーザを制限したい場合は、 ACL (Access Control List; アクセス制御リスト) を設定して行ないます。また、設定ファイルを変更した場合は、 squid を再読み込みさせるか、再起動しなければなりません。 ACL について、詳しくは <xref linkend="sec.squid.acl"/> をお読みください。</para>
-   <para>squid が正しく開始できているにもかかわらず、しばらくして squid が停止してしまうような場合は、ネームサーバの設定が正しく行なわれていないか、 <filename>/etc/resolv.conf</filename> ファイルがそもそも存在していないことが考えられます。 squid では、開始時の問題を <filename>/var/log/squid/cache.log</filename> ファイル内に記録します。</para>
+   <para>squid が正しく開始できているにもかかわらず、しばらくして squid が停止してしまうような場合は、ネームサーバの設定が正しく行なわれていないか、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルがそもそも存在していないことが考えられます。 squid では、開始時の問題を <filename>/var/log/squid/cache.log</filename> ファイル内に記録します。</para>
   </sect2>
 
   <sect2 xml:id="sec.squid.stop">
@@ -260,8 +260,8 @@ Connection: close
     <varlistentry xml:id="vle.squid.dynamicdns">
      <term>動的に DNS 設定を取得している場合</term>
      <listitem>
-      <para>動的に DNS 設定を取得している場合、 DNS サーバの情報はインターネットの接続時にプロバイダ側から提供され、それにあわせてローカルの <filename>/etc/resolv.conf</filename> が自動的に調整されるようになっています。この動作は、 <filename>/etc/sysconfig/network/config</filename> 内の <constant>NETCONFIG_DNS_POLICY</constant> という sysconfig 変数で変更することができます。 &yast; sysconfig エディタなどを利用して、 <constant>NETCONFIG_DNS_POLICY</constant> を <constant>""</constant> に設定してください。</para>
-      <para>その後、 <filename>/etc/resolv.conf</filename> 内にローカルの DNS サーバを設定します。具体的には、 <systemitem class="domainname">localhost</systemitem> を意味する <systemitem class="ipaddress">127.0.0.1</systemitem> の IP アドレスを設定します。これにより、 squid は開始時にローカルのネームサーバを常に見つけられるようになります。</para>
+      <para>動的に DNS 設定を取得している場合、 DNS サーバの情報はインターネットの接続時にプロバイダ側から提供され、それにあわせてローカルの <filename>/var/run/netconfig/resolv.conf</filename> が自動的に調整されるようになっています。この動作は、 <filename>/etc/sysconfig/network/config</filename> 内の <constant>NETCONFIG_DNS_POLICY</constant> という sysconfig 変数で変更することができます。 &yast; sysconfig エディタなどを利用して、 <constant>NETCONFIG_DNS_POLICY</constant> を <constant>""</constant> に設定してください。</para>
+      <para>その後、 <filename>/var/run/netconfig/resolv.conf</filename> 内にローカルの DNS サーバを設定します。具体的には、 <systemitem class="domainname">localhost</systemitem> を意味する <systemitem class="ipaddress">127.0.0.1</systemitem> の IP アドレスを設定します。これにより、 squid は開始時にローカルのネームサーバを常に見つけられるようになります。</para>
       <remark>FIXME ke: check it. Do you have to set more variables?</remark>
       <para>また、プロバイダのネームサーバにアクセスできるようにするため、 <filename>/etc/named.conf</filename> 内の <systemitem>forwarders</systemitem> 以下に、 IP アドレスでプロバイダのネームサーバを指定します。動的に取得する環境の場合は、 sysconfig 変数の <constant>NETCONFIG_DNS_POLICY</constant> を <constant>auto</constant> にすることで、自動的に調整させることができるようになります。</para>
      </listitem>
@@ -269,7 +269,7 @@ Connection: close
     <varlistentry>
      <term>静的に DNS 設定を行なっている場合</term>
      <listitem>
-      <para>静的な DNS 設定の場合、接続を行なっても自動的に DNS の設定が更新されることはありません。そのため、 sysconfig 変数についても、特に変更を行なう必要はありません。しかしながら、 <xref linkend="vle.squid.dynamicdns"/> で説明しているとおり、 <filename>/etc/resolv.conf</filename> ファイルでローカルの DNS サーバを指定しておかなければなりません。これに加えて、 <filename>/etc/named.conf</filename> ファイル内の <systemitem>forwarders</systemitem> 以下に、 IP アドレスでプロバイダのネームサーバを指定してください。</para>
+      <para>静的な DNS 設定の場合、接続を行なっても自動的に DNS の設定が更新されることはありません。そのため、 sysconfig 変数についても、特に変更を行なう必要はありません。しかしながら、 <xref linkend="vle.squid.dynamicdns"/> で説明しているとおり、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルでローカルの DNS サーバを指定しておかなければなりません。これに加えて、 <filename>/etc/named.conf</filename> ファイル内の <systemitem>forwarders</systemitem> 以下に、 IP アドレスでプロバイダのネームサーバを指定してください。</para>
      </listitem>
     </varlistentry>
    </variablelist>
