@@ -4,34 +4,22 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" xml:base="libvirt_configuration_virsh.xml" version="5.0" xml:id="cha.libvirt.config_virsh">
- <title>Configuring Virtual Machines with virsh</title>
+ <title>virsh を利用した仮想マシンの設定</title>
  <info>
   <abstract>
-   <para>
-    You can use <command>virsh</command> to configure the &vmguest; in addition
-    to using the Virtual Machine Manager. <command>virsh</command> is a command
-    line tool that manages virtual machines created by VM software, such as
-    KVM, Xen, VMWare, and LXC. With <command>virsh</command>, you can control
-    the state of a VM, edit the configuration of a VM or even migrate a VM to
-    another host. The following section shows the management of a VM with
-    virsh. Examples include modifying memory allocation, input devices, CPU
-    settings, and video configuration.
-   </para>
+   <para>&vmguest; を設定するにあたっては、仮想マシンマネージャだけでなく <command>virsh</command> も使用することができます。 <command>virsh</command> は KVM や Xen, VMWare, LXC などの仮想化ソフトウエアで作成された仮想マシンを、管理するためのコマンドラインツールです。 <command>virsh</command> を利用することで、 VM の制御や設定の変更、他のホストへの移行などを行なうことができます。下記の章では、 virsh を利用した管理の方法について説明しています。作業例としては、メモリの割当量の変更や入力デバイスの変更、 CPU やビデオの設定などを行なっています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
   </dm:docmanager>
  </info>
  <sect1 xml:id="sec.libvirt.config.editing.virsh">
-  <title>Editing the VM Configuration</title>
+  <title>VM の設定変更</title>
 
-  <para>
-   The configuration of a VM is stored in a XML file in
-   <filename>/etc/libvirtd/qemu/</filename> and looks like this:
-  </para>
+  <para>仮想マシンの設定ファイルは <filename>/etc/libvirtd/qemu/</filename> 内に保存されていて、下記のような内容になっているはずです:</para>
 
   <example>
-   <title>Example XML Configuration file</title>
+   <title>XML 設定ファイルの例</title>
 <screen>
     &lt;domain type='kvm'&gt;
       &lt;name&gt;sles15&lt;/name&gt;
@@ -63,161 +51,91 @@
     </screen>
   </example>
 
-  <para>
-   If you want to edit the configuration of the &vmguest;, check if the guest
-   is offline:
-  </para>
+  <para>&vmguest; の設定を変更する場合は、まずシャットオフ状態になっているかどうかを確認します:</para>
 
 <screen>&prompt.sudo;<command>virsh list --inactive</command></screen>
 
-  <para>
-   If your &vmguest; is in this list, you can safely edit its configuration
-   with:
-  </para>
+  <para>上記のコマンドの実行結果に編集対象の &vmguest; が現われている場合は、そのまま設定を変更してかまいません:</para>
 
-<screen>&prompt.sudo;<command>virsh edit <replaceable>NAME_OF_VM_GUEST</replaceable></command>
+<screen>&prompt.sudo;<command>virsh edit <replaceable>VM_名</replaceable></command>
     </screen>
 
-  <para>
-   Before saving the changes, <command>virsh</command> validates your input
-   against a RelaxNG schema.
-  </para>
+  <para>なお設定の保存時には、 <command>virsh</command> が RelaxNG スキーマを利用して設定内容のチェックを行ないます。</para>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.machinetype.virsh">
-  <title>Changing the Machine Type</title>
+  <title>マシンの種類の変更</title>
 
-  <para>
-   When installing with the <command>virt-install</command> tool, the machine
-   type for a &vmguest; is <emphasis>pc-i440fx</emphasis> by default. The
-   machine type is stored in the &vmguest;'s configuration file in the
-   <tag>type</tag>
-   element:
-  </para>
+  <para><command>virt-install</command> ツールを利用してインストールを行なった場合、 &vmguest; のマシンの種類は、既定で <emphasis>pc-i440fx</emphasis> になります。マシンの種類も &vmguest; の設定ファイル内に含まれていて、 <tag>type</tag> というタグ要素内に書かれています:</para>
 
 <screen>&lt;type arch='x86_64' machine='pc-i440fx-2.3'&gt;hvm&lt;/type&gt;</screen>
 
-  <para>
-   As an example, the following procedure shows how to change this value to the
-   machine type <literal>q35</literal>. The value <literal>q35</literal> is an
-   Intel* chipset and includes <xref linkend="gloss.vt.acronym.pcie"/>,
-   supports up to 12 USB ports, and has support for
-   <xref linkend="gloss.vt.acronym.sata"/> and
-   <xref linkend="gloss.vt.acronym.iommu"/>.
-<!-- IRQ routing has also
-  been improved. -->
-  </para>
+  <para>下記の手順では、例としてマシンの種類を <literal>q35</literal> に変更します。 <literal>q35</literal> という値は Intel* 社のチップセットを表わす文字列で、 <xref linkend="gloss.vt.acronym.pcie"/> が含まれているほか、最大で 12 個までの USB ポートに対応し、 <xref linkend="gloss.vt.acronym.sata"/> や <xref linkend="gloss.vt.acronym.iommu"/> にも対応しています。 <!-- IRQ routing has also been improved. --></para>
 
   <procedure>
-   <title>Changing Machine Type</title>
+   <title>マシンの種類の変更</title>
    <step>
-    <para>
-     Check whether your &vmguest; is inactive:
-    </para>
+    <para>まずは &vmguest; が停止していることを確認します:</para>
 <screen>&prompt.sudo;<command>virsh list --inactive</command>
-Id    Name                           State
+Id    名前                           状態
 ----------------------------------------------------
--     sles15                         shut off</screen>
+-     sles15                         シャットオフ</screen>
    </step>
    <step>
-    <para>
-     Edit the configuration for this &vmguest;:
-    </para>
+    <para>この &vmguest; に対する設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para>
-     Replace the value of the
-     <tag class="attribute">machine</tag>
-     attribute with
-     <tag class="attvalue">pc-q35-2.0</tag>
-     :
-    </para>
+    <para>タグ内の <tag class="attribute">machine</tag> という属性の値を、 <tag class="attvalue">pc-q35-2.0</tag> に変更します:</para>
 <screen>&lt;type arch='x86_64' machine='pc-q35-2.0'&gt;hvm&lt;/type&gt;</screen>
    </step>
    <step>
-    <para>
-     Restart the &vmguest;:
-    </para>
+    <para>&vmguest; を起動し直します:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
    <step>
-    <para>
-     Check if the machine type has changed. Log in to the &vmguest; and run the
-     following command:
-    </para>
+    <para>マシンの種類が変更されていることを確認します。 &vmguest; を起動してログインし、下記のコマンドを実行します:</para>
 <screen>&prompt.sudo;<command>dmidecode | grep Product</command>
 Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
    </step>
   </procedure>
 
   <tip>
-   <title>Machine Type Update Recommendations</title>
-   <para>
-    Whenever the QEMU version on the host system is upgraded (for example, when
-    upgrading the &vmhost; to a new service pack), upgrade the machine
-    type of the &vmguest;s to the latest available version. To check, use the
-    command <command>qemu-system-x86_64 -M help</command> on the &vmhost;.
-   </para>
-   <para>
-    The default machine type <literal>pc-i440fx</literal>, for example, is
-    regularly updated. If your &vmguest; still runs with a machine type of
-    <literal>pc-i440fx-1.<replaceable>X</replaceable></literal>, we strongly
-    recommend an update to
-    <literal>pc-i440fx-2.<replaceable>X</replaceable></literal>. This allows
-    taking advantage of the most recent updates and corrections in machine
-    definitions, and ensures better future compatibility.
-   </para>
+   <title>マシンの種類を更新した際の推奨事項について</title>
+   <para>ホストシステム側の QEMU のバージョンをアップグレードした場合 (たとえば &vmhost; のディストリビューションのバージョンをアップグレードした場合など) 、 &vmguest; 側のマシンの種類についても、利用可能な最新版にアップグレードするようにしてください。どのような種類を指定できるのかを知りたい場合は、 &vmhost; 側で <command>qemu-system-x86_64 -M help</command> を実行してください。</para>
+   <para>また、既定で使用されるマシン種類 (<literal>pc-i440fx</literal>) なども、定期的に更新が行なわれます。お使いの &vmguest; が今も <literal>pc-i440fx-1.<replaceable>X</replaceable></literal> のマシン種類で動作している場合は、 <literal>pc-i440fx-2.<replaceable>X</replaceable></literal> にアップグレードすることを強くお勧めします。これにより、最新の更新内容を受けることができることになり、不具合の修正や将来の互換性維持に役立つことになります。</para>
   </tip>
  </sect1>
  <sect1 xml:id="libvirt.cpu_virsh">
-  <title>Configuring CPU Allocation</title>
+  <title>CPU 割り当ての設定</title>
 
-  <para>
-   The number of allocated CPUs is stored in the &vmguest;'s XML configuration
-   file in <filename>/etc/libvirt/qemu/</filename> in the
-   <tag class="attribute">vcpu</tag>
-   element:
-  </para>
+  <para>&vmguest; の CPU の割り当て数は、 <filename>/etc/libvirt/qemu/</filename> にある XML 設定ファイル内の <tag class="attribute">vcpu</tag> タグ内に書かれています:</para>
 
 <screen>&lt;vcpu placement='static'&gt;1&lt;/vcpu&gt;</screen>
 
-  <para>
-   In this example, the &vmguest; has only one allocated CPU. The following
-   procedure shows how to change the number of allocated CPUs for the &vmguest;:
-  </para>
+  <para>上記の例では、 &vmguest; 側には CPU を 1 つだけ割り当てていることになります。下記の手順では、 &vmguest; 側への CPU の割り当て数の変更方法を説明しています:</para>
 
   <procedure>
    <step>
-    <para>
-     Check whether your &vmguest; is inactive:
-    </para>
+    <para>まずは &vmguest; が停止していることを確認します:</para>
 <screen>&prompt.sudo;<command>virsh list --inactive</command>
-Id    Name                           State
+Id    名前                           状態
 ----------------------------------------------------
--     sles15                         shut off</screen>
+-     sles15                         シャットオフ</screen>
    </step>
    <step>
-    <para>
-     Edit the configuration for an existing &vmguest;:
-    </para>
+    <para>既存の &vmguest; に対する設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para>
-     Change the number of allocated CPUs:
-    </para>
+    <para>CPU の割り当て数を変更して保存します:</para>
 <screen>&lt;vcpu placement='static'&gt;2&lt;/vcpu&gt;</screen>
    </step>
    <step>
-    <para>
-     Restart the &vmguest;:
-    </para>
+    <para>&vmguest; を起動し直します:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
    <step>
-    <para>
-     Check if the number of the CPUs in the VM has changed.
-    </para>
+    <para>仮想マシンに対して割り当てられている CPU 数が変更されていることを確認します:</para>
 <screen>
 &prompt.sudo;<command>virsh vcpuinfo sled15</command>
 VCPU:           0
@@ -236,13 +154,9 @@ CPU Affinity:   yy
   </procedure>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.boot_menu.virsh">
-  <title>Changing Boot Options</title>
+  <title>起動オプションの変更</title>
 
-  <para>
-   The boot menu of the &vmguest; can be found in the
-   <tag>os</tag>
-   element and usually looks like this:
-  </para>
+  <para>&vmguest; の起動メニューの設定は <tag>os</tag> タグ内に含まれ、下記のような内容になっています:</para>
 
 <screen>&lt;os&gt;
   &lt;type&gt;hvm&lt;/type&gt;
@@ -255,36 +169,18 @@ CPU Affinity:   yy
   &lt;bios useserial='yes' rebootTimeout='0'/&gt;
   &lt;/os&gt;</screen>
 
-  <para>
-   In this example, two devices are available,
-   <tag class="attvalue">hd</tag>
-   and
-   <tag class="attvalue">cdrom</tag>
-   . The configuration also reflects the actual boot order, so the
-   <tag class="attvalue">cdrom</tag>
-   comes before the
-   <tag class="attvalue">hd</tag>
-   .
-  </para>
+  <para>上記の例では、 <tag class="attvalue">hd</tag> と <tag class="attvalue">cdrom</tag> という 2 つのデバイスが有効化されています。設定内容は実際の起動順序にも影響し、上記の例では <tag class="attvalue">hd</tag> よりも前に <tag class="attvalue">cdrom</tag> の起動が試されることになります。</para>
 
   <sect2 xml:id="sec.libvirt.config.bootorder.virsh">
-   <title>Changing Boot Order</title>
-   <para>
-    The &vmguest;'s boot order is represented through the order of devices in
-    the XML configuration file. As the devices are interchangeable, it is
-    possible to change the boot order of the &vmguest;.
-   </para>
+   <title>起動順序の変更</title>
+   <para>&vmguest; の起動順序は、 XML 設定ファイル内での出現順序で表わされます。つまり、デバイスのタグを入れ替えることで起動順序を変更できることになります。</para>
    <procedure>
     <step>
-     <para>
-      Open the &vmguest;'s XML configuration.
-     </para>
+     <para>&vmguest; の XML 設定ファイルを開きます。</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
     </step>
     <step>
-     <para>
-      Change the sequence of the bootable devices.
-     </para>
+     <para>デバイスの順序を入れ替えます。</para>
 <screen>
 ...
 &lt;boot dev='cdrom'/&gt;
@@ -293,137 +189,84 @@ CPU Affinity:   yy
       </screen>
     </step>
     <step>
-     <para>
-      Check if the boot order was changed successfully by looking at the boot
-      menu in the BIOS of the &vmguest;.
-     </para>
+     <para>&vmguest; の BIOS 設定内の起動メニューを確認して、起動順序が変更されていることを確認します。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.libvirt.config.directkernel.virsh">
-   <title>Using Direct Kernel Boot</title>
-   <para>
-    Direct Kernel Boot allows you to boot from a kernel and initrd stored on
-    the host. Set the path to both files in the
-    <tag>kernel</tag>
-    and
-    <tag>initrd</tag>
-    elements:
-   </para>
+   <title>直接カーネル起動の使用</title>
+   <para>直接カーネル起動を使用することで、ホスト内に保存されているカーネルと initrd を利用して起動を行なうことができます。この場合は、 <tag>kernel</tag> と <tag>initrd</tag> のタグを追加してファイルを指定します:</para>
 <screen>&lt;os&gt;
     ...
   &lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
   &lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
     ...
 &lt;os&gt;</screen>
-   <para>
-    To enable Direct Kernel Boot:
-   </para>
+   <para>直接カーネル起動を有効化するには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Open the &vmguest;'s XML configuration:
-     </para>
+     <para>&vmguest; の XML 設定を開きます:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
     </step>
     <step>
-     <para>
-      Inside the
-      <tag>os</tag>
-      element, add a
-      <tag>kernel</tag>
-      element and the path to the kernel file on the host:
-     </para>
+     <para><tag>os</tag> タグ内に <tag>kernel</tag> タグを追加し、ホスト側でのカーネルファイルのパスを指定します:</para>
 <screen>...
 &lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
 ...</screen>
     </step>
     <step>
-     <para>
-      Add an
-      <tag>initrd</tag>
-      element and the path to the initrd file on the host.
-     </para>
+     <para>同様に <tag>initrd</tag> タグを追加し、ホスト側での initrd ファイルのパスを指定します:</para>
 <screen>...
 &lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
 ...</screen>
     </step>
     <step>
-     <para>
-      Start your VM to boot from the new kernel.
-     </para>
+     <para>あとは仮想マシンを起動すると、新しいカーネルでの起動が行なわれます。</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
     </step>
    </procedure>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.memory.virsh">
-  <title>Configuring Memory Allocation</title>
+  <title>メモリ割り当ての設定</title>
 
-  <para>
-   The amount of memory allocated for the &vmguest; can also be configured with
-   virsh. It is stored in the
-   <tag>memory</tag>
-   element. Follow these steps:
-  </para>
+  <para>&vmguest; に対するメモリ割り当て量は、 virsh でも変更することができます。設定は <tag>memory</tag> タグ内に書かれています。変更を行なうには、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Open the &vmguest;'s XML configuration:
-    </para>
+    <para>&vmguest; の XML 設定を開きます:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para>
-     Search for the
-     <tag>memory</tag>
-     element and set the amount of allocated RAM:
-    </para>
+    <para><tag>memory</tag> タグを検索して、メモリの割り当て量を変更します:</para>
 <screen>...
 &lt;memory unit='KiB'&gt;524288&lt;/memory&gt;
 ...</screen>
    </step>
    <step>
-    <para>
-     Check the amount of allocated RAM in your VM by running:
-    </para>
+    <para>あとは仮想マシン内で、割り当てられているメモリ量を確認します:</para>
 <screen>&prompt.user;<command>cat /proc/meminfo</command></screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.pci.virsh">
-  <title>Adding a PCI Device</title>
+  <title>PCI デバイスの追加</title>
 
-  <para>
-   To assign a PCI device to &vmguest; with <command>virsh</command>, follow
-   these steps:
-  </para>
+  <para><command>virsh</command> を利用して &vmguest; に対して PCI デバイスを追加するには、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Identify the host PCI device to assign to the &vmguest;. In the following
-     example, we are assigning a DEC network card to the guest:
-    </para>
+    <para>まずは &vmguest; に割り当てるホスト側の PCI デバイスを識別します。下記の例では、 DEC 社のネットワークカードをゲストに割り当てようとしています:</para>
 <screen>&prompt.sudo;<command>lspci -nn</command>
 [...]
 <emphasis role="bold">03:07.0</emphasis> Ethernet controller [0200]: Digital Equipment Corporation DECchip \
 21140 [FasterNet] [1011:0009] (rev 22)
 [...]</screen>
-    <para>
-     Write down the device ID (<literal>03:07.0</literal> in this case).
-    </para>
+    <para>デバイス ID (上記の例では <literal>03:07.0</literal>) をメモしておきます。</para>
    </step>
    <step>
-    <para>
-     Gather detailed information about the device using <command>virsh
-     nodedev-dumpxml <replaceable>ID</replaceable></command>. To get the
-     <replaceable>ID</replaceable>, replace the colon and the period in the
-     device ID (<literal>03:07.0</literal>) with underscores. Prefix the result
-     with <quote>pci_0000_</quote>: <literal>pci_0000_03_07_0</literal>.
-    </para>
+    <para><command>virsh nodedev-dumpxml <replaceable>ID</replaceable></command> を実行して、デバイスに関する詳細情報を取得します。ここで <replaceable>ID</replaceable> にはデバイス ID (この例では <literal>03:07.0</literal> ) を指定しますが、コロン (:) とピリオド (.) をアンダースコア (_) に置き換え、かつ <quote>pci_0000_</quote> という前置きを置いた値 (この例では <literal>pci_0000_03_07_0</literal> になります) を指定して実行します:</para>
 <screen>&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_03_07_0</command>
 &lt;device&gt;
   &lt;name&gt;pci_0000_03_07_0&lt;/name&gt;
@@ -442,126 +285,63 @@ CPU Affinity:   yy
     &lt;numa node='0'/&gt;
   &lt;/capability&gt;
 &lt;/device&gt;</screen>
-    <para>
-     Write down the values for domain, bus, and function (see the previous XML
-     code printed in bold).
-    </para>
+    <para>出力された値の中から、 <tag>domain</tag>, <tag>bus</tag>, <!-- NOTE: slot? --> <tag>slot</tag>, <tag>function</tag> の値 (上記太字部分) をメモしておきます。</para>
    </step>
    <step>
-    <para>
-     Detach the device from the host system prior to attaching it to the
-     &vmguest;:
-    </para>
+    <para>&vmguest; に対して割り当てを行なう前に、 &vmhost; 側からの切り離しを行ないます:</para>
 <screen>&prompt.sudo;<command>virsh nodedev-detach pci_0000_03_07_0</command>
   Device pci_0000_03_07_0 detached</screen>
     <tip>
-     <title>Multi-Function PCI Devices</title>
-     <para>
-      When using a multi-function PCI device that does not support FLR
-      (function level reset) or PM (power management) reset, you need to detach
-      all its functions from the &vmhost;. The whole device must be reset
-      for security reasons. <systemitem>libvirt</systemitem> will refuse to
-      assign the device if one of its functions is still in use by the &vmhost;
-      or another &vmguest;.
-     </para>
+     <title>多機能型 PCI デバイスについて</title>
+     <para>FLR (Function Level Reset; 機能レベルリセット) や PM (Power Management; 電源管理) リセットに対応していない多機能型の PCI デバイスを使用している場合、 &vmguest; 側に割り当てるには、 &vmhost; 側で全ての機能を切り離す必要があります。また、セキュリティ上の理由から、デバイス全体をリセットする必要があります。 <systemitem>libvirt</systemitem> では、 &vmhost; 側もしくは他の &vmguest; 側で機能の一部が使用されている場合、その割り当てを拒否するようになっています。</para>
     </tip>
    </step>
    <step>
-    <para>
-     Convert the domain, bus, slot, and function value from decimal to
-     hexadecimal. In our example, domain = 0, bus = 3, slot = 7, and function =
-     0. Ensure that the values are inserted in the right order:
-    </para>
-<screen>&prompt.user;<command>printf "&lt;address domain='0x%x' bus='0x%x' slot='0x%x' function='0x%x'/&gt;\n" 0 3 7 0</command></screen>
-    <para>
-     This results in:
-    </para>
+    <para>domain, bus, slot, function の各値を 16 進数に変換します。上記の例では、 domain = 0, bus = 3, slot = 7, function = 0 ですので、下記のようなコマンドを実行して変換を行ないます。なお、指定の順序を間違えないようにしてください:</para>
+<screen>&prompt.user;<command>printf "&lt;address domain='0x%x' bus='0x%x' slot='0x%x' function='0x%x'/&gt;
+" 0 3 7 0</command></screen>
+    <para>上記を実行すると、下記のように出力されるはずです:</para>
 <screen>&lt;address domain='0x0' bus='0x3' slot='0x7' function='0x0'/&gt;</screen>
    </step>
    <step>
-    <para>
-     Run <command>virsh edit</command> on your domain, and add the following
-     device entry in the <literal>&lt;devices&gt;</literal> section using the
-     result from the previous step:
-    </para>
+    <para>あとは対象の &vmguest; の設定ファイルを <command>virsh edit</command> で編集して、上記の手順の出力結果を <literal>&lt;devices&gt;</literal> タグ内に貼り付けます:</para>
 <screen>&lt;hostdev mode='subsystem' type='pci' managed='yes'&gt;
   &lt;source&gt;
     &lt;address domain='0x0' bus='0x03' slot='0x07' function='0x0'/&gt;
   &lt;/source&gt;
 &lt;/hostdev&gt;</screen>
     <tip xml:id="tip.libvirt.config.pci.virsh.managed">
-     <title><literal>managed</literal> Compared to <literal>unmanaged</literal></title>
-     <para>
-      <systemitem>libvirt</systemitem> recognizes two modes for handling PCI
-      devices: they can be either <literal>managed</literal> or
-      <literal>unmanaged</literal>. In the managed case,
-      <systemitem>libvirt</systemitem> handles all details of unbinding the
-      device from the existing driver if needed, resetting the device, binding
-      it to <systemitem>vfio-pci</systemitem> before starting the domain, etc.
-      When the domain is terminated or the device is removed from the domain,
-      <systemitem>libvirt</systemitem> unbinds from
-      <systemitem>vfio-pci</systemitem> and rebinds to the original driver in
-      the case of a managed device. If the device is unmanaged, the user must
-      ensure all of these management aspects of the device are done before
-      assigning it to a domain, and after the device is no longer used by the
-      domain.
-     </para>
+     <title><literal>managed</literal> と <literal>unmanaged</literal> の違いについて</title>
+     <para><systemitem>libvirt</systemitem> では、 PCI デバイスの処理方法を 2 種類 (<literal>managed</literal> と <literal>unmanaged</literal>) 用意しています。 <literal>managed</literal> の場合、 <systemitem>libvirt</systemitem> は必要に応じて既存のドライバからデバイスを切り離す処理からデバイスのリセット、仮想マシンを起動する前の <systemitem>vfio-pci</systemitem> への接続など、全ての詳細処理を制御するようになります。また、仮想マシンが終了した場合や仮想マシンからデバイスを切り離した場合、 <systemitem>libvirt</systemitem> は <systemitem>vfio-pci</systemitem> への接続を解除して元のドライバに再接続する処理までを行なうようになります。逆に <literal>unmanaged</literal> の場合、 <systemitem>libvirt</systemitem> はそれらの処理を行なわず、仮想マシンにハードウエアを割り当てる際と、仮想マシンからハードウエアを切り離す際には、それらの処理をユーザ側で行なわなければなりません。</para>
     </tip>
-    <para>
-     In the example above, the <literal>managed='yes'</literal> option means
-     that the device is managed. To switch the device mode to unmanaged, set
-     <literal>managed='no'</literal> in the listing above. If you do so, you
-     need to take care of the related driver with the <command>virsh
-     nodedev-detach</command> and <command>virsh nodedev-reattach</command>
-     commands. Prior to starting the &vmguest; you need to detach the device
-     from the host by running <command>virsh nodedev-detach
-     pci_0000_03_07_0</command>. In case the &vmguest; is not running, you can
-     make the device available for the host by running <command>virsh
-     nodedev-reattach pci_0000_03_07_0</command>.
-    </para>
+    <para>上記の例では <literal>managed='yes'</literal> を指定しているため、 <literal>managed</literal> を選択していることになります。 <literal>unmanaged</literal> に切り替えたい場合は、これを <literal>managed='no'</literal> に変更してください。なお、この場合は <command>virsh nodedev-detach</command> や <command>virsh nodedev-reattach</command> のコマンドを利用して、対応するドライバに対する処理を行なう必要があります。具体的には、 &vmguest; を起動する前に <command>virsh nodedev-detach pci_0000_03_07_0</command> を実行してホスト側から切り離し、終了後には <command>virsh nodedev-reattach pci_0000_03_07_0</command> を実行して、ホスト側で認識できるように再設定する必要があります。</para>
    </step>
    <step>
-    <para>
-     Shut down the &vmguest; and disable &selnx; if it is running on the host.
-    </para>
+    <para>ホスト側で &selnx; が動作している場合は、 &vmguest; をシャットダウンして &selnx; を無効化します。</para>
 <screen>&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command></screen>
    </step>
    <step>
-    <para>
-     Start your &vmguest; to make the assigned PCI device available.
-    </para>
+    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた PCI デバイスにアクセスできるようになります。</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.usb.virsh">
-  <title>Adding a USB Device</title>
+  <title>USB デバイスの追加</title>
 
-  <para>
-   To assign a USB device to &vmguest; using <command>virsh</command>, follow
-   these steps:
-  </para>
+  <para>USB デバイスを &vmguest; に割り当てるには、 <command>virsh</command> を使用して下記のように実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Identify the host USB device to assign to the &vmguest;:
-    </para>
+    <para>&vmguest; に接続されている USB デバイスを識別します:</para>
 <screen>&prompt.sudo;<command>lsusb</command>
 [...]
 Bus 001 Device 003: ID <emphasis role="bold">0557:2221</emphasis> ATEN International Co., Ltd Winbond Hermon
 [...]</screen>
-    <para>
-     Write down the vendor and product IDs. In our example, the vendor ID is
-     <literal>0557</literal> and the product ID is <literal>2221</literal>.
-    </para>
+    <para>出力された ID をメモしておきます。上記の例では、製造元 ID が <literal>0557</literal> 、製品 ID が <literal>2221</literal> となります。</para>
    </step>
    <step>
-    <para>
-     Run <command>virsh edit</command> on your domain, and add the following
-     device entry in the <literal>&lt;devices&gt;</literal> section using the
-     values from the previous step:
-    </para>
+    <para>仮想マシンに対して <command>virsh edit</command> を実行し、下記の内容を <literal>&lt;devices&gt;</literal> タグ内に追加します。このとき、 vendor と product の箇所にそれぞれメモした値を指定します:</para>
 <screen>&lt;hostdev mode='subsystem' type='usb'&gt;
   &lt;source startupPolicy='optional'&gt;
    <emphasis role="bold">&lt;vendor id='0557'/&gt;
@@ -569,253 +349,134 @@ Bus 001 Device 003: ID <emphasis role="bold">0557:2221</emphasis> ATEN Internati
   &lt;/source&gt;
 &lt;/hostdev&gt;</screen>
     <tip>
-     <title>Vendor/Product or Device's Address</title>
-     <para>
-      Instead of defining the host device with
-      <tag class="emptytag">vendor</tag>
-      and
-      <tag class="emptytag">product</tag>
-      IDs, you can use the
-      <tag class="emptytag">address</tag>
-      element as described for host PCI devices in
-      <xref linkend="sec.libvirt.config.pci.virsh"/>.
-     </para>
+     <title>製造元 (vendor) と製品 (product) の指定ではなく、デバイスのアドレス (address) を設定する方法について</title>
+     <para><tag class="emptytag">vendor</tag> および <tag class="emptytag">product</tag> の ID を指定する方法のほかにも、 <xref linkend="sec.libvirt.config.pci.virsh"/> で PCI デバイスを割り当てる際の説明と同様に、 <tag class="emptytag">address</tag> タグを利用して割り当てる方法もあります。</para>
     </tip>
    </step>
    <step>
-    <para>
-     Shut down the &vmguest; and disable &selnx; if it is running on the host.
-     available.
-    </para>
+    <para>ホスト側で &selnx; が動作している場合は、 &vmguest; をシャットダウンして &selnx; を無効化します。</para>
 <screen>&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command></screen>
    </step>
    <step>
-    <para>
-     Start your &vmguest; to make the assigned PCI device available
-    </para>
+    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた <!-- NOTE: "USB"? --> デバイスにアクセスできるようになります。</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.io">
-  <title>Adding SR-IOV Devices</title>
+  <title>SR-IOV デバイスの追加</title>
 
-  <para>
-   Single Root I/O Virtualization (<xref linkend="vt.io.sriov"/>) capable
-   <xref linkend="gloss.vt.acronym.pcie"/> devices can replicate their
-   resources, so they appear to be multiple devices. Each of these
-   <quote>pseudo-devices</quote> can be assigned to a &vmguest;.
-  </para>
+  <para>Single Root I/O Virtualization ( <xref linkend="vt.io.sriov"/> ) に対応した <xref linkend="gloss.vt.acronym.pcie"/> デバイスは、リソースを複製することができるため、複数のデバイスとして振る舞うことができます。複製されたリソースは <quote>擬似デバイス</quote> として、 &vmguest; への割り当てを行なうことができます。</para>
 
-  <para>
-   <xref linkend="vt.io.sriov"/> is an industry specification that was created
-   by the Peripheral Component Interconnect Special Interest Group (PCI-SIG)
-   consortium. It introduces physical functions (PF) and virtual functions
-   (VF). PFs are full <xref linkend="gloss.vt.acronym.pcie"/> functions used to
-   manage and configure the device. PFs also can move data. VFs lack the
-   configuration and management part—they only can move data and a reduced
-   set of configuration functions. As VFs do not have all
-   <xref linkend="gloss.vt.acronym.pcie"/> functions, the host operating system
-   or the <xref linkend="gloss.vt.hypervisor"/> must support
-   <xref linkend="vt.io.sriov"/> to be able to access and initialize VFs. The
-   theoretical maximum for VFs is 256 per device (consequently the maximum for
-   a dual-port Ethernet card would be 512). In practice this maximum is much
-   lower, since each VF consumes resources.
-  </para>
+  <para><xref linkend="vt.io.sriov"/> は Peripheral Component Interconnect Special Interest Group (PCI-SIG) が作成した工業仕様で、物理機能 (Physical Functions (PF)) と仮想機能 (Virtual Functions (VF)) を提供しています。 PF はデバイスを管理したり設定したりするための完全な <xref linkend="gloss.vt.acronym.pcie"/> 機能で、データの移動も行なうことができます。それに対して VF 側には管理部分が提供されておらず、データの移動と設定機能の一部のみが提供されています。 VF は全ての <xref linkend="gloss.vt.acronym.pcie"/> 機能を持っているわけではないので、ホスト側のオペレーティングシステムもしくは <xref linkend="gloss.vt.hypervisor"/> が <xref linkend="vt.io.sriov"/> に対応し、 VF へのアクセスと初期化を行なわなければなりません。論理上の VF の最大数は、 1 デバイスあたり 256 個まで (たとえば 2 ポートのイーサネットカードであれば 512 個) になります。実際には各 VF がリソースを消費してしまうことから、この最大値はもっとずっと小さくなります。</para>
 
   <sect2 xml:id="sec.libvirt.config.io.requirements">
-   <title>Requirements</title>
-   <para>
-    The following requirements must be met to use
-    <xref linkend="vt.io.sriov"/>:
-   </para>
+   <title>要件</title>
+   <para><xref linkend="vt.io.sriov"/> を使用するには、下記の要件を全て満たさなければなりません:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      An <xref linkend="vt.io.sriov"/>-capable network card (as of
-      <phrase role="productname"><phrase os="sles">SUSE Linux Enterprise
-      Server</phrase></phrase>
-      <phrase role="productnumber"><phrase os="sles;sled">15</phrase></phrase>,
-      only network cards support <xref linkend="vt.io.sriov"/>)
-     </para>
+     <para><xref linkend="vt.io.sriov"/> に対応したネットワークカードを用意すること (&productname; ではネットワークカードのみに対応しています) 。</para>
     </listitem>
     <listitem>
-     <para>
-      An AMD64/Intel 64 host supporting hardware virtualization (AMD-V or
-      Intel VT-x)<phrase os="sles;sled">, see
-      <xref linkend="sec.kvm.requires.hardware"/> for more information</phrase>
-     </para>
+     <para>AMD64/Intel 64 でハードウエア仮想化 (AMD-V もしくは Intel VT-x) に対応していること。 <phrase os="sles;sled">詳しくは <xref linkend="sec.kvm.requires.hardware"/> をお読みください。</phrase></para>
     </listitem>
     <listitem>
-     <para>
-      A chipset that supports device assignment (AMD-Vi or Intel
-      <xref linkend="gloss.vt.acronym.vtd"/>)
-     </para>
+     <para>デバイスの割り当て (AMD-Vi もしくは Intel <xref linkend="gloss.vt.acronym.vtd"/>) に対応したチップセットであること。</para>
     </listitem>
     <listitem>
-     <para>
-      &libvirt; 0.9.10 or better
-     </para>
+     <para>&libvirt; 0.9.10 もしくはそれ以降が存在すること。</para>
     </listitem>
     <listitem>
-     <para>
-      <xref linkend="vt.io.sriov"/> drivers must be loaded and configured on
-      the host system
-     </para>
+     <para>ホストシステム内で <xref linkend="vt.io.sriov"/> ドライバが読み込まれ、設定されていること。</para>
     </listitem>
     <listitem>
-     <para>
-      A host configuration that meets the requirements listed at
-      <xref linkend="ann.vt.io.require"/>
-     </para>
+     <para>ホスト側の設定が <xref linkend="ann.vt.io.require"/> に示されている要件を満たしていること。</para>
     </listitem>
     <listitem>
-     <para>
-      A list of the PCI addresses of the VF(s) that will be assigned to
-      &vmguest;s
-     </para>
+     <para>&vmguest; に割り当てる予定の VF の PCI アドレスの一覧を用意していること。</para>
     </listitem>
    </itemizedlist>
    <tip>
-    <title>Checking if a Device is SR-IOV-Capable</title>
-    <para>
-     The information whether a device is SR-IOV-capable can be obtained from
-     its PCI descriptor by running <command>lspci</command>. A device that
-     supports <xref linkend="vt.io.sriov"/> reports a capability similar to the
-     following:
-    </para>
+    <title>デバイスが SR-IOV に対応しているかどうかの確認方法</title>
+    <para>デバイスが <xref linkend="vt.io.sriov"/> に対応しているかどうかは、 <command>lspci <!-- NOTE: "-v" is required? -->-v</command> を実行して表示される情報から判断することができます。 <xref linkend="vt.io.sriov"/> に対応するデバイスである場合、下記のような表示が現われるはずです:</para>
 <screen>Capabilities: [160 v1] Single Root I/O Virtualization (<xref linkend="vt.io.sriov"/>)</screen>
    </tip>
    <note>
-    <title>Adding an SR-IOV Device at &vmguest; Creation</title>
-    <para>
-     Before adding an SR-IOV device to a &vmguest; when initially setting it up,
-     the &vmhost; already needs to be configured as described in
-     <xref linkend="sec.libvirt.config.io.config"/>.
-    </para>
+    <title>&vmguest; の作成時における SR-IOV デバイスの追加について</title>
+    <para>初期設定時に &vmguest; に SR-IOV デバイスを追加する場合は、あらかじめ <xref linkend="sec.libvirt.config.io.config"/> で説明している手順で設定を済ませておく必要があります。</para>
    </note>
   </sect2>
 
   <sect2 xml:id="sec.libvirt.config.io.config">
-   <title>Loading and Configuring the SR-IOV Host Drivers</title>
-   <para>
-    To access and initialize VFs, an SR-IOV-capable driver needs to be loaded
-    on the host system.
-   </para>
+   <title>SR-IOV ホストドライバの読み込みと設定</title>
+   <para>VF にアクセスして準備を行なうには、 SR-IOV 対応のドライバをホスト側のシステムに読み込んでおく必要があります。</para>
    <procedure>
     <step>
-     <para>
-      Before loading the driver, make sure the card is properly detected by
-      running <command>lspci</command>. The following example shows the
-      <command>lspci</command> output for the dual-port Intel 82576NS network
-      card:
-     </para>
+     <para>ドライバを読み込む前に、まずは <command>lspci</command> を実行して、カードが正しく検出されていることを確認します。下記の例では、 <command>lspci</command> がデュアルポートの Intel 82576NS ネットワークカードを検出しています:</para>
 <screen>&prompt.sudo;<command>/sbin/lspci | grep 82576</command>
 01:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)
 01:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)
 04:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)
 04:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)</screen>
-     <para>
-      In case the card is not detected, it is likely that the hardware
-      virtualization support in the BIOS/EFI has not been enabled. To check if
-      hardware virtualization support is enabled, look at the settings in the
-      host's BIOS.
-     </para>
+     <para>カードが検出されていない場合、 BIOS/EFI の設定でハードウエア仮想化の設定が有効化されていないことが考えられます。ハードウエア仮想化機能が有効化されているか同化を調べるには、ホスト側の BIOS 設定をご確認ください。</para>
     </step>
     <step>
-     <para>
-      Check whether the <xref linkend="vt.io.sriov"/> driver is already loaded
-      by running <command>lsmod</command>. In the following example a check for
-      the igb driver (for the Intel 82576NS network card) returns a result.
-      That means the driver is already loaded. If the command returns nothing,
-      the driver is not loaded.
-     </para>
+     <para>次に <command>lsmod</command> を実行して、 <xref linkend="vt.io.sriov"/> ドライバが読み込まれているかどうかを確認します。下記の例では igb ドライバ (Intel 82576NS ネットワークカード向けのドライバです) が読み込まれているかどうかの確認になります。下記のように表示されれば、ドライバが既に読み込まれていることになります。何も出力を返さない場合は、ドライバが読み込まれていないことになります。</para>
 <screen>&prompt.sudo;<command>/sbin/lsmod | egrep "^igb "</command>
 igb                   185649  0</screen>
     </step>
     <step>
-     <para>
-      Skip the following step if the driver is already loaded. If the
-      <xref linkend="vt.io.sriov"/> driver is not yet loaded, the
-      non-<xref linkend="vt.io.sriov"/> driver needs to be removed first,
-      before loading the new driver. Use <command>rmmod</command> to unload a
-      driver. The following example unloads the
-      non-<xref linkend="vt.io.sriov"/> driver for the Intel 82576NS network
-      card:
-     </para>
+     <para>ドライバが既に読み込まれている場合は、この手順を飛ばしてください。 <xref linkend="vt.io.sriov"/> ドライバが読み込まれていない場合は、あらかじめ <xref linkend="vt.io.sriov"/> 非対応のドライバの読み込みを解除する必要があります。読み込みを解除するには、 <command>rmmod</command> コマンドをお使いください。下記の例では、 Intel 82576NS ネットワークカード向けの <xref linkend="vt.io.sriov"/> 非対応ドライバの読み込みを解除しています:</para>
 <screen>&prompt.sudo;<command>/sbin/rmmod igbvf</command></screen>
     </step>
     <step>
-     <para>
-      Load the <xref linkend="vt.io.sriov"/> driver subsequently using the
-      <command>modprobe</command> command—the VF parameter
-      (<literal>max_vfs</literal>) is mandatory:
-     </para>
+     <para>あとは <command>modprobe</command> を利用して、 <xref linkend="vt.io.sriov"/> 対応のドライバを読み込みます。このとき、 VF パラメータ ( <literal>max_vfs</literal> ) を必ず指定してください:</para>
 <screen>&prompt.sudo;<command>/sbin/modprobe igb max_vfs=8</command></screen>
     </step>
    </procedure>
    <remark>Unsure if the following procedure is really needed.</remark>
-   <para>
-    As an alternative, you can also load the driver via SYSFS:
-   </para>
+   <para>代わりの方法として、 SYSFS を介してドライバを読み込む方法もあります:</para>
    <procedure>
     <step>
-     <para>
-      Find the PCI ID of the physical NIC by listing Ethernet devices:
-     </para>
+     <para>イーサネットデバイスの一覧を表示して、物理 NIC の PCI ID を確認します:</para>
 <screen>&prompt.sudo;<command>lspci | grep Eth</command>
 06:00.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)
 06:00.1 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</screen>
     </step>
     <step>
-     <para>
-      To enable VFs, echo the number of desired VFs to load to the
-      <literal>sriov_numvfs</literal> parameter:
-     </para>
+     <para>VF を有効化するには、 <literal>sriov_numvfs</literal> パラメータに対して必要な VF 数を書き込みます:</para>
 <screen>&prompt.sudo;<command>echo 1 &gt; /sys/bus/pci/devices/0000:06:00.1/sriov_numvfs</command></screen>
     </step>
     <step>
-     <para>
-      Verify that the VF NIC was loaded:
-     </para>
+     <para>VF NIC が読み込まれたことを確認します:</para>
 <screen>&prompt.sudo;<command>lspci | grep Eth</command>
 06:00.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)
 06:00.1 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)
 06:08.0 Ethernet controller: Emulex Corporation OneConnect NIC (Skyhawk) (rev 10)</screen>
     </step>
     <step>
-     <para>
-      Obtain the maximum number of VFs available:
-     </para>
+     <para>設定可能な VF の最大数を知りたい場合は、下記のようなコマンドを入力して実行します:</para>
 <screen>&prompt.sudo;<command>lspci -vvv -s 06:00.1 | grep 'Initial VFs'</command>
                        Initial VFs: 32, Total VFs: 32, Number of VFs: 0,
 Function Dependency Link: 01</screen>
     </step>
     <step>
-     <para>
-      Create a <filename>/etc/systemd/system/before.service</filename> file
-      which loads VF via SYSFS on boot:
-     </para>
+     <para><filename>/etc/systemd/system/before.service</filename> ファイルを作成して、システムの起動時に SYSFS 経由で VF を自動設定するように設定します:</para>
 <screen>[Unit]
 Before=
 [Service]
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/bin/bash -c "echo 1 &gt; /sys/bus/pci/devices/0000:06:00.1/sriov_numvfs"
-# beware, executable is run directly, not through a shell, check the man pages
-# systemd.service and systemd.unit for full syntax
+# 注意: 実行ファイルはシェル経由ではなく、直接実行されます。詳しい書式については、
+# systemd.service と systemd.unit のマニュアルページをお読みください
 [Install]
-# target in which to start the service
+# このサービスを開始するターゲットの指定
 WantedBy=multi-user.target
 #WantedBy=graphical.target</screen>
     </step>
     <step>
-     <para>
-      Prior to starting the VM, it is required to create another service file
-      (<filename>after-local.service</filename>) pointing to
-      <filename>/etc/init.d/after.local</filename> script that detaches the
-      NIC. Otherwise the VM would fail to start:
-     </para>
+     <para>また仮想マシンを起動する前に、もう 1 つのサービスファイル ( <filename>after-local.service</filename> ) を作成し、 NIC の切り離しを行なうスクリプト <filename>/etc/init.d/after.local</filename> を実行するように設定します。これを行なわないと、 VM の起動が失敗するようになってしまいます:</para>
 <screen>[Unit]
 Description=/etc/init.d/after.local Compatibility
 After=libvirtd.service
@@ -829,23 +490,14 @@ RemainAfterExit=true
 WantedBy=multi-user.target</screen>
     </step>
     <step>
-     <para>
-      Copy it to <filename>/etc/systemd/system</filename>.
-     </para>
+     <para>上記の内容を <filename>/etc/systemd/system</filename> にコピーします。</para>
 <screen>#! /bin/sh
 # ...
 virsh nodedev-detach pci_0000_06_08_0</screen>
-     <para>
-      Save it as <filename>/etc/init.d/after.local</filename>.
-     </para>
+     <para>上記の内容を <filename>/etc/init.d/after.local</filename> に保存します。</para>
     </step>
     <step>
-     <para>
-      Reboot the machine and check if the SR-IOV driver is loaded by re-running
-      the <command>lspci</command> command from the first step of this
-      procedure. If the SR-IOV driver was loaded successfully you should see
-      additional lines for the VFs:
-     </para>
+     <para>マシンを再起動したあと、手順の冒頭で実行した <command>lspci</command> コマンドを実行しなおし、 SR-IOV ドライバが読み込まれていることを確認します。 SR-IOV ドライバが正しく読み込まれていれば、下記のように VF 向けの追加の行が現われているはずです:</para>
 <screen>01:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)
 01:00.1 Ethernet controller: Intel Corporation 82576NS Gigabit Network Connection (rev 01)
 01:10.0 Ethernet controller: Intel Corporation 82576 Virtual Function (rev 01)
@@ -863,30 +515,13 @@ virsh nodedev-detach pci_0000_06_08_0</screen>
   </sect2>
 
   <sect2 xml:id="sec.libvirt.config.io.attach">
-   <title>Adding a VF Network Device to a &vmguest;</title>
-   <para>
-    When the <xref linkend="vt.io.sriov"/> hardware is properly set up on the
-    &vmhost;, you can add VFs to &vmguest;s. To do so, you need to collect
-    some data first.
-   </para>
+   <title>&vmguest; に対する VF ネットワークデバイスの追加</title>
+   <para><xref linkend="vt.io.sriov"/> 対応のハードウエアの設定を &vmhost; 内で正しく実施したあとは、 &vmguest; に対して VF を追加していきます。これを行なうには、まずいくつかのデータを収集しておく必要があります。</para>
    <procedure>
-    <title>Adding a VF Network Device to an Existing &vmguest;</title>
-    <para>
-     The following procedure uses example data. Make sure to replace it by
-     appropriate data from your setup.
-    </para>
+    <title>既存の &vmguest; に対する VF ネットワークデバイスの追加</title>
+    <para>下記に示す手順は構成例となります。お使いの環境に合わせて各種のデータを変更して実行してください。</para>
     <step>
-     <para>
-      Use the <command>virsh nodedev-list</command> command to get the PCI
-      address of the VF you want to assign and its corresponding PF. Numerical
-      values from the <command>lspci</command> output shown in
-      <xref linkend="sec.libvirt.config.io.config"/> (for example
-      <literal>01:00.0</literal> or <literal>04:00.1</literal>) are transformed
-      by adding the prefix "pci_0000_" and by replacing colons and dots with
-      underscores. So a PCI ID listed as "04:00.0" by <command>lspci</command>
-      is listed as "pci_0000_04_00_0" by virsh. The following example lists the
-      PCI IDs for the second port of the Intel 82576NS network card:
-     </para>
+     <para><command>virsh nodedev-list</command> コマンドを実行して、割り当てる VF と対応する PF の PCI アドレスを取得します。 <command>lspci</command> の出力は <xref linkend="sec.libvirt.config.io.config"/> のようになります (たとえば <literal>01:00.0</literal> や <literal>04:00.1</literal> など) 。このアドレス情報のコロン (:) やドット (.) をアンダースコア (_) に変換し、冒頭に "pci_0000_" を付けたものが virsh で使用するアドレスとなります。たとえば <command>lspci</command> コマンドで "04:00.0" と出力された場合、 virsh のアドレスは "pci_0000_04_00_0" になります。下記の例では、 Intel 82576NS デュアルポートイーサネットカードでの PCI ID を取得しています:</para>
 <screen>&prompt.sudo;<command>virsh nodedev-list | grep 0000_04_</command>
 <emphasis role="bold">pci_0000_04_00_0</emphasis>
 <emphasis role="bold">pci_0000_04_00_1</emphasis>
@@ -904,16 +539,10 @@ pci_0000_04_11_2
 pci_0000_04_11_3
 pci_0000_04_11_4
 pci_0000_04_11_5</screen>
-     <para>
-      The first two entries represent the <emphasis role="bold">PFs</emphasis>,
-      whereas the other entries represent the VFs.
-     </para>
+     <para>最初の 2 つの項目が <emphasis role="bold">PF</emphasis> を、残りの項目が VF を表わしています。</para>
     </step>
     <step>
-     <para>
-      Run the following command <command>virsh nodedev-dumpxml</command> on the
-      PCI ID of the VF you want to add:
-     </para>
+     <para>あとは <command>virsh nodedev-dumpxml</command> を実行して、追加したい VF の PCI ID を取得します:</para>
 <screen>&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_04_10_0</command>
 &lt;device&gt;
   &lt;name&gt;pci_0000_04_10_0&lt;/name&gt;
@@ -930,39 +559,24 @@ pci_0000_04_11_5</screen>
     &lt;/capability&gt;
   &lt;/capability&gt;
 &lt;/device&gt;</screen>
-     <para>
-      The following data is needed for the next step:
-     </para>
+     <para>次の手順では、下記のデータが必要となります:</para>
      <itemizedlist>
       <listitem>
-       <para>
-        <literal>&lt;domain&gt;0&lt;/domain&gt;</literal>
-       </para>
+       <para><literal>&lt;domain&gt;0&lt;/domain&gt;</literal></para>
       </listitem>
       <listitem>
-       <para>
-        <literal>&lt;bus&gt;4&lt;/bus&gt;</literal>
-       </para>
+       <para><literal>&lt;bus&gt;4&lt;/bus&gt;</literal></para>
       </listitem>
       <listitem>
-       <para>
-        <literal>&lt;slot&gt;16&lt;/slot&gt;</literal>
-       </para>
+       <para><literal>&lt;slot&gt;16&lt;/slot&gt;</literal></para>
       </listitem>
       <listitem>
-       <para>
-        <literal>&lt;function&gt;0&lt;/function&gt;</literal>
-       </para>
+       <para><literal>&lt;function&gt;0&lt;/function&gt;</literal></para>
       </listitem>
      </itemizedlist>
     </step>
     <step>
-     <para>
-      Create a temporary XML file (for example
-      <filename>/tmp/vf-interface.xml</filename> containing the data necessary
-      to add a VF network device to an existing &vmguest;. The minimal content
-      of the file needs to look like the following:
-     </para>
+     <para>あとは一時的な XML ファイル (たとえば <filename>/tmp/vf-interface.xml</filename>) を作成して、既存の &vmguest; に VF ネットワークデバイスを追加するのに必要なデータを記述していきます。このファイルを最も短く作成すると、下記のようになります:</para>
 <screen>&lt;interface type='hostdev'&gt;<co xml:id="sriov.iface"/>
  &lt;source&gt;
   &lt;address type='pci' domain='0' bus='11' slot='16' function='0'2/&gt;<co xml:id="sriov.data"/>
@@ -970,154 +584,79 @@ pci_0000_04_11_5</screen>
 &lt;/interface&gt;</screen>
      <calloutlist>
       <callout arearefs="sriov.iface">
-       <para>
-        VFs do not get a fixed MAC address; it changes every time the host
-        reboots. When adding network devices the <quote>traditional</quote> way
-        with <tag class="attribute">hostdev</tag>, it would require to
-        reconfigure the &vmguest;'s network device after each reboot of the
-        host, because of the MAC address change. To avoid this kind of problem,
-        &libvirt; introduced the <tag class="attvalue">hostdev</tag> value, that
-        sets up network-specific data <emphasis>before</emphasis> assigning the
-        device.
-       </para>
+       <para>VF は固定の MAC アドレスを取得しません。ホストが再起動されるたびに MAC アドレスが変更される形になります。この場合、 <tag class="attribute">hostdev</tag> で通常通りにネットワークデバイスを追加すると、ホスト側の再起動が発生するたびに MAC アドレスが変わってしまうため、 &vmguest; 側のネットワークデバイスを再設定する必要が生じてしまいます。このような問題を回避するため、 &libvirt; では <tag class="attvalue">hostdev</tag> という値が提供されるようになり、これによってデバイスの割り当て前にネットワーク固有のデータを設定できるようになっています。</para>
       </callout>
       <callout arearefs="sriov.data">
-       <para>
-        Specify the data you acquired in the previous step here.
-       </para>
+       <para>以前の手順で取得したデータを指定します。</para>
       </callout>
      </calloutlist>
     </step>
     <step>
-     <para>
-      In case a device is already attached to the host, it cannot be attached
-      to a &vmguest;. To make it available for guests, detach it from the host
-      first:
-     </para>
+     <para>デバイスが既にホスト側に割り当てられてしまっている場合、 &vmguest; に対して割り当てることができなくなります。ゲストに対して割り当てたい場合は、下記のようにしてホスト側から切り離しを行なってください:</para>
 <screen>&prompt.sudo;<command>virsh nodedev-detach pci_0000_04_10_0</command></screen>
     </step>
     <step>
-     <para>
-      Add the VF interface to an existing &vmguest;:
-     </para>
-<screen>&prompt.sudo;<command>virsh attach-device <replaceable>GUEST</replaceable> /tmp/vf-interface.xml --<replaceable>OPTION</replaceable></command></screen>
-     <para>
-      <replaceable>GUEST</replaceable> needs to be replaced by the domain name,
-      ID or UUID of the &vmguest;. --<replaceable>OPTION</replaceable> can be
-      one of the following:
-     </para>
+     <para>あとは既存の &vmguest; に VF インターフェイスを追加します:</para>
+<screen>&prompt.sudo;<command>virsh attach-device <replaceable>仮想マシン名</replaceable> /tmp/vf-interface.xml --<replaceable>オプション</replaceable></command></screen>
+     <para><replaceable>仮想マシン名</replaceable> の箇所には &vmguest; の名前のほか、 ID や UUID を指定することもできます。また、 --<replaceable>オプション</replaceable> の部分には下記を指定することができます:</para>
      <variablelist>
       <varlistentry>
-       <term><option>--persistent</option>
-       </term>
+       <term><option>--persistent</option></term>
        <listitem>
-        <para>
-         This option will always add the device to the domain's persistent XML.
-         In addition, if the domain is running, it will be hotplugged.
-        </para>
+        <para>仮想マシンの XML 設定ファイルに対してデバイスを追加します。これに加えて、仮想マシンが動作中である場合、ホットプラグで接続することもできます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>--config</option>
-       </term>
+       <term><option>--config</option></term>
        <listitem>
-        <para>
-         This option will only affect the persistent XML, even if the domain is
-         running. The device will only show up in the &vmguest; on next boot.
-        </para>
+        <para>仮想マシンの XML 設定ファイルに対してデバイスを追加します。仮想マシンが動作中の場合、ホットプラグは行なわれず、次回の再起動以降に現われるようになります。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>--live</option>
-       </term>
+       <term><option>--live</option></term>
        <listitem>
-        <para>
-         This option will only affect a running domain. If the domain is
-         inactive, the operation will fail. The device is not persisted in the
-         XML and will not be available in the &vmguest; on next boot.
-        </para>
+        <para>仮想マシンの動作中の状態にのみ適用します。仮想マシンが動作中ではない場合、この操作は失敗します。 XML ファイル内には保存されませんので、 &vmguest; の再起動を行なうとデバイスが消えてしまいます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>--current</option>
-       </term>
+       <term><option>--current</option></term>
        <listitem>
-        <para>
-         This option affects the current state of the domain. If the domain is
-         inactive, the device is added to the persistent XML and will be
-         available on next boot. If the domain is active, the device is
-         hotplugged but not added to the persistent XML.
-        </para>
+        <para>仮想マシンの現在の状態に反映させます。仮想マシンが動作中ではない場合、デバイスを XML 設定ファイル内に追加し、次回の起動時に現われるようになります。仮想マシンが動作中である場合、デバイスはホットプラグで追加されますが、 XML 設定ファイルには追加されないようになります。</para>
        </listitem>
       </varlistentry>
      </variablelist>
     </step>
     <step>
-     <para>
-      To detach a VF interface, use the <command>virsh detach-device</command>
-      command, which also takes the options listed above.
-     </para>
+     <para>VF インターフェイスを切り離すには、 <command>virsh detach-device</command> コマンドを使用します。オプション類は上記と同じです。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="libvirt.config.io.pool">
-   <title>Dynamic Allocation of VFs from a Pool</title>
-   <para>
-    If you define the PCI address of a VF into a &vmguest;'s configuration
-    statically as described in <xref linkend="sec.libvirt.config.io.attach"/>,
-    it is hard to migrate such guest to another host. The host must have
-    identical hardware in the same location on the PCI bus, or the &vmguest;
-    configuration must be modified prior to each start.
-   </para>
-   <para>
-    Another approach is to create a &libvirt; network with a device pool
-    that contains all the VFs of an <xref linkend="vt.io.sriov"/> device. The
-    &vmguest; then references this network, and each time it is started, a single
-    VF is dynamically allocated to it. When the &vmguest; is stopped, the VF is
-    returned to the pool, available for another guest.
-   </para>
+   <title>プールからの動的な VF の割り当て</title>
+   <para><xref linkend="sec.libvirt.config.io.attach"/> の手順に従って &vmguest; の設定内に VF の PCI アドレスを指定してしまうと、他のホストへの移行が難しくなってしまいます。移行先のホストで移行元と同じ PCI バスに同じハードウエアが搭載されていれば問題はありませんが、そうでない場合は &vmguest; の設定を変更しなければならなくなってしまいます。</para>
+   <para>このような場合は、 <xref linkend="vt.io.sriov"/> の全ての VF を含むデバイスプールを設定し、 &libvirt; 側から使用できるようにする方法があります。 &vmguest; では起動時にこのプールを参照し、空いているいずれかのデバイスを動的に使用することができます。 &vmguest; を停止すると VF はプール内に戻されますので、他のゲストから使用できるようになります。</para>
    <sect3 xml:id="libvirt.config.io.pool.host">
-    <title>Defining Network with Pool of VFs on &vmhost;</title>
-    <para>
-     The following example of network definition creates a pool of all VFs for
-     the <xref linkend="vt.io.sriov"/> device with its physical function (PF)
-     at the network interface <literal>eth0</literal> on the host:
-    </para>
+    <title>&vmhost; 内の VF プールを利用したネットワークの定義</title>
+    <para>下記の例では、ホスト側で <literal>eth0</literal> のネットワークインターフェイスが割り当てられている PF に対して、それに結びつく全ての <xref linkend="vt.io.sriov"/> デバイスである VF のプールを作成しています:</para>
 <screen>&lt;network&gt;
   &lt;name&gt;passthrough&lt;/name&gt;
     &lt;forward mode='hostdev' managed='yes'&gt;
       &lt;pf dev='eth0'/&gt;
     &lt;/forward&gt;
   &lt;/network&gt;</screen>
-    <para>
-     To use this network on the host, save the above code to a file, for
-     example <filename>/tmp/passthrough.xml</filename>, and execute the
-     following commands. Remember to replace <literal>eth0</literal> with the
-     real network interface name of your <xref linkend="vt.io.sriov"/> device's
-     PF:
-    </para>
+    <para>このネットワークインターフェイスをホスト側で使用する場合は、上記のコードをファイルに保存 (例: <filename>/tmp/passthrough.xml</filename>) したあと、下記のコマンドを実行してください。なお、上記の <literal>eth0</literal> の箇所はお使いの環境内の <xref linkend="vt.io.sriov"/> デバイスの PF に置き換えてください:</para>
 <screen>&prompt.sudo;<command>virsh net-define /tmp/passthrough.xml</command>
 &prompt.sudo;<command>virsh net-autostart passthrough</command>
 &prompt.sudo;<command>virsh net-start passthrough</command></screen>
    </sect3>
    <sect3 xml:id="libvirt.config.io.pool.guest">
-    <title>Configuring &vmguest;s to Use VF from the Pool</title>
-    <para>
-     The following example of &vmguest; device interface definition uses a VF of
-     the <xref linkend="vt.io.sriov"/> device from the pool created in
-     <xref linkend="libvirt.config.io.pool.host"/>. &libvirt; automatically
-     derives the list of all VFs associated with that PF the first time the
-     guest is started.
-    </para>
+    <title>プールから VF を使用するための &vmguest; 側の設定</title>
+    <para>下記の &vmguest; のデバイスインターフェイス定義は、 <xref linkend="libvirt.config.io.pool.host"/> で作成したプールから <xref linkend="vt.io.sriov"/> デバイスの VF を使用する設定です。 &libvirt; では、最初のゲストの起動時に、 PF に結びつけられた VF の一覧を自動的に取得します。</para>
 <screen>&lt;interface type='network'&gt;
   &lt;source network='passthrough'&gt;
 &lt;/interface&gt;</screen>
-    <para>
-     After the first &vmguest; starts that uses the network with the pool of VFs,
-     verify the list of associated VFs. Do so by running <command>virsh
-     net-dumpxml passthrough</command> on the host.
-    </para>
+    <para>VF のプールからネットワークインターフェイスを使用するように設定した &vmguest; を起動したあとは、 VF が正しく使用されていることを確認します。これを行なうには、ホスト側で <command>virsh net-dumpxml passthrough</command> を実行します:</para>
 <screen>&lt;network connections='1'&gt;
   &lt;name&gt;passthrough&lt;/name&gt;
   &lt;uuid&gt;a6a26429-d483-d4ed-3465-4436ac786437&lt;/uuid&gt;
@@ -1136,162 +675,79 @@ pci_0000_04_11_5</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="libvirt.config.storage.virsh">
-  <title>Configuring Storage Devices</title>
+  <title>ストレージデバイスの設定</title>
 
-  <para>
-   Storage devices are defined within the
-   <tag>disk</tag>
-   element. The usual
-   <tag>disk</tag>
-   element supports several attributes. The following two attributes are the
-   most important:
-  </para>
+  <para>ストレージデバイスは <tag>disk</tag> 内に記述します。通常、 <tag>disk</tag> タグには複数の属性を指定します。そのうち、下記に示す 2 つの属性が最も重要です:</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-     The
-     <tag class="attribute">type</tag>
-     attribute describes the source of the virtual disk device. Valid values
-     are
-     <tag class="attvalue">file</tag>
-     ,
-     <tag class="attvalue">block</tag>
-     ,
-     <tag class="attvalue">dir</tag>
-     ,
-     <tag class="attvalue">network</tag>
-     , or
-     <tag class="attvalue">volume</tag>
-     .
-    </para>
+    <para><tag class="attribute">type</tag> 属性: 仮想ディスクデバイスのソースを指定するための属性です。 <tag class="attvalue">file</tag> , <tag class="attvalue">block</tag> , <tag class="attvalue">dir</tag> , <tag class="attvalue">network</tag> , <tag class="attvalue">volume</tag> のいずれかを指定します。</para>
    </listitem>
    <listitem>
-    <para>
-     The
-     <tag class="attribute">device</tag>
-     attribute indicates how the disk is exposed to the &vmguest; OS. As an
-     example, possible values can include
-     <tag class="attvalue">floppy</tag>
-     ,
-     <tag class="attvalue">disk</tag>
-     ,
-     <tag class="attvalue">cdrom</tag>
-     , and others.
-    </para>
+    <para><tag class="attribute">device</tag> 属性: ディスクを &vmguest; 側の OS に示す際の方法を指定する属性です。 <tag class="attvalue">floppy</tag> (フロッピィディスク), <tag class="attvalue">disk</tag> (ハードディスク), <tag class="attvalue">cdrom</tag> (CD-ROM) などがあります。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   The following child elements are the most important:
-  </para>
+  <para>子要素として最も重要なものは下記のとおりです:</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-     <tag>driver</tag>
-     contains the driver and the bus. Those are used by the &vmguest; to work
-     with the new disk device.
-    </para>
+    <para><tag>driver</tag>: ドライバとバスに関する情報を指定します。これらは &vmhost; 側での管理方法などを指定します。</para>
    </listitem>
    <listitem>
-    <para>
-     The
-     <tag>target</tag>
-     element contains the device name, under which the new disk is shown in the
-     &vmguest;. It also contains the optional bus attribute, which defines the
-     type of bus, on which the new disk should operate.
-    </para>
+    <para><tag>target</tag>: &vmguest; 内でのデバイス名の設定が含まれます。ここには任意指定の bus 属性 (接続されているストレージバスに関する情報) を含むことができます。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   The following procedure shows how to add storage devices to the &vmguest;:
-  </para>
+  <para>&vmguest; にストレージデバイスを追加するには、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Edit the configuration for an existing &vmguest;:
-    </para>
+    <para>既存の &vmguest; に対する設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para>
-     Add a
-     <tag>disk</tag>
-     element inside the
-     <tag>disk</tag>
-     element together with the attributes
-     <tag class="attvalue">type</tag>
-     and
-     <tag class="attvalue">device</tag>
-     .
-    </para>
+    <para><tag>disk</tag> タグを追加し、その中に <tag class="attvalue">type</tag> と <tag class="attvalue">device</tag> の属性を追加します。</para>
 <screen>&lt;disk type='file' device='disk'&gt;</screen>
    </step>
    <step>
-    <para>
-     Specify a
-     <tag>driver</tag>
-     element and use the default values:
-    </para>
+    <para><tag>driver</tag> タグでは下記のような既定値を指定します:</para>
 <screen>&lt;driver name='qemu' type='qcow2'/&gt;</screen>
    </step>
    <step>
-    <para>
-     Create a disk image, which will be used as a source for the new virtual
-     disk device:
-    </para>
+    <para>新しい仮想ディスクデバイスのソースとなるディスクイメージを作成します:</para>
 <screen>&prompt.sudo;<command>qemu-img create -f qcow2 /var/lib/libvirt/images/sles15.qcow2 32G</command></screen>
    </step>
    <step>
-    <para>
-     Add the path for the disk source:
-    </para>
+    <para>あとは <tag>source</tag> タグでソースを指定します:</para>
 <screen>&lt;source file='/var/lib/libvirt/images/sles15.qcow2'/&gt;</screen>
    </step>
    <step>
-    <para>
-     Define the target device name in the &vmguest; and the bus, on which the
-     disk should work:
-    </para>
+    <para>&vmguest; 内でのデバイス名を表わす <tag>target</tag> タグを追加します。このとき、接続先を表わす <tag>bus</tag> 属性も設定しておきます:</para>
 <screen>&lt;target dev='vda' bus='virtio'/&gt;</screen>
    </step>
    <step>
-    <para>
-     Restart your VM:
-    </para>
+    <para>あとは仮想マシンを再起動します:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
 
-  <para>
-   Your new storage device should be available in the &vmguest; OS.
-  </para>
+  <para>これで、 &vmguest; の OS 内から新しいストレージデバイスにアクセスできるようになります。</para>
  </sect1>
  <sect1 xml:id="libvirt.video_virsh">
-  <title>Configuring Video Devices</title>
+  <title>ビデオデバイスの設定</title>
 
-  <para>
-   When using the Virtual Machine Manager, only the Video device model can be
-   defined. The amount of allocated VRAM or 2D/3D acceleration can only be
-   changed in the XML configuration.
-  </para>
+  <para>仮想マシンマネージャを利用した場合、ビデオデバイスのモデルのみを設定することができます。 VRAM の割り当てや 2D/3D のアクセラレーションの設定については、 XML の設定を編集することでしか設定することができません。</para>
 
   <sect2 xml:id="libvirt.video_vram_virsh">
-   <title>Changing the Amount of Allocated VRAM</title>
+   <title>VRAM の割り当て量の変更</title>
    <procedure>
     <step>
-     <para>
-      Edit the configuration for an existing &vmguest;:
-     </para>
+     <para>既存の &vmguest; に対する設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
     </step>
     <step>
-     <para>
-      Change the size of the allocated VRAM:
-     </para>
+     <para>VRAM に割り当てるサイズを変更するには、下記のように設定します:</para>
 <screen>&lt;video&gt;
 &lt;model type='vga' vram='65535' heads='1'&gt;
 ...
@@ -1299,28 +755,20 @@ pci_0000_04_11_5</screen>
 &lt;/video&gt;</screen>
     </step>
     <step>
-     <para>
-      Check if the amount of VRAM in the VM has changed by looking at the
-      amount in the Virtual Machine Manager.
-     </para>
+     <para>あとは仮想マシンマネージャを開いて、仮想マシン側に割り当てられた VRAM のサイズを確認してください。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="libvirt.video_accel_virsh">
-   <title>Changing the State of 2D/3D Acceleration</title>
+   <title>2D/3D アクセラレーションの設定変更</title>
    <procedure>
     <step>
-     <para>
-      Edit the configuration for an existing &vmguest;:
-     </para>
+     <para>既存の &vmguest; に対する設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
     </step>
     <step>
-     <para>
-      To enable/disable 2D/3D acceleration, change the value of
-      <literal>accel3d</literal> and <literal>accel2d</literal> accordingly.
-     </para>
+     <para>2D/3D アクセラレーション機能を有効化／無効化するには、それぞれ <literal>accel3d</literal> もしくは <literal>accel2d</literal> の設定を変更します。</para>
 <screen>&lt;video&gt;
 &lt;acceleration accel3d='yes' accel2d='no'&gt;
 ...
@@ -1329,53 +777,27 @@ pci_0000_04_11_5</screen>
     </step>
    </procedure>
    <tip>
-    <title>Enabling 2D/3D Acceleration</title>
-    <para>
-     Only <literal>vbox</literal> video devices are capable of 2D/3D
-     acceleration. You cannot enable it on other video devices.
-    </para>
+    <title>2D/3D アクセラレーションの有効化について</title>
+    <para>2D/3D アクセラレーション機能を使用するには、 <literal>vbox</literal> ビデオデバイスを使用する必要があります。それ以外のビデオデバイスである場合は、機能を有効化することができません。</para>
    </tip>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.direct">
-  <title>Using Macvtap to Share &vmhost; Network Interfaces</title>
+  <title>&vmhost; のネットワークインターフェイスを共有するための macvtap の使用</title>
   
-  <para>
-   Macvtap provides direct attachment of a &vmguest; virtual interface to a
-   host network interface. The macvtap-based interface extends the &vmhost;
-   network interface and has its own MAC address on the same Ethernet segment.
-   Typically, this is used to make both the &vmguest; and the &vmhost; show up
-   directly on the switch that the &vmhost; is connected to.
-  </para>
+  <para>macvtap は &vmguest; の仮想インターフェイスをホストのネットワークインターフェイスに直接結びつけるための方法です。 macvtap ベースのインターフェイスは &vmhost; のネットワークインターフェイスを拡張するための仕組みで、同じイーサネットセグメント内で別の MAC アドレスを使用します。通常は &vmguest; と &vmhost; をそれぞれ同じスイッチに接続する形になります。</para>
   
   <note>
-   <title>Macvtap Cannot Be Used with a Linux Bridge</title>
-   <para>
-    Macvtap cannot be used with network interfaces already connected to a Linux
-    bridge. Before attempting to create the macvtap interface, remove the
-    interface from the bridge.
-   </para>
+   <title>Linux ブリッジでは macvtap を使用することができない問題について</title>
+   <para>macvtap は対象のインターフェイスが Linux ブリッジに接続されている場合、使用することができません。 macvtap インターフェイスを作成する前に、ブリッジからインターフェイスを削除しておく必要があります。</para>
   </note>
   
   <note>
-   <title>&vmguest; to &vmhost; Communication with Macvtap</title>
-   <para>
-    When using macvtap, a &vmguest; can communicate with other &vmguest;s, and
-    with other external hosts on the network. But it cannot communicate with
-    the &vmhost; on which the &vmguest; runs. This is the defined behavior of
-    macvtap, because of the way the &vmhost;'s physical Ethernet is attached to
-    the macvtap bridge. Traffic from the &vmguest; into that bridge that is
-    forwarded to the physical interface cannot be bounced back up to the
-    &vmhost;'s IP stack. Similarly, traffic from the &vmhost;'s IP stack that
-    is sent to the physical interface cannot be bounced back up to the macvtap
-    bridge for forwarding to the &vmguest;.
-   </para>
+   <title>macvtap を利用した &vmguest; と &vmhost; の通信</title>
+   <para>macvtap を使用すると、 &vmguest; 同士のほか、ネットワーク内の他のホストとも通信を行なうことができるようになります。ただし、 &vmguest; が動作している &vmhost; との間は、通信を行なうことができません。これは macvtap の意図的な動作によるもので、 &vmhost; の物理イーサネットが macvtap ブリッジに割り当てられているためです。 &vmguest; からブリッジへのトラフィックはそのまま物理インターフェイスに送信され、 &vmhost; の IP スタックに戻ることができないようになっています。これと同様に、 &vmhost; の IP スタックからのトラフィックも物理インターフェイスにそのまま送信され、 &vmguest; の macvtap に戻ることができなくなっています。</para>
   </note>
   
-  <para>
-   Virtual network interfaces based on macvtap are supported by libvirt by
-   specifying an interface type of <literal>direct</literal>. For example:
-  </para>
+  <para>macvtap ベースの仮想ネットワークインターフェイスは libvirt でサポートされていて、インターフェイスの種類 (type) を <literal>direct</literal> にすることによって実現することができます。たとえば下記のようになります:</para>
   
   <screen>&lt;interface type='direct'&gt;
    &lt;mac address='aa:bb:cc:dd:ee:ff'/&gt;
@@ -1383,63 +805,26 @@ pci_0000_04_11_5</screen>
    &lt;model type='virtio'/&gt;
    &lt;/interface&gt;</screen>
   
-  <para>
-   The operation mode of the macvtap device can be controlled with the
-   <literal>mode</literal> attribute. The following lists show its possible
-   values and a description for each:
-  </para>
+  <para>macvtap の操作モードは、 <literal>mode</literal> 属性を設定することで制御することができます。下記の一覧には、設定可能な値とそれらの説明を示しています:</para>
   
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <literal>vepa</literal>: All &vmguest; packets are sent to an external
-     bridge. Packets whose destination is a &vmguest; on the same &vmhost; as
-     where the packet originates from are sent back to the &vmhost; by the VEPA
-     capable bridge (today's bridges are typically not VEPA capable).
-    </para>
+    <para><literal>vepa</literal> : 全ての &vmguest; パケットを外部ブリッジに送信します。同じ &vmhost; 内の &vmguest; を宛先とするパケットは、 VEPA 対応ブリッジによって &vmhost; 側に戻される動作になります (現在のブリッジは一般に VEPA 対応ではありません) 。</para>
    </listitem>
    <listitem>
-    <para>
-     <literal>bridge</literal>: Packets whose destination is on the same
-     &vmhost; as where they originate from are directly delivered to the target
-     macvtap device. Both origin and destination devices need to be in
-     <literal>bridge</literal> mode for direct delivery. If either one of them
-     is in <literal>vepa</literal> mode, a VEPA capable bridge is required.
-    </para>
+    <para><literal>bridge</literal> : 同じ &vmhost; を宛先とするパケットは、ターゲットの macvtap デバイスに直接配信されるようになります。送信元と送信先のデバイスは、直接配送に対応する <literal>bridge</literal> モードである必要があります。いずれかのモードが <literal>vepa</literal> である場合は、 VEPA 対応ブリッジが必要になります。</para>
    </listitem>
    <listitem>
-    <para>
-     <literal>private</literal>: All packets are sent to the external bridge
-     and will only be delivered to a target &vmguest; on the same &vmhost; if
-     they are sent through an external router or gateway and that device sends
-     them back to the &vmhost;. This procedure is followed if either the source
-     or destination device is in private mode.
-    </para>
+    <para><literal>private</literal> : 全てのパケットを外部ブリッジに送信し、外部のルータやゲートウエイから送信されたパケットは同じ &vmhost; 内のターゲットの &vmguest; にのみ配信されるようになります。この処理は送信元と送信先のいずれかがプライベートモードである場合の動作になります。</para>
    </listitem>
    <listitem>
-    <para>
-     <literal>passthrough</literal>: A special mode that gives more power to
-     the network interface. All packets will be forwarded to the interface,
-     allowing virtio &vmguest;s to change the MAC address or set promiscuous
-     mode to bridge the interface or create VLAN interfaces on top of it. Note
-     that a network interface is not shareable in
-     <literal>passthrough</literal> mode. Assigning an interface to a &vmguest;
-     will disconnect it from the &vmhost;. For this reason SR-IOV virtual
-     functions are often assigned to the &vmguest; in
-     <literal>passthrough</literal> mode.
-    </para>
+    <para><literal>passthrough</literal> : ネットワークインターフェイスに対してさらなる力を与えるための特殊なモードです。全てのパケットはインターフェイスに転送され、 virtio &vmguest; では MAC アドレスの変更やプロミスキャスモードに対応することで、インターフェイスのブリッジや VLAN インターフェイスの作成に対応するようになります。ただし、 <literal>passthrough</literal> モードではネットワークインターフェイスを共有することはできません。 &vmguest; にインターフェイスを割り当てると、 &vmhost; 側からは切り離されます。このような理由から、 SR-IOV 仮想機能は &vmguest; の <literal>passthrough</literal> モードと比較されます。</para>
    </listitem>
   </itemizedlist>
  </sect1>
  <sect1 xml:id="sec.libvirt.config.disable_virtio_mellon">
-  <title>Disabling a Memory Balloon Device</title>
-   <para>
-    Memory Balloon has become a default option for KVM. The device will be
-    added to the &vmguest; explicitly, so you do not need to add this element in the
-    &vmguest;'s XML configuration. However, if you want to disable Memory Balloon
-    in the &vmguest; for any reason, you need to set <literal>model='none'</literal>
-    as shown below:
-  </para>
+  <title>メモリバルーンデバイスの無効化</title>
+   <para>メモリバルーン機能は KVM では既定のオプションになっています。 &vmguest; 側には明示的にデバイスが割り当てられるようになっていますので、 &vmguest; の XML 設定ファイルには、メモリバルーンのタグを追加する必要はありません。何らかの理由で &vmguest; のメモリバルーン機能を無効化したい場合は、下記のようにして <literal>model='none'</literal> を指定する必要があります:</para>
 
   <screen>&lt;devices&gt;
    &lt;memballoon model='none'/&gt;
