@@ -4,41 +4,25 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec.kvm.managing.clock">
- <title>&vmguest; Clock Settings</title>
+ <title>&vmguest; の時刻設定</title>
  <info>
   <abstract>
-   <para>
-    Keeping the correct time in a &vmguest; is one of the more difficult
-    aspects of virtualization. Keeping the correct time is especially important
-    for network applications and is also a prerequisite to do a live migration
-    of a &vmguest;.
-   </para>
+   <para>&vmguest; で正しい時刻を維持することは、仮想化においてさらに難しい要素の 1 つになっています。時刻の維持はネットワークアプリケーションで特に重要であるほか、 &vmguest; のライブマイグレーションを実施する際の事前要件でもあります。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
   </dm:docmanager>
  </info>
  <tip>
-  <title>Timekeeping on the &vmhost;</title>
-  <para>
-   It is strongly recommended to ensure the &vmhost; keeps the correct time as
-   well, for example, by using NTP (see <xref linkend="cha.ntp"/> for more
-   information).
-  </para>
+  <title>&vmhost; 側での時刻維持について</title>
+  <para>&vmhost; 側でも同様に、 NTP などを利用 (詳しくは <xref linkend="cha.ntp"/> をお読みください) して、正しい時刻を維持するようにすることを強くお勧めします。</para>
  </tip>
  <sect1 xml:id="sec.kvm.managing.clock.kvm">
-  <title>&kvm;: Using <systemitem>kvm_clock</systemitem></title>
+  <title>&kvm;: <systemitem>kvm_clock</systemitem> を使用する方法</title>
 
-  <para>
-   &kvm; provides a paravirtualized clock which is supported via the
-   <systemitem>kvm_clock</systemitem> driver. It is strongly recommended to use
-   <systemitem>kvm_clock</systemitem>.
-  </para>
+  <para>&kvm; では、 <systemitem>kvm_clock</systemitem> ドライバを介した準仮想化クロックに対応しています。 <systemitem>kvm_clock</systemitem> を使用することを強くお勧めします。</para>
 
-  <para>
-   Use the following command inside a &vmguest; running Linux to check whether
-   the driver <systemitem>kvm_clock</systemitem> has been loaded:
-  </para>
+  <para>下記のように実行すると、 Linux の動作する &vmguest; 側で <systemitem>kvm_clock</systemitem> ドライバを読み込んでいるかどうかを調べることができます:</para>
 
 <screen>&prompt.sudo;dmesg | grep kvm-clock
 [    0.000000] kvm-clock: cpu 0, msr 0:7d3a81, boot clock
@@ -46,50 +30,26 @@
 [    0.012000] kvm-clock: cpu 1, msr 0:1306a81, secondary cpu clock
 [    0.160082] Switching to clocksource kvm-clock</screen>
 
-  <para>
-   To check which clock source is currently used, run the following command in
-   the &vmguest;. It should output <literal>kvm-clock</literal>:
-  </para>
+  <para>現在使用しているクロックソースを確認したい場合は、下記のコマンドを &vmguest; 内で実行してください。 <literal>kvm-clock</literal> と出力されるはずです:</para>
 
 <screen>&prompt.user;cat /sys/devices/system/clocksource/clocksource0/current_clocksource</screen>
 
   <important>
-   <title><literal>kvm-clock</literal> and NTP</title>
+   <title><literal>kvm-clock</literal> と NTP について</title>
 <!-- bsc#994806 -->
-   <para>
-    When using <literal>kvm-clock</literal>, it is recommended to use NTP in
-    the &vmguest;, as well. Using NTP on the &vmhost; is also recommended.
-   </para>
+   <para>&vmguest; 内で <literal>kvm-clock</literal> を使用している場合でも、 NTP を併用することをお勧めします。 &vmhost; 側でも NTP の使用をお勧めします。</para>
   </important>
 
   <sect2 xml:id="sec.kvm.managing.clock.other">
-   <title>Other Timekeeping Methods</title>
-   <para>
-    The paravirtualized <literal>kvm-clock</literal> is currently not for
-    Windows* operating systems. For Windows*, use the <literal>Windows Time
-    Service Tools</literal> for time synchronization (see
-    <link xlink:href="http://technet.microsoft.com/en-us/library/cc773263%28WS.10%29.aspx"/>
-    for more information).
-   </para>
+   <title>その他の時刻維持方式</title>
+   <para>準仮想化ドライバ <literal>kvm-clock</literal> は Windows* オペレーティングシステムには対応していません。 Windows* をお使いの場合、時刻同期は <literal>Windows Time サービスツール</literal> を利用して行なってください (詳しくは <link xlink:href="http://technet.microsoft.com/ja-jp/library/cc773263%28WS.10%29.aspx"/> をお読みください) 。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.xen.guests.suse.time">
-  <title>&xen; Virtual Machine Clock Settings</title>
+  <title>&xen; 仮想マシン時計設定</title>
 
-  <para>
-   With &xen; 4, the independent wallclock setting
-   <filename>/proc/sys/xen/independent_wallclock</filename> used for time
-   synchronization between &xen; host and guest was removed. A new
-   configuration option <option>tsc_mode</option> was introduced. It specifies
-   a method of utilizing the <emphasis>timestamp counter</emphasis> to
-   synchronize the guest time with the &xen; server. Its default value '0'
-   handles the vast majority of hardware and software environments.
-  </para>
+  <para>&xen; 4 では、 &xen; ホストとゲストの間で時刻同期を行なっていた <filename>/proc/sys/xen/independent_wallclock</filename> の設定が削除されました。また、それに代わって新しい <option>tsc_mode</option> というオプションが提供されるようになりました。これにより、 &xen; サーバとゲストとの間の時刻同期に際して、 <emphasis>タイムスタンプカウンタ</emphasis> を使用する方法を指定することができるようになっています。既定値は '0' で、大多数のハードウエアおよびソフトウエア環境でうまく動作するようになっています。</para>
 
-  <para>
-   For more details on <option>tsc_mode</option>, see the
-   <literal>xen-tscmode</literal> manual page (<command>man 7
-   xen-tscmode</command>).
-  </para>
+  <para><option>tsc_mode</option> の詳細について、詳しくは <literal>xen-tscmode</literal> のマニュアルページをお読みください ( <command>man 7 xen-tscmode</command> ) 。</para>
  </sect1>
 </chapter>
