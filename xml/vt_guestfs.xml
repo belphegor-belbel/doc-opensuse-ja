@@ -7,16 +7,7 @@
  <title>libguestfs</title>
  <info>
       <abstract>
-        <para>
-          <xref linkend="gloss.vt.vm"/>s consist of disk images and definition
-    files. Manually accessing and manipulating these guest components
-    (outside of normal hypervisor processes) is possible, but inherently
-    dangerous and risks compromising data integrity. libguestfs is a C
-    library and a corresponding set of tools designed for safely accessing and
-    modifying <xref linkend="gloss.vt.vm"/> disk images&mdash;outside of normal
-    hypervisor processes, but without the risk normally associated with
-    manual editing.
-   </para>
+        <para><xref linkend="gloss.vt.vm"/> にはディスクイメージと対応する定義ファイルが存在しています。通常のハイパーバイザを経由せずにゲスト側のコンポーネントにアクセスしたり、それらを変更したりすることもできますが、このような作業は本質的に危険なものであり、データの一貫性を破壊してしまうリスクをはらんでいます。 libguestfs は C 言語で書かれたライブラリで、 <xref linkend="gloss.vt.vm"/> のディスクイメージに対して安全な方法で、アクセスしたり変更したりするための仕組みを提供します。このライブラリを使用することで、ハイパーバイザを使用することなく、かつ手作業による編集のリスクを伴うことなく、作業を行なうことができます。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -24,205 +15,103 @@
       </dm:docmanager>
     </info>
     <sect1 xml:id="sec.guestfs.intro">
-  <title>&vmguest; Manipulation Overview</title>
+  <title>&vmguest; のディスク編集の概要</title>
 
   <para/>
 
   <sect2 xml:id="sec.guestfs.intro.risk">
-   <title>&vmguest; Manipulation Risk</title>
-   <para>
-    As disk images and definition files are simply another type of file in a
-    Linux environment, it is possible to use many tools to access,
-    edit and write to these files. When used correctly, such tools can be an
-    important part of guest administration. However, even correct usage of
-    these tools is not without risk. Risks that should be considered when
-    manually manipulating guest disk images include:
-   </para>
+   <title>&vmguest; のディスク編集によるリスク</title>
+   <para>ディスクイメージファイルと定義ファイルは、いずれも Linux 環境では単純なファイルとして存在しているものです。そのため、さまざまなツールを利用してアクセスしたり、編集や書き込みを行なったりすることができます。正しく使用している限りにおいては、これらのツールを利用することでゲスト側を管理することができるようになります。しかしながら、これらのツールを正しく使用していても、リスク無しにディスクイメージを編集することはできません。ゲスト側のディスクイメージを編集する場合、下記のようなリスクが発生します:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      <emphasis>Data Corruption</emphasis>: Concurrently accessing images,
-      by the host machine or another node in a cluster, can cause changes to
-      be lost or data corruption to occur if virtualization protection
-      layers are bypassed.
-     </para>
+     <para><emphasis>データの破壊</emphasis> : ホストマシンとクラスタ内の別ノードで同時にアクセスしてしまうと、仮想化による保護レイヤを迂回してしまうことになるため、データが失われたり破壊されたりしてしまいます。</para>
     </listitem>
     <listitem>
-     <para>
-      <emphasis>Security</emphasis>: Mounting disk images as loop devices
-      requires root access. While an image is loop mounted, other users and
-      processes can potentially access the disk contents.
-     </para>
+     <para><emphasis>セキュリティ</emphasis> : ループバックデバイスを利用したディスクイメージのマウントは、 root 権限が必要な作業です。ただし、イメージのマウントが成功してしまうと、他のユーザからディスクの内容にアクセスできてしまう場合があります。</para>
     </listitem>
     <listitem>
-     <para>
-      <emphasis>Administrator Error</emphasis>: Bypassing virtualization
-      layers correctly requires advanced understanding of virtual components
-      and tools. Failing to isolate the images or failing to clean up
-      properly after changes have been made can lead to further problems
-      once back in virtualization control.
-     </para>
+     <para><emphasis>管理上の作業ミス</emphasis> : 仮想化レイヤの迂回には仮想化のコンポーネントやツールに対する高度な理解が必要となります。イメージを仮想化コンポーネントから切り離して編集を行ない、編集完了後に仮想化コンポーネントに戻す作業は、時として作業ミスを引き起こしやすくなっています。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.intro.design">
-   <title>libguestfs Design</title>
-   <para>
-    libguestfs C library has been designed to safely and securely create,
-    access and modify virtual machine (&vmguest;) disk images. It also
-    provides additional language bindings: for
-    <link xlink:href="http://libguestfs.org/guestfs-perl.3.html">Perl</link>,
-    <link xlink:href="http://libguestfs.org/guestfs-python.3.html">Python</link>,
-    PHP (only for 64-bit machines), and
-    <link xlink:href="http://libguestfs.org/guestfs-ruby.3.html">
-    Ruby</link>. libguestfs can access &vmguest; disk images without
-    needing root and with multiple layers of defense against rogue disk
-    images.
-   </para>
-   <para>
-    libguestfs provides many tools designed for accessing and
-    modifying &vmguest; disk images and contents. These tools provide
-    such capabilities as: viewing and editing files inside guests, scripting
-    changes to &vmguest;s, monitoring disk used/free statistics, creating
-    guests, doing V2V or P2V migrations, performing backups, cloning &vmguest;s,
-    formatting disks, and resizing disks.
-   </para>
+   <title>libguestfs の設計</title>
+   <para>libguestfs は C 言語で記述されたライブラリで、仮想マシン (&vmguest;) のディスクイメージを安全に作成したり、アクセスや修正を行なったりする機能を提供するように設計されています。また libguestfs には、 <link xlink:href="http://libguestfs.org/guestfs-perl.3.html">Perl</link> , <link xlink:href="http://libguestfs.org/guestfs-python.3.html">Python</link> , PHP (64 ビットマシン向けのみ), <link xlink:href="http://libguestfs.org/guestfs-ruby.3.html"> Ruby</link> の言語バインディングも用意されています。 libguestfs は root 権限を使用せずに &vmguest; のディスクイメージにアクセスする機能を提供しているほか、不正なディスクイメージへのアクセスを防ぐための多階層の防御を提供しています。</para>
+   <para>libguestfs は &vmguest; のディスクイメージとその内容にアクセスしたり、それらを修正したりするための多数のツールを提供しています。これらのツールには、ゲスト内のファイルを表示したり編集したりするツールのほか、スクリプトを利用して &vmguest; の変更を行なったり、ディスクの使用率に関する統計情報の監視やゲストの作成、 V2V もしくは P2V の移行を行なう機能、バックアップの実施や &vmguest; の複製、ディスクのフォーマットやサイズ変更などの機能が含まれています。</para>
    <warning>
-    <title>Best Practices</title>
-    <para>
-     You must not use libguestfs tools on live virtual machines. Doing so
-     will probably result in disk corruption in the &vmguest;. libguestfs
-     tools try to stop you from doing this, but cannot catch all cases.
-    </para>
-    <para>
-     However most command have the <option>--ro</option> (read-only) option.
-     With this option, you can attach a command to a live virtual machine.
-     The results might be strange or inconsistent at times but you will not
-     risk disk corruption.
-    </para>
+    <title>注意事項について</title>
+    <para>動作中の仮想マシンが使用しているディスクイメージに対しては、 libguestfs ツールを使用してはなりません。動作中の状態のままディスクイメージにアクセスしてしまうと、 &vmguest; のディスクを破壊する結果になります。 libguestfs ツールからアクセスしようとすると、対象の仮想マシンが動作中であればエラーを表示しようとしますが、完全な仕組みではないことに注意してください。</para>
+    <para>なお、ほとんどのコマンドには <option>--ro</option> (読み込み専用) オプションが用意されています。このオプションを指定すると、動作中の仮想マシンのディスクイメージにアクセスすることができます。ただし、仮想マシン側の動作によってファイルが正しく読み込めなくなってしまうことがありますが、ディスクが破壊されてしまうリスクはありません。</para>
    </warning>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.guestfs.package">
-  <title>Package Installation</title>
+  <title>パッケージのインストール</title>
 
-  <para>
-   libguestfs is shipped through 4 packages:
-  </para>
+  <para>libguestfs は 4 個のパッケージから構成されています:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <systemitem class="resource">libguestfs0</systemitem>: which provides
-     the main C library
-    </para>
+    <para><systemitem class="resource">libguestfs0</systemitem> : メインの C 言語ライブラリです。</para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">guestfs-data</systemitem>: which contains
-     the appliance files used when launching images (stored in
-     <filename>/usr/lib64/guestfs</filename>)
-    </para>
+    <para><systemitem class="resource">guestfs-data</systemitem> : イメージを起動する際に使用するアプライアンスファイルが含まれています (<filename>/usr/lib64/guestfs</filename> ディレクトリ内に保存されています) 。</para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">guestfs-tools</systemitem>: the core guestfs
-     tools, man pages, and the <filename>/etc/libguestfs-tools.conf</filename>
-     configuration file.
-    </para>
+    <para><systemitem class="resource">guestfs-tools</systemitem> : 中枢となる guestfs ツールやマニュアルページ、そして <filename>/etc/libguestfs-tools.conf</filename> の設定ファイルが含まれています。</para>
    </listitem>
    <listitem>
-    <para>
-     <systemitem class="resource">guestfs-winsupport</systemitem>: provides
-     support for Windows file guests in the guestfs tools. This package only
-     needs to be installed to handle Windows guests, for example when
-     converting a Windows guest to KVM.
-    </para>
+    <para><systemitem class="resource">guestfs-winsupport</systemitem> : guestfs ツールから Windows ゲストのファイルにアクセスするための機能が含まれています。このパッケージは、 Windows ゲストを KVM に移行する場合など、 Windows ゲストにアクセスする場合にのみ必要となります。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   To install guestfs tools on your system run:
-  </para>
+  <para>guestfs ツールをお使いのシステムにインストールするには、下記を実行します:</para>
 
 <screen>&prompt.sudo;zypper in guestfs-tools</screen>
  </sect1>
  <sect1 xml:id="sec.guestfs.tools">
-  <title>Guestfs Tools</title>
+  <title>libguestfs ツール</title>
 
   <para/>
 
   <sect2 xml:id="sec.guestfs.tools.intro">
-   <title>Modifying Virtual Machines</title>
-   <para>
-    The set of tools found within the guestfs-tools package is used for
-    accessing and modifying virtual machine disk images. This functionality
-    is provided through a familiar shell interface with built-in safeguards
-    which ensure image integrity. Guestfs tools shells expose all
-    capabilities of the guestfs API, and create an appliance on the fly
-    using the packages installed on the machine and the files found in
-    <filename>/usr/lib4/guestfs</filename>.
-   </para>
+   <title>仮想マシンの修正</title>
+   <para>guestfs-tools パッケージ内にあるツールを使用することで、仮想マシンのディスクイメージにアクセスしたり、ディスクイメージを編集したりすることができます。この機能は、ディスクイメージの一貫性を損なうことがないようにするセーフガード付きのわかりやすいシェルインターフェイスを介して提供されていて、ここから guestfs API の全ての機能を利用することができます。また、マシンにインストールされているファイルと <filename>/usr/lib4/guestfs</filename> 内のファイルを使用することで、その場でアプライアンスを作成することもできます。</para>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.tools.supportedfs">
-   <title>Supported File Systems and Disk Images</title>
-   <para>
-    Guestfs tools support various file systems including:
-   </para>
+   <title>対応するファイルシステムとディスクイメージ</title>
+   <para>guestfs ツールは下記のファイルシステムに対応しています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      Ext2, Ext3, Ext4
-     </para>
+     <para>Ext2, Ext3, Ext4</para>
     </listitem>
     <listitem>
-     <para>
-      Xfs
-     </para>
+     <para>Xfs</para>
     </listitem>
     <listitem>
-     <para>
-      Btrfs
-     </para>
+     <para>Btrfs</para>
     </listitem>
    </itemizedlist>
-   <para>
-    Multiple disk image formats are also supported:
-   </para>
+   <para>複数のディスク形式にも対応しています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      raw
-     </para>
+     <para>raw</para>
     </listitem>
     <listitem>
-     <para>
-      qcow2
-     </para>
+     <para>qcow2</para>
     </listitem>
    </itemizedlist>
    <warning>
-    <title>Unsupported File System</title>
-    <para>
-     Guestfs may also support Windows* file systems (VFAT, NTFS), BSD* and
-     Apple* file systems, and other disk image formats (VMDK, VHDX...).
-     However, these file systems and disk image formats are unsupported on
-     &productname;.
-    </para>
+    <title>未対応のファイルシステムについて</title>
+    <para>guestfs では Windows* のファイルシステム (VFAT, NTFS) のほか、 BSD* や Apple* のファイルシステムにも対応しているほか、その他のディスクイメージ形式 (VMDK, VHDX) にも対応しています。ですが、これらのファイルシステムとディスクイメージ形式は、いずれも &productname; ではサポート対象外となります。</para>
    </warning>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.tools.virt-rescue">
    <title><command>virt-rescue</command></title>
-   <para>
-    <command>virt-rescue</command> is similar to a rescue CD, but for
-    virtual machines, and without the need for a CD. virt-rescue presents
-    users with a rescue shell and some simple recovery tools which can be
-    used to examine and correct problems within a virtual machine or disk
-    image.
-   </para>
+   <para><command>virt-rescue</command> はレスキュー CD と同様の機能を提供する仕組みですが、仮想マシン向けに動作し、 CD を使用せずに作業を行なうことができます。 <command>virt-rescue</command> はユーザに対してレスキューシェルを提供し、仮想マシンやディスクイメージ内に存在する問題を調査し、修正する機能を提供します。</para>
 <screen>&prompt.user;virt-rescue -a sles.qcow2
 Welcome to virt-rescue, the libguestfs rescue shell.
 
@@ -245,9 +134,7 @@ Directory: /root
 Thu Jun  5 13:20:51 UTC 2014
 (none):~ #
    </screen>
-   <para>
-    You are now running the &vmguest; in rescue mode:
-   </para>
+   <para>これで &vmguest; をレスキューモードでアクセスすることができるようになります:</para>
 <screen>(none):~ # cat /etc/fstab
 devpts  /dev/pts          devpts  mode=0620,gid=5 0 0
 proc    /proc             proc    defaults        0 0
@@ -260,41 +147,23 @@ tmpfs   /run              tmpfs   noauto          0 0
 
   <sect2 xml:id="sec.guestfs.tools.virt-resize">
    <title><command>virt-resize</command></title>
-   <para>
-    <command>virt-resize</command> is used to resize a virtual machine disk,
-    making it larger or smaller overall, and resizing or deleting any
-    partitions contained within.
-   </para>
+   <para><command>virt-resize</command> は仮想マシンのディスクのサイズを変更するためのツールで、サイズの拡張や縮小だけでなく、ディスク内のパーティションのサイズ変更や削除にも対応しています。</para>
    <procedure xml:id="pro.guestfs.tools.virt-resize">
-    <title>Expanding a Disk</title>
-    <para>
-     Full step-by-step example: How to expand a virtual machine disk
-    </para>
+    <title>ディスクのサイズ拡張</title>
+    <para>手順例: 仮想マシンのディスクサイズの拡張</para>
     <step>
-     <para>
-      First, with virtual machine powered off, determine the size of the
-      partitions available on this virtual machine:
-     </para>
+     <para>まずは仮想マシンの電源を落としてシャットオフ状態にします。その後、仮想マシンのディスクイメージ内にあるパーティションのサイズを読み取ります:</para>
 <screen>&prompt.user;virt-filesystems --long --parts --blkdevs -h -a sles.qcow2
 Name       Type       MBR  Size  Parent
 /dev/sda1  partition  83   16G   /dev/sda
 /dev/sda   device     -    16G   -</screen>
     </step>
     <step>
-     <para>
-      <command>virt-resize</command> cannot do in-place disk
-      modifications&mdash;there must be sufficient space to store the
-      resized output disk. Use the <command>truncate</command> command to
-      create a file of suitable size:
-     </para>
+     <para><command>virt-resize</command> はディスクイメージを直接書き換えることはできません。その代わり、サイズ変更後のディスクを用意して対応します。たとえば <command>truncate</command> コマンドを利用して、適切なサイズの仮想ディスクを作成します:</para>
 <screen>&prompt.user;truncate -s 32G outdisk.img</screen>
     </step>
     <step>
-     <para>
-      Use <command>virt-resize</command> to resize the disk image.
-      <command>virt-resize</command> requires two mandatory parameters for
-      the input and output images:
-     </para>
+     <para>あとは <command>virt-resize</command> コマンドを利用して、ディスクイメージのサイズを変更します。このとき、入力元と出力先のディスクイメージをそれぞれ指定する必要があることに注意してください:</para>
 <screen>&prompt.user;virt-resize --expand /dev/sda1 sles.qcow2 outdisk.img
 Examining sles.qcow2 ...
 **********
@@ -315,50 +184,31 @@ Resize operation completed with no errors.  Before deleting the old
 disk, carefully check that the resized disk boots and works correctly.</screen>
     </step>
     <step>
-     <para>
-      Confirm the image was resized properly:
-     </para>
+     <para>あとはイメージのサイズが想定通りになっていることを確認します:</para>
 <screen>&prompt.user;virt-filesystems --long --parts --blkdevs -h -a outdisk.img
 Name       Type       MBR  Size  Parent
 /dev/sda1  partition  83   32G   /dev/sda
 /dev/sda   device     -    32G   -</screen>
     </step>
     <step>
-     <para>
-      Bring up the &vmguest; using the new disk image and confirm correct
-      operation before deleting the old image.
-     </para>
+     <para>新しいディスクイメージを利用して &vmguest; を起動して、正しく動作することを確認してください。古いイメージの削除は、動作確認が完了してから実施してください。</para>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.tools.others">
-   <title>Other virt-* Tools</title>
-   <para>
-    There are guestfs tools to simplify administrative
-    tasks&mdash;such as viewing and editing files, or obtaining
-    information on the virtual machine.
-   </para>
+   <title>その他の virt-* ツール</title>
+   <para>さまざまな管理作業を単純化するための guestfs ツールも用意されています。これにはたとえばファイルの閲覧や編集、仮想マシン内の情報採取などが含まれています。</para>
    <sect3 xml:id="sec.guestfs.tools.others.filesystem">
     <title><command>virt-filesystems</command></title>
-    <para>
-     This tool is used to report information regarding file systems,
-     partitions, and logical volumes in a disk image or virtual machine.
-    </para>
+    <para>このツールは、ディスクイメージや仮想マシン内にある、ファイルシステムやパーティション、論理ボリュームなどの情報を表示することができます。</para>
 <screen>&prompt.user;virt-filesystems -l -a sles.qcow2
 Name       Type        VFS   Label  Size         Parent
 /dev/sda1  filesystem  ext3  -      17178820608  -</screen>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.ls">
     <title><command>virt-ls</command></title>
-    <para>
-     <command>virt-ls</command> lists file names, file sizes, checksums,
-     extended attributes and more from a virtual machine or disk image.
-     Multiple directory names can be given, in which case the output from
-     each is concatenated. To list directories from a libvirt guest, use the
-     <option>-d</option> option to specify the name of the guest. For a disk
-     image, use the <option>-a</option> option.
-    </para>
+    <para><command>virt-ls</command> コマンドは、仮想マシンやディスクイメージ内にあるファイルの名前やサイズ、チェックサムや拡張属性などを出力します。複数のディレクトリを指定することもでき、この場合はそれぞれの出力が繋げられて出力されます。 libvirt のゲスト側からディレクトリの一覧を表示したい場合は、 <option>-d</option> オプションを指定してゲストの名前を入力してください。ディスクイメージから表示したい場合は、 <option>-a</option> オプションをお使いください。</para>
     <screen>&prompt.user;virt-ls -h -lR -a sles.qcow2 /var/log/
 d 0755        776 /var/log
 - 0640          0 /var/log/NetworkManager
@@ -375,54 +225,30 @@ d 0700        482 /var/log/YaST2
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.cat">
     <title><command>virt-cat</command></title>
-    <para>
-     <command>virt-cat</command> is a command line tool to display the
-     contents of a file that exists in the named virtual machine (or disk
-     image). Multiple file names can be given, in which case they are
-     concatenated together. Each file name must be a full path, starting at
-     the root directory (starting with '/').
-    </para>
+    <para><command>virt-cat</command> はファイルの内容を出力するためのコマンドラインツールで、仮想マシンの名前やディスクイメージを指定して処理を行ないます。複数のファイル名を指定した場合は、それぞれが繋げられた状態で出力されます。また、ファイル名はフルパスでなければなりません (つまり、 '/' で始まるルートディレクトリからのパスを指定する必要があります) 。</para>
 <screen>&prompt.user;virt-cat -a sles.qcow2 /etc/fstab
 devpts /dev/pts devpts mode=0620,gid=5 0 0
 proc   /proc    proc   defaults        0 0</screen>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.df">
     <title><command>virt-df</command></title>
-    <para>
-     <command>virt-df</command> is a command line tool to display free space on
-     virtual machine file systems. Unlike other tools, it not only displays the
-     size of disk allocated to a virtual machine, but can look inside disk
-     images to show how much space is actually being used.
-    </para>
+    <para><command>virt-df</command> は仮想マシンのファイルシステム内での空き容量を表示するためのコマンドラインツールです。その他のツールとは異なり、仮想マシンに割り当てられたサイズを表示するだけでなく、ディスクイメージ内でどれだけの領域を使用しているのかを表示することができます。</para>
 <screen>&prompt.user;virt-df -a sles.qcow2
-Filesystem                           1K-blocks       Used  Available  Use%
+ファイルシステム                       1K-ブロック  使用      使用可能  使用%
 sles.qcow2:/dev/sda1                  16381864     520564   15022492  4%</screen>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.edit">
     <title><command>virt-edit</command></title>
-    <para>
-     <command>virt-edit</command> is a command line tool capable of editing
-     files that reside in the named virtual machine (or disk image).
-    </para>
+    <para><command>virt-edit</command> は仮想マシン (またはディスクイメージ) 内に存在するファイルを編集するためのコマンドラインツールです。</para>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.tar">
     <title><command>virt-tar-in/out</command></title>
-    <para>
-     <command>virt-tar-in</command> unpacks an uncompressed TAR archive into a
-     virtual machine disk image or named libvirt domain.
-     <command>virt-tar-out</command> packs a virtual machine disk image
-     directory into a TAR archive.
-    </para>
+    <para><command>virt-tar-in</command> は非圧縮の TAR 書庫を仮想マシンのディスクイメージもしくは指定した名前の仮想マシンに展開します。 <command>virt-tar-out</command> はその逆で、仮想マシンのディスクイメージや仮想マシンのディレクトリを TAR 書庫にまとめます。</para>
 <screen>&prompt.user;virt-tar-out -a sles.qcow2 /home homes.tar</screen>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.copy">
     <title><command>virt-copy-in/out</command></title>
-    <para>
-     <command>virt-copy-in</command> copies files and directories from the
-     local disk into a virtual machine disk image or named libvirt domain.
-     <command>virt-copy-out</command> copies files and directories out of a
-     virtual machine disk image or named libvirt domain.
-    </para>
+    <para><command>virt-copy-in</command> はローカルのディスク内にあるファイルやディレクトリを仮想マシンのディスクイメージもしくは指定した名前の仮想マシンにコピーします。 <command>virt-copy-out</command> はその逆で、仮想マシンのディスクイメージもしくは指定した名前の仮想マシンから、ファイルやディレクトリをローカルのディスクにコピーします。</para>
 <screen>&prompt.user;virt-copy-in -a sles.qcow2 data.tar /tmp/
 virt-ls -a sles.qcow2 /tmp/
 .ICE-unix
@@ -431,12 +257,7 @@ data.tar</screen>
    </sect3>
    <sect3 xml:id="sec.guestfs.tools.others.log">
     <title><command>virt-log</command></title>
-    <para>
-     <command>virt-log</command> shows the log files of the named libvirt
-     domain, virtual machine or disk image. If the package
-     <package>guestfs-winsupport</package> is installed
-     it can also show the event log of a Windows virtual machine disk image.
-    </para>
+    <para><command>virt-log</command> は指定した名前の libvirt 仮想マシンもしくはディスクイメージ内にあるログファイルを表示します。 <package>guestfs-winsupport</package> パッケージがインストールされていれば、 Windows の仮想マシンディスクイメージから、イベントログの内容を表示することもできます。</para>
     <screen>&prompt.user;virt-log -a windows8.qcow2
 <![CDATA[<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <Events>
@@ -465,14 +286,8 @@ data.tar</screen>
 
   <sect2 xml:id="sec.guestfs.guestfish">
    <title><command>guestfish</command></title>
-   <para>
-    <command>guestfish</command> is a shell and command line tool for
-    examining and modifying virtual machine file systems. It uses libguestfs
-    and exposes all of the functionality of the guestfs API.
-   </para>
-   <para>
-    Examples of usage:
-   </para>
+   <para><command>guestfish</command> は仮想マシンのファイルシステムを調査したり修正したりするためのシェルおよびコマンドラインツールです。 libguestfs を使用し、 guestfs API の全ての機能を提供します。</para>
+   <para>使用例:</para>
 <screen>&prompt.user;guestfish -a disk.img &lt;&lt;EOF
 run
 list-filesystems
@@ -502,175 +317,95 @@ tmpfs   /run              tmpfs   noauto          0 0
   </sect2>
 
   <sect2 xml:id="sec.guestfs.p2v">
-   <title>Converting a Physical Machine into a &kvm; Guest</title>
+   <title>物理イメージから &kvm; ゲストへの変換</title>
 
-   <para>
-    Libguestfs provides tools to help converting &xen; virtual machines or
-    physical machines into &kvm; guests. <phrase os="sles">The &xen; to &kvm;
-    conversion scenario is covered by the <xref linkend="art.sles.xen2kvmquick"/>.</phrase> The following section will
-    cover a special use case: converting a bare metal machine into a &kvm; one.
-   </para>
+   <para>libguestfs には、 &xen; の仮想マシンや物理マシンを &kvm; のゲストに変換する機能が用意されています。 <phrase os="sles">&xen; から &kvm; への変換シナリオは、 <xref linkend="art.sles.xen2kvmquick"/> で説明しています。</phrase> 下記の章では、物理マシンを &kvm; の仮想マシンに変換する特殊な使用例を説明しています。</para>
 
-   <para>
-      Converting a physical machine into a &kvm; one is not yet supported
-      in &productname;.  This feature is released as a technology
-      preview only.
-   </para>
+   <para>ただし、物理マシンから &kvm; 仮想マシンへの変換は、 &productname; ではサポート対象外となっており、技術プレビューとしての提供にとどまっています。</para>
 
-   <para>
-    Converting a physical machine requires collecting information about
-    it and transmitting this to a conversion server. This is achieved by
-    running a live system prepared with <command>virt-p2v</command> and
-    <command>kiwi</command> tools on the machine.
-   </para>
+   <para>物理マシンの変換に際しては、まず物理マシンに関する情報収集を行ない、それを変換サーバに送信する必要があります。この作業は、対象のマシン内で <command>virt-p2v</command> と <command>kiwi</command> を実行することで行なうことができます。</para>
 
    <procedure xml:id="pro.guestfs.p2v.kiwi">
-    <title>Using virt-p2v</title>
+    <title>virt-p2v の使用</title>
     <step>
-     <para>
-      Install the needed packages with the command:
-     </para>
+     <para>まずは必要なパッケージをインストールします:</para>
 <screen>&prompt.sudo;zypper in virt-p2v kiwi-desc-isoboot</screen>
 
      <note>
-      <para>
-       These steps will document how to create an ISO image to create a
-       bootable DVD.  Alternatively, you can create a PXE boot image
-       instead; for more information about building PXE images with
-       &kiwi;, see <command>man virt-p2v-make-kiwi</command>.
-      </para>
+      <para>ここで説明している手順は、起動可能な DVD を作成するための ISO イメージの作成手順となります。この方法以外にも、 PXE 起動イメージを作成する方法もあります。 &kiwi; での PXE 起動イメージの構築方法について、詳しくは <command>man virt-p2v-make-kiwi</command> をお読みください。</para>
      </note>
     </step>
 
     <step>
-     <para>
-      Create a &kiwi; configuration:
-     </para>
+     <para>&kiwi; の設定を作成します:</para>
 
      <screen>&prompt.user;virt-p2v-make-kiwi -o <replaceable>/tmp/p2v.kiwi</replaceable></screen>
 
-     <para>
-      The <option>-o</option> defines where to create the &kiwi; configuration.
-     </para>
+     <para><option>-o</option> オプションを指定することで、 &kiwi; の設定ファイルの出力先を指定しています。</para>
     </step>
 
     <step>
-     <para>
-      Edit the <filename>config.xml</filename> file in the generated
-      configuration if needed.  For example, in
-      <filename>config.xml</filename> adjust the keyboard layout of the
-      live system.
-     </para>
+     <para>生成された設定内にある <filename>config.xml</filename> ファイルを必要に応じて修正します。たとえば <filename>config.xml</filename> ファイルを編集して、システムのキーボードレイアウトを調整するなどの処理があります。</para>
     </step>
 
     <step>
-     <para>
-      Build the ISO image with <command>kiwi</command>:
-     </para>
+     <para><command>kiwi</command> を利用して ISO イメージを構築します:</para>
 
 <screen>&prompt.user;kiwi --build <replaceable>/tmp/p2v.kiwi</replaceable><co xml:id="p2v.config"/> \
      -d <replaceable>/tmp/build</replaceable><co xml:id="p2v.target"/> \
      --ignore-repos \
-     --add-repo <replaceable>http://URL/TO/SLE/REPOSITORIES</replaceable><co xml:id="p2v.repo"/> \
+     --add-repo <replaceable>http://(リポジトリのパス)</replaceable><co xml:id="p2v.repo"/> \
      --type iso</screen>
      <calloutlist>
       <callout arearefs="p2v.config">
-       <para>
-        The directory where the &kiwi; configuration was generated in the
-        previous step.
-       </para>
+       <para>以前の手順で生成した &kiwi; 設定ディレクトリの場所を指定します。</para>
       </callout>
       <callout arearefs="p2v.target">
-       <para>
-        The directory where &kiwi; will place the generated ISO image and other
-        intermediary build results.
-       </para>
+       <para>&kiwi; が ISO イメージを生成したり、途中のイメージを書き込んだりする際の出力先ディレクトリを指定します。</para>
       </callout>
       <callout arearefs="p2v.repo">
-       <para>
-        The URLs to the package repositories as found with
-        <command>zypper lr -d</command>.
-       </para>
+       <para><command>zypper lr -d</command> コマンドで出力することのできる、パッケージリポジトリの URL を指定します。</para>
 
-       <para>
-        Use one <option>--add-repo</option> parameter per repository.
-       </para>
+       <para>なお、リポジトリごとに <option>--add-repo</option> オプションを指定してください。</para>
       </callout>
      </calloutlist>
     </step>
 
     <step>
-     <para>
-      Burn the ISO on a DVD or a USB stick.  With such a medium, boot
-      the machine to be converted.
-     </para>
+     <para>ISO イメージを DVD もしくは USB メモリに書き込みます。このメディアから起動を行なうことで、変換対象のマシンを起動することができます。</para>
     </step>
 
     <step>
-     <para>
-      After the system is started, you will be asked for the connection
-      details of the <emphasis>conversion server</emphasis>. This server
-      is a machine with the <systemitem class="resource">virt-v2v</systemitem> package installed.
-     </para>
+     <para>システムを起動すると、 <emphasis>変換サーバ</emphasis> の接続詳細を尋ねられます。このサーバは、 <systemitem class="resource">virt-v2v</systemitem> パッケージがインストールされたマシンを意味します。</para>
 
-     <para>
-      If the network setup is more complex than a DHCP client, click the
-      <guimenu>Configure network</guimenu> button to open the &yast;
-      network configuration dialog.
-     </para>
+     <para>DHCP クライアントよりも複雑なネットワーク設定を行なっている場合は、 <guimenu>ネットワークの設定</guimenu> ボタンを押して、 &yast; のネットワーク設定ダイアログを開いてください。</para>
 
-     <para>
-      Click the <guimenu>Test connection</guimenu> button to allow
-      moving to the next page of the wizard.
-     </para>
+     <para><guimenu>接続のテスト</guimenu> ボタンを押して、ウイザードの次の手順に進みます。</para>
     </step>
 
     <step>
-     <para>
-      Select the disks and network interfaces to be converted and define
-      the VM data like the amount of allocated CPUs, memory and the
-      Virtual Machine name.
-     </para>
+     <para>変換対象のディスクとネットワークインターフェイスを選択したあと、 CPU の割り当て数やメモリ、仮想マシン名などの仮想マシン向けのデータを設定します。</para>
 
      <note>
-      <para>
-       If not defined, the created disk image format will be <emphasis>raw</emphasis>
-       by default. This can be changed by entering the desired format in the
-       <guimenu>Output format</guimenu> field.
-      </para>
+      <para>何も指定しない場合、作成されたディスクイメージ形式は既定で <emphasis>raw</emphasis> になります。これは <guimenu>出力形式</guimenu> の項目内で形式を指定することで、変更を行なうことができます。</para>
      </note>
 
-     <para>
-      There are two possibilities to generate the virtual machine:
-      either using the <emphasis>local</emphasis> or the
-      <emphasis>libvirt</emphasis> output. The first one will place the
-      Virtual Machine disk image and configuration in the path defined
-      in the <guimenu>Output storage</guimenu> field. These can then be
-      used to define a new libvirt-handled guest using
-      <command>virsh</command>. The second method will create a new
-      libvirt-handled guest with the disk image placed in the pool
-      defined in the <guimenu>Output storage</guimenu> field.
-     </para>
+     <para>仮想マシンの生成方法には 2 種類の仕組みがあります。それぞれ <emphasis>ローカル</emphasis> および <emphasis>libvirt</emphasis> 出力と呼ばれます。前者の場合、仮想マシンのディスクイメージと設定の出力先を <guimenu>出力ストレージ</guimenu> の項目に指定します。これらは <command>virsh</command> を利用することで、 libvirt の管理する仮想マシンにすることができます。後者の場合は <guimenu>出力ストレージ</guimenu> 内に定義されたプール内にディスクイメージを配置して、新しく libvirt の管理する仮想マシンを作成します。</para>
 
-     <para>
-      Click <guimenu>Start conversion</guimenu> to start it.
-     </para>
+     <para><guimenu>変換開始</guimenu> を押して開始してください。</para>
     </step>
    </procedure>
   </sect2>
 
  </sect1>
  <sect1 xml:id="sec.guestfs.trouble">
-  <title>Troubleshooting</title>
+  <title>トラブルシューティング</title>
 
   <para/>
 
   <sect2 xml:id="sec.guestfs.trouble.btrfs">
-   <title>Btrfs-related Problems</title>
-   <para>
-    When using the guestfs tools on an image with Btrfs root partition (the
-    default with &productname;) the following error message may be displayed:
-   </para>
+   <title>btrfs 関連の問題</title>
+   <para>btrfs をルートパーティションとしているイメージ (&productname; の既定値です) に対して guestfs ツールを使用すると、下記のようなエラーメッセージが表示されることがあります:</para>
    <screen>&prompt.user;virt-ls -a /path/to/sles12sp2.qcow2 /
 virt-ls: multi-boot operating systems are not supported
 
@@ -687,53 +422,32 @@ If using other virt tools, multi-boot operating systems won't work
 with these tools.  Use the guestfish equivalent commands
 (see the virt tool manual page).
 </screen>
-   <para>
-    This is usually caused by the presence of snapshots in the guests. In this
-    case guestfs does not know which snapshot to bootstrap. To force the
-    use of a snapshot, use the <option>-m</option> parameter as follows:
-   </para>
+   <para>これは一般に、ゲスト内にスナップショットが存在することによって発生します。この場合、どのスナップショットから起動すべきなのかが判断できないことを表わしています。特定のスナップショットを指定して起動する場合は、 <option>-m</option> オプションを指定してください:</para>
    <screen>&prompt.user;virt-ls -m /dev/sda2:/:subvol=@/.snapshots/2/snapshot -a /path/to/sles12sp2.qcow2 /</screen>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.trouble.env">
-   <title>Environment</title>
-   <para>
-    When troubleshooting problems within a libguestfs appliance, the
-    environment variable <emphasis>LIBGUESTFS_DEBUG=1</emphasis> can be used
-    to enable debug messages. To output each command/API call in a format
-    that is similar to guestfish commands, use the environment variable
-    <emphasis>LIBGUESTFS_TRACE=1</emphasis>.
-   </para>
+   <title>環境</title>
+   <para>libguestfs アプライアンス内で問題を分析する場合、環境変数 <emphasis>LIBGUESTFS_DEBUG=1</emphasis> を指定すると、デバッグメッセージを出力することができます。出力されるコマンドや API コールを guestfish でのコマンドに似た形式で出力したい場合は、環境変数 <emphasis>LIBGUESTFS_TRACE=1</emphasis> を指定してください。</para>
   </sect2>
 
   <sect2 xml:id="sec.guestfs.trouble.tools">
    <title><command>libguestfs-test-tool</command></title>
-   <para>
-    <command>libguestfs-test-tool</command> is a test program that checks if
-    basic libguestfs functionality is working. It will print a large amount
-    of diagnostic messages and details of the guestfs environment, then
-    create a test image and try to start it. If it runs to completion
-    successfully, the following message should be seen near the end:
-   </para>
+   <para><command>libguestfs-test-tool</command> ツールは、 libguestfs の基本的な機能が動作しているかどうかを確認するためのテストプログラムです。大量の分析用メッセージと guestfs 環境詳細が出力され、テストイメージを作成して開始しようとします。テストが問題なく完了すると、下記のようなメッセージが末尾付近に現われるはずです:</para>
 <screen>===== TEST FINISHED OK =====</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.guestfs.external.doc">
-  <title>External References</title>
+  <title>外部参照</title>
 
   <para/>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <link xlink:href="http://libguestfs.org">libguestfs.org</link>
-    </para>
+    <para><link xlink:href="http://libguestfs.org">libguestfs.org</link></para>
    </listitem>
    <listitem>
-    <para>
-     <link xlink:href="http://libguestfs.org/guestfs-faq.1.html">libguestfs
-     FAQ</link>
-    </para>
+    <para><link xlink:href="http://libguestfs.org/guestfs-faq.1.html">libguestfs FAQ (英語)</link></para>
    </listitem>
 <!--   <listitem>
     <para>
