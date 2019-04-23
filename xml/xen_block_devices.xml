@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.xen.vbd">
- <title>Block Devices in &xen;</title>
+ <title>&xen; 内でのブロックデバイス</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -12,275 +12,145 @@
  </info>
  <para/>
  <sect1 xml:id="sec.xen.config.disk">
-  <title>Mapping Physical Storage to Virtual Disks</title>
+  <title>物理ストレージから仮想ディスクへのマッピング</title>
 
-  <para>
-   The disk(s) specification for a &xen; domain in the domain configuration
-   file is as straightforward as the following example:
-  </para>
+  <para>ドメインの設定ファイル内にある &xen; ドメインのディスク設定は非常に直感的で、下記のように記述します:</para>
 
 <screen>disk = [ 'format=raw,vdev=hdc,access=ro,devtype=cdrom,target=/root/image.iso' ]</screen>
 
-  <para>
-   It defines a disk block device based on the
-   <filename>/root/image.iso</filename> disk image file. The disk will be seen
-   as <literal>hdc</literal> by the guest, with read-only
-   (<literal>ro</literal>) access. The type of the device is
-   <literal>cdrom</literal> with <literal>raw</literal> format.
-  </para>
+  <para>上記では <filename>/root/image.iso</filename> というファイルをベースにしたディスク型のブロックデバイスを定義しています。ゲスト内では、このディスクは <literal>hdc</literal> として表示され、読み込み専用 ( <literal>ro</literal> ) に設定されています。デバイスの種類は <literal>cdrom</literal> で、 <literal>raw</literal> 形式を使用する設定になっています。</para>
 
-  <para>
-   The following example defines an identical device, but using simplified
-   positional syntax:
-  </para>
+  <para>下記の設定例は上記と同じ設定ですが、よりシンプルなカンマ区切りの書式を使用しています:</para>
 
 <screen>disk = [ '/root/image.iso,raw,hdc,ro,cdrom' ]</screen>
 
-  <para>
-   You can include more disk definitions in the same line, each one separated
-   by a comma. If a parameter is not specified, then its default value is
-   taken:
-  </para>
+  <para>同じ行内に複数のディスク定義を設定したい場合は、それぞれをカンマ区切りで指定してください。パラメータを指定しない場合、既定値が指定されているものとみなされます:</para>
 
 <screen>disk = [ '/root/image.iso,raw,hdc,ro,cdrom','/dev/vg/guest-volume,,hda','...' ]</screen>
 
   <variablelist>
-   <title>List of Parameters</title>
+   <title>パラメータの一覧</title>
    <varlistentry>
     <term>target</term>
     <listitem>
-     <para>
-      Source block device or disk image file path.
-     </para>
+     <para>ソースとなるブロックデバイスやディスクイメージのファイルパスを指定します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>format</term>
     <listitem>
-     <para>
-      The format of the image file. Default is <literal>raw</literal>.
-     </para>
+     <para>イメージファイルの形式を指定します。既定値は <literal>raw</literal> です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>vdev</term>
     <listitem>
-     <para>
-      Virtual device as seen by the guest. Supported values are hd[x], xvd[x],
-      sd[x] etc. See
-      <filename>/usr/share/doc/packages/xen/misc/vbd-interface.txt</filename>
-      for more details. This parameter is mandatory.
-     </para>
+     <para>ゲスト側での仮想デバイスを指定します。設定できる値には hd[x], xvd[x], sd[x] などがあります。詳しくは <filename>/usr/share/doc/packages/xen/misc/vbd-interface.txt</filename> (英語) ファイルをお読みください。このパラメータは必須です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>access</term>
     <listitem>
-     <para>
-      Whether the block device is provided to the guest in read-only or
-      read-write mode. Supported values are <literal>ro</literal> or
-      <literal>r</literal> for read-only, and <literal>rw</literal> or
-      <literal>w</literal> for read/write access. Default is
-      <literal>ro</literal> for <literal>devtype=cdrom</literal>, and
-      <literal>rw</literal> for other device types.
-     </para>
+     <para>ゲスト側でのブロックデバイスを読み込み専用とするか、読み書きできるものとするかを指定します。設定可能な値は <literal>ro</literal> または <literal>r</literal> (読み込み専用),  <literal>rw</literal> または <literal>w</literal> (読み書き可能) から指定します。既定値は <literal>devtype=cdrom</literal> の場合は <literal>ro</literal> が、それ以外の種類のデバイスの場合は <literal>rw</literal> になります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>devtype</term>
     <listitem>
-     <para>
-      Qualifies virtual device type. Supported value is
-      <literal>cdrom</literal>.
-     </para>
+     <para>仮想デバイスの種類を指定します。設定可能な値は <literal>cdrom</literal> です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>backendtype</term>
     <listitem>
-     <para>
-      The back-end implementation to use. Supported values are
-      <literal>phy</literal>, <literal>tap</literal>, and
-      <literal>qdisk</literal>. Normally this option should not be specified as
-      the back-end type is automatically determined.
-     </para>
+     <para>使用するバックエンド実装を指定します。設定可能な値は <literal>phy</literal> , <literal>tap</literal> , <literal>qdisk</literal> のいずれかです。通常は、バックエンドの種類を自動設定するため、このオプションを指定する必要はありません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>script</term>
     <listitem>
-     <para>
-      Specifies that <literal>target</literal> is not a normal host path, but
-      rather information to be interpreted by the executable program. The
-      specified script file is looked for in
-      <filename>/etc/xen/scripts</filename> if it does not point to an absolute
-      path. These scripts are normally called
-      <literal>block-&lt;script_name&gt;</literal>.
-     </para>
+     <para><literal>target</literal> が通常のホストパスではなく、実行可能なプログラムで解釈される情報である場合に指定します。ここで指定したスクリプトファイルが絶対パスではない場合、 <filename>/etc/xen/scripts</filename> 内にあるものとして扱われます。これらのスクリプトは通常、 <literal>block-&lt;スクリプト名&gt;</literal> と呼ばれます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   For more information about specifying virtual disks, see
-   <filename>/usr/share/doc/packages/xen/misc/xl-disk-configuration.txt</filename>.
-  </para>
+  <para>仮想ディスクの指定方法に関する詳細は、 <filename>/usr/share/doc/packages/xen/misc/xl-disk-configuration.txt</filename> (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.xen.config.netdisk">
-  <title>Mapping Network Storage to Virtual Disk</title>
+  <title>ネットワークストレージから仮想ディスクへのマッピング</title>
 
-  <para>
-   Similar to mapping a local disk image (see
-   <xref linkend="sec.xen.config.disk"/>), you can map a network disk as a
-   virtual disk as well.
-  </para>
+  <para>ローカルのディスクイメージをマッピングする (詳しくは <xref linkend="sec.xen.config.disk"/> をお読みください) 場合と同様に、ネットワークディスクを仮想ディスクとしてマッピングすることもできます。</para>
 
-  <para>
-   The following example shows mapping of an RBD (RADOS Block Device) disk with
-   multiple Ceph monitors and cephx authentication enabled:
-  </para>
+  <para>下記の例では、複数の Ceph モニタと cephx 認証が有効化された RBD (RADOS Block Device) ディスクに対して、マッピングを設定しています:</para>
 
 <screen>disk = [ 'vdev=hdc, backendtype=qdisk, \
 target=rbd:libvirt-pool/new-libvirt-image:\
 id=libvirt:key=AQDsPWtW8JoXJBAAyLPQe7MhCC+JPkI3QuhaAw==:auth_supported=cephx;none:\
 mon_host=137.65.135.205\\:6789;137.65.135.206\\:6789;137.65.135.207\\:6789' ]</screen>
 
-  <para>
-   Following is an example of an NBD (Network Block Device) disk mapping:
-  </para>
+  <para>NBD (Network Block Device) のディスクマッピング例は下記のとおりです:</para>
 
 <screen>disk = [ 'vdev=hdc, backendtype=qdisk, target=nbd:151.155.144.82:5555' ]</screen>
  </sect1>
  <sect1 xml:id="sec.xen.config.filedisk">
-  <title>File-Backed Virtual Disks and Loopback Devices</title>
+  <title>ファイルとして存在する仮想ディスクとループバックデバイス</title>
 
-  <para>
-   When a virtual machine is running, each of its file-backed virtual disks
-   consumes a loopback device on the host. By default, the host allows up to 64
-   loopback devices to be consumed.
-  </para>
+  <para>仮想マシンが動作している場合、ファイルとして存在する仮想ディスクは、ホスト内でループバックデバイスを使用します。既定では、ホスト側では 64 個までのループバックデバイスを使用することができます。</para>
 
-  <para>
-   To simultaneously run more file-backed virtual disks on a host, you can
-   increase the number of available loopback devices by adding the following
-   option to the host’s <filename>/etc/modprobe.conf.local</filename> file.
-  </para>
+  <para>ホスト側でそれ以上のファイルベースの仮想ディスクを使用する場合は、ホスト側の <filename>/etc/modprobe.conf.local</filename> ファイル内に下記のオプションを追加して、同時に利用可能なループバック数を増やしておく必要があります。</para>
 
 <screen>
 options loop max_loop=x
 </screen>
 
-  <para>
-   where <command>x</command> is the maximum number of loopback devices to
-   create.
-  </para>
+  <para>ここで、 <command>x</command> には使用したいループバックデバイスの最大数を指定します。</para>
 
-  <para>
-   Changes take effect after the module is reloaded.
-  </para>
+  <para>設定した内容は、モジュールの再読み込み時に反映されます。</para>
 
   <tip>
-   <para>
-    Enter <command>rmmod loop</command> and <command>modprobe loop</command> to
-    unload and reload the module. In case <command>rmmod</command> does not
-    work, unmount all existing loop devices or reboot the computer.
-   </para>
+   <para><command>rmmod loop</command> および <command>modprobe loop</command> を実行することで、モジュールの読み込み解除と再読み込みを行なうことができます。なお、 <command>rmmod</command> がうまく動作しない場合、既存のループバックデバイスの使用を全て解除するか、もしくはコンピュータを再起動してください。</para>
   </tip>
  </sect1>
  <sect1 xml:id="sec.xen.block.resize">
-  <title>Resizing Block Devices</title>
+  <title>ブロックデバイスのサイズ変更</title>
 
-  <para>
-   While it is always possible to add new block devices to a &vmguest; system,
-   it is sometimes more desirable to increase the size of an existing block
-   device. In case such a system modification is already planned during
-   deployment of the &vmguest;, some basic considerations should be done:
-  </para>
+  <para>&vmguest; システムに新しいブロックデバイスを追加することもできますが、場合によっては既存のブロックデバイスのサイズを増やしたほうが都合のよい場合があります。 &vmguest; の作成の際にそのような拡張を考慮しておきたい場合は、下記のような設定を行なっておくことをお勧めします:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Use a block device that may be increased in size. LVM devices and file
-     system images are commonly used.
-    </para>
+    <para>サイズを増やすことのできるブロックデバイスを使用するようにしてください。具体的には LVM デバイスやファイルベースのイメージがそれにあたります。</para>
    </listitem>
    <listitem>
-    <para>
-     Do not partition the device inside the &vmguest;, but use the main device
-     directly to apply the file system. For example, use
-     <filename>/dev/xvdb</filename> directly instead of adding partitions to
-     <filename>/dev/xvdb</filename>.
-    </para>
+    <para>&vmguest; 内部ではデバイスのパーティションを作成せずに使用するものとし、メインとなるデバイスを直接マウントしてお使いください。たとえば <filename>/dev/xvdb</filename> に対してパーティションを作成する代わりに、 <filename>/dev/xvdb</filename> を直接マウントしてください。</para>
    </listitem>
    <listitem>
-    <para>
-     Make sure that the file system to be used can be resized. Sometimes, for
-     example with Ext3, some features must be switched off to be able to resize
-     the file system. A file system that can be resized online and mounted is
-     <literal>XFS</literal>. Use the command <command>xfs_growfs</command> to
-     resize that file system after the underlying block device has been
-     increased in size. For more information about <literal>XFS</literal>, see
-     <command>man 8 xfs_growfs</command>.
-    </para>
+    <para>サイズを変更することのできるファイルシステムを使用してください。たとえば ext3 などのファイルシステムでは、サイズを変更するためにいくつかの機能を無効化しなければならないこともあります。また、オンラインでマウントしたままサイズを変更することができるファイルシステムとして、 <literal>XFS</literal> があります。 <command>xfs_growfs</command> コマンドを使用することで、ブロックデバイス側のサイズ変更を行なったあと、ファイルシステム側のサイズ変更を行なうことができます。 <literal>XFS</literal> の詳細について、詳しくは <command>man 8 xfs_growfs</command> をお読みください。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   When resizing an LVM device that is assigned to a &vmguest;, the new size is
-   automatically known to the &vmguest;. No further action is needed to inform
-   the &vmguest; about the new size of the block device.
-  </para>
+  <para>&vmguest; に対して割り当てられている LVM デバイスをサイズ変更する場合、新しいサイズは自動的に &vmguest; に伝達されます。新しいブロックデバイスのサイズを知らせるために必要なアクションはありません。</para>
 
-  <para>
-   When using file system images, a loop device is used to attach the image
-   file to the guest. For more information about resizing that image and
-   refreshing the size information for the &vmguest;, see
-   <xref linkend="sec.xen.config.sparse"/>.
-  </para>
+  <para>ファイルシステムのイメージを使用する場合、ループバックデバイスを使用してイメージファイルをゲストに割り当てます。イメージのサイズ変更と &vmguest; 側でのサイズ情報の伝達にについて、詳しくは <xref linkend="sec.xen.config.sparse"/> をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec.xen.block.advstoragescripts">
-  <title>Scripts for Managing Advanced Storage Scenarios</title>
+  <title>高度なストレージ管理向けのスクリプト</title>
   <!-- fate#319810: Xen + block-drbd + libvirt -->
 
-  <para>
-   There are scripts that can help with managing advanced storage scenarios
-   such as disk environments provided by
-   <command>dmmd</command> (<quote>device mapper&mdash;multi
-   disk</quote>) including LVM environments built upon a software RAID set, or
-   a software RAID set built upon an LVM environment. These scripts are part of
-   the <package>xen-tools</package> package. After installation, they can be
-   found in <filename>/etc/xen/scripts</filename>:
-  </para>
+  <para>ソフトウエア RAID セット上に構築されてた LVM 環境や LVM 環境上に構築されたソフトウエア RAID セットなど、 <command>dmmd</command> ( <quote>device mapper&mdash;multi disk</quote> ) で提供されるディスク環境のような高度なストレージ環境の管理を支援するため、いくつかのスクリプトが提供されています。これらのスクリプトは <package>xen-tools</package> パッケージ内に含まれていて、インストール後には <filename>/etc/xen/scripts</filename> ディレクトリ内に存在します:</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-      <command>block-dmmd</command>
-    </para>
+    <para><command>block-dmmd</command></para>
    </listitem>
    <listitem>
-    <para>
-     <command>block-drbd-probe</command>
-    </para>
+    <para><command>block-drbd-probe</command></para>
    </listitem>
    <listitem>
-    <para>
-     <command>block-npiv</command>
-    </para>
+    <para><command>block-npiv</command></para>
    </listitem>
   </itemizedlist>
-  <para>
-   The scripts allow for external commands to perform some action, or
-   series of actions of the block devices prior to serving them up to a
-   guest.
-  </para>
-  <para>
-   These scripts could formerly only be used with <command>xl</command>
-   or <command>libxl</command> using the disk configuration syntax
-   <literal>script=</literal>.  They can now be used with libvirt by
-   specifying the base name of the block script in the
-   <literal>&lt;source&gt;</literal> element of the disk. For example:
-  </para>
+  <para>これらのスクリプトを使用すると、外部のコマンドがゲストに対してブロックデバイスを提供する前に、そのブロックデバイスに対して何らかの処理や一連のアクションを実行することができるようになります。</para>
+  <para>これらのスクリプトは従来、 <literal>script=</literal> のディスク設定書式を利用して <command>xl</command> や <command>libxl</command> で使用できていたものです。これらはディスクの <literal>&lt;source&gt;</literal> 要素内でブロックスクリプトのベース名を指定することで、 libvirt でも使用できるようになっています。たとえば下記のようになります:</para>
 
   <screen>&lt;source dev='dmmd:md;/dev/md0;lvm;/dev/vgxen/lv-vm01'/&gt;</screen>
 
