@@ -4,95 +4,47 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.xen.manage">
- <title>Managing a Virtualization Environment</title>
+ <title>仮想環境の管理</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  Apart from using the recommended &libvirt; library
-  (<xref linkend="part.virt.libvirt"/>), you can manage &xen; guest
-  domains with the <command>xl</command> tool from the command line.
- </para>
+    <para>推奨される方式である &libvirt; ライブラリによる管理 ( <xref linkend="part.virt.libvirt"/> ) とは別に、コマンドラインから &xen; 専用のツールである <command>xl</command> を使用することで、 &xen; のゲストドメインを管理することもできます。</para>
  <sect1 xml:id="sec.xen.manage.xl">
-  <title>XL&mdash;&xen; Management Tool</title>
+  <title>xl: &xen; 管理ツール</title>
 
-  <para>
-   The <command>xl</command> program is a tool for managing &xen; guest
-   domains. It is part of the <package>xen-tools</package> package.
-   <command>xl</command> is based on the LibXenlight library, and can be
-   used for general domain management, such as domain creation, listing,
-   pausing, or shutting down. Usually you need to be &rootuser; to
-   execute <command>xl</command> commands.
-  </para>
+  <para><command>xl</command> コマンドは &xen; ゲストドメインを管理するためのツールです。このプログラムは <package>xen-tools</package> パッケージ内に含まれています。 <command>xl</command> コマンドは LibXenlight ライブラリをベースにして作られていますので、ドメインの作成や一覧表示、一時停止やシャットダウンなど、一般的なゲスト管理を行なうことができます。通常は <command>xl</command> コマンドを実行するのに &rootuser; の権限が必要となります。</para>
 
   <note>
-   <para>
-    <command>xl</command> can only manage running guest domains specified by
-    their configuration file. If a guest domain is not running, you cannot
-    manage it with <command>xl</command>.
-   </para>
+   <para><command>xl</command> コマンドは設定ファイルを指定しますが、動作中のゲストドメインのみを管理することができます。対象のゲストドメインが動作中ではない場合、 <command>xl</command> コマンドによる管理を行なうことができません。</para>
   </note>
 
   <tip>
-   <para>
-    To allow users to continue to have managed guest domains in the way the
-    obsolete <command>xm</command> command allowed, we now recommend using
-    &libvirt;'s <command>virsh</command> and
-    <command>virt-manager</command> tools. For more information, see
-    <xref linkend="part.virt.libvirt"/>.
-   </para>
+   <para>従来の <command>xm</command> コマンドで実現できていた、一般ユーザからのゲストドメイン管理を行ないたい場合は、 &libvirt; 側に用意されている <command>virsh</command> と <command>virt-manager</command> の各ツールをお使いください。詳しくは <xref linkend="part.virt.libvirt"/> をお読みください。</para>
   </tip>
 
-  <para>
-   <command>xl</command> operations rely upon
-   <systemitem>xenstored</systemitem> and
-   <systemitem>xenconsoled</systemitem> services. Make sure you start
-  </para>
+  <para><command>xl</command> を動作させるには、 <systemitem>xenstored</systemitem> サービスと <systemitem>xenconsoled</systemitem> サービスを開始しておく必要があります。下記を実行して開始しておいてください:</para>
 
 <screen>&prompt.user;systemctl start xencommons</screen>
 
-  <para>
-   at boot time to initialize all the daemons required by
-   <command>xl</command>.
-  </para>
+  <para><!-- NOTE: nothing needed for translation --></para>
 
   <tip>
-   <title>Set up a <literal>xenbr0</literal> Network Bridge in the Host Domain</title>
-   <para>
-    In the most common network configuration, you need to set up a bridge in
-    the host domain named <literal>xenbr0</literal> to have a
-    working network for the guest domains.
-   </para>
+   <title>ホストドメイン内での <literal>xenbr0</literal> ネットワークブリッジの設定について</title>
+   <para>最も一般的なネットワーク設定では、ホストドメイン側に <literal>xenbr0</literal> という名前のブリッジを作成して、ゲストドメインのネットワークを動作させます。</para>
   </tip>
 
-  <para>
-   The basic structure of every <command>xl</command> command is:
-  </para>
+  <para><command>xl</command> コマンドの基本構造は下記のとおりです:</para>
 
-<screen>xl &lt;subcommand&gt; [options] domain_id</screen>
+<screen>xl <replaceable>&lt;サブコマンド&gt;</replaceable> <replaceable>[オプション]</replaceable> <replaceable>ドメイン_ID</replaceable></screen>
 
-  <para>
-   where &lt;subcommand&gt; is the xl command to run, domain_id is the ID
-   number assigned to a domain or the name of the virtual machine, and
-   <command>OPTIONS</command> indicates subcommand-specific options.
-  </para>
+  <para>ここで、 <replaceable>&lt;サブコマンド&gt;</replaceable> には実行すべき xl のサブコマンドを、 <replaceable>ドメイン_ID</replaceable> にはドメインに対して割り当てられた ID か、仮想マシンの名前を、そして <replaceable>[オプション]</replaceable> にはサブコマンドごとに固有のオプション類を指定します。</para>
 
-  <para>
-   For a complete list of the available <command>xl</command> subcommands,
-   run <command>xl help</command>. For each command, there is a more
-   detailed help available that is obtained with the extra parameter
-   <systemitem>--help</systemitem>. More information about the respective
-   subcommands is available in the manual page of <command>xl</command>.
-  </para>
+  <para>利用可能な全ての <command>xl</command> のサブコマンドの一覧を表示するには、 <command>xl help</command> コマンドを実行してください。このほか、各サブコマンドに対して詳細なヘルプも表示することができます。この場合は、サブコマンドのオプションとして <systemitem>--help</systemitem> を指定してください。また、サブコマンドに関する詳細は、 <command>xl</command> のマニュアルページにも記載があります。</para>
 
-  <para>
-   For example, the <command>xl list --help</command> displays all options
-   that are available to the list command. As an example, the <command>xl
-   list</command> command displays the status of all virtual machines.
-  </para>
+  <para>たとえば <command>xl list --help</command> のように入力して実行すると、 list コマンドに対して指定可能な全てのオプションが表示されます。ちなみに、 <command>xl list</command> コマンドは、全ての仮想マシンの状態を一覧表示するためのコマンドです。</para>
 
 <screen>
 &prompt.sudo;xl list
@@ -102,64 +54,31 @@ sles12                                7    512     1       -b----     16.3
 opensuse                                   512     1                  12.9
 </screen>
 
-  <para>
-   The <guimenu>State</guimenu> information indicates if a machine is
-   running, and in which state it is. The most common flags are
-   <literal>r</literal> (running) and <literal>b</literal> (blocked) where
-   blocked means it is either waiting for IO, or sleeping because there is
-   nothing to do. For more details about the state flags, see <command>man 1
-   xl</command>.
-  </para>
+  <para><guimenu>State</guimenu> の列には、対象のマシンが動作しているかどうかと、その現在の状態が示されています。最もよく表示されるのが <literal>r</literal> (running; 動作中) と <literal>b</literal> (blocked; ブロック中) (IO 処理待ち、もしくは何もすべきことが無く、待機中) です。状態 (State) フラグの一覧に関する詳細は、 <command>man 1 xl</command> のマニュアルページをお読みください。</para>
 
-  <para>
-   Other useful <command>xl</command> commands include:
-  </para>
+  <para>その他の <command>xl</command> サブコマンドには、下記のようなものがあります:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <command>xl create</command> creates a virtual machine from a given
-     configuration file.
-    </para>
+    <para><command>xl create</command>: 指定した設定ファイルから仮想マシンを作成します。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>xl reboot </command>reboots a virtual machine.
-    </para>
+    <para><command>xl reboot </command>: 仮想マシンを再起動します。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>xl destroy</command> immediately terminates a virtual machine.
-    </para>
+    <para><command>xl destroy</command>: 仮想マシンを即時に停止します。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>xl block-list</command> displays all virtual block devices
-     attached to a virtual machine.
-    </para>
+    <para><command>xl block-list</command>: 仮想マシンに接続されている全ての仮想マシンを表示します。</para>
    </listitem>
   </itemizedlist>
 
   <sect2 xml:id="sec.xen.manage.xl.cfg_file">
-   <title>Guest Domain Configuration File</title>
-   <para>
-    When operating domains, <command>xl</command> requires a domain
-    configuration file for each domain. The default directory to store such
-    configuration files is <filename>/etc/xen/</filename>.
-   </para>
-   <para>
-    A domain configuration file is a plain text file. It consists of
-    several
-    <replaceable>KEY</replaceable>=<replaceable>VALUE</replaceable>
-    pairs. Some keys are mandatory, some are general and apply to any
-    guest, and some apply only to a specific guest type (para or fully
-    virtualized). A value can either be a <literal>"string"</literal>
-    surrounded by single or double quotes, a number, a boolean value, or
-    a list of several values enclosed in brackets <literal>[ value1,
-    value2, ... ]</literal>.
-   </para>
+   <title>ゲストドメインの設定ファイル</title>
+   <para>ゲストドメイン (仮想マシン) を動作させるにあたって、 <command>xl</command> ではゲストドメイン向けの設定ファイルが必要となります。設定ファイルを保存しておくための既定のディレクトリは <filename>/etc/xen/</filename> です。</para>
+   <para>ドメインの設定ファイルは純粋なテキスト形式です。ここには <replaceable>キー</replaceable> = <replaceable>値</replaceable> の形式で、さまざまな設定が記述されます。キーによっては必須のものもあるほか、一般的で任意のゲストに適用することができるものや、特定の種類のゲストにのみ適用できるもの (たとえば完全仮想化環境専用の設定など) があります。値は <literal>"文字列"</literal> のようにして、単一もしくは二重引用符で括ることもできるほか、数値やブール値、もしくは <literal>[ 値_1, 値_2, ... ]</literal> のように括弧で複数の値をまとめることもできます。</para>
    <example>
-    <title>Guest Domain Configuration File for &sleda; 12: <filename>/etc/xen/sled12.cfg</filename></title>
+    <title>&sleda; 12 のゲストドメイン設定ファイル例: <filename>/etc/xen/sled12.cfg</filename></title>
 <screen>name= "sled12"
 builder = "hvm"
 vncviewer = 1
@@ -168,313 +87,193 @@ disk = [ '/var/lib/xen/images/sled12.raw,,hda', '/dev/cdrom,,hdc,cdrom' ]
 vif = [ 'mac=00:16:3e:5f:48:e4,model=rtl8139,bridge=br0' ]
 boot = "n"</screen>
    </example>
-   <para>
-    To start such domain, run <command>xl create
-    /etc/xen/sled12.cfg</command>.
-   </para>
+   <para>上記のドメインを起動するには、 <command>xl create /etc/xen/sled12.cfg</command> を実行します。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.xen.manage.autostart">
-  <title>Automatic Start of Guest Domains</title>
+  <title>ゲストドメインの自動起動</title>
 
-  <para>
-   To make a guest domain start automatically after the host system boots,
-   follow these steps:
-  </para>
+  <para>ホスト側のシステムが起動した際にゲストドメインを自動的に起動したい場合は、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Create the domain configuration file if it does not exist, and save it
-     in the <filename>/etc/xen/</filename> directory, for example
-     <filename>/etc/xen/domain_name.cfg</filename>.
-    </para>
+    <para>ドメインの設定ファイルを作成していない場合は、 <filename>/etc/xen/</filename> ディレクトリ内に作成します。たとえば <filename>/etc/xen/domain_name.cfg</filename> のようになります。</para>
    </step>
    <step>
-    <para>
-     Make a symbolic link of the guest domain configuration file in the
-     <filename>auto/</filename> subdirectory.
-    </para>
+    <para><filename>auto/</filename> サブディレクトリ内に、ゲストドメインの設定ファイルに対するシンボリックリンクを作成します。</para>
 <screen>&prompt.sudo;ln -s /etc/xen/domain_name.cfg /etc/xen/auto/domain_name.cfg</screen>
    </step>
    <step>
-    <para>
-     On the next system boot, the guest domain defined in
-     <filename>domain_name.cfg</filename> will be started.
-    </para>
+    <para>このように設定することで、システムの起動時に <filename>domain_name.cfg</filename> で設定されたゲストドメインが開始するようになります。</para>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.xen.manage.events">
-  <title>Event Actions</title>
+  <title>イベントアクション</title>
 
-  <para>
-   In the guest domain configuration file, you can define actions to be
-   performed on a predefined set of events. For example, to tell the domain
-   to restart itself after it is powered off, include the following line in
-   its configuration file:
-  </para>
+  <para>ゲスト側の設定ファイルでは、さまざまなイベントに対応するアクションを設定することができます。たとえばゲスト側の電源が落とされた際、その後にドメインを再起動させたい場合は、設定ファイル内に下記を記述します:</para>
 
 <screen>on_poweroff="restart"</screen>
 
-  <para>
-   A list of predefined events for a guest domain follows:
-  </para>
+  <para>ゲストドメインで利用できるイベントには、下記のようなものがあります:</para>
 
   <variablelist>
-   <title>List of Events</title>
+   <title>イベントの一覧</title>
    <varlistentry>
     <term>on_poweroff</term>
     <listitem>
-     <para>
-      Specifies what should be done with the domain if it shuts itself down.
-     </para>
+     <para>ドメインをシャットダウンした際に取るべきアクションを指定します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>on_reboot</term>
     <listitem>
-     <para>
-      Action to take if the domain shuts down with a reason code requesting
-      a reboot.
-     </para>
+     <para>ドメインが再起動を要求するような理由コード付きのシャットダウンを受け取った際に、取るべきアクションを指定します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>on_watchdog</term>
     <listitem>
-     <para>
-      Action to take if the domain shuts down because of a &xen; watchdog
-      timeout.
-     </para>
+     <para>&xen; のウオッチドッグタイムアウトにより、ドメインをシャットダウンする際に取るべきアクションを指定します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>on_crash</term>
     <listitem>
-     <para>
-      Action to take if the domain crashes.
-     </para>
+     <para>ドメインがクラッシュした際に取るべきアクションを指定します。</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   For these events, you can define one of the following actions:
-  </para>
+  <para>これらのイベントに対して、下記のアクションを指定することができます:</para>
 
   <variablelist>
-   <title>List of Related Actions</title>
+   <title>関連アクションの一覧</title>
    <varlistentry>
     <term>destroy</term>
     <listitem>
-     <para>
-      Destroy the domain.
-     </para>
+     <para>ドメインを強制停止します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>restart</term>
     <listitem>
-     <para>
-      Destroy the domain and immediately create a new domain with the same
-      configuration.
-     </para>
+     <para>ドメインを強制停止したあと、同じ設定のまま新しいドメインを作成します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>rename-restart</term>
     <listitem>
-     <para>
-      Rename the domain that terminated, and then immediately create a new
-      domain with the same configuration as the original.
-     </para>
+     <para>ドメインを強制停止したあと名前を変更し、元の名前で新しいドメインを作成します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>preserve</term>
     <listitem>
-     <para>
-      Keep the domain. It can be examined, and later destroyed with
-      <command>xl destroy</command>.
-     </para>
+     <para>ドメインを維持します。ここから何らかの調査を行なうことができます。調査が終わったら、 <command>xl destroy</command> で停止を行なうことができます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>coredump-destroy</term>
     <listitem>
-     <para>
-      Write a core dump of the domain to
-      <filename>/var/xen/dump/NAME</filename> and then destroy the domain.
-     </para>
+     <para><filename>/var/xen/dump/<replaceable>名前</replaceable></filename> 内にドメインのコアダンプを書き込んだあと、ドメインを強制停止します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>coredump-restart</term>
     <listitem>
-     <para>
-      Write a core dump of the domain to
-      <filename>/var/xen/dump/NAME</filename> and then restart the domain.
-     </para>
+     <para><filename>/var/xen/dump/<replaceable>名前</replaceable></filename> 内にドメインのコアダンプを書き込んだあと、ドメインを再起動します。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
 
  <sect1 xml:id="sec.xen.manage.tsc">
-  <title>Time Stamp Counter</title>
-  <para>
-   The Time Stamp Counter (TSC) may be specified for each domain in the guest
-   domain configuration file (for more information, see <xref linkend="sec.xen.manage.xl.cfg_file"/>).
-  </para>
-  <para>
-   With the <literal>tsc_mode</literal> setting, you specify whether
-   rdtsc instructions are executed <quote>natively</quote> (fast, but
-   TSC-sensitive applications may sometimes run incorrectly) or emulated
-   (always run correctly, but performance may suffer).
-  </para>
+  <title>タイムスタンプカウンタ (TSC)</title>
+  <para>Time Stamp Counter (TSC) をゲストドメインの設定ファイル (詳しくは <xref linkend="sec.xen.manage.xl.cfg_file"/> をお読みください) 内に設定することができます。</para>
+  <para><literal>tsc_mode</literal> の設定を行なうことで、 rdtsc インストラクションをネイティブで動作させる (高速に動作するものの、 TSC を厳格に処理するアプリケーションが正しく動作しなくなってしまうことがあります) か、もしくは擬似的に動作させる (常に正しく動作しますが、性能が劣化します) かを制御することができます。</para>
   <variablelist>
    <varlistentry>
-    <term><literal>tsc_mode=0</literal> (default)</term>
+    <term><literal>tsc_mode=0</literal> (既定値)</term>
     <listitem>
-     <para>
-      Use this to ensure correctness while providing the best performance
-      possible&mdash;for more information, see <link xlink:href="https://xenbits.xen.org/docs/4.3-testing/misc/tscmode.txt"/>.
-     </para>
+     <para>性能をできるだけ劣化させず、かつ正確性を維持する方式です。詳しくは <link xlink:href="https://xenbits.xen.org/docs/4.3-testing/misc/tscmode.txt"/> (英語) をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>tsc_mode=1</literal> (always emulate)</term>
+    <term><literal>tsc_mode=1</literal> (常に擬似的に動作させる)</term>
     <listitem>
-     <para>
-      Use this when TSC-sensitive apps are running and worst-case
-      performance degradation is known and acceptable.
-     </para>
+     <para>TSC を厳格に処理するアプリケーションが存在していて、かつ最大限の性能劣化を許容できるシステムである場合に指定する方式です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>tsc_mode=2</literal> (never emulate)</term>
+    <term><literal>tsc_mode=2</literal> (擬似的に動作させない)</term>
     <listitem>
-     <para>
-      Use this when all applications running in
-      this VM are TSC-resilient and highest performance is required.
-     </para>
+     <para>TSC を厳格に処理するアプリケーションが存在せず、最大限の性能を発揮させる必要のあるシステムである場合に指定する方式です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><literal>tsc_mode=3</literal> (PVRDTSCP)</term>
     <listitem>
-     <para>
-      High-TSC-frequency applications may be paravirtualized (modified)
-      to obtain both correctness and highest performance&mdash;any
-      unmodified applications must be TSC-resilient.
-     </para>
+     <para>頻繁に TSC を使用するアプリケーションが存在する場合、準仮想化 (修正済み) で動作させることによって、正確性と高性能の両方を実現することができます。未修正のアプリケーションについては、 TSC に対する耐性が必須となります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
-  <para>
-   For background information, see <link xlink:href="https://xenbits.xen.org/docs/4.3-testing/misc/tscmode.txt"/>.
-  </para>
+  <para>背景となる情報について、詳しくは <link xlink:href="https://xenbits.xen.org/docs/4.3-testing/misc/tscmode.txt"/> をお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec.xen.config.suspend">
-  <title>Saving Virtual Machines</title>
+  <title>仮想マシンの保存</title>
 
   <procedure>
-   <title>Save a Virtual Machine’s Current State</title>
+   <title>仮想マシンに対する現在状態の保存</title>
    <step>
-    <para>
-     Make sure the virtual machine to be saved is running.
-    </para>
+    <para>まずは保存したい仮想マシンが動作中であることを確認します。</para>
    </step>
    <step>
-    <para>
-     In the host environment, enter
-    </para>
-<screen>&prompt.sudo;xl save <replaceable>ID</replaceable> <replaceable>STATE-FILE</replaceable></screen>
-    <para>
-     where <replaceable>ID</replaceable> is the virtual machine ID you want
-     to save, and <replaceable>STATE-FILE</replaceable> is the name you
-     specify for the memory state file. By default, the domain will no
-     longer be running after you create its snapshot. Use
-     <option>-c</option> to keep it running even after you create the
-     snapshot.
-    </para>
+    <para>ホスト側の環境で下記を実行します:</para>
+<screen>&prompt.sudo;xl save <replaceable>ID</replaceable> <replaceable>状態ファイル</replaceable></screen>
+    <para>ここで <replaceable>ID</replaceable> には保存対象の仮想マシンの ID を、 <replaceable>状態ファイル</replaceable> にはメモリの状態を保存するためのファイルを指定します。 <!-- NOTE: snapshot means saving? --> 既定では、このようにして保存を行なった場合、対象のドメインは停止されますが、 <option>-c</option> を指定することで動作させたままの状態にすることもできます。</para>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.xen.config.restore">
-  <title>Restoring Virtual Machines</title>
+  <title>仮想マシンの再開</title>
 
   <procedure>
-   <title>Restore a Virtual Machine’s Current State</title>
+   <title>仮想マシンに対する保存状態の再開</title>
    <step>
-    <para>
-     Make sure the virtual machine to be restored has not been started since
-     you ran the save operation.
-    </para>
+    <para>まずは対象の仮想マシンが開始されていないことを確認します。</para>
    </step>
    <step>
-    <para>
-     In the host environment, enter
-    </para>
-<screen>&prompt.sudo;xl restore <replaceable>STATE-FILE</replaceable></screen>
-    <para>
-     where <replaceable>STATE-FILE</replaceable> is the previously saved
-     memory state file. By default, the domain will be running after it is
-     restored. To pause it after the restore, use <option>-p</option>.
-    </para>
+    <para>ホスト側の環境で下記を実行します:</para>
+<screen>&prompt.sudo;xl restore <replaceable>状態ファイル</replaceable></screen>
+    <para>ここで、 <replaceable>状態ファイル</replaceable> には保存時に使用したファイルのファイル名 (パス) を指定します。既定では再開を行なうと動作中の状態に戻りますが、 <option>-p</option> を指定することで、一時停止中のままにしておくこともできます。</para>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="sec.xen.config.state">
-  <title>Virtual Machine States</title>
+  <title>仮想マシンの状態</title>
 
-  <para>
-   A virtual machine’s state can be displayed by viewing the results of
-   the <command>xl list</command> command, which abbreviates the state using
-   a single character.
-  </para>
+  <para>仮想マシンの状態は <command>xl list</command> コマンドで表示することができます。このとき、状態は下記に示す 1 文字の略記で表わされます。</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <command>r</command> - running - The virtual machine is currently
-     running and consuming allocated resources.
-    </para>
+    <para><command>r</command> (running (動作中)): 仮想マシンが動作していて、割り当てられたリソースを使用していることを示しています。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>b</command> - blocked - The virtual machine’s processor is
-     not running and not able to run. It is either waiting for I/O or has
-     stopped working.
-    </para>
+    <para><command>b</command> (blocked (ブロック中)): 仮想マシンのプロセッサが動作しておらず、かつ動作できない状態であることを示しています。 I/O の処理待ち、もしくは停止処理中であることを表わしています。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>p</command> - paused - The virtual machine is paused. It does
-     not interact with the hypervisor but still maintains its allocated
-     resources, such as memory.
-    </para>
+    <para><command>p</command> (paused (一時停止中)): 仮想マシンが一時停止中であることを表わしています。ハイパーバイザとの通信は行なわれていませんが、メモリなどのリソースは使用したままの状態になります。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>s</command> - shutdown - The guest operating system is in the
-     process of being shut down, rebooted, or suspended, and the virtual
-     machine is being stopped.
-    </para>
+    <para><command>s</command> (shutdown (シャットダウン中)): ゲスト側のオペレーティングシステムでシャットダウンや再起動、サスペンド処理などを行なっていて、仮想マシンが停止されつつある状態であることを表わしています。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>c</command> - crashed - The virtual machine has crashed and is
-     not running.
-    </para>
+    <para><command>c</command> (crashed (クラッシュ済み)): 仮想マシンがクラッシュしていて、動作していないことを表わしています。</para>
    </listitem>
    <listitem>
-    <para>
-     <command>d</command> - dying - The virtual machine is in the process of
-     shutting down or crashing.
-    </para>
+    <para><command>d</command> (dying (死亡中)): 仮想マシンがシャットダウン中であるか、クラッシュ中であることを表わしています。</para>
    </listitem>
   </itemizedlist>
  </sect1>
