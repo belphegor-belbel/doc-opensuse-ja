@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.xen.admin">
- <title>Administrative Tasks</title>
+ <title>管理作業</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -13,24 +13,14 @@
     </info>
     <para/>
  <sect1 xml:id="sec.xen.config.bootloader">
-  <title>The Boot Loader Program</title>
+  <title>ブートローダプログラム</title>
 
-  <para>
-   The boot loader controls how the virtualization software boots and runs.
-   You can modify the boot loader properties by using &yast;, or by
-   directly editing the boot loader configuration file.
-  </para>
+  <para>ブートローダには仮想化ソフトウエアの起動と実行に関する制御が含まれています。 &yast; を使用するか、もしくは直接設定ファイルを編集することで、ブートローダプログラムの設定を変更することができます。</para>
 
-  <para>
-   The &yast; boot loader program is located at <menuchoice>
-   <guimenu>&yast;</guimenu> <guimenu>System</guimenu> <guimenu>Boot
-   Loader</guimenu> </menuchoice>. Click the <guimenu>Bootloader
-   Options</guimenu> tab and select the line containing the &xen; kernel
-   as the <guimenu>Default Boot Section</guimenu>.
-  </para>
+  <para>&yast; のブートローダプログラムは <menuchoice> <guimenu>&yast;</guimenu> <guimenu>システム</guimenu> <guimenu>ブートローダ</guimenu> </menuchoice> にあります。 <guimenu>ブートローダのオプション</guimenu> タブを選択して、 &xen; カーネルを含むものを <guimenu>既定のブートセクション</guimenu> で選択してください。</para>
 
   <figure>
-   <title>Boot Loader Settings</title>
+   <title>ブートローダの設定</title>
    <mediaobject>
     <imageobject role="fo">
      <imagedata fileref="xen_bootloader.png" width="80%" format="PNG"/>
@@ -41,485 +31,241 @@
    </mediaobject>
   </figure>
 
-  <para>
-   Confirm with <guimenu>OK</guimenu>. Next time you boot the host, it will
-   be ready to provide the &xen; virtualization environment.
-  </para>
+  <para>設定が終わったら <guimenu>OK</guimenu> を押します。これでホストの次回の起動時に &xen; が読み込まれ、 &xen; 仮想化環境を使用できるようになります。</para>
 
-  <para>
-   You can use the Boot Loader program to specify functionality, such as:
-  </para>
+  <para>ブートローダプログラムを使用することで、様々な機能を調整することができます。具体的には下記のようなものがあります:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     Pass kernel command line parameters.
-    </para>
+    <para>カーネルのコマンドラインパラメータの指定</para>
    </listitem>
    <listitem>
-    <para>
-     Specify the kernel image and initial RAM disk.
-    </para>
+    <para>カーネルイメージと初期 RAM ディスクの指定</para>
    </listitem>
    <listitem>
-    <para>
-     Select a specific hypervisor.
-    </para>
+    <para>特定のハイパーバイザの選択</para>
    </listitem>
    <listitem>
-    <para>
-     Pass additional parameters to the hypervisor. See
-     <link xlink:href="http://xenbits.xen.org/docs/unstable/misc/xen-command-line.html"/>
-     for their complete list.
-    </para>
+    <para>ハイパーバイザに対する追加パラメータの指定。詳しくは <link xlink:href="http://xenbits.xen.org/docs/unstable/misc/xen-command-line.html"/> (英語) をお読みください。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   You can customize your virtualization environment by editing the
-   <filename>/etc/default/grub</filename> file. Add the following line to
-   this file:
-   <literal>GRUB_CMDLINE_XEN="&lt;boot_parameters&gt;"</literal>. Do not
-   forget to run <command>grub2-mkconfig -o /boot/grub2/grub.cfg</command>
-   after editing the file.
-  </para>
+  <para>仮想化環境のカスタマイズに際しては、 <filename>/etc/default/grub</filename> ファイルを編集してください。このファイルに対して、 <literal>GRUB_CMDLINE_XEN="<replaceable>&lt;パラメータ&gt;"</replaceable></literal> のような行を追加します。なお、編集後は忘れずに <command>grub2-mkconfig -o /boot/grub2/grub.cfg</command> を実行してください。</para>
  </sect1>
  <sect1 xml:id="sec.xen.config.sparse">
-  <title>Sparse Image Files and Disk Space</title>
+  <title>スパースイメージファイルとディスク領域</title>
 
-  <para>
-   If the host’s physical disk reaches a state where it has no available
-   space, a virtual machine using a virtual disk based on a sparse image
-   file cannot write to its disk. Consequently, it reports I/O errors.
-  </para>
+  <para>ホスト側の物理ディスクの容量がいっぱいになり空き容量が無くなると、スパース (疎な) イメージファイルをベースとした仮想ディスクを使用している仮想マシンは、ディスクへの書き込みができなくなります。これにより、 I/O エラーが発生することになります。</para>
 
-  <para>
-   If this situation
-   occurs, you should free up available space on the physical disk, remount
-   the virtual machine’s file system, and set the file system back to
-   read-write.
-  </para>
+  <para>このような状況に陥ってしまった場合、まずは物理ディスク側にある不要なファイルを削除するなどして容量を空けてください。その後、仮想マシン側のファイルシステムを再マウントして、ファイルシステムを書き込み可能な状態に戻してください。</para>
 
-  <para>
-   To check the actual disk requirements of a sparse image file, use the
-   command <command>du -h &lt;image file&gt;</command>.
-  </para>
+  <para>スパースイメージファイルが実際に使用している容量を調べるには、 <command>du -h <replaceable>&lt;イメージファイル名&gt;</replaceable></command> を実行します。</para>
 
-  <para>
-   To increase the available space of a sparse image file, first increase
-   the file size and then the file system.
-  </para>
+  <para>スパースイメージファイルの容量を増やすには、まずファイルサイズを増やしてから、ファイルシステム側のサイズを増やしてください。</para>
 
   <warning>
-   <title>Back Up Before Resizing</title>
-   <para>
-    Touching the sizes of partitions or sparse files always bears the risk
-    of data failure. Do not work without a backup.
-   </para>
+   <title>サイズ変更を実施する前にバックアップを採取しておく必要性について</title>
+   <para>パーティションのサイズを変更する場合もスパースファイルのサイズを変更する場合も、処理の失敗に備えて必ずバックアップを採取しておいてください。バックアップ無しに作業を行なってはなりません。</para>
   </warning>
 
-  <para>
-   The resizing of the image file can be done online, while the &vmguest;
-   is running. Increase the size of a sparse image file with:
-  </para>
+  <para>イメージファイルのサイズ変更はオンラインで実施することができます。つまり、 &vmguest; が動作している間でも実行することができます。スパースイメージファイルのサイズを拡張するには、下記のコマンドを入力して実行します:</para>
 
-<screen>&prompt.sudo;dd if=/dev/zero of=&lt;image file&gt; count=0 bs=1M seek=&lt;new size in MB&gt;</screen>
+<screen>&prompt.sudo;dd if=/dev/zero of=<replaceable>&lt;イメージファイル&gt;</replaceable> count=0 bs=1M seek=<replaceable>&lt;サイズ_(メガバイト単位)&gt;</replaceable></screen>
 
-  <para>
-   For example, to increase the file
-   <filename>/var/lib/xen/images/sles/disk0</filename> to a size of 16GB,
-   use the command:
-  </para>
+  <para>たとえば <filename>/var/lib/xen/images/sles/disk0</filename> というファイルを 16GB まで拡張させたい場合は、下記を実行します:</para>
 
 <screen>&prompt.sudo;dd if=/dev/zero of=/var/lib/xen/images/sles/disk0 count=0 bs=1M seek=16000</screen>
 
   <note>
-   <title>Increasing Non-Sparse Images</title>
-   <para>
-    It is also possible to increase the image files of devices that are not
-    sparse files. However, you must know exactly where the previous image
-    ends. Use the seek parameter to point to the end of the image file and
-    use a command similar to the following:
-   </para>
+   <title>非スパースイメージの拡張</title>
+   <para>非スパースファイルをベースにしたイメージファイルの場合であっても、イメージファイルのサイズを拡張することができます。ただし、この場合は現時点でのイメージサイズを正確に知っておかなければなりません。現時点でのイメージサイズを seek パラメータに設定して、拡張するサイズを count サイズで指定します:</para>
 <screen>&prompt.sudo;dd if=/dev/zero of=/var/lib/xen/images/sles/disk0 seek=8000 bs=1M count=2000</screen>
   </note>
 
-  <para>
-   Be sure to use the right seek, else data loss may happen.
-  </para>
+  <para>なお、 seek の値を間違えてはなりません。誤った値を指定してしまうと、データの一部を消してしまうことになります。</para>
 
-  <para>
-   If the &vmguest; is running during the resize operation, also resize
-   the loop device that provides the image file to the &vmguest;. First
-   detect the correct loop device with the command:
-  </para>
+  <para>サイズ変更の作業時に &vmguest; が動作中であった場合、 &vmguest; 側にイメージを提供しているループバックデバイス側でもサイズ変更を行なう必要があります。まずは下記のコマンドを実行して、現在使用しているループバックデバイスを検出します:</para>
 
 <screen>&prompt.sudo;losetup -j /var/lib/xen/images/sles/disk0</screen>
 
-  <para>
-   Then resize the loop device, for example <filename>/dev/loop0</filename>,
-   with the following command:
-  </para>
+  <para>あとはループバックデバイスのサイズを変更します。たとえばループバックデバイスが <filename>/dev/loop0</filename> である場合は、下記のようなコマンドになります:</para>
 
 <screen>&prompt.sudo;losetup -c /dev/loop0</screen>
 
-  <para>
-   Finally check the size of the block device inside the guest system with
-   the command <command>fdisk -l /dev/xvdb</command>. The device name
-   depends on the actually increased device.
-  </para>
+  <para>あとはゲストシステム内でブロックデバイスのサイズを確認します。具体的には <command>fdisk -l /dev/xvdb</command> のようなコマンドを入力して実行し、確認を行ないます。なお、デバイス名はお使いの環境に合わせて変更してください。</para>
 
-  <para>
-   The resizing of the file system inside the sparse file involves tools that
-   are depending on the actual file system. <phrase os="sles">This is
-   described in detail in the <xref linkend="book.storage"/>.</phrase>
-  </para>
+  <para>スパースファイル内にあるファイルシステム側の変更については、使用しているファイルシステムの種類によって異なりますので、対応するツールをお使いのうえ変更を行なってください。 <phrase os="sles">詳しくは <xref linkend="book.storage"/> をお読みください。</phrase></para>
  </sect1>
  <sect1 xml:id="sec.xen.manage.migrate">
-  <title>Migrating &xen; &vmguest; Systems</title>
+  <title>&xen; &vmguest; システムの移行</title>
 
-  <para>
-   With &xen; it is possible to migrate a &vmguest; system from one
-   &vmhost; to another with almost no service interruption. This could be
-   used for example to move a busy &vmguest; to a &vmhost; that has
-   stronger hardware or is not yet loaded. Or, if a service of a &vmhost;
-   is required, all &vmguest; systems running on this machine can be
-   migrated to other machines to avoid interruption of service.
-   These are only two examples&mdash;many more reasons may apply to your
-   personal situation.
-  </para>
+  <para>&xen; では、ほとんどサービスの停止を伴うことなく &vmguest; のシステムを一方の &vmhost; から他方の &vmhost; に移行することができます。これはたとえば、負荷の重い &vmguest; をより強力なハードウエアの搭載された &vmhost; に移行したり、負荷に余裕のある &vmhost; に移行したりする際に使用します。また、何らかの理由で &vmhost; を停止させる必要が発生した場合、その中で動作している &vmguest; を他の &vmhost; に移行して、サービスの停止を回避するためにも使用します。ここには 2 種類の理由しか記述していませんが、実際にはさまざまな理由で移行が必要となることがあります。</para>
 
-  <para>
-   Before starting, some preliminary considerations regarding the
-   &vmhost; should be taken into account:
-  </para>
+  <para>移行を開始する前に、まずは &vmhost; に関するいくつかの事前要件を考慮する必要があります:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     All &vmhost; systems should use a similar CPU. The frequency is not
-     so important, but they should be using the same CPU family. To get more
-     information about the used CPU, see <command>cat
-     /proc/cpuinfo</command>.
-    </para>
+    <para>移行に関わる全ての &vmhost; のシステムで、同じような CPU を使用する必要があります。動作周波数などは異なっていてもかまいませんが、同一のファミリの CPU を使用しておく必要があります。 CPU に関する詳細は、 <command>cat /proc/cpuinfo</command> を実行すると取得することができます。</para>
    </listitem>
    <listitem>
-    <para>
-     All resources that are used by a specific guest system must be
-     available on all involved &vmhost; systems&mdash;for example all used block devices
-     must exist on both &vmhost; systems.
-    </para>
+    <para>特定のゲストシステムが使用している全てのリソースは、移行に関わる全ての &vmhost; から使用できなければなりません。具体的には、使用している全てのブロックデバイスは、両方の &vmhost; システム内に存在していなければなりません。</para>
    </listitem>
    <listitem>
-    <para>
-     If the hosts included in the migration process run in different subnets,
-     make sure that either DHCP relay is available to the guests,
-     or for guests with static network configuration, set up the network manually.
-    </para>
+    <para>移行処理に関わる &vmhost; が異なるサブネット内に存在している場合、ゲストに対して DHCP リレーを提供する必要があります。なお、ゲスト側で固定のネットワーク設定を使用している場合、ネットワークの設定果て座興で修正する必要があります。</para>
    </listitem>
    <listitem>
-    <para>
-     Using special features like <literal>&pciback;</literal> may be
-     problematic. Do not implement these when deploying for an environment
-     that should migrate &vmguest; systems between different &vmhost;
-     systems.
-    </para>
+    <para><literal>&pciback;</literal> などの特殊機能を使用していると、問題が発生する場合があります。異なる &vmhost; 間で &vmguest; を移行する可能性がある場合は、これらの機能を使用しないでください。</para>
    </listitem>
    <listitem>
-    <para>
-     For fast migrations, a fast network is mandatory. If possible, use GB
-     Ethernet and fast switches. Deploying VLAN might also help avoid
-     collisions.
-    </para>
+    <para>移行を高速に行なうには、ネットワークも高速化してください。可能であればギガビットイーサネットで高速なスイッチを使用してください。また、 VLAN を使用することで、衝突を防ぐことができます。</para>
    </listitem>
   </itemizedlist>
 
   <sect2 xml:id="sec.xen.manage.migrate.block">
-   <title>Preparing Block Devices for Migrations</title>
-   <para>
-    The block devices needed by the &vmguest; system must be available on
-    all involved &vmhost; systems. This is done by implementing some kind
-    of shared storage that serves as container for the root file system of
-    the migrated &vmguest; system. Common possibilities include:
-   </para>
+   <title>移行のためのブロックデバイスの準備</title>
+   <para>&vmguest; 側で必要となるブロックデバイスは、移行に関わる全ての &vmhost; システムからアクセスできなければなりません。これは移行を行なう &vmguest; システムのルートファイルシステムを、共有型ストレージ内に配置することで実現することができます。一般的には下記のようなものがあります:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      <literal>iSCSI</literal> can be set up to give access to the same block
-      devices from different systems at the same time. <phrase os="sles">For
-      more information about iSCSI, see <xref linkend="cha.iscsi"/>.</phrase>
-     </para>
+     <para><literal>iSCSI</literal>: 複数のシステムに対して、同時に同一のブロックデバイスにアクセスする機能を提供することができます。 <phrase os="sles">iSCSI に関する詳細は、 <xref linkend="cha.iscsi"/> をお読みください。</phrase></para>
     </listitem>
     <listitem>
-     <para>
-      <literal>NFS</literal> is a widely used root file system that can
-      easily be accessed from different locations. For more information, see
-      <xref linkend="cha.nfs"/>.
-     </para>
+     <para><literal>NFS</literal>: 複数のシステムから容易にアクセスすることのできるルートファイルシステムとして、幅広く使用されています。詳しくは <xref linkend="cha.nfs"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      <literal>DRBD</literal> can be used if only two &vmhost; systems
-      are involved. This gives some extra data security, because the used
-      data is mirrored over the network. <phrase os="sles;sled">For more information, see the
-      <citetitle>SUSE Linux Enterprise High Availability Extension
-      &productnumber;</citetitle> documentation at
-      <link xlink:href="http://www.suse.com/doc/"/></phrase>.
-     </para>
+     <para><literal>DRBD</literal>: 2 台の &vmhost; システム間でのみ使用することのできるシステムです。この仕組みを使用すると、ネットワークを介してデータが複製されることになりますので、データの保全性をさらに高めることができます。 <phrase os="sles;sled">詳しくは、 <link xlink:href="http://www.suse.com/doc/"/> で提供されている <citetitle>SUSE Linux Enterprise High Availability Extension &productnumber;</citetitle> をお読みください。 </phrase></para>
     </listitem>
     <listitem>
-     <para>
-      <literal>SCSI</literal> can also be used if the available hardware
-      permits shared access to the same disks.
-     </para>
+     <para><literal>SCSI</literal>: ハードウエア側で共有が許可されていれば、同じディスクに対して複数のシステムがアクセスすることができます。</para>
     </listitem>
     <listitem>
-     <para>
-      <literal>NPIV</literal> is a special mode to use Fibre channel disks.
-      However, in this case all migration hosts must be attached to the same
-      Fibre channel switch. For more information about NPIV, see
-      <xref linkend="sec.xen.config.disk"/>. Commonly, this works if the
-      Fibre channel environment supports 4 Gbit or faster connections.
-     </para>
+     <para><literal>NPIV</literal>: ファイバチャネルディスクを使用するための特殊なモードです。ただし、この場合は移行に関わる &vmhost; が同じファイバチャネルのスイッチに接続されていなければなりません。 NPIV に関する詳細は、 <xref linkend="sec.xen.config.disk"/> をお読みください。一般的に、これは 4 ギガビット以上のファイバチャネル接続環境でのみ動作します。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="sec.xen.manage.migrate.xl">
-   <title>Migrating &vmguest; Systems</title>
-   <para>
-    The actual migration of the &vmguest; system is done with the
-    command:
-   </para>
-<screen>&prompt.sudo;xl migrate &lt;domain_name&gt; &lt;host&gt;</screen>
-   <para>
-    The speed of the migration depends on how fast the memory print can be
-    saved to disk, sent to the new &vmhost; and loaded there. This means
-    that small &vmguest; systems can be migrated faster than big systems
-    with a lot of memory.
-   </para>
+   <title>&vmguest; システムの移行</title>
+   <para>&vmguest; システムの実際の移行作業は、下記のコマンドで行ないます:</para>
+<screen>&prompt.sudo;xl migrate <replaceable>&lt;ドメイン名&gt;</replaceable> <replaceable>&lt;ホスト名&gt;</replaceable></screen>
+   <para>移行の速度はメモリのディスクへの書き込み速度と、新しい &vmhost; への送信速度、そして新しい &vmhost; での読み込み速度によって決まります。つまり、メモリの少ない &vmguest; のほうが、メモリの多い &vmguest; よりも素早く移行できることになります。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.xen.monitor">
-  <title>Monitoring &xen;</title>
+  <title>&xen; の監視</title>
 
-  <para>
-   For a regular operation of many virtual guests, having a possibility to
-   check the sanity of all the different &vmguest; systems is
-   indispensable. &xen; offers several tools besides the system tools to
-   gather information about the system.
-  </para>
+  <para>多数の仮想化ゲストを定常的に管理している場合、動作している多数の &vmguest; の正常性を監視する作業が欠かせません。 &xen; では、システムに関する情報を収集するためのさまざまなシステムツールを提供しています。</para>
 
   <tip>
-   <title>Monitoring the &vmhost;</title>
-   <para>
-    Basic monitoring of the &vmhost; (I/O and CPU) is available via the
-    &vmm;. Refer to
-    <xref linkend="cha.libvirt.admin.monitor.virt-manager"/> for details.
-   </para>
+   <title>&vmhost; の監視</title>
+   <para>&vmhost; の基本的な監視 (I/O および CPU) については、 &vmm; 側で提供しています。詳しくは <xref linkend="cha.libvirt.admin.monitor.virt-manager"/> をお読みください。</para>
   </tip>
 
   <sect2 xml:id="sec.xen.monitor.xentop">
-   <title>Monitor &xen; with <command>xentop</command></title>
-   <para>
-    The preferred terminal application to gather information about &xen;
-    virtual environment is <command>xentop</command>. Unfortunately, this
-    tool needs a rather broad terminal, else it inserts line breaks into the
-    display.
-   </para>
-   <para>
-    <command>xentop</command> has several command keys that can give you
-    more information about the system that is monitored. Some of the more
-    important are:
-   </para>
+   <title><command>xentop</command> を利用した &xen; の管理</title>
+   <para>&xen; 仮想化環境で情報を収集するために使用する端末アプリケーションとして、 <command>xentop</command> が用意されています。ただし、このツールを使用するにはサイズの大きな (文字数の多い) 端末が必要となります。サイズの小さな端末を使用してしまうと、表示が改行されて読みにくくなってしまいます。</para>
+   <para><command>xentop</command> には監視の際の設定を変更するためのコマンドキーが用意されています。主なものは下記のとおりです:</para>
    <variablelist>
     <varlistentry>
      <term>D</term>
      <listitem>
-      <para>
-       Change the delay between the refreshes of the screen.
-      </para>
+      <para>画面の更新間隔を指定します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>N</term>
      <listitem>
-      <para>
-       Also display network statistics. Note, that only standard
-       configurations will be displayed. If you use a special configuration
-       like a routed network, no network will be displayed.
-      </para>
+      <para>ネットワークの統計情報も表示するようにします。なお、標準的な設定のみが表示されます。また、ルーティング型ネットワークのような特殊な設定にも対応していません。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>B</term>
      <listitem>
-      <para>
-       Display the respective block devices and their cumulated usage count.
-      </para>
+      <para>接続されているブロックデバイスと、その累積しよう回数を表示します。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    For more information about <command>xentop</command> see the manual page
-    <command>man 1 xentop</command>.
-   </para>
+   <para><command>xentop</command> に関する詳細は、 <command>man 1 xentop</command> で表示されるマニュアルページをお読みください。</para>
 
    <tip>
     <title><command>virt-top</command></title>
-    <para>
-     libvirt offers the hypervisor-agnostic tool <command>virt-top</command>,
-     which is recommended for monitoring &vmguest;s. See <xref linkend="cha.libvirt.admin.monitor.virt-top"/> for details.
-    </para>
+    <para>libvirt にはハイパーバイザに依存しない <command>virt-top</command> というツールが提供されています。こちらも &vmguest; の監視にはお勧めです。詳しくは <xref linkend="cha.libvirt.admin.monitor.virt-top"/> をお読みください。</para>
    </tip>
 
   </sect2>
 
   <sect2 xml:id="sec.xen.monitor.tools">
-   <title>Additional Tools</title>
-   <para>
-    There are many system tools that also help monitoring or debugging a
-    running <phrase os="sles;sled">&sle;</phrase><phrase os="osuse">&opensuse;</phrase> system. Many of these are covered in
-    <xref linkend="cha.util"/>. Especially useful for monitoring a
-    virtualization environment are the following tools:
-   </para>
+   <title>追加のツール</title>
+   <para>稼働中の <phrase os="sles;sled">&sle;</phrase> <phrase os="osuse">&opensuse;</phrase> システムを監視したりデバッグしたりするためのシステムツールは数多く存在しています。それらのうちの多くは <xref linkend="cha.util"/> で説明を行なっています。ここでは特に、仮想化環境を監視するためのツールについて説明しています:</para>
    <variablelist>
     <varlistentry>
      <term>ip</term>
      <listitem>
-      <para>
-       The command line utility <command>ip</command> may be used to monitor
-       arbitrary network interfaces. This is especially useful if you have
-       set up a network that is routed or applied a masqueraded network. To
-       monitor a network interface with the name
-       <literal>&xenguest;.0</literal>, run the following command:
-      </para>
+      <para>コマンドラインユーティリティである <command>ip</command> コマンドは、任意のネットワークインターフェイスの監視を行なうことができるコマンドです。このコマンドは、ルーティング型のネットワークやマスカレード型のネットワークを構成しているような場合、特に有用です。たとえば <literal>&xenguest;.0</literal> という名前のネットワークインターフェイスを監視したい場合は、下記のコマンドを実行します:</para>
 <screen>&prompt.user;watch ip -s link show &xenguest;.0</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>bridge</term>
      <listitem>
-      <para>
-       In a standard setup, all the &xen; &vmguest; systems are
-       attached to a virtual network bridge. <command>bridge</command> allows
-       you to determine the connection between the bridge and the virtual
-       network adapter in the &vmguest; system. For example, the output
-       of <command>bridge link</command> may look like the following:
-      </para>
+      <para>標準的な設定では、全ての &xen; &vmguest; は仮想ネットワークブリッジに接続されます。 <command>bridge</command> コマンドを実行すると、 &vmguest; システム内の仮想ネットワークアダプタが、どのブリッジに接続されているのかを知ることができます。この場合は、 <command>bridge link</command> と入力して実行します。出力は下記のようになります:</para>
 <screen>
 2: eth0 state DOWN : &lt;NO-CARRIER, ...,UP&gt; mtu 1500 master br0
 8: vnet0 state UNKNOWN : &lt;BROADCAST, ...,LOWER_UP&gt; mtu 1500 master virbr0 \
   state forwarding priority 32 cost 100
 </screen>
-      <para>
-       This shows that there are two virtual bridges defined on the system.  One
-       is connected to the physical Ethernet device <literal>eth0</literal>, the
-       other one is connected to a VLAN interface <literal>vnet0</literal>.
-      </para>
+      <para>上記の出力では、 2 種類の仮想ブリッジがシステム内に定義されています。一方は物理イーサネットデバイスである <literal>eth0</literal> に、もう一方は VLAN インターフェイスである <literal>vnet0</literal> に接続されています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term>iptables-save</term>
      <listitem>
-      <para>
-       Especially when using masquerade networks, or if several Ethernet
-       interfaces are set up together with a firewall setup, it may be
-       helpful to check the current firewall rules.
-      </para>
-      <para>
-       The command <command>iptables</command> may be used to check all the
-       different firewall settings. To list all the rules of a chain, or
-       even of the complete setup, you may use the commands
-       <command>iptables-save</command> or <command>iptables -S</command>.
-      </para>
+      <para>マスカレード型のネットワークを使用している場合や、イーサネットインターフェイスに対してファイアウオールの設定を行なっている場合、現在のファイアウオールルールを確認しておく必要がある場合があります。</para>
+      <para>この場合、 <command>iptables</command> コマンドを実行することで、さまざまなファイアウオール設定を一括で表示することができます。チェイン内の全てのルールを表示したい場合、もしくは全ての設定を出力したい場合は、 <command>iptables-save</command> もしくは <command>iptables -S</command> を実行してください。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
  </sect1>
  <sect1 xml:id="sec.xen.admin.vhostmd">
-  <title>Providing Host Information for &vmguest; Systems</title>
+  <title>&vmguest; システムに対するホスト情報の提供</title>
 
-  <para>
-   In a standard &xen; environment, the &vmguest; systems have only
-   very limited information about the &vmhost; system they are running
-   on. If a guest should know more about the &vmhost; it runs on,
-   <systemitem>vhostmd</systemitem> can provide more information to selected
-   guests. To set up your system to run <systemitem>vhostmd</systemitem>,
-   proceed as follows:
-  </para>
+  <para>標準的な &xen; 環境では、 &vmguest; システムに対しては、 &vmhost; システムの一部の情報しか伝達されません。ゲスト側でさらに詳しい &vmhost; の情報を提供する必要がある場合は、 <systemitem>vhostmd</systemitem> を利用して、選択したゲストに情報提供を行なってください。お使いのシステムで <systemitem>vhostmd</systemitem> を動作させるには、下記の手順を行ないます:</para>
 
   <procedure>
    <step>
-    <para>
-     Install the package vhostmd on the &vmhost;.
-    </para>
+    <para>まずは &vmhost; に vhostmd パッケージをインストールします。</para>
    </step>
    <step>
-    <para>
-     To add or remove <literal>metric</literal> sections from the
-     configuration, edit the file
-     <filename>/etc/vhostmd/vhostmd.conf</filename>. However, the default works
-     well.
-    </para>
+    <para>設定内に <literal>metric</literal> セクションを追加または削除するには、 <filename>/etc/vhostmd/vhostmd.conf</filename> ファイルを編集します。ただし、既定値のままでもかまいません。</para>
    </step>
    <step>
-    <para>
-     Check the validity of the <filename>vhostmd.conf</filename>
-     configuration file with the command:
-    </para>
+    <para>下記のコマンドを実行して、 <filename>vhostmd.conf</filename> 設定ファイルの書式が正しいことを確認します:</para>
 <screen>&prompt.user;cd /etc/vhostmd
 &prompt.user;xmllint --postvalid --noout vhostmd.conf
     </screen>
    </step>
    <step>
-    <para>
-     Start the vhostmd daemon with the command <command>sudo systemctl start
-     vhostmd</command>.
-    </para>
-    <para>
-     If vhostmd should be started automatically during start-up of the
-     system, run the command:
-    </para>
+    <para>あとは <command>sudo systemctl start vhostmd</command> を実行して、 vhostmd デーモンを開始します。</para>
+    <para>vhostmd をシステムの起動時に開始するように設定したい場合は、下記を実行します:</para>
 <screen>&prompt.sudo;systemctl enable vhostmd</screen>
    </step>
    <step>
-    <para>
-     Attach the image file <filename>/dev/shm/vhostmd0</filename> to the
-     &vmguest; system named &xenguest; with the command:
-    </para>
+    <para>&xenguest; という名前の &vmguest; に対して、 <filename>/dev/shm/vhostmd0</filename> というイメージファイルを接続するため、下記のコマンドを実行します:</para>
 <screen>&prompt.user;xl block-attach opensuse /dev/shm/vhostmd0,,xvdb,ro</screen>
    </step>
    <step>
-    <para>
-     Log on the &vmguest; system.
-    </para>
+    <para>&vmguest; 側のシステムにログインします。</para>
    </step>
    <step>
-    <para>
-     Install the client package <systemitem>vm-dump-metrics</systemitem>.
-    </para>
+    <para>クライアント側のパッケージ <systemitem>vm-dump-metrics</systemitem> をインストールします。</para>
    </step>
    <step>
-    <para>
-     Run the command <command>vm-dump-metrics</command>. To save the result to
-     a file, use the option <systemitem>-d &lt;filename&gt;</systemitem>.
-    </para>
+    <para><command>vm-dump-metrics</command> コマンドを実行します。結果をファイルに保存したい場合は、 <systemitem>-d <replaceable>&lt;ファイル名&gt;</replaceable></systemitem> オプションを追加してください。</para>
    </step>
   </procedure>
 
-  <para>
-   The result of the <systemitem>vm-dump-metrics</systemitem> is an XML
-   output. The respective metric entries follow the DTD
-   <filename>/etc/vhostmd/metric.dtd</filename>.
-  </para>
+  <para><systemitem>vm-dump-metrics</systemitem> の出力は XML 形式で行なわれます。また、出力される内容は <filename>/etc/vhostmd/metric.dtd</filename> の DTD 定義に従って行なわれます。</para>
 
-  <para>
-   For more information, see the manual pages <command>man 8
-   vhostmd</command> and <filename>/usr/share/doc/vhostmd/README</filename>
-   on the &vmhost; system. On the guest, see the manual page <command>man
-   1 vm-dump-metrics</command>.
-  </para>
+  <para>さらに詳しい情報については、 <command>man 8 vhostmd</command> で表示されるマニュアルページのほか、 &vmhost; システム側にある <filename>/usr/share/doc/vhostmd/README</filename> (英語) ファイルをお読みください。ゲスト側では、 <command>man 1 vm-dump-metrics</command> のマニュアルページもお読みいただくことができます。</para>
  </sect1>
 </chapter>
