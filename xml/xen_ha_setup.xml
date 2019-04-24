@@ -4,49 +4,31 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.xen.ha">
- <title>&xen; as a High-Availability Virtualization Host</title>
+ <title>&xen; の高可用性仮想化ホストとしての使用</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  Setting up two &xen; hosts as a failover system has several advantages
-  compared to a setup where every server runs on dedicated hardware.
- </para>
+    <para>2 台の &xen; ホストをフェイルオーバーシステムとして構築することで、サーバを別々に動作させる場合と比べて、さまざまなメリットが生まれます:</para>
  <itemizedlist mark="bullet" spacing="normal">
   <listitem>
-   <para>
-    Failure of a single server does not cause major interruption of the
-    service.
-   </para>
+   <para>一方のサーバで障害が発生しても、サービスが止まらずに稼働させ続けることができます。</para>
   </listitem>
   <listitem>
-   <para>
-    A single big machine is normally way cheaper than multiple smaller
-    machines.
-   </para>
+   <para>一般に 1 台のマシンのスペックを上げるよりも、 2 台の同じスペックのマシンを用意したほうが安く上がります。</para>
   </listitem>
   <listitem>
-   <para>
-    Adding new servers as needed is a trivial task.
-   </para>
+   <para>必要に応じて新しいサーバを継ぎ足していくと、管理面での手間が増えるだけです。</para>
   </listitem>
   <listitem>
-   <para>
-    The usage of the server is improved, which has positive effects on
-    the power consumption of the system.
-   </para>
+   <para>サーバの使用方法を改善することで、システムの電源消費量に良い影響を与えることにもなります。</para>
   </listitem>
  </itemizedlist>
- <para>
-  The setup of migration for &xen; hosts is described in
-  <xref linkend="sec.xen.manage.migrate"/>. In the following, several
-  typical scenarios are described.
- </para>
+ <para>&xen; ホスト間で移行を行なうことのできる環境の構築については、 <xref linkend="sec.xen.manage.migrate"/> で説明しています。下記では、高可用性を実現するためのいくつかの方式を説明しています。</para>
  <sect1 xml:id="sec.xen.ha.remote_storage">
-  <title>&xen; HA with Remote Storage</title>
+  <title>リモートストレージでの &xen; HA 構成</title>
 
 <!--
   iSCSI, NBD
@@ -54,169 +36,88 @@
   NFS
   -->
 
-  <para>
-   &xen; can directly provide several remote block devices to the
-   respective &xen; guest systems. These include iSCSI, NPIV, and NBD.
-   All of these may be used to do live migrations. When a storage system is
-   already in place, first try to use the same device type you already used
-   in the network.
-  </para>
+  <para>&xen; ではゲストシステムに対して、いくつかのリモートブロックデバイスを直接提供する機能を用意しています。これには iSCSI, NPIV, NBD があります。これらのうちの全てはライブマイグレーションでも使用することができます。ストレージシステムが既に配置されている場合、まずはネットワーク内で既に使用されているものと同じ種類のデバイスを使ってみてください。</para>
 
-  <para>
-   If the storage system cannot be used directly but provides a possibility
-   to offer the needed space over NFS, it is also possible to create image
-   files on NFS. If the NFS file system is available on all &xen; host
-   systems, this method also allows live migrations of &xen; guests.
-  </para>
+  <para>ストレージシステムを直接使用することができないものの、 NFS を介して必要な領域を提供できる機能を備えている場合は、 NFS の共有内にイメージファイルを配置する方法もあります。 NFS が全ての &xen; ホストシステムからアクセスできる環境であれば、 &xen; ゲストのライブマイグレーションにも対応することができます。</para>
 
-  <para>
-   When setting up a new system, one of the main considerations is whether a
-   dedicated storage area network should be implemented. The following
-   possibilities are available:
-  </para>
+  <para>新しいシステムを構築する場合の最初の考慮事項は、専用のストレージエリアネットワークを作成する必要があるかどうかです。これを考えるにあたっては、下記のような構成が考えられます:</para>
 
 <!-- method, complexity/cost, comments -->
 
   <table xml:id="tab.xen.remote_storage">
-   <title>&xen; Remote Storage</title>
+   <title>&xen; リモートストレージ</title>
    <tgroup cols="3">
     <thead>
      <row>
       <entry>
-       <para>
-        Method
-       </para>
+       <para>方式</para>
       </entry>
       <entry>
-       <para>
-        Complexity
-       </para>
+       <para>複雑さ</para>
       </entry>
       <entry>
-       <para>
-        Comments
-       </para>
+       <para>コメント</para>
       </entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry>
-       <para>
-        Ethernet
-       </para>
+       <para>イーサネット</para>
       </entry>
       <entry>
-       <para>
-        low
-       </para>
+       <para>低</para>
       </entry>
       <entry>
-       <para>
-        Note that all block device traffic goes over the same Ethernet
-        interface as the network traffic. This may be limiting the
-        performance of the guest.
-       </para>
+       <para>この場合、ブロックデバイスのトラフィックはネットワークトラフィックと同じイーサネット内を流れることになります。従って、ゲスト側の性能も制限されることになります。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        Ethernet dedicated to storage.
-       </para>
+       <para>ストレージ専用のイーサネット</para>
       </entry>
       <entry>
-       <para>
-        medium
-       </para>
+       <para>中</para>
       </entry>
       <entry>
-       <para>
-        Running the storage traffic over a dedicated Ethernet interface may
-        eliminate a bottleneck on the server side. However, planning your
-        own network with your own IP address range and possibly a VLAN
-        dedicated to storage requires numerous considerations.
-       </para>
+       <para>ストレージ関係のトラフィックを専用のイーサネットインターフェイスから行なうようにすることで、サーバ側でのボトルネックを解消することができます。この場合、専用のイーサネット側には独自の IP アドレス範囲を割り当てたり、ストレージ専用の VLAN を構築したりする必要性など、各種の考慮事項が存在します。</para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>
-        NPIV
-       </para>
+       <para>NPIV</para>
       </entry>
       <entry>
-       <para>
-        high
-       </para>
+       <para>高</para>
       </entry>
       <entry>
-       <para>
-        NPIV is a method to virtualize Fibre channel connections. This is
-        available with adapters that support a data rate of at least 4
-        Gbit/s and allows the setup of complex storage systems.
-       </para>
+       <para>NPIV はファイバチャネル接続の仮想化方式です。これには最低でも 4 Gbit/s のデータ転送速度を提供し、複雑なストレージシステムの構築にも対応しているアダプタで使用することができます。</para>
       </entry>
      </row>
     </tbody>
    </tgroup>
   </table>
 
-  <para>
-   Typically, a 1 Gbit/s Ethernet device can fully use a typical
-   hard disk or storage system. When using very fast storage systems, such
-   an Ethernet device will probably limit the speed of the system.
-  </para>
+  <para>通常は 1 Gbit/s 程度のイーサネットデバイスであれば、ハードディスクやストレージシステムの性能を生かすことができますが、さらに高速なストレージシステムをお使いの場合は、イーサネットデバイスの速度が不足してしまうこともありますので、ご注意ください。</para>
  </sect1>
  <sect1 xml:id="sec.xen.ha.local_storage">
-  <title>&xen; HA with Local Storage</title>
+  <title>ローカルストレージでの &xen; HA 構成</title>
 
-  <para>
-   For space or budget reasons, it may be necessary to rely on storage that
-   is local to the &xen; host systems. To still maintain the possibility
-   of live migrations, it is necessary to build block devices that are
-   mirrored to both &xen; hosts. The software that allows this is called
-   Distributed Replicated Block Device (DRBD).
-  </para>
+  <para>スペースや予算上の都合から、 &xen; のホストシステムのローカルストレージを使用する必要がある場合があります。この場合にライブマイグレーションを実現するには、両方の &xen; ホスト間でブロックデバイスを複製するよう構築する必要があります。このようなブロックデバイスの複製を行なうソフトウエアとしては、 Distributed Replicated Block Device (DRBD) と呼ばれるソフトウエアが存在します。</para>
 
-  <para>
-   If a system that uses DRBD to mirror the block devices or files between
-   two &xen; hosts should be set up, both hosts should use the identical
-   hardware. If one of the hosts has slower hard disks, both hosts will
-   suffer from this limitation.
-  </para>
+  <para>2 台の &xen; ホスト間でブロックデバイスやファイルを複製するために DRBD を設定する必要がある場合、両方のホストでは等価なハードウエアを使用する必要があります。たとえば一方のホストのハードディスクの速度が遅い場合、もう一方のホストもそれに引きずられてしまい、性能が落ちる結果になってしまいます。</para>
 
-  <para>
-   During the setup, each of the required block devices should use its own
-   DRBD device. The setup of such a system is quite a complex task.
-  </para>
+  <para>また構築の際、それぞれのブロックデバイスは独自のものを使用する必要があります。このようなシステムの構築は複雑な作業であるため、ここでは説明していません。</para>
  </sect1>
  <sect1 xml:id="sec.xen.ha.private_bridge">
-  <title>&xen; HA and Private Bridges</title>
+  <title>&xen; HA とプライベートブリッジ</title>
 
-  <para>
-   When using several guest systems that need to communicate between each
-   other, it is possible to do this over the regular interface. However, for
-   security reasons it may be advisable to create a bridge that is only
-   connected to guest systems.
-  </para>
+  <para>お互いに通信すべきゲストシステムが存在する場合、もちろん通常のインターフェイスを介して通信してもかまいません。ですが、セキュリティ上の理由から、必要なゲストシステムのみを参加させたブリッジを作成して、そのブリッジ経由で通信を行なうように設定しておくことをお勧めします。</para>
 
-  <para>
-   In an HA environment that also should support live migrations, such a
-   private bridge must be connected to the other &xen; hosts. This is possible
-   by using dedicated physical Ethernet devices and a dedicated network.
-  </para>
+  <para>ライブマイグレーションに対応すべき高可用性環境の場合、このようなプライベートブリッジはもう一方の &xen; ホストにも接続されていなければなりません。これはプライベートブリッジ専用の物理イーサネットデバイスを用意して、専用のネットワークを構築することによって実現することができます。</para>
 
-  <para>
-   A different implementation method is using VLAN interfaces. In that case,
-   all the traffic goes over the regular Ethernet interface. However, the
-   VLAN interface does not get the regular traffic, because only the VLAN
-   packets that are tagged for the correct VLAN are forwarded.
-  </para>
+  <para>もう一つの方法としてあげられるのが、 VLAN インターフェイスの使用です。この場合、全てのトラフィックは通常のイーサネットインターフェイス経由で送信されます。ただし、 VLAN のパケットにのみタグが付与され、通常のトラフィックとは区別されるようにすることができますので、これによって通常のトラフィックと混在させることができるようになります。</para>
 
-  <para>
-   For more information about the setup of a VLAN interface see
-   <xref linkend="sec.xen.net.vlan"/>.
-  </para>
+  <para>VLAN インターフェイスの設定方法について、詳しくは <xref linkend="sec.xen.net.vlan"/> をお読みください。</para>
  </sect1>
 </chapter>
