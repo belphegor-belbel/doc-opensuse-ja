@@ -4,163 +4,92 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.xen.xenstore">
- <title>&xenstore;: Configuration Database Shared between Domains</title>
+ <title>&xenstore;: ドメイン間で共有される設定データベース</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  This section introduces basic information about &xenstore;, its role in
-  the &xen; environment, the directory structure of files used by
-  &xenstore;, and the description of &xenstore;'s commands.
- </para>
+    <para>本章では、 &xenstore; に関する基本的な情報のほか、 &xen; 環境内での役割、 &xenstore; で使用されるファイルのディレクトリ構造、そして &xenstore; のコマンドに関する説明をそれぞれ行なっています。</para>
  <sect1 xml:id="sec.xenstore.intro">
-  <title>Introduction</title>
+  <title>概要</title>
 
-  <para>
-   &xenstore; is a database of configuration and status information
-   shared between &vmguest;s and the management tools running in
-   &dom0;. &vmguest;s and the management tools read and write to
-   &xenstore; to convey configuration information, status updates, and
-   state changes. The &xenstore; database is managed by &dom0; and
-   supports simple operations such as reading and writing a key.
-   &vmguest;s and management tools can be notified of any changes in
-   &xenstore; by watching entries of interest. Note that the
-   <systemitem>xenstored</systemitem> daemon is managed by the
-   <systemitem>xencommons</systemitem> service.
-  </para>
+  <para>&xenstore; は設定や状態の情報を含むデータベースで、 &vmguest; と &dom0; 内で動作する管理ツールとの間で共有される仕組みでもあります。 &vmguest; と管理ツールは、 &xenstore; との間で情報を読み書きし、設定情報の伝達や状態の更新／変更などを行なうことができます。 &xenstore; データベースは &dom0; が管理するものであり、キーをベースにした読み書きなどのシンプルな構成になっています。 &vmguest; と管理ツール側では、 &xenstore; 内での項目を監視することで、変更の通知を受けることもできます。なお、 <systemitem>xenstored</systemitem> デーモンは <systemitem>xencommons</systemitem> サービスで管理されます。</para>
 
-  <para>
-   &xenstore; is located on &dom0; in a single database file
-   <filename>/var/lib/xenstored/tdb</filename> (<literal>tdb</literal>
-   represents <emphasis>tree database</emphasis>).
-  </para>
+  <para>&xenstore; は &dom0; 内で単一のデータベースファイル <filename>/var/lib/xenstored/tdb</filename> ( <literal>tdb</literal> は <emphasis>Tree DataBase (ツリー構造型データベース)</emphasis> の略) として存在しています。</para>
  </sect1>
  <sect1 xml:id="sec.xenstore.fsi">
-  <title>File System Interface</title>
+  <title>ファイルシステムインターフェイス</title>
 
-  <para>
-   &xenstore; database content is represented by a virtual file system
-   similar to <filename>/proc</filename> (for more information on
-   <filename>/proc</filename>, see <xref linkend="sec.util.proc"/>). The
-   tree has three main paths: <filename>/vm</filename>,
-   <filename>/local/domain</filename>, and <filename>/tool</filename>.
-  </para>
+  <para>&xenstore; のデータベースの内容は <filename>/proc</filename> に似た仮想的なファイルシステム構造になっています (<filename>/proc</filename> に関する詳細は <xref linkend="sec.util.proc"/> をお読みください) 。このファイルシステムのツリーには、 <filename>/vm</filename> , <filename>/local/domain</filename> ,<filename>/tool</filename> の 3 つの種類から構成されています。</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <filename>/vm</filename> - stores information about the &vmguest;
-     configuration.
-    </para>
+    <para><filename>/vm</filename>: &vmguest; の設定に関する情報が保存されています。</para>
    </listitem>
    <listitem>
-    <para>
-     <filename>/local/domain</filename> - stores information about
-     &vmguest; on the local node.
-    </para>
+    <para><filename>/local/domain</filename>: ローカルノード内の &vmguest; に関する情報が保存されています。</para>
    </listitem>
    <listitem>
-    <para>
-     <filename>/tool</filename> - stores general information about various
-     tools.
-    </para>
+    <para><filename>/tool</filename>: さまざまなツールに関する一般的な情報が保存されています。</para>
    </listitem>
   </itemizedlist>
 
   <tip>
-   <para>
-    Each &vmguest; has two different ID numbers. The <emphasis>universal
-    unique identifier</emphasis> (UUID) remains the same even if the
-    &vmguest; is migrated to another machine. The <emphasis>domain
-    identifier</emphasis> (DOMID) is an identification number that
-    represents a particular running instance. It typically changes when the
-    &vmguest; is migrated to another machine.
-   </para>
+   <para>それぞれの &vmguest; には 2 種類の ID 番号が設定されます。一方の <emphasis>Universal Unique IDntifier</emphasis> (UUID) は、 &vmguest; を他のマシンに移行しても変更されることの無い値、もう一方の <emphasis>DOMain IDentifier</emphasis> (DOMID) は、動作中のインスタンスを一位に識別する番号で、こちらは一方から他方に移行を行なうと、通常は値が変化することになります。</para>
   </tip>
 
   <sect2>
-   <title>&xenstore; Commands</title>
-   <para>
-    The file system structure of the &xenstore; database can be operated
-    with the following commands:
-   </para>
+   <title>&xenstore; のコマンド</title>
+   <para>&xenstore; データベースのファイルシステム構造は、下記のコマンドを使用してアクセスすることができます:</para>
    <variablelist>
     <varlistentry>
-     <term><command>xenstore-ls</command>
-     </term>
+     <term><command>xenstore-ls</command></term>
      <listitem>
-      <para>
-       Displays the full dump of the &xenstore; database.
-      </para>
+      <para>&xenstore; データベースのダンプを表示します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-read</command><option>path_to_xenstore_entry</option>
-     </term>
+     <term><command>xenstore-read</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
      <listitem>
-      <para>
-       Displays the value of the specified &xenstore; entry.
-      </para>
+      <para>指定した &xenstore; の項目の値を読み取ります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-exists</command><option>xenstore_path</option>
-     </term>
+     <term><command>xenstore-exists</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
      <listitem>
-      <para>
-       Reports whether the specified &xenstore; path exists.
-      </para>
+      <para>指定した &xenstore; のパスが存在しているかどうかを報告します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-list</command><option>xenstore_path</option>
-     </term>
+     <term><command>xenstore-list</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
      <listitem>
-      <para>
-       Displays all the children entries of the specified &xenstore;
-       path.
-      </para>
+      <para>指定した &xenstore; パス以下の全ての子項目を表示します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-write</command><option>path_to_xenstore_entry</option>
-     </term>
+     <term><command>xenstore-write</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
      <listitem>
-      <para>
-       Updates the value of the specified &xenstore; entry.
-      </para>
+      <para>指定した &xenstore; の項目の値を更新します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-rm</command><option>xenstore_path</option>
-     </term>
+     <term><command>xenstore-rm</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
      <listitem>
-      <para>
-       Removes the specified &xenstore; entry or directory.
-      </para>
+      <para>指定した &xenstore; の項目またはディレクトリを削除します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-chmod</command><option>xenstore_path</option><option>mode</option>
-     </term>
+     <term><command>xenstore-chmod</command> <option><replaceable>&xenstore;_のパス</replaceable></option> <option><replaceable>モード</replaceable></option></term>
      <listitem>
-      <para>
-       Updates the read/write permission on the specified &xenstore;
-       path.
-      </para>
+      <para>指定した &xenstore; パスの読み込み／書き込み権限を更新します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>xenstore-control</command>
-     </term>
+     <term><command>xenstore-control</command></term>
      <listitem>
-      <para>
-       Sends a command to the <systemitem>xenstored</systemitem> back-end,
-       such as triggering an integrity check.
-      </para>
+      <para>たとえば一貫性のチェックなど、 <systemitem>xenstored</systemitem> バックエンドに対してコマンドを送信します。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -168,22 +97,11 @@
 
   <sect2 xml:id="xenstore.vm">
    <title><filename>/vm</filename></title>
-   <para>
-    The <filename>/vm</filename> path is indexed by the UUID of each
-    &vmguest;, and stores configuration information such as the number of
-    virtual CPUs and the amount of allocated memory. There is a
-    <filename>/vm/&lt;uuid&gt;</filename> directory for each
-    &vmguest;. To list the directory content, use
-    <command>xenstore-list</command>.
-   </para>
+   <para><filename>/vm</filename> パスにはそれぞれの &vmguest; の UUID が順に並べられ、その中には仮想 CPU 数や割り当てられているメモリ量などの設定情報が保存されています。つまり、それぞれの &vmguest; に対して <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> というディレクトリが存在することになります。ディレクトリの内容を表示したい場合は、 <command>xenstore-list</command> コマンドをお使いください。</para>
 <screen>&prompt.sudo;xenstore-list /vm
 00000000-0000-0000-0000-000000000000
 9b30841b-43bc-2af9-2ed3-5a649f466d79-1</screen>
-   <para>
-    The first line of the output belongs to &dom0;, and the second one to
-    a running &vmguest;. The following command lists all the entries
-    related to the &vmguest;:
-   </para>
+   <para>出力の冒頭は &dom0; そのもので、 2 行目が実際の &vmguest; になります。下記のように実行することで、 &vmguest; 内の項目を表示することができます:</para>
 <screen>&prompt.sudo;xenstore-list /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1
 image
 rtc
@@ -200,91 +118,55 @@ vcpus
 vcpu_avail
 bootloader
 name</screen>
-   <para>
-    To read a value of an entry, for example the number of virtual CPUs
-    dedicated to the &vmguest;, use <command>xenstore-read</command>:
-   </para>
+   <para>たとえば &vmguest; に割り当てられている仮想 CPU 数など、項目の値を読み取りたい場合は、 <command>xenstore-read</command> コマンドを使用します:</para>
 <screen>&prompt.sudo;xenstore-read /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1/vcpus
 1</screen>
-   <para>
-    A list of selected <filename>/vm/&lt;uuid&gt;</filename> entries
-    follows:
-   </para>
+   <para><filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> 以下の主な項目は下記のとおりです:</para>
    <variablelist>
     <varlistentry>
-     <term><literal>uuid</literal>
-     </term>
+     <term><literal>uuid</literal></term>
      <listitem>
-      <para>
-       UUID of the &vmguest;. It does not change during the migration
-       process.
-      </para>
+      <para>&vmguest; の UUID です。移行処理を行なっても、この値は変更されません。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>on_reboot</literal>
-     </term>
+     <term><literal>on_reboot</literal></term>
      <listitem>
-      <para>
-       Specifies whether to destroy or restart the &vmguest; in response
-       to a reboot request.
-      </para>
+      <para>&vmguest; が再起動要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行なうのかを指定する項目です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>on_poweroff</literal>
-     </term>
+     <term><literal>on_poweroff</literal></term>
      <listitem>
-      <para>
-       Specifies whether to destroy or restart the &vmguest; in response
-       to a halt request.
-      </para>
+      <para>&vmguest; が停止要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行なうのかを指定する項目です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>on_crash</literal>
-     </term>
+     <term><literal>on_crash</literal></term>
      <listitem>
-      <para>
-       Specifies whether to destroy or restart the &vmguest; in response
-       to a crash.
-      </para>
+      <para>&vmguest; がクラッシュした場合、 &vmguest; のシャットダウンや再起動など、何を行なうのかを指定する項目です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>vcpus</literal>
-     </term>
+     <term><literal>vcpus</literal></term>
      <listitem>
-      <para>
-       Number of virtual CPUs allocated to the &vmguest;.
-      </para>
+      <para>&vmguest; に割り当てられた仮想 CPU 数を表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>vcpu_avail</literal>
-     </term>
+     <term><literal>vcpu_avail</literal></term>
      <listitem>
-      <para>
-       Bitmask of active virtual CPUs for the &vmguest;. The bitmask has
-       several bits equal to the value of <literal>vcpus</literal>, with
-       a bit set for each online virtual CPU.
-      </para>
+      <para>&vmguest; に対して提供されている仮想 CPU のビットマスクです。このビットマスクには <literal>vcpus</literal> の値と同じ数だけビットが設定されています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>name</literal>
-     </term>
+     <term><literal>name</literal></term>
      <listitem>
-      <para>
-       The name of the &vmguest;.
-      </para>
+      <para>&vmguest; の名前を表わします。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    Regular &vmguest;s (not &dom0;) use the
-    <filename>/vm/&lt;uuid&gt;/image</filename> path:
-   </para>
+   <para>通常の &vmguest; (&dom0; 以外) であれば、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image</filename> のようなパスも存在します:</para>
 <screen>&prompt.sudo;xenstore-list /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1/image
 ostype
 kernel
@@ -293,183 +175,112 @@ ramdisk
 dmargs
 device-model
 display</screen>
-   <para>
-    An explanation of the used entries follows:
-   </para>
+   <para>それぞれの項目の意味は下記のとおりです:</para>
    <variablelist>
     <varlistentry>
-     <term><literal>ostype</literal>
-     </term>
+     <term><literal>ostype</literal></term>
      <listitem>
-      <para>
-       The OS type of the &vmguest;.
-      </para>
+      <para>&vmguest; の OS の種類を表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>kernel</literal>
-     </term>
+     <term><literal>kernel</literal></term>
      <listitem>
-      <para>
-       The path on &dom0; to the kernel for the &vmguest;.
-      </para>
+      <para>&vmguest; で使用するカーネルの &dom0; 内でのパスを表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>cmdline</literal>
-     </term>
+     <term><literal>cmdline</literal></term>
      <listitem>
-      <para>
-       The kernel command line for the &vmguest; used when booting.
-      </para>
+      <para>&vmguest; の起動時に使用するカーネルのコマンドラインを表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>ramdisk</literal>
-     </term>
+     <term><literal>ramdisk</literal></term>
      <listitem>
-      <para>
-       The path on &dom0; to the RAM disk for the &vmguest;.
-      </para>
+      <para>&vmguest; で使用する RAM ディスクの &dom0; 内でのパスを表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>dmargs</literal>
-     </term>
+     <term><literal>dmargs</literal></term>
      <listitem>
-      <para>
-       Shows arguments passed to the &qemu; process. If you look at the
-       &qemu; process with <command>ps</command>, you should see the same
-       arguments as in
-       <filename>/vm/&lt;uuid&gt;/image/dmargs</filename>.
-      </para>
+      <para>&qemu; プロセスに対して渡されるパラメータを表わします。 <command>ps</command> コマンドで &qemu; のプロセスを参照すると、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image/dmargs</filename> と同じ内容が現われるはずです。</para>
      </listitem>
     </varlistentry>
    </variablelist>
   </sect2>
 
   <sect2>
-   <title><filename>/local/domain/&lt;domid&gt;</filename></title>
-   <para>
-    This path is indexed by the running domain (&vmguest;) ID, and
-    contains information about the running &vmguest;. Remember that the
-    domain ID changes during &vmguest; migration. The following entries
-    are available:
-   </para>
+   <title><filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename></title>
+   <para>ここでのパスは動作中のドメイン (&vmguest;) の ID を使用し、動作中の &vmguest; に対する情報を提供しています。なお、 &vmguest; の移行を行なった場合、ドメイン ID は変化することに注意してください。下記のような項目が提供されます:</para>
    <variablelist>
     <varlistentry>
-     <term><literal>vm</literal>
-     </term>
+     <term><literal>vm</literal></term>
      <listitem>
-      <para>
-       The path of the <filename>/vm</filename> directory for this
-       &vmguest;.
-      </para>
+      <para>この &vmguest; に対応する <filename>/vm</filename> ディレクトリのパスを表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>on_reboot, on_poweroff, on_crash, name</literal>
-     </term>
+     <term><literal>on_reboot, on_poweroff, on_crash, name</literal></term>
      <listitem>
-      <para>
-       See identical options in <xref linkend="xenstore.vm"/>
-      </para>
+      <para><xref linkend="xenstore.vm"/> での同名の項目と同じ意味を持ちます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>domid</literal>
-     </term>
+     <term><literal>domid</literal></term>
      <listitem>
-      <para>
-       Domain identifier for the &vmguest;.
-      </para>
+      <para>&vmguest; のドメイン ID を表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>cpu</literal>
-     </term>
+     <term><literal>cpu</literal></term>
      <listitem>
-      <para>
-       The current CPU to which the &vmguest; is pinned.
-      </para>
+      <para>&vmguest; 側でピン設定を行なっている現在の CPU を表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>cpu_weight</literal>
-     </term>
+     <term><literal>cpu_weight</literal></term>
      <listitem>
-      <para>
-       The weight assigned to the &vmguest; for scheduling purposes.
-       Higher weights use the physical CPUs more often.
-      </para>
+      <para>スケジューリングの目的で割り当てられた、 &vmguest; に対する重み値を表わします。この値が大きければ大きいほど、物理 CPU が頻繁に割り当てられるようになります。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    Apart from the individual entries described above, there are also
-    several subdirectories under
-    <filename>/local/domain/&lt;domid&gt;</filename>, containing specific
-    entries. To see all entries available, refer to
-    <link xlink:href="http://wiki.xen.org/wiki/XenStore_Reference">&xenstore;
-    Reference</link>.
-   </para>
+   <para>上述の項目以外にも、 <filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename> 内にはいくつかのサブディレクトリが存在しています。利用可能な全ての項目の意味を知りたい場合は、 <link xlink:href="http://wiki.xen.org/wiki/XenStore_Reference">&xenstore; Reference</link> (英語) をお読みください。</para>
    <variablelist>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/memory</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory</literal></term>
      <listitem>
-      <para>
-       Contains memory information.
-       <literal>/local/domain/&lt;domid&gt;/memory/target</literal>
-       contains target memory size for the &vmguest; (in kilobytes).
-      </para>
+      <para>メモリに関する情報が含まれています。なお、 <literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory/target</literal> には、 &vmguest; に対するターゲットのメモリサイズ (キロバイト単位) が含まれています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/console</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/console</literal></term>
      <listitem>
-      <para>
-       Contains information about a console used by the &vmguest;.
-      </para>
+      <para>&vmguest; が使用しているコンソールに関する情報が含まれています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/backend</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/backend</literal></term>
      <listitem>
-      <para>
-       Contains information about all back-end devices used by the
-       &vmguest;. The path has subdirectories of its own.
-      </para>
+      <para>&vmguest; が使用している全てのバックエンドデバイスの情報が含まれています。ここにはさらにサブディレクトリが存在する場合があります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/device</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device</literal></term>
      <listitem>
-      <para>
-       Contains information about the front-end devices for the
-       &vmguest;.
-      </para>
+      <para>&vmguest; のフロントエンドデバイスに関する情報が含まれています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/device-misc</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device-misc</literal></term>
      <listitem>
-      <para>
-       Contains miscellaneous information about devices.
-      </para>
+      <para>デバイスに関するその他の情報が含まれています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>/local/domain/&lt;domid&gt;/store</literal>
-     </term>
+     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/store</literal></term>
      <listitem>
-      <para>
-       Contains information about the &vmguest;'s store.
-      </para>
+      <para>&vmguest; のストア情報が含まれています。</para>
      </listitem>
     </varlistentry>
    </variablelist>
