@@ -4,57 +4,34 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.qemu.host">
- <title>Setting Up a &kvm; &vmhost;</title>
+ <title>&kvm; &vmhost; の構築</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
   </dm:docmanager>
  </info>
- <para>
-  This section documents how to set up and use &productname; &productnumber;
-  as a &qemu;-&kvm; based virtual machine host.
- </para>
+ <para>本章では、 &productname; &productnumber; を &qemu;-&kvm; ベースの仮想マシンホストとして動作させるまでの手順と、その使用方法について説明しています。</para>
  <tip>
-  <title>Resources</title>
-  <para>
-   In general, the virtual guest system needs the same hardware resources as
-   when installed on a physical machine. The more guests you plan to run on
-   the host system, the more hardware resources&mdash;CPU, disk, memory, and
-   network&mdash;you need to add to the &vmhost;.
-  </para>
+  <title>リソースについて</title>
+  <para>一般的に、仮想マシンのゲストシステムには、物理マシンにインストールする場合と同じだけのハードウエアリソースが必要となります。 &vmhost; システム内で多くのゲストシステムを稼働させる場合、それだけ多くの CPU コアやディスク、メモリやネットワークなどを必要とすることになります。</para>
  </tip>
  <sect1 xml:id="kvm.host.cpu">
-  <title>CPU Support for Virtualization</title>
+  <title>仮想化のための CPU 側サポート</title>
 
-  <para>
-   To run &kvm;, your CPU must support virtualization, and
-   virtualization needs to be enabled in BIOS. The file
-   <filename>/proc/cpuinfo</filename> includes information about your CPU
-   features.
-  </para>
+  <para>&kvm; を動作させるには、お使いの CPU が仮想化機能に対応し、 BIOS 側でも仮想化機能が有効化されていなければなりません。 CPU の機能について調べるには、 <filename>/proc/cpuinfo</filename> ファイル内に情報が書かれています。</para>
 
-  <para os="sles;sled">
-   To find out whether your system supports virtualization, see
-   <xref linkend="sec.kvm.requires.hardware"/>.
-  </para>
+  <para os="sles;sled">お使いのシステムが仮想化に対応しているかどうかを調べる方法について、詳しくは <xref linkend="sec.kvm.requires.hardware"/> をお読みください。</para>
  </sect1>
  <sect1 xml:id="kvm.host.soft">
-  <title>Required Software</title>
+  <title>必要なソフトウエア</title>
 
-  <para>
-   The &kvm; host requires several packages to be installed. To install all
-   necessary packages, do the following:
-  </para>
+  <para>&kvm; ホストに対しては、いくつかのパッケージをインストールする必要があります。必要な全てのパッケージをインストールするには、下記の手順を実施します:</para>
 
   <procedure>
    <step>
-    <para>
-     Run <menuchoice><guimenu>&yast;</guimenu><guimenu>
-     Virtualization</guimenu><guimenu>Install Hypervisor and
-     Tools</guimenu></menuchoice>.
-    </para>
+    <para><menuchoice><guimenu>&yast;</guimenu><guimenu>仮想化</guimenu><guimenu>ハイパーバイザとツールのインストール</guimenu></menuchoice> を選択します。</para>
     <figure os="sles;sled">
-     <title>Installing the &kvm; Hypervisor and Tools</title>
+     <title>&kvm; ハイパーバイザとツールのインストール</title>
      <mediaobject>
       <imageobject role="fo">
        <imagedata fileref="yast2_hypervisors.png" width="75%" format="PNG"/>
@@ -66,7 +43,7 @@
     </figure>
 
     <figure os="osuse">
-     <title>Installing the &kvm; Hypervisor and Tools</title>
+     <title>&kvm; ハイパーバイザとツールのインストール</title>
      <mediaobject>
       <imageobject role="fo">
        <imagedata fileref="yast2_hypervisors_kde.png" width="75%" format="PNG"/>
@@ -79,21 +56,12 @@
 
    </step>
    <step>
-    <para>
-     Select <guimenu>KVM server</guimenu> and preferably also <guimenu>KVM
-     tools</guimenu>, and confirm with <guimenu>Accept</guimenu>.
-    </para>
+    <para><guimenu>KVM サーバ</guimenu> を選択します。なお、必要であれば <guimenu>KVM ツール</guimenu> も選択します。選択を行なったら <guimenu>了解</guimenu> を押します。</para>
    </step>
    <step>
-    <para>
-     During the installation process, you can optionally let &yast; create a
-     <guimenu>Network Bridge</guimenu> for you automatically. If you do not
-     plan to dedicate an additional physical network card to your virtual
-     guests, network bridge is a standard way to connect the guest machines
-     to the network.
-    </para>
+    <para>インストール処理が始まります。なお、処理の途中で &yast; 側から、 <guimenu>ネットワークブリッジ</guimenu> の自動作成を行なうかどうかを尋ねられます。仮想化ゲストに対して専用のネットワークインターフェイスを割り当てるような場合は不要ですが、それ以外の場合はここでブリッジを作成して、ゲストマシンをネットワークに接続するのが一般的です。</para>
     <figure>
-     <title>Network Bridge</title>
+     <title>ネットワークブリッジ</title>
      <mediaobject>
       <imageobject role="fo">
        <imagedata fileref="yast2_netbridge.png" width="75%" format="PNG"/>
@@ -105,340 +73,168 @@
     </figure>
    </step>
    <step>
-    <para>
-     After all the required packages are installed (and new network setup
-     activated), try to load the &kvm; kernel module relevant for your CPU
-     type&mdash;<systemitem>kvm-intel</systemitem> or
-     <systemitem>kvm-amd</systemitem>:
-    </para>
+    <para>必要なパッケージを全てインストールし、必要であれば新しいネットワークブリッジの作成を行なったら、お使いの CPU の種類に合わせて &kvm; のカーネルモジュールを読み込みます。具体的には <systemitem>kvm-intel</systemitem> もしくは <systemitem>kvm-amd</systemitem> のいずれかを読み込みます:</para>
 <screen>&prompt.root;modprobe kvm-intel</screen>
-    <para>
-     Check if the module is loaded into memory:
-    </para>
+    <para>モジュールが正しく読み込めていることを確認します:</para>
 <screen>&prompt.user;lsmod | grep kvm
 kvm_intel              64835  6
 kvm                   411041  1 kvm_intel</screen>
-    <para>
-     Now the &kvm; host is ready to serve &kvm; &vmguest;s. For more
-     information, see <xref linkend="cha.qemu.running"/>.
-    </para>
+    <para>これで &kvm; ホストの準備が整い、 &kvm; の &vmguest; を開始することができるようになります。続きは <xref linkend="cha.qemu.running"/> をお読みください。</para>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="kvm.host.virtio">
-  <title>&kvm; Host-Specific Features</title>
+  <title>&kvm; ホスト固有の機能</title>
 
-  <para>
-   You can improve the performance of &kvm;-based &vmguest;s by letting them
-   fully use specific features of the &vmhost;'s hardware
-   (<emphasis>paravirtualization</emphasis>). This section introduces
-   techniques to make the guests access the physical host's hardware
-   directly&mdash;without the emulation layer&mdash;to make the most use of
-   it.
-  </para>
+  <para>&vmhost; のハードウエアの機能を完全に生かし切る ( <emphasis>準仮想化</emphasis> を使用します) ことによって、 &kvm; ベースの &vmguest; の性能を改善することができます。本章では、エミュレーションを介することなく、ゲスト側から物理ホストのハードウエアを直接アクセスするための技術について説明しています。</para>
 
   <tip>
-   <para>
-    Examples included in this section assume basic knowledge of the
-    <command>qemu-system-<replaceable>ARCH</replaceable></command> command
-    line options. For more information, see
-    <xref linkend="cha.qemu.running"/>.
-   </para>
+   <para>本章内で示しているコマンド例では、 <command>qemu-system-<replaceable>ARCH</replaceable></command> コマンドのオプションについて知っていることを前提にして説明しています。詳しくは <xref linkend="cha.qemu.running"/> をお読みください。</para>
   </tip>
 
   <sect2 xml:id="kvm.virtio-scsi">
-   <title>Using the Host Storage with <systemitem>virtio-scsi</systemitem></title>
-   <para>
-    <systemitem>virtio-scsi</systemitem> is an advanced storage stack for
-    &kvm;. It replaces the former <systemitem>virtio-blk</systemitem> stack
-    for SCSI devices pass-through. It has several advantages over
-    <systemitem>virtio-blk</systemitem>:
-   </para>
+   <title><systemitem>virtio-scsi</systemitem> を利用したホスト側ストレージの使用</title>
+   <para><systemitem>virtio-scsi</systemitem> は &kvm; 向けの高度なストレージスタックです。これは従来 SCSI デバイスのパススルーで使用していた <systemitem>virtio-blk</systemitem> スタックの置き換えとして生まれた仕組みでもあります。 <systemitem>virtio-blk</systemitem> と比較すると、下記の利点があります:</para>
    <variablelist>
     <varlistentry>
-     <term>Improved scalability</term>
+     <term>スケーラビリティの改善</term>
      <listitem>
-      <para>
-       &kvm; guests have a limited number of PCI controllers, which results
-       in a limited number of possibly attached devices.
-       <systemitem>virtio-scsi</systemitem> solves this limitation by
-       grouping multiple storage devices on a single controller. Each device
-       on a <systemitem>virtio-scsi</systemitem> controller is represented
-       as a logical unit, or <emphasis>LUN</emphasis>.
-      </para>
+      <para>&kvm; ゲストに設定できる PCI コントローラには制限が存在することから、接続できるデバイス数にも制限が生まれる結果になっています。 <systemitem>virtio-scsi</systemitem> では、複数のストレージデバイスを単一のコントローラにまとめることによって、この制限を乗り越えることができるようになっています。 <systemitem>virtio-scsi</systemitem> コントローラ内のデバイスは論理ユニット (<emphasis>LUN</emphasis>) として現われるようになっています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Standard command set</term>
+     <term>標準的なコマンドセット</term>
      <listitem>
-      <para>
-       <systemitem>virtio-blk</systemitem> uses a small set of
-       commands that need to be known to both the
-       <systemitem>virtio-blk</systemitem> driver and the virtual machine
-       monitor, and so introducing a new command requires updating both the
-       driver and the monitor.
-      </para>
-      <para>
-       By comparison, <systemitem>virtio-scsi</systemitem> does not define
-       commands, but rather a transport protocol for these commands following
-       the industry-standard SCSI specification. This approach is shared with
-       other technologies, such as Fibre Channel, ATAPI, and USB devices.
-      </para>
+      <para><systemitem>virtio-blk</systemitem> では <systemitem>virtio-blk</systemitem> のドライバと仮想マシンモニタの両方で共通する少数のコマンドセットのみを使用していたため、新しいコマンドを追加するにも、ドライバとモニタの両方を更新する必要がありました。</para>
+      <para><systemitem>virtio-scsi</systemitem> ではコマンドを定義せずに伝送プロトコルを定義し、それらのコマンドを工業規格である SCSI 仕様に従って送信するようになっています。このようなアプローチにより、ファイバーチャネルや ATAPI, USB デバイスなどの他の技術とも共用がはかれるようになっています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Device naming</term>
+     <term>デバイスの名前</term>
      <listitem>
-      <para>
-       <systemitem>virtio-blk</systemitem> devices are presented inside the
-       guest as <filename>/dev/vd<replaceable>X</replaceable></filename>,
-       which is different from device
-       names in physical systems and may cause migration problems.
-      </para>
-      <para>
-       <systemitem>virtio-scsi</systemitem> keeps the device names identical
-       to those on physical systems, making the virtual machines easily
-       relocatable.
-      </para>
+      <para><systemitem>virtio-blk</systemitem> でのデバイスはゲスト内で <filename>/dev/vd<replaceable>X</replaceable></filename> として現われるようになっていました。そのため物理システムとはデバイス名が異なることにより、移行時の障害になっていました。</para>
+      <para><systemitem>virtio-scsi</systemitem> では物理システムと同じデバイス名になるようになっています。そのため、仮想マシンを容易に再配置できるようになっています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>SCSI device pass-through</term>
+     <term>SCSI デバイスのパススルー</term>
      <listitem>
-      <para>
-       For virtual disks backed by a whole LUN on the host, it is preferable
-       for the guest to send SCSI commands directly to the LUN
-       (pass-through). This is limited in
-       <systemitem>virtio-blk</systemitem>, as guests need to use the
-       virtio-blk protocol instead of SCSI command pass-through, and,
-       moreover, it is not available for Windows guests.
-       <systemitem>virtio-scsi</systemitem> natively removes these
-       limitations.
-      </para>
+      <para>ホスト内の LUN 全体を表わす仮想ディスクの場合、ゲストから SCSI コマンドを直接 LUN に送信 (パススルー) したほうが良い場合があります。これは <systemitem>virtio-blk</systemitem> の場合、ゲスト側では SCSI コマンドではなく virtio-blk プロトコルを使用していることから実現できませんし、 Windows ゲストの場合でも利用できません。 <systemitem>virtio-scsi</systemitem> では SCSI そのものを使用しますので、何も問題なく対応できることになります。</para>
      </listitem>
     </varlistentry>
    </variablelist>
    <sect3>
-    <title><systemitem>virtio-scsi</systemitem> Usage</title>
-    <para>
-     &kvm; supports the SCSI pass-through feature with the
-     <systemitem>virtio-scsi-pci</systemitem> device:
-    </para>
+    <title><systemitem>virtio-scsi</systemitem> の使用方法</title>
+    <para>&kvm; では <systemitem>virtio-scsi-pci</systemitem> デバイスで SCSI のパススルー機能に対応しています:</para>
 <screen>&prompt.root;qemu-system-x86_64 [...] \
 -device virtio-scsi-pci,id=scsi</screen>
    </sect3>
   </sect2>
 
   <sect2 xml:id="kvm.qemu.vnet">
-   <title>Accelerated Networking with <systemitem>vhost-net</systemitem></title>
-   <para>
-    The <systemitem>vhost-net</systemitem> module is used to accelerate
-    &kvm;'s paravirtualized network drivers. It provides better latency and
-    greater network throughput. Use the <literal>vhost-net</literal>
-    driver by starting the guest with the following example command line:
-   </para>
+   <title><systemitem>vhost-net</systemitem> を利用したネットワーク処理の高速化</title>
+   <para><systemitem>vhost-net</systemitem> モジュールは &kvm; の準仮想化ネットワークドライバを高速化するために使用するモジュールです。遅延とスループットの改善をそれぞれ提供します。 <literal>vhost-net</literal> ドライバを使用するには、下記のようにしてコマンドラインで指定します:</para>
 <screen>&prompt.root;qemu-system-x86_64 [...] \
 -netdev tap,id=guest0,vhost=on,script=no \
 -net nic,model=virtio,netdev=guest0,macaddr=00:16:35:AF:94:4B</screen>
-   <para>
-    Note that <literal>guest0</literal> is an identification string of the
-    vhost-driven device.
-   </para>
+   <para>ここで、 <literal>guest0</literal> はデバイスの識別用文字列です。</para>
   </sect2>
 
   <sect2 xml:id="kvm.qemu.multiqueue">
-   <title>Scaling Network Performance with Multiqueue virtio-net</title>
-   <para>
-    As the number of virtual CPUs increases in &vmguest;s, &qemu; offers a
-    way of improving the network performance using
-    <emphasis>multiqueue</emphasis>. Multiqueue virtio-net scales the
-    network performance by allowing &vmguest; virtual CPUs to transfer
-    packets in parallel. Multiqueue support is required on both the &vmhost;
-    and &vmguest; sides.
-   </para>
+   <title>マルチキュー型 virtio-net を利用したネットワーク性能の強化</title>
+   <para>&vmguest; 内での仮想 CPU 数を増やす場合、 &qemu; では <emphasis>マルチキュー</emphasis> と呼ばれる仕組みを利用して、ネットワーク性能を改善することができます。マルチキュー型の virtio-net では、複数の &vmguest; の仮想 CPU が同時にパケットを送信することができるようになりますので、ネットワークの性能を大きく向上させることができます。なお、マルチキューへの対応は、 &vmhost; と &vmguest; の両方で行なう必要があります。</para>
    <tip>
-    <title>Performance Benefit</title>
-    <para>
-     The multiqueue virtio-net solution is most beneficial in the following
-     cases:
-    </para>
+    <title>性能面での利点について</title>
+    <para>マルチキュー型の virtio-net ソリューションは、下記のような場合に有用です:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       Network traffic packets are large.
-      </para>
+      <para>ネットワークトラフィックのパケットが大きい場合。</para>
      </listitem>
      <listitem>
-      <para>
-       &vmguest; has many connections active at the same time, mainly
-       between the guest systems, or between the guest and the host, or
-       between the guest and an external system.
-      </para>
+      <para>&vmguest; 内で多数の接続を同時に処理する必要がある場合。これはゲストシステム間だけでなく、ゲストとホストの間やゲストと外部システムの間でも有用です。</para>
      </listitem>
      <listitem>
-      <para>
-       The number of active queues is equal to the number of virtual CPUs in
-       the &vmguest;.
-      </para>
+      <para>&vmguest; 内での有効なキュー数と仮想 CPU の数が一致している場合。</para>
      </listitem>
     </itemizedlist>
    </tip>
    <note>
-    <para>
-     While multiqueue virtio-net increases the total network throughput, it
-     increases CPU consumption as it uses of the virtual CPU's power.
-    </para>
+    <para>マルチキュー型の virtio-net は全体のネットワーク性能を強化する仕組みであるため、仮想 CPU の使用率も上がることになります。</para>
    </note>
    <procedure xml:id="kvm.qemu.mq.enable">
-    <title>How to Enable Multiqueue virtio-net</title>
-    <para>
-     The following procedure lists important steps to enable the multiqueue
-     feature with <command>qemu-system-ARCH</command>. It assumes that a tap
-     network device with multiqueue capability (supported since kernel
-     version 3.8) is set up on the &vmhost;.
-    </para>
+    <title>マルチキュー型 virtio-net の有効化方法</title>
+    <para>下記の手順では <command>qemu-system-ARCH</command> を利用してマルチキュー機能を有効化する場合の、主な流れを説明しています。なお、 &vmhost; 側にはマルチキュー機能に対応した tap ネットワークデバイス (カーネルバージョン 3.8 以降で対応しています) が既に設定されているものとします。</para>
     <step>
-     <para>
-      In <command>qemu-system-ARCH</command>, enable multiqueue for the tap
-      device:
-     </para>
+     <para>tap デバイスに対してマルチキュー機能を有効化するには、 <command>qemu-system-ARCH</command> に下記を追加します:</para>
 <screen>-netdev tap,vhost=on,queues=<replaceable>2*N</replaceable></screen>
-     <para>
-      where <literal>N</literal> stands for the number of queue pairs.
-     </para>
+     <para>ここで、 <literal>N</literal> にはキュー対の数を指定します。</para>
     </step>
     <step>
-     <para>
-      In <command>qemu-system-ARCH</command>, enable multiqueue and specify
-      MSI-X (Message Signaled Interrupt) vectors for the virtio-net-pci
-      device:
-     </para>
+     <para>さらに <command>qemu-system-ARCH</command> 側でマルチキューを有効化し、 virtio-net-pci デバイスに対する MSI-X (Message Signaled Interrupt (メッセージシグナル型割り込み)) ベクトルを指定します:</para>
 <screen>-device virtio-net-pci,mq=on,vectors=<replaceable>2*N+2</replaceable></screen>
-     <para>
-      where the formula for the number of MSI-X vectors results from: N
-      vectors for TX (transmit) queues, N for RX (receive) queues, one for
-      configuration purposes, and one for possible VQ (vector quantization)
-      control.
-     </para>
+     <para>ここで、 MSI-X ベクトルの数 (vectors=) は下記のようにして計算します: まず TX (送信) キュー用に N 個、 RX (受信) 用に N 個、設定用に 1 個、そして発生しうる VQ (Vector Quantization (ベクトル量子化)) 制御用に 1 個を用意します。つまり、合計で 2*N+2 になります。</para>
     </step>
     <step>
-     <para>
-      In &vmguest;, enable multiqueue on the relevant network interface
-      (<literal>eth0</literal> in this example):
-     </para>
+     <para>&vmguest; 側でネットワークインターフェイスに対してマルチキューを有効化します (下記はデバイスが <literal>eth0</literal> である場合の例です):</para>
 <screen>&prompt.sudo;ethtool -L eth0 combined 2*N</screen>
     </step>
    </procedure>
-   <para>
-    The resulting <command>qemu-system-ARCH</command> command line will look
-    similar to the following example:
-   </para>
+   <para>生成された <command>qemu-system-ARCH</command> のコマンドラインは、下記のようになるはずです:</para>
 <screen>qemu-system-x86_64 [...] -netdev tap,id=guest0,queues=8,vhost=on \
 -device virtio-net-pci,netdev=guest0,mq=on,vectors=10</screen>
-   <para>
-    Note that the <literal>id</literal> of the network device
-    (<literal>guest0</literal> ) needs to be identical for both options.
-   </para>
-   <para>
-    Inside the running &vmguest;, specify the following command with
-    &rootuser; privileges:
-   </para>
+   <para>ここで、ネットワークデバイス ( <literal>guest0</literal> ) の <literal>id</literal> の値は、両方で同じものである必要があることに注意してください。</para>
+   <para>&vmguest; 内では、 &rootuser; 権限で下記のようなコマンドを入力して実行します:</para>
 <screen>&prompt.sudo;ethtool -L eth0 combined 8</screen>
-   <para>
-    Now the guest system networking uses the multiqueue support from the
-    <command>qemu-system-ARCH</command> hypervisor.
-   </para>
+   <para>これでゲストシステムのネットワークインターフェイスは、 <command>qemu-system-ARCH</command> ハイパーバイザが提供するマルチキュー機能に対応するようになっています。</para>
   </sect2>
 
   <sect2 xml:id="kvm.vfio">
-   <title>VFIO: Secure Direct Access to Devices</title>
-   <para>
-    Directly assigning a PCI device to a &vmguest; (PCI pass-through) avoids
-    performance issues caused by avoiding any emulation in performance-critical
-    paths. VFIO replaces the traditional &kvm; &pciback; device
-    assignment. A prerequisite for this feature is a &vmhost; configuration
-    as described in <xref linkend="ann.vt.io.require"/>.
-   </para>
-   <para>
-    To be able to assign a PCI device via VFIO to a &vmguest;, you need to
-    find out which IOMMU Group it belongs to. The
-    <xref linkend="gloss.vt.acronym.iommu"/> (input/output memory
-    management unit that connects a direct memory access-capable I/O bus to
-    the main memory) API supports the notion of groups. A group is a set of
-    devices that can be isolated from all other devices in the system.
-    Groups are therefore the unit of ownership used by
-    <xref linkend="vt.io.vfio"/>.
-   </para>
+   <title>VFIO: デバイスに対する安全な直接アクセス</title>
+   <para>&vmguest; に対する PCI デバイスの直接割り当て (PCI パススルー) を使用することで、性能を重視する環境ではエミュレーションに必要な処理を回避することができます。 VFIO は従来の &kvm; &pciback; デバイス割り当てを置き換えるよう作成された仕組みで、この機能を利用するには <xref linkend="ann.vt.io.require"/> で説明している要件を満たす必要があります。</para>
+   <para>VFIO を利用して PCI デバイスを &vmguest; に割り当てることができるようにするには、まず所属する IOMMU グループが何であるのかを調べる必要があります。 <xref linkend="gloss.vt.acronym.iommu"/> (Input/Output Memory Management Unit; メインメモリへの直接メモリアクセスに対応した I/O バス) API にはグループという概念があります。グループはデバイスの集合で、システム内での境界線として使用しているものです。そのため、グループは <xref linkend="vt.io.vfio"/> が使用する所有権の単位であると言えます。</para>
    <procedure>
-    <title>Assigning a PCI Device to a &vmguest; via VFIO</title>
+    <title>VFIO を介した &vmguest; への PCI デバイスの割り当て</title>
     <step>
-     <para>
-      Identify the host PCI device to assign to the guest.
-     </para>
+     <para>まずはゲストに割り当てるホスト側の PCI デバイスを識別します。</para>
 <screen>&prompt.sudo;lspci -nn
 [...]
 00:10.0 Ethernet controller [0200]: Intel Corporation 82576 \
 Virtual Function [8086:10ca] (rev 01)
 [...]</screen>
-     <para>
-      Note down the device ID (<literal>00:10.0</literal> in this case) and
-      the vendor ID (<literal>8086:10ca</literal>).
-     </para>
+     <para>対象のデバイスのデバイス ID (この場合は <literal>00:10.0</literal>) と製造元 ID ( <literal>8086:10ca</literal> ) をそれぞれメモしておきます。</para>
     </step>
     <step>
-     <para>
-      Find the IOMMU group of this device:
-     </para>
+     <para>このデバイスの IOMMU グループを判別します:</para>
 <screen>&prompt.sudo;readlink /sys/bus/pci/devices/0000\:00\:10.0/iommu_group
 ../../../kernel/iommu_groups/20</screen>
-     <para>
-      The IOMMU group for this device is <literal>20</literal>. Now you can
-      check the devices belonging to the same IOMMU group:
-     </para>
+     <para>このデバイスの IOMMU グループは <literal>20</literal> であることがわかりました。あとは同じ IOMMU グループに属しているデバイスを確認します:</para>
 <screen>&prompt.sudo;ls -l /sys/bus/pci/devices/0000:01:10.0/iommu_group/devices/0000:01:10.0
 [...] 0000:00:1e.0 -&gt; ../../../../devices/pci0000:00/0000:00:1e.0
 [...] 0000:01:10.0 -&gt; ../../../../devices/pci0000:00/0000:00:1e.0/0000:01:10.0
 [...] 0000:01:10.1 -&gt; ../../../../devices/pci0000:00/0000:00:1e.0/0000:01:10.1</screen>
     </step>
     <step>
-     <para>
-      Unbind the device from the device driver:
-     </para>
+     <para>デバイスドライバからデバイスを取り外します:</para>
 <screen>&prompt.sudo;echo "0000:01:10.0" &gt; /sys/bus/pci/devices/0000\:01\:10.0/driver/unbind</screen>
     </step>
     <step>
-     <para>
-      Bind the device to the vfio-pci driver using the vendor ID from step
-      1:
-     </para>
+     <para>上記で取得した製造元 ID を指定して、デバイスを vfio-pci ドライバに接続します:</para>
 <screen>&prompt.sudo;echo "8086 153a" &gt; /sys/bus/pci/drivers/vfio-pci/new_id</screen>
-     <para>
-      A new device
-      <filename>/dev/vfio/<replaceable>IOMMU_GROUP</replaceable></filename>
-      will be created as a result, <filename>/dev/vfio/20</filename> in this
-      case.
-     </para>
+     <para>上記を実行すると、 <filename>/dev/vfio/<replaceable>IOMMU_グループ</replaceable></filename> という新しいデバイスが作成されます。上記の例の場合は <filename>/dev/vfio/20</filename> になります。</para>
     </step>
     <step>
-     <para>
-      Change the ownership of the newly created device:
-     </para>
-<screen>&prompt.sudo;chown qemu.qemu /dev/vfio/<replaceable>DEVICE</replaceable></screen>
+     <para>新しく作成したデバイスの所有者を変更します:</para>
+<screen>&prompt.sudo;chown qemu.qemu /dev/vfio/<replaceable>デバイス名</replaceable></screen>
     </step>
     <step>
-     <para>
-      Now run the &vmguest; with the PCI device assigned.
-     </para>
+     <para>あとは割り当てた PCI デバイスを指定して &vmguest; を起動します。</para>
 <screen>&prompt.sudo;qemu-system-<replaceable>ARCH</replaceable> [...] -device
      vfio-pci,host=00:10.0,id=<replaceable>ID</replaceable></screen>
     </step>
    </procedure>
    <important>
-    <title>No Hotplugging</title>
-    <para>
-     As of &productname; &productnumber; hotplugging of PCI devices passed
-     to a &vmguest; via VFIO is not supported.
-    </para>
+    <title>ホットプラグ (活性接続) への非対応について</title>
+    <para>&productname; &productnumber; では、 PCI デバイスのホットプラグによる &vmguest; への接続はサポートしていません。</para>
    </important>
 <!-- fs 2015-10-09: not yet supported
    <para>
@@ -462,143 +258,69 @@ Virtual Function [8086:10ca] (rev 01)
     </listitem>
    </itemizedlist>
 -->
-   <para>
-    You can find more detailed information on the
-    <xref linkend="vt.io.vfio"/> driver in the
-    <filename>/usr/src/linux/Documentation/vfio.txt</filename> file (package
-    <systemitem>kernel-source</systemitem> needs to be installed).
-   </para>
+   <para><xref linkend="vt.io.vfio"/> ドライバに関するさらに詳しい情報については、 <filename>/usr/src/linux/Documentation/vfio.txt</filename> (英語) をお読みください (<systemitem>kernel-source</systemitem> パッケージをインストールする必要があります) 。</para>
   </sect2>
 
   <sect2 xml:id="kvm.qemu.virtfs">
-   <title>VirtFS: Sharing Directories between Host and Guests</title>
-   <para>
-    &vmguest;s usually run in a separate computing space&mdash;they are
-    provided their own memory range, dedicated CPUs, and file system space.
-    The ability to share parts of the &vmhost;'s file system makes the
-    virtualization environment more flexible by simplifying mutual data
-    exchange. Network file systems, such as CIFS and NFS, have been the
-    traditional way of sharing directories. But as they are not specifically
-    designed for virtualization purposes, they suffer from major performance
-    and feature issues.
-   </para>
-   <para>
-    &kvm; introduces a new optimized method called
-    <emphasis>VirtFS</emphasis> (sometimes called <quote>file system
-    pass-through</quote>). VirtFS uses a paravirtual file system driver,
-    which avoids converting the guest application file system operations
-    into block device operations, and then again into host file system
-    operations.
-   </para>
-   <para>
-    You typically use VirtFS for the following situations:
-   </para>
+   <title>VirtFS: ホストとゲストの間でのディレクトリ共有</title>
+   <para>&vmguest; は通常、個別の作業領域で動作します。メモリ範囲や CPU を独自に割り当てるほか、ファイルシステムも別々になります。 &vmhost; 側のファイルシステムとの間で共有を行なうことで、相互のデータ交換をより柔軟に行なうことができるようになります。 CIFS や NFS などのネットワーク型のファイルシステムでもディレクトリの共有を行なうことができますが、これらは仮想化用に設計されたものではありませんので、十分な性能を提供することができないほか、機能面の問題に直面する可能性もあります。</para>
+   <para>&kvm; では新しく最適化された <emphasis>VirtFS</emphasis> (<quote>ファイルシステムのパススルー</quote> と呼ぶこともあります) を提供しています。 VirtFS は準仮想化型のファイルシステムドライバで、ゲスト側でのファイルシステム操作をブロックデバイスの操作に変換する処理を行なうことなく、そのままホスト側のファイルシステム操作に変換することができます。</para>
+   <para>VirtFS の機能は下記のような用途で使用することができます:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      To access a shared directory from several guests, or to provide
-      guest-to-guest file system access.
-     </para>
+     <para>複数のゲストから共通のディレクトリにアクセスする必要がある場合や、ゲスト間で同じファイルシステムにアクセスする必要がある場合。</para>
     </listitem>
     <listitem>
-     <para>
-      To replace the virtual disk as the root file system to which the
-      guest's RAM disk connects during the guest boot process.
-     </para>
+     <para>ゲスト側の RAM ディスクで、起動時にアクセスするルートファイルシステムの代替として使用したい場合。</para>
     </listitem>
     <listitem>
-     <para>
-      To provide storage services to different customers from a single host
-      file system in a cloud environment.
-     </para>
+     <para>クラウド環境で、ホスト側のファイルシステムを複数の顧客に提供するようなストレージサービスを構成するような場合。</para>
     </listitem>
    </itemizedlist>
    <sect3 xml:id="kvm.qemu.virtfs.implement">
-    <title>Implementation</title>
-    <para>
-     In &qemu;, the implementation of VirtFS is simplified by defining two
-     types of devices:
-    </para>
+    <title>実装</title>
+    <para>&qemu; では、 VirtFS の実装を下記の 2 種類のデバイスとして提供しています:</para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>
-       <literal>virtio-9p-pci</literal> device which transports protocol
-       messages and data between the host and the guest.
-      </para>
+      <para><literal>virtio-9p-pci</literal>: プロトコルのメッセージとデータを、ホストとゲストの間で伝送するデバイス。</para>
      </listitem>
      <listitem>
-      <para>
-       <literal>fsdev</literal> device which defines the export file system
-       properties, such as file system type and security model.
-      </para>
+      <para><literal>fsdev</literal>: ファイルシステムの種類やセキュリティモデルなど、ファイルシステムの属性情報を提供するためのデバイス。</para>
      </listitem>
     </itemizedlist>
     <example xml:id="ex.qemu.virtfs.host">
-     <title>Exporting Host's File System with VirtFS</title>
+     <title>VirtFS を利用したホスト側ファイルシステムの公開</title>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -fsdev local,id=exp1<co xml:id="co.virtfs.host.id"/>,path=/tmp/<co xml:id="co.virtfs.host.path"/>,security_model=mapped<co xml:id="co.virtfs.host.sec_model"/> \
 -device virtio-9p-pci,fsdev=exp1<co xml:id="co.virtfs.host.fsdev"/>,mount_tag=v_tmp<co xml:id="co.virtfs.host.mnt_tag"/></screen>
      <calloutlist>
       <callout arearefs="co.virtfs.host.id">
-       <para>
-        Identification of the file system to be exported.
-       </para>
+       <para>公開するファイルシステムの識別子を指定します。</para>
       </callout>
       <callout arearefs="co.virtfs.host.path">
-       <para>
-        File system path on the host to be exported.
-       </para>
+       <para>公開するファイルシステムのホスト内でのパスを指定します。</para>
       </callout>
       <callout arearefs="co.virtfs.host.sec_model">
-       <para>
-        Security model to be used&mdash;<literal>mapped</literal> keeps the
-        guest file system modes and permissions isolated from the host,
-        while <literal>none</literal> invokes a <quote>pass-through</quote>
-        security model in which permission changes on the guest's files are
-        reflected on the host as well.
-       </para>
+       <para>使用するセキュリティモデルを指定します。 <literal>mapped</literal> を指定すると、ゲスト側からのファイルシステムモードとパーミッションを維持し、ホスト側とは区別して管理するようにします。 <literal>none</literal> は <quote>パススルー</quote> 型のセキュリティモデルで、ゲスト側のファイルアクセスでのパーミッションをそのままホスト側にも反映させる設定です。</para>
       </callout>
       <callout arearefs="co.virtfs.host.fsdev">
-       <para>
-        The exported file system ID defined before with <literal>-fsdev
-        id=</literal> .
-       </para>
+       <para><literal>-fsdev id=</literal> で指定していたファイルシステムの識別子を指定します。</para>
       </callout>
       <callout arearefs="co.virtfs.host.mnt_tag">
-       <para>
-        Mount tag used later on the guest to mount the exported file system.
-       </para>
+       <para>ゲスト側でマウントを行なう際、タグとして使用する名前を指定します。</para>
       </callout>
      </calloutlist>
-     <para>
-      Such an exported file system can be mounted on the guest as follows:
-     </para>
+     <para>上記のようにファイルシステムを公開した場合、ゲスト側では下記のようにしてマウントすることができます:</para>
 <screen>&prompt.sudo;mount -t 9p -o trans=virtio v_tmp /mnt</screen>
-     <para>
-      where <literal>v_tmp</literal> is the mount tag defined earlier with
-      <literal>-device mount_tag=</literal> and <literal>/mnt</literal> is
-      the mount point where you want to mount the exported file system.
-     </para>
+     <para>ここで、 <literal>v_tmp</literal> は <literal>-device mount_tag=</literal> で指定したタグ名を、 <literal>/mnt</literal> は公開されたファイルシステムをマウントする先をそれぞれ指定します。</para>
     </example>
    </sect3>
   </sect2>
 
   <sect2 xml:id="kvm.qemu.ksm">
-   <title>KSM: Sharing Memory Pages between Guests</title>
-   <para>
-    Kernel Same Page Merging (<xref linkend="gloss.vt.acronym.ksm"/>) is a
-    Linux kernel feature that merges identical memory pages from multiple
-    running processes into one memory region. Because &kvm; guests run as
-    processes under Linux, <xref linkend="gloss.vt.acronym.ksm"/> provides
-    the memory overcommit feature to hypervisors for more efficient use of
-    memory. Therefore, if you need to run multiple virtual machines on a
-    host with limited memory, <xref linkend="gloss.vt.acronym.ksm"/> may be
-    helpful to you.
-   </para>
-   <para>
-    <xref linkend="gloss.vt.acronym.ksm"/> stores its status information in
-    the files under the <filename>/sys/kernel/mm/ksm</filename> directory:
-   </para>
+   <title>KSM: ゲスト間でのメモリページ共有</title>
+   <para>Kernel Same Page Merging ( <xref linkend="gloss.vt.acronym.ksm"/> ) は Linux カーネルの機能で、複数のプロセス内にある同一のメモリページを、 1 つのメモリ領域にまとめる機能のことを指します。 &kvm; ゲストは Linux 内のプロセスとして存在することになりますので、 <xref linkend="gloss.vt.acronym.ksm"/> を使用することでハイパーバイザがメモリをより効率的に使用し、オーバーコミット機能 (搭載されているメモリよりも多くのメモリを提供する機能) を提供することにもなります。そのため、メモリの限られたホスト内で複数の仮想マシンを動作させる必要がある場合、 <xref linkend="gloss.vt.acronym.ksm"/> を利用することで解決できる場合があることになります。</para>
+   <para><xref linkend="gloss.vt.acronym.ksm"/> では、 <filename>/sys/kernel/mm/ksm</filename> ディレクトリ内に、その状態に関する情報を含むファイルを提供します:</para>
 <screen>&prompt.user;ls -1 /sys/kernel/mm/ksm
 full_scans
 merge_across_nodes
@@ -609,30 +331,15 @@ pages_unshared
 pages_volatile
 run
 sleep_millisecs</screen>
-   <para>
-    For more information on the meaning of the
-    <filename>/sys/kernel/mm/ksm/*</filename> files, see
-    <filename>/usr/src/linux/Documentation/vm/ksm.txt</filename> (package
-    <systemitem>kernel-source</systemitem>).
-   </para>
-   <para>
-    To use <xref linkend="gloss.vt.acronym.ksm"/>, do the following.
-   </para>
+   <para><filename>/sys/kernel/mm/ksm/*</filename> ファイルのそれぞれの意味について、詳しくは <filename>/usr/src/linux/Documentation/vm/ksm.txt</filename> (英語) をお読みください (<systemitem>kernel-source</systemitem> パッケージ内に含まれています) 。</para>
+   <para><xref linkend="gloss.vt.acronym.ksm"/> を使用するには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Although &productnameshort; includes
-      <xref linkend="gloss.vt.acronym.ksm"/> support in the kernel, it is
-      disabled by default. To enable it, run the following command:
-     </para>
+     <para>&productnameshort; では、 <xref linkend="gloss.vt.acronym.ksm"/> のサポートがカーネル内に含まれていますが、既定では無効化されています。有効化するには、下記のコマンドを実行します:</para>
 <screen>&prompt.root;echo 1 &gt; /sys/kernel/mm/ksm/run</screen>
     </step>
     <step>
-     <para>
-      Now run several &vmguest;s under &kvm; and inspect the content of
-      files <filename>pages_sharing</filename> and
-      <filename>pages_shared</filename>, for example:
-     </para>
+     <para>あとは必要な &vmguest; を &kvm; 内で動作させます。機能が正しく動作しているかどうかを調べるには、 <filename>pages_sharing</filename> と <filename>pages_shared</filename> のファイルの内容を調べてください:</para>
 <screen>&prompt.user;while [ 1 ]; do cat /sys/kernel/mm/ksm/pages_shared; sleep 1; done
 13522
 13523
