@@ -4,7 +4,7 @@
 %entities;
 ]>
 <appendix xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="app.kvm">
- <title>Appendix</title>
+ <title>付録</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -13,105 +13,53 @@
     </info>
     <para/>
  <sect1 xml:id="app.kvm.virtio_install" os="sles;sled">
-  <title>Installing Paravirtualized Drivers</title>
+  <title>準仮想化ドライバのインストール</title>
 
   <para/>
 
   <sect2 xml:id="app.kvm.virtio_install.windows">
-   <title>Installing virtio Drivers for Microsoft Windows*</title>
-   <para os="sles">
-    &suse; has developed virtio-based drivers for Windows, which are
-    available in the Virtual Machine Driver Pack (VMDP). See
-    <link xlink:href="http://www.suse.com/products/vmdriverpack/"/> for more
-    information on the VMDP. Installation instructions are now available in
-    a dedicated official documentation.
-   </para>
+   <title>Microsoft Windows* での virtio ドライバのインストール</title>
+   <para os="sles">&suse; では Windows 向けに virtio ベースのドライバを開発しています。このドライバは Virtual Machine Driver Pack (VMDP) 内に含まれています。 VMDP に関する詳細は、 <link xlink:href="http://www.suse.com/products/vmdriverpack/"/> をお読みください。インストール手順については、専用の公式文書をお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="app.kvm.certificates">
-  <title>Generating x509 Client/Server Certificates</title>
+  <title>x509 クライアント／サーバ証明書の生成</title>
 
-  <para>
-   To be able to create x509 client and server certificates you
-   need to issue them by a Certificate Authority (CA). It is recommended to
-   set up an independent CA that only issues certificates for
-   <systemitem class="library">libvirt</systemitem>.
-  </para>
+  <para>x509 クライアント／サーバ証明書を作成するには、証明機関 (Certificate Authority (CA)) からそれらを発行する必要があります。 <systemitem class="library">libvirt</systemitem> で証明書を使用する場合は、それ専用の CA を構築して使用することをお勧めします。</para>
 
   <procedure>
    <step>
-    <para>
-     Set up a CA as described in
-     <xref linkend="sec.security.yast_ca.module.rootca"/>.
-    </para>
+    <para>まずは <xref linkend="sec.security.yast_ca.module.rootca"/> の手順に従って CA を構築します。</para>
    </step>
    <step>
-    <para>
-     Create a server and a client certificate as described in
-     <xref linkend="sec.security.yast_ca.module.clientserver"/>. The Common
-     Name (CN) for the server certificate must be the fully qualified host
-     name, while the Common Name for the client certificate can be freely
-     chosen. For all other fields stick with the defaults suggested by
-     &yast;.
-    </para>
-    <para>
-     Export the client and server certificates to a temporary location (for
-     example, <filename>/tmp/x509/</filename>) by performing the following
-     steps:
-    </para>
+    <para><xref linkend="sec.security.yast_ca.module.clientserver"/> の手順に従ってサーバ証明書やクライアント証明書を作成します。サーバ証明書の場合、 Common Name (CN) の項目は完全修飾ホスト名でなければなりませんが、クライアント証明書の場合は任意の名前でかまいません。それ以外の値については、 &yast; が提示する既定値のままにしておいてください。</para>
+    <para>あとは下記の手順を実施して、一時的な場所 (例: <filename>/tmp/x509/</filename>) にクライアント証明書やサーバ証明書をエクスポートします:</para>
     <substeps performance="required">
      <step>
-      <para>
-       Select the certificate on the <guimenu>certificates</guimenu> tab.
-      </para>
+      <para><guimenu>証明書</guimenu> タブで証明書を選択します。</para>
      </step>
      <step>
-      <para>
-       Choose <menuchoice> <guimenu>Export</guimenu> <guimenu>Export to
-       File</guimenu> <guimenu>Certificate and the Key Unencrypted in PEM
-       Format</guimenu> </menuchoice>, provide the <guimenu>Certificate
-       Password</guimenu> and the full path and the file name under
-       <guimenu>File Name</guimenu>, for example,
-       <filename>/tmp/x509/server.pem</filename> or
-       <filename>/tmp/x509/client.pem</filename>.
-      </para>
+      <para><menuchoice> <guimenu>エクスポート</guimenu> <guimenu>ファイルにエクスポート</guimenu> <guimenu>証明書と鍵を暗号化せずに PEM 形式で</guimenu> </menuchoice> を選択し、 <guimenu>証明書のパスワード</guimenu> を入力してから <guimenu>ファイル名</guimenu> に出力先を指定します。たとえば <filename>/tmp/x509/server.pem</filename> や <filename>/tmp/x509/client.pem</filename> のように指定します。</para>
      </step>
      <step>
-      <para>
-       Open a terminal and change to the directory where you have saved the
-       certificate and issue the following commands to split it into
-       certificate and key (this example splits the server key):
-      </para>
+      <para>端末を開いて証明書を保存したディレクトリに移動し、下記のようなコマンドを入力して実行することで、証明書と鍵を分割します (この例では <filename>server.pem</filename> ファイルを分割しています):</para>
 <screen>&prompt.user;csplit -z -f s_ server.pem '/-----BEGIN/' '{1}'
        mv s_00 servercert.pem
        mv s_01 serverkey.pem</screen>
      </step>
      <step>
-      <para>
-       Repeat the procedure for each client and server certificate you want to
-       export.
-      </para>
+      <para>複数の証明書をエクスポートしている場合は、上記の手順を繰り返し、全ての証明書に対して実施します。</para>
      </step>
     </substeps>
    </step>
    <step>
-    <para>
-     Finally export the CA certificate by performing the following steps:
-    </para>
+    <para>最後に CA 自身の証明書をエクスポートします:</para>
     <substeps performance="required">
      <step>
-      <para>
-       Switch to the <guimenu>Description</guimenu> tab.
-      </para>
+      <para><guimenu>説明</guimenu> タブに切り替えます。</para>
      </step>
      <step>
-      <para>
-       Choose <menuchoice> <guimenu>Advanced</guimenu> <guimenu>Export to
-       File</guimenu> <guimenu>Only the Certificate in PEM Format</guimenu>
-       </menuchoice> and enter the full path and the file name under
-       <guimenu>File Name</guimenu>, for example,
-       <filename>/tmp/x509/cacert.pem</filename>.
-      </para>
+      <para><menuchoice> <guimenu>詳細設定</guimenu> <guimenu>ファイルにエクスポート</guimenu> <guimenu>証明書のみを PEM 形式で</guimenu> </menuchoice> を選択して、 <guimenu>ファイル名</guimenu> に出力先を指定します。たとえば <filename>/tmp/x509/cacert.pem</filename> のように指定します。</para>
      </step>
     </substeps>
    </step>
