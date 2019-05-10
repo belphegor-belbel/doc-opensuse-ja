@@ -4,114 +4,67 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.lxc2libvirt">
- <title>Migration from &lxc; to <systemitem>libvirt-lxc</systemitem></title>
+ <title>&lxc; から <systemitem>libvirt-lxc</systemitem> への移行</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
         </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>
-  Since <phrase os="sles;sled">&sls; 12</phrase><phrase os="osuse">&opensuse;
-  Leap</phrase>, &lxc; is integrated into &libvirt; library. This decision has
-  several advantages over using &lxc; as a separate solution&mdash;such as a
-  unified approach with other virtualization solutions or independence on the
-  kernel used. This chapter describes steps needed to migrate an existing &lxc;
-  environment for use with the &libvirt; library.
- </para>
+    <para><phrase os="sles;sled">&sls; 12</phrase> <phrase os="osuse">&opensuse; Leap</phrase> 以降のバージョンでは、 &lxc; が &libvirt; ライブラリに統合されるようになっています。この決定により、単独で &lxc; を使用する場合に比べて、いくつかの利点が生まれるようになっています。具体的には、他の仮想化ソリューションと同じインターフェイスにまとめることができるようになった点や、使用するカーネルからの独立などがあげられます。本章では、既存の &lxc; 環境を &libvirt; ライブラリを使用する環境に移行する手順について説明しています。</para>
  <sect1 xml:id="lxc2libvirt.host">
-  <title>Host Migration</title>
+  <title>ホストの移行</title>
 
-  <para>
-   The migration itself has two phases. You first need to migrate the host,
-   then the &lxc; containers. After that, you can run the original containers
-   as &vmguest;s in the &libvirt; environment.
-  </para>
+  <para>移行処理は 2 段階から構成されています。まずはホスト側を移行してから、コンテナ内を移行する手順になっています。移行が全て終わると、元のコンテナを &libvirt; 環境下の &vmguest; として動作させることができるようになります。</para>
 
   <procedure>
-   <title>Host Migration</title>
+   <title>ホストの移行</title>
    <step>
-    <para>
-     Upgrade the host to <phrase os="sles;sled">&sls; 15</phrase><phrase os="osuse">&opensuse; Leap 15</phrase> using the official DVD media.
-    </para>
+    <para>公式の DVD メディアを利用して、ホスト側を <phrase os="sles;sled">&sls; 15</phrase> <phrase os="osuse">&opensuse; Leap 15</phrase> にアップグレードします。</para>
    </step>
    <step>
-    <para>
-     After the upgrade, install the
-     <systemitem>libvirt-daemon-lxc</systemitem> and
-     <systemitem>libvirt-daemon-config-network</systemitem> packages.
-    </para>
+    <para>アップグレードが完了したら、それぞれ <systemitem>libvirt-daemon-lxc</systemitem> と <systemitem>libvirt-daemon-config-network</systemitem> のパッケージをインストールします。</para>
    </step>
    <step>
-    <para>
-     Create a &libvirt; XML configuration
-     <filename>lxc_container.xml</filename> from the existing container
-     <literal>lxc_container</literal>:
-    </para>
+    <para>既存のコンテナ <literal>lxc_container</literal> から、&libvirt; の XML 設定ファイル <filename>lxc_container.xml</filename> を作成します:</para>
 <screen>&prompt.sudo;virt-lxc-convert /etc/lxc/lxc_container/config &gt; lxc_container.xml</screen>
    </step>
    <step>
-    <para>
-     Check if the network configuration on the host is the same as in the
-     container configuration file, and fix it if needed.
-    </para>
+    <para>ホスト側のネットワーク設定とコンテナの設定ファイル内の設定が同じになっていることを確認します。異なっている場合は修正を行なってください。</para>
    </step>
    <step>
-    <para>
-     Check the <filename>lxc_container.xml</filename> file for any weird or
-     missing configuration. Note that some &lxc; configuration options
-     cannot be mapped to &libvirt; configuration. Although the conversion
-     should usually be fine, check <xref linkend="lxc.diff"/> for more
-     details.
-    </para>
+    <para>作成された <filename>lxc_container.xml</filename> ファイルを確認し、何かおかしな設定や消えてしまっているものがないかどうかを調べます。なお、 &lxc; の設定オプションによっては、 &libvirt; の設定に移行できないものもあります。一般に変換作業は問題なく動作するはずですが、 <xref linkend="lxc.diff"/> を確認しておくことをお勧めします。</para>
    </step>
    <step>
-    <para>
-     Define the container in &libvirt; based on the created XML
-     definition:
-    </para>
+    <para>作成された XML 定義を元にして、 &libvirt; 内でコンテナを定義します:</para>
 <screen>&prompt.sudo;virsh -c lxc:/// define lxc_container.xml</screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="lxc2libvirt.container">
-  <title>Container Migration</title>
+  <title>コンテナの移行</title>
 
-  <para>
-   After the host is migrated, the &lxc; container in &libvirt; will not
-   boot. It needs to be migrated to <phrase os="sles;sled">&sls;
-   15</phrase><phrase os="osuse">&opensuse; Leap 15</phrase> as well to get
-   everything working.
-  </para>
+  <para>ホスト側の移行が完了しても、 &libvirt; 内の &lxc; コンテナは起動しません。こちらについても正しく動作させることができるよう、 <phrase os="sles;sled">&sls; 15</phrase> <phrase os="osuse">&opensuse; Leap 15</phrase> に移行する必要があります。</para>
 
   <procedure>
-   <title>Container Migration</title>
+   <title>コンテナの移行</title>
    <step>
-    <para>
-     The <filename>baseproduct</filename> file is missing (and
-     <command>zypper</command> keeps complaining about it). Create the
-     relevant symbolic link:
-    </para>
+    <para><filename>baseproduct</filename> ファイルが存在しない場合 (<command>zypper</command> コマンドがその旨を警告した場合) 、対応するシンボリックリンクを作成します:</para>
 <screen>&prompt.root;ROOTFS=/var/lib/lxc/lxc_container/rootfs
 &prompt.root;ln -s $ROOTFS/etc/products.d/SUSE_SLES.prod $ROOTFS/etc/products.d/baseproduct</screen>
    </step>
    <step>
-    <para>
-     Add the DVD repository. Note that you need to replace the DVD device
-     with the one attached to your container:
-    </para>
+    <para>DVD リポジトリを追加します。このとき、 DVD デバイス名はコンテナに接続されているデバイスに置き換えて実行してください:</para>
 <screen os="sles;sled">&prompt.root;zypper --root $ROOTFS ar \
 cd:///?devices=/dev/dvd SLES15-0</screen>
    </step>
    <step>
-    <para>
-     Disable or remove previous repositories:
-    </para>
+    <para>古いバージョンのリポジトリを無効化するか、削除します:</para>
 <screen>&prompt.root;zypper --root $ROOTFS lr
-  | Alias                       | Name                         | Enabled | Refresh
---+-----------------------------+------------------------------+---------+--------
-1 | SLES12                      | SLES12                       | Yes     | No
-2 | SUSE-[...]-Server-12-SP3 38 | SUSE-[...]-Server-12-SP3 138 | Yes     | No
+  | 別名                        | 名前                         | 有効       | 更新
+--+-----------------------------+------------------------------+------------+-----------
+1 | SLES12                      | SLES12                       | はい (y)   | いいえ (n)
+2 | SUSE-[...]-Server-12-SP3 38 | SUSE-[...]-Server-12-SP3 138 | いいえ (n) | いいえ (n)
 
 &prompt.root;zypper --root $ROOTFS rr 2</screen>
 
@@ -119,46 +72,33 @@ cd:///?devices=/dev/dvd SLES15-0</screen>
 cd:///?devices=/dev/dvd "openSUSE 15"</screen>
    </step>
    <step>
-    <para>
-     Disable or remove previous repositories:
-    </para>
+    <para>古いバージョンのリポジトリを無効化するか、削除します:</para>
 <screen>&prompt.root;zypper --root $ROOTFS lr
-  | Alias                       | Name                         | Enabled | Refresh
---+-----------------------------+------------------------------+---------+--------
-1 | openSUSE 42.3 Main          | openSUSE 42.3 Main           | Yes     | No
-2 | openSUSE 42.3 Update        | openSUSE 42.3 Update         | Yes     | No
+  | 別名                        | 名前                         | 有効      | 更新
+--+-----------------------------+------------------------------+----------+-----------
+1 | openSUSE 42.3 Main          | openSUSE 42.3 Main           | はい (y) | いいえ (n)
+2 | openSUSE 42.3 Update        | openSUSE 42.3 Update         | はい (y) | いいえ (n)
 
 &prompt.root;zypper --root $ROOTFS rr 2</screen>
    </step>
    <step>
-    <para>
-     Upgrade the container:
-    </para>
+    <para>コンテナをアップグレードします:</para>
 <screen>&prompt.root;zypper --root $ROOTFS dup</screen>
    </step>
    <step>
-    <para>
-     Install the <emphasis>Minimal</emphasis> pattern to make sure
-     everything required is installed:
-    </para>
+    <para>最低限必要なファイルをインストールしておくため、 <emphasis>Minimal</emphasis> パターンをインストールしておきます:</para>
 <screen>&prompt.root;zypper --root $ROOTFS in -t pattern Minimal</screen>
    </step>
   </procedure>
  </sect1>
  <sect1 xml:id="lxc2libvirt.start">
-  <title>Starting the Container</title>
+  <title>コンテナの起動</title>
 
-  <para>
-   After the host and container migration is complete, the container can be
-   started:
-  </para>
+  <para>ホストとコンテナの両方のアップグレードが完了したら、コンテナを起動することができるようになります:</para>
 
 <screen>&prompt.root;virsh -c lxc:/// start lxc_container</screen>
 
-  <para>
-   If you need to get a console to view the logging messages produced by the
-   container, run:
-  </para>
+  <para>コンテナ側で生成されたログメッセージを表示するため、コンソールを開くには、下記のコマンドを実行します:</para>
 
 <screen>&prompt.root;virsh -c lxc:/// console lxc_container</screen>
  </sect1>
