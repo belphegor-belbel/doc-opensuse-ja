@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2018-07-05 01:25+0000\n"
+"POT-Creation-Date: 2019-06-03 04:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -1313,146 +1313,301 @@ msgid "A rollback of the boot loader is not possible, since all <quote>stages</q
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1227
+#: snapper.xml:1228
+#, no-c-format
+msgid "Enabling Snapper in User Home Directories"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1230
+#, no-c-format
+msgid "You may enable snapshots for users' <filename>/home</filename> directories, which supports a number of use cases:"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1236
+#, no-c-format
+msgid "Individual users may manage their own snapshots and rollbacks."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1241
+#, no-c-format
+msgid "System users, for example database, system, and network admins who want to track copies of configuration files, documentation, and so on."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1248
+#, no-c-format
+msgid "Samba shares with home directories and Btrfs backend."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1253
+#, no-c-format
+msgid "Each user's directory is a Btrfs subvolume of <filename>/home</filename> . It is possible to set this up manually (see <xref linkend=\"sec.snapper.manual-home-config\"/> ). However, a more convenient way is to use <literal>pam_snapper</literal> . The <literal>pam_snapper</literal> package installs the <literal>pam_snapper.so</literal> module and helper scripts, which automate user creation and Snapper configuration."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1262
+#, no-c-format
+msgid "<literal>pam_snapper</literal> provides integration with the <command>useradd</command> command, pluggable authentication modules (PAM), and Snapper. By default it creates snapshots at user login and logout, and also creates time-based snapshots as some users remain logged in for extended periods of time. You may change the defaults using the normal Snapper commands and configuration files."
+msgstr ""
+
+#. Tag: title
+#: snapper.xml:1272
+#, no-c-format
+msgid "Installing pam_snapper and Creating Users"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1274
+#, no-c-format
+msgid "The easiest way is to start with a new <filename>/home</filename> directory formatted with Btrfs, and no existing users. Install <literal>pam_snapper</literal> :"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1279
+#, no-c-format
+msgid "&prompt.root;zypper in pam_snapper"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1280
+#, no-c-format
+msgid "Add this line to <filename>/etc/pam.d/common-session</filename> :"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1283
+#, no-c-format
+msgid "session optional pam_snapper.so"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1284
+#, no-c-format
+msgid "Use the <command>/usr/lib/pam_snapper/pam_snapper_useradd.sh</command> script to create a new user and home directory. By default the script performs a dry run. Edit the script to change <literal>DRYRUN=1</literal> to <literal>DRYRUN=0</literal> . Now you can create a new user:"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1291
+#, no-c-format
+msgid "&prompt.root;/usr/lib/pam_snapper/pam_snapper_useradd.sh \\\n"
+      "<replaceable>username</replaceable> <replaceable>group</replaceable> passwd=<replaceable>password</replaceable>\n"
+      "Create subvolume '/home/username'\n"
+      "useradd: warning: the home directory already exists.\n"
+      "Not copying any file from skel directory into it.\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1297
+#, no-c-format
+msgid "The files from <filename>/etc/skel</filename> will be copied into the user's home directory at their first login. Verify that the user's configuration was created by listing your Snapper configurations:"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1303
+#, no-c-format
+msgid "&prompt.root;snapper list --all\n"
+      "Config: home_username, subvolume: /home/username\n"
+      "Type   | # | Pre # | Date | User | Cleanup | Description | Userdata\n"
+      "-------+---+-------+------+------+---------+-------------+---------\n"
+      "single | 0 |       |      | root |         | current     |\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1309
+#, no-c-format
+msgid "Over time, this output will become populated with a list of snapshots, which the user can manage with the standard Snapper commands."
+msgstr ""
+
+#. Tag: title
+#: snapper.xml:1316
+#, no-c-format
+msgid "Removing Users"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1317
+#, no-c-format
+msgid "Remove users with the <command>/usr/lib/pam_snapper/pam_snapper_userdel.sh</command> script. By default it performs a dry run, so edit it to change <literal>DRYRUN=1</literal> to <literal>DRYRUN=0</literal> . This removes the user, the user's home subvolume, Snapper configuration, and deletes all snapshots."
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1325
+#, no-c-format
+msgid "&prompt.root;/usr/lib/pam_snapper/pam_snapper_userdel.sh username"
+msgstr ""
+
+#. Tag: title
+#: snapper.xml:1329
+#, no-c-format
+msgid "Manually Enabling Snapshots in Home Directories"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:1331
+#, no-c-format
+msgid "These are the steps for manually setting up users' home directories with Snapper. <filename>/home</filename> must be formatted with Btrfs, and the users not yet created."
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:1336
+#, no-c-format
+msgid "&prompt.root;btrfs subvol create /home/<replaceable>username</replaceable>\n"
+      "&prompt.root;snapper -c home_<replaceable>username</replaceable> create-config /home/<replaceable>username</replaceable>\n"
+      "&prompt.root;sed -i -e \"s/ALLOW_USERS=\\\"\\\"/ALLOW_USERS=\\\"<replaceable>username</replaceable>\\\"/g\" \\\n"
+      "/etc/snapper/configs/home_<replaceable>username</replaceable>\n"
+      "&prompt.root;yast users add username=<replaceable>username</replaceable> home=/home/<replaceable>username</replaceable> password=<replaceable>password</replaceable>\n"
+      "&prompt.root;chown <replaceable>username</replaceable>.<replaceable>group</replaceable> /home/<replaceable>username</replaceable>\n"
+      "&prompt.root;chmod 755 /home/<replaceable>username</replaceable>/.snapshots\n"
+      ""
+msgstr ""
+
+#. Tag: title
+#: snapper.xml:1348
 #, no-c-format
 msgid "Creating and Modifying Snapper Configurations"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1229
+#: snapper.xml:1350
 #, no-c-format
 msgid "The way Snapper behaves is defined in a configuration file that is specific for each partition or <literal>Btrfs</literal> subvolume. These configuration files reside under <filename>/etc/snapper/configs/</filename> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1235
+#: snapper.xml:1356
 #, no-c-format
 msgid "In case the root file system is big enough (approximately 12 GB), snapshots are automatically enabled for the root file system <filename>/</filename> upon installation. The corresponding default configuration is named <filename>root</filename> . It creates and manages the &yast; and Zypper snapshot. See <xref linkend=\"sec.snapper.config.modify.values\"/> for a list of the default values."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1246
+#: snapper.xml:1367
 #, no-c-format
 msgid "Minimum Root File System Size for Enabling Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1247
+#: snapper.xml:1368
 #, no-c-format
 msgid "As explained in <xref linkend=\"sec.snapper.setup\"/> , enabling snapshots requires additional free space in the root file system. The amount depends on the amount of packages installed and the amount of changes made to the volume that is included in snapshots. The snapshot frequency and the number of snapshots that get archived also matter."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1254
+#: snapper.xml:1375
 #, no-c-format
 msgid "There is a minimum root file system size that is required to automatically enable snapshots during the installation. Currently this size is approximately 12 GB. This value may change in the future, depending on architecture and the size of the base system. It depends on the values for the following tags in the file <filename>/control.xml</filename> from the installation media:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1262
+#: snapper.xml:1383
 #, no-c-format
 msgid "&lt;root_base_size&gt;\n"
       "&lt;btrfs_increase_percentage&gt;"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1264
+#: snapper.xml:1385
 #, no-c-format
 msgid "It is calculated with the following formula: <replaceable>ROOT_BASE_SIZE</replaceable> * (1 + <replaceable>BTRFS_INCREASE_PERCENTAGE</replaceable> /100)"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1267
+#: snapper.xml:1388
 #, no-c-format
 msgid "Keep in mind that this value is a minimum size. Consider using more space for the root file system. As a rule of thumb, double the size you would use when not having enabled snapshots."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1274
+#: snapper.xml:1395
 #, no-c-format
 msgid "You may create your own configurations for other partitions formatted with <literal>Btrfs</literal> or existing subvolumes on a <literal>Btrfs</literal> partition. In the following example we will set up a Snapper configuration for backing up the Web server data residing on a separate, <literal>Btrfs</literal> -formatted partition mounted at <filename>/srv/www</filename> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1283
+#: snapper.xml:1404
 #, no-c-format
 msgid "After a configuration has been created, you can either use <command>snapper</command> itself or the &yast; <guimenu>Snapper</guimenu> module to restore files from these snapshots. In &yast; you need to select your <guimenu>Current Configuration</guimenu> , while you need to specify your configuration for <command>snapper</command> with the global switch <option>-c</option> (for example, <command>snapper -c myconfig list</command> )."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1293
+#: snapper.xml:1414
 #, no-c-format
 msgid "To create a new Snapper configuration, run <command>snapper create-config</command> :"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1298
+#: snapper.xml:1419
 #, no-c-format
 msgid "&prompt.sudo;snapper -c www-data<co xml:id=\"snapper.create.name\"/> create-config /srv/www<co xml:id=\"snapper.create.volume\"/>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1302
+#: snapper.xml:1423
 #, no-c-format
 msgid "Name of configuration file."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1307
+#: snapper.xml:1428
 #, no-c-format
 msgid "Mount point of the partition or <literal>Btrfs</literal> subvolume on which to take snapshots."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1314
+#: snapper.xml:1435
 #, no-c-format
 msgid "This command will create a new configuration file <filename>/etc/snapper/configs/www-data</filename> with reasonable default values (taken from <filename>/etc/snapper/config-templates/default</filename> ). Refer to <xref linkend=\"sec.snapper.config.modify\"/> for instructions on how to adjust these defaults."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1324
+#: snapper.xml:1445
 #, no-c-format
 msgid "Configuration Defaults"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1325
+#: snapper.xml:1446
 #, no-c-format
 msgid "Default values for a new configuration are taken from <filename>/etc/snapper/config-templates/default</filename> . To use your own set of defaults, create a copy of this file in the same directory and adjust it to your needs. To use it, specify the <option>-t</option> option with the create-config command:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1332
+#: snapper.xml:1453
 #, no-c-format
 msgid "&prompt.sudo;snapper -c www-data create-config -t <replaceable>MY_DEFAULTS</replaceable> /srv/www"
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1336
+#: snapper.xml:1457
 #, no-c-format
 msgid "Managing Existing Configurations"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1337
+#: snapper.xml:1458
 #, no-c-format
 msgid "The <command>snapper</command> offers several subcommands for managing existing configurations. You can list, show, delete and modify them:"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1343
+#: snapper.xml:1464
 #, no-c-format
 msgid "List Configurations"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1345
+#: snapper.xml:1466
 #, no-c-format
 msgid "Use the command <command>snapper list-configs</command> to get all existing configurations:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1349
+#: snapper.xml:1470
 #, no-c-format
 msgid "&prompt.sudo;snapper list-configs\n"
       "Config | Subvolume\n"
@@ -1463,908 +1618,908 @@ msgid "&prompt.sudo;snapper list-configs\n"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1358
+#: snapper.xml:1479
 #, no-c-format
 msgid "Show a Configuration"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1360
+#: snapper.xml:1481
 #, no-c-format
 msgid "Use the subcommand <command>snapper -c <replaceable>CONFIG</replaceable> get-config</command> to display the specified configuration. <replaceable>Config</replaceable> needs to be replaced by a configuration name shown by <command>snapper list-configs</command> . See <xref linkend=\"sec.snapper.config.modify.values\"/> for more information on the configuration options."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1369
+#: snapper.xml:1490
 #, no-c-format
 msgid "To display the default configuration run"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1372
+#: snapper.xml:1493
 #, no-c-format
 msgid "&prompt.sudo;snapper -c root get-config"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1376
+#: snapper.xml:1497
 #, no-c-format
 msgid "Modify a Configuration"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1378
+#: snapper.xml:1499
 #, no-c-format
 msgid "Use the subcommand <command>snapper -c <replaceable>CONFIG</replaceable> set-config <replaceable>OPTION</replaceable>=<replaceable>VALUE</replaceable></command> to modify an option in the specified configuration. <replaceable>Config</replaceable> needs to be replaced by a configuration name shown by <command>snapper list-configs</command> . Possible values for <replaceable>OPTION</replaceable> and <replaceable>VALUE</replaceable> are listed in <xref linkend=\"sec.snapper.config.modify.values\"/> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1392
+#: snapper.xml:1513
 #, no-c-format
 msgid "Delete a Configuration"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1394
+#: snapper.xml:1515
 #, no-c-format
 msgid "Use the subcommand <command>snapper -c <replaceable>CONFIG</replaceable> delete-config</command> to delete a configuration. <replaceable>Config</replaceable> needs to be replaced by a configuration name shown by <command>snapper list-configs</command> ."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1404
+#: snapper.xml:1525
 #, no-c-format
 msgid "Configuration Data"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1405
+#: snapper.xml:1526
 #, no-c-format
 msgid "Each configuration contains a list of options that can be modified from the command line. The following list provides details for each option. To change a value, run <command>snapper -c <replaceable>CONFIG</replaceable> set-config \"<replaceable>KEY</replaceable>=<replaceable>VALUE</replaceable>\"</command> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1414
+#: snapper.xml:1535
 #, no-c-format
 msgid "<literal>ALLOW_GROUPS</literal> , <literal>ALLOW_USERS</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1418
+#: snapper.xml:1539
 #, no-c-format
 msgid "Granting permissions to use snapshots to regular users. See <xref linkend=\"sec.snapper.config.user\"/> for more information."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1422
+#: snapper.xml:1543
 #, no-c-format
 msgid "The default value is <literal>\"\"</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1428
+#: snapper.xml:1549
 #, no-c-format
 msgid "<literal>BACKGROUND_COMPARISON</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1431
+#: snapper.xml:1552
 #, no-c-format
 msgid "Defines whether pre and post snapshots should be compared in the background after creation."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1441
+#: snapper.xml:1562
 #, no-c-format
 msgid "<literal>EMPTY_*</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1444
+#: snapper.xml:1565
 #, no-c-format
 msgid "Defines the clean-up algorithm for snapshots pairs with identical pre and post snapshots. See <xref linkend=\"sec.snapper.clean-up.empty\"/> for details."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1452
+#: snapper.xml:1573
 #, no-c-format
 msgid "<literal>FSTYPE</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1455
+#: snapper.xml:1576
 #, no-c-format
 msgid "File system type of the partition. Do not change."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1458
+#: snapper.xml:1579
 #, no-c-format
 msgid "The default value is <literal>\"btrfs\"</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1464
+#: snapper.xml:1585
 #, no-c-format
 msgid "NUMBER_*"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1466
+#: snapper.xml:1587
 #, no-c-format
 msgid "Defines the clean-up algorithm for installation and admin snapshots. See <xref linkend=\"sec.snapper.clean-up.number\"/> for details."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1473
+#: snapper.xml:1594
 #, no-c-format
 msgid "<literal>QGROUP</literal> / <literal>SPACE_LIMIT</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1476
+#: snapper.xml:1597
 #, no-c-format
 msgid "Adds quota support to the clean-up algorithms. See <xref linkend=\"sec.snapper.clean-up.quota\"/> for details."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1484
+#: snapper.xml:1605
 #, no-c-format
 msgid "<literal>SUBVOLUME</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1487
+#: snapper.xml:1608
 #, no-c-format
 msgid "Mount point of the partition or subvolume to snapshot. Do not change."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1490
+#: snapper.xml:1611
 #, no-c-format
 msgid "The default value is <literal>\"/\"</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1496
+#: snapper.xml:1617
 #, no-c-format
 msgid "<literal>SYNC_ACL</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1499
+#: snapper.xml:1620
 #, no-c-format
 msgid "If Snapper is used by regular users (see <xref linkend=\"sec.snapper.config.user\"/> ), the users must be able to access the <filename>.snapshot</filename> directories and to read files within them. If SYNC_ACL is set to <literal>yes</literal> , Snapper automatically makes them accessible using ACLs for users and groups from the ALLOW_USERS or ALLOW_GROUPS entries."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1513
+#: snapper.xml:1634
 #, no-c-format
 msgid "<literal>TIMELINE_CREATE</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1516
+#: snapper.xml:1637
 #, no-c-format
 msgid "If set to <literal>yes</literal> , hourly snapshots are created. Valid values: <literal>yes</literal> , <literal>no</literal> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1520
+#: snapper.xml:1641
 #, no-c-format
 msgid "The default value is <literal>\"no\"</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1526
+#: snapper.xml:1647
 #, no-c-format
 msgid "<literal>TIMELINE_CLEANUP</literal> / <literal>TIMELINE_LIMIT_*</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1530
+#: snapper.xml:1651
 #, no-c-format
 msgid "Defines the clean-up algorithm for timeline snapshots. See <xref linkend=\"sec.snapper.clean-up.timeline\"/> for details."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1540
+#: snapper.xml:1661
 #, no-c-format
 msgid "Using Snapper as Regular User"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1541
+#: snapper.xml:1662
 #, no-c-format
 msgid "By default Snapper can only be used by &rootuser;. However, there are cases in which certain groups or users need to be able to create snapshots or undo changes by reverting to a snapshot:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1548
+#: snapper.xml:1669
 #, no-c-format
 msgid "Web site administrators who want to take snapshots of <filename>/srv/www</filename>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1554
+#: snapper.xml:1675
 #, no-c-format
 msgid "Users who want to take a snapshot of their home directory"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1559
+#: snapper.xml:1680
 #, no-c-format
 msgid "For these purposes Snapper configurations that grant permissions to users or/and groups can be created. The corresponding <filename>.snapshots</filename> directory needs to be readable and accessible by the specified users. The easiest way to achieve this is to set the SYNC_ACL option to <literal>yes</literal> ."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1567
+#: snapper.xml:1688
 #, no-c-format
 msgid "Enabling Regular Users to Use Snapper"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1568
+#: snapper.xml:1689
 #, no-c-format
 msgid "Note that all steps in this procedure need to be run by &rootuser;."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1572
+#: snapper.xml:1693
 #, no-c-format
 msgid "If not existing, create a Snapper configuration for the partition or subvolume on which the user should be able to use Snapper. Refer to <xref linkend=\"sec.snapper.config\"/> for instructions. Example:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1577
+#: snapper.xml:1698
 #, no-c-format
 msgid "&prompt.sudo;snapper --config web_data create /srv/www"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1580
+#: snapper.xml:1701
 #, no-c-format
 msgid "The configuration file is created under <filename>/etc/snapper/configs/<replaceable>CONFIG</replaceable></filename> , where CONFIG is the value you specified with <option>-c/--config</option> in the previous step (for example <filename>/etc/snapper/configs/web_data</filename> ). Adjust it according to your needs; see <xref linkend=\"sec.snapper.config.modify\"/> for details."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1591
+#: snapper.xml:1712
 #, no-c-format
 msgid "Set values for <envar>ALLOW_USERS</envar> and/or <envar>ALLOW_GROUPS</envar> to grant permissions to users and/or groups, respectively. Multiple entries need to be separated by <keycap function=\"space\"/> . To grant permissions to the user <systemitem class=\"username\">www_admin</systemitem> for example, run:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1598
+#: snapper.xml:1719
 #, no-c-format
 msgid "&prompt.sudo;snapper -c web_data set-config \"ALLOW_USERS=www_admin\" SYNC_ACL=\"yes\""
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1601
+#: snapper.xml:1722
 #, no-c-format
 msgid "The given Snapper configuration can now be used by the specified user(s) and/or group(s). You can test it with the <literal>list</literal> command, for example:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:1606
+#: snapper.xml:1727
 #, no-c-format
 msgid "www_admin:~ &gt; snapper -c web_data list"
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1613
+#: snapper.xml:1734
 #, no-c-format
 msgid "Manually Creating and Managing Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1615
+#: snapper.xml:1736
 #, no-c-format
 msgid "Snapper is not restricted to creating and managing snapshots automatically by configuration; you can also create snapshot pairs ( <quote>before and after</quote> ) or single snapshots manually using either the command-line tool or the &yast; module."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1622
+#: snapper.xml:1743
 #, no-c-format
 msgid "All Snapper operations are carried out for an existing configuration (see <xref linkend=\"sec.snapper.config\"/> for details). You can only take snapshots of partitions or volumes for which a configuration exists. By default the system configuration ( <literal>root</literal> ) is used. To create or manage snapshots for your own configuration you need to explicitly choose it. Use the <guimenu>Current Configuration</guimenu> drop-down box in &yast; or specify the <option>-c</option> on the command line ( <command>snapper -c <replaceable>MYCONFIG</replaceable> <replaceable>COMMAND</replaceable></command> )."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1635
+#: snapper.xml:1756
 #, no-c-format
 msgid "Snapshot Metadata"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1636
+#: snapper.xml:1757
 #, no-c-format
 msgid "Each snapshot consists of the snapshot itself and some metadata. When creating a snapshot you also need to specify the metadata. Modifying a snapshot means changing its metadata&mdash;you cannot modify its content. Use <command>snapper list</command> to show existing snapshots and their metadata:"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1645
+#: snapper.xml:1766
 #, no-c-format
 msgid "<command>snapper --config home list</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1648
+#: snapper.xml:1769
 #, no-c-format
 msgid "Lists snapshots for the configuration <literal>home</literal> . To list snapshots for the default configuration (root), use <command>snapper -c root list</command> or <command>snapper list</command> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1656
+#: snapper.xml:1777
 #, no-c-format
 msgid "<command>snapper list -a</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1659
+#: snapper.xml:1780
 #, no-c-format
 msgid "Lists snapshots for all existing configurations."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1665
+#: snapper.xml:1786
 #, no-c-format
 msgid "<command>snapper list -t pre-post</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1668
+#: snapper.xml:1789
 #, no-c-format
 msgid "Lists all pre and post snapshot pairs for the default ( <literal>root</literal> ) configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1675
+#: snapper.xml:1796
 #, no-c-format
 msgid "<command>snapper list -t single</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1678
+#: snapper.xml:1799
 #, no-c-format
 msgid "Lists all snapshots of the type <literal>single</literal> for the default ( <literal>root</literal> ) configuration."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1685
+#: snapper.xml:1806
 #, no-c-format
 msgid "The following metadata is available for each snapshot:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1690
+#: snapper.xml:1811
 #, no-c-format
 msgid "<emphasis role=\"bold\">Type</emphasis> : Snapshot type, see <xref linkend=\"sec.snapper.manage.metadata.type\"/> for details. This data cannot be changed."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1697
+#: snapper.xml:1818
 #, no-c-format
 msgid "<emphasis role=\"bold\">Number</emphasis> : Unique number of the snapshot. This data cannot be changed."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1703
+#: snapper.xml:1824
 #, no-c-format
 msgid "<emphasis role=\"bold\">Pre Number</emphasis> : Specifies the number of the corresponding pre snapshot. For snapshots of type post only. This data cannot be changed."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1710
+#: snapper.xml:1831
 #, no-c-format
 msgid "<emphasis role=\"bold\">Description</emphasis> : A description of the snapshot."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1716
+#: snapper.xml:1837
 #, no-c-format
 msgid "<emphasis role=\"bold\">Userdata</emphasis> : An extended description where you can specify custom data in the form of a comma-separated key=value list: <literal>reason=testing, project=foo</literal> . This field is also used to mark a snapshot as important ( <literal>important=yes</literal> ) and to list the user that created the snapshot (user=&exampleuser_plain;)."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1726
+#: snapper.xml:1847
 #, no-c-format
 msgid "<emphasis role=\"bold\">Cleanup-Algorithm</emphasis> : Cleanup-algorithm for the snapshot, see <xref linkend=\"sec.snapper.clean-up\"/> for details."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1733
+#: snapper.xml:1854
 #, no-c-format
 msgid "Snapshot Types"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1734
+#: snapper.xml:1855
 #, no-c-format
 msgid "Snapper knows three different types of snapshots: pre, post, and single. Physically they do not differ, but Snapper handles them differently."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1740
+#: snapper.xml:1861
 #, no-c-format
 msgid "<literal>pre</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1743
+#: snapper.xml:1864
 #, no-c-format
 msgid "Snapshot of a file system <emphasis>before</emphasis> a modification. Each <literal>pre</literal> snapshot has got a corresponding <literal>post</literal> snapshot. Used for the automatic &yast;/Zypper snapshots, for example."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1752
+#: snapper.xml:1873
 #, no-c-format
 msgid "<literal>post</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1755
+#: snapper.xml:1876
 #, no-c-format
 msgid "Snapshot of a file system <emphasis>after</emphasis> a modification. Each <literal>post</literal> snapshot has got a corresponding <literal>pre</literal> snapshot. Used for the automatic &yast;/Zypper snapshots, for example."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1764
+#: snapper.xml:1885
 #, no-c-format
 msgid "<literal>single</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1767
+#: snapper.xml:1888
 #, no-c-format
 msgid "Stand-alone snapshot. Used for the automatic hourly snapshots, for example. This is the default type when creating snapshots."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1776
+#: snapper.xml:1897
 #, no-c-format
 msgid "Cleanup-algorithms"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1777
+#: snapper.xml:1898
 #, no-c-format
 msgid "Snapper provides three algorithms to clean up old snapshots. The algorithms are executed in a daily cron job. It is possible to define the number of different types of snapshots to keep in the Snapper configuration (see <xref linkend=\"sec.snapper.config.modify\"/> for details)."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1786
+#: snapper.xml:1907
 #, no-c-format
 msgid "number"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1788
+#: snapper.xml:1909
 #, no-c-format
 msgid "Deletes old snapshots when a certain snapshot count is reached."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1794
+#: snapper.xml:1915
 #, no-c-format
 msgid "timeline"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1796
+#: snapper.xml:1917
 #, no-c-format
 msgid "Deletes old snapshots having passed a certain age, but keeps several hourly, daily, monthly, and yearly snapshots."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1803
+#: snapper.xml:1924
 #, no-c-format
 msgid "empty-pre-post"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1805
+#: snapper.xml:1926
 #, no-c-format
 msgid "Deletes pre/post snapshot pairs with empty diffs."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1815
+#: snapper.xml:1936
 #, no-c-format
 msgid "Creating Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1816
+#: snapper.xml:1937
 #, no-c-format
 msgid "Creating a snapshot is done by running <command>snapper create</command> or by clicking <guimenu>Create</guimenu> in the &yast; module <guimenu>Snapper</guimenu> . The following examples explain how to create snapshots from the command line. It should be easy to adopt them when using the &yast; interface."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1824
+#: snapper.xml:1945
 #, no-c-format
 msgid "Snapshot Description"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1825
+#: snapper.xml:1946
 #, no-c-format
 msgid "You should always specify a meaningful description to later be able to identify its purpose. Even more information can be specified via the user data option."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1834
+#: snapper.xml:1955
 #, no-c-format
 msgid "<command>snapper create --description \"Snapshot for week 2 2014\"</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1838
+#: snapper.xml:1959
 #, no-c-format
 msgid "Creates a stand-alone snapshot (type single) for the default ( <literal>root</literal> ) configuration with a description. Because no cleanup-algorithm is specified, the snapshot will never be deleted automatically."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1847
+#: snapper.xml:1968
 #, no-c-format
 msgid "<command>snapper --config home create --description \"Cleanup in ~&exampleuser_plain;\"</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1851
+#: snapper.xml:1972
 #, no-c-format
 msgid "Creates a stand-alone snapshot (type single) for a custom configuration named <literal>home</literal> with a description. Because no cleanup-algorithm is specified, the snapshot will never be deleted automatically."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1860
+#: snapper.xml:1981
 #, no-c-format
 msgid "<command>snapper --config home create --description \"Daily data backup\" --cleanup-algorithm timeline</command> &gt;"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1864
+#: snapper.xml:1985
 #, no-c-format
 msgid "Creates a stand-alone snapshot (type single) for a custom configuration named <literal>home</literal> with a description. The file will automatically be deleted when it meets the criteria specified for the timeline cleanup-algorithm in the configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1873
+#: snapper.xml:1994
 #, no-c-format
 msgid "<command>snapper create --type pre --print-number --description \"Before the Apache config cleanup\" --userdata \"important=yes\"</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1877
+#: snapper.xml:1998
 #, no-c-format
 msgid "Creates a snapshot of the type <literal>pre</literal> and prints the snapshot number. First command needed to create a pair of snapshots used to save a <quote>before</quote> and <quote>after</quote> state. The snapshot is marked as important."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1886
+#: snapper.xml:2007
 #, no-c-format
 msgid "<command>snapper create --type post --pre-number 30 --description \"After the Apache config cleanup\" --userdata \"important=yes\"</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1890
+#: snapper.xml:2011
 #, no-c-format
 msgid "Creates a snapshot of the type <literal>post</literal> paired with the <literal>pre</literal> snapshot number <literal>30</literal> . Second command needed to create a pair of snapshots used to save a <quote>before</quote> and <quote>after</quote> state. The snapshot is marked as important."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1900
+#: snapper.xml:2021
 #, no-c-format
 msgid "<command>snapper create --command <replaceable>COMMAND</replaceable> --description \"Before and after COMMAND\"</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1904
+#: snapper.xml:2025
 #, no-c-format
 msgid "Automatically creates a snapshot pair before and after running <replaceable>COMMAND</replaceable> . This option is only available when using snapper on the command line."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1915
+#: snapper.xml:2036
 #, no-c-format
 msgid "Modifying Snapshot Metadata"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1916
+#: snapper.xml:2037
 #, no-c-format
 msgid "Snapper allows you to modify the description, the cleanup algorithm, and the user data of a snapshot. All other metadata cannot be changed. The following examples explain how to modify snapshots from the command line. It should be easy to adopt them when using the &yast; interface."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1922
+#: snapper.xml:2043
 #, no-c-format
 msgid "To modify a snapshot on the command line, you need to know its number. Use <command>snapper list</command> to display all snapshots and their numbers."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1927
+#: snapper.xml:2048
 #, no-c-format
 msgid "The &yast; <guimenu>Snapper</guimenu> module already lists all snapshots. Choose one from the list and click <guimenu>Modify</guimenu> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1933
+#: snapper.xml:2054
 #, no-c-format
 msgid "<command>snapper modify --cleanup-algorithm \"timeline\"</command> 10"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1937
+#: snapper.xml:2058
 #, no-c-format
 msgid "Modifies the metadata of snapshot 10 for the default ( <literal>root</literal> ) configuration. The cleanup algorithm is set to <literal>timeline</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1945
+#: snapper.xml:2066
 #, no-c-format
 msgid "<command>snapper --config home modify --description \"daily backup\" -cleanup-algorithm \"timeline\" 120</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1949
+#: snapper.xml:2070
 #, no-c-format
 msgid "Modifies the metadata of snapshot 120 for a custom configuration named <literal>home</literal> . A new description is set and the cleanup algorithm is unset."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1960
+#: snapper.xml:2081
 #, no-c-format
 msgid "Deleting Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1961
+#: snapper.xml:2082
 #, no-c-format
 msgid "To delete a snapshot with the &yast; <guimenu>Snapper</guimenu> module, choose a snapshot from the list and click <guimenu>Delete</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1965
+#: snapper.xml:2086
 #, no-c-format
 msgid "To delete a snapshot with the command line tool, you need to know its number. Get it by running <command>snapper list</command> . To delete a snapshot, run <command>snapper delete</command> <replaceable>NUMBER</replaceable> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1971
+#: snapper.xml:2092
 #, no-c-format
 msgid "Deleting the current default subvolume snapshot is not allowed."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1974
+#: snapper.xml:2095
 #, no-c-format
 msgid "When deleting snapshots with Snapper, the freed space will be claimed by a Btrfs process running in the background. Thus the visibility and the availability of free space is delayed. In case you need space freed by deleting a snapshot to be available immediately, use the option <option>--sync</option> with the delete command."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:1982
+#: snapper.xml:2103
 #, no-c-format
 msgid "Deleting Snapshot Pairs"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1983
+#: snapper.xml:2104
 #, no-c-format
 msgid "When deleting a <literal>pre</literal> snapshot, you should always delete its corresponding <literal>post</literal> snapshot (and vice versa)."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:1990
+#: snapper.xml:2111
 #, no-c-format
 msgid "<command>snapper delete 65</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:1993
+#: snapper.xml:2114
 #, no-c-format
 msgid "Deletes snapshot 65 for the default ( <literal>root</literal> ) configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2000
+#: snapper.xml:2121
 #, no-c-format
 msgid "<command>snapper -c home delete 89 90</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2003
+#: snapper.xml:2124
 #, no-c-format
 msgid "Deletes snapshots 89 and 90 for a custom configuration named <literal>home</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2010
+#: snapper.xml:2131
 #, no-c-format
 msgid "<command>snapper delete --sync 23</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2012
+#: snapper.xml:2133
 #, no-c-format
 msgid "Deletes snapshot 23 for the default ( <literal>root</literal> ) configuration and makes the freed space available immediately."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2020
+#: snapper.xml:2141
 #, no-c-format
 msgid "Delete Unreferenced Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2021
+#: snapper.xml:2142
 #, no-c-format
 msgid "Sometimes the Btrfs snapshot is present but the XML file containing the metadata for Snapper is missing. In this case the snapshot is not visible for Snapper and needs to be deleted manually:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2026
+#: snapper.xml:2147
 #, no-c-format
 msgid "btrfs subvolume delete /.snapshots/<replaceable>SNAPSHOTNUMBER</replaceable>/snapshot\n"
       "rm -rf /.snapshots/SNAPSHOTNUMBER"
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2030
+#: snapper.xml:2151
 #, no-c-format
 msgid "Old Snapshots Occupy More Disk Space"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2031
+#: snapper.xml:2152
 #, no-c-format
 msgid "If you delete snapshots to free space on your hard disk, make sure to delete old snapshots first. The older a snapshot is, the more disk space it occupies."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2037
+#: snapper.xml:2158
 #, no-c-format
 msgid "Snapshots are also automatically deleted by a daily cron job. Refer to <xref linkend=\"sec.snapper.manage.metadata.cleanup\"/> for details."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2044
+#: snapper.xml:2165
 #, no-c-format
 msgid "Automatic Snapshot Clean-Up"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2046
+#: snapper.xml:2167
 #, no-c-format
 msgid "Snapshots occupy disk space and over time the amount of disk space occupied by the snapshots may become large. To prevent disks from running out of space, Snapper offers algorithms to automatically delete old snapshots. These algorithms differentiate between timeline snapshots and numbered snapshots (administration plus installation snapshot pairs). You can specify the number of snapshots to keep for each type."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2055
+#: snapper.xml:2176
 #, no-c-format
 msgid "In addition to that, you can optionally specify a disk space quota, defining the maximum amount of disk space the snapshots may occupy. It is also possible to automatically delete pre and post snapshots pairs that do not differ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2062
+#: snapper.xml:2183
 #, no-c-format
 msgid "A clean-up algorithm is always bound to a single Snapper configuration, so you need to configure algorithms for each configuration. To prevent certain snapshots from being automatically deleted, refer to <xref linkend=\"faq.snapper.permanent\"/> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2069
+#: snapper.xml:2190
 #, no-c-format
 msgid "The default setup ( <literal>root</literal> ) is configured to do clean-up for numbered snapshots and empty pre and post snapshot pairs. Quota support is enabled&mdash;snapshots may not occupy more than 50% of the available disk space of the root partition. Timeline snapshots are disabled by default, therefore the timeline clean-up algorithm is also disabled."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2078
+#: snapper.xml:2199
 #, no-c-format
 msgid "Cleaning Up Numbered Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2079
+#: snapper.xml:2200
 #, no-c-format
 msgid "Cleaning up numbered snapshots&mdash;administration plus installation snapshot pairs&mdash;is controlled by the following parameters of a Snapper configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2086
+#: snapper.xml:2207
 #, no-c-format
 msgid "<literal>NUMBER_CLEANUP</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2089
+#: snapper.xml:2210
 #, no-c-format
 msgid "Enables or disables clean-up of installation and admin snapshot pairs. If enabled, snapshot pairs are deleted when the total snapshot count exceeds a number specified with <literal>NUMBER_LIMIT</literal> and/or <literal>NUMBER_LIMIT_IMPORTANT</literal> <emphasis>and</emphasis> an age specified with <literal>NUMBER_MIN_AGE</literal> . Valid values: <literal>yes</literal> (enable), <literal>no</literal> (disable)."
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2103
+#: snapper.xml:2224
 #, no-c-format
 msgid "&prompt.sudo;snapper -c <replaceable>CONFIG</replaceable> set-config \"NUMBER_CLEANUP=no\""
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2107
+#: snapper.xml:2228
 #, no-c-format
 msgid "<literal>NUMBER_LIMIT</literal> / <literal>NUMBER_LIMIT_IMPORTANT</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2111
+#: snapper.xml:2232
 #, no-c-format
 msgid "Defines how many regular and/or important installation and administration snapshot pairs to keep. Only the youngest snapshots will be kept. Ignored if <literal>NUMBER_CLEANUP</literal> is set to <literal>\"no\"</literal> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2117
+#: snapper.xml:2238
 #, no-c-format
 msgid "The default value is <literal>\"2-10\"</literal> for <literal>NUMBER_LIMIT</literal> and <literal>\"4-10\"</literal> for <literal>NUMBER_LIMIT_IMPORTANT</literal> ."
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2125
+#: snapper.xml:2246
 #, no-c-format
 msgid "&prompt.sudo;snapper -c <replaceable>CONFIG</replaceable> set-config \"NUMBER_LIMIT=10\""
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2127
+#: snapper.xml:2248
 #, no-c-format
 msgid "Ranged Compared to Constant Values"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2128
+#: snapper.xml:2249
 #, no-c-format
 msgid "In case quota support is enabled (see <xref linkend=\"sec.snapper.clean-up.quota\"/> ) the limit needs to be specified as a minimum-maximum range, for example <literal>2-10</literal> . If quota support is disabled, a constant value, for example <literal>10</literal> , needs to be provided, otherwise cleaning-up will fail with an error."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2141
+#: snapper.xml:2262
 #, no-c-format
 msgid "<literal>NUMBER_MIN_AGE</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2144
+#: snapper.xml:2265
 #, no-c-format
 msgid "Defines the minimum age in seconds a snapshot must have before it can automatically be deleted. Snapshots younger than the value specified here will not be deleted, regardless of how many exist."
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2155
+#: snapper.xml:2276
 #, no-c-format
 msgid "&prompt.sudo;snapper -c <replaceable>CONFIG</replaceable> set-config \"NUMBER_MIN_AGE=864000\""
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2160
+#: snapper.xml:2281
 #, no-c-format
 msgid "Limit and Age"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2161
+#: snapper.xml:2282
 #, no-c-format
 msgid "<literal>NUMBER_LIMIT</literal> , <literal>NUMBER_LIMIT_IMPORTANT</literal> and <literal>NUMBER_MIN_AGE</literal> are always evaluated. Snapshots are only deleted when <emphasis>all</emphasis> conditions are met."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2166
+#: snapper.xml:2287
 #, no-c-format
 msgid "If you always want to keep the number of snapshots defined with <literal>NUMBER_LIMIT*</literal> regardless of their age, set <literal>NUMBER_MIN_AGE</literal> to <literal>0</literal> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2171
+#: snapper.xml:2292
 #, no-c-format
 msgid "The following example shows a configuration to keep the last 10 important and regular snapshots regardless of age:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2175
+#: snapper.xml:2296
 #, no-c-format
 msgid "NUMBER_CLEANUP=yes\n"
       "NUMBER_LIMIT_IMPORTANT=10\n"
@@ -2373,19 +2528,19 @@ msgid "NUMBER_CLEANUP=yes\n"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2179
+#: snapper.xml:2300
 #, no-c-format
 msgid "On the other hand, if you do not want to keep snapshots beyond a certain age, set <literal>NUMBER_LIMIT*</literal> to <literal>0</literal> and provide the age with <literal>NUMBER_MIN_AGE</literal> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2184
+#: snapper.xml:2305
 #, no-c-format
 msgid "The following example shows a configuration to only keep snapshots younger than ten days:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2188
+#: snapper.xml:2309
 #, no-c-format
 msgid "NUMBER_CLEANUP=yes\n"
       "NUMBER_LIMIT_IMPORTANT=0\n"
@@ -2394,79 +2549,79 @@ msgid "NUMBER_CLEANUP=yes\n"
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2196
+#: snapper.xml:2317
 #, no-c-format
 msgid "Cleaning Up Timeline Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2197
+#: snapper.xml:2318
 #, no-c-format
 msgid "Cleaning up timeline snapshots is controlled by the following parameters of a Snapper configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2203
+#: snapper.xml:2324
 #, no-c-format
 msgid "<literal>TIMELINE_CLEANUP</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2206
+#: snapper.xml:2327
 #, no-c-format
 msgid "Enables or disables clean-up of timeline snapshots. If enabled, snapshots are deleted when the total snapshot count exceeds a number specified with <literal>TIMELINE_LIMIT_*</literal> <emphasis>and</emphasis> an age specified with <literal>TIMELINE_MIN_AGE</literal> . Valid values: <literal>yes</literal> , <literal>no</literal> ."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2217
+#: snapper.xml:2338
 #, no-c-format
 msgid "Example command to change or set:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2220
+#: snapper.xml:2341
 #, no-c-format
 msgid "&prompt.sudo;snapper -c <replaceable>CONFIG</replaceable> set-config \"TIMELINE_CLEANUP=yes\""
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2224
+#: snapper.xml:2345
 #, no-c-format
 msgid "<literal>TIMELINE_LIMIT_DAILY</literal> , <literal>TIMELINE_LIMIT_HOURLY</literal> , <literal>TIMELINE_LIMIT_MONTHLY</literal> , <literal>TIMELINE_LIMIT_WEEKLY</literal> , <literal>TIMELINE_LIMIT_YEARLY</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2231
+#: snapper.xml:2352
 #, no-c-format
 msgid "Number of snapshots to keep for hour, day, month, week, and year."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2234
+#: snapper.xml:2355
 #, no-c-format
 msgid "The default value for each entry is <literal>\"10\"</literal> , except for <literal>TIMELINE_LIMIT_WEEKLY</literal> , which is set to <literal>\"0\"</literal> by default."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2242
+#: snapper.xml:2363
 #, no-c-format
 msgid "<literal>TIMELINE_MIN_AGE</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2245
+#: snapper.xml:2366
 #, no-c-format
 msgid "Defines the minimum age in seconds a snapshot must have before it can automatically be deleted."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2256
+#: snapper.xml:2377
 #, no-c-format
 msgid "Example timeline configuration"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2257
+#: snapper.xml:2378
 #, no-c-format
 msgid "TIMELINE_CLEANUP=\"yes\"\n"
       "TIMELINE_CREATE=\"yes\"\n"
@@ -2479,363 +2634,363 @@ msgid "TIMELINE_CLEANUP=\"yes\"\n"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2265
+#: snapper.xml:2386
 #, no-c-format
 msgid "This example configuration enables hourly snapshots which are automatically cleaned up. <literal>TIMELINE_MIN_AGE</literal> and <literal>TIMELINE_LIMIT_*</literal> are always both evaluated. In this example, the minimum age of a snapshot before it can be deleted is set to 30 minutes (1800 seconds). Since we create hourly snapshots, this ensures that only the latest snapshots are kept. If <literal>TIMELINE_LIMIT_DAILY</literal> is set to not zero, this means that the first snapshot of the day is kept, too."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2276
+#: snapper.xml:2397
 #, no-c-format
 msgid "Snapshots to be Kept"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2278
+#: snapper.xml:2399
 #, no-c-format
 msgid "Hourly: The last 24 snapshots that have been made."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2283
+#: snapper.xml:2404
 #, no-c-format
 msgid "Daily: The first daily snapshot that has been made is kept from the last seven days."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2289
+#: snapper.xml:2410
 #, no-c-format
 msgid "Monthly: The first snapshot made on the last day of the month is kept for the last twelve months."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2295
+#: snapper.xml:2416
 #, no-c-format
 msgid "Weekly: The first snapshot made on the last day of the week is kept from the last four weeks."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2301
+#: snapper.xml:2422
 #, no-c-format
 msgid "Yearly: The first snapshot made on the last day of the year is kept for the last two years."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2311
+#: snapper.xml:2432
 #, no-c-format
 msgid "Cleaning Up Snapshot Pairs That Do Not Differ"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2312
+#: snapper.xml:2433
 #, no-c-format
 msgid "As explained in <xref linkend=\"snapper.snapshot-type\"/> , whenever you run a &yast; module or execute Zypper, a pre snapshot is created on start-up and a post snapshot is created when exiting. In case you have not made any changes there will be no difference between the pre and post snapshots. Such <quote>empty</quote> snapshot pairs can be automatically be deleted by setting the following parameters in a Snapper configuration:"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2322
+#: snapper.xml:2443
 #, no-c-format
 msgid "<literal>EMPTY_PRE_POST_CLEANUP</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2325
+#: snapper.xml:2446
 #, no-c-format
 msgid "If set to <literal>yes</literal> , pre and post snapshot pairs that do not differ will be deleted."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2329
+#: snapper.xml:2450
 #, no-c-format
 msgid "The default value is <literal>\"yes\"</literal> ."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2335
+#: snapper.xml:2456
 #, no-c-format
 msgid "<literal>EMPTY_PRE_POST_MIN_AGE</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2338
+#: snapper.xml:2459
 #, no-c-format
 msgid "Defines the minimum age in seconds a pre and post snapshot pair that does not differ must have before it can automatically be deleted."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2342
+#: snapper.xml:2463
 #, no-c-format
 msgid "The default value is <literal>\"1800\"</literal> ."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2351
+#: snapper.xml:2472
 #, no-c-format
 msgid "Cleaning Up Manually Created Snapshots"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2352
+#: snapper.xml:2473
 #, no-c-format
 msgid "Snapper does not offer custom clean-up algorithms for manually created snapshots. However, you can assign the number or timeline clean-up algorithm to a manually created snapshot. If you do so, the snapshot will join the <quote>clean-up queue</quote> for the algorithm you specified. You can specify a clean-up algorithm when creating a snapshot, or by modifying an existing snapshot:"
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2362
+#: snapper.xml:2483
 #, no-c-format
 msgid "<command>snapper create --description \"Test\" --cleanup-algorithm number</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2365
+#: snapper.xml:2486
 #, no-c-format
 msgid "Creates a stand-alone snapshot (type single) for the default (root) configuration and assigns the <literal>number</literal> clean-up algorithm."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2373
+#: snapper.xml:2494
 #, no-c-format
 msgid "<command>snapper modify --cleanup-algorithm \"timeline\" 25</command>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2376
+#: snapper.xml:2497
 #, no-c-format
 msgid "Modifies the snapshot with the number 25 and assigns the clean-up algorithm <literal>timeline</literal> ."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2386
+#: snapper.xml:2507
 #, no-c-format
 msgid "Adding Disk Quota Support"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2387
+#: snapper.xml:2508
 #, no-c-format
 msgid "In addition to the number and/or timeline clean-up algorithms described above, Snapper supports quotas. You can define what percentage of the available space snapshots are allowed to occupy. This percentage value always applies to the Btrfs subvolume defined in the respective Snapper configuration."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2394
+#: snapper.xml:2515
 #, no-c-format
 msgid "If Snapper was enabled during the installation, quota support is automatically enabled. In case you manually enable Snapper at a later point in time, you can enable quota support by running <command>snapper setup-quota</command> . This requires a valid configuration (see <xref linkend=\"sec.snapper.config\"/> for more information)."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2402
+#: snapper.xml:2523
 #, no-c-format
 msgid "Quota support is controlled by the following parameters of a Snapper configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2408
+#: snapper.xml:2529
 #, no-c-format
 msgid "<literal>QGROUP</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2411
+#: snapper.xml:2532
 #, no-c-format
 msgid "The Btrfs quota group used by Snapper. If not set, run <command>snapper setup-quota</command> . If already set, only change if you are familiar with <command>man 8 btrfs-qgroup</command> . This value is set with <command>snapper setup-quota</command> and should not be changed."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2420
+#: snapper.xml:2541
 #, no-c-format
 msgid "<literal>SPACE_LIMIT</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2423
+#: snapper.xml:2544
 #, no-c-format
 msgid "Limit of space snapshots are allowed to use in fractions of 1 (100%). Valid values range from 0 to 1 (0.1 = 10%, 0.2 = 20%, ...)."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2430
+#: snapper.xml:2551
 #, no-c-format
 msgid "The following limitations and guidelines apply:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2435
+#: snapper.xml:2556
 #, no-c-format
 msgid "Quotas are only activated in <emphasis>addition</emphasis> to an existing number and/or timeline clean-up algorithm. If no clean-up algorithm is active, quota restrictions are not applied."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2442
+#: snapper.xml:2563
 #, no-c-format
 msgid "With quota support enabled, Snapper will perform two clean-up runs if required. The first run will apply the rules specified for number and timeline snapshots. Only if the quota is exceeded after this run, the quota-specific rules will be applied in a second run."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2450
+#: snapper.xml:2571
 #, no-c-format
 msgid "Even if quota support is enabled, Snapper will always keep the number of snapshots specified with the <literal>NUMBER_LIMIT*</literal> and <literal>TIMELINE_LIMIT*</literal> values, even if the quota will be exceeded. It is therefore recommended to specify ranged values ( <literal><replaceable>MIN</replaceable>-<replaceable>MAX</replaceable></literal> ) for <literal>NUMBER_LIMIT*</literal> and <literal>TIMELINE_LIMIT*</literal> to ensure the quota can be applied."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2459
+#: snapper.xml:2580
 #, no-c-format
 msgid "If, for example, <literal>NUMBER_LIMIT=5-20</literal> is set, Snapper will perform a first clean-up run and reduce the number of regular numbered snapshots to 20. In case these 20 snapshots exceed the quota, Snapper will delete the oldest ones in a second run until the quota is met. A minimum of five snapshots will always be kept, regardless of the amount of space they occupy."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2472
+#: snapper.xml:2593
 #, no-c-format
 msgid "Frequently Asked Questions"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2477
+#: snapper.xml:2598
 #, no-c-format
 msgid "Why does Snapper Never Show Changes in <filename>/var/log</filename> , <filename>/tmp</filename> and Other Directories?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2483
+#: snapper.xml:2604
 #, no-c-format
 msgid "For some directories we decided to exclude them from snapshots. See <xref linkend=\"snapper.dir-excludes\"/> for a list and reasons. To exclude a path from snapshots we create a subvolume for that path."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2492
+#: snapper.xml:2613
 #, no-c-format
 msgid "How much disk space is used by snapshots? How to free disk space?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2497
+#: snapper.xml:2618
 #, no-c-format
 msgid "Displaying the amount of disk space a snapshot allocates is currently not supported by the <literal>Btrfs</literal> tools. However, if you have quota enabled, it is possible to determine how much space would be freed if <emphasis>all</emphasis> snapshots would be deleted:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2505
+#: snapper.xml:2626
 #, no-c-format
 msgid "Get the quota group ID ( <literal>1/0</literal> in the following example):"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2509
+#: snapper.xml:2630
 #, no-c-format
 msgid "&prompt.sudo;snapper -c root get-config | grep QGROUP\n"
       "QGROUP                 | 1/0"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2513
+#: snapper.xml:2634
 #, no-c-format
 msgid "Rescan the subvolume quotas:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2516
+#: snapper.xml:2637
 #, no-c-format
 msgid "&prompt.sudo;btrfs quota rescan -w /"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2519
+#: snapper.xml:2640
 #, no-c-format
 msgid "Show the data of the quota group ( <literal>1/0</literal> in the following example):"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2523
+#: snapper.xml:2644
 #, no-c-format
 msgid "&prompt.sudo;btrfs qgroup show / | grep \"1/0\"\n"
       "1/0           4.80GiB    108.82MiB"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2525
+#: snapper.xml:2646
 #, no-c-format
 msgid "The third column shows the amount of space that would be freed when deleting all snapshots ( <literal>108.82MiB</literal> )."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2531
+#: snapper.xml:2652
 #, no-c-format
 msgid "To free space on a <literal>Btrfs</literal> partition containing snapshots you need to delete unneeded snapshots rather than files. Older snapshots occupy more space than recent ones. See <xref linkend=\"sec.snapper.setup.customize.archiving\"/> for details."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2537
+#: snapper.xml:2658
 #, no-c-format
 msgid "Doing an upgrade from one service pack to another results in snapshots occupying a lot of disk space on the system subvolumes, because a lot of data gets changed (package updates). Manually deleting these snapshots after they are no longer needed is recommended. See <xref linkend=\"sec.snapper.manage.delete\"/> for details."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2548
+#: snapper.xml:2669
 #, no-c-format
 msgid "Can I Boot a Snapshot from the Boot Loader?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2553
+#: snapper.xml:2674
 #, no-c-format
 msgid "Yes&mdash;refer to <xref linkend=\"sec.snapper.snapshot-boot\"/> for details."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2561
+#: snapper.xml:2682
 #, no-c-format
 msgid "How to make a snapshot permanent?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2566
+#: snapper.xml:2687
 #, no-c-format
 msgid "Currently Snapper does not offer means to prevent a snapshot from being deleted manually. However, you can prevent snapshots from being automatically deleted by clean-up algorithms. Manually created snapshots (see <xref linkend=\"sec.snapper.manage.create\"/> ) have no clean-up algorithm assigned unless you specify one with <option>--cleanup-algorithm</option> . Automatically created snapshots always either have the <literal>number</literal> or <literal>timeline</literal> algorithm assigned. To remove such an assignment from one or more snapshots, proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2579
+#: snapper.xml:2700
 #, no-c-format
 msgid "List all available snapshots:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2582
+#: snapper.xml:2703
 #, no-c-format
 msgid "&prompt.sudo;snapper list -a"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2585
+#: snapper.xml:2706
 #, no-c-format
 msgid "Memorize the number of the snapshot(s) you want to prevent from being deleted."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2591
+#: snapper.xml:2712
 #, no-c-format
 msgid "Run the following command and replace the number placeholders with the number(s) you memorized:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2595
+#: snapper.xml:2716
 #, no-c-format
 msgid "&prompt.sudo;snapper modify --cleanup-algorithm \"\" <replaceable>#1</replaceable> <replaceable>#2</replaceable> <replaceable>#n</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2598
+#: snapper.xml:2719
 #, no-c-format
 msgid "Check the result by running <command>snapper list -a</command> again. The entry in the column <literal>Cleanup</literal> should now be empty for the snapshots you modified."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2609
+#: snapper.xml:2730
 #, no-c-format
 msgid "Where can I get more information on Snapper?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2614
+#: snapper.xml:2735
 #, no-c-format
 msgid "See the Snapper home page at <link xlink:href=\"http://snapper.io/\"/> ."
 msgstr ""
