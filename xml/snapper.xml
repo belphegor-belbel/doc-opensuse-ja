@@ -640,123 +640,64 @@ single | 4 |     |               |                       |
  </sect1>
  
  <sect1 xml:id="sec.snapper.homedirs">
-     <title>インストール済みシステムにおける Snapper の有効化</title>
+     <title>ユーザのホームディレクトリに対する snapper の有効化</title>
      
-     <para>
-         You may enable snapshots for users' <filename>/home</filename> 
-         directories, which supports a number of use cases:
-     </para>
+     <para>ユーザの <filename>/home</filename> ディレクトリに対してスナップショットを有効化することもできます。この場合、下記のような用途が考えられます:</para>
      <itemizedlist>
           <listitem>
-              <para>
-                 Individual users may manage their own snapshots and rollbacks.
-             </para>
+              <para>ユーザごとにスナップショットとロールバックを管理することができます。</para>
          </listitem>
          <listitem>
-             <para>
-                 System users, for example database, system, and network admins
-                 who want to track copies of configuration files, documentation, 
-                 and so on.
-             </para>
+             <para>たとえばデータベースやシステム、ネットワークの管理者などのシステムユーザが、設定ファイルやドキュメンテーションなどのコピーを保持しておくことができるようになります。</para>
          </listitem>    
          <listitem>
-             <para>
-                 Samba shares with home directories and Btrfs backend.
-             </para>
+             <para>btrfs バックエンド付きのホームディレクトリを samba で共有することができます。</para>
          </listitem>
      </itemizedlist>
-     <para>
-         Each user's directory is a Btrfs subvolume of <filename>/home</filename>.         
-         It is possible to set this up manually 
-         (see <xref linkend="sec.snapper.manual-home-config"/>). However, a 
-         more convenient way is to use <literal>pam_snapper</literal>.
-         The <literal>pam_snapper</literal> package installs the 
-         <literal>pam_snapper.so</literal> module and helper scripts, which 
-         automate user creation and Snapper configuration. 
-     </para>
-     <para>
-         <literal>pam_snapper</literal> provides integration with the 
-         <command>useradd</command> command, pluggable
-         authentication modules (PAM), and Snapper. By default it creates snapshots
-         at user login and logout, and also creates time-based snapshots as some
-         users remain logged in for extended periods of time. You may change the
-         defaults using the normal Snapper commands and configuration files.
-     </para>
+     <para>それぞれのユーザのホームディレクトリは <filename>/home</filename> の btrfs サブボリュームとなります。このような構成は手作業で設定することができます (詳しくは <xref linkend="sec.snapper.manual-home-config"/> をお読みください) 。ただし、 <literal>pam_snapper</literal> を使用するより便利な方法もあります。 <literal>pam_snapper</literal> パッケージは <literal>pam_snapper.so</literal> モジュールのほか、ユーザの作成や snapper の設定を作成するヘルパースクリプトをインストールします。</para>
+     <para><literal>pam_snapper</literal> は <command>useradd</command> コマンドと Pluggable Authentication Modules (PAM) 、そして snapper との間を統合する機能を提供します。既定ではユーザのログイン時とログアウト時にスナップショットを作成するほか、ユーザがしばらくログインしたままの状態にあると、時間ベースのスナップショットも作成します。これらの既定値は通常の snapper コマンドと設定ファイルで変更することができます。</para>
 
      <sect2 xml:id="sec.snapper.install-pam-snapper">
-         <title>一般ユーザからの Snapper の使用</title>
+         <title>pam_snapper のインストールとユーザの作成</title>
          
-         <para>
-             The easiest way is to start with a new <filename>/home</filename> 
-             directory formatted with Btrfs, and no existing users. Install
-             <literal>pam_snapper</literal>:
-         </para>
+         <para>最も始めやすい方法は、 btrfs でフォーマットした新しい <filename>/home</filename> ディレクトリを用意し、全くユーザが存在しない状況から行なうことです。まずは <literal>pam_snapper</literal> をインストールします:</para>
          <screen>&prompt.root;zypper in pam_snapper</screen>
-         <para>
-             Add this line to <filename>/etc/pam.d/common-session</filename>:
-         </para>
+         <para><filename>/etc/pam.d/common-session</filename> に下記の行を追加します:</para>
          <screen>session optional pam_snapper.so</screen>
-         <para>
-             Use the <command>/usr/lib/pam_snapper/pam_snapper_useradd.sh</command>
-             script to create a new user and home directory. By default the script
-             performs a dry run. Edit the script to change 
-             <literal>DRYRUN=1</literal> to <literal>DRYRUN=0</literal>. Now you
-             can create a new user:
-         </para>
+         <para>ユーザとホームディレクトリを作成する場合は、 <command>/usr/lib/pam_snapper/pam_snapper_useradd.sh</command> を使用します。既定では、スクリプトは表示のみを行なって実行は行ないませんので、スクリプトを編集して <literal>DRYRUN=1</literal> を <literal>DRYRUN=0</literal> に変更します。あとは下記のようにして新しいユーザを作成します:</para>
          <screen>&prompt.root;/usr/lib/pam_snapper/pam_snapper_useradd.sh \
-<replaceable>username</replaceable> <replaceable>group</replaceable> passwd=<replaceable>password</replaceable>
+<replaceable>ユーザ名</replaceable> <replaceable>グループ</replaceable> passwd=<replaceable>パスワード</replaceable>
 Create subvolume '/home/username'
-useradd: warning: the home directory already exists.
-Not copying any file from skel directory into it.
+useradd: 警告: ホームディレクトリが既に存在します。
+skel ディレクトリからのコピーは行いません。
 </screen>
-         <para>
-             The files from <filename>/etc/skel</filename> will be copied
-             into the user's home directory at their first login. Verify that
-             the user's configuration was created by listing your Snapper 
-             configurations:
-         </para>
-         <screen>
-&prompt.root;<command>snapper</command> --iso list
-種類   | # |     | クリーンアップ | 説明                  | ユーザデータ
--------+---+ ... +---------------+-----------------------+--------------
-single | 0 |     |               | current               |
-single | 1 |     |               | first root filesystem |
-single | 2 |     | number        | after installation    | important=yes
+         <para>ユーザ側では、初回ログイン時にホームディレクトリ内に <filename>/etc/skel</filename> の内容がコピーされます。あとは下記のように実行して、ユーザの設定が作成されていることを確認します:</para>
+         <screen>&prompt.root;snapper list --all
+Config: home_username, subvolume: /home/username
+Type   | # | Pre # | Date | User | Cleanup | Description | Userdata
+-------+---+-------+------+------+---------+-------------+---------
+single | 0 |       |      | root |         | current     |
 </screen>
-        <para>
-            Over time, this output will become populated with a list of snapshots,
-            which the user can manage with the standard Snapper commands.
-        </para>
+        <para>時間が経過するごとに上記の出力は増えていきますが、ユーザ側では標準的な snapper コマンドで管理を行なうことができます。</para>
      </sect2>
 
      <sect2 xml:id="sec.snapper.remove-user">
-         <title>ユーザ作成の巻き戻しについて</title>
-         <para>
-             Remove users with the 
-             <command>/usr/lib/pam_snapper/pam_snapper_userdel.sh</command>
-             script. By default it performs a dry run, so edit it to change 
-             <literal>DRYRUN=1</literal> to <literal>DRYRUN=0</literal>. This 
-             removes the user, the user's home subvolume, Snapper configuration, 
-             and deletes all snapshots.
-         </para>
+         <title>ユーザの削除</title>
+         <para>ユーザの削除についても <command>/usr/lib/pam_snapper/pam_snapper_userdel.sh</command> で行ないます。既定では、スクリプトは表示のみを行なって実行は行ないませんので、スクリプトを編集して <literal>DRYRUN=1</literal> を <literal>DRYRUN=0</literal> に変更します。あとは下記のようにしてユーザとユーザのサブボリューム、 snapper の設定と全てのスナップショットを削除します:</para>
          <screen>&prompt.root;/usr/lib/pam_snapper/pam_snapper_userdel.sh username</screen>
      </sect2>
 
      <sect2 xml:id="sec.snapper.manual-home-config">
-         <title>Manually Enabling Snapshots in Home Directories</title>
+         <title>手作業でのホームディレクトリに対するスナップショットの有効化</title>
          
-         <para>
-            These are the steps for manually setting up users' home directories
-            with Snapper. <filename>/home</filename> must be formatted with Btrfs,
-            and the users not yet created.
-        </para>
-        <screen>&prompt.root;btrfs subvol create /home/<replaceable>username</replaceable>
-&prompt.root;snapper -c home_<replaceable>username</replaceable> create-config /home/<replaceable>username</replaceable>
-&prompt.root;sed -i -e "s/ALLOW_USERS=\"\"/ALLOW_USERS=\"<replaceable>username</replaceable>\"/g" \
-/etc/snapper/configs/home_<replaceable>username</replaceable>
-&prompt.root;yast users add username=<replaceable>username</replaceable> home=/home/<replaceable>username</replaceable> password=<replaceable>password</replaceable>
-&prompt.root;chown <replaceable>username</replaceable>.<replaceable>group</replaceable> /home/<replaceable>username</replaceable>
-&prompt.root;chmod 755 /home/<replaceable>username</replaceable>/.snapshots
+         <para>下記は、 snapper を利用してユーザのホームディレクトリを手作業で設定するための手順を示しています。なお、 <filename>/home</filename> は btrfs でフォーマットされていなければならず、実行する時点でユーザは存在していないものとします。</para>
+        <screen>&prompt.root;btrfs subvol create /home/<replaceable>ユーザ名</replaceable>
+&prompt.root;snapper -c home_<replaceable>ユーザ名</replaceable> create-config /home/<replaceable>ユーザ名</replaceable>
+&prompt.root;sed -i -e "s/ALLOW_USERS=\"\"/ALLOW_USERS=\"<replaceable>ユーザ名</replaceable>\"/g" \
+/etc/snapper/configs/home_<replaceable>ユーザ名</replaceable>
+&prompt.root;yast users add username=<replaceable>ユーザ名</replaceable> home=/home/<replaceable>ユーザ名</replaceable> password=<replaceable>パスワード</replaceable>
+&prompt.root;chown <replaceable>ユーザ名</replaceable>.<replaceable>group</replaceable> /home/<replaceable>ユーザ名</replaceable>
+&prompt.root;chmod 755 /home/<replaceable>ユーザ名</replaceable>/.snapshots
 </screen>
 </sect2>
  </sect1>
