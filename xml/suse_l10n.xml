@@ -17,7 +17,8 @@
 
  <para><systemitem>LC_</systemitem> 変数に対する設定は、 <filename>/etc/sysconfig/language</filename> ファイル内で行ないます。ここでの設定は <emphasis>言語サポート</emphasis> という意味だけでなく、 <emphasis>メッセージ</emphasis> (言語), <emphasis>文字セット</emphasis> , <emphasis>並び替え順序</emphasis> , <emphasis>日付と時刻の表示形式</emphasis> , <emphasis>数字の表記方法</emphasis> , <emphasis>通貨単位</emphasis> などの分野があります。それぞれの分野に対する設定は、直接指定することができるほか、 <filename>language</filename> ファイル内のマスター変数で間接的に使用することもできます (詳しくは <command>locale</command> のマニュアルページをお読みください) 。</para>
 
- <variablelist>
+ <variablelist xml:id="vl.suse.l10n.variables">
+  <title>List of Variables</title>
   <varlistentry>
    <term><systemitem>RC_LC_MESSAGES</systemitem> , <systemitem>RC_LC_CTYPE</systemitem> , <systemitem>RC_LC_COLLATE</systemitem> , <systemitem>RC_LC_TIME</systemitem> , <systemitem>RC_LC_NUMERIC</systemitem> , <systemitem>RC_LC_MONETARY</systemitem></term>
    <listitem>
@@ -50,8 +51,66 @@
   LANG=&lt;言語&gt;[[_&lt;国コード&gt;].&lt;エンコーディング&gt;[@&lt;修飾子&gt;]]
 </screen>
 
+ <sect2 xml:id="sec.suse.l10n.settings">
+  <title>System Wide Locale Settings</title>
+  <para>
+   As of &sls; 15, &systemd; reads <filename>/etc/locale.conf</filename>
+   at early boot. The locale settings configured in this file are
+   inherited by every service or user, unless there are individual
+   settings.
+  </para>
+  <para>
+   In earlier versions, &productname; read it's settings from
+   <filename>/etc/sysconfig/language</filename>,
+   <filename>/etc/sysconfig/keyboard</filename>, and
+   <filename>/etc/sysconfig/console</filename>.
+   As of &sls; 15, these files are considered obsolete. &systemd; does not
+   read certain settings from these files anymore. Starting with &sls; 15,
+   &systemd; reads <filename>/etc/locale.conf</filename>.
+
+   All variables defined in <filename>/etc/sysconfig/language</filename>
+   will still be used to override the system-wide locale and to define a
+   different locale settings for users's shells (see <xref linkend="sec.suse.l10n.examples"/>).
+  </para>
+  <para>To set the system-wide locale, you could either:</para>
+
+  <itemizedlist>
+     <listitem>
+      <para>
+       Write your settings in <filename>/etc/locale.conf</filename>.
+       Each line is a environment-like variable assignment (see
+       <command>man 5 locale.conf</command> for a list of variables):
+      </para>
+      <screen>LANG=de_DE.UTF-8</screen>
+      <para>
+       To fine-tune the settings, you can add additional variables,
+       one variable per line.
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       Use the command <command>localectl</command>:
+      </para>
+      <screen>&prompt.root;<command>localectl</command> set-locale LANG=de_DE.UTF-8</screen>
+      <para>Same here, you can also specify additional variables after the
+      <command>localectl set-locale</command> command.</para>
+     </listitem>
+    </itemizedlist>
+
+  <para>
+   To keep backward compatibility with old systems during the
+   update of the systemd package, all variables mentioned will be migrated
+   from sysconfig to their final destinations if they are not already defined
+   there.
+  </para>
+ </sect2>
+
  <sect2 xml:id="sec.suse.l10n.examples">
   <title>いくつかの例</title>
+  <remark>toms 2019-05-21: This section should be restructured as
+  it not completely deals with generating locales.
+  Postponed to a later point.
+  </remark>
   <para>言語と国コードについては、必ず指定してください。言語は ISO-639 (一覧は <link xlink:href="https://ja.wikipedia.org/wiki/ISO_639-1%E3%82%B3%E3%83%BC%E3%83%89%E4%B8%80%E8%A6%A7"/> にあります) を、国コードは ISO-3166 (一覧は <link xlink:href="https://ja.wikipedia.org/wiki/ISO_3166-1"/> にあります) をそれぞれお使いください。 <!--taroth 2013-02-06: the following URL now redirects to a generic site on which the ISO standard can be bought, but not really be accessed--> <!--<ulink url="http://www.din.de/gremien/nas/nabd/iso3166ma/codlstp1/en_listp1.html"/>.--></para>
   <para>なお、 <filename>/usr/lib/locale</filename> 以下にあるディレクトリの言語および国コードなどの組み合わせのみを使用することができます。また、追加の定義ファイルを作成したい場合は、 <command>localedef</command> コマンドをお使いのうえ、 <filename>/usr/share/i18n</filename> 内にファイルを作成してください。定義ファイルは <systemitem>glibc-i18ndata</systemitem> に含まれているものです。たとえば <literal>en_US.UTF-8</literal> (イギリスおよびアメリカ英語) を作成したい場合は、下記のように実行します:</para>
 <!--
