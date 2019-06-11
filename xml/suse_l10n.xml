@@ -18,7 +18,7 @@
  <para><systemitem>LC_</systemitem> 変数に対する設定は、 <filename>/etc/sysconfig/language</filename> ファイル内で行ないます。ここでの設定は <emphasis>言語サポート</emphasis> という意味だけでなく、 <emphasis>メッセージ</emphasis> (言語), <emphasis>文字セット</emphasis> , <emphasis>並び替え順序</emphasis> , <emphasis>日付と時刻の表示形式</emphasis> , <emphasis>数字の表記方法</emphasis> , <emphasis>通貨単位</emphasis> などの分野があります。それぞれの分野に対する設定は、直接指定することができるほか、 <filename>language</filename> ファイル内のマスター変数で間接的に使用することもできます (詳しくは <command>locale</command> のマニュアルページをお読みください) 。</para>
 
  <variablelist xml:id="vl.suse.l10n.variables">
-  <title>List of Variables</title>
+  <title>変数の一覧</title>
   <varlistentry>
    <term><systemitem>RC_LC_MESSAGES</systemitem> , <systemitem>RC_LC_CTYPE</systemitem> , <systemitem>RC_LC_COLLATE</systemitem> , <systemitem>RC_LC_TIME</systemitem> , <systemitem>RC_LC_NUMERIC</systemitem> , <systemitem>RC_LC_MONETARY</systemitem></term>
    <listitem>
@@ -40,69 +40,35 @@
   <varlistentry>
    <term><systemitem>ROOT_USES_LANG</systemitem></term>
    <listitem>
-    <para><literal>yes</literal> もしくは <literal>no</literal> を指定する変数です。 <literal>no</literal> を指定すると、 <systemitem class="username">root</systemitem> が常に POSIX 環境に設定されます。</para>
+    <para><literal>yes</literal> もしくは <literal>ctype</literal> (既定値) を指定する変数です。 <literal>yes</literal> を指定すると、 <systemitem class="username">root</systemitem> に対して言語や国に固有の設定を適用するようになりますが、そうでない場合、システム管理者は POSIX 環境を使用するようになります。</para>
    </listitem>
   </varlistentry>
  </variablelist>
 
  <para>なお、これらの変数は &yast; sysconfig エディタで設定することができます。これらの変数の値は言語コードや国コード、エンコーディングや修飾子などが含まれます。具体的には、下記のような書式になります:</para>
 
-<screen>
-  LANG=&lt;言語&gt;[[_&lt;国コード&gt;].&lt;エンコーディング&gt;[@&lt;修飾子&gt;]]
-</screen>
+<screen>LANG=&lt;言語&gt;[[_&lt;国コード&gt;].&lt;エンコーディング&gt;[@&lt;修飾子&gt;]]</screen>
 
  <sect2 xml:id="sec.suse.l10n.settings">
-  <title>System Wide Locale Settings</title>
-  <para>
-   As of &sls; 15, &systemd; reads <filename>/etc/locale.conf</filename>
-   at early boot. The locale settings configured in this file are
-   inherited by every service or user, unless there are individual
-   settings.
-  </para>
-  <para>
-   In earlier versions, &productname; read it's settings from
-   <filename>/etc/sysconfig/language</filename>,
-   <filename>/etc/sysconfig/keyboard</filename>, and
-   <filename>/etc/sysconfig/console</filename>.
-   As of &sls; 15, these files are considered obsolete. &systemd; does not
-   read certain settings from these files anymore. Starting with &sls; 15,
-   &systemd; reads <filename>/etc/locale.conf</filename>.
-
-   All variables defined in <filename>/etc/sysconfig/language</filename>
-   will still be used to override the system-wide locale and to define a
-   different locale settings for users's shells (see <xref linkend="sec.suse.l10n.examples"/>).
-  </para>
-  <para>To set the system-wide locale, you could either:</para>
+  <title>システム全体の言語設定</title>
+  <para>&sls; 15 およびそれ以降のバージョンでは、 &systemd; は起動時の早い段階で <filename>/etc/locale.conf</filename> を読み込みます。このファイル内に書かれたロケール設定は、個別に設定した場合を除いて、サービスやユーザに継承されます。</para>
+  <para>上記以前のバージョンでは、 &productname; は <filename>/etc/sysconfig/language</filename> , <filename>/etc/sysconfig/keyboard</filename> , <filename>/etc/sysconfig/console</filename> の各ファイルから設定を読み込んでいました。 &sls; 15 では、これらのファイルは廃止予定としてマークされるようになっています。 &systemd; でも、これらのファイルを読み込むことは行なっていません。 &sls; 15 およびそれ以降では <filename>/etc/locale.conf</filename> を読み込みますが、 <filename>/etc/sysconfig/language</filename> 内での設定はシステム全体のロケールを上書きするために使用されているほか、ユーザのシェルに対して異なるロケール設定を行なうために使用されています (詳しくは <xref linkend="sec.suse.l10n.examples"/> をお読みください) 。</para>
+  <para>システム全体のロケールを設定するには、下記のいずれかを実施します:</para>
 
   <itemizedlist>
      <listitem>
-      <para>
-       Write your settings in <filename>/etc/locale.conf</filename>.
-       Each line is a environment-like variable assignment (see
-       <command>man 5 locale.conf</command> for a list of variables):
-      </para>
-      <screen>LANG=de_DE.UTF-8</screen>
-      <para>
-       To fine-tune the settings, you can add additional variables,
-       one variable per line.
-      </para>
+      <para><filename>/etc/locale.conf</filename> ファイル内に設定を書き込みます。各行は環境変数のような書式で変数設定を行ないます (変数の一覧については <command>man 5 locale.conf</command> をお読みください):</para>
+      <screen>LANG=ja_JP.UTF-8</screen>
+      <para>さらに細かい設定を行ないたい場合は、 1 行に 1 つの変数を記述する方式で、設定を追加していってください。</para>
      </listitem>
      <listitem>
-      <para>
-       Use the command <command>localectl</command>:
-      </para>
-      <screen>&prompt.root;<command>localectl</command> set-locale LANG=de_DE.UTF-8</screen>
-      <para>Same here, you can also specify additional variables after the
-      <command>localectl set-locale</command> command.</para>
+      <para><command>localectl</command> コマンドを使用してもかまいません:</para>
+      <screen>&prompt.root;<command>localectl</command> set-locale LANG=ja_JP.UTF-8</screen>
+      <para>こちらの場合でも、 <command>localectl set-locale</command> コマンドの後ろに追加の変数を指定することができます。</para>
      </listitem>
     </itemizedlist>
 
-  <para>
-   To keep backward compatibility with old systems during the
-   update of the systemd package, all variables mentioned will be migrated
-   from sysconfig to their final destinations if they are not already defined
-   there.
-  </para>
+  <para>後方互換性を維持するため、 systemd パッケージの更新時にこれらの変数設定が存在すると、新しいほうの設定を書き込むようになっています。</para>
  </sect2>
 
  <sect2 xml:id="sec.suse.l10n.examples">
@@ -125,9 +91,7 @@ localedef -i es_ES@euro -f UTF-8 es_ES@euro.UTF-8
 -->
   <remark role="trans">Change the description file in the previous para and the
    following screen to something appropriate for your language.</remark>
-<screen>
-localedef -i en_US -f UTF-8 en_US.UTF-8
-</screen>
+<screen>localedef -i en_US -f UTF-8 en_US.UTF-8</screen>
   <variablelist>
    <varlistentry>
     <term><!--Use for:German: <systemitem>LANG=de_DE.UTF-8</systemitem>French: <systemitem>LANG=fr_FR.UTF-8</systemitem>Italian: <systemitem>LANG=it_IT.UTF-8</systemitem>Spanish: <systemitem>LANG=es_ES.UTF-8</systemitem>--> <systemitem>LANG=en_US.UTF-8</systemitem></term>
@@ -171,8 +135,7 @@ Spanish:  <systemitem>LANG=es_ES@euro</systemitem>
   <title><filename>~/.i18n</filename> 内でのロケール (言語) 設定</title>
   <para>システム側で設定された既定値では不都合がある場合は、 <filename>~/.i18n</filename> ファイルを bash のスクリプト形式で記述することで、設定を変更することができます。 <filename>~/.i18n</filename> 内での記述は <filename>/etc/sysconfig/language</filename> の設定を上書きすることができます。なお、変数名は <filename>/etc/sysconfig/language</filename> のものから、 <literal>RC_</literal> の接頭辞を取り除いて指定してください。たとえば <literal>RC_LANG</literal> ではなく <literal>LANG</literal> のようになります:</para>
 <screen>LANG=cs_CZ.UTF-8
-LC_COLLATE=C
-</screen>
+LC_COLLATE=C</screen>
  </sect2>
 
  <sect2 xml:id="sec.suse.l10n.fallback">
