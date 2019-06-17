@@ -14,14 +14,13 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
   </dm:docmanager>
   <abstract>
    <para>VNC は Virtual Network Computing (仮想ネットワークコンピューティング) の略で、ネットワーク上離れたコンピュータを (シェルではなく) グラフィカルなデスクトップ経由でアクセスする機能を提供します。 VNC はプラットフォームに依存しない構造で、任意のオペレーティングシステムからアクセスする機能を提供します。</para>
-
-   <para>&productname; では 2 種類の VNC セッションに対応しています。 1 つはワンタイムセッションと呼ばれ、クライアントからの接続が切れるまで <quote>有効</quote> となるセッションです。もう 1 つは永続セッションと呼ばれ、明示的に終了させるまでずっと <quote>有効</quote> であり続けるセッションです。</para>
-  </abstract>
- </info>
- <note>
-  <title>セッションの種類</title>
+     <para>&productname; では 2 種類の VNC セッションに対応しています。 1 つはワンタイムセッションと呼ばれ、クライアントからの接続が切れるまで <quote>有効</quote> となるセッションです。もう 1 つは永続セッションと呼ばれ、明示的に終了させるまでずっと <quote>有効</quote> であり続けるセッションです。</para>
   <para>それぞれ異なるポートであれば、両方の種類のセッションを同じマシン内で同時に提供することもできます。ただし、開いたセッションの種類を変更することはできません。</para>
- </note>
+   </abstract>
+</info>
+
+ <sect1 xml:id="sec.vnc.viewer">
+  <title><command>vncviewer</command> クライアント</title>
  <important os="osuse">
   <title>対応するディスプレイマネージャ</title>
   <para>VNC 接続を受け付けるには、 XDMCP プロトコルに対応したディスプレイマネージャを使用する必要があります。 <systemitem>gdm</systemitem> , <systemitem>lxdm</systemitem> , <systemitem>lightdm</systemitem> は XDMCP に対応していますが、 KDE 5 の既定のディスプレイマネージャである <systemitem>sddm</systemitem> の場合は、 XDMCP に対応していません。ディスプレイマネージャを変更した場合は、現在の X セッションをログアウトしたあと、下記のコマンドで再起動を行なってください:</para>
@@ -29,8 +28,6 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
 &prompt.user;sudo systemctl restart xdm.service
 </screen>
  </important>
- <sect1 xml:id="sec.vnc.viewer">
-  <title><command>vncviewer</command> クライアント</title>
 
   <para>サーバ側で提供されている VNC サービスに接続するには、クライアントソフトウエアが必要です。 &productname; での既定は <command>vncviewer</command> で、 <systemitem class="resource">tigervnc</systemitem> パッケージ内に含まれています。</para>
 
@@ -68,6 +65,7 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
    <para>VNC プロトコルでは、様々な種類の暗号化接続 (注: パスワード認証とは全く異なり、通信そのものを暗号化して外部から内容を読み取られないようにする仕組みです) に対応しています。接続時に TLS を使用していないと、 VNC ビューアのウインドウタイトルに <quote>(Connection not encrypted!)</quote> (通信が暗号化されていません) というメッセージが表示されるようになっています。</para>
   </sect2>
  </sect1>
+
  <sect1 xml:id="vnc.remmina">
   <title>Remmina: リモートデスクトップクライアント</title>
 
@@ -222,8 +220,9 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
    <para>Remmina を起動していない状態であれば、 <filename>sle15.remmina</filename> のように、設定ファイルをよりわかりやすいファイル名に変更することができます。もちろん設定ファイルをどこか別のディレクトリにコピーして、 <command>remmina -c</command> で指定して実行することもできます。</para>
   </sect2>
  </sect1>
+ 
  <sect1 xml:id="sec.vnc.one-time">
-  <title>ワンタイム VNC セッション</title>
+  <title>ワンタイム VNC セッションの設定</title>
 
   <para>ワンタイムセッションはリモートのクライアントからの接続で起動する仕組みです。クライアントから接続を行なうと、サーバ内のグラフィカルなログイン画面を表示し、セッションを開始することができます。また、ログインマネージャ側で対応していれば、デスクトップ環境を選択することもできます。ワンタイムセッションの接続を閉じると、その中で動作していたアプリケーションも終了します。ワンタイム VNC セッションは共有することができませんが、単一のホスト内で複数のセッションを扱うことができます。</para>
 
@@ -283,9 +282,9 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
    <para>既定値を変更する必要がなければ、この手順は実施しなくてもかまいません。</para>
    <para>ワンタイム VNC セッションは、 &systemd; のソケット <systemitem>xvnc.socket</systemitem> 経由で起動されます。既定では 6 つの設定ブロックが存在していて、そのうち 3 つが VNC ビューア向け ( <literal>vnc1</literal> から <literal>vnc3</literal> まで) で、残りの 3 つが JavaScript クライアント向け ( <literal>vnchttpd1</literal> から <literal>vnchttpd3</literal> まで) です。既定では <literal>vnc1</literal> と <literal>vnchttpd1</literal> だけが有効化されています。</para>
    <para>VNC サーバソケットをシステムの起動時に有効化するには、下記のコマンドを実行します:</para>
-<screen>sudo systemctl enable xvnc.socket</screen>
+<screen>&prompt.sudo;systemctl reload xvnc.socket</screen>
    <para>即時にソケットを開始するには、下記のコマンドを実行します:</para>
-<screen>sudo systemctl start xvnc.socket</screen>
+<screen>&prompt.sudo;systemctl reload xvnc.socket</screen>
    <para><command>Xvnc</command> サーバは、 <literal>server_args</literal> オプションを介して設定することができます。オプションの一覧については <command>Xvnc --help</command> をお読みください。</para>
    <para>独自の設定を加える場合、同じホストで動作している他の設定やサービス、既存の VNC セッションなどが使用していないポートを設定するよう注意してください。</para>
    <para>設定の変更を反映させるには、下記のコマンドを実行します:</para>
@@ -296,8 +295,9 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
    </important>
   </sect2>
  </sect1>
+ 
  <sect1 xml:id="sec.vnc.persistent">
-  <title>永続 VNC セッション</title>
+  <title>永続 VNC セッションの設定</title>
 
   <para>永続 VNC セッションを使用すると、複数のクライアントから同時に接続できるようになります。たとえば 1 つのクライアントに対してだけ操作を許可しておき、それ以外の全てのクライアントは表示専用に設定することで、デモンストレーション目的で公開するようなこともできます。また、講師から参加者のデスクトップにアクセスできるように設定しておけば、トレーニングなどの際にも便利に使用することができます。</para>
 
@@ -471,8 +471,9 @@ WINDOWMANAGER=icewm vncserver -geometry 1024x768</screen>
    </sect3>
   </sect2>
  </sect1>
+ 
  <sect1 xml:id="sec.vnc.encrypt">
-  <title>暗号化された VNC 通信</title>
+  <title>ワンタイム VNC セッションの設定</title>
 
   <para>VNC サーバを正しく設定すると、 VNC サーバとクライアントとの間が暗号化されるようになります。認証はセッションの冒頭で行なわれ、実際のデータ転送はそれ以降に行なわれます。</para>
 
