@@ -70,6 +70,40 @@
 <screen>&prompt.sudo;zypper --userdata <replaceable>文字列</replaceable> patch</screen>
  </sect2>
 
+ <sect2 xml:id="sec.zypper.subcommands">
+  <title>zypper のコマンド</title>
+  <para>
+   Zypper subcommands are executables that are stored in the zypper_execdir,
+   <filename>/usr/lib/zypper/commands</filename>. If a subcommand is not found
+   in the zypper_execdir, Zypper automatically searches the rest of your $PATH
+   for it. This enables writing your own local extensions and storing them in
+   userspace.
+  </para>
+  <para>
+   Executing subcommands in the Zypper shell, and using global Zypper options
+   are not supported.
+  </para>
+  <para>
+   List your available subcommands:
+  </para>
+<screen>&prompt.user;zypper help subcommand
+[...]
+Available zypper subcommands in '/usr/lib/zypper/commands'
+
+  appstream-cache
+  lifecycle      
+  migration      
+  search-packages
+
+Zypper subcommands available from elsewhere on your $PATH
+
+  &lt;none&gt; </screen>
+  <para>
+   View the help screen for a subcommand:
+  </para>
+<screen>&prompt.user;zypper list-updates</screen>
+ </sect2>
+
  <sect2 xml:id="sec.zypper.softman">
   <title>zypper を利用したソフトウエアのインストールと削除</title>
   <para>パッケージをインストールしたり削除したりしたい場合は、下記のコマンドをお使いください:</para>
@@ -196,7 +230,7 @@ sudo zypper remove <replaceable>パッケージ名</replaceable></screen>
    <para>通常は、パッケージをインストールしたり更新したりする場合、有効化されたリポジトリのパッケージのみを使用することができます。ですが、 <option>--plus-content <replaceable>タグ</replaceable></option> オプションを指定すると、その zypper の実行時に限定して一時的にリポジトリを有効化し、インストールや交信を行なうことができるようになります。 zypper のコマンドが終了すると元に戻されます (無効化されます) 。</para>
    <para>たとえば <filename>-debuginfo</filename> や <filename>-debugsource</filename> などのパッケージを提供する追加リポジトリを有効化したい場合は、 <option>--plus-content debug</option> オプションを指定してください。なお、 <option>--plus-content</option> は必要に応じて複数回指定することができます。</para>
    <para>このような 'debug' (デバッグ) リポジトリを有効化して、特定の <filename>-debuginfo</filename> パッケージをインストールするには、下記のように実行します:</para>
-   <screen>&prompt.sudo;zypper --plus-content debug \
+<screen>&prompt.sudo;zypper --plus-content debug \
    install "debuginfo(build-id)=eb844a5c20c70a59fc693cd1061f851fb7d046f4"</screen>
    <para>ここで、 <literal>build-id</literal> 以下の文字列は、 <command>gdb</command> コマンドで表示される ID を指定します。</para>
    <note>
@@ -417,14 +451,7 @@ PID   | PPID | UID | ユーザ | コマンド      | サービス     | ファ�
       |      |     |        |              |              | /lib64/libpthrea-&gt;
       |      |     |        |              |              | /lib64/libc-2.19-&gt;
 [...]</screen>
-  <simplelist>
-   <member><emphasis role="bold">PID</emphasis>: そのプロセスの ID</member>
-   <member><emphasis role="bold">PPID</emphasis>: 親プロセスの ID</member>
-   <member><emphasis role="bold">UID</emphasis>: プロセスを実行しているユーザの ID</member>
-   <member><emphasis role="bold">ユーザ</emphasis>: プロセスを実行しているユーザのログイン名</member>
-   <member><emphasis role="bold">コマンド</emphasis>: プロセスで使用しているコマンド</member>
-   <member><emphasis role="bold">サービス</emphasis>: サービス名 (コマンドがシステムサービスに属している場合のみ)</member>
-   <member><emphasis role="bold">ファイル</emphasis>: 削除されたファイルの一覧</member>
+  <simplelist><member><emphasis role="bold">PID</emphasis>: そのプロセスの ID</member><member><emphasis role="bold">PPID</emphasis>: 親プロセスの ID</member><member><emphasis role="bold">UID</emphasis>: プロセスを実行しているユーザの ID</member><member><emphasis role="bold">ユーザ</emphasis>: プロセスを実行しているユーザのログイン名</member><member><emphasis role="bold">コマンド</emphasis>: プロセスで使用しているコマンド</member><member><emphasis role="bold">サービス</emphasis>: サービス名 (コマンドがシステムサービスに属している場合のみ)</member><member><emphasis role="bold">ファイル</emphasis>: 削除されたファイルの一覧</member>
   </simplelist>
   <para><command>zypper ps</command> の出力形式は、下記のように指定することで変更することができます:</para>
   <variablelist>
@@ -543,11 +570,7 @@ systemctl status sshd</screen>
    <para><command>zypper modifyrepo</command> コマンドを使用することで、リポジトリを有効化したり無効化したりすることができます。このほか、このコマンドではリポジトリの設定 (自動更新や名前、優先順位など) も変更することができます。たとえば下記のコマンドを実行すると、 <literal>updates</literal> という名前のリポジトリの自動更新を有効化し、優先順位を 20 にします:</para>
 <screen>&prompt.sudo;zypper modifyrepo -er -p 20 'updates'</screen>
    <para>リポジトリの編集は、リポジトリ 1 つに対して行なうことができるだけではありません。複数のリポジトリに対して一括で変更することもできます:</para>
-   <simplelist>
-    <member><option>-a</option>: 全てのリポジトリ</member>
-    <member><option>-l</option>: ローカルのリポジトリ</member>
-    <member><option>-t</option>: リモートのリポジトリ</member>
-    <member><option>-m <replaceable>種類</replaceable></option>: 特定の種類のリポジトリ (<replaceable>種類</replaceable> には下記のいずれかを指定することができます: <literal>http</literal>, <literal>https</literal>, <literal>ftp</literal>, <literal>cd</literal>, <literal>dvd</literal>, <literal>dir</literal>, <literal>file</literal>, <literal>cifs</literal>, <literal>smb</literal>, <literal>nfs</literal>, <literal>hd</literal>, <literal>iso</literal>)</member>
+   <simplelist><member><option>-a</option>: 全てのリポジトリ</member><member><option>-l</option>: ローカルのリポジトリ</member><member><option>-t</option>: リモートのリポジトリ</member><member><option>-m <replaceable>種類</replaceable></option>: 特定の種類のリポジトリ (<replaceable>種類</replaceable> には下記のいずれかを指定することができます: <literal>http</literal>, <literal>https</literal>, <literal>ftp</literal>, <literal>cd</literal>, <literal>dvd</literal>, <literal>dir</literal>, <literal>file</literal>, <literal>cifs</literal>, <literal>smb</literal>, <literal>nfs</literal>, <literal>hd</literal>, <literal>iso</literal>)</member>
    </simplelist>
    <para>リポジトリの別名を変更するには、 <literal>renamerepo</literal> コマンドを使用します。下記の例では、 <literal>Mozilla Firefox</literal> という別名のリポジトリを <literal>firefox</literal> という別名に変更しています:</para>
 <screen>&prompt.sudo;zypper renamerepo 'Mozilla Firefox' firefox</screen>
@@ -601,6 +624,33 @@ systemctl status sshd</screen>
   <sect3 xml:id="sec.zypper.query.search-packages" os="sles;sled">
    <title>全ての &slea; モジュールに対するパッケージの検索</title>
    <para>現在有効化されている &slea; モジュールを、内外問わずにパッケージ検索したい場合は、<command>zypper search-packages</command> を使用します。このコマンドは &scc; に接続して、該当するパッケージに対する全てのモジュールを検索します。</para>
+<screen>&prompt.sudo;zypper addrepo <replaceable>URI</replaceable> <replaceable>別名</replaceable></screen>
+   <para><command>zypper ps</command> <option>-s</option></para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      Search for an exact match of your search string: <option>-x</option>,
+      <option>--match-exact</option>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Group the results by module (default: group by package):
+      <option>-g,</option> <option>--group-by-module</option>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Display more detailed information about packages: <option>-d</option>,
+      <option>--details</option>
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      Output search results in XML: <option>--xmlout</option>
+     </para>
+    </listitem>
+   </itemizedlist>
   </sect3>
   <sect3 xml:id="sec.zypper.query.what-provides">
    <title>特定の能力を指定する検索</title>
@@ -621,7 +671,7 @@ systemctl status sshd</screen>
   <title>ライフサイクル情報の表示</title>
   <para>&suse; 製品は一般に 10 年間のサポート期間が用意されています。また、必要であれば、標準のサポート期間に加えて 3 年間の延長サポートを提供する &suse; の拡張サポートも利用することができます。お使いの製品に対する正確なライフサイクル情報は <link xlink:href="https://www.suse.com/lifecycle"/> をご覧ください。</para>
   <para>お使いの製品に対するライフサイクル情報を確認するには、下記のようにして <command>zypper lifecycle</command> コマンドを実行します:</para>
-  <screen>&prompt.root;<command>zypper lifecycle</command>
+<screen>&prompt.root;<command>zypper lifecycle</command>
 
 Product end of support
 Codestream: SUSE Linux Enterprise Server 15             2028-07-31
