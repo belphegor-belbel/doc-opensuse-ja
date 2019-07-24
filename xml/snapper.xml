@@ -1275,11 +1275,7 @@ TIMELINE_MIN_AGE="1800"</screen>
   <sect2 xml:id="sec.snapper.clean-up.quota">
    <title>ディスククォータサポートの追加</title>
    <para>上述の番号／タイムラインのクリーンアップアルゴリズムに加えて、 Snapper ではクォータ (容量制限) を設定することができます。容量制限は利用可能な空き容量に対する比率で指定します。この比率での指定は、それぞれの Snapper 設定内で指定された btrfs サブボリュームに対して常に適用されます。</para>
-   <para> 
-       Btrfs quotas are applied to subvolumes, not to users. You may apply 
-       disk space quotas to users and groups (for example, with the 
-       <command>quota</command> command) in addition to using Btrfs quotas.
-   </para>
+   <para>btrfs のクオータは、ユーザではなくサブボリュームに対して適用されます。また、 btrfs のクオータは、ユーザやグループに対するクオータ (<command>quota</command> コマンドを使用するクオータ) と併用することができます。</para>
    <para>インストール時に Snapper を有効化していると、クォータサポートも自動的に有効化されます。 Snapper を後から有効化した場合は、 <command>snapper setup-quota</command> を実行することでクォータサポートを有効化することができます。また、この動作には正しい設定が必要です (詳しくは <xref linkend="sec.snapper.config"/> をお読みください) 。</para>
    <para>クォータサポートは、 Snapper 設定のうち下記のパラメータで制御することができます。</para>
    <variablelist>
@@ -1313,35 +1309,24 @@ TIMELINE_MIN_AGE="1800"</screen>
 </sect1>
  
   <sect1>
-      <title>Showing Exclusive Disk Space Used by Snapshots</title>
-     <para>
-      Snapshots share data, for efficient use of storage space, so using ordinary
-      commands like <command>du</command> and <command>df</command> won't measure
-      used disk space accurately. When you want to free up disk space on Btrfs 
-      with quotas enabled, you need to know how much exclusive disk space is 
-      used by each snapshot, rather than shared space. Snapper 0.6 and up reports 
-      the used disk space for each snapshot in the
-    <literal>Used Space</literal> column:
-</para>
+      <title>スナップショットが占有しているディスク容量の表示</title>
+     <para>スナップショットではストレージ領域を効率的に使用する目的で、データの共有を行なっています。そのため、 <command>du</command> や <command>df</command> 等のコマンドを使用しても、残りのディスク領域を正確に測定することができません。 btrfs でクォータを有効化している場合、ディスク領域を空けるには、まずそれぞれのスナップショットが占有している (共有していない) ディスク容量を正確に把握する必要があります。 snapper 0.6 もしくはそれ以降のバージョンでは、 <literal>使用済み領域</literal> の列内に占有している容量が表示されます:</para>
 <screen>&prompt.root;snapper--iso list
-  # | Type   | Pre # | Date                | User | Used Space | Cleanup | Description           | Userdata     
-----+--------+-------+---------------------+------+------------+---------+-----------------------+--------------
- 0  | single |       |                     | root |            |         | current               |              
- 1* | single |       | 2019-07-22 13:08:38 | root |  16.00 KiB |         | first root filesystem |              
- 2  | single |       | 2019-07-22 14:21:05 | root |  14.23 MiB | number  | after installation    | important=yes
- 3  | pre    |       | 2019-07-22 14:26:03 | root | 144.00 KiB | number  | zypp(zypper)          | important=no 
- 4  | post   |     3 | 2019-07-22 14:26:04 | root | 112.00 KiB | number  |                       | important=no 
- 5  | pre    |       | 2019-07-23 08:19:36 | root | 128.00 KiB | number  | zypp(zypper)          | important=no 
- 6  | post   |     5 | 2019-07-23 08:19:43 | root |  80.00 KiB | number  |                       | important=no 
- 7  | pre    |       | 2019-07-23 08:20:50 | root | 256.00 KiB | number  | yast sw_single        |              
- 8  | pre    |       | 2019-07-23 08:23:22 | root | 112.00 KiB | number  | zypp(ruby.ruby2.5)    | important=no 
- 9  | post   |     8 | 2019-07-23 08:23:35 | root |  64.00 KiB | number  |                       | important=no 
-10  | post   |     7 | 2019-07-23 08:24:05 | root |  16.00 KiB | number  |                       |              
+  # | 種類   | 前 #  | 日付                        | ユーザ | 使用済み領域 | クリーンアップ| 説明                  | ユーザデータ
+----+--------+-------+----------------------------+--------+-------------+--------------+-----------------------+--------------
+ 0  | single |       |                            | root   |             |              | current               |              
+ 1* | single |       | 2019年07月22日 13時08分38秒 | root   |  16.00 KiB  |              | first root filesystem |              
+ 2  | single |       | 2019年07月22日 14時21分05秒 | root   |  14.23 MiB  | number       | after installation    | important=yes
+ 3  | pre    |       | 2019年07月22日 14時26分03秒 | root   | 144.00 KiB  | number       | zypp(zypper)          | important=no 
+ 4  | post   |     3 | 2019年07月22日 14時26分04秒 | root   | 112.00 KiB  | number       |                       | important=no 
+ 5  | pre    |       | 2019年07月23日 08時19分36秒 | root   | 128.00 KiB  | number       | zypp(zypper)          | important=no 
+ 6  | post   |     5 | 2019年07月23日 08時19分43秒 | root   |  80.00 KiB  | number       |                       | important=no 
+ 7  | pre    |       | 2019年07月23日 08時20分50秒 | root   | 256.00 KiB  | number       | yast sw_single        |              
+ 8  | pre    |       | 2019年07月23日 08時23分22秒 | root   | 112.00 KiB  | number       | zypp(ruby.ruby2.5)    | important=no 
+ 9  | post   |     8 | 2019年07月23日 08時23分35秒 | root   |  64.00 KiB  | number       |                       | important=no 
+10  | post   |     7 | 2019年07月23日 08時24分05秒 | root   |  16.00 KiB  | number       |                       |              
 </screen>
-<para>
-    The <command>btrfs</command> command provides another view of space used by 
-    snapshots:
-</para>
+<para><command>btrfs</command> コマンドを使用しても、それぞれのスナップショットが占有するディスク容量を表示することができます:</para>
 <screen>
 &prompt.root;btrfs qgroup show -p /
 qgroupid         rfer         excl parent  
@@ -1359,27 +1344,11 @@ qgroupid         rfer         excl parent
 0/280         3.12GiB     16.00KiB 1/0     
 1/0           3.33GiB    222.95MiB --- 
 </screen>
-<para>
-    The <literal>qgroupid</literal> column displays the identification number for
-    each subvolume, assigning a qgroup level/ID combination.
-</para> 
-<para>
-    The <literal>rfer</literal> column displays the total amount of data 
-    referred to in the subvolume.
-</para>
-<para>
-    The <literal>excl</literal> column displays the exclusive data in each
-    subvolume. 
-</para>
-<para>
-    The <literal>parent</literal> column shows the parent qgroup of the subvolumes.
-</para>
-<para>    
-    The final item, <literal>1/0</literal>, shows the totals for the parent 
-    qgroup. In the above example, 222.95 MiB will be freed if all subvolumes
-    are removed. Run the following command to see which snapshots are associated
-    with each subvolume:
-</para>
+<para><literal>qgroupid</literal> 列には、それぞれのサブボリュームの識別番号と qgroup レベル/ID の組み合わせが表示されます。</para> 
+<para><literal>rfer</literal> 列には、サブボリューム内で参照されているデータの容量が表示されます。</para>
+<para><literal>excl</literal> 列には、それぞれのサブボリューム内に存在する占有データ容量が表示されます。</para>
+<para><literal>parent</literal> 列には、サブボリュームの親 qgroup が表示されます。</para>
+<para>末尾にある <literal>1/0</literal> には、親 qgroup に対する合計容量が表示されています。上記の例では、全てのサブボリュームを削除すると、 222.95 MiB が解放されることになります。下記のコマンドを実行すると、スナップショットとサブボリュームの関係性を表示することができます:</para>
 <screen>&prompt.root;btrfs subvolume list -st /
 ID	gen	top level	path	
 --	---	---------	----	
@@ -1394,7 +1363,7 @@ ID	gen	top level	path
 279	297	266		@/.snapshots/9/snapshot
 280	298	266		@/.snapshots/10/snapshot
 </screen>
-     <para>また、一方のサービスパックから他方のサービスパックにアップグレードを行なったりすると、パッケージの更新により多数のデータが変更されるため、スナップショットがシステムサブボリューム内の多くの領域を占有するようになります。これらは、不要になった段階で手作業で削除することをお勧めします。詳しくは <xref linkend="sec.snapper.manage.delete"/> をお読みください。</para>
+     <para>また、一方のサービスパックから他方のサービスパックにアップグレードを行なったりすると、パッケージの更新により多数のデータが変更されるため、スナップショットがシステムサブボリューム内の多くの領域を占有するようになります。これらは、不要になった段階で手作業で削除することをqお勧めします。詳しくは <xref linkend="sec.snapper.manage.delete"/> をお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec.snapper.faqs">
