@@ -1275,6 +1275,11 @@ TIMELINE_MIN_AGE="1800"</screen>
   <sect2 xml:id="sec.snapper.clean-up.quota">
    <title>ディスククォータサポートの追加</title>
    <para>上述の番号／タイムラインのクリーンアップアルゴリズムに加えて、 Snapper ではクォータ (容量制限) を設定することができます。容量制限は利用可能な空き容量に対する比率で指定します。この比率での指定は、それぞれの Snapper 設定内で指定された btrfs サブボリュームに対して常に適用されます。</para>
+   <para> 
+       Btrfs quotas are applied to subvolumes, not to users. You may apply 
+       disk space quotas to users and groups (for example, with the 
+       <command>quota</command> command) in addition to using Btrfs quotas.
+   </para>
    <para>インストール時に Snapper を有効化していると、クォータサポートも自動的に有効化されます。 Snapper を後から有効化した場合は、 <command>snapper setup-quota</command> を実行することでクォータサポートを有効化することができます。また、この動作には正しい設定が必要です (詳しくは <xref linkend="sec.snapper.config"/> をお読みください) 。</para>
    <para>クォータサポートは、 Snapper 設定のうち下記のパラメータで制御することができます。</para>
    <variablelist>
@@ -1305,7 +1310,93 @@ TIMELINE_MIN_AGE="1800"</screen>
     </listitem>
    </itemizedlist>
   </sect2>
+</sect1>
+ 
+  <sect1>
+      <title>Showing Exclusive Disk Space Used by Snapshots</title>
+     <para>
+      Snapshots share data, for efficient use of storage space, so using ordinary
+      commands like <command>du</command> and <command>df</command> won't measure
+      used disk space accurately. When you want to free up disk space on Btrfs 
+      with quotas enabled, you need to know how much exclusive disk space is 
+      used by each snapshot, rather than shared space. Snapper 0.6 and up reports 
+      the used disk space for each snapshot in the
+    <literal>Used Space</literal> column:
+</para>
+<screen>&prompt.root;snapper--iso list
+  # | Type   | Pre # | Date                | User | Used Space | Cleanup | Description           | Userdata     
+----+--------+-------+---------------------+------+------------+---------+-----------------------+--------------
+ 0  | single |       |                     | root |            |         | current               |              
+ 1* | single |       | 2019-07-22 13:08:38 | root |  16.00 KiB |         | first root filesystem |              
+ 2  | single |       | 2019-07-22 14:21:05 | root |  14.23 MiB | number  | after installation    | important=yes
+ 3  | pre    |       | 2019-07-22 14:26:03 | root | 144.00 KiB | number  | zypp(zypper)          | important=no 
+ 4  | post   |     3 | 2019-07-22 14:26:04 | root | 112.00 KiB | number  |                       | important=no 
+ 5  | pre    |       | 2019-07-23 08:19:36 | root | 128.00 KiB | number  | zypp(zypper)          | important=no 
+ 6  | post   |     5 | 2019-07-23 08:19:43 | root |  80.00 KiB | number  |                       | important=no 
+ 7  | pre    |       | 2019-07-23 08:20:50 | root | 256.00 KiB | number  | yast sw_single        |              
+ 8  | pre    |       | 2019-07-23 08:23:22 | root | 112.00 KiB | number  | zypp(ruby.ruby2.5)    | important=no 
+ 9  | post   |     8 | 2019-07-23 08:23:35 | root |  64.00 KiB | number  |                       | important=no 
+10  | post   |     7 | 2019-07-23 08:24:05 | root |  16.00 KiB | number  |                       |              
+</screen>
+<para>
+    The <command>btrfs</command> command provides another view of space used by 
+    snapshots:
+</para>
+<screen>
+&prompt.root;btrfs qgroup show -p /
+qgroupid         rfer         excl parent  
+--------         ----         ---- ------  
+0/5          16.00KiB     16.00KiB ---     
+[...]    
+0/272         3.09GiB     14.23MiB 1/0     
+0/273         3.11GiB    144.00KiB 1/0     
+0/274         3.11GiB    112.00KiB 1/0     
+0/275         3.11GiB    128.00KiB 1/0     
+0/276         3.11GiB     80.00KiB 1/0     
+0/277         3.11GiB    256.00KiB 1/0     
+0/278         3.11GiB    112.00KiB 1/0     
+0/279         3.12GiB     64.00KiB 1/0     
+0/280         3.12GiB     16.00KiB 1/0     
+1/0           3.33GiB    222.95MiB --- 
+</screen>
+<para>
+    The <literal>qgroupid</literal> column displays the identification number for
+    each subvolume, assigning a qgroup level/ID combination.
+</para> 
+<para>
+    The <literal>rfer</literal> column displays the total amount of data 
+    referred to in the subvolume.
+</para>
+<para>
+    The <literal>excl</literal> column displays the exclusive data in each
+    subvolume. 
+</para>
+<para>
+    The <literal>parent</literal> column shows the parent qgroup of the subvolumes.
+</para>
+<para>    
+    The final item, <literal>1/0</literal>, shows the totals for the parent 
+    qgroup. In the above example, 222.95 MiB will be freed if all subvolumes
+    are removed. Run the following command to see which snapshots are associated
+    with each subvolume:
+</para>
+<screen>&prompt.root;btrfs subvolume list -st /
+ID	gen	top level	path	
+--	---	---------	----	
+267	298	266		@/.snapshots/1/snapshot
+272	159	266		@/.snapshots/2/snapshot
+273	170	266		@/.snapshots/3/snapshot
+274	171	266		@/.snapshots/4/snapshot
+275	287	266		@/.snapshots/5/snapshot
+276	288	266		@/.snapshots/6/snapshot
+277	292	266		@/.snapshots/7/snapshot
+278	296	266		@/.snapshots/8/snapshot
+279	297	266		@/.snapshots/9/snapshot
+280	298	266		@/.snapshots/10/snapshot
+</screen>
+     <para>また、一方のサービスパックから他方のサービスパックにアップグレードを行なったりすると、パッケージの更新により多数のデータが変更されるため、スナップショットがシステムサブボリューム内の多くの領域を占有するようになります。これらは、不要になった段階で手作業で削除することをお勧めします。詳しくは <xref linkend="sec.snapper.manage.delete"/> をお読みください。</para>
  </sect1>
+
  <sect1 xml:id="sec.snapper.faqs">
   <title>よくある質問とその回答</title>
 
@@ -1316,33 +1407,6 @@ TIMELINE_MIN_AGE="1800"</screen>
     </question>
     <answer>
      <para>ディレクトリによってはスナップショットから除外されているものがあります。詳しい一覧とその理由については、 <xref linkend="snapper.dir-excludes"/> をご覧ください。スナップショットからの除外にあたっては、サブボリュームを作成して対応しています。</para>
-    </answer>
-   </qandaentry>
-   <qandaentry>
-    <question>
-     <para>スナップショットが使用しているディスク領域のサイズは？ 空き容量を増やすには？</para>
-    </question>
-    <answer>
-     <para>スナップショットが使用しているディスク領域のサイズについては、現状の <literal>btrfs</literal> ツールではサポートされていません。ただし、クォータを有効化していれば、 <emphasis>全ての</emphasis> スナップショットを削除した場合に、どれだけの空き容量が確保できるのかを知ることができます:</para>
-     <procedure>
-      <step>
-       <para>まずはクォータグループ ID を取得します (下記の例では <literal>1/0</literal> になっています):</para>
-<screen>&prompt.sudo;snapper -c root get-config | grep QGROUP
-QGROUP                 | 1/0</screen>
-      </step>
-      <step>
-       <para>サブボリュームのクォータを再スキャンします:</para>
-<screen>&prompt.sudo;btrfs quota rescan -w /</screen>
-      </step>
-      <step>
-       <para>クォータグループのデータを表示します (下記の例では <literal>1/0</literal> を指定しています:</para>
-<screen>&prompt.sudo;btrfs qgroup show / | grep "1/0"
-1/0           4.80GiB    108.82MiB</screen>
-       <para>3 列目に全てのスナップショットを削除した場合に開放される容量が示されます ( この場合は <literal>108.82MiB</literal> ) 。</para>
-      </step>
-     </procedure>
-     <para><literal>btrfs</literal> パーティションでスナップショットを含む場合、空き領域を増やすには、不要なファイルではなく不要なスナップショットを削除してください。古いスナップショットほどより多くのディスク領域を占有します。詳しくは <xref linkend="sec.snapper.setup.customize.archiving"/> をお読みください。</para>
-     <para>また、一方のサービスパックから他方のサービスパックにアップグレードを行なったりすると、パッケージの更新により多数のデータが変更されるため、スナップショットがシステムサブボリューム内の多くの領域を占有するようになります。これらは、不要になった段階で手作業で削除することをお勧めします。詳しくは <xref linkend="sec.snapper.manage.delete"/> をお読みください。</para>
     </answer>
    </qandaentry>
    <qandaentry>

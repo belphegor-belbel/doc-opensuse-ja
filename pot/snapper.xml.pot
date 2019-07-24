@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2019-06-03 10:55+0000\n"
+"POT-Creation-Date: 2019-07-24 03:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -2774,223 +2774,276 @@ msgstr ""
 #. Tag: para
 #: snapper.xml:2515
 #, no-c-format
+msgid "Btrfs quotas are applied to subvolumes, not to users. You may apply disk space quotas to users and groups (for example, with the <command>quota</command> command) in addition to using Btrfs quotas."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2520
+#, no-c-format
 msgid "If Snapper was enabled during the installation, quota support is automatically enabled. In case you manually enable Snapper at a later point in time, you can enable quota support by running <command>snapper setup-quota</command> . This requires a valid configuration (see <xref linkend=\"sec.snapper.config\"/> for more information)."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2523
+#: snapper.xml:2528
 #, no-c-format
 msgid "Quota support is controlled by the following parameters of a Snapper configuration."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2529
+#: snapper.xml:2534
 #, no-c-format
 msgid "<literal>QGROUP</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2532
+#: snapper.xml:2537
 #, no-c-format
 msgid "The Btrfs quota group used by Snapper. If not set, run <command>snapper setup-quota</command> . If already set, only change if you are familiar with <command>man 8 btrfs-qgroup</command> . This value is set with <command>snapper setup-quota</command> and should not be changed."
 msgstr ""
 
 #. Tag: term
-#: snapper.xml:2541
+#: snapper.xml:2546
 #, no-c-format
 msgid "<literal>SPACE_LIMIT</literal>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2544
+#: snapper.xml:2549
 #, no-c-format
 msgid "Limit of space snapshots are allowed to use in fractions of 1 (100%). Valid values range from 0 to 1 (0.1 = 10%, 0.2 = 20%, ...)."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2551
+#: snapper.xml:2556
 #, no-c-format
 msgid "The following limitations and guidelines apply:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2556
+#: snapper.xml:2561
 #, no-c-format
 msgid "Quotas are only activated in <emphasis>addition</emphasis> to an existing number and/or timeline clean-up algorithm. If no clean-up algorithm is active, quota restrictions are not applied."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2563
+#: snapper.xml:2568
 #, no-c-format
 msgid "With quota support enabled, Snapper will perform two clean-up runs if required. The first run will apply the rules specified for number and timeline snapshots. Only if the quota is exceeded after this run, the quota-specific rules will be applied in a second run."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2571
+#: snapper.xml:2576
 #, no-c-format
 msgid "Even if quota support is enabled, Snapper will always keep the number of snapshots specified with the <literal>NUMBER_LIMIT*</literal> and <literal>TIMELINE_LIMIT*</literal> values, even if the quota will be exceeded. It is therefore recommended to specify ranged values ( <literal><replaceable>MIN</replaceable>-<replaceable>MAX</replaceable></literal> ) for <literal>NUMBER_LIMIT*</literal> and <literal>TIMELINE_LIMIT*</literal> to ensure the quota can be applied."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2580
+#: snapper.xml:2585
 #, no-c-format
 msgid "If, for example, <literal>NUMBER_LIMIT=5-20</literal> is set, Snapper will perform a first clean-up run and reduce the number of regular numbered snapshots to 20. In case these 20 snapshots exceed the quota, Snapper will delete the oldest ones in a second run until the quota is met. A minimum of five snapshots will always be kept, regardless of the amount of space they occupy."
 msgstr ""
 
 #. Tag: title
-#: snapper.xml:2593
+#: snapper.xml:2599
+#, no-c-format
+msgid "Showing Exclusive Disk Space Used by Snapshots"
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2600
+#, no-c-format
+msgid "Snapshots share data, for efficient use of storage space, so using ordinary commands like <command>du</command> and <command>df</command> won't measure used disk space accurately. When you want to free up disk space on Btrfs with quotas enabled, you need to know how much exclusive disk space is used by each snapshot, rather than shared space. Snapper 0.6 and up reports the used disk space for each snapshot in the <literal>Used Space</literal> column:"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:2609
+#, no-c-format
+msgid "&prompt.root;snapper--iso list\n"
+      "  # | Type   | Pre # | Date                | User | Used Space | Cleanup | Description           | Userdata     \n"
+      "----+--------+-------+---------------------+------+------------+---------+-----------------------+--------------\n"
+      " 0  | single |       |                     | root |            |         | current               |              \n"
+      " 1* | single |       | 2019-07-22 13:08:38 | root |  16.00 KiB |         | first root filesystem |              \n"
+      " 2  | single |       | 2019-07-22 14:21:05 | root |  14.23 MiB | number  | after installation    | important=yes\n"
+      " 3  | pre    |       | 2019-07-22 14:26:03 | root | 144.00 KiB | number  | zypp(zypper)          | important=no \n"
+      " 4  | post   |     3 | 2019-07-22 14:26:04 | root | 112.00 KiB | number  |                       | important=no \n"
+      " 5  | pre    |       | 2019-07-23 08:19:36 | root | 128.00 KiB | number  | zypp(zypper)          | important=no \n"
+      " 6  | post   |     5 | 2019-07-23 08:19:43 | root |  80.00 KiB | number  |                       | important=no \n"
+      " 7  | pre    |       | 2019-07-23 08:20:50 | root | 256.00 KiB | number  | yast sw_single        |              \n"
+      " 8  | pre    |       | 2019-07-23 08:23:22 | root | 112.00 KiB | number  | zypp(ruby.ruby2.5)    | important=no \n"
+      " 9  | post   |     8 | 2019-07-23 08:23:35 | root |  64.00 KiB | number  |                       | important=no \n"
+      "10  | post   |     7 | 2019-07-23 08:24:05 | root |  16.00 KiB | number  |                       |              \n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2624
+#, no-c-format
+msgid "The <command>btrfs</command> command provides another view of space used by snapshots:"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:2628
+#, no-c-format
+msgid "\n"
+      "&prompt.root;btrfs qgroup show -p /\n"
+      "qgroupid         rfer         excl parent  \n"
+      "--------         ----         ---- ------  \n"
+      "0/5          16.00KiB     16.00KiB ---     \n"
+      "[...]    \n"
+      "0/272         3.09GiB     14.23MiB 1/0     \n"
+      "0/273         3.11GiB    144.00KiB 1/0     \n"
+      "0/274         3.11GiB    112.00KiB 1/0     \n"
+      "0/275         3.11GiB    128.00KiB 1/0     \n"
+      "0/276         3.11GiB     80.00KiB 1/0     \n"
+      "0/277         3.11GiB    256.00KiB 1/0     \n"
+      "0/278         3.11GiB    112.00KiB 1/0     \n"
+      "0/279         3.12GiB     64.00KiB 1/0     \n"
+      "0/280         3.12GiB     16.00KiB 1/0     \n"
+      "1/0           3.33GiB    222.95MiB --- \n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2645
+#, no-c-format
+msgid "The <literal>qgroupid</literal> column displays the identification number for each subvolume, assigning a qgroup level/ID combination."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2649
+#, no-c-format
+msgid "The <literal>rfer</literal> column displays the total amount of data referred to in the subvolume."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2653
+#, no-c-format
+msgid "The <literal>excl</literal> column displays the exclusive data in each subvolume."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2657
+#, no-c-format
+msgid "The <literal>parent</literal> column shows the parent qgroup of the subvolumes."
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2660
+#, no-c-format
+msgid "The final item, <literal>1/0</literal> , shows the totals for the parent qgroup. In the above example, 222.95 MiB will be freed if all subvolumes are removed. Run the following command to see which snapshots are associated with each subvolume:"
+msgstr ""
+
+#. Tag: screen
+#: snapper.xml:2666
+#, no-c-format
+msgid "&prompt.root;btrfs subvolume list -st /\n"
+      "ID	gen	top level	path	\n"
+      "--	---	---------	----	\n"
+      "267	298	266		@/.snapshots/1/snapshot\n"
+      "272	159	266		@/.snapshots/2/snapshot\n"
+      "273	170	266		@/.snapshots/3/snapshot\n"
+      "274	171	266		@/.snapshots/4/snapshot\n"
+      "275	287	266		@/.snapshots/5/snapshot\n"
+      "276	288	266		@/.snapshots/6/snapshot\n"
+      "277	292	266		@/.snapshots/7/snapshot\n"
+      "278	296	266		@/.snapshots/8/snapshot\n"
+      "279	297	266		@/.snapshots/9/snapshot\n"
+      "280	298	266		@/.snapshots/10/snapshot\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: snapper.xml:2680
+#, no-c-format
+msgid "Doing an upgrade from one service pack to another results in snapshots occupying a lot of disk space on the system subvolumes. Manually deleting these snapshots after they are no longer needed is recommended. See <xref linkend=\"sec.snapper.manage.delete\"/> for details."
+msgstr ""
+
+#. Tag: title
+#: snapper.xml:2689
 #, no-c-format
 msgid "Frequently Asked Questions"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2598
+#: snapper.xml:2694
 #, no-c-format
 msgid "Why does Snapper Never Show Changes in <filename>/var/log</filename> , <filename>/tmp</filename> and Other Directories?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2604
+#: snapper.xml:2700
 #, no-c-format
 msgid "For some directories we decided to exclude them from snapshots. See <xref linkend=\"snapper.dir-excludes\"/> for a list and reasons. To exclude a path from snapshots we create a subvolume for that path."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2613
-#, no-c-format
-msgid "How much disk space is used by snapshots? How to free disk space?"
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2618
-#, no-c-format
-msgid "Displaying the amount of disk space a snapshot allocates is currently not supported by the <literal>Btrfs</literal> tools. However, if you have quota enabled, it is possible to determine how much space would be freed if <emphasis>all</emphasis> snapshots would be deleted:"
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2626
-#, no-c-format
-msgid "Get the quota group ID ( <literal>1/0</literal> in the following example):"
-msgstr ""
-
-#. Tag: screen
-#: snapper.xml:2630
-#, no-c-format
-msgid "&prompt.sudo;snapper -c root get-config | grep QGROUP\n"
-      "QGROUP                 | 1/0"
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2634
-#, no-c-format
-msgid "Rescan the subvolume quotas:"
-msgstr ""
-
-#. Tag: screen
-#: snapper.xml:2637
-#, no-c-format
-msgid "&prompt.sudo;btrfs quota rescan -w /"
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2640
-#, no-c-format
-msgid "Show the data of the quota group ( <literal>1/0</literal> in the following example):"
-msgstr ""
-
-#. Tag: screen
-#: snapper.xml:2644
-#, no-c-format
-msgid "&prompt.sudo;btrfs qgroup show / | grep \"1/0\"\n"
-      "1/0           4.80GiB    108.82MiB"
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2646
-#, no-c-format
-msgid "The third column shows the amount of space that would be freed when deleting all snapshots ( <literal>108.82MiB</literal> )."
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2652
-#, no-c-format
-msgid "To free space on a <literal>Btrfs</literal> partition containing snapshots you need to delete unneeded snapshots rather than files. Older snapshots occupy more space than recent ones. See <xref linkend=\"sec.snapper.setup.customize.archiving\"/> for details."
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2658
-#, no-c-format
-msgid "Doing an upgrade from one service pack to another results in snapshots occupying a lot of disk space on the system subvolumes, because a lot of data gets changed (package updates). Manually deleting these snapshots after they are no longer needed is recommended. See <xref linkend=\"sec.snapper.manage.delete\"/> for details."
-msgstr ""
-
-#. Tag: para
-#: snapper.xml:2669
+#: snapper.xml:2709
 #, no-c-format
 msgid "Can I Boot a Snapshot from the Boot Loader?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2674
+#: snapper.xml:2714
 #, no-c-format
 msgid "Yes&mdash;refer to <xref linkend=\"sec.snapper.snapshot-boot\"/> for details."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2682
+#: snapper.xml:2722
 #, no-c-format
 msgid "How to make a snapshot permanent?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2687
+#: snapper.xml:2727
 #, no-c-format
 msgid "Currently Snapper does not offer means to prevent a snapshot from being deleted manually. However, you can prevent snapshots from being automatically deleted by clean-up algorithms. Manually created snapshots (see <xref linkend=\"sec.snapper.manage.create\"/> ) have no clean-up algorithm assigned unless you specify one with <option>--cleanup-algorithm</option> . Automatically created snapshots always either have the <literal>number</literal> or <literal>timeline</literal> algorithm assigned. To remove such an assignment from one or more snapshots, proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2700
+#: snapper.xml:2740
 #, no-c-format
 msgid "List all available snapshots:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2703
+#: snapper.xml:2743
 #, no-c-format
 msgid "&prompt.sudo;snapper list -a"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2706
+#: snapper.xml:2746
 #, no-c-format
 msgid "Memorize the number of the snapshot(s) you want to prevent from being deleted."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2712
+#: snapper.xml:2752
 #, no-c-format
 msgid "Run the following command and replace the number placeholders with the number(s) you memorized:"
 msgstr ""
 
 #. Tag: screen
-#: snapper.xml:2716
+#: snapper.xml:2756
 #, no-c-format
 msgid "&prompt.sudo;snapper modify --cleanup-algorithm \"\" <replaceable>#1</replaceable> <replaceable>#2</replaceable> <replaceable>#n</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2719
+#: snapper.xml:2759
 #, no-c-format
 msgid "Check the result by running <command>snapper list -a</command> again. The entry in the column <literal>Cleanup</literal> should now be empty for the snapshots you modified."
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2730
+#: snapper.xml:2770
 #, no-c-format
 msgid "Where can I get more information on Snapper?"
 msgstr ""
 
 #. Tag: para
-#: snapper.xml:2735
+#: snapper.xml:2775
 #, no-c-format
 msgid "See the Snapper home page at <link xlink:href=\"http://snapper.io/\"/> ."
 msgstr ""
