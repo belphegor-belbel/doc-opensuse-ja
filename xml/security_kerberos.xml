@@ -702,100 +702,147 @@ GSSAPICleanupCredentials yes</screen>
 
   <sect2 xml:id="sec.security.kerberos.admin.ldap">
    <title>LDAP と &krb; の使用</title>
-   <para>&krb; を使用する際、ユーザ情報 (ユーザ ID, グループ, ホームディレクトリ) をローカルのネットワーク内に配信する方法の 1 つとして、 LDAP という仕組みがあります。なお、パケットを盗聴することによる情報漏洩や、その他の攻撃を防ぐため、強力な暗号化を施す必要があります。この LDAP 通信の強力な暗号化に際しても、 &krb; を利用することができます。</para>
-   <para>OpenLDAP ではほとんどの認証方式を SASL 経由で実装しています。 SASL はシンプルな認証セッションレイヤであるほか、認証用に設計されたネットワークプロトコルでもあります。 SASL の実装は cyrus-sasl と呼ばれ、いくつかの認証方式に対応する仕組みになっています。 &krb; の認証は GSSAPI (General Security Services API; 汎用セキュリティサービス API) を介して実行されるようになっています。既定では GSSAPI 向けの SASL プラグインはインストールされませんので、 &yast; から <systemitem>cyrus-sasl-gssapi</systemitem> をインストールしてください。</para>
-   <para>OpenLDAP サーバに対してバインドするよう &krb; を設定するには、 <literal>ldap/&ldapname;</literal> というプリンシパルを作成して、これを keytab に追加してください。</para>
-   <para>既定では、 LDAP サーバである slapd は <systemitem class="username">ldap</systemitem> というユーザおよびグループで動作するように設定されています。ところが、 keytab ファイルは <systemitem class="username">root</systemitem> のみに対して読み込み権限が与えられています。そのような事情から、 LDAP 側の設定を変更してサーバを <systemitem class="username">root</systemitem> で動作させるようにするか、もしくは keytab ファイルを <systemitem class="username">ldap</systemitem> グループから読み込むことができるように設定する必要があります。後者の設定については、 <filename>/etc/sysconfig/openldap</filename> 内の <envar>OPENLDAP_KRB5_KEYTAB</envar> ファイルで keytab ファイルを指定していて、かつ <envar>OPENLDAP_CHOWN_DIRS</envar> が <literal>yes</literal> に設定されている (既定値) 場合に、 OpenLDAP の起動スクリプト ( <filename>/usr/lib/openldap/start</filename> ) 内で自動的に設定が行なわれます。なお、 <envar>OPENLDAP_KRB5_KEYTAB</envar> に何も指定していない場合は、既定の keytab ファイルである <filename>/etc/krb5.keytab</filename> が使用されますので、必要であれば下記の通りの手順で、調整を行なわなければならなくなります。</para>
-   <para>slapd を &rootuser; で動作させたい場合は、 <filename>/etc/sysconfig/openldap</filename> ファイルを編集します。それぞれ <systemitem>OPENLDAP_USER</systemitem> と <systemitem>OPENLDAP_GROUP</systemitem> の項目を探して、それぞれの行頭にコメント文字を入力して、コメントアウトしてください。</para>
-   <para>keytab ファイルを LDAP グループから読み込めるようにするには、下記を実行します:</para>
-<screen>&prompt.sudo;chgrp ldap /etc/krb5.keytab
-&prompt.sudo;chmod 640 /etc/krb5.keytab</screen>
-   <para>もう 1 つの (おそらくこの中で最適な) 解決方法として、 OpenLDAP に別の keytab ファイルを読み込ませる方法があります。これを行なうには、 kadmin を起動して ldap/&ldapname; のプリンシパルを追加したあと、下記を実行します:</para>
-<screen>&prompt.sudo;ktadd -k /etc/openldap/ldap.keytab ldap/&ldapname;@EXAMPLE.COM</screen>
-   <para>あとはシェル側で下記を実行します:</para>
-<screen>&prompt.sudo;chown ldap:ldap /etc/openldap/ldap.keytab
-&prompt.sudo;chmod 600 /etc/openldap/ldap.keytab</screen>
-   <para>OpenLDAP に対して別の keytab ファイルを使用するようにするには、 <filename>/etc/sysconfig/openldap</filename> 内の下記の変数を変更します:</para>
-<screen>OPENLDAP_KRB5_KEYTAB="/etc/openldap/ldap.keytab"</screen>
-   <para>あとは <command>sudo systemctl restart slapd</command> を実行して、 LDAP サーバを再起動してください。</para>
+   <para>
+    While &krb; provides authentication, LDAP is used for authorization and
+    identification. Both services can work together.
+   </para>
+   <para>
+    For secure connections,&ds389; supports different ways of encrypting data:
+    SSL/TLS connections, Start TLS connections, and SASL authentication. Simple
+    Authentication and Security Layer (SASL) is a network protocol designed for
+    authentication. The SASL implementation used on &productname; is
+    <literal>cyrus-sasl</literal>. &krb; authentication is performed through
+    GSS-API (General Security Services API), provided by the
+    <package>cyrus-sasl-gssapi</package> package. Using GSS-API, &ds389; uses
+    &krb; tickets to authenticate sessions and encrypt data.
+   </para>
+   <para>&krb; では認証は常に相互的に動作します。つまり、 LDAP サーバに対して認証を行なっているだけでなく、 LDAP サーバ自身もあなたに対して認証を行なっていることになります。これは、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。 <!-- ke: I think "set up" is fine here. --></para>
+   <para>
+    To enable &krb; to bind to the &ds389;, create a principal
+    <literal>ldap/&ldapname;</literal> and add that to the keytab. The credentials
+    used by the &ds389; to authenticate are given to other servers by the keytab.
+    &ds389; assigns a keytab through the <varname>KRB5_KTNAME</varname> 
+    environment variable.
+   </para>
+   <procedure>
+   <para>
+    To set the variable, proceed as follows:
+   </para>
+    <step>
+     <screen>&prompt.sudo;systemctl edit dirsrv@<replaceable>INSTANCE</replaceable></screen>
+     <para>
+      If you used the default name for the &ds389; instance, replace
+      <replaceable>INSTANCE</replaceable> with <literal>localhost</literal>.
+     </para>
+    </step>
+    <step>
+     <para>
+      Add the following:
+     </para>
+     <screen>[Service]
+  Environment=KRB5_KTNAME=/etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab</screen>
+    </step>
+    <step>
+     <para>
+      The keytab file needs to be readable by the account under which the &ds389;
+      runs (for example, <literal>dirserv</literal>):
+     </para>
+     <screen>&prompt.sudo;chown dirsrv:dirsrv /etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab
+&prompt.sudo;chmod 600 /etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab</screen>
+    </step>
+  </procedure>
+
    <sect3 xml:id="sec.security.kerberos.admin.ldap.auth">
     <title>LDAP を利用した &krb; 認証の使用</title>
-    <para>これで ldapsearch などのツールを使用することで、 &krb; の認証を使用できるようになります。</para>
-<screen>&prompt.user;ldapsearch -b ou=people,dc=example,dc=com '(uid=&exampleuserIII_plain;)'
-
-SASL/GSSAPI authentication started
-SASL SSF: 56
-SASL installing layers
-[...]
-
-# &exampleuserIII_plain;, people, example.com
-dn: uid=&exampleuserIII_plain;,ou=people,dc=example,dc=com
-uid: &exampleuserIII_plain;
-cn: &exampleuserIIIfull;
-[...]</screen>
-    <para>上記のとおり、 <command>ldapsearch</command> コマンドを実行すると、 GSSAPI による認証を表わすメッセージが表示されます。次の行は非常にわかりにくいのですが、 <emphasis>Security Strength Factor (セキュリティ強度係数; SSF)</emphasis> が 56 であることを表わしています (56 という値はいくぶん恣意的な値で、 DES 暗号鍵のビット長を表わすよくある値です) 。これにより、 GSSAPI の認証が成功し、 LDAP の通信に対して暗号化によるデータの保護と守秘が行なわれていることを表わしています。</para>
-    <para>&krb; では認証は常に相互的に動作します。つまり、 LDAP サーバに対して認証を行なっているだけでなく、 LDAP サーバ自身もあなたに対して認証を行なっていることになります。これは、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。 <!-- ke: I think "set up" is fine here. --></para>
+    <para><remark>taroth 2019-07-15: FIXME, add content by wbrown, sent via mail
+    on 2019-07-11</remark></para>
+    <!--$ kinit william@REALM
+        $ ldapwhoami
+        ldapwhoami shows you that GSSAPI authentication worked and an encryption
+        layer was used-->
    </sect3>
-   <sect3 xml:id="sec.security.kerberos.admin.ldap.acl">
-    <title>&krb; 認証と LDAP アクセス制御</title>
-<!-- see bnc#764297:
-     the ACL change isn't even required to make &krb; logins work for
-     OpenLDAP.
-    -->
-<!--
-    <para>
-     Now, allow each user to modify the login shell attribute of their LDAP
-     user record. Assuming you have a schema where the LDAP entry of user
-     &exampleuser; is located at
-     <filename>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</filename>, set up the
-     following access controls in the <systemitem>cn=config</systemitem>
-     back-end:
-    </para>
-    <para>
-To update the ACLs for a database you would for example update the
-<literal>olcAccess</literal> attribute of the
-<systemitem>cn=config</systemitem> entry representing that database. For
-the first LDAP database such a change could look like this in LDIF:
-    </para>
-    <screen>dn: olcDatabase={1}hdb,cn=config
-replace: olcAccess
-olcAccess: to dn="*,ou=people,dc=example,dc=com" attrs=loginShell
-       by self write
-olcAccess: to * by users read</screen>
-   <para>
-     This statement first gives authenticated users write access to the
-     <literal>loginShell</literal> attribute of their own LDAP
-     entry. And the last statement gives all authenticated users read
-     access to the entire LDAP directory.
-    </para>
-<note>
- <para>
-  This will replace all existing ACLs for that data. If you want to add
-  or delete a single ACL you can use <literal>add</literal> or
-  <literal>delete</literal> instead of <literal>replace</literal>. You
-  can also add a <literal>{<replaceable>NUMBER</replaceable>}</literal>
-  in front of the <literal>olcAcccess</literal> attribute's values to
-  insert the ACL at a specific place in the list (the order of ACLs
-  matters for their evaluation).
-    </para>
-</note>
-<para>
- To change global ACLs (those that should be in place for the complete
- database, in case none of the database specific ACLs matches you would
- have the special database entry:
-</para>
 
-<screen>olcDatabase={-1}frontend,cn=config</screen>
--->
-    <para>&krb; と LDAP を組み合わせて使用するにあたっては、もう 1 つ足りないものがあります。それは LDAP サーバ内で &krb; のユーザを見つける方法です。たとえば <literal>&exampleuser_plain;@EXAMPLE.COM</literal> という &krb; のユーザを LDAP の DN <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal> に結びつけたい場合、 <literal>saslExpr</literal> ディレクティブを使用して手作業でマッピングを設定しなければなりません。上記の例のとおり設定すると仮定すると、 LDIF ファイルで "authz-regexp" を修正する場合、下記のようなファイルになります:</para>
-<screen>dn: cn=config
-add: olcAuthzRegexp
-olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</screen>
-    <para>いずれの変更であっても、コマンドラインから <command>ldapmodify</command> を実行することで、設定を反映させることができます。</para>
-    <para>SASL がユーザ認証を行なう際、まず OpenLDAP は SASL 側で指定された名前 (たとえば &exampleuser;) と SASL の方式 ( <literal>GSSAPI</literal> ) から DN を生成します。たとえば <literal>uid=&exampleuser_plain;,cn=GSSAPI,cn=auth</literal> のようになります。</para>
-    <para><literal>authz-regexp</literal> を設定すると、最初に指定されたパラメータを正規表現として使用し、 SASL の情報から生成された DN と比較が行なわれます。比較が成功すると、 <literal>authz-regexp</literal> の 2 つ目のパラメータを利用して DN を生成します。なお、 <literal>$1</literal> は 1 つ目のパラメータの比較結果の一部を取り出して適用します。この場合、 <literal>(.*)</literal> の部分を取り出して使用します。</para>
-    <para>より複雑な正規表現を使用することもできます。より複雑なディレクトリ構造やスキーマをお使いの場合や、ユーザ名が DN の一部になっていなかったりする場合でも、正規表現で SASL DN からユーザ DN に変換することができます。</para>
-    <para>詳しくは <literal>slapd-config</literal> のマニュアルページをお読みください。</para>
+   <sect3 xml:id="sec.security.kerberos.admin.ldap.sasl">
+    <title>サブネットルーティングの設定について</title>
+
+    <para>
+     When processing a SASL bind request, the &ds389; maps the SASL
+     authentication ID (used to authenticate to the Directory Server) with an
+     LDAP entry stored within the server. When using Kerberos, the SASL user ID
+     usually has the following format:
+     <literal><replaceable>userid</replaceable>@<replaceable>REALM</replaceable></literal>,
+     such as &exampleuser;@&exampledomain;. This ID must be converted into the
+     DN of the user's Directory Server entry, such as
+     <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal>.
+     The &ds389; comes with some default maps for most common configurations.
+     However, you can create customized maps. <xref linkend="pro.krb.389-ds.mapping"/>
+     shows how to list and display a map, how to delete a map and how to create
+     a custom map.
+    </para>
+    <procedure xml:id="pro.krb.389-ds.mapping">
+     <title>Managing Maps</title>
+     <step>
+      <para>To list the existing SASL maps:</para>
+      <screen>&prompt.user;dsconf <replaceable>INSTANCE</replaceable> sasl list
+Kerberos uid mapping
+rfc 2829 dn syntax
+rfc 2829u syntax
+uid mapping</screen>
+     </step>
+     <step>
+      <para>
+       To display a map:
+      </para>
+      <screen>&prompt.sudo;dsconf <replaceable>INSTANCE</replaceable> sasl get "Kerberos uid mapping"
+dn: cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config
+cn: Kerberos uid mapping
+nsSaslMapBaseDNTemplate: dc=\2,dc=\3
+nsSaslMapFilterTemplate: (uid=\1)
+nsSaslMapRegexString: \(.*\)@\(.*\)\.\(.*\)
+objectClass: top
+objectClass: nsSaslMapping
+      </screen>
+     </step>
+     <step>
+      <para>
+       The default map only works if your dc has two components. To delete the
+       map (if it does not work for you):
+      </para>
+      <screen>&prompt.sudo;dsconf <replaceable>INSTANCE</replaceable> sasl delete "Kerberos uid mapping"
+Deleting SaslMapping cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config :
+Successfully deleted cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config</screen>
+     </step>
+     <step>
+      <para>
+      To create a new map:
+      </para>
+      <screen>&prompt.sudo;dsconf localhost sasl create --cn=bhgssapi --nsSaslMapRegexString "\
+(.*\)@EXAMPLE.NET.DE" --nsSaslMapBaseDNTemplate="dc=example,dc=net,dc=de" --nsSaslMapFilterTemplate="(uid=\1)"
+&prompt.sudo;Enter value for nsSaslMapPriority :
+Successfully created bhgssapi</screen>
+     </step>
+     <step>
+      <para>
+       Display the newly created map with:
+      </para>
+      <screen>&prompt.sudo;dsconf localhost sasl get "bhgssapi"
+dn: cn=bhgssapi,cn=mapping,cn=sasl,cn=config
+cn: bhgssapi
+nsSaslMapBaseDNTemplate: dc=example,dc=net,dc=de
+nsSaslMapFilterTemplate: (uid=\1)
+nsSaslMapPriority: 100
+nsSaslMapRegexString: \(.*\)@EXAMPLE.NET.DE
+objectClass: top
+objectClass: nsSaslMapping</screen>
+      <para>
+       With this, you can check only the users of a specific realm and remap them
+       to a different dc base. As you can see, the new map has 3 <literal>dc</literal>
+       components, so the default maps would not have worked for this realm
+       (<literal>EXAMPLE.NET.DE</literal>), only for a realm like
+       <literal>EXAMPLE.NET</literal>.
+      </para>
+     </step>
+    </procedure>
    </sect3>
   </sect2>
  </sect1>
@@ -888,6 +935,47 @@ olcAuthzRegexp: uid=(.*),cn=GSSAPI,cn=auth uid=$1,ou=people,dc=example,dc=com</s
     <para>必要に応じて、 &yast; が追加のパッケージをインストールします。</para>
    </step>
   </procedure>
+  <para>
+   <remark>taroth 2019-07-25: ToDo - integrate following info by wbrown</remark>
+<!-- info by wbrown, via mail (2019-07-02)
+
+after you follow the Yast KDB setup steps, you can then do:
+
+# kadmin.local
+kadmin.local: listprincs
+kadmin.local: ank admin@EXAMPLE.COM
+
+
+# ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost
+
+
+# admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.com
+dn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com
+krbLoginFailedCount: 0
+krbPrincipalName: admin@EXAMPLE.COM
+krbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg
+ AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr
+ 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ
+ WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=
+krbLastPwdChange: 20190702032802Z
+krbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=
+krbExtraData:: AAgBAA==
+objectClass: krbprincipal
+objectClass: krbprincipalaux
+objectClass: krbTicketPolicyAux
+objectClass: top
+
+
+linux-go62:/home/admin # kinit admin@EXAMPLE.COM
+Password for admin@EXAMPLE.COM:
+linux-go62:/home/admin # klist
+Ticket cache: DIR::/run/user/0/krb5cc/tkt
+Default principal: admin@EXAMPLE.COM
+
+Valid starting     Expires            Service principal
+07/02/19 13:29:04  07/03/19 13:29:04  krbtgt/EXAMPLE.COM@EXAMPLE.COM-->
+
+  </para>
  </sect1>
 
  <sect1 xml:id="sec.security.kerberos.nfs">

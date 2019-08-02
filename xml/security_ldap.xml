@@ -15,104 +15,30 @@
       </dm:docmanager>
     </info>
 
- <para>ネットワークでマシンが接続されている環境では、データの構造化と素早い提供が重要となります。ディレクトリサービスは、適切に構造化され、検索の可能な形態で情報を提供することができます。</para>
- <para>実際には、中央のサーバがディレクトリ内にデータを保管しておき、全てのクライアントに対しては明確に定義されたプロトコルで配布を行ないます。構造化されたデータの仕組みにより、様々なアプリケーションがそれらのデータにアクセスできるようになります。中央のサーバ (リポジトリとも呼びます) を用意することで管理の手間を省き、 LDAP のようなオープンで標準化されたプロトコルを使用することで、そこで管理されている情報にアクセスするプログラムをできる限り多く用意することができます。</para>
- <para>なお、本章での <quote>ディレクトリ</quote> とは、読み込みや検索の速度や効率性の点で最適化されたデータベースを意味します:</para>
- <itemizedlist mark="bullet" spacing="normal">
-  <listitem>
-   <remark condition="clarity">
-    2011-02-18 - fs: the number is limited? and why limit reads?
-   </remark>
-   <para>同時に多数の読み込みアクセスを受け付けることができるよう、更新の頻度は非常に少なく設定します。また、読み書きに対するアクセス権は、管理者権限を持つごく一部のユーザにのみ許可します。一般的なデータベースでは、短い時間にできる限り多くのデータを受け付けるようにしますが、これとは対照的な仕組みになっています。</para>
-  </listitem>
-  <listitem>
-   <para>ほぼ変化のないデータを管理している場合、既存のデータセットに対する更新処理もほとんど発生しません。逆に動的なデータ、特に銀行口座に対するデータセットや会計が関係してくるデータのような場合、データの一貫性は最も重要となります。たとえば一方から他方に資金を移すような処理の場合、一方の口座で資金を減らして、他方の口座で資金を増やす処理は、全体で資金が増減したりすることのないよう、 1 つの <emphasis>トランザクション</emphasis> として一括で処理されなければなりません。従来のリレーショナルデータベースでは、トランザクションの参照整合性サポートなどの形で、データの一貫性の維持を非常に重視しています。その逆に、 LDAP のディレクトリでは、リレーショナルデータベースほどの強力な一貫性維持は行なっていません。</para>
-  </listitem>
- </itemizedlist>
- <para>LDAP のようなディレクトリサービスでは、複雑な更新や問い合わせの仕組みにも対応していません。全てのアプリケーションに対して、サービスへのアクセスを素早く実施できる点を重視しています。</para>
- <sect1 xml:id="sec.security.ldap.vs_nis">
-  <title>LDAP と NIS の違い</title>
+  <para>実際には、中央のサーバがディレクトリ内にデータを保管しておき、全てのクライアントに対しては明確に定義されたプロトコルで配布を行ないます。構造化されたデータの仕組みにより、様々なアプリケーションがそれらのデータにアクセスできるようになります。中央のサーバ (リポジトリとも呼びます) を用意することで管理の手間を省き、 LDAP のようなオープンで標準化されたプロトコルを使用することで、そこで管理されている情報にアクセスするプログラムをできる限り多く用意することができます。</para>
+  <para>
+   A directory in this context is a type of database optimized for quick and
+   effective reading and searching. The type of data stored in a directory tends
+   to be long lived and changes infrequently. This allows the LDAP service to be
+   optimized for high performance concurrent reads, whereas conventional databases
+   are optimized for accepting a large number of writes to data in a short time.
+  </para>
 
-  <remark condition="generic"> 2007-05-29 - jjaeger: this still necessary? Why not discard the NIS
-   part altogether and merge the use cases for LDAP with the intro? </remark>
-
-  <para>Unix のシステム管理者は、以前より NIS (Network Information Service) を利用してネットワーク内での名前の解決やデータの配布などを行なってきました。 <filename>/etc</filename> ディレクトリ内にある <filename>group</filename> , <filename>hosts</filename> , <filename>mail</filename> , <filename>netgroup</filename> , <filename>networks</filename> , <filename>passwd</filename> , <filename>printcap</filename> , <filename>protocols</filename> , <filename>rpc</filename> , <filename>services</filename> などのファイルも、ネットワークを介して配信されていました。これらのファイルは、いずれもシンプルなテキストファイル形式であるため、管理の手間もあまり発生していませんでしたが、データ量が増えてくると、構造化されていないことによって管理が面倒になってきていました。 <remark>sknorr, 2014-08-26: "nonexistent structuring" sounds a bit complicated.</remark> また、 NIS は Unix プラットフォーム向けにのみ設計されていて、異なるオペレーティングシステムの存在する異種混合型ネットワーク内の中央データ管理ツールとしては、不十分な存在でした。</para>
-
-  <para>NIS とは異なり、 LDAP サービスは純粋な Unix ネットワーク環境だけでなく、Windows&trade; サーバ (Windows 2000 以降) でも LDAP をディレクトリサービスとして使用しています。上述のアプリケーションの処理についても、非 Unix システムで動作させることができるようになっています。</para>
-
-  <para>LDAP は、データを集中管理する必要のある任意のデータ構造に適用することができます。たとえば下記のような用途に使用することができます:</para>
-
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para>NIS サービスの置き換え</para>
-   </listitem>
-   <listitem>
-    <para>メールの配送制御 (postfix)</para>
-   </listitem>
-   <listitem>
-    <para>メールクライアント (Mozilla Thunderbird, Evolution, Outlook) 向けのアドレス帳</para>
-   </listitem>
-   <listitem>
-    <para>BIND 9 ネームサーバのゾーン設定の管理</para>
-   </listitem>
-   <listitem>
-    <para>異種混在ネットワークでの Samba によるユーザ認証</para>
-   </listitem>
-  </itemizedlist>
-
-  <para>NIS とは異なり、 LDAP は拡張性に富む仕組みであることから、上記以外の用途にも使用することができます。また、データ構造を明確な階層構造にしていることから、大規模なデータの管理も検索もより簡単にできるようになっています。</para>
- </sect1>
  <sect1 xml:id="sec.security.ldap.tree">
   <title>LDAP のディレクトリツリー構造</title>
-
-  <para>LDAP サーバの動作とデータの保管方法に関する情報を得るには、まずサーバ内でデータがどのように統合されているのかと、そのような構造化されたデータを素早くアクセスできる仕組みについて知っておく必要があります。また、 LDAP の設定を正しく知るには、基本的ないくつかの LDAP 用語を知っておく必要もあります。本章では、 LDAP ディレクトリツリーの基本的な配置と、 LDAP に関する基本的な用語を説明しています。既に LDAP に関する知識があって、 &productname; での LDAP 設定方法を知りたいだけであれば、本章は読み飛ばしていただいてかまいません。 <phrase os="sles;osuse"> そのような場合は、 <!-- <xref linkend="sec.security.ldap.yast"/> or --> <xref linkend="sec.security.ldap.slapd"/> をお読みください。</phrase></para>
+<!--
+  taroth 2019-02-27: acc. to wbrown the content of this section is still correct,
+  but the section should be revised in the future - for input, see
+  https://fy.blackhats.net.au/blog/html/pages/ldap_guide_part_1_foundations.html
+-->
+   <para>
+   This section introduces the layout of an LDAP directory tree and provides
+   the basic terminology used with regard to LDAP. <phrase os="sles;osuse">If
+    you are familiar with LDAP, read on at <xref linkend="sec.security.ldap.server"/>.
+   </phrase>
+  </para>
 
   <para>LDAP ディレクトリはツリー型の構造になっています。ディレクトリ内の全ての項目 (オブジェクトと呼びます) は、この階層構造内での位置が決められています。この階層構造を <emphasis>ディレクトリ情報ツリー</emphasis> (Directory Information Tree (DIT)) と呼びます。また、特定の項目に対して、それを正確に識別するためのパス情報を、 <emphasis>識別名</emphasis> (Distinguished Name (DN)) と呼びます。また、ファイルシステムと同様に、 DN も相対的な表記を行なうことができます。これを <emphasis>相対識別名</emphasis> (Relative Distinguished Name (RDN)) と呼びます。</para>
-
-<!-- rhafer says:
-"This entire paragraph is actually not quite correct. With LDAP, each object
-can be leaf and container, as long as there are no DIT Content/DIT Structure
-rules. However, explaining these rules in the handbook might go too far. They
-are not completely standardized and OpenLDAP does not support them. Thus, leave
-this paragraph out completely."
-
-  <para>
-   Objects can generally be assigned to one of two possible types:
-  </para>
-
-  <variablelist>
-   <varlistentry>
-    <term>container</term>
-    <listitem>
-     <para>
-      These objects can themselves contain other objects. Such object
-      classes are <literal>root</literal> (the root element of the directory
-      tree, which does not really exist), <literal>c</literal> (country),
-      <literal>ou</literal> (organizational unit), and <literal>dc</literal>
-      (domain component). This model is comparable to the directories
-      (directories) in a file system.
-     </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>leaf</term>
-    <listitem>
-     <para>
-      These objects sit at the end of a branch and have no subordinate
-      objects. Examples are <literal>person</literal>,
-      <literal>InetOrgPerson</literal>, or <literal>groupofNames</literal>.
-     </para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
-
-  <para>
-   The top of the directory hierarchy has a root element
-   <literal>root</literal>. This can contain <literal>c</literal> (country),
-   <literal>dc</literal> (domain component), or <literal>o</literal>
-   (organization) as subordinate elements.
-  </para>
-  -->
 
   <para>LDAP ディレクトリツリーの構造を図に表わすと、 <xref linkend="fig.ldap.tree"/> のようになります。</para>
 
@@ -165,13 +91,17 @@ this paragraph out completely."
        <para><literal>dcObject</literal></para>
       </entry>
       <entry>
-       <para><emphasis>domainComponent</emphasis> (ドメインの各パート)</para>
+       <para>
+        name components of the domain
+       </para>
       </entry>
       <entry>
        <para>example</para>
       </entry>
       <entry>
-       <para>dc</para>
+       <para>
+        displayName
+       </para>
       </entry>
      </row>
      <row>
@@ -179,7 +109,7 @@ this paragraph out completely."
        <para><literal>organizationalUnit</literal></para>
       </entry>
       <entry>
-       <para><emphasis>organizationalUnit</emphasis> (組織単位)</para>
+       <para><literal>organizationalUnit</literal></para>
       </entry>
       <entry>
        <para>doc</para>
@@ -199,7 +129,9 @@ this paragraph out completely."
        <para>Geeko Linux</para>
       </entry>
       <entry>
-       <para>sn および cn</para>
+       <para>
+        cn
+       </para>
       </entry>
      </row>
     </tbody>
@@ -228,9 +160,6 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
   $ st $ l $ description) )
   ...</screen>
   </example>
-
-  <para>ここでは、属性の種類 <literal>organizationalUnitName</literal> と、対応するオブジェクトクラス <literal>organizationalUnit</literal> の定義を抜粋しています。</para>
-
   <calloutlist>
    <callout arearefs="co.ldap.schema.core.att_type">
     <para>属性の名前とユニークな OID (<emphasis>オブジェクト識別子 (Object Identifier)</emphasis>) (数字) 、そして属性の略称を表わしています。</para>
@@ -238,8 +167,16 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
    <callout arearefs="co.ldap.schema.core.desc">
     <para><literal>DESC</literal> では属性に対する簡潔な説明を記します。定義の元となった RFC などがあれば、それも記述されます。</para>
    </callout>
-   <callout arearefs="co.ldap.schema.core.sup">
-    <para><literal>SUP</literal> では、その属性が属する親の属性種類を表わします。</para>
+   <callout arearefs="co.ldap.schema.core.syntax">
+    <para>
+      The type of data that can be held in the attribute. In this case, it is a
+      case-insensitive directory string.
+    </para>
+   </callout>
+   <callout arearefs="co.ldap.schema.core.xorigin">
+    <para>
+     The source of the schema element (for example, the name of the project).
+    </para>
    </callout>
    <callout arearefs="co.ldap.schema.core.oc">
     <para>オブジェクトクラス <literal>organizationalUnit</literal> の定義の始まりです。オブジェクトクラスの定義は属性の定義と同じで、 OID とオブジェクトクラスの名前をそれぞれ記します。</para>
@@ -257,11 +194,532 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
     <para><literal>MAY</literal> 以下には、そのオブジェクトクラスで設定することのできる全ての属性種類を記します。</para>
    </callout>
   </calloutlist>
-
-  <para>スキーマの使用例で最良のものが OpenLDAP のドキュメンテーション ( <systemitem>openldap2-doc</systemitem> ) 内に用意されています。このパッケージをインストールしたあと、 <filename>/usr/share/doc/packages/openldap2/adminguide/guide.html</filename> ファイルをお読みください。</para>
  </sect1>
 
- <sect1 xml:id="sec.security.ldap.yast.client">
+ <sect1 xml:id="sec.security.ldap.server.install">
+  <title>Installing the Software for &ds389;</title>
+   <para>
+    The <systemitem>389-ds</systemitem> package contains the &ds389; and the
+    administration tools. If the package is not installed yet, install it with
+    the following command:</para>
+    <screen>&prompt.sudo;zypper install 389-ds</screen>
+    <para>
+     After installation, you can set up the server either manually or with &yast;.
+     Also, you can manage LDAP users and groups and configure an LDAP client with
+     &yast;:
+    </para>
+   <itemizedlist os="sles;osuse">
+    <listitem>
+     <para>
+      <xref linkend="sec.security.ldap.server"/>
+     </para>
+    </listitem>
+   <listitem>
+    <para>
+     <xref linkend="sec.security.auth.yast"/>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <xref linkend="sec.security.ldap.yast.usergr"/>
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     <xref linkend="sec.security.ldap.yast.client"/>
+    </para>
+   </listitem>
+  </itemizedlist>
+ </sect1>
+
+ <sect1 xml:id="sec.security.ldap.server" os="sles;osuse">
+  <title>LDAP サーバの手動設定</title>
+  <para>
+   Setting up the &ds389; takes the following basic steps:
+  </para>
+  <procedure>
+    <step>
+    <para>
+     <!--Creating the Directory Server Instance-->
+     <xref linkend="sec.security.ldap.server.instance" xrefstyle="select:title"/>
+    </para>
+   </step>
+   <step>
+    <para>
+     <!--Configuring Admin Credentials for Remote/Local Access-->
+      <xref linkend="sec.security.ldap.server.credentials" xrefstyle="select:title"/>
+    </para>
+   </step>
+   <step>
+    <para>
+    <!--Configuring Users and Groups-->
+     <xref linkend="sec.security.ldap.server.users" xrefstyle="select:title"/>
+    </para>
+   </step>
+   <step>
+    <para>
+    <!--Configuring SSSD-->
+     <xref linkend="sec.security.ldap.server.sssd" xrefstyle="select:title"/>
+    </para>
+   </step>
+  </procedure>
+  <para>
+   <remark>taroth 2019-06-19: some topics like 'configuring other applications'
+    and 'backup and restore' to be added later on</remark>
+  </para>
+   <!--
+    *  configuring other applications (showing "dsidm instance client_config display")
+    * backup and restore
+   -->
+   <para>
+   The &ds389; is controlled by 3 primary commands:
+  </para>
+  <variablelist>
+   <varlistentry>
+    <term><command>dsctl</command></term>
+    <listitem>
+     <para>
+      Manages a local instance and requires &rootuser; permissions. Requires you
+      to be connected to a terminal which is running the directory server instance.
+      Used for starting, stopping, backing up the database and more.
+     </para>
+    </listitem>
+   </varlistentry>
+    <varlistentry>
+     <term><command>dsconf</command></term>
+     <listitem>
+      <para>
+       The primary tool used for administration and configuration of the server.
+       Manages an instance's configuration via its external interfaces. This allows
+       you to make configuration changes remotely on the instance.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term><command>dsidm</command></term>
+     <listitem>
+      <para>
+       Used for identity management (manage users, groups, passwords etc.).
+       The permissions are granted by access controls, so users can reset their
+       own password or change details of their own account, for example.
+      </para>
+     </listitem>
+    </varlistentry>
+  </variablelist>
+
+  <sect2 xml:id="sec.security.ldap.server.instance">
+  <title>Creating the &ds389; Instance</title>
+    <para>
+     You create the instance with the <command>dscreate</command> command.
+     It can take a configuration file (<filename>*.inf</filename>) which
+     defines the instance configuration settings. Alternatively, the command can
+     be run in an interactive mode.
+    </para>
+    <note>
+     <title>Instance Name</title>
+      <para>
+       If not specified otherwise, the default instance name is
+       <literal>localhost</literal>. The instance name cannot
+       be changed after the instance has been created.</para>
+    </note>
+    <para>
+     <xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/> shows an
+     example configuration file that you can use as a starting point. Alternatively,
+     use <command>dscreate create-template</command> to create a template
+     <filename>*.inf</filename> file. The template is commented and pre-filled,
+     so you can adjust its variables to your needs. For more details, see the
+     man page of <command>dscreate</command>.
+    </para>
+   <procedure>
+    <step>
+     <para>
+      If you want to set up a trial instance, start an editor and save the
+      following as <filename>/tmp/instance.inf</filename>:
+     </para>
+     <example xml:id="ex.ldap.389-ds.inf">
+      <title>Basic Instance Configuration File</title>
+      <screen># /tmp/instance.inf
+[general]
+config_version = 2
+
+[slapd]
+root_password = <replaceable>YOUR_PASSWORD_FOR_CN=DIRECTORY_MANAGER</replaceable><co xml:id="co.ldap.389-ds.rootpasswd"/>
+
+[backend-userroot]
+sample_entries = yes
+suffix = dc=example,dc=com</screen>
+      <calloutlist>
+       <callout arearefs="co.ldap.389-ds.rootpasswd">
+        <para>
+         Set the <varname>root_password</varname> to the password for
+         the directory server &rootuser; user. The password is used for LDAP
+         server administration only.
+        </para>
+       </callout>
+      </calloutlist>
+     </example>
+   </step>
+   <step>
+    <para>
+     To create the &ds389; instance from <xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/>, run:
+    </para>
+    <screen>&prompt.sudo;dscreate from-file /tmp/instance.inf</screen>
+    <para>
+     This creates a working LDAP server.
+    </para>
+   </step>
+   <step>
+    <para>
+     If <command>dscreate</command> should fail, the messages will tell you why.
+     For more details, repeat the command with the <option>-v</option> option:
+    </para>
+    <screen>&prompt.sudo;dscreate -v from-file /tmp/instance.inf</screen>
+   </step>
+   <step>
+    <para>
+     Check the status of the server with:
+    </para>
+    <screen>&prompt.sudo;dsctl localhost status
+instance 'Localhost' is running</screen>
+   </step>
+   <step>
+    <para>
+     In case you want to delete the instance later on:
+    </para>
+    <screen>&prompt.sudo;dsctl localhost remove --do-it</screen>
+    <para>
+     With this command, you can also remove partially installed or corrupted
+     instances.
+    </para>
+   </step>
+  </procedure>
+ </sect2>
+
+ <sect2 xml:id="sec.security.ldap.server.credentials">
+  <title>Configuring Admin Credentials for Remote/Local Access</title>
+   <para>
+    For remote or local administration of the &ds389;, you can create a
+    <filename>.dsrc</filename> configuration file in your home directory. This
+    saves you to type your user name and connection details with every command.
+    <xref linkend="ex.security.ldap.server.credentials.remote" xrefstyle="select:label"/> shows an example  configuration file for remote
+    administration, whereas <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/> shows one for local administration.
+   </para>
+  <example xml:id="ex.security.ldap.server.credentials.remote">
+   <title>A <filename>.dsrc</filename> File for Remote Administration</title>
+   <screen># cat ~/.dsrc
+[localhost]
+uri = ldaps://localhost <co xml:id="co.ldap.server.dsrc.remote.localhost"/>
+basedn = dc=example,dc=com
+binddn = cn=Directory Manager
+tls_cacertdir = /etc/dirsrv/slapd-localhost/ <co xml:id="co.ldap.server.dsrc.remote.cert"/></screen>
+   <calloutlist>
+    <callout arearefs="co.ldap.server.dsrc.remote.localhost">
+     <para>
+      Needs to point to the LDAP server instance. If not specified otherwise,
+      the default instance name is <literal>localhost</literal>.
+     </para>
+    </callout>
+    <callout arearefs="co.ldap.server.dsrc.remote.cert">
+     <para>
+      If you have configured a certificate yourself, provide the path to the
+      CA certificate here (for remote access with TLS). If you have not
+      configured a certificate yourself, <command>dscreate</command> generates
+      a self-signed certificate which you can trust. Find the certificate at
+      <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename>. Copy it to a
+      readable location or to the client machine from which you use the
+      <command>ds*</command> commands.
+     </para>
+    </callout>
+   </calloutlist>
+  </example>
+  <para>
+   If you want to administer the instance on the same host where the &ds389; runs,
+   use the configuration file in <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/>.
+  </para>
+  <example xml:id="ex.security.ldap.server.credentials.local">
+   <title>A <filename>.dsrc</filename> File for Local Administration</title>
+   <screen># cat ~/.dsrc
+[localhost]
+# Note that '/' is replaced with '%%2f'.
+uri = ldapi://%%2fvar%%2frun%%2fslapd-localhost.socket <co xml:id="co.ldap.server.dsrc.remote.ldapi"/>
+basedn = dc=example,dc=com
+binddn = cn=Directory Manager
+</screen>
+   <calloutlist>
+    <callout arearefs="co.ldap.server.dsrc.remote.ldapi">
+      <para>
+       <!--Question: “When I use ldapi on the server that has the DS instance,
+       why don’t I need to provide my password?”--> When using <literal>ldapi</literal>
+       on the server where the &ds389; instance is running, your UID/GID will be
+       detected. If it is <literal>0/0 </literal> (which means you are logged
+       in as &rootuser; user), the <literal>ldapi</literal> binds the local
+       &rootuser; as the directory server root dn (<literal>cn=Directory Manager</literal>)
+       of the instance. This allows local administration of the server, but also
+       allows you to set a machine-generated password for <literal>cn=Directory
+       Manager</literal>) that no human knows. Whoever has administrator rights
+       on the server hosting the &ds389; instance, can access the instance as
+       <literal>cn=Directory Manager</literal>.
+      </para>
+    </callout>
+   </calloutlist>
+  </example>
+ </sect2>
+
+ <sect2 xml:id="sec.security.ldap.server.users">
+  <title>&yast; での LDAP ユーザとグループの設定</title>
+   <para>
+    Users and groups can be created and managed with the <command>dsidm</command>
+    command. It either runs interactively or you can use it with arguments from
+    the command line.
+   </para>
+  <para>
+   In the following example, we add two users, &exampleuserII; and &exampleuserIII;,
+   by specifying their data via command line arguments.
+  </para>
+  <procedure xml:id="pro.security.ldap.server.users">
+   <title>Creating LDAP Users</title>
+   <step>
+    <para>
+    Create the user &exampleuserII;:
+    </para>
+    <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid \
+  --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1000 --gidNumber 1000 \
+  --homeDirectory /home/&exampleuserII;</screen>
+   </step>
+   <step>
+    <para>
+     To look up a user's <literal>distinguished name</literal> (fully qualified
+     name to the directory object, which is guaranteed unique):
+    </para>
+    <screen>&prompt.sudo;dsidm localhost user get &exampleuserII;
+dn: uid=&exampleuserII;,ou=people,dc=example,dc=com
+[...]</screen>
+    <para>
+     The system prompts you for the directory server &rootuser; user password
+     (unless you configured remote or local access as described in <xref linkend="sec.security.ldap.server.credentials"/>).
+    </para>
+    <para>
+     You need the distinguished name for actions such as changing the password
+     for a user.
+    </para>
+   </step>
+   <step>
+    <para>
+     To set or change the password for &exampleuserII;:
+    </para>
+    <substeps>
+      <step>
+       <screen>&prompt.sudo;dsidm localhost account reset_password \
+  uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+       <para>
+        The system prompts you for the directory server &rootuser; user password
+        (unless you configured remote or local access as described in <xref linkend="sec.security.ldap.server.credentials"/>).
+       </para>
+      </step>
+      <step>
+       <para>
+        Enter the new password for &exampleuserII; twice.
+       </para>
+       <para>
+        If the action was successful, you get the following message:
+       </para>
+       <screen>reset password for uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+      </step>
+    </substeps>
+   </step>
+   <step>
+    <para>Create the user &exampleuserIII;:</para>
+    <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid \
+  --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
+  --uidNumber 1001 --gidNumber 1001 --homeDirectory /home/&exampleuserIII;</screen>
+   </step>
+  </procedure>
+  <procedure xml:id="pro.security.ldap.server.groups">
+   <title>Creating LDAP Groups and Assigning Users to Them</title>
+   <para>
+    In the following, we create a group, <systemitem class="groupname">server_admins</systemitem>, and assign the user
+    &exampleuserII; to this group.</para>
+   <step>
+    <para>
+     Create the group:
+    </para>
+    <screen>&prompt.sudo;dsidm localhost group create</screen>
+    <para>
+     You will be prompted for a group name:
+    </para>
+    <screen>Enter value for cn :</screen>
+   </step>
+   <step>
+    <para>
+     Enter the name for the group, for example: <literal>server_admins</literal>.
+    </para>
+   </step>
+   <step>
+    <para>
+     Add the user &exampleuserII; to the group:
+    </para>
+    <screen>&prompt.sudo;dsidm localhost group add_member server_admins uid=&exampleuserII;,ou=people,dc=example,dc=com
+added member: uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+   </step>
+   <step>
+    <para>
+     Verify if authentication works:
+    </para>
+   <screen>&prompt.sudo;ldapwhoami -H ldaps://localhost -D \
+  uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
+    <para>
+     If you are prompted for the LDAP password of &exampleuserII;, authentication works.
+    </para>
+    <para>
+     If the command fails with the following error, you are probably using a
+     self-signed certificate:
+    </para>
+    <screen>ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)</screen>
+    <para>
+     In that case, edit <filename>/etc/openldap/ldap.conf</filename> and add the
+     path to the certificate. For example:
+    </para>
+    <screen>TLS_CACERT=/etc/dirsrv/slapd-localhost/ca.crt</screen>
+    <para>
+     Alternatively, include the path to the certificate in the
+     <filename>whoami</filename> command:
+    </para>
+    <screen>&prompt.sudo;LDAPTLS_CACERT=/etc/dirsrv/slapd-localhost/ca.crt \
+  ldapwhoami -H ldaps://localhost -D \
+  uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
+   </step>
+  </procedure>
+ </sect2>
+
+ <sect2 xml:id="sec.security.ldap.server.sssd">
+  <title>Setting Up SSSD</title>
+  <para>
+   SSSD (System Security Services Daemon) is a daemon that communicates with
+   remote identity providers and allows <literal>pam</literal> and
+   <literal>nsswitch</literal> to consume that data. SSSD can have multiple
+   back-ends, cache users and groups and provides features like SSH key
+   distributions.
+  </para>
+  <procedure>
+   <step>
+     <para>On a separate server, install the <systemitem>sssd</systemitem> package:
+     </para>
+    <screen>&prompt.sudo;zypper in sssd</screen>
+   </step>
+   <step>
+    <para>
+     Disable and stop the <systemitem class="daemon">nscd</systemitem> daemon
+     because it conflicts with <systemitem class="daemon">sssd</systemitem>:
+    </para>
+    <screen>&prompt.sudo;systemctl disable nscd &amp;&amp; systemctl stop nscd</screen>
+   </step>
+   <step>
+    <para>
+     Create the SSSD configuration and restrict the login to the members of the group <systemitem class="groupname">server_admins</systemitem> that we created in <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/>:
+    </para>
+    <screen>&prompt.sudo;dsidm localhost client_config sssd.conf server_admins</screen>
+   </step>
+   <step>
+    <para>
+     Review the output and paste (or redirect) it to <filename>/etc/sssd/sssd.conf</filename>.
+     If required, edit the configuration file according to your needs.
+    </para>
+   </step>
+   <step>
+    <para>
+     To configure the certificates on your client, copy <filename>ca.crt</filename>
+     from the LDAP server to your client:</para>
+    <screen>&prompt.sudo;mkdir -p /etc/openldap/certs
+cp [...]&gt;/ca.crt /etc/openldap/certs/
+/usr/bin/c_rehash /etc/openldap/certs</screen>
+   </step>
+   <step>
+    <para>
+     Enable and start SSSD:
+    </para>
+    <screen>&prompt.sudo;systemctl enable sssd
+systemctl start sssd</screen>
+   </step>
+   <step>
+    <para>
+     To make sure SSSD is part of PAM and NSS, follow the instructions in sections <citetitle>Configure PAM
+      (&suse;)</citetitle> and <citetitle>Configure NSS (&suse;)</citetitle> at <link xlink:href="http://www.port389.org/docs/389ds/howto/howto-sssd.html"/>.
+    </para>
+   </step>
+   <step>
+    <para>
+     Verify if the client can provide the details for user &exampleuserII;:
+    </para>
+    <screen>&prompt.sudo;id &exampleuserII;
+    uid=1000(&exampleuserII;) gid=100(users) groups=100(users)</screen>
+    <para>
+     If everything is set up correctly, &exampleuserII; can access the &ds389;
+     instance via SSH to the machine where you have installed and configured
+     SSSD. However, &exampleuserIII; will fail to do so, because &exampleuserIII;
+     does not belong to the group <literal>server_admins</literal> that we have
+     configured in <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/>.
+    </para>
+   </step>
+  </procedure>
+ </sect2>
+ </sect1>
+
+<sect1 xml:id="sec.security.ldap.yast.usergr">
+  <title>&yast; での LDAP ユーザとグループの設定</title>
+  <procedure>
+   <step>
+    <para>&yast; から <menuchoice> <guimenu>セキュリティとユーザ</guimenu><guimenu>ユーザとグループの管理</guimenu></menuchoice> を選択して、ユーザとグループの管理モジュールを起動します。</para>
+   </step>
+   <step>
+    <para>LDAP が正しく接続できるかどうかを確認したい場合は、 <guimenu>接続のテスト</guimenu> を押してください。</para>
+   </step>
+   <step>
+    <para><guimenu>フィルタの設定</guimenu> を押して <guimenu>LDAP ユーザ</guimenu> を選択し、バインド DN に対するパスワードを入力して、 LDAP のユーザのみを表示します。</para>
+   </step>
+   <step>
+    <para><guimenu>追加</guimenu> を押してユーザ設定を入力します。表示されたダイアログには、 4 つのタブがあります:</para>
+    <substeps performance="required">
+     <step>
+      <para><guimenu>ユーザ情報</guimenu> のタブでは、ユーザのフルネームとログイン名、パスワードをそれぞれ設定します。</para>
+     </step>
+     <step>
+      <para><guimenu>詳細</guimenu> タブでは、そのユーザが所属するグループやログイン時に使用するシェル、そしてホームディレクトリなどを設定します。必要に応じて変更してください。 <!-- The default values (as well as those of the password settings) can be defined with the procedure described in <xref linkend="sec.security.auth.yast.client.conf.mod"/>.--></para>
+     </step>
+     <step>
+      <para><guimenu>パスワードの設定</guimenu> タブでは、必要であれば設定を変更します。</para>
+     </step>
+     <step>
+      <para><guimenu>プラグイン</guimenu> タブでは LDAP プラグインを選択して <guimenu>起動</guimenu> を押し、新しいユーザに設定する追加の LDAP 属性を指定します <!-- (see <xref linkend="fig.ldap.y2.adset"/>).--> 。</para>
+     </step>
+    </substeps>
+   </step>
+   <step>
+    <para><guimenu>OK</guimenu> を押して設定を適用し、ユーザ設定を終了します。</para>
+   </step>
+  </procedure>
+
+ <para>
+  You can administer groups in a similar way on the <guimenu>Groups</guimenu>
+  tab.
+</para>
+<!--
+  <figure id="fig.ldap.y2.adset">
+   <title>&yast;: Additional LDAP Settings</title>
+   <mediaobject>
+    <imageobject role="fo">
+     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
+    </imageobject>
+    <imageobject role="html">
+     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </figure>
+  -->
+
+  <para>ユーザ管理モジュールで最初に表示されるフォーム内では、 <guimenu>LDAP オプション</guimenu> を指定することができます。このオプションを設定することにより、特定のユーザのみを表示するための検索フィルタを適用することができます。この方法以外にも、 <guimenu>LDAP ユーザとグループの設定</guimenu> を選択してユーザとグループを設定することもできます。</para>
+ </sect1>
+
+<sect1 xml:id="sec.security.ldap.yast.client">
   <title>&yast; による LDAP クライアントの設定</title>
   <para>&yast; には <guimenu>LDAP および Kerberos クライアント</guimenu> モジュールが用意されています。このモジュールでは、 LDAP や Kerberos を利用する認証を設定することができます。</para>
   <para>Kerberos と LDAP を個別に参加させるように使用することもできます。そのような場合、たとえば &ad; への参加 (LDAP と Kerberos を組み合わせて使用します) などでは、 このモジュールは最初の選択とはならないかもしれません。詳しくは <xref linkend="sec.security.auth.yast.client"/> をお読みください。</para>
@@ -311,7 +769,33 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
       <para>必要に応じて、 <guimenu>LDAP のユーザに対して認証を許可する</guimenu> と <guimenu>自動的にホームディレクトリを作成する</guimenu> を選択します。</para>
      </listitem>
      <listitem>
-      <para>LDAP の項目をローカルにキャッシュするには、 <guimenu>より高速な応答のため LDAP の項目をキャッシュする</guimenu> を選択します。この場合、項目が古いまま保持される危険性がありますので、あらかじめご了承ください。</para>
+      <para>
+       If you want to cache LDAP entries locally, use <guimenu>Cache LDAP Entries
+        For Faster Response</guimenu>.
+      </para>
+      <warning>
+       <title>Potential Security Risk with Caching</title>
+       <para>
+        Using the cache bears security risks, depending on the used mechanism.
+       </para>
+       <formalpara>
+        <title>nscd</title>
+        <para>
+         If you define an authorization rule (for example, members of group
+         <literal>admin</literal> can log in), and you remove a user from that
+         group, the client cache will not see that change until the cache expires
+         or refreshes. So a user whose account has been revoked can still log in
+         for a period of time later.
+        </para>
+       </formalpara>
+       <formalpara>
+        <title>sssd</title>
+        <para>
+         This caching mechanism constantly checks if group memberships are still
+         valid. Thus the cache risk only exists if the <literal>sssd</literal>
+         daemon is disconnected from the LDAP server for any reason.</para>
+       </formalpara>
+      </warning>
      </listitem>
      <listitem>
       <para>さらに LDAP の情報源から使用すべきデータの種類 (たとえば <guimenu>ユーザ</guimenu> ,  <guimenu>グループ</guimenu> , <guimenu>スーパーユーザコマンド</guimenu> , <guimenu>ネットワークディスクの場所</guimenu> (必要に応じて自動的にマウントすることのできる共有ドライブ)) を指定します。</para>
@@ -322,10 +806,11 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
       <warning>
        <title>暗号化を行なわない認証について</title>
        <para>TLS や StartTLS を利用した伝送路の暗号化を使用せずに認証を行なうと、パスワードは平文のまま転送されてしまいます。</para>
-       <remark>
-        Is the YaST dialog compatible with SASL in any way? - sknorr,
-        2017-03-01
-       </remark>
+       <!--for the records:
+        sknorr, 2017-03-01: Is the YaST dialog compatible with SASL in any way?
+        wbrown 2019-02-26: SASL is too complicated for a setup like this,
+        not worth including.
+       -->
       </warning>
      </listitem>
     </itemizedlist>
@@ -339,685 +824,24 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
     <para>全ての設定が終わったら、 <guimenu>完了</guimenu> を押して閉じます。</para>
    </step>
   </procedure>
- </sect1>
+</sect1>
 
- <sect1 xml:id="sec.security.ldap.yast.usergr">
-  <title>&yast; での LDAP ユーザとグループの設定</title>
-
-  <para>ユーザやグループの登録作業は、 LDAP を使用する場合と使用しない場合で、少しだけ異なる手順になります。また、下記に示す手順はユーザの管理の手順ですが、グループの管理も同様の手順で行なうことができます。</para>
-
-  <procedure>
-   <step>
-    <para>&yast; から <menuchoice> <guimenu>セキュリティとユーザ</guimenu><guimenu>ユーザとグループの管理</guimenu></menuchoice> を選択して、ユーザとグループの管理モジュールを起動します。</para>
-   </step>
-   <step>
-    <para><guimenu>フィルタの設定</guimenu> を押して <guimenu>LDAP ユーザ</guimenu> を選択し、バインド DN に対するパスワードを入力して、 LDAP のユーザのみを表示します。</para>
-   </step>
-   <step>
-    <para><guimenu>追加</guimenu> を押してユーザ設定を入力します。表示されたダイアログには、 4 つのタブがあります:</para>
-    <substeps performance="required">
-     <step>
-      <para><guimenu>ユーザ情報</guimenu> のタブでは、ユーザのフルネームとログイン名、パスワードをそれぞれ設定します。</para>
-     </step>
-     <step>
-      <para><guimenu>詳細</guimenu> タブでは、そのユーザが所属するグループやログイン時に使用するシェル、そしてホームディレクトリなどを設定します。必要に応じて変更してください。 <!-- The default values (as well as those of the password settings) can be defined with the procedure described in <xref linkend="sec.security.auth.yast.client.conf.mod"/>.--></para>
-     </step>
-     <step>
-      <para><guimenu>パスワードの設定</guimenu> タブでは、必要であれば設定を変更します。</para>
-     </step>
-     <step>
-      <para><guimenu>プラグイン</guimenu> タブでは LDAP プラグインを選択して <guimenu>起動</guimenu> を押し、新しいユーザに設定する追加の LDAP 属性を指定します <!-- (see <xref linkend="fig.ldap.y2.adset"/>).--> 。</para>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para><guimenu>OK</guimenu> を押して設定を適用し、ユーザ設定を終了します。</para>
-   </step>
-  </procedure>
-
-<!--
-  <figure id="fig.ldap.y2.adset">
-   <title>&yast;: Additional LDAP Settings</title>
-   <mediaobject>
-    <imageobject role="fo">
-     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
-    </imageobject>
-    <imageobject role="html">
-     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
-    </imageobject>
-   </mediaobject>
-  </figure>
-  -->
-
-  <para>ユーザ管理モジュールで最初に表示されるフォーム内では、 <guimenu>LDAP オプション</guimenu> を指定することができます。このオプションを設定することにより、特定のユーザのみを表示するための検索フィルタを適用することができます。この方法以外にも、 <guimenu>LDAP ユーザとグループの設定</guimenu> を選択してユーザとグループを設定することもできます。</para>
- </sect1>
-
- <sect1 xml:id="sec.security.ldap.slapd" os="sles;osuse">
-  <title>LDAP サーバの手動設定</title>
-
-<!--
-  <para>
-   Your installed system contains a complete configuration file for your
-   LDAP server at <filename>/etc/openldap/slapd.conf</filename>. The single
-   entries are briefly described here and necessary adjustments are
-   explained. Entries prefixed with a hash (#) are inactive. This comment
-   character must be removed to activate them.
-  </para>
--->
-
-  <para>&yast; では、 OpenLDAP の動的設定データベース ( <systemitem>back-config</systemitem> ) を利用して LDAP の設定を保存しています。動的な設定の保存方式について、詳しくは <systemitem>slapd-config(5)</systemitem> のマニュアルページ、もしくは <systemitem>openldap2</systemitem> パッケージをインストールしてある環境内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> に存在する、 OpenLDAP Software 2.4 Administrator's Guide をお読みください。</para>
-
-  <tip>
-   <title>古い OpenLDAP インストールのアップグレードについて</title>
-   <para>&yast; では OpenLDAP の設定を保存するにあたって、 <filename>/etc/openldap/slapd.conf</filename> を使用しなくなっています。システムをアップグレードした場合は、 <filename>/etc/openldap/slapd.conf</filename> の設定ファイルのコピーが <filename>/etc/openldap/slapd.conf.YaSTsave</filename> として保存されます。</para>
-  </tip>
-
-  <para>設定バックエンドに便利にアクセスすることができるようにするため、 SASL 外部認証を使用することができます。たとえば下記の <command>ldapsearch</command> コマンドを &rootuser; で実行すると、 <command>slapd</command> の完全な設定を表示させることができます:</para>
-
-<screen>&prompt.user;ldapsearch -Y external -H ldapi:/// -b cn=config</screen>
-
-  <note>
-<!-- bnc#911409 -->
-   <title>認証サーバの設定の一部で LDAP サーバの設定も行なうことができる件について</title>
-   <para>&yast; の認証サーバモジュール内では、基本的な LDAP サーバの準備と設定を行なうことができます。詳しくは <xref linkend="sec.security.auth.yast"/> をお読みください。</para>
-  </note>
-
-<!-- Why is this commented away? At least the initial bits look okay-ish.
-svn.opensuse.org is not much of a help either, since this has been there
-since the initial import. And the internal SVN ... seems to say the comment
-characters were added when formatting with xmlformat (Apr 28, 2009). Ugh.
-- sknorr, 2017-02-10 -->
-<!--
-  <sect2 id="sec.security.ldap.slapd.global">
-   <title>Global Directives in slapd.conf</title>
-   <example id="aus.ldap.slapd.include">
-    <title>slapd.conf: Include Directive for Schemas</title>
-<screen>include         /etc/openldap/schema/core.schema
-include         /etc/openldap/schema/cosine.schema
-include         /etc/openldap/schema/inetorgperson.schema
-include         /etc/openldap/schema/rfc2307bis.schema
-include         /etc/openldap/schema/yast.schema</screen>
-   </example>
-   <para>
-    This first directive in <filename>/etc/openldap/slapd.conf</filename>, shown in
-    <xref linkend="aus.ldap.slapd.include"/>, specifies the Schema by which
-    the LDAP directory is organized. The entry
-    <filename>core.schema</filename> is required. Additionally required
-    Schemas are appended to this directive. Find information in the included
-    OpenLDAP documentation.
-   </para>
-   <example id="aus.ldap.slapd.pid">
-    <title>slapd.conf: pidfile and argsfile</title>
-<screen>pidfile /var/run/slapd/slapd.pid
-argsfile /var/run/slapd/slapd.args</screen>
-   </example>
-   <para>
-    These two files contain the PID (process ID) and some arguments
-    the <command>slapd</command> process is started with. There is no need
-    for modifications here.
-   </para>
-   <example id="aus.ldap.slapd.acl">
-    <title>slapd.conf: Access Control</title>
-<screen># Sample Access Control
-#       Allow read access of root DSE
-# Allow self write access
-#       Allow authenticated users read access
-#       Allow anonymous users to authenticate
-# access to dn="" by * read
-  access to * by self write
-              by users read
-              by anonymous auth
-#
-# if no access controls are present, the default is:
-#       Allow read by all
-#
-# rootdn can always write!</screen>
-   </example>
-   <para>
-    <xref linkend="aus.ldap.slapd.acl"/> is the excerpt from
-    <filename>slapd.conf</filename> that regulates the access permissions
-    for the LDAP directory on the server. The settings made here in the
-    global section of <filename>slapd.conf</filename> are valid as long as
-    no custom access rules are declared in the database-specific section.
-    These would overwrite the global declarations. As presented here, all
-    users have read access to the directory, but only the administrator
-    (<literal>rootdn</literal>) can write to this directory. Access control
-    regulation in LDAP is a highly complex process. The following tips can
-    help:
-   </para>
-   <itemizedlist>
-    <listitem>
-     <para>
-      Every access rule has the following structure:
-     </para>
-<screen>access to <replaceable>WHAT</replaceable> by <replaceable>WHO</replaceable> <replaceable>ACCESS_TYPE</replaceable></screen>
-    </listitem>
-    <listitem>
-     <para>
-      <replaceable>WHAT</replaceable> is a placeholder for the object or
-      attribute to which access is granted. Individual directory branches
-      can be protected explicitly with separate rules. It is also possible
-      to process regions of the directory tree with one rule by using
-      regular expressions. <command>slapd</command> evaluates all rules in
-      the order in which they are listed in the configuration file. More
-      general rules should be listed after more specific ones&mdash;
-      <command>slapd</command> will apply the first rule that matches, and
-      all the following rules are ignored.
-     </para>
-    </listitem>
-    <listitem>
-     <para>
-      <replaceable>WHO</replaceable> determines who should be granted access
-      to the areas determined with <replaceable>WHAT</replaceable>. Regular
-      expressions may be used. <command>slapd</command> again aborts the
-      evaluation of <systemitem>who</systemitem> after the first match, so
-      more specific rules should be listed before the more general ones. The
-      entries shown in <xref linkend="tab.ldap.acl.who"/> are possible.
-     </para>
-     <table id="tab.ldap.acl.who">
-      <title>User Groups and Their Access Grants</title>
-      <tgroup cols="2">
-       <thead>
-        <row>
-         <entry>
-          <para>
-           Tag
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Scope
-          </para>
-         </entry>
-        </row>
-       </thead>
-       <tbody>
-        <row>
-         <entry>
-          <para>
-           <literal>*</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           All users without exception
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>anonymous</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Not authenticated (<quote>anonymous</quote>) users
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>users</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Authenticated users
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>self</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Users connected with the target object
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>dn.regex=&lt;regex&gt;</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           All users matching the regular expression
-          </para>
-         </entry>
-        </row>
-       </tbody>
-      </tgroup>
-     </table>
-    </listitem>
-    <listitem>
-     <para>
-      <replaceable>ACCESS</replaceable> specifies the type of access. Use
-      the options listed in <xref linkend="tab.ldap.acl.access"/>.
-     </para>
-     <table id="tab.ldap.acl.access">
-      <title>Types of Access</title>
-      <tgroup cols="2">
-       <thead>
-        <row>
-         <entry>
-          <para>
-           Tag
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Scope of Access
-          </para>
-         </entry>
-        </row>
-       </thead>
-       <tbody>
-        <row>
-         <entry>
-          <para>
-           <literal>none</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           No access
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>auth</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           For contacting the server
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>compare</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           To objects for comparison access
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>search</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           For the employment of search filters
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>read</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Read access
-          </para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>
-           <literal>write</literal>
-          </para>
-         </entry>
-         <entry>
-          <para>
-           Write access
-          </para>
-         </entry>
-        </row>
-       </tbody>
-      </tgroup>
-     </table>
-     <para>
-      <command>slapd</command> compares the access right requested by the
-      client with those granted in <filename>slapd.conf</filename>. The
-      client is granted access if the rules allow a higher or equal right
-      than the requested one. If the client requests higher rights than
-      those declared in the rules, it is denied access.
-     </para>
-    </listitem>
-   </itemizedlist>
-   <para>
-    <xref linkend="aus.ldap.slapd.aclex"/> shows an example of a simple
-    access control that can be arbitrarily developed using regular
-    expressions.
-   </para>
-   <example id="aus.ldap.slapd.aclex">
-    <title>slapd.conf: Example for Access Control</title>
-<screen>access to  dn.regex="ou=([^,]+),dc=example,dc=com"
-by dn.regex="cn=Administrator,ou=$1,dc=example,dc=com" write
-by user read
-by * none</screen>
-   </example>
-   <para>
-    This rule declares that only its respective administrator has write
-    access to an individual <literal>ou</literal> entry. All other
-    authenticated users have read access and the rest of the world has no
-    access.
-   </para>
-   <tip>
-    <title>Establishing Access Rules</title>
-    <para>
-     If there is no <literal>access to</literal> rule or no matching
-     <option>by</option> directive, access is denied. Only explicitly
-     declared access rights are granted. If no rules are declared at all,
-     the default principle is write access for the administrator and read
-     access for the rest of the world.
-    </para>
-   </tip>
-   <para>
-    Find detailed information and an example configuration for LDAP access
-    rights in the online documentation of the installed
-    <systemitem class="resource">openldap2</systemitem> package.
-   </para>
-   <para>
-    Apart from the possibility to administer access permissions with the
-    central server configuration file (<filename>slapd.conf</filename>),
-    there is access control information (ACI). ACI allows storage of the
-    access information for individual objects within the LDAP tree. This
-    type of access control is not yet common and is still considered
-    experimental by the developers. Refer to
-    <ulink
-    url="http://www.openldap.org/faq/data/cache/758.html"/> for
-    information.
-   </para>
-  </sect2>
-
-  <sect2 id="sec.security.ldap.slapd.db">
-   <title>Database-Specific Directives in slapd.conf</title>
-   <example id="aus.ldap.slapd.bdb">
-    <title>slapd.conf: Database-Specific Directives</title>
-<screen>database bdb<co id="co.db"/>
-suffix "dc=example,dc=com"<co id="co.suffix"/>
-checkpoint      1024    5<co id="co.checkp"/>
-cachesize       10000<co id="co.cache"/>
-rootdn "cn=Administrator,dc=example,dc=com"<co id="co.rootdn"/>
-# Cleartext passwords, especially for the rootdn, should
-# be avoided.  See slappasswd(8) and slapd.conf(5) for details.
-# Use of strong authentication encouraged.
-rootpw secret<co id="co.rootpw"/>
-# The database directory MUST exist prior to running slapd AND
-# should only be accessible by the slapd/tools. Mode 700 recommended.
-directory /var/lib/ldap<co id="co.dir"/>
-# Indices to maintain
-index   objectClass     eq<co id="co.index"/>
-overlay ppolicy<co id="co.ppolicy"/>
-ppolicy_default "cn=Default Password Policy,dc=example,dc=com"
-ppolicy_hash_cleartext
-ppolicy_use_lockout</screen>
-   </example>
-   <calloutlist>
-    <callout arearefs="co.db">
-     <para>
-      The type of database, a Berkeley database in this case, is set in the
-      first line of this section (see
-      <xref
-     linkend="aus.ldap.slapd.bdb"/>).
-     </para>
-    </callout>
-    <callout arearefs="co.suffix">
-     <para>
-      <literal>suffix</literal> determines for which portion of the LDAP
-      tree this server should be responsible.
-     </para>
-    </callout>
-    <callout arearefs="co.checkp">
-     <para>
-      <literal>checkpoint</literal> determines the amount of data (in KB)
-      that is kept in the transaction log before it is written to the actual
-      database and the time (in minutes) between two write actions.
-     </para>
-    </callout>
-    <callout arearefs="co.cache">
-     <para>
-      <literal>cachesize</literal> sets the number of objects kept in the
-      database's cache.
-     </para>
-    </callout>
-    <callout arearefs="co.rootdn">
-     <para>
-      <literal>rootdn</literal> determines who owns administrator rights to
-      this server. The user declared here does not need to have an LDAP
-      entry or exist as regular user.
-     </para>
-    </callout>
-    <callout arearefs="co.rootpw">
-     <para>
-      <literal>rootpw</literal> sets the administrator password. Instead of
-      using <literal>secret</literal> here, it is possible to enter the hash
-      of the administrator password created by
-      <command>slappasswd</command>.
-     </para>
-    </callout>
-    <callout arearefs="co.dir">
-     <para>
-      The <literal>directory</literal> directive indicates the directory in
-      the file system where the database directories are stored on the
-      server.
-     </para>
-    </callout>
-    <callout arearefs="co.index">
-     <para>
-      The last directive, <literal>index objectClass eq</literal>, results
-      in the maintenance of an index of all object classes. Attributes for
-      which users search most often can be added here according to
-      experience.
-     </para>
-    </callout>
-    <callout arearefs="co.ppolicy">
-     <para>
-      <literal>overlay ppolicy</literal> adds a layer of password control
-      mechanisms. <literal>ppolicy_default</literal> specifies the DN of the
-      pwdPolicy object to use when no specific policy is set on a given
-      user's entry. If there is no specific policy for an entry and no
-      default is given, no policies are enforced.
-      <literal>ppolicy_hash_cleartext</literal> specifies that clear text
-      passwords present in add and modify requests are hashed before being
-      stored in the database. When this option is used, it is recommended to
-      deny compare, search, and read access to the
-      <literal>userPassword</literal> attribute for all directory users,
-      because <literal>ppolicy_hash_cleartext</literal> violates the
-      X.500/LDAP information model. <literal>ppolicy_use_lockout</literal>
-      sends a specific error code when a client tries to connect to a locked
-      account. When your site is sensitive to security issues, disable this
-      option as the error code provides useful information to attackers.
-     </para>
-    </callout>
-   </calloutlist>
-   <para>
-    Custom <literal>Access</literal> rules defined here for the database are
-    used instead of the global <literal>Access</literal> rules.
-   </para>
-  </sect2>
--->
-
-  <!-- <sect2 xml:id="sec.security.ldap.slapd.start"> -->
-  <!--  <title>Starting and Stopping the Servers</title> -->
-   <para>LDAP サーバの設定を全て終えて、 <xref linkend="sec.security.ldap.data"/> で説明している手順で必要な項目を全て設定したあとは、 <command>sudo systemctl start slapd</command> を実行して &rootuser; で LDAP サーバを起動します。サーバを手動で停止したい場合は、 <command>sudo systemctl stop slapd</command> を実行します。また、 LDAP サーバの動作状態を確認したい場合は、 <command>sudo systemctl status slapd</command> を実行します。</para>
-   <para>また、 <xref linkend="sec.boot.runlevel.edit"/> で説明している手順で &yast; <guimenu>&ycc_runlevel;</guimenu> を使用することで、システムの起動時に自動的にサーバを開始させ、システムのシャットダウン時に自動的にサーバを停止することができます。また、 <xref linkend="sec.boot.systemd.basics.services"/> で説明しているコマンドを使用することで、開始時や停止時にスクリプトを動作させることもできます。</para>
-  <!-- </sect2> -->
- </sect1>
-<!-- ==================================================================== -->
  <sect1 xml:id="sec.security.ldap.data" os="sles;osuse">
   <title>LDAP データの手動管理</title>
-
-  <para>OpenLDAP では、 LDAP ディレクトリ内のデータを管理するための様々なツールが提供されています。本章では、データを追加したり削除したり、検索したり修正したりするための最も重要なツールについて説明しています。</para>
-
-  <sect2 xml:id="sec.security.ldap.data.add">
-   <title>LDAP ディレクトリへのデータの挿入</title>
-   <para>LDAP サーバの設定 <!--in <filename>/etc/openldap/slapd.conf</filename>--> (それぞれ <literal>suffix</literal> , <literal>directory</literal> , <literal>rootdn</literal> , <literal>rootpw</literal> , <literal>index</literal> の項目の指定) を正しく完了したあとは、レコードの追加作業を行ないます。 OpenLDAP では、 <command>ldapadd</command> というコマンドを利用して行なうことができます。なお、可能であればデータは一括で追加するようにしてください (実用上の理由からです) 。 LDAP では、 LDIF と呼ばれる形式 (LDAP データ交換形式 (LDAP data interchange format)) のデータを読み込むことができます。 LDIF ファイルは単純なテキストファイル形式で、任意の数の名前と値の対を含むことができるものです。 <!-- Refer to the Schema files declared in <filename>slapd.conf</filename> for the available object classes and attributes.--> <xref linkend="fig.ldap.tree"/> で示している構造を作成する際の例を <xref linkend="dat.ldap.ldif"/> に示します。</para>
-   <important>
-    <title>LDIF ファイルのエンコードについて</title>
-    <para><!-- UTF-8 is the default since ages now...--> <!-- NOTE: Explanation was changed for Japanese, for example, kanji character must be encoded with UTF-8.. --> LDAP は UTF-8 (Unicode) で動作する仕組みであるため、適切にエンコードが行なわれていれば、漢字や記号などの文字も設定することができます。 UTF-8 以外のエンコードで作成している場合は、 <command>iconv</command> などで UTF-8 に変換しておいてください。</para>
-   </important>
-   <example xml:id="dat.ldap.ldif">
-    <title>LDIF ファイル</title>
-<screen># 組織全体
-dn: dc=example,dc=com
-objectClass: dcObject
-objectClass: organization
-o: Example dc: example
-
-# 組織内の開発部門 (devel)
-dn: ou=devel,dc=example,dc=com
-objectClass: organizationalUnit
-ou: devel
-
-# 組織内の文書部門 (doc)
-dn: ou=doc,dc=example,dc=com
-objectClass: organizationalUnit
-ou: doc
-
-# 組織内の IT 部門 (it)
-dn: ou=it,dc=example,dc=com
-objectClass: organizationalUnit
-ou: it</screen>
-   </example>
-   <para>上記の内容を <filename>.ldif</filename> で終わるファイル名のファイルで作成して保存したあとは、下記のコマンドを実行してサーバに渡します:</para>
-<screen>&prompt.user;ldapadd -x -D <replaceable>管理者の_DN</replaceable> -W -f <replaceable>ファイル名</replaceable>.ldif</screen>
-   <para><literal>-x</literal> を指定することで、ここでは SASL の認証を無効化しています。また、 <literal>-D</literal> ではその操作を実行する際のユーザを指定しています。ここには通常、 <filename>slapd.conf</filename> 内に設定する管理者の DN を正しく入力します。たとえば下記の例では <literal>cn=Administrator,dc=example,dc=com</literal> を指定しています。 <literal>-W</literal> はコマンドライン内でのパスワードの入力を回避するための指定で、パスワードを入力するためのプロンプトを別途表示するための指定です。 <!-- This password was previously determined in <filename>slapd.conf</filename> with <literal>rootpw</literal>. --> 最後の <literal>-f</literal> オプションは、ファイル名を指定するためのものです。 <command>ldapadd</command> を実行すると、 <xref linkend="aus.ldap.addentry"/> のような出力が現われるはずです。</para>
-   <example xml:id="aus.ldap.addentry">
-    <title>example.ldif での ldapadd</title>
-<screen>&prompt.user;ldapadd -x -D cn=Administrator,dc=example,dc=com -W -f example.ldif
-
-Enter LDAP password:
-adding new entry "dc=example,dc=com"
-adding new entry "ou=devel,dc=example,dc=com"
-adding new entry "ou=doc,dc=example,dc=com"
-adding new entry "ou=it,dc=example,dc=com"</screen>
-   </example>
-   <para>各個人のユーザデータについては、別途の LDIF ファイルで用意することができます。たとえば <xref linkend="aus.ldap.addtux"/> では、 <systemitem class="username">Tux</systemitem> というユーザを新しい LDAP ディレクトリに追加しています。</para>
-   <example xml:id="aus.ldap.addtux">
-    <title>Tux の LDIF データ例</title>
-<screen># coworker Tux
-dn: cn=Tux Linux,ou=devel,dc=example,dc=com
-objectClass: inetOrgPerson
-cn: Tux Linux
-givenName: Tux
-sn: Linux
-mail: tux@example.com
-uid: tux
-telephoneNumber: +81 3 0000-0000</screen>
-   </example>
-   <para>LDIF ファイルには任意の数のオブジェクトを含めることができます。個別のオブジェクトの例と同様に、部門全体もしくは部門の一部を一括でサーバに渡すこともできます。比較的頻繁に変更されるようなデータがあるような場合は、その部分だけを個別のファイルにしてもかまいません。</para>
-  </sect2>
-
-  <sect2 xml:id="sec.security.ldap.data.change">
-   <title>LDAP ディレクトリ内のデータの変更</title>
-   <para><command>ldapmodify</command> ツールは、データの変更を行なうために使用するツールです。変更を行なうにあたって最も簡単な方法は、変更用の LDIF ファイルを作成して、それを LDAP サーバに送信する方法です。たとえば Tux ユーザの電話番号を <literal>+49 1234 567-8</literal> から <literal>+49 1234 567-10</literal> に変更したい場合は、 <xref linkend="aus.ldap.ldif.tux"/> に示すような LDIF ファイルを作成します。</para>
-   <example xml:id="aus.ldap.ldif.tux">
-    <title>変更用の LDIF ファイル tux.ldif</title>
-<screen># coworker Tux
-dn: cn=Tux Linux,ou=devel,dc=example,dc=com
-changetype: modify
-replace: telephoneNumber
-telephoneNumber: +81 3 0000-0000</screen>
-   </example>
-   <para>あとは下記のコマンドを実行して、 LDAP ディレクトリに修正用のファイルを送信します:</para>
-<screen>&prompt.user;ldapmodify -x -D cn=Administrator,dc=example,dc=com -W -f tux.ldif</screen>
-   <para>上記の方法以外にも、 <command>ldapmodify</command> を利用して直接データを変更することもできます:</para>
-   <procedure>
-    <step>
-     <para><command>ldapmodify</command> を実行してパスワードを入力します:</para>
-<screen>&prompt.user;ldapmodify -x -D cn=Administrator,dc=example,dc=com -W
-Enter LDAP password:</screen>
-    </step>
-    <step>
-     <para>変更用の書式をそのまま入力します:</para>
-<screen>dn: cn=Tux Linux,ou=devel,dc=example,dc=com
-changetype: modify
-replace: telephoneNumber
-telephoneNumber: +49 1234 567-10</screen>
-    </step>
-   </procedure>
-   <para><command>ldapmodify</command> に関する詳細やその書式について、詳しくは <command>ldapmodify</command> のマニュアルページをお読みください。</para>
-  </sect2>
-
-  <sect2 xml:id="sec.security.ldap.data.search">
-   <title>LDAP ディレクトリ内のデータの検索および読み取り</title>
-   <para>OpenLDAP では、 <command>ldapsearch</command> コマンドを利用して LDAP ディレクトリの検索を行ない、その結果を表示させることができます。下記のようにして実行します:</para>
-<screen>&prompt.user;ldapsearch -x -b dc=example,dc=com "(objectClass=*)"</screen>
-   <para><option>-b</option> オプションは検索ベース (検索を開始するツリー構造の位置) を指定するためのものです。上記の例では <literal>dc=example,dc=com</literal> 以下を検索する意味になります。たとえば開発部門 (<literal>devel</literal>) のみを対象にして検索を行ないたい場合は、対応する部門の DN を <command>ldapsearch</command> の <option>-b</option> で指定してください。 <option>-x</option> オプションはシンプル認証を使用する指定です。 <literal>(objectClass=*)</literal> は、ディレクトリ内の任意のオブジェクトを読み込むための指定です。このコマンドを使用することで、新しいディレクトリツリーとその中の項目が正しく設定されているかどうかと、サーバが期待通りの応答をするかどうかを確認することができます。 <command>ldapsearch</command> の使用方法について、詳しくは <systemitem>ldapsearch(1)</systemitem> のマニュアルページをお読みください。</para>
-  </sect2>
-
-  <sect2 xml:id="sec.security.ldap.data.del">
-   <title>LDAP ディレクトリからのデータの削除</title>
-   <para><command>ldapdelete</command> コマンドを使用することで、不要な項目を削除することができます。書式は他のコマンドと同様です。たとえば <literal>Tux Linux</literal> の項目を削除したい場合は、下記のようなコマンドを実行します:</para>
-<screen>&prompt.user;ldapdelete -x -D cn=Administrator,dc=example,dc=com -W cn=Tux \
-Linux,ou=devel,dc=example,dc=com</screen>
-  </sect2>
+   <para>
+    The command line tools provided by the <systemitem>openldap2-client</systemitem>
+    package (like <command>ldapsearch</command> or <command>ldapmodify</command>)
+    can be used for administration of data in the LDAP directory. However, they
+    are low-level tools and hard to use. For details about their use, refer to
+    the respective man pages and documentation.
+   </para>
  </sect1>
- <sect1 xml:id="sec.security.ldap.info">
+
+<sect1 xml:id="sec.security.ldap.info">
   <title>さらなる情報</title>
-
-  <para>さらに複雑な内容 (SASL の設定や複数のスレーブに負荷を分散させる LDAP サーバ群の構築方法など) については、本章では説明していません。詳しくは <xref linkend="list.ldap.info.adminguide"/> で説明している <emphasis>OpenLDAP 2.4 Administrator's Guide</emphasis> をお読みください。</para>
-
-  <para>OpenLDAP プロジェクトの Web サイトでは、 LDAP の初心者から上級者にいたるまで、様々な要件に適合した広範囲のドキュメンテーションを提供しています:</para>
-
-  <variablelist>
-   <varlistentry>
-    <term>OpenLDAP Faq-O-Matic (よくある質問)</term>
-    <listitem>
-     <para>OpenLAP のインストールや設定／使用に対する様々な質問と回答 (英語) を記載しています。詳しくは <link xlink:href="http://www.openldap.org/faq/data/cache/1.html"/> をご覧ください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>Quick Start Guide (クイックスタートガイド)</term>
-    <listitem>
-     <para>LDAP サーバを初めてインストールされる方に向けて、手順を追って説明する形式の文書 (英語のみ) です。 <link xlink:href="http://www.openldap.org/doc/admin24/quickstart.html"/> もしくはインストール済みのシステム内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> にあるセクション 2 をお読みください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry xml:id="list.ldap.info.adminguide">
-    <term>OpenLDAP 2.4 Administrator's Guide (OpenLDAP 2.4 管理者ガイド)</term>
-    <listitem>
-     <para>LDAP の設定に関する全ての重要な項目に対する詳しい説明が書かれています。ここにはアクセス制御や暗号化に関する話題も記載されています。 <link xlink:href="http://www.openldap.org/doc/admin24/"/> もしくはインストール済みのシステム内の <filename>/usr/share/doc/packages/openldap2/guide/admin/guide.html</filename> をお読みください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>Understanding LDAP</term>
-    <listitem>
-     <para>LDAP の基本的な考え方に対する詳しい説明です。詳しくは: <link xlink:href="http://www.redbooks.ibm.com/redbooks/pdfs/sg244986.pdf"/> 。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
-
-  <para>LDAP に関する印刷済みの書籍もあります:</para>
-
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para><!-- NOTE: altered to Japanese book --> <citetitle>システム管理者のための LDAP 徹底理解</citetitle> (著者: 太田 俊哉／中満 英生／堀田 倫英／菊池 研自) (ISBN 479734847X)</para>
-   </listitem>
-   <listitem>
-    <para><!-- NOTE: altered to Japanese book --> <citetitle>入門LDAP/OpenLDAPディレクトリサービス導入・運用ガイド</citetitle>  (著者: デージーネット) (ISBN 4798018007)</para>
-   </listitem>
-  </itemizedlist>
-
-  <para>LDAP の詳細仕様を確認したい場合は、対応する RFC をお読みになってもかまいません (RFC-2251, RFC-2256) 。</para>
+  <para>
+   For more information about &ds389;, see the upstream documentation,
+   available at <link xlink:href="http://www.port389.org/docs/389ds/documentation.html"/>.
+  </para>
  </sect1>
 </chapter>
