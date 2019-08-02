@@ -702,60 +702,31 @@ GSSAPICleanupCredentials yes</screen>
 
   <sect2 xml:id="sec.security.kerberos.admin.ldap">
    <title>LDAP と &krb; の使用</title>
-   <para>
-    While &krb; provides authentication, LDAP is used for authorization and
-    identification. Both services can work together.
-   </para>
-   <para>
-    For secure connections,&ds389; supports different ways of encrypting data:
-    SSL/TLS connections, Start TLS connections, and SASL authentication. Simple
-    Authentication and Security Layer (SASL) is a network protocol designed for
-    authentication. The SASL implementation used on &productname; is
-    <literal>cyrus-sasl</literal>. &krb; authentication is performed through
-    GSS-API (General Security Services API), provided by the
-    <package>cyrus-sasl-gssapi</package> package. Using GSS-API, &ds389; uses
-    &krb; tickets to authenticate sessions and encrypt data.
-   </para>
-   <para>&krb; では認証は常に相互的に動作します。つまり、 LDAP サーバに対して認証を行なっているだけでなく、 LDAP サーバ自身もあなたに対して認証を行なっていることになります。これは、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。 <!-- ke: I think "set up" is fine here. --></para>
-   <para>
-    To enable &krb; to bind to the &ds389;, create a principal
-    <literal>ldap/&ldapname;</literal> and add that to the keytab. The credentials
-    used by the &ds389; to authenticate are given to other servers by the keytab.
-    &ds389; assigns a keytab through the <varname>KRB5_KTNAME</varname> 
-    environment variable.
-   </para>
+   <para>&krb; が認証機能を提供するのに対して、 LDAP では認証と識別の両方を提供します。両方のサービスを同時に動作させることもできます。</para>
+   <para>接続の機密を保持する目的で、 &ds389; ではさまざまなデータの暗号化方式に対応しています。 SSL/TLS 接続や StartTLS 接続、そして SASL による認証にそれぞれ対応しています。Simple Authentication and Security Layer (SASL) は認証用に設計されたネットワークプロトコルです。 &productname; での SASL 実装は <literal>cyrus-sasl</literal> と呼ばれます。それに対して &krb; 認証は、 <package>cyrus-sasl-gssapi</package> パッケージが提供する GSS-API (General Security Services API) で行なわれます。 GSS-API を使用することで、 &ds389; は &krb; のチケットを利用して、セッションの認証とデータの暗号化を使用することができます。</para>
+   <para>SASL フレームワークを使用することで、サーバへの認証方式に異なる仕組みを使用することができます。たとえば &krb; の場合、認証は常に相互的に動作します。つまり、 &ds389; サーバに対して認証を行なっているだけでなく、 &ds389; 自身もあなたに対して認証を行なっていることになります。これは特に、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。</para>
+   <para>&krb; から &ds389; に接続するようにするには、 <literal>ldap/&ldapname;</literal> というプリンシパルを作成して、それを keytab 内に追加する必要があります。 &ds389; が認証時に使用する認可情報は、 keytab によって他のサーバに送信されます。 &ds389; では keytab を <varname>KRB5_KTNAME</varname> という環境変数を介して割り当てます。</para>
    <procedure>
-   <para>
-    To set the variable, proceed as follows:
-   </para>
+   <para>値を設定するには下記の手順を実施します:</para>
     <step>
-     <screen>&prompt.sudo;systemctl edit dirsrv@<replaceable>INSTANCE</replaceable></screen>
-     <para>
-      If you used the default name for the &ds389; instance, replace
-      <replaceable>INSTANCE</replaceable> with <literal>localhost</literal>.
-     </para>
+     <screen>&prompt.sudo;systemctl edit dirsrv@<replaceable>インスタンス名</replaceable></screen>
+     <para>&ds389; の既定のインスタンス名を使用している場合は、 <replaceable>インスタンス名</replaceable> の箇所を <literal>localhost</literal> にしてください。</para>
     </step>
     <step>
-     <para>
-      Add the following:
-     </para>
+     <para>あとは下記を追加します:</para>
      <screen>[Service]
-  Environment=KRB5_KTNAME=/etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab</screen>
+  Environment=KRB5_KTNAME=/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab</screen>
     </step>
     <step>
-     <para>
-      The keytab file needs to be readable by the account under which the &ds389;
-      runs (for example, <literal>dirserv</literal>):
-     </para>
-     <screen>&prompt.sudo;chown dirsrv:dirsrv /etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab
-&prompt.sudo;chmod 600 /etc/dirsrv/slapd-<replaceable>INSTANCE</replaceable>/krb5.keytab</screen>
+     <para>keytab ファイルは &ds389; の動作するアカウント (例: <literal>dirserv</literal>) が読み込めるようにする必要があります:</para>
+     <screen>&prompt.sudo;chown dirsrv:dirsrv /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab
+&prompt.sudo;chmod 600 /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab</screen>
     </step>
   </procedure>
 
    <sect3 xml:id="sec.security.kerberos.admin.ldap.auth">
     <title>LDAP を利用した &krb; 認証の使用</title>
-    <para><remark>taroth 2019-07-15: FIXME, add content by wbrown, sent via mail
-    on 2019-07-11</remark></para>
+    <para><remark>taroth 2019-07-15: FIXME, add content by wbrown, sent via mail on 2019-07-11</remark></para>
     <!--$ kinit william@REALM
         $ ldapwhoami
         ldapwhoami shows you that GSSAPI authentication worked and an encryption
@@ -763,37 +734,22 @@ GSSAPICleanupCredentials yes</screen>
    </sect3>
 
    <sect3 xml:id="sec.security.kerberos.admin.ldap.sasl">
-    <title>サブネットルーティングの設定について</title>
+    <title>SASL 識別子マッピングの設定</title>
 
-    <para>
-     When processing a SASL bind request, the &ds389; maps the SASL
-     authentication ID (used to authenticate to the Directory Server) with an
-     LDAP entry stored within the server. When using Kerberos, the SASL user ID
-     usually has the following format:
-     <literal><replaceable>userid</replaceable>@<replaceable>REALM</replaceable></literal>,
-     such as &exampleuser;@&exampledomain;. This ID must be converted into the
-     DN of the user's Directory Server entry, such as
-     <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal>.
-     The &ds389; comes with some default maps for most common configurations.
-     However, you can create customized maps. <xref linkend="pro.krb.389-ds.mapping"/>
-     shows how to list and display a map, how to delete a map and how to create
-     a custom map.
-    </para>
+    <para>SASL バインド要求を処理する際、 &ds389; は SASL の認証 ID (ディレクトリサーバとの間で認証時に使用するもの) とサーバ内に保存されている LDAP エントリの紐付け (マッピング) を行ないます。 Kerberos を使用している場合、 SASL のユーザ ID は <literal><replaceable>ユーザ_ID</replaceable>@<replaceable>レルム</replaceable></literal>  (例: &exampleuser;@&exampledomain;) のような書式になります。 ID はディレクトリサーバ内のユーザの DN 、つまり <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal> などに変換されなければなりません。 &ds389; では、よくある構成向けの既定のマッピングが提供されていますが、必要であれば独自のマップを作成することもできます。 <xref linkend="pro.krb.389-ds.mapping"/> では、マップの表示方法や削除方法、独自のマップを作成する方法について説明しています。</para>
     <procedure xml:id="pro.krb.389-ds.mapping">
-     <title>Managing Maps</title>
+     <title>マップの管理</title>
      <step>
-      <para>To list the existing SASL maps:</para>
-      <screen>&prompt.user;dsconf <replaceable>INSTANCE</replaceable> sasl list
+      <para>既存の SASL マップを一覧表示するには、下記のように入力して実行します:</para>
+      <screen>&prompt.user;dsconf <replaceable>インスタンス名</replaceable> sasl list
 Kerberos uid mapping
 rfc 2829 dn syntax
 rfc 2829u syntax
 uid mapping</screen>
      </step>
      <step>
-      <para>
-       To display a map:
-      </para>
-      <screen>&prompt.sudo;dsconf <replaceable>INSTANCE</replaceable> sasl get "Kerberos uid mapping"
+      <para>マップを表示するには、下記のように入力して実行します:</para>
+      <screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl get "Kerberos uid mapping"
 dn: cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config
 cn: Kerberos uid mapping
 nsSaslMapBaseDNTemplate: dc=\2,dc=\3
@@ -804,27 +760,20 @@ objectClass: nsSaslMapping
       </screen>
      </step>
      <step>
-      <para>
-       The default map only works if your dc has two components. To delete the
-       map (if it does not work for you):
-      </para>
-      <screen>&prompt.sudo;dsconf <replaceable>INSTANCE</replaceable> sasl delete "Kerberos uid mapping"
+      <para>既定のマップでは、お使いの環境の dc が 2 つのコンポーネントから構成されている場合にのみ動作します。 (お使いの環境に合わないなどの理由で) マップを削除するには、下記のように入力して実行します:</para>
+      <screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl delete "Kerberos uid mapping"
 Deleting SaslMapping cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config :
 Successfully deleted cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config</screen>
      </step>
      <step>
-      <para>
-      To create a new map:
-      </para>
+      <para>新しいマップを作成するには、下記のように入力して実行します:</para>
       <screen>&prompt.sudo;dsconf localhost sasl create --cn=bhgssapi --nsSaslMapRegexString "\
 (.*\)@EXAMPLE.NET.DE" --nsSaslMapBaseDNTemplate="dc=example,dc=net,dc=de" --nsSaslMapFilterTemplate="(uid=\1)"
 &prompt.sudo;Enter value for nsSaslMapPriority :
 Successfully created bhgssapi</screen>
      </step>
      <step>
-      <para>
-       Display the newly created map with:
-      </para>
+      <para>新しく作成したマップを表示するには、下記のように入力して実行します:</para>
       <screen>&prompt.sudo;dsconf localhost sasl get "bhgssapi"
 dn: cn=bhgssapi,cn=mapping,cn=sasl,cn=config
 cn: bhgssapi
@@ -834,13 +783,7 @@ nsSaslMapPriority: 100
 nsSaslMapRegexString: \(.*\)@EXAMPLE.NET.DE
 objectClass: top
 objectClass: nsSaslMapping</screen>
-      <para>
-       With this, you can check only the users of a specific realm and remap them
-       to a different dc base. As you can see, the new map has 3 <literal>dc</literal>
-       components, so the default maps would not have worked for this realm
-       (<literal>EXAMPLE.NET.DE</literal>), only for a realm like
-       <literal>EXAMPLE.NET</literal>.
-      </para>
+      <para>これを利用することで、特定のレルムのユーザのみをチェックして、異なる dc ベースに再マップすることができるようになります。既にご存じのとおり、新しいマップには 3 つの <literal>dc</literal> コンポーネントが存在していますので、既定のマップはこのレルム ( <literal>EXAMPLE.NET.DE</literal> ) では動作せず、 <literal>EXAMPLE.NET</literal> のようなレルムでのみ動作します。</para>
      </step>
     </procedure>
    </sect3>
@@ -935,47 +878,7 @@ objectClass: nsSaslMapping</screen>
     <para>必要に応じて、 &yast; が追加のパッケージをインストールします。</para>
    </step>
   </procedure>
-  <para>
-   <remark>taroth 2019-07-25: ToDo - integrate following info by wbrown</remark>
-<!-- info by wbrown, via mail (2019-07-02)
-
-after you follow the Yast KDB setup steps, you can then do:
-
-# kadmin.local
-kadmin.local: listprincs
-kadmin.local: ank admin@EXAMPLE.COM
-
-
-# ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost
-
-
-# admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.com
-dn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com
-krbLoginFailedCount: 0
-krbPrincipalName: admin@EXAMPLE.COM
-krbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg
- AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr
- 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ
- WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=
-krbLastPwdChange: 20190702032802Z
-krbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=
-krbExtraData:: AAgBAA==
-objectClass: krbprincipal
-objectClass: krbprincipalaux
-objectClass: krbTicketPolicyAux
-objectClass: top
-
-
-linux-go62:/home/admin # kinit admin@EXAMPLE.COM
-Password for admin@EXAMPLE.COM:
-linux-go62:/home/admin # klist
-Ticket cache: DIR::/run/user/0/krb5cc/tkt
-Default principal: admin@EXAMPLE.COM
-
-Valid starting     Expires            Service principal
-07/02/19 13:29:04  07/03/19 13:29:04  krbtgt/EXAMPLE.COM@EXAMPLE.COM-->
-
-  </para>
+  <para><remark>taroth 2019-07-25: ToDo - integrate following info by wbrown</remark> <!-- info by wbrown, via mail (2019-07-02)after you follow the Yast KDB setup steps, you can then do:# kadmin.localkadmin.local: listprincskadmin.local: ank admin@EXAMPLE.COM# ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost# admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.comdn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=comkrbLoginFailedCount: 0krbPrincipalName: admin@EXAMPLE.COMkrbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=krbLastPwdChange: 20190702032802ZkrbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=krbExtraData:: AAgBAA==objectClass: krbprincipalobjectClass: krbprincipalauxobjectClass: krbTicketPolicyAuxobjectClass: toplinux-go62:/home/admin # kinit admin@EXAMPLE.COMPassword for admin@EXAMPLE.COM:linux-go62:/home/admin # klistTicket cache: DIR::/run/user/0/krb5cc/tktDefault principal: admin@EXAMPLE.COMValid starting Expires Service principal07/02/19 13:29:04 07/03/19 13:29:04 krbtgt/EXAMPLE.COM@EXAMPLE.COM--></para>
  </sect1>
 
  <sect1 xml:id="sec.security.kerberos.nfs">

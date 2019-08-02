@@ -7,7 +7,7 @@
  <title>LDAP ディレクトリサービス</title>
  <info>
       <abstract>
-        <para>軽量ディレクトリアクセスプロトコル (Lightweight Directory Access Protocol (LDAP)) は、情報ディレクトリにアクセスしたり情報ディレクトリを管理したりするためのプロトコル集です。 LDAP はユーザやグループのほか、システム設定の管理やアドレスの管理などにも使用することができます。本章では、 OpenLDAP の基本的な動作について説明しています。</para>
+        <para>軽量ディレクトリアクセスプロトコル (Lightweight Directory Access Protocol (LDAP)) は、情報ディレクトリにアクセスしたり情報ディレクトリを管理したりするためのプロトコル集です。 LDAP はユーザやグループのほか、システム設定の管理やアドレスの管理などにも使用することができます。本章では、 LDAP の基本的な動作について説明しています。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -16,13 +16,7 @@
     </info>
 
   <para>実際には、中央のサーバがディレクトリ内にデータを保管しておき、全てのクライアントに対しては明確に定義されたプロトコルで配布を行ないます。構造化されたデータの仕組みにより、様々なアプリケーションがそれらのデータにアクセスできるようになります。中央のサーバ (リポジトリとも呼びます) を用意することで管理の手間を省き、 LDAP のようなオープンで標準化されたプロトコルを使用することで、そこで管理されている情報にアクセスするプログラムをできる限り多く用意することができます。</para>
-  <para>
-   A directory in this context is a type of database optimized for quick and
-   effective reading and searching. The type of data stored in a directory tends
-   to be long lived and changes infrequently. This allows the LDAP service to be
-   optimized for high performance concurrent reads, whereas conventional databases
-   are optimized for accepting a large number of writes to data in a short time.
-  </para>
+  <para>なお、本章での <quote>ディレクトリ</quote> とは、読み込みや検索の速度や効率性の点で最適化されたデータベースを意味します。ディレクトリ内に保存されたデータは長期にわたって保存され、あまり変更が発生しないものとされます。通常のデータベースシステムであれば短い時間内にデータの書き込みが多数発生する前提で最適化が行なわれますが LDAP サービスは読み込みに対して大きく最適化されたデータベースとなります。</para>
 
  <sect1 xml:id="sec.security.ldap.tree">
   <title>LDAP のディレクトリツリー構造</title>
@@ -31,14 +25,9 @@
   but the section should be revised in the future - for input, see
   https://fy.blackhats.net.au/blog/html/pages/ldap_guide_part_1_foundations.html
 -->
-   <para>
-   This section introduces the layout of an LDAP directory tree and provides
-   the basic terminology used with regard to LDAP. <phrase os="sles;osuse">If
-    you are familiar with LDAP, read on at <xref linkend="sec.security.ldap.server"/>.
-   </phrase>
-  </para>
+   <para>本章では、 LDAP ディレクトリツリーの基本的な配置と、 LDAP に関する基本的な用語を説明しています。 <phrase os="sles;osuse">既に LDAP に関する知識をお持ちの場合は、 <xref linkend="sec.security.ldap.server"/> からお読みください。 </phrase></para>
 
-  <para>LDAP ディレクトリはツリー型の構造になっています。ディレクトリ内の全ての項目 (オブジェクトと呼びます) は、この階層構造内での位置が決められています。この階層構造を <emphasis>ディレクトリ情報ツリー</emphasis> (Directory Information Tree (DIT)) と呼びます。また、特定の項目に対して、それを正確に識別するためのパス情報を、 <emphasis>識別名</emphasis> (Distinguished Name (DN)) と呼びます。また、ファイルシステムと同様に、 DN も相対的な表記を行なうことができます。これを <emphasis>相対識別名</emphasis> (Relative Distinguished Name (RDN)) と呼びます。</para>
+  <para>LDAP ディレクトリはツリー型の構造になっています。ディレクトリ内の全ての項目 (オブジェクトと呼びます) は、この階層構造内での位置が決められています。この階層構造を <emphasis>ディレクトリ情報ツリー</emphasis> (Directory Information Tree (DIT)) と呼びます。また、特定の項目に対して、それを正確に識別するためのパス情報を、 <emphasis>識別名</emphasis> (Distinguished Name (DN)) と呼びます。またツリー内にあるオブジェクトは <emphasis>相対識別名</emphasis> (Relative Distinguished Name (RDN)) でお互いを区別します。 <emphasis>識別名</emphasis> は、その項目に対する全ての <emphasis>相対識別名</emphasis> から構成されています。</para>
 
   <para>LDAP ディレクトリツリーの構造を図に表わすと、 <xref linkend="fig.ldap.tree"/> のようになります。</para>
 
@@ -58,9 +47,9 @@
 
 <!-- ke: yes, these things are called "Schema" -->
 
-  <para>ディレクトリ情報ツリー (DIT) 内に保管できるオブジェクトの種類は、 <emphasis>スキーマ</emphasis> と呼ばれるものに従って設定されます。オブジェクトの種類は <emphasis>オブジェクトクラス</emphasis> と呼ばれ、それに対応するスキーマで、そのオブジェクトが設定しなければならない値や、設定できる値が示されます。そのためスキーマは、特定の用途で使用される全てのオブジェクトクラスや属性の定義を含んでいなければならないことになります。一般的なスキーマとしてはいくつかのものが規定されています (RFC 2252 および RFC 2256) 。 LDAP RFC でも、いくつかの一般的なスキーマが規定されています (RFC 4519 など) 。これに加えて、様々な用途に対応するスキーマが用意されています (たとえば Samba や NIS の代替など) 。もちろん、独自のスキーマを作成して使用することもできますし、必要であれば、お互いに補完し合うような関係の複数のスキーマを使用することもできます。</para>
+  <para>ディレクトリ情報ツリー (DIT) 内に保管できるオブジェクトの種類は、 <emphasis>スキーマ</emphasis> と呼ばれるものに従って設定されます。オブジェクトの種類は <emphasis>オブジェクトクラス</emphasis> と呼ばれ、それに対応するスキーマで、そのオブジェクトが設定しなければならない値や、設定できる値が示されます。そのためスキーマには、 LDAP サーバ内で使用される全てのオブジェクトクラスや属性の定義を含んでいることになります。一方の属性は、構造化されたデータ型です。それらの書式や順序などの情報も、スキーマ内に記述されています。 LDAP サーバには幅広い環境で動作することができるよう、中枢 (コア) スキーマセットが用意されています。必要であれば、独自のスキーマを作成して使用することもできます。</para>
 
-  <para><xref linkend="tab.ldap.schema"/> には、 <filename>core.schema</filename> や <filename>inetorgperson.schema</filename> で規定されているオブジェクトクラスの一部と、それらで必須とされている属性を紹介しています。 <!-- intro abbrev "Req. Attr." too shorten the table header --></para>
+  <para><xref linkend="tab.ldap.schema"/> には、 <filename>00core.ldif</filename> や <filename>06inetorgperson.ldif</filename> で規定されているオブジェクトクラスの一部と、それらで必須とされている属性、そして属性値の書式を紹介しています。 <systemitem>389-ds</systemitem> パッケージをインストールしている環境であれば、これらは <filename>usr/share/dirsrv/schema</filename> 内に存在しています。 <!-- intro abbrev "Req. Attr." too shorten the table header --></para>
 
   <table xml:id="tab.ldap.schema">
    <title>よく使用されるオブジェクトクラスと属性</title>
@@ -88,20 +77,16 @@
     <tbody>
      <row>
       <entry>
-       <para><literal>dcObject</literal></para>
+       <para><literal>domain</literal></para>
       </entry>
       <entry>
-       <para>
-        name components of the domain
-       </para>
+       <para>ドメインの名前パート</para>
       </entry>
       <entry>
        <para>example</para>
       </entry>
       <entry>
-       <para>
-        displayName
-       </para>
+       <para>displayName</para>
       </entry>
      </row>
      <row>
@@ -109,7 +94,7 @@
        <para><literal>organizationalUnit</literal></para>
       </entry>
       <entry>
-       <para><literal>organizationalUnit</literal></para>
+       <para>組織単位</para>
       </entry>
       <entry>
        <para>doc</para>
@@ -120,18 +105,16 @@
      </row>
      <row>
       <entry>
-       <para><literal>inetOrgPerson</literal></para>
+       <para><literal>nsPerson</literal></para>
       </entry>
       <entry>
-       <para><emphasis>inetOrgPerson</emphasis> (イントラネットもしくはインターネットの個人に関するデータ)</para>
+       <para>イントラネットもしくはインターネットの個人関連データ</para>
       </entry>
       <entry>
        <para>Geeko Linux</para>
       </entry>
       <entry>
-       <para>
-        cn
-       </para>
+       <para>cn</para>
       </entry>
      </row>
     </tbody>
@@ -141,23 +124,19 @@
   <para>また <xref linkend="aus.ldap.schema.help"/> では、スキーマ定義の例を示しています。</para>
 
   <example xml:id="aus.ldap.schema.help">
-   <title>schema.core からの抜粋</title>
-<screen>attributetype (2.5.4.11 NAME ( 'ou' 'organizationalUnitName') <co xml:id="co.ldap.schema.core.att_type"/>
-       DESC 'RFC2256: organizational unit this object belongs to' <co xml:id="co.ldap.schema.core.desc"/>
-       SUP name ) <co xml:id="co.ldap.schema.core.sup"/>
+   <title>CN=schema からの抜粋</title>
+<screen>attributetype (1.2.840.113556.1.2.102 NAME 'memberOf' <co xml:id="co.ldap.schema.core.att_type"/>
+       DESC 'Group that the entry belongs to' <co xml:id="co.ldap.schema.core.desc"/>
+       SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 <co xml:id="co.ldap.schema.core.syntax"/>
+       X-ORIGIN 'Netscape Delegated Administrator') <co xml:id="co.ldap.schema.core.xorigin"/>
 
-objectclass ( 2.5.6.5 NAME 'organizationalUnit' <co xml:id="co.ldap.schema.core.oc"/>
-       DESC 'RFC2256: an organizational unit' <co xml:id="co.ldap.schema.core.desc.oc"/>
+objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co.ldap.schema.core.oc"/>
+       DESC 'A representation of a person in a directory server' <co xml:id="co.ldap.schema.core.desc.oc"/>
        SUP top STRUCTURAL <co xml:id="co.ldap.schema.core.sup.oc"/>
-       MUST ou <co xml:id="co.ldap.schema.core.must.oc"/>
-MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap.schema.core.may.oc"/>
-  $ x121Address $ registeredAddress $ destinationIndicator
-  $ preferredDeliveryMethod $ telexNumber
-  $ teletexTerminalIdentifier $ telephoneNumber
-  $ internationaliSDNNumber $ facsimileTelephoneNumber
-  $ street $ postOfficeBox $ postalCode $ postalAddress
-  $ physicalDeliveryOfficeName
-  $ st $ l $ description) )
+       MUST ( displayName $ cn ) <co xml:id="co.ldap.schema.core.must.oc"/>
+       MAY ( userPassword $ seeAlso $ description $ legalName $ mail \
+             $ preferredLanguage ) <co xml:id="co.ldap.schema.core.may.oc"/>
+       X-ORIGIN '389 Directory Server Project’
   ...</screen>
   </example>
   <calloutlist>
@@ -168,18 +147,13 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
     <para><literal>DESC</literal> では属性に対する簡潔な説明を記します。定義の元となった RFC などがあれば、それも記述されます。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.syntax">
-    <para>
-      The type of data that can be held in the attribute. In this case, it is a
-      case-insensitive directory string.
-    </para>
+    <para>属性内に保持できるデータの型。この場合、大文字と小文字を区別しない文字列であることを示しています。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.xorigin">
-    <para>
-     The source of the schema element (for example, the name of the project).
-    </para>
+    <para>スキーマ要素のソース (たとえばプロジェクト名) 。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.oc">
-    <para>オブジェクトクラス <literal>organizationalUnit</literal> の定義の始まりです。オブジェクトクラスの定義は属性の定義と同じで、 OID とオブジェクトクラスの名前をそれぞれ記します。</para>
+    <para>オブジェクトクラス <literal>nsPerson</literal> の定義の始まりです。オブジェクトクラスの定義は属性の定義と同じで、 OID とオブジェクトクラスの名前をそれぞれ記します。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.desc.oc">
     <para>そのオブジェクトクラスに対する簡潔な説明です。</para>
@@ -188,7 +162,7 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
     <para><literal>SUP top</literal> と書くことで、このオブジェクトクラスの上位に存在するオブジェクトクラスが存在していないことを表わしています。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.must.oc">
-    <para><literal>MUST</literal> 以下には、 <literal>organizationalUnit</literal> のオブジェクトクラスで、設定されなければならない全ての属性種類を記します。</para>
+    <para><literal>MUST</literal> 以下には、 <literal>nsPerson</literal> のオブジェクトクラスで、設定されなければならない全ての属性種類を記します。</para>
    </callout>
    <callout arearefs="co.ldap.schema.core.may.oc">
     <para><literal>MAY</literal> 以下には、そのオブジェクトクラスで設定することのできる全ての属性種類を記します。</para>
@@ -197,147 +171,83 @@ MAY (userPassword $ searchGuide $ seeAlso $ businessCategory <co xml:id="co.ldap
  </sect1>
 
  <sect1 xml:id="sec.security.ldap.server.install">
-  <title>Installing the Software for &ds389;</title>
-   <para>
-    The <systemitem>389-ds</systemitem> package contains the &ds389; and the
-    administration tools. If the package is not installed yet, install it with
-    the following command:</para>
+  <title>&ds389; 向けのソフトウエアのインストール</title>
+   <para><systemitem>389-ds</systemitem> パッケージには、 &ds389; と管理ツールが含まれています。パッケージをインストールしていない場合は、下記のコマンドを入力して実行し、インストールを行なってください:</para>
     <screen>&prompt.sudo;zypper install 389-ds</screen>
-    <para>
-     After installation, you can set up the server either manually or with &yast;.
-     Also, you can manage LDAP users and groups and configure an LDAP client with
-     &yast;:
-    </para>
+    <para>インストールを行なった後は、サーバを手作業で設定してもかまいませんし、 &yast; で設定してもかまいません。このほか、 &yast; を利用することで、 LDAP のユーザやグループを管理することができるほか、 LDAP クライアントの設定も行なうことができます:</para>
    <itemizedlist os="sles;osuse">
     <listitem>
-     <para>
-      <xref linkend="sec.security.ldap.server"/>
-     </para>
+     <para><xref linkend="sec.security.ldap.server"/></para>
     </listitem>
    <listitem>
-    <para>
-     <xref linkend="sec.security.auth.yast"/>
-    </para>
+    <para><xref linkend="sec.security.auth.yast"/></para>
    </listitem>
    <listitem>
-    <para>
-     <xref linkend="sec.security.ldap.yast.usergr"/>
-    </para>
+    <para><xref linkend="sec.security.ldap.yast.usergr"/></para>
    </listitem>
    <listitem>
-    <para>
-     <xref linkend="sec.security.ldap.yast.client"/>
-    </para>
+    <para><xref linkend="sec.security.ldap.yast.client"/></para>
    </listitem>
   </itemizedlist>
  </sect1>
 
  <sect1 xml:id="sec.security.ldap.server" os="sles;osuse">
-  <title>LDAP サーバの手動設定</title>
-  <para>
-   Setting up the &ds389; takes the following basic steps:
-  </para>
+  <title>&ds389; サーバの手動設定</title>
+  <para>&ds389; の設定作業は下記の流れで行ないます:</para>
   <procedure>
     <step>
-    <para>
-     <!--Creating the Directory Server Instance-->
-     <xref linkend="sec.security.ldap.server.instance" xrefstyle="select:title"/>
-    </para>
+    <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec.security.ldap.server.instance" xrefstyle="select:title"/></para>
    </step>
    <step>
-    <para>
-     <!--Configuring Admin Credentials for Remote/Local Access-->
-      <xref linkend="sec.security.ldap.server.credentials" xrefstyle="select:title"/>
-    </para>
+    <para><!--リモート／ローカルアクセス用の管理者の設定--> <xref linkend="sec.security.ldap.server.credentials" xrefstyle="select:title"/></para>
    </step>
    <step>
-    <para>
-    <!--Configuring Users and Groups-->
-     <xref linkend="sec.security.ldap.server.users" xrefstyle="select:title"/>
-    </para>
+    <para><!--ユーザとグループの設定--> <xref linkend="sec.security.ldap.server.users" xrefstyle="select:title"/></para>
    </step>
    <step>
-    <para>
-    <!--Configuring SSSD-->
-     <xref linkend="sec.security.ldap.server.sssd" xrefstyle="select:title"/>
-    </para>
+    <para><!--SSSD の設定--> <xref linkend="sec.security.ldap.server.sssd" xrefstyle="select:title"/></para>
    </step>
   </procedure>
-  <para>
-   <remark>taroth 2019-06-19: some topics like 'configuring other applications'
-    and 'backup and restore' to be added later on</remark>
-  </para>
+  <para><remark>taroth 2019-06-19: some topics like 'configuring other applications' and 'backup and restore' to be added later on</remark></para>
    <!--
     *  configuring other applications (showing "dsidm instance client_config display")
     * backup and restore
    -->
-   <para>
-   The &ds389; is controlled by 3 primary commands:
-  </para>
+   <para>&ds389; は主に 3 つのコマンドで制御します:</para>
   <variablelist>
    <varlistentry>
     <term><command>dsctl</command></term>
     <listitem>
-     <para>
-      Manages a local instance and requires &rootuser; permissions. Requires you
-      to be connected to a terminal which is running the directory server instance.
-      Used for starting, stopping, backing up the database and more.
-     </para>
+     <para>ローカルのインスタンス管理に使用するコマンドで、 &rootuser; の権限が必要となります。なお、このコマンドを実行するには、ディレクトリサーバインスタンスの動作しているサーバ内にいなければなりません。起動や停止、データベースのバックアップなどを行なうことができます。</para>
     </listitem>
    </varlistentry>
     <varlistentry>
      <term><command>dsconf</command></term>
      <listitem>
-      <para>
-       The primary tool used for administration and configuration of the server.
-       Manages an instance's configuration via its external interfaces. This allows
-       you to make configuration changes remotely on the instance.
-      </para>
+      <para>サーバの管理や設定を行なうための主要なツールです。外部インターフェイスを介してインスタンスの設定を管理することができます。このコマンドを使用することで、インスタンスをリモートから設定変更することができます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><command>dsidm</command></term>
      <listitem>
-      <para>
-       Used for identity management (manage users, groups, passwords etc.).
-       The permissions are granted by access controls, so users can reset their
-       own password or change details of their own account, for example.
-      </para>
+      <para>識別子 (ユーザ／グループ／パスワードなど) を管理するために使用します。なお、アクセス制御機能で許可を得ておく必要があります。一般ユーザの場合、自分自身のパスワードのリセットや詳細情報の変更などを行なうことができます。</para>
      </listitem>
     </varlistentry>
   </variablelist>
 
   <sect2 xml:id="sec.security.ldap.server.instance">
-  <title>Creating the &ds389; Instance</title>
-    <para>
-     You create the instance with the <command>dscreate</command> command.
-     It can take a configuration file (<filename>*.inf</filename>) which
-     defines the instance configuration settings. Alternatively, the command can
-     be run in an interactive mode.
-    </para>
+  <title>&ds389; インスタンスの作成</title>
+    <para><command>dscreate</command> コマンドを使用することで、インスタンスを作成することができます。このコマンドでは、設定ファイル ( <filename>*.inf</filename> ) を指定することで、インスタンスの設定を行なうことができるほか、対話的に動作させることもできます。</para>
     <note>
-     <title>Instance Name</title>
-      <para>
-       If not specified otherwise, the default instance name is
-       <literal>localhost</literal>. The instance name cannot
-       be changed after the instance has been created.</para>
+     <title>インスタンス名</title>
+      <para>何も指定しない場合、既定のインスタンス名は <literal>localhost</literal> になります。作成後にインスタンス名を変更することはできません。</para>
     </note>
-    <para>
-     <xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/> shows an
-     example configuration file that you can use as a starting point. Alternatively,
-     use <command>dscreate create-template</command> to create a template
-     <filename>*.inf</filename> file. The template is commented and pre-filled,
-     so you can adjust its variables to your needs. For more details, see the
-     man page of <command>dscreate</command>.
-    </para>
+    <para><xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/> には、出発点となる設定ファイルの例が示されています。また、 <command>dscreate create-template</command> コマンドを使用することで、雛形となる <filename>*.inf</filename> を作成することもできます。雛形にはコメントや事前の設定値が記述され、後から必要に応じて調整できるようになっています。詳しくは <command>dscreate</command> のマニュアルをお読みください。</para>
    <procedure>
     <step>
-     <para>
-      If you want to set up a trial instance, start an editor and save the
-      following as <filename>/tmp/instance.inf</filename>:
-     </para>
+     <para>試しにインスタンスを作成したい場合は、エディタを起動して <filename>/tmp/instance.inf</filename> のようなファイル名で下記の内容を保存してください:</para>
      <example xml:id="ex.ldap.389-ds.inf">
-      <title>Basic Instance Configuration File</title>
+      <title>基本的なインスタンス設定ファイル</title>
       <screen># /tmp/instance.inf
 [general]
 config_version = 2
@@ -350,62 +260,38 @@ sample_entries = yes
 suffix = dc=example,dc=com</screen>
       <calloutlist>
        <callout arearefs="co.ldap.389-ds.rootpasswd">
-        <para>
-         Set the <varname>root_password</varname> to the password for
-         the directory server &rootuser; user. The password is used for LDAP
-         server administration only.
-        </para>
+        <para><varname>root_password</varname> の箇所には、ディレクトリサーバの &rootuser; ユーザのパスワードを設定します。このパスワードは、 LDAP サーバの管理用にのみ使用します。</para>
        </callout>
       </calloutlist>
      </example>
    </step>
    <step>
-    <para>
-     To create the &ds389; instance from <xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/>, run:
-    </para>
+    <para><xref linkend="ex.ldap.389-ds.inf" xrefstyle="select:label"/> から &ds389; のインスタンスを作成するには、下記を実行します:</para>
     <screen>&prompt.sudo;dscreate from-file /tmp/instance.inf</screen>
-    <para>
-     This creates a working LDAP server.
-    </para>
+    <para>これにより、 LDAP サーバが作成されます。</para>
    </step>
    <step>
-    <para>
-     If <command>dscreate</command> should fail, the messages will tell you why.
-     For more details, repeat the command with the <option>-v</option> option:
-    </para>
+    <para><command>dscreate</command> の実行が失敗した場合は、作成できなかった理由がメッセージとして示されます。詳しくは <option>-v</option> オプションを付けて実行してください:</para>
     <screen>&prompt.sudo;dscreate -v from-file /tmp/instance.inf</screen>
    </step>
    <step>
-    <para>
-     Check the status of the server with:
-    </para>
+    <para>次にサーバの動作状況を確認します:</para>
     <screen>&prompt.sudo;dsctl localhost status
 instance 'Localhost' is running</screen>
    </step>
    <step>
-    <para>
-     In case you want to delete the instance later on:
-    </para>
+    <para>インスタンスを削除帯場合は、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;dsctl localhost remove --do-it</screen>
-    <para>
-     With this command, you can also remove partially installed or corrupted
-     instances.
-    </para>
+    <para>このコマンドを実行することで、部分的にインストールが完了していたり、壊れてしまったりしたインスタンスを削除することもできます。</para>
    </step>
   </procedure>
  </sect2>
 
  <sect2 xml:id="sec.security.ldap.server.credentials">
-  <title>Configuring Admin Credentials for Remote/Local Access</title>
-   <para>
-    For remote or local administration of the &ds389;, you can create a
-    <filename>.dsrc</filename> configuration file in your home directory. This
-    saves you to type your user name and connection details with every command.
-    <xref linkend="ex.security.ldap.server.credentials.remote" xrefstyle="select:label"/> shows an example  configuration file for remote
-    administration, whereas <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/> shows one for local administration.
-   </para>
+  <title>リモート／ローカルアクセス用の管理者の設定</title>
+   <para>&ds389; のリモート管理やローカル管理を行なう目的で、お使いのホームディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。このファイルには、ユーザ名や接続の詳細を保存しておくことができます。 <xref linkend="ex.security.ldap.server.credentials.remote" xrefstyle="select:label"/> にはリモート管理用の設定ファイル例が、 <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/> にはローカル管理用の設定ファイル例が、それぞれ示されています。</para>
   <example xml:id="ex.security.ldap.server.credentials.remote">
-   <title>A <filename>.dsrc</filename> File for Remote Administration</title>
+   <title>リモート管理用の <filename>.dsrc</filename> ファイル</title>
    <screen># cat ~/.dsrc
 [localhost]
 uri = ldaps://localhost <co xml:id="co.ldap.server.dsrc.remote.localhost"/>
@@ -414,52 +300,26 @@ binddn = cn=Directory Manager
 tls_cacertdir = /etc/dirsrv/slapd-localhost/ <co xml:id="co.ldap.server.dsrc.remote.cert"/></screen>
    <calloutlist>
     <callout arearefs="co.ldap.server.dsrc.remote.localhost">
-     <para>
-      Needs to point to the LDAP server instance. If not specified otherwise,
-      the default instance name is <literal>localhost</literal>.
-     </para>
+     <para>LDAP サーバインスタンスを示すように設定する必要があります。何も指定しない場合、既定のインスタンス名として <literal>localhost</literal> が使用されます。</para>
     </callout>
     <callout arearefs="co.ldap.server.dsrc.remote.cert">
-     <para>
-      If you have configured a certificate yourself, provide the path to the
-      CA certificate here (for remote access with TLS). If you have not
-      configured a certificate yourself, <command>dscreate</command> generates
-      a self-signed certificate which you can trust. Find the certificate at
-      <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename>. Copy it to a
-      readable location or to the client machine from which you use the
-      <command>ds*</command> commands.
-     </para>
+     <para>TLS でリモートアクセスするにあたって、設定済みの証明書が既に存在する場合は、ここに CA (証明機関) の証明書のパスを指定します。証明書を設定していない場合は、 <command>dscreate</command> コマンドで自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename> にあるものとして扱われます。必要に応じて、 <command>ds*</command> コマンドを実行するクライアントマシンにコピーしてください。</para>
     </callout>
    </calloutlist>
   </example>
-  <para>
-   If you want to administer the instance on the same host where the &ds389; runs,
-   use the configuration file in <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/>.
-  </para>
+  <para>&ds389; が動作するマシン内で管理を行ないたい場合は、 <xref linkend="ex.security.ldap.server.credentials.local" xrefstyle="select:label"/> にある設定ファイル例をお使いください。</para>
   <example xml:id="ex.security.ldap.server.credentials.local">
-   <title>A <filename>.dsrc</filename> File for Local Administration</title>
+   <title>ローカル管理用の <filename>.dsrc</filename>　ファイル</title>
    <screen># cat ~/.dsrc
 [localhost]
-# Note that '/' is replaced with '%%2f'.
+# '/' は '%%2f' に置き換えてください
 uri = ldapi://%%2fvar%%2frun%%2fslapd-localhost.socket <co xml:id="co.ldap.server.dsrc.remote.ldapi"/>
 basedn = dc=example,dc=com
 binddn = cn=Directory Manager
 </screen>
    <calloutlist>
     <callout arearefs="co.ldap.server.dsrc.remote.ldapi">
-      <para>
-       <!--Question: “When I use ldapi on the server that has the DS instance,
-       why don’t I need to provide my password?”--> When using <literal>ldapi</literal>
-       on the server where the &ds389; instance is running, your UID/GID will be
-       detected. If it is <literal>0/0 </literal> (which means you are logged
-       in as &rootuser; user), the <literal>ldapi</literal> binds the local
-       &rootuser; as the directory server root dn (<literal>cn=Directory Manager</literal>)
-       of the instance. This allows local administration of the server, but also
-       allows you to set a machine-generated password for <literal>cn=Directory
-       Manager</literal>) that no human knows. Whoever has administrator rights
-       on the server hosting the &ds389; instance, can access the instance as
-       <literal>cn=Directory Manager</literal>.
-      </para>
+      <para><!--Question: “When I use ldapi on the server that has the DS instance, why don’t I need to provide my password?”--> &ds389; インスタンスが動作しているのと同じマシンで実行する場合、 <literal>ldapi</literal> を指定することで、 UID/GID を自動的に検出するようになります。これが <literal>0/0 </literal> である場合 (つまり、 &rootuser; である場合) 、 <literal>ldapi</literal> はディレクトリサーバインスタンスの root dn ( <literal>cn=Directory Manager</literal> ) でバインドすることができます。これにより、 &rootuser; はサーバ内ローカルでの管理を行なうことができますが、 <literal>cn=Directory Manager</literal> のパスワードを知らなくても管理ができることになります。つまり、 &ds389; のインスタンスが動作するサーバ内で管理者権限を持っていれば、誰でも <literal>cn=Directory Manager</literal> として接続できることになります。</para>
     </callout>
    </calloutlist>
   </example>
@@ -467,123 +327,73 @@ binddn = cn=Directory Manager
 
  <sect2 xml:id="sec.security.ldap.server.users">
   <title>&yast; での LDAP ユーザとグループの設定</title>
-   <para>
-    Users and groups can be created and managed with the <command>dsidm</command>
-    command. It either runs interactively or you can use it with arguments from
-    the command line.
-   </para>
-  <para>
-   In the following example, we add two users, &exampleuserII; and &exampleuserIII;,
-   by specifying their data via command line arguments.
-  </para>
+   <para>ユーザとグループは <command>dsidm</command> コマンドで作成および管理を行ないます。このコマンドは対話的に動作させることができるほか、コマンドラインでパラメータを指定して実行することもできます。</para>
+  <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定します。</para>
   <procedure xml:id="pro.security.ldap.server.users">
-   <title>Creating LDAP Users</title>
+   <title>LDAP ユーザの作成</title>
    <step>
-    <para>
-    Create the user &exampleuserII;:
-    </para>
+    <para>&exampleuserII; ユーザを作成します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid \
   --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1000 --gidNumber 1000 \
   --homeDirectory /home/&exampleuserII;</screen>
    </step>
    <step>
-    <para>
-     To look up a user's <literal>distinguished name</literal> (fully qualified
-     name to the directory object, which is guaranteed unique):
-    </para>
+    <para>ユーザの <literal>distinguished name</literal> (DN) 名 (ディレクトリオブジェクトに対する完全修飾名、つまり唯一性の保証された名前) を参照するには、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;dsidm localhost user get &exampleuserII;
 dn: uid=&exampleuserII;,ou=people,dc=example,dc=com
 [...]</screen>
-    <para>
-     The system prompts you for the directory server &rootuser; user password
-     (unless you configured remote or local access as described in <xref linkend="sec.security.ldap.server.credentials"/>).
-    </para>
-    <para>
-     You need the distinguished name for actions such as changing the password
-     for a user.
-    </para>
+    <para>この場合、まずはディレクトリサーバの &rootuser; のパスワードを入力することになります (ただし、 <xref linkend="sec.security.ldap.server.credentials"/> でリモートもしくはローカルのアクセス方法を指定した場合を除きます) 。</para>
+    <para>ユーザのパスワード変更などの処理を行なうには、 <literal>distinguished name</literal> (DN) を指定する必要があります。</para>
    </step>
    <step>
-    <para>
-     To set or change the password for &exampleuserII;:
-    </para>
+    <para>&exampleuserII; のパスワードを設定もしくは変更するには、下記のように入力して実行します:</para>
     <substeps>
       <step>
        <screen>&prompt.sudo;dsidm localhost account reset_password \
   uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
-       <para>
-        The system prompts you for the directory server &rootuser; user password
-        (unless you configured remote or local access as described in <xref linkend="sec.security.ldap.server.credentials"/>).
-       </para>
+       <para>この場合、まずはディレクトリサーバの &rootuser; のパスワードを入力することになります (ただし、 <xref linkend="sec.security.ldap.server.credentials"/> でリモートもしくはローカルのアクセス方法を指定した場合を除きます) 。</para>
       </step>
       <step>
-       <para>
-        Enter the new password for &exampleuserII; twice.
-       </para>
-       <para>
-        If the action was successful, you get the following message:
-       </para>
+       <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
+       <para>パスワードの設定が完了すると、下記のようなメッセージが表示されるはずです:</para>
        <screen>reset password for uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
       </step>
     </substeps>
    </step>
    <step>
-    <para>Create the user &exampleuserIII;:</para>
+    <para>続いて &exampleuserIII; ユーザを作成します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid \
   --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
   --uidNumber 1001 --gidNumber 1001 --homeDirectory /home/&exampleuserIII;</screen>
    </step>
   </procedure>
   <procedure xml:id="pro.security.ldap.server.groups">
-   <title>Creating LDAP Groups and Assigning Users to Them</title>
-   <para>
-    In the following, we create a group, <systemitem class="groupname">server_admins</systemitem>, and assign the user
-    &exampleuserII; to this group.</para>
+   <title>LDAP グループの作成とユーザの割り当て</title>
+   <para>下記の手順では <systemitem class="groupname">server_admins</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。</para>
    <step>
-    <para>
-     Create the group:
-    </para>
+    <para>まずはグループを作成します:</para>
     <screen>&prompt.sudo;dsidm localhost group create</screen>
-    <para>
-     You will be prompted for a group name:
-    </para>
+    <para>すると、グループ名を尋ねられます:</para>
     <screen>Enter value for cn :</screen>
    </step>
    <step>
-    <para>
-     Enter the name for the group, for example: <literal>server_admins</literal>.
-    </para>
+    <para>ここではグループ名を入力します (例: <literal>server_admins</literal>) 。</para>
    </step>
    <step>
-    <para>
-     Add the user &exampleuserII; to the group:
-    </para>
+    <para>&exampleuserII; ユーザをグループに追加します:</para>
     <screen>&prompt.sudo;dsidm localhost group add_member server_admins uid=&exampleuserII;,ou=people,dc=example,dc=com
 added member: uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
    </step>
    <step>
-    <para>
-     Verify if authentication works:
-    </para>
+    <para>認証が正しく動作することを確認します:</para>
    <screen>&prompt.sudo;ldapwhoami -H ldaps://localhost -D \
   uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
-    <para>
-     If you are prompted for the LDAP password of &exampleuserII;, authentication works.
-    </para>
-    <para>
-     If the command fails with the following error, you are probably using a
-     self-signed certificate:
-    </para>
+    <para>&exampleuserII; の LDAP パスワードの入力を求められれば、認証は動作していることになります。</para>
+    <para>下記のようなエラーメッセージでコマンドが失敗する場合は、おそらく自己署名証明書を使用しているものと思われます:</para>
     <screen>ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)</screen>
-    <para>
-     In that case, edit <filename>/etc/openldap/ldap.conf</filename> and add the
-     path to the certificate. For example:
-    </para>
+    <para>このような場合は、 <filename>/etc/openldap/ldap.conf</filename> ファイルを編集して、証明書のパスを追加してください。たとえば下記のようになります:</para>
     <screen>TLS_CACERT=/etc/dirsrv/slapd-localhost/ca.crt</screen>
-    <para>
-     Alternatively, include the path to the certificate in the
-     <filename>whoami</filename> command:
-    </para>
+    <para>それ以外にも、 <filename>whoami</filename> コマンド内で証明書のパスを指定してもかまいません:</para>
     <screen>&prompt.sudo;LDAPTLS_CACERT=/etc/dirsrv/slapd-localhost/ca.crt \
   ldapwhoami -H ldaps://localhost -D \
   uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
@@ -592,73 +402,43 @@ added member: uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
  </sect2>
 
  <sect2 xml:id="sec.security.ldap.server.sssd">
-  <title>Setting Up SSSD</title>
-  <para>
-   SSSD (System Security Services Daemon) is a daemon that communicates with
-   remote identity providers and allows <literal>pam</literal> and
-   <literal>nsswitch</literal> to consume that data. SSSD can have multiple
-   back-ends, cache users and groups and provides features like SSH key
-   distributions.
-  </para>
+  <title>SSSD の設定</title>
+  <para>SSSD (System Security Services Daemon) はリモートの識別子プロバイダとの通信を行ない、 <literal>pam</literal> や <literal>nsswitch</literal> にデータを渡すことのできるデーモンです。 SSSD には複数のバックエンドを設定することができるほか、ユーザとグループのキャッシュ機能や、 SSH の鍵配布などの機能に対応しています。</para>
   <procedure>
    <step>
-     <para>On a separate server, install the <systemitem>sssd</systemitem> package:
-     </para>
+     <para>まずは別のサーバに <systemitem>sssd</systemitem> パッケージをインストールします:</para>
     <screen>&prompt.sudo;zypper in sssd</screen>
    </step>
    <step>
-    <para>
-     Disable and stop the <systemitem class="daemon">nscd</systemitem> daemon
-     because it conflicts with <systemitem class="daemon">sssd</systemitem>:
-    </para>
+    <para><systemitem class="daemon">sssd</systemitem> と衝突してしまうことから、 <systemitem class="daemon">nscd</systemitem> デーモンを無効化して停止します:</para>
     <screen>&prompt.sudo;systemctl disable nscd &amp;&amp; systemctl stop nscd</screen>
    </step>
    <step>
-    <para>
-     Create the SSSD configuration and restrict the login to the members of the group <systemitem class="groupname">server_admins</systemitem> that we created in <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/>:
-    </para>
+    <para>SSSD の設定ファイルを作成して、 <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/> で作成しておいた <systemitem class="groupname">server_admins</systemitem> グループのメンバーのみがログインできるように設定します:</para>
     <screen>&prompt.sudo;dsidm localhost client_config sssd.conf server_admins</screen>
    </step>
    <step>
-    <para>
-     Review the output and paste (or redirect) it to <filename>/etc/sssd/sssd.conf</filename>.
-     If required, edit the configuration file according to your needs.
-    </para>
+    <para>出力内容を確認して、内容を <filename>/etc/sssd/sssd.conf</filename> に貼り付けます。必要であれば、ここから設定ファイルを調整してもかまいません。</para>
    </step>
    <step>
-    <para>
-     To configure the certificates on your client, copy <filename>ca.crt</filename>
-     from the LDAP server to your client:</para>
+    <para>お使いのクライアントで証明書を設定するには、 LDAP サーバからクライアントに対して、 <filename>ca.crt</filename> をコピーします:</para>
     <screen>&prompt.sudo;mkdir -p /etc/openldap/certs
 cp [...]&gt;/ca.crt /etc/openldap/certs/
 /usr/bin/c_rehash /etc/openldap/certs</screen>
    </step>
    <step>
-    <para>
-     Enable and start SSSD:
-    </para>
+    <para>SSSD を有効化して開始します:</para>
     <screen>&prompt.sudo;systemctl enable sssd
 systemctl start sssd</screen>
    </step>
    <step>
-    <para>
-     To make sure SSSD is part of PAM and NSS, follow the instructions in sections <citetitle>Configure PAM
-      (&suse;)</citetitle> and <citetitle>Configure NSS (&suse;)</citetitle> at <link xlink:href="http://www.port389.org/docs/389ds/howto/howto-sssd.html"/>.
-    </para>
+    <para>SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href="http://www.port389.org/docs/389ds/howto/howto-sssd.html"/> にある <citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS (&suse;)</citetitle> の手順に従って作業を行なってください。</para>
    </step>
    <step>
-    <para>
-     Verify if the client can provide the details for user &exampleuserII;:
-    </para>
+    <para>あとはクライアント側で、 &exampleuserII; ユーザの詳細情報が取得できることを確認します:</para>
     <screen>&prompt.sudo;id &exampleuserII;
     uid=1000(&exampleuserII;) gid=100(users) groups=100(users)</screen>
-    <para>
-     If everything is set up correctly, &exampleuserII; can access the &ds389;
-     instance via SSH to the machine where you have installed and configured
-     SSSD. However, &exampleuserIII; will fail to do so, because &exampleuserIII;
-     does not belong to the group <literal>server_admins</literal> that we have
-     configured in <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/>.
-    </para>
+    <para>全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro.security.ldap.server.groups" xrefstyle="select:label"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
    </step>
   </procedure>
  </sect2>
@@ -671,10 +451,10 @@ systemctl start sssd</screen>
     <para>&yast; から <menuchoice> <guimenu>セキュリティとユーザ</guimenu><guimenu>ユーザとグループの管理</guimenu></menuchoice> を選択して、ユーザとグループの管理モジュールを起動します。</para>
    </step>
    <step>
-    <para>LDAP が正しく接続できるかどうかを確認したい場合は、 <guimenu>接続のテスト</guimenu> を押してください。</para>
+    <para>LDAP ユーザの表示と管理を行なうには、 <guimenu>ユーザ</guimenu> タブを選択します。</para>
    </step>
    <step>
-    <para><guimenu>フィルタの設定</guimenu> を押して <guimenu>LDAP ユーザ</guimenu> を選択し、バインド DN に対するパスワードを入力して、 LDAP のユーザのみを表示します。</para>
+    <para><menuchoice><guimenu>フィルタの設定</guimenu><guimenu>LDAP ユーザ</guimenu></menuchoice> を選択し、 Root DN に対するパスワードを入力します。</para>
    </step>
    <step>
     <para><guimenu>追加</guimenu> を押してユーザ設定を入力します。表示されたダイアログには、 4 つのタブがあります:</para>
@@ -698,10 +478,7 @@ systemctl start sssd</screen>
    </step>
   </procedure>
 
- <para>
-  You can administer groups in a similar way on the <guimenu>Groups</guimenu>
-  tab.
-</para>
+ <para>グループを管理する場合は、 <guimenu>グループ</guimenu> タブで上記と同様に管理を行ないます。</para>
 <!--
   <figure id="fig.ldap.y2.adset">
    <title>&yast;: Additional LDAP Settings</title>
@@ -753,7 +530,7 @@ systemctl start sssd</screen>
     </informalfigure>
    </step>
    <step>
-    <para><guimenu>LDAP サーバの場所</guimenu> 内に、 1 つもしくは複数の LDAP サーバ URL やホスト名、 IP アドレスを入力します。複数のアドレスを指定する場合は、スペースで区切って指定してください。</para>
+    <para><!-- wbrown 2019-02-25: URLs or hostnames only. IP address would break TLS cn/san checking. --> <guimenu>LDAP サーバの場所</guimenu> 内に、 1 つもしくは複数の LDAP サーバ URL やホスト名を入力します。セキュリティ上の理由から、 <literal>LDAPS://</literal> URL を使用することをお勧めします。また、複数のアドレスを指定する場合は、スペースで区切って指定してください。</para>
    </step>
    <step>
     <para>次に <guimenu>検索ベースの DN</guimenu> 内に、 LDAP の識別名 (DN) を指定します。たとえば <literal>dc=example,dc=com</literal> のように指定します。</para>
@@ -769,31 +546,17 @@ systemctl start sssd</screen>
       <para>必要に応じて、 <guimenu>LDAP のユーザに対して認証を許可する</guimenu> と <guimenu>自動的にホームディレクトリを作成する</guimenu> を選択します。</para>
      </listitem>
      <listitem>
-      <para>
-       If you want to cache LDAP entries locally, use <guimenu>Cache LDAP Entries
-        For Faster Response</guimenu>.
-      </para>
+      <para>LDAP の項目をローカルにキャッシュしておきたい場合は、 <guimenu>より高速な応答のため LDAP の項目をキャッシュする</guimenu> を選択します。</para>
       <warning>
-       <title>Potential Security Risk with Caching</title>
-       <para>
-        Using the cache bears security risks, depending on the used mechanism.
-       </para>
+       <title>キャッシュによる潜在的なセキュリティリスクについて</title>
+       <para>お使いの認証機構によっては、このキャッシュ機能がセキュリティリスクを引き起こすことがあります。</para>
        <formalpara>
         <title>nscd</title>
-        <para>
-         If you define an authorization rule (for example, members of group
-         <literal>admin</literal> can log in), and you remove a user from that
-         group, the client cache will not see that change until the cache expires
-         or refreshes. So a user whose account has been revoked can still log in
-         for a period of time later.
-        </para>
+        <para>認可ルール (たとえば <literal>admin</literal> グループのメンバーのみにログインを許可するルール) が存在している場合、そのグループからユーザを削除しても、クライアント側にキャッシュが残ってしまっていると、そのキャッシュが更新されるまではログインができてしまうことになります。また、アカウントを削除された場合でも、一定時間はログインができることにもなります。</para>
        </formalpara>
        <formalpara>
         <title>sssd</title>
-        <para>
-         This caching mechanism constantly checks if group memberships are still
-         valid. Thus the cache risk only exists if the <literal>sssd</literal>
-         daemon is disconnected from the LDAP server for any reason.</para>
+        <para>このキャッシュ機構は、グループのメンバー情報が正しいかどうかを定期的に確認します。そのため、 <literal>sssd</literal> デーモンを利用した場合のリスクは、 LDAP サーバとの通信が切断された場合にのみ発生します。</para>
        </formalpara>
       </warning>
      </listitem>
@@ -828,20 +591,11 @@ systemctl start sssd</screen>
 
  <sect1 xml:id="sec.security.ldap.data" os="sles;osuse">
   <title>LDAP データの手動管理</title>
-   <para>
-    The command line tools provided by the <systemitem>openldap2-client</systemitem>
-    package (like <command>ldapsearch</command> or <command>ldapmodify</command>)
-    can be used for administration of data in the LDAP directory. However, they
-    are low-level tools and hard to use. For details about their use, refer to
-    the respective man pages and documentation.
-   </para>
+   <para><systemitem>openldap2-client</systemitem> パッケージが提供するコマンドラインツール (たとえば <command>ldapsearch</command> や <command>ldapmodify</command> など) を使用することで、 LDAP ディレクトリ内のデータを管理することができます。しかしながら、これらのツールは低レベルなツールであり、使いやすさの点では劣ります。これらの使い方に関する詳細は、それぞれのマニュアルページもしくはドキュメンテーションをお読みください。</para>
  </sect1>
 
 <sect1 xml:id="sec.security.ldap.info">
   <title>さらなる情報</title>
-  <para>
-   For more information about &ds389;, see the upstream documentation,
-   available at <link xlink:href="http://www.port389.org/docs/389ds/documentation.html"/>.
-  </para>
+  <para>&ds389; に関する詳細については、提供元のドキュメンテーションをお読みください。ドキュメンテーションは <link xlink:href="http://www.port389.org/docs/389ds/documentation.html"/> にあります。</para>
  </sect1>
 </chapter>
