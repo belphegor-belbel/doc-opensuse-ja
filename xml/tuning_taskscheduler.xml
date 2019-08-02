@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.taskscheduler">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-taskscheduler">
  <title>タスクスケジューラのチューニング</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -13,29 +13,29 @@
     </info>
     <para>&productnamereg; のような現代型のオペレーティングシステムでは、通常の状態でも複数の処理を同時に動作させることができます。たとえばテキストファイル内を検索しながら、同時に電子メールを受信し、さらに外付けのハードディスクから巨大なファイルをコピーしたりすることができます。また、これらのようなシンプルな処理であっても、システム内では様々な追加のプロセスが動作します。それぞれの処理に対して必要なリソースを提供するため、 Linux カーネルではツールを利用して、個別の処理にリソースを配分することができます。これが <emphasis>タスクスケジューラ</emphasis> の仕組みです。</para>
  <para>下記の章では、プロセスのスケジューリングに関する最も重要な用語について説明しているほか、 &productname; で使用されているタスクスケジューラのポリシーやスケジューリングのアルゴリズム、タスクスケジューラに関する説明なども提供しています。また、関連する情報源へのリンクも用意されています。</para>
- <sect1 xml:id="sec.tuning.taskscheduler.intro">
+ <sect1 xml:id="sec-tuning-taskscheduler-intro">
   <title>概要</title>
 
   <para>Linux カーネルは、システム内で管理されているタスク (もしくはプロセス) の管理方法を制御します。タスクスケジューラは <emphasis>プロセススケジューラ</emphasis> と呼ばれることもありますが、これは次に動作させるタスクを決定するカーネル内の構成部品を指します。複数のタスクが同時に実行できることを保証するため、システムのリソースを最大限に使用する責任を負っています。このような構造により、タスクスケジューラはマルチタスク型のオペレーティングシステムの中枢を成しています。</para>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.intro.preemption">
+  <sect2 xml:id="sec-tuning-taskscheduler-intro-preemption">
    <title>プリエンプション</title>
    <para>タスクスケジューリングでの考え方は非常にシンプルです。システム内に動作可能なプロセスが存在すれば、それらのうちの少なくとも 1 つを動作させます。また、システム内にプロセッサの数よりも多くの動作可能なプロセスが存在した場合、同時にそれら全てを動作させることはできません。</para>
    <para>そのため、プロセスによっては一時的に停止させる (<emphasis>サスペンドさせる</emphasis>) 必要があることになり、後で実行させる必要があることになります。タスクスケジューラは、キュー内にあるどのプロセスを次に実行させるのかを決定します。</para>
    <para>上述のとおり、他の Unix 系オペレーティングシステムと同様に、 Linux は <emphasis>マルチタスク型の</emphasis> (複数のタスクを同時に動作させることのできる) オペレーティングシステムです。 Linux は <emphasis>プリエンプティブ</emphasis> マルチタスクと呼ばれる構造で、スケジューラ側でプロセスの一時停止を決定します。このような強制的な一時停止を <emphasis>プリエンプション</emphasis> (横取り等の意味) と呼びます。全ての Unix 系オペレーティングシステムは、その登場当初からプリエンプティブマルチタスクを提供しています。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.intro.timeslice">
+  <sect2 xml:id="sec-tuning-taskscheduler-intro-timeslice">
    <title>タイムスライス</title>
    <para>それぞれのプロセスに対して与えられる時間枠で、その時間が経過するまではタスクスケジューラ側から一時停止を指示されない、最小単位の時間を指します。タイムスライスとは、各プロセスに対して提供されるプロセッサ時間の量を表わす値でもあります。タイムスライスを割り当てておくことで、タスクスケジューラは動作中のシステムに対してグローバルな決定を下すことができるほか、プロセスがプロセッサを占有しないようにするための仕組みです。 <remark>sknorr, 2014-08-22: "dominate over" sounds weird, not sure if just "dominate" would be better, though.</remark></para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.intro.priority">
+  <sect2 xml:id="sec-tuning-taskscheduler-intro-priority">
    <title>プロセスの優先順位</title>
    <para>スケジューラは各プロセスに割り当てられた優先順位を元にして判断を行ないます。プロセスの現在の優先順位を計算するにあたって、タスクスケジューラは複雑なアルゴリズムを使用します。その結果、各プロセスにはプロセッサの能力に応じた値が設定されます。</para>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.tuning.taskscheduler.policy.class">
+ <sect1 xml:id="sec-tuning-taskscheduler-policy-class">
   <title>プロセスの分類</title>
 
   <para>プロセスは通常、目的や振る舞いに応じた分類付けが行なわれます。明確な区切りがあるとは限りませんが、一般的には 2 種類の分類が行なわれます。これらの基準はそれぞれ個別に判断されるべきもので、お互いに排他関係にあるわけではありません。</para>
@@ -72,7 +72,7 @@
   </itemizedlist>
  </sect1>
 <!-- 2014-07-22 tbazant: removing, O1 not used anymore
- <sect1 id="sec.tuning.taskscheduler.o1">
+ <sect1 id="sec-tuning-taskscheduler-o1">
   <title>O(1) Scheduler</title>
 
   <para>
@@ -113,7 +113,7 @@
   </para>
  </sect1>
  -->
- <sect1 xml:id="sec.tuning.taskscheduler.cfs">
+ <sect1 xml:id="sec-tuning-taskscheduler-cfs">
   <title>完全公平型スケジューラ (Completely Fair Scheduler)</title>
 
   <para>Linux カーネルバージョン 2.6.23 およびそれ以降では、プロセスの実行を制御するスケジューリングに対して新しいアプローチが追加され、完全公平型スケジューラ (Completely Fair Scheduler (CFS)) が既定の Linux カーネルのスケジューラとして設定されるようになりました。それ以降重要な変更や改善が行なわれていますが、本章での説明は &productname; のカーネルバージョン 2.6.32 およびそれ以降 (バージョン 3.x を含む) に対応しています。スケジューラ環境は複数のパーツから構成されていますが、主として 3 種類の機能が追加されています:</para>
@@ -141,20 +141,20 @@
 
   <para>これらのことから、 CFS はサーバ環境でもデスクトップ環境でも最適なスケジューリングを提供できるようになっています。</para>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.howitworks">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-howitworks">
    <title>CFS の仕組み</title>
    <para>CFS は実行可能なそれぞれのタスクに対して、公平な割り振りを行なおうとします。タスクスケジューリングで最も公平なやり方として、 CFS は <emphasis>赤黒木</emphasis> の考え方を採用しています。赤黒木は平衡二分探索木の一種で、項目の挿入や削除を合理的な方法で提供し、平衡性を保ったままにすることができます。詳しい説明については、 <link xlink:href="https://ja.wikipedia.org/wiki/%E8%B5%A4%E9%BB%92%E6%9C%A8">赤黒木</link> の Wiki ページをお読みください。</para>
    <para>CFS がタスクをスケジュールする際、 <quote>仮想ランタイム</quote> もしくは <quote>vruntime</quote> と呼ばれる値を足していきます。実行する次のタスクを選択する際には、それまでに足された最小の vruntime のタスクを使用します。タスクが <emphasis>実行キュー</emphasis> (次に実行すべきプロセスの予定時刻表) 内に挿入された場合、赤黒木は平衡を保つように動作するため、最小の vruntime 値を持つタスクが赤黒木内では最初の項目となるように動きます。</para>
    <para>タスクに対して足される vruntime の量は、その優先順位に対応して決められます。高い優先順位のタスクは、低い優先順位のタスクよりも遅い頻度で vruntime が足される仕組みであるため、より高い優先順位のタスクほど、より頻繁に処理が行なわれることになります。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.grouping">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-grouping">
    <title>プロセスのグループ化</title>
    <para>Linux カーネルバージョン 2.6.24 では、 CFS が個別のタスクよりもグループに対して公平となるよう調整されました。実行可能なタスクはエンティティ (タスクの集合) としてグループ化され、 CFS では個別のタスクではなく、エンティティに対して公平になるように動作するようになっています。なおスケジューラ側では、エンティティ内の個別タスクに対しても、公平になるように処理を行ないます。</para>
-   <para>カーネルスケジューラは、コントロールグループを利用して実行可能なタスクをグループ化しています。詳しくは <xref linkend="cha.tuning.cgroups"/> をお読みください。</para>
+   <para>カーネルスケジューラは、コントロールグループを利用して実行可能なタスクをグループ化しています。詳しくは <xref linkend="cha-tuning-cgroups"/> をお読みください。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.kernelconfig">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-kernelconfig">
    <title>カーネルの設定オプション</title>
    <para>タスクスケジューラの基本的な動作に関わる要素は、カーネルの設定オプションを介して設定することができます。これらのオプションの設定は、カーネルのコンパイル時のオプションとして用意されています。カーネルのコンパイル作業は複雑な作業となるため、ここでは説明していません。詳しくは別途の資料をお探しください。</para>
    <warning>
@@ -163,7 +163,7 @@
    </warning>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.terms">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-terms">
    <title>用語</title>
    <para>タスクスケジューリングポリシーに関する文書では、いくつかの技術用語を用いる箇所があります。これらの用語の意味を知っておくことで、正しく文書を読み取ることができるようになります。下記にそれらのうちのいくつかを示します:</para>
    <variablelist>
@@ -182,7 +182,7 @@
      </listitem>
     </varlistentry>
    </variablelist>
-   <sect3 xml:id="kernel.tasksched.policies">
+   <sect3 xml:id="kernel-tasksched-policies">
     <title>スケジューリングポリシー</title>
     <para>Linux カーネルは下記のスケジューリングポリシーに対応しています:</para>
     <variablelist>
@@ -220,7 +220,7 @@
    </sect3>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.chrt">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-chrt">
    <title><command>chrt</command> によるプロセスのリアルタイム属性の変更</title>
    <para><command>chrt</command> コマンドは、実行中のプロセスに対するリアルタイムスケジューリング属性を設定したり取得したりすることができるほか、指定した属性で指定したコマンドを実行することもできます。プロセスのスケジューリングポリシーのほか、優先順位の取得や設定も行なうことができます。</para>
    <para>下記の例では、 PID が 16244 のプロセスを対象にしています。</para>
@@ -246,7 +246,7 @@ pid 16244's current scheduling priority: 0
    <para><command>chrt</command> に関する詳細については、マニュアルページ ( <command>man 1 chrt</command> ) をお読みください。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.tuning">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-tuning">
    <title><command>sysctl</command> による稼働中のチューニング</title>
    <para>稼働中にカーネルのパラメータを調査したり変更したりすることのできる <command>sysctl</command> インターフェイスを利用して変数を変更することで、タスクスケジューラの既定の動作を変更することができます。 <command>sysctl</command> の書式はシンプルですが、いずれのコマンドとも &rootuser; で実行しなければなりません。</para>
    <para>カーネル変数の値を表示するには、下記のように入力して実行します:</para>
@@ -284,32 +284,32 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
    <para>最も重要なタスクスケジューラ関連の <command>sysctl</command> チューニング変数 (<filename>/proc/sys/kernel/</filename> からもアクセスすることができます) と、その簡潔な説明を下記に示します:</para>
    <variablelist>
     <varlistentry>
-     <term><systemitem>sched_cfs_bandwidth_slice_us</systemitem></term>
+     <term>"\n  <systemitem>sched_cfs_bandwidth_slice_us</systemitem>\n"</term>
      <listitem>
       <para>CFS の帯域制御が使用されている場合、このパラメータはタスクのコントロールグループの帯域プールから実行キューに転送されるランタイムの量 (帯域幅) を制御することができます。小さい値であるほど、全体の帯域幅をタスク間できめ細かく共有できるようになりますし、大きい値であるほど、転送にかかるオーバーヘッドを減らすことができます。詳しくは <link xlink:href="https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt"/> (英語) をお読みください。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_child_runs_first</systemitem></term>
+     <term>"\n  <systemitem>sched_child_runs_first</systemitem>\n"</term>
      <listitem>
       <para>新しく fork された子プロセスは、親プロセスの実行が再開されるよりも早く実行が行なわれます。このパラメータを <literal>1</literal> にすると、子プロセスが fork 後すぐに処理を始めるような場合に有用となります。たとえば <command>make</command> <option>-j<replaceable>&lt;CPU_数&gt;</replaceable></option> のようなコマンドは、 sched_child_runs_first が <literal>0</literal> であるような場合より、高速に動作するようになります。既定値は <literal>0</literal> です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_compat_yield</systemitem></term>
+     <term>"\n  <systemitem>sched_compat_yield</systemitem>\n"</term>
      <listitem>
       <para>古い <emphasis>O(1)</emphasis> スケジューラに存在していた、放棄タスクを実行可能キューの末尾 (赤黒木で一番右側) に移動させる積極的な CPU の yielding 動作を有効にするかどうかを設定します。 <option>sched_yield(2)</option> システムコールの動作に依存するアプリケーションでは、競合の激しいリソース (たとえばロックなど) が存在するような場合、他のプロセスに対して実行のチャンスを与えることになることから、性能面での改善をもたらす場合があります。その一方、このシステムコールはコンテキストスイッチによって発生するものであるため、誤って使用してしまうと逆に性能が落ちてしまう場合があります。そのため、性能面での改善が確実である場合にのみ設定してください。既定値は <literal>0</literal> です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_migration_cost_ns</systemitem></term>
+     <term>"\n  <systemitem>sched_migration_cost_ns</systemitem>\n"</term>
      <listitem>
       <para>直近の実行が行なわれたのち、特定のタスクがマイグレーションの決定に際して <quote>キャッシュホット</quote> であると判断する時間量を設定します。 <quote>ホット</quote> なタスクほど、他の CPU にマイグレーション (移行) することが少なくなりますので、この値を増やすことでタスクマイグレーションを少なくすることができます。既定値は <literal>500000</literal> [ナノ秒] です。</para>
       <para>実行可能なプロセスが存在しているにもかかわらず、 CPU のアイドル時間が予想よりも長い場合は、この値を小さくすることをお勧めします。逆に、 CPU 間やノード間でのタスクのマイグレーションが過剰である場合、大きくすることをお勧めします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_latency_ns</systemitem></term>
+     <term>"\n  <systemitem>sched_latency_ns</systemitem>\n"</term>
      <listitem>
       <para>CPU バウンドのタスクに対して、ターゲットとするプリエンプション遅延を指定します。この値を増やすと、 CPU バウンドのタスクのタイムスライスが長くなります。タスクのタイムスライスは、スケジューリングの間隔と重み付けの設定から、下記のように公平な共有が行なわれます:</para>
       <para><replaceable>タイムスライス</replaceable> = <replaceable>スケジュール間隔</replaceable> * (<replaceable>タスクの重み</replaceable> / <replaceable>実行キュー内にあるタスクの重みの合計</replaceable>)</para>
@@ -319,13 +319,13 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_min_granularity_ns</systemitem></term>
+     <term>"\n  <systemitem>sched_min_granularity_ns</systemitem>\n"</term>
      <listitem>
       <para>CPU バウンドのタスクに対するプリエンプションの粒度です。詳しくは <systemitem>sched_latency_ns</systemitem> をご覧ください。既定値は <literal>4000000</literal> [ナノ秒] です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_wakeup_granularity_ns</systemitem></term>
+     <term>"\n  <systemitem>sched_wakeup_granularity_ns</systemitem>\n"</term>
      <listitem>
       <para>起床プリエンプション粒度を表わします。この変数の値を増やすと、起床時のプリエンプションを減らし、計算処理が主となるタスクの乱れを減らすことになります。この値を減らすと、起床の遅延を改善することができますので、遅延の回避が重要となるタスクではスループットを改善することができます。特に短いデューティサイクルの負荷コンポーネントが、 CPU バウンドのコンポーネントと確実に競合するような場合に有用です。既定値は <literal>2500000</literal> [ナノ秒] です。</para>
       <warning>
@@ -335,31 +335,31 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_rr_timeslice_ms</systemitem></term>
+     <term>"\n  <systemitem>sched_rr_timeslice_ms</systemitem>\n"</term>
      <listitem>
       <para>SCHED_RR のタスクが、他のタスクに奪われたり、タスクリストの末尾に回されたりすることなく実行できる時間単位を表わします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_rt_period_us</systemitem></term>
+     <term>"\n  <systemitem>sched_rt_period_us</systemitem>\n"</term>
      <listitem>
       <para>リアルタイムタスクの帯域強制を測定する時間を表わします。既定値は <literal>1000000</literal> [マイクロ秒] です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_rt_runtime_us</systemitem></term>
+     <term>"\n  <systemitem>sched_rt_runtime_us</systemitem>\n"</term>
      <listitem>
       <para>sched_rt_period_us の間にリアルタイムタスクに割り当てられる時間単位です。 -1 を設定すると、リアルタイムタスクの帯域強制を行なわなくなります。既定では、リアルタイムタスクは 95 [%CPU/sec] を消費するため、 5 [%CPU/sec] もしくは 0.05s が SCHED_OTHER のタスクに残されることになります。既定値は <literal>950000</literal> [マイクロ秒] です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_nr_migrate</systemitem></term>
+     <term>"\n  <systemitem>sched_nr_migrate</systemitem>\n"</term>
      <listitem>
       <para>負荷分散の目的で、プロセッサ間でタスクをマイグレーション (移行) できるタスクの数を制御します。負荷分散では割り込みを無効化 (ソフト IRQ) して実行キューを列挙するため、リアルタイムのタスクに対しては IRQ 遅延のペナルティを招く可能性があります。そのため、この値を増やすと、巨大な SCHED_OTHER のスレッドに対して性能を向上させる代わりに、リアルタイムタスクの IRQ 遅延が増えることになります。既定値は <literal>32</literal> です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>sched_time_avg_ms</systemitem></term>
+     <term>"\n  <systemitem>sched_time_avg_ms</systemitem>\n"</term>
      <listitem>
       <para>このパラメータは、リアルタイムのタスクの実行に費やす時間の平均値を設定します。この平均値は CFS に対して、負荷分散の決定を支援する値となるほか、 CPU が高い優先順位のリアルタイムタスクでどれだけ忙しくなっているのかを表わす値にもなっています。</para>
       <para>このパラメータに対する最適な設定値は、負荷の内容に大きく依存するものであるほか、リアルタイムのタスクをどれだけ頻繁に、どれだけ長く実行するのかにもよります。</para>
@@ -372,7 +372,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
      any SUSE Linux/opensuse distribution
      but see FATE#310074 !!
 
-  <sect2 id="sec.tuning.taskscheduler.cfs.tuning_other">
+  <sect2 id="sec-tuning-taskscheduler-cfs-tuning-other">
    <title>Other Tuning Options</title>
    <para>
     Long running, non-interactive tasks (that don't like preemption) and batch
@@ -395,14 +395,14 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
   </sect2>
 -->
 
-  <sect2 xml:id="sec.tuning.taskscheduler.cfs.debug">
+  <sect2 xml:id="sec-tuning-taskscheduler-cfs-debug">
    <title>デバッグ用インターフェイスとスケジューラの統計情報</title>
    <para>CFS では新しく改善されたデバッグインターフェイスが用意され、稼働中の統計情報を提供することができるようになっています。これらのファイルは <filename>/proc</filename> ファイルシステム内に用意されていますので、 <command>cat</command> や <command>less</command> などのコマンドを使用することで、簡単に調べることができるようになっています。下記にはタスクスケジューラ関連の <filename>/proc</filename> ファイルと、その簡潔な説明を示しています:</para>
    <variablelist>
     <varlistentry>
-     <term><filename>/proc/sched_debug</filename></term>
+     <term>"\n  <filename>/proc/sched_debug</filename>\n"</term>
      <listitem>
-      <para>タスクスケジューラの動作に関わる全てのチューニング可能な変数 (詳しくは <xref linkend="sec.tuning.taskscheduler.cfs.tuning"/> をご覧ください) のほか、 CFS の統計情報や全てのプロセッサでの実行キュー (CFS, RT, deadline) に対する現在の値を含んでいるファイルです。各プロセッサで動作しているタスクの概要についても、タスク名と PID 、そしてスケジューラ固有の統計情報を表示することができます。最初の列には <option>tree-key</option> 列が表示されていますが、これはタスクの仮想ランタイムを示すもので、その名前は赤黒木内で全ての実行可能なタスクを並べ替える際のキーでもあります。また <option>switches</option> 列には、スイッチの合計数 (involuntary であるものを含む) を示しています。さらに、 <option>prio</option> 列にはプロセスの優先順位が、 <option>wait-time</option> にはタスクがスケジュールされるまでに待機した時間の合計値が、 <option>sum-exec</option> と <option>sum-sleep</option> には、それぞれそのタスクをプロセッサ内で実行した時間の合計と、休眠 (スリープ) していた時間の合計がナノ秒単位で示されています。</para>
+      <para>タスクスケジューラの動作に関わる全てのチューニング可能な変数 (詳しくは <xref linkend="sec-tuning-taskscheduler-cfs-tuning"/> をご覧ください) のほか、 CFS の統計情報や全てのプロセッサでの実行キュー (CFS, RT, deadline) に対する現在の値を含んでいるファイルです。各プロセッサで動作しているタスクの概要についても、タスク名と PID 、そしてスケジューラ固有の統計情報を表示することができます。最初の列には <option>tree-key</option> 列が表示されていますが、これはタスクの仮想ランタイムを示すもので、その名前は赤黒木内で全ての実行可能なタスクを並べ替える際のキーでもあります。また <option>switches</option> 列には、スイッチの合計数 (involuntary であるものを含む) を示しています。さらに、 <option>prio</option> 列にはプロセスの優先順位が、 <option>wait-time</option> にはタスクがスケジュールされるまでに待機した時間の合計値が、 <option>sum-exec</option> と <option>sum-sleep</option> には、それぞれそのタスクをプロセッサ内で実行した時間の合計と、休眠 (スリープ) していた時間の合計がナノ秒単位で示されています。</para>
 <screen>&prompt.root;cat /proc/sched_debug
 Sched Debug Version: v0.11, 4.4.21-64-default #1
 ktime                                   : 23533900.395978
@@ -447,13 +447,13 @@ R  cc1 63477     98876.717832       197   120      0.000000         ...</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/proc/schedstat</filename></term>
+     <term>"\n  <filename>/proc/schedstat</filename>\n"</term>
      <listitem>
       <para>現在の実行キューに関連する統計情報を表示します。 SMP システムの場合、接続されている全てのプロセッサに対して、ドメイン固有の統計情報も表示することができます。出力形式はわかりにくい形式であるため、詳しくは <filename>/usr/src/linux/Documentation/scheduler/sched-stats.txt</filename> をお読みください。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/proc/<replaceable>PID</replaceable>/sched</filename></term>
+     <term>"\n  <filename>/proc/<replaceable>PID</replaceable>/sched</filename>\n"</term>
      <listitem>
       <para><replaceable>PID</replaceable> で指定したプロセスのスケジューリング情報を表示することができます。</para>
 <screen>&prompt.root;cat /proc/$(pidof gdm)/sched
@@ -481,7 +481,7 @@ numa_faults_memory, 1, 0, 0, 0, -1
    </variablelist>
   </sect2>
  </sect1>
- <sect1 xml:id="cha.tuning.taskscheduler.moreinfo">
+ <sect1 xml:id="cha-tuning-taskscheduler-moreinfo">
   <title>さらなる情報</title>
 
   <para>Linux のタスクスケジューリングに関して、よりコンパクトな知識を得たい場合は、下記のような情報源をお読みになることをお勧めします:</para>

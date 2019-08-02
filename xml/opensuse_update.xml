@@ -3,27 +3,27 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.update.osuse">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-update-osuse">
  <title>システムのアップグレードとシステムの変更</title>
  <info>
   <abstract>
-   <para>既存のシステムは、再インストールを行なうことなくアップグレードすることができます。アップグレードには 2 種類の方式があります。 1 つは <emphasis>個別のソフトウエアパッケージの更新</emphasis> 、もう 1 つは <emphasis>システム全体のアップグレード</emphasis> です。個別のソフトウエアパッケージの更新については、 <xref linkend="cha.yast-software"/> と <xref linkend="cha.onlineupdate.you"/> で説明しています。また、本章では 2 種類のアップグレード方法を説明しています。 1 つは <xref linkend="sec.upgrade.yast"/> で、もう 1 つは <xref linkend="sec.update.zypper"/> です。</para>
+   <para>既存のシステムは、再インストールを行なうことなくアップグレードすることができます。アップグレードには 2 種類の方式があります。 1 つは <emphasis>個別のソフトウエアパッケージの更新</emphasis> 、もう 1 つは <emphasis>システム全体のアップグレード</emphasis> です。個別のソフトウエアパッケージの更新については、 <xref linkend="cha-yast-software"/> と <xref linkend="cha-onlineupdate-you"/> で説明しています。また、本章では 2 種類のアップグレード方法を説明しています。 1 つは <xref linkend="sec-upgrade-yast"/> で、もう 1 つは <xref linkend="sec-update-zypper"/> です。</para>
   </abstract>
  </info>
- <sect1 xml:id="sec.update.suselinux">
+ <sect1 xml:id="sec-update-suselinux">
   <title>システムのアップグレード</title>
  <important>
   <title>&productname; &productnumber; における 64 ビット版のみの提供について</title>
-  <para>&productname; &productnumber; は 64 ビット版のみの提供となっています。また、 32 ビット版のインストール環境から 64 ビット版への移行についても、サポート対象外となっております。 <xref linkend="art.opensuse.installquick"/> および<xref linkend="cha.install"/> にある手順に従って、お使いのコンピュータに新規に <productname>&productname;</productname> をインストールし直すか、<link xlink:href="https://ja.opensuse.org/Portal:Tumbleweed"> &opensuse; Tumbleweed</link> への切り替えをお勧めします。</para>
+  <para>&productname; &productnumber; は 64 ビット版のみの提供となっています。また、 32 ビット版のインストール環境から 64 ビット版への移行についても、サポート対象外となっております。 <xref linkend="art-opensuse-installquick"/> および<xref linkend="cha-install"/> にある手順に従って、お使いのコンピュータに新規に <productname>&productname;</productname> をインストールし直すか、<link xlink:href="https://ja.opensuse.org/Portal:Tumbleweed"> &opensuse; Tumbleweed</link> への切り替えをお勧めします。</para>
  </important>
  <para>リリースノートはインストールメディア内に添付されているほか、 <link xlink:href="https://doc.opensuse.org/release-notes/"> &productname; リリースノート</link> からも読むことができるようになっています。</para>
   <para>ソフトウエアはバージョンが上がるたびに <quote>成長</quote> し、必要なサイズが増大していくものです。そのため、アップグレードを行なう前に、あらかじめ <command>df</command> を利用して空き容量を確認しておくことをお勧めします。ディスクの空き容量が少ない場合は、まずお使いのデータ類をバックアップしてから、パーティションを作成し直すことをお勧めします。各パーティションに必要な容量は、インストールされているソフトウエアや環境によって大きく異なりますので、一般的な値というものは特にありません。</para>
 
-  <sect2 xml:id="cha.update-preparation">
+  <sect2 xml:id="cha-update-preparation">
    <title>準備作業</title>
    <para>アップグレードを行なう前に、まずはデータを保全するため、別のメディア (リムーバブルハードディスクや USB メモリなど) に設定ファイルをコピーします。一般的には、設定ファイルは <filename>/etc</filename> 内にありますが、 <filename>/var</filename> 内に存在する場合もあります。また、バックアップメディアに <filename>/home</filename> ( <envar>HOME</envar> ディレクトリ) 以下のファイルをコピーしてもかまいません。なお、バックアップにあたっては、 <systemitem class="username">root</systemitem> で作業を行なう必要があります。これは、全てのローカルファイルを読み込むことができるのは、 <systemitem class="username">root</systemitem> だけであるためです。</para>
-   <para>アップグレードを始める前に、次はルートパーティションを確認します。 <command>df&nbsp;/</command> コマンドを実行すると、ルートパーティションの名前が表示されます。 <xref linkend="aus.update.df"/> の例では、 <filename>/dev/sda3</filename> がルートパーティションです (<filename>/</filename> にマウントされているため) 。</para>
-   <example xml:id="aus.update.df">
+   <para>アップグレードを始める前に、次はルートパーティションを確認します。 <command>df&nbsp;/</command> コマンドを実行すると、ルートパーティションの名前が表示されます。 <xref linkend="aus-update-df"/> の例では、 <filename>/dev/sda3</filename> がルートパーティションです (<filename>/</filename> にマウントされているため) 。</para>
+   <example xml:id="aus-update-df">
     <title><command>df -h</command> の出力結果</title>
 <screen>ファイルシス  サイズ  使用  残り 使用% マウント位置
 /dev/sda3       74G   22G   53G  29% /
@@ -51,16 +51,16 @@ udev           252M  124K  252M   1% /dev
    </sect3>
   </sect2>
 
-  <sect2 xml:id="sec.upgrade.yast">
+  <sect2 xml:id="sec-upgrade-yast">
    <title>&yast; を利用したアップグレード</title>
-   <para><xref linkend="cha.update-preparation"/> に示す手順で準備を行なったら、あとはシステムのアップグレードを行なうだけです:</para>
+   <para><xref linkend="cha-update-preparation"/> に示す手順で準備を行なったら、あとはシステムのアップグレードを行なうだけです:</para>
    <procedure>
     <step os="sles;sled">
-     <para>必要であれば、インストールサーバをご用意ください。背景となる情報について、詳しくは <xref linkend="sec.deployment.instserver.sles9"/> をお読みください。</para>
+     <para>必要であれば、インストールサーバをご用意ください。背景となる情報について、詳しくは <xref linkend="sec-deployment-instserver-sles9"/> をお読みください。</para>
     </step>
     <step>
      <para>まずは &productname; の DVD メディアをドライブに挿入し、コンピュータを再起動してインストールシステムを起動します。従来型の BIOS が搭載されたマシンの場合、下記のようなグラフィカルな起動画面が表示されます。 UEFI が搭載されたマシンの場合は、下記とは少し異なる画面になります。 UEFI マシンでの Secure Boot にも対応しています。</para>
-     <para><keycap>F2</keycap> を押して、インストールシステムで使用する言語を選択します。キーボードレイアウトについても、言語にあわせて自動設定されます。起動パラメータの変更方法について、詳しくは <xref linkend="sec.boot_parameters.screen"/> と <xref linkend="sec.boot_parameters.uefi"/> をお読みください。</para>
+     <para><keycap>F2</keycap> を押して、インストールシステムで使用する言語を選択します。キーボードレイアウトについても、言語にあわせて自動設定されます。起動パラメータの変更方法について、詳しくは <xref linkend="sec-boot_parameters-screen"/> と <xref linkend="sec-boot_parameters-uefi"/> をお読みください。</para>
      <informalfigure>
       <mediaobject>
        <imageobject role="fo">
@@ -90,7 +90,7 @@ udev           252M  124K  252M   1% /dev
      </informalfigure>
     </step>
     <step>
-     <para>&yast; はまず、ルートパーティションが複数存在していないかどうかを確認します。ルートパーティションが 1 つしか見つからなかった場合は、そのまま次の手順に進みます。複数のルートパーティションが見つかった場合は、それらが表示されますので、適切なパーティションを選択して <guimenu>次へ</guimenu> を押します (<xref linkend="cha.update-preparation"/> の環境では、 <filename>/dev/sda3</filename> を選択します) 。 &yast; はパーティション内にある既存の <filename>fstab</filename> ファイルを読み込み、設定されているその他のパーティションをマウントします。</para>
+     <para>&yast; はまず、ルートパーティションが複数存在していないかどうかを確認します。ルートパーティションが 1 つしか見つからなかった場合は、そのまま次の手順に進みます。複数のルートパーティションが見つかった場合は、それらが表示されますので、適切なパーティションを選択して <guimenu>次へ</guimenu> を押します (<xref linkend="cha-update-preparation"/> の環境では、 <filename>/dev/sda3</filename> を選択します) 。 &yast; はパーティション内にある既存の <filename>fstab</filename> ファイルを読み込み、設定されているその他のパーティションをマウントします。</para>
      <!-- cwickert 2016-03-23: This seems no longer necessary or possible -->
      <!-- <warning>
       <title>Persistent Device Names</title>
@@ -159,7 +159,7 @@ udev           252M  124K  252M   1% /dev
      <para>
       To configure the network, choose a network interface from the list and
       click <guimenu>Edit</guimenu> to change its settings. Use the tabs to
-      configure DNS and routing. Refer to <xref linkend="sec.network.yast"/>
+      configure DNS and routing. Refer to <xref linkend="sec-network-yast"/>
       for more details.
      </para>
      <informalfigure>
@@ -194,47 +194,47 @@ udev           252M  124K  252M   1% /dev
      <para><guimenu>インストール設定</guimenu> では、その他のインストール設定とその設定内容が一覧で表示されます。必要であれば、ここから変更することもできます。変更を行ないたい場合は、それぞれの項目名のリンク (下線が引かれた箇所) を押してください。また、ファイアウオールや SSH などの設定については、設定項目内のリンクを押すことで、直接変更できるものもあります。</para>
      <variablelist>
       <varlistentry>
-       <term><guimenu>システム</guimenu></term>
+       <term>"\n  <guimenu>システム</guimenu>\n"</term>
        <listitem>
-        <para><guimenu>システム</guimenu> を押すと、詳細なハードウエア情報を表示することができます。ここでは <guimenu>カーネル設定</guimenu> を押して詳細な設定を行なうことができます。詳しくは <xref linkend="sec.yast_install.proposal.system"/> をお読みください。</para>
+        <para><guimenu>システム</guimenu> を押すと、詳細なハードウエア情報を表示することができます。ここでは <guimenu>カーネル設定</guimenu> を押して詳細な設定を行なうことができます。詳しくは <xref linkend="sec-yast_install-proposal-system"/> をお読みください。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>更新オプション</guimenu></term>
+       <term>"\n  <guimenu>更新オプション</guimenu>\n"</term>
        <listitem>
         <para>既定では、 &yast; は選択されているパターンに従って、完全な <guimenu>新しいソフトウエアと機能をインストールして更新</guimenu> を行ないます。それぞれのパターンには、それを実行するのに必要な複数のソフトウエアパッケージが含まれています (たとえば Web および LAMP サーバ や 印刷サーバ など) 。</para>
         <para>ここではパッケージの選択を変更することができるほか、 <guimenu>更新モード</guimenu> を <guimenu>インストール済みのパッケージのみ更新</guimenu> にすることができます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>パッケージ</guimenu></term>
+       <term>"\n  <guimenu>パッケージ</guimenu>\n"</term>
        <listitem>
-        <para><guimenu>パッケージ</guimenu> 画面を利用することで、パッケージの選択をさらに調整することができます。パターンの選択だけでなく、個別のパッケージのインストールを設定することもできます。詳しくは <xref linkend="cha.yast-software"/> をお読みください。</para>
+        <para><guimenu>パッケージ</guimenu> 画面を利用することで、パッケージの選択をさらに調整することができます。パターンの選択だけでなく、個別のパッケージのインストールを設定することもできます。詳しくは <xref linkend="cha-yast-software"/> をお読みください。</para>
         <para>お使いのシステムの拡張を行なう場合は、まず先にアップグレードを完了させてから、その後に追加のソフトウエアをインストールすることをお勧めします。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>バックアップ</guimenu></term>
+       <term>"\n  <guimenu>バックアップ</guimenu>\n"</term>
        <listitem>
         <para>様々なシステムコンポーネントのバックアップを作成する機能が用意されています。バックアップを行なうように選択すると、アップグレードの処理にかかる時間が長くなりますので、あらかじめご注意ください。このオプションは、直近のシステムバックアップを採取していないような場合に必要な設定です。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>言語</guimenu></term>
+       <term>"\n  <guimenu>言語</guimenu>\n"</term>
        <listitem>
         <para>ここでは、 <guimenu>第一言語</guimenu> と追加の <guimenu>第二言語</guimenu> をそれぞれ変更することができます。また、必要であればキーボードレイアウトやタイムゾーンを第一言語にあわせて設定することもできます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>キーボードレイアウト</guimenu></term>
+       <term>"\n  <guimenu>キーボードレイアウト</guimenu>\n"</term>
        <listitem>
         <para>ここではキーボードレイアウトを変更することができるほか、 <guimenu>熟練者向け設定</guimenu> を利用して細かい調整を行なうこともできます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><guimenu>起動</guimenu></term>
+       <term>"\n  <guimenu>起動</guimenu>\n"</term>
        <listitem>
-        <para>このセクションでは、ブートローダの設定を表示します。既定値の変更は、どうしても必要な場合を除いて、お勧めできません。詳しくは <xref linkend="cha.grub2"/> をお読みください。</para>
+        <para>このセクションでは、ブートローダの設定を表示します。既定値の変更は、どうしても必要な場合を除いて、お勧めできません。詳しくは <xref linkend="cha-grub2"/> をお読みください。</para>
        </listitem>
       </varlistentry>
      </variablelist>
@@ -265,21 +265,21 @@ udev           252M  124K  252M   1% /dev
 
    </procedure>
    <para>基本部分のアップグレードインストールが完了すると、 &yast; はシステムを再起動します。<!-- test the Internet connection as offered by the &yast; dialog. --> 最後に、 &yast; は <phrase os="sles;sled"> &ncc; 設定で提供している</phrase> 残りのソフトウエアがあれば、それらを更新します。また、アップグレード中はリリースノートを読むこともできます。 <!-- Click <guimenu>Finish</guimenu> to write the &yast; configuration. --></para>
-   <para os="sles;sled">&ncc; について、詳しくは <xref linkend="sec.yast_install.scc_registration"/> をお読みください。</para>
+   <para os="sles;sled">&ncc; について、詳しくは <xref linkend="sec-yast_install-scc_registration"/> をお読みください。</para>
   </sect2>
 
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="zypper_upgrade.xml"/>
 
-  <sect2 xml:id="sec.update.packages" os="osuse">
+  <sect2 xml:id="sec-update-packages" os="osuse">
    <title>個別のパッケージのアップグレード</title>
    <para>システム全体のアップグレードではなく、個別のパッケージに対して更新を行なうこともできます。ただし、個別のパッケージをアップグレードした場合は、システムが安定して動作することを保証できませんので、ご自身の責任のもと、お使いください。</para>
-   <para><xref linkend="cha.yast-software"/> で説明している手順で &yast; のソフトウエア管理ツールを起動します。すると、インストール済みのパッケージで、より新しいバージョンの存在するものに対しては、 <guimenu>インストール済み (利用可能)</guimenu> の列が、青色の表示になります。また、システムの動作全体に影響のあるパッケージの場合は、 &yast; がその旨を警告します。このようなパッケージは、更新モードでのみ更新されるべきものです。たとえば多くのパッケージに <emphasis>共有ライブラリ</emphasis> が含まれていますが、これらがそれに該当します。これらのプログラムやアプリケーションの更新を行なうと、システムの安定性が損なわれる可能性があります。</para>
+   <para><xref linkend="cha-yast-software"/> で説明している手順で &yast; のソフトウエア管理ツールを起動します。すると、インストール済みのパッケージで、より新しいバージョンの存在するものに対しては、 <guimenu>インストール済み (利用可能)</guimenu> の列が、青色の表示になります。また、システムの動作全体に影響のあるパッケージの場合は、 &yast; がその旨を警告します。このようなパッケージは、更新モードでのみ更新されるべきものです。たとえば多くのパッケージに <emphasis>共有ライブラリ</emphasis> が含まれていますが、これらがそれに該当します。これらのプログラムやアプリケーションの更新を行なうと、システムの安定性が損なわれる可能性があります。</para>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.update.version" os="osuse">
+ <sect1 xml:id="sec-update-version" os="osuse">
   <title>さらなる情報</title>
 
-  <para>様々なバージョンにおける一般的な問題や特殊な問題が、オンラインで公開されています。詳しくは下記のリンクをお読みください。また、個別のパッケージに対する重要な更新情報については、 &yast; のオンライン更新からアクセスすることができます。詳しくは <xref linkend="cha.onlineupdate.you"/> をお読みください。</para>
+  <para>様々なバージョンにおける一般的な問題や特殊な問題が、オンラインで公開されています。詳しくは下記のリンクをお読みください。また、個別のパッケージに対する重要な更新情報については、 &yast; のオンライン更新からアクセスすることができます。詳しくは <xref linkend="cha-onlineupdate-you"/> をお読みください。</para>
 
   <para>直近で判明している変更点や問題点について、詳しくは <literal>製品ハイライト</literal>  ( <link xlink:href="http://ja.opensuse.org/Product_highlights"/> ) や &opensuse; の <literal>バグ</literal> 情報 ( <link xlink:href="http://ja.opensuse.org/openSUSE:Most_annoying_bugs"/> ) などをお読みください。</para>
  </sect1>

@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.kprobes">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-kprobes">
  <title>カーネルプローブ</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -14,8 +14,8 @@
     <para>カーネルプローブは Linux カーネルのデバッグや性能に関する情報を収集するためのツール集です。開発者やシステム管理者は、これらを利用してカーネルのデバッグを行なったり、システムにおける性能のボトルネックを発見したりすることができます。また、収集したデータをシステムの性能改善のために使用することもできます。</para>
  <para>カーネルプローブは任意のカーネルルーチン内に設定し、カーネル処理内の特定の箇所 (ブレークポイント) に到達した後に、指定したハンドラを実行することができるようになります。カーネルプローブの主な利点としては、カーネルの再構築が不要であることと、プローブの変更後にシステムの再起動が不要になっている点です。</para>
  <para>カーネルプローブを使用するには、まずは必要なカーネルモジュールを作成する必要があります。このモジュール内には <emphasis>初期化</emphasis> と <emphasis>終了</emphasis> の各関数を用意する必要があります。初期化の関数 (たとえば <systemitem>register_kprobe()</systemitem>) では 1 つ以上のプローブを設定し、終了の関数ではそれらの登録を解除します。登録処理ではカーネル内の <emphasis>どこ</emphasis> にプローブを挿入するかと、そのプローブに到達した際に <emphasis>どのようなハンドラ</emphasis> を実行するのかを定義します。複数のプローブを一括で登録もしくは登録解除するには、対応する <literal>register_&lt;<replaceable>プローブの種類</replaceable>&gt;probes()</literal> や <literal>unregister_&lt;<replaceable>プローブの種類</replaceable>&gt;probes()</literal> を使用する必要があります。</para>
- <para>デバッグや状態を表わすメッセージは一般に、 <systemitem>printk</systemitem> カーネルルーチンを利用して行ないます。 <systemitem>printk</systemitem> はユーザスペースでの <systemitem>printf</systemitem> と等価なカーネルルーチンです。 <systemitem>printk</systemitem> に関する詳細については、 <link xlink:href="http://www.win.tue.nl/~aeb/linux/lk/lk-2.html#ss2.8">Logging kernel messages</link> (英語) をお読みください。通常、このカーネルルーチンで出力されたメッセージは、 &systemd; ジャーナルで読むことができます (詳しくは <xref linkend="cha.journalctl"/> をお読みください) 。なお、ログファイルに関する詳細については、 <xref linkend="cha.tuning.logfiles"/> をお読みください。</para>
- <sect1 xml:id="cha.tuning.kprobes.supparch">
+ <para>デバッグや状態を表わすメッセージは一般に、 <systemitem>printk</systemitem> カーネルルーチンを利用して行ないます。 <systemitem>printk</systemitem> はユーザスペースでの <systemitem>printf</systemitem> と等価なカーネルルーチンです。 <systemitem>printk</systemitem> に関する詳細については、 <link xlink:href="http://www.win.tue.nl/~aeb/linux/lk/lk-2.html#ss2.8">Logging kernel messages</link> (英語) をお読みください。通常、このカーネルルーチンで出力されたメッセージは、 &systemd; ジャーナルで読むことができます (詳しくは <xref linkend="cha-journalctl"/> をお読みください) 。なお、ログファイルに関する詳細については、 <xref linkend="cha-tuning-logfiles"/> をお読みください。</para>
+ <sect1 xml:id="cha-tuning-kprobes-supparch">
   <title>対応するアーキテクチャ</title>
 
   <para>カーネルプローブは、下記のアーキテクチャ向けに <emphasis>完全</emphasis> 実装されています:</para>
@@ -46,49 +46,49 @@
    </listitem>
   </itemizedlist>
  </sect1>
- <sect1 xml:id="cha.tuning.kprobes.types">
+ <sect1 xml:id="cha-tuning-kprobes-types">
   <title>カーネルプローブの種類</title>
 
   <para>カーネルプローブには 3 種類のものがあります。具体的には <emphasis>Kprobes</emphasis> , <emphasis>Jprobes</emphasis> , <emphasis>Kretprobes</emphasis> の 3 種類です。 Kretprobes は <emphasis>return probes</emphasis> (返りプローブ) とも呼ばれます。 3 種類のプローブの例については、 Linux カーネルのソースコードをお読みください。 <filename>/usr/src/linux/samples/kprobes/</filename> ディレクトリ内 (<systemitem>kernel-source</systemitem> パッケージ内) にあります。 <remark>sknorr, 2014-08-21: that the words kprobes and kprobe are used interchangeably here is slightly confusing. (Same goes for jprobes and jprobe)</remark></para>
 
-  <sect2 xml:id="cha.tuning.kprobes.types.kprobe">
+  <sect2 xml:id="cha-tuning-kprobes-types-kprobe">
    <title>&kprobes;</title>
    <para>&kprobes; は Linux カーネル内の任意のインストラクション (命令) に接続することができる仕組みです。 &kprobes; を登録すると、対象のインストラクションの最初のバイト位置にブレークポイントが設定されます。プロセッサがそのブレークポイントに到達すると、プロセッサレジスタを保存して、処理を &kprobes; に渡します。その後 <emphasis>pre-handler</emphasis> (事前ハンドラ) を実行し、対象のインストラクションをステップ実行したのち、最後に <emphasis>post-handler</emphasis> <!-- mdejmek: I think you mean "an instruction is stopped" here, right?--> <!-- toba: no, 'stepped' is correct: instruction by instruction is run and inspected => stepped (step by step) --> (事後ハンドラ) を実行します。あとはプローブポイント後の位置に制御が移り、元の動作に戻ることになります。</para>
   </sect2>
 
-  <sect2 xml:id="cha.tuning.kprobes.types.jprobe">
+  <sect2 xml:id="cha-tuning-kprobes-types-jprobe">
    <title>Jprobes</title>
    <para>Jprobes は &kprobes; の仕組みを利用して実装されているものです。関数の開始位置に挿入され、プローブ対象の関数のパラメータに対して、直接アクセスできるようになります。ハンドラルーチンにはプローブ対象の関数と全く同じパラメータリストを指定しなければならず、かつ返り値も同じ型でなければなりません。これを終了するには、 <systemitem>jprobe_return()</systemitem> 関数を呼び出します。</para>
    <para>JProbes が設定された関数を到達すると、プロセッサレジスタを保存したあと、インストラクションポインタは JProbes のハンドラルーチンに転送されます。その後、制御は <!-- mdejmek: what does control mean here? Is it the name of a function?--> <!-- toba: the control over the code execution --> ハンドラ内に移り、プローブ対象の関数と同じレジスタ状態になります。最後に、ハンドラは <systemitem>jprobe_return()</systemitem> を呼び出し、制御が元の関数に戻るようになります。</para>
    <para>一般的には、 1 つの関数に対して複数のプローブを設定することができますが、 Jprobes については 1 つの関数に対して 1 つのインスタンスのみに制限されます。</para>
   </sect2>
 
-  <sect2 xml:id="cha.tuning.kprobes.types.kretprobe">
+  <sect2 xml:id="cha-tuning-kprobes-types-kretprobe">
    <title>Return Probe</title>
    <para>Return Probe も &kprobes; を介して実装されています。 <systemitem>register_kretprobe()</systemitem> を呼び出すと、 &kprobes; はプローブ対象の関数の開始位置に設定されます。 <!--mdejmek: sounds weird to me; maybe: ...a kprobe is attached to the entry of the probed function?--> <!--toba: you are probably right, i've fixed it --> プローブ位置に到達すると、カーネルはプローブ対象の関数の返りアドレスを保存して、ユーザが指定した返りハンドラを呼び出します。あとは制御が元の関数に戻ります。</para>
    <para><systemitem>register_kretprobe()</systemitem> を呼び出す場合は、 <systemitem>maxactive</systemitem> パラメータを指定する必要があります。これはこの関数を同時にいくつまでプローブするのかを指定するパラメータで、値が小さすぎるとプローブが失敗します。</para>
   </sect2>
  </sect1>
- <sect1 xml:id="cha.tuning.kprobes.api">
+ <sect1 xml:id="cha-tuning-kprobes-api">
   <title>&kprobes; API</title>
 
-  <para>&kprobes; のプログラミングインターフェイスは、使用するカーネルプローブと対応するプローブハンドラの登録と登録解除に使用する関数から構成されています。これらの関数とパラメータに対する詳しい説明については、 <xref linkend="cha.tuning.kprobes.moreinfo"/> にある情報源を参照してください。</para>
+  <para>&kprobes; のプログラミングインターフェイスは、使用するカーネルプローブと対応するプローブハンドラの登録と登録解除に使用する関数から構成されています。これらの関数とパラメータに対する詳しい説明については、 <xref linkend="cha-tuning-kprobes-moreinfo"/> にある情報源を参照してください。</para>
 
   <variablelist>
    <varlistentry>
-    <term><systemitem>register_kprobe()</systemitem></term>
+    <term>"\n  <systemitem>register_kprobe()</systemitem>\n"</term>
     <listitem>
      <para>指定したアドレスにブレークポイントを挿入します。ブレークポイントに到達すると、 <systemitem>pre_handler</systemitem> (事前ハンドラ) と <systemitem>post_handler</systemitem> (事後ハンドラ) がそれぞれ呼び出されます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><systemitem>register_jprobe()</systemitem></term>
+    <term>"\n  <systemitem>register_jprobe()</systemitem>\n"</term>
     <listitem>
      <para>指定したアドレスにブレークポイントを挿入します。アドレスは、プローブ対象の関数内の最初のインストラクションのアドレスである必要があります。ブレークポイントに到達すると、指定したハンドラを実行します。ハンドラはプローブ対象の関数と同じパラメータリストでなければならず、かつ返り値も同じデータ型でなければなりません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><systemitem>register_kretprobe()</systemitem></term>
+    <term>"\n  <systemitem>register_kretprobe()</systemitem>\n"</term>
     <listitem>
      <para>指定した関数に return probe を挿入します。プローブ対象の関数が終了して値を返す際、指定したハンドラが呼び出されます。この関数は 0 を返すと成功の意味に、負の数のエラー番号である場合は失敗の意味になります。</para>
     </listitem>
@@ -125,12 +125,12 @@
    </varlistentry>
   </variablelist>
  </sect1>
- <sect1 xml:id="cha.tuning.kprobes.debugfs">
+ <sect1 xml:id="cha-tuning-kprobes-debugfs">
   <title><systemitem>debugfs</systemitem> インターフェイス</title>
 
   <para>新しい Linux カーネルでは、 &kprobes; はカーネルの <systemitem>debugfs</systemitem> インターフェイスを利用して制御することができます。ここでは登録済みのプローブの一覧や、全てのプローブの一括有効化／無効化を行なうことができます。</para>
 
-  <sect2 xml:id="cha.tuning.kprobes.debugfs.list">
+  <sect2 xml:id="cha-tuning-kprobes-debugfs-list">
    <title>登録済みのカーネルプローブの一覧表示</title>
    <para>現時点で登録されている全てのプローブの一覧は、 <filename>/sys/kernel/debug/kprobes/list</filename> 内に書かれています。</para>
 <screen>&wsIIIname;:~ # cat /sys/kernel/debug/kprobes/list
@@ -140,7 +140,7 @@ c03dedc5  r  tcp_v4_rcv+0x0</screen>
    <para>左から最初の列には、プローブを挿入したカーネル内のアドレスが書かれています。 2 番目の列にはプローブの種類が書かれています (<literal>k</literal> (kprobe), <literal>j</literal> (jprobe), <literal>r</literal> (return probe)) 。 3 番目の列はシンボルとオフセット、そしてプローブのモジュール名 (もしあれば) が書かれています。また、それ以降の列は必要に応じて現われる箇所で、プローブの状態が書かれています。挿入済みのプローブが無効なアドレスを指している場合は <literal>[GONE]</literal> 、対象のプローブが一時的に無効化されて居る場合は <literal>[DISABLED]</literal> と書かれます。</para>
   </sect2>
 
-  <sect2 xml:id="cha.tuning.kprobes.debugfs.switch">
+  <sect2 xml:id="cha-tuning-kprobes-debugfs-switch">
    <title>全てのカーネルプローブに対する有効化と無効化</title>
    <para><filename>/sys/kernel/debug/kprobes/enabled</filename> ファイルは、登録済みの全てのカーネルプローブに対して、一括でかつ強制的に有効化および無効化を行なうスイッチになっています。全てのカーネルプローブを無効化したい場合は、 &rootuser; で下記のように入力して実行します:</para>
 <screen>&prompt.root;echo "0" &gt; /sys/kernel/debug/kprobes/enabled</screen>
@@ -149,7 +149,7 @@ c03dedc5  r  tcp_v4_rcv+0x0</screen>
    <para>なお、この方法ではプローブごとの状態変更を行なうことはできません。特定のプローブが一時的に無効化されている場合、後者のコマンドを入力して実行しても、 <literal>[DISABLED]</literal> (無効) のままになります。</para>
   </sect2>
  </sect1>
- <sect1 xml:id="cha.tuning.kprobes.moreinfo">
+ <sect1 xml:id="cha-tuning-kprobes-moreinfo">
   <title>さらなる情報</title>
 
   <para>カーネルプローブに関する詳細については、下記の情報源をご覧ください:</para>

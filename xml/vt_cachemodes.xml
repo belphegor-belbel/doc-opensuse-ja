@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.cachemodes">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-cachemodes">
  <title>ディスクのキャッシュモード</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -12,7 +12,7 @@
       </dm:docmanager>
     </info>
     <para/>
- <sect1 xml:id="sec.cachemodes">
+ <sect1 xml:id="sec-cachemodes">
   <title>ディスクインターフェイスのキャッシュモード</title>
 
   <para>ハイパーバイザでは、 &vmguest; を設定するにあたって、さまざまなストレージキャッシュ方式を指定することができます。それぞれのゲスト側のディスクインターフェイスに対して、 <emphasis>writethrough</emphasis> , <emphasis>writeback</emphasis> , <emphasis>none</emphasis> , <emphasis>directsync</emphasis> , <emphasis>unsafe</emphasis> のいずれかを指定することができます。何もキャッシュモードを指定しない場合、適切な既定のキャッシュモードを使用します。これらのキャッシュモードはホストベースのストレージのアクセス方法を指定するもので、具体的には下記のような効果を提供します:</para>
@@ -34,7 +34,7 @@
 
   <para>ゲストとストレージコントローラの間の通信が不正に切断された場合、キャッシュモードによってはデータの損失が発生することになります。また、キャッシュモードはディスクの性能に顕著に影響します。これに加えて、キャッシュモードによっては、いくつかの要素に依存してライブマイグレーション機能と非互換なものもあります。キャッシュモードとディスクイメージの形式、イメージの配置方法やストレージサブシステムに対して、最適な選択がどれになるのかは単純には判断できません。お使いのユーザ側でゲスト側の設定を注意深く確認し、どれが最適な選択であるのかを試しながら決定を下してください。</para>
  </sect1>
- <sect1 xml:id="cachemodes.descr">
+ <sect1 xml:id="cachemodes-descr">
   <title>キャッシュモードの説明</title>
 
   <variablelist>
@@ -44,40 +44,40 @@
      <para>古いバージョンの &qemu; でキャッシュモードを指定しない場合は、既定値として <emphasis>writethrough</emphasis> が指定されているものとみなしていました。現行の &productname; に同梱されている新しいバージョンの場合、さまざまなゲスト側のストレージインターフェイスで、 <emphasis>writeback</emphasis> や <emphasis>writethrough</emphasis> の方式をより正しく処理するように修正されていることから、既定のキャッシュモードが <emphasis>writeback</emphasis> になっています。ただし、 <literal>ide</literal> , <literal>scsi</literal> , <literal>virtio</literal> の各ゲスト側ドライバには writeback でのキャッシュを無効化する権限が与えられているため、キャッシュモードは <emphasis>writethrough</emphasis> に戻されるようになっています。それ以外のゲスト側ストレージドライバは、前述のとおり <emphasis>writeback</emphasis> を使用します。</para>
     </listitem>
    </varlistentry>
-   <varlistentry xml:id="cache.writethrough">
+   <varlistentry xml:id="cache-writethrough">
     <term>writethrough</term>
     <listitem>
      <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> を指定してディスクイメージやブロックデバイスを扱うように指定します。書き込みは実際のストレージデバイスに書き込みが完了するまで待機させられるようになります。つまり、ホスト側のページキャッシュは、ライトスルーキャッシュとして使用されることになります。ゲスト側の仮想ストレージアダプタにはライトバックキャッシュが存在しないものとして通知しますので、ゲスト側からはデータの一貫性維持に必要なフラッシュコマンドを送信する必要がなくなります。これにより、ストレージはライトスルーキャッシュが存在する動作になります。</para>
     </listitem>
    </varlistentry>
-   <varlistentry xml:id="cache.writeback">
+   <varlistentry xml:id="cache-writeback">
     <term>writeback</term>
     <listitem>
      <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> も <literal>O_DIRECT</literal> も指定せずにディスクイメージやブロックデバイスを扱うように指定します。ホスト側のページキャッシュも使用し、書き込み処理はホスト側のページキャッシュ内に保存した段階で完了となります。通常のページキャッシュ管理で実際のストレージデバイスへの書き込みを行なうことになります。これに加えて、ゲスト側の仮想ストレージアダプタに対してライトバックキャッシュが存在しているものとして通知しますので、ゲスト側からはデータの一貫性維持のため、フラッシュコマンドを送信する必要があることになります。これにより、メモリキャッシュ付きの RAID コントローラを使用しているような動作になります。</para>
     </listitem>
    </varlistentry>
-   <varlistentry xml:id="cache.none">
+   <varlistentry xml:id="cache-none">
     <term>none</term>
     <listitem>
      <para>このモードはハイパーバイザに対して、 <literal>O_DIRECT</literal> を指定してディスクイメージやブロックデバイスを扱うように指定します。ホスト側のページキャッシュは迂回され、 I/O 処理はハイパーバイザ側のユーザスペースバッファとストレージデバイスとの間で直接行なわれることになります。ただし実際のストレージデバイスでは、書き込みキュー内に配置できた段階で書き込み完了とされることがありますので、ゲスト側の仮想ストレージアダプタに対しては、ライトバックキャッシュが存在するものとして通知します。そのため、ゲスト側からはデータの一貫性維持のため、フラッシュコマンドを送信する必要があることになります。性能という観点では、ホスト側のディスクに対して直接アクセスするのと等価になります。</para>
     </listitem>
    </varlistentry>
-   <varlistentry xml:id="cache.unsafe">
+   <varlistentry xml:id="cache-unsafe">
     <term>unsafe</term>
     <listitem>
      <para>このモードは上述の <literal>writeback</literal> モードに似ています。ただし <quote>unsafe</quote> モードでは、ゲスト側からのフラッシュコマンドが全て無視されます。このモードの使用にあたっては、ホスト側で何らかの障害が発生した際、データ損失の可能性があるリスクと引き替えに、性能を向上させている点に注意する必要があります。そのため、ゲスト側のインストール作業時などにのみ有用な仕組みで、本番環境の負荷に対して適用すべきではありません。</para>
     </listitem>
    </varlistentry>
-   <varlistentry xml:id="cache.directsync">
+   <varlistentry xml:id="cache-directsync">
     <term>directsync</term>
     <listitem>
-     <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> と <literal>O_DIRECT</literal> の両方を指定してディスクイメージやブロックデバイスを扱うように指定します。これにより、書き込みは実際のストレージデバイスに書き込みが完了するまで待機させられるようになるほか、ホスト側のページキャッシュも迂回することになります。 <xref linkend="cache.writethrough"/> と同様に、ゲスト側からはデータの一貫性維持に必要なフラッシュコマンドを送信する必要がなくなります。これが最後に追加されたキャッシュモードであり、これによって全てのキャッシュおよび直接アクセス方式を網羅していることになります。</para>
+     <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> と <literal>O_DIRECT</literal> の両方を指定してディスクイメージやブロックデバイスを扱うように指定します。これにより、書き込みは実際のストレージデバイスに書き込みが完了するまで待機させられるようになるほか、ホスト側のページキャッシュも迂回することになります。 <xref linkend="cache-writethrough"/> と同様に、ゲスト側からはデータの一貫性維持に必要なフラッシュコマンドを送信する必要がなくなります。これが最後に追加されたキャッシュモードであり、これによって全てのキャッシュおよび直接アクセス方式を網羅していることになります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
 
- <sect1 xml:id="qemu.cachemodes.data_integrity">
+ <sect1 xml:id="qemu-cachemodes-data-integrity">
   <title>キャッシュモードごとのデータの一貫性維持に関する説明</title>
 
   <variablelist>
@@ -102,12 +102,12 @@
   </variablelist>
  </sect1>
 
- <sect1 xml:id="qemu.cachemodes.performance">
+ <sect1 xml:id="qemu-cachemodes-performance">
   <title>キャッシュモードごとの性能に関する説明</title>
 
   <para>ページキャッシュを最大限に活用し、キャッシュ経由で必要なデータを書き込むのか、それともキャッシュを迂回するのかの選択は、性能面には大きな影響があります。もちろん実際のストレージシステムのディスク性能や使用しているディスクイメージ形式、そしてページキャッシュの潜在的なサイズや使用している IO スケジューラについても、性能への影響があります。これに加えて、書き込みキャッシュをフラッシュしないまま使用することで、上述のとおりリスクが高くなるものの、性能を向上させる効果もあります。一般的にはハイエンドのシステムの場合、発生するデータコピーの量を減らすため、キャッシュモードを <literal>none</literal> に設定しておくのがお勧めです。また、ホスト側のページキャッシュを複数のゲストで共有する設定や読み込みと書き込みの比率、そして AIO モード <literal>native</literal> の使用 (後述) も考慮しておくとよいでしょう。</para>
  </sect1>
- <sect1 xml:id="sec.cache.mode.live.migration">
+ <sect1 xml:id="sec-cache-mode-live-migration">
   <title>ライブマイグレーション時のキャッシュモードの効果</title>
 
   <para>ストレージのデータやメタデータのキャッシュは、ライブマイグレーションに対応する際には障害となりうるものです。現時点では、ライブマイグレーションを行なうには <literal>raw</literal> , <literal>qcow2</literal> のいずれかのイメージ形式を使用する必要があります。クラスタ型のファイルシステムを使用している場合は、全てのキャッシュモードでライブマイグレーションを行なうことができます。それ以外の場合、読み書き可能な共有ストレージで使用できるキャッシュモードは <literal>none</literal> のみとなります。</para>

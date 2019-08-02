@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.systemtap">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-systemtap">
 <!--taroth 2011-08-18: this chapter documents systemtap 1.0, for SLES 11 SP2
         we ship systemtap 1.5-->
 <!--
@@ -20,7 +20,7 @@
  </para>
  <variablelist>
   <varlistentry>
-   <term><xref linkend="sec.tuning.systemtap.setup.classic" xrefstyle="select:title"/>
+   <term><xref linkend="sec-tuning-systemtap-setup-classic" xrefstyle="select:title"/>
    </term>
    <listitem>
     <para>
@@ -31,7 +31,7 @@
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><xref linkend="sec.tuning.systemtap.setup.client-server" xrefstyle="select:title"/>
+   <term><xref linkend="sec-tuning-systemtap-setup-client-server" xrefstyle="select:title"/>
    </term>
    <listitem>
     <para>
@@ -68,7 +68,7 @@
  </para>
  <variablelist>
   <varlistentry>
-   <term><xref linkend="sec.tuning.systemtap.setup.classic" xrefstyle="select:title"/>
+   <term><xref linkend="sec-tuning-systemtap-setup-classic" xrefstyle="select:title"/>
    </term>
    <listitem>
     <para>
@@ -79,7 +79,7 @@
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><xref linkend="sec.tuning.systemtap.setup.client-server" xrefstyle="select:title"/>
+   <term><xref linkend="sec-tuning-systemtap-setup-client-server" xrefstyle="select:title"/>
    </term>
    <listitem>
     <para>
@@ -91,38 +91,38 @@
    </listitem>
   </varlistentry>
  </variablelist>-->
- <sect1 xml:id="sec.tuning.systemtap.concept">
+ <sect1 xml:id="sec-tuning-systemtap-concept">
   <title>考え方の概要</title>
 
   <para>&stap; スクリプトを動作させると、 &stap; セッションが起動します。また、スクリプトが実行されるまでの間に、いくつかのパスが実行されます。その後、スクリプトはカーネルモジュールとしてコンパイルされ、読み込まれます。スクリプトを以前に実行していて、システムコンポーネント (コンパイラやカーネルのバージョン、ライブラリパスやスクリプトの内容) に変更がない場合、 &stap; は再度スクリプトをコンパイルするようなことはありません。その代わり、 &stap; のキャッシュ ( <filename>~/.systemtap</filename> ) 内に保存されている <filename>*.c</filename> と <filename>*.ko</filename> のデータを使用します。</para>
-  <para>タップの動作が完了すると、モジュールの読み込みも解除されます。たとえば <xref linkend="sec.tuning.systemtap.setup"/> にあるテストスクリプトと、対応する説明をお読みください。 <!--taroth 2011-10-17: systemtap 1.5, orginal linkend: sec.tuning.systemtap.setup.classic--></para>
+  <para>タップの動作が完了すると、モジュールの読み込みも解除されます。たとえば <xref linkend="sec-tuning-systemtap-setup"/> にあるテストスクリプトと、対応する説明をお読みください。 <!--taroth 2011-10-17: systemtap 1.5, orginal linkend: sec.tuning.systemtap.setup.classic--></para>
 
-  <sect2 xml:id="sec.tuning.systemtap.concept.scripts">
+  <sect2 xml:id="sec-tuning-systemtap-concept-scripts">
    <title>&stap; スクリプト</title>
    <para>&stap; は &stap; スクリプト ( <filename>*.stp</filename> ) を利用して行なう仕組みです。スクリプト内では収集する情報の種類のほか、収集後に何をすべきかを指定しています。スクリプトは &stap; スクリプト言語と呼ばれる、 AWK や C 言語に似た言語で作成します。言語の詳しい定義については <link xlink:href="http://sourceware.org/systemtap/langref/"/> (英語) をお読みください。また、スクリプト例については <link xlink:href="http://www.sourceware.org/systemtap/examples/"/> をご覧ください。</para>
    <para>&stap; スクリプトの考え方のベースとして、 <literal>イベント</literal> とそれに対応した <literal>ハンドラ</literal> があります。 &stap; がスクリプトを実行すると、 &stap; はまず特定のイベントを待機します。そのイベントが発生すると、 Linux カーネルはサブルーチンとして指定されたハンドラを実行し、元の処理に戻ります。このような仕組みであることから、イベントはスクリプトを実行する際のトリガー (起動条件) と考えることができます。また、ハンドラは指定したデータをそのまま記録することができるほか、特定の書式でそれを出力することもできます。</para>
    <para>&stap; 言語にはいくつかのデータ型 (整数, 文字列, およびそれらの連想配列) と、完全な制御構造 (ブロック, 条件分岐, ループ, 関数) が用意されています。また、文法は軽量な構造で、文末のセミコロンは省略することができますし、詳細なデータ型指定を行なう必要もありません (データ型は自動的に推測およびチェックされます) 。</para>
-   <para>&stap; スクリプトとその文法に関する詳細については、 <xref linkend="sec.tuning.systemtap.syntax"/> のほか、 <command>stapprobes</command> と <command>stapfuncs</command> の各マニュアルページをお読みください。マニュアルページは <systemitem class="resource">systemtap-docs</systemitem> パッケージ内に含まれています。</para>
+   <para>&stap; スクリプトとその文法に関する詳細については、 <xref linkend="sec-tuning-systemtap-syntax"/> のほか、 <command>stapprobes</command> と <command>stapfuncs</command> の各マニュアルページをお読みください。マニュアルページは <systemitem class="resource">systemtap-docs</systemitem> パッケージ内に含まれています。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.systemtap.concept.tapsets">
+  <sect2 xml:id="sec-tuning-systemtap-concept-tapsets">
    <title>タップセット</title>
    <para><remark>sknorr, 2014-08-21: "tapsets are a library" sounds wrong... to me, it would make more sense if there was a "library of tapsets," i.e. a collection of systemtap scripts.</remark> タップセットは、あらかじめ記述されたプローブや関数を含むライブラリで、 &stap; のスクリプト内から使用することができます。 &stap; のスクリプトを実行すると、 &stap; はスクリプト内のプローブイベントとハンドラが、タップセットライブラリ内に存在していないかどうかを確認します。 &stap; はスクリプトを C 言語に翻訳する前に、対応するプローブや関数を読み込みます。 &stap; スクリプト自身のように、タップセットにも同じファイル拡張子 <filename>*.stp</filename> が設定されています。 <!--The standard library of tapsets is located in /usr/share/systemtap/tapset/ by default.--></para>
    <para>ただし、 &stap; スクリプトとは異なり、タップセットは直接実行するためのものではありません。タップセットは他のスクリプトに定義を与える存在であり、タップセットライブラリはユーザに対して、イベントや関数の定義をやりやすくするために設計されているものです。タップセットは関数に対して別名を提供し、ユーザ側からイベントとして指定することができるようになります。そのため、カーネルのバージョンによって異なるようなカーネルの関数を、より簡単に指定することができるようになります。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.systemtap.concept.cmd">
+  <sect2 xml:id="sec-tuning-systemtap-concept-cmd">
    <title>コマンドと権限</title>
    <para>&stap; に付属するメインのコマンドは、 <command>stap</command> と <command>staprun</command> の 2 種類です。これらを実行するには &rootuser; の権限を使用するか、もしくは <systemitem class="groupname">stapdev</systemitem> または <systemitem class="groupname">stapusr</systemitem> のメンバーである必要があります。</para>
    <variablelist>
     <varlistentry>
-     <term><command>stap</command></term>
+     <term>"\n  <command>stap</command>\n"</term>
      <listitem>
       <para>&stap; のフロントエンドです。 &stap; スクリプトのファイルを指定するか、もしくは標準入力から読み込むことで実行することができます。スクリプトは C 言語のコードに翻訳され、コンパイルされて動作中の Linux カーネル内でモジュールとして読み込みが行なわれます。これにより、必要なシステムトレースやプローブ関数を実行することができるようになります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><command>staprun</command></term>
+     <term>"\n  <command>staprun</command>\n"</term>
      <listitem>
       <para>&stap; のバックエンドです。 &stap; のフロントエンドが作成したカーネルモジュールを、読み込んだり読み込みを解除したりすることができます。 <!--runs instrumentation modules--></para>
      </listitem>
@@ -140,20 +140,20 @@
     subcommands. This set of commands allows you to compile a &stap; module
     on a machine other than the one on which it will be run. For more
     information about this specific setup and the commands involved, refer
-    to <xref linkend="sec.tuning.systemtap.setup"/> and to the
+    to <xref linkend="sec-tuning-systemtap-setup"/> and to the
     <command>stap-server</command> and <command>stap-client</command> man
     pages.
    </para>-->
 <para><!-- bsc#992981 --> &rootuser; の権限を与えずに一般ユーザの権限で &stap; を実行させたい場合は、対象のユーザを下記の &stap; グループのいずれかに所属するように設定してください。これらのグループは既定の &productname; では作成されていませんので、必要に応じて作成し、アクセス権を調整してください。また、お使いの環境でセキュリティへの影響に問題がなければ、 <command>staprun</command> コマンドのパーミッションを調整してもかまいません。</para>
    <variablelist>
     <varlistentry>
-     <term><systemitem class="groupname">stapdev</systemitem></term>
+     <term>"\n  <systemitem class="groupname">stapdev</systemitem>\n"</term>
      <listitem>
       <para>このグループのメンバーであれば、 <command>stap</command> コマンドで &stap; スクリプトを実行することができるほか、 <command>staprun</command> コマンドで計装モジュールを実行することもできます。なお、 <command>stap</command> コマンドの実行には、スクリプトをカーネルモジュールにコンパイルする処理と、コンパイルしたカーネルモジュールをカーネルに読み込む処理が含まれますので、実質的には &rootuser; のアクセスと同等の権限を持つことになります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem class="groupname">stapusr</systemitem></term>
+     <term>"\n  <systemitem class="groupname">stapusr</systemitem>\n"</term>
      <listitem>
       <para>このグループのメンバーは、 <command>staprun</command> コマンドで計装モジュールを実行する権限のみを持ちます。これに加えて、 <filename>/lib/modules/<replaceable>カーネルバージョン</replaceable>/systemtap/</filename> 内にあるモジュールのみを実行することができます。このディレクトリは &rootuser; が所有しなければならず、かつ &rootuser; ユーザのみが書き込むことができるようにしなければなりません。</para>
      </listitem>
@@ -161,36 +161,36 @@
    </variablelist>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.systemtap.concept.dir">
+  <sect2 xml:id="sec-tuning-systemtap-concept-dir">
    <title>主要なファイルとディレクトリ</title>
    <para>下記では、 &stap; で使用される主なファイルとディレクトリについて、概要を説明しています。</para>
    <variablelist>
     <varlistentry>
-     <term><filename>/lib/modules/<replaceable>カーネルバージョン</replaceable>/systemtap/</filename></term>
+     <term>"\n  <filename>/lib/modules/<replaceable>カーネルバージョン</replaceable>/systemtap/</filename>\n"</term>
      <listitem>
       <para>&stap; の計装モジュールが含まれるディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/usr/share/systemtap/tapset/</filename></term>
+     <term>"\n  <filename>/usr/share/systemtap/tapset/</filename>\n"</term>
      <listitem>
       <para>タップセットの標準ライブラリが含まれるディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/usr/share/doc/packages/systemtap/examples</filename></term>
+     <term>"\n  <filename>/usr/share/doc/packages/systemtap/examples</filename>\n"</term>
      <listitem>
       <para>様々な用途に対応した &stap; スクリプトの例を配置しているディレクトリです。なお、このディレクトリは <systemitem class="resource">systemtap-docs</systemitem> パッケージをインストールした場合にのみ作成されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>~/.systemtap/cache</filename></term>
+     <term>"\n  <filename>~/.systemtap/cache</filename>\n"</term>
      <listitem>
       <para>キャッシュされた &stap; ファイルを含むデータディレクトリです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><filename>/tmp/stap*</filename></term>
+     <term>"\n  <filename>/tmp/stap*</filename>\n"</term>
      <listitem>
       <para>&stap; ファイルの一時ディレクトリです。 C 言語に変換されたコードのほか、カーネルオブジェクトなどが含まれます。</para>
      </listitem>
@@ -260,7 +260,7 @@
     </variablelist>-->
   </sect2>
  </sect1>
- <sect1 xml:id="sec.tuning.systemtap.setup">
+ <sect1 xml:id="sec-tuning-systemtap-setup">
   <title>インストールと設定</title>
 
   <para><!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later--> <!--Depending on your preferred setup, check the sections below for an overview of the packages you need.--> &stap; を動作させるにはカーネルに関する情報が必要となることから、カーネル関連の追加パッケージをインストールしなければなりません。また、 &stap; でプローブを設定したいカーネルごとに、それぞれ下記のパッケージをインストールする必要があります。さらに、下記のパッケージをインストールする場合は、プローブを設定したいカーネルのフレーバー (下記では <literal>*</literal> と記してあります) とバージョンが厳密に一致したパッケージをインストールする必要があります。</para>
@@ -281,7 +281,7 @@
 
 <!--taroth 2011-10-17: commenting for now (systemtap 1.5), to be updated later-->
 
-<!--<sect2 id="sec.tuning.systemtap.setup.classic">
+<!--<sect2 id="sec-tuning-systemtap-setup-classic">
    <title>Classic Setup and Initial Test</title>
 -->
 
@@ -289,30 +289,30 @@
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para><systemitem class="resource">systemtap</systemitem></para>
+    <para>"\n  <systemitem class="resource">systemtap</systemitem>\n"</para>
    </listitem>
    <listitem>
-    <para><systemitem class="resource">systemtap-server</systemitem></para>
+    <para>"\n  <systemitem class="resource">systemtap-server</systemitem>\n"</para>
    </listitem>
    <listitem>
     <para><systemitem class="resource">systemtap-docs</systemitem> (任意)</para>
    </listitem>
    <listitem>
-    <para><systemitem class="resource">kernel-*-base</systemitem></para>
+    <para>"\n  <systemitem class="resource">kernel-*-base</systemitem>\n"</para>
    </listitem>
 <!--taroth 2011-10-07: just for the records: debuginfo pkgs are
            internally available from DVD3-->
    <listitem>
-    <para><systemitem class="resource">kernel-*-debuginfo</systemitem></para>
+    <para>"\n  <systemitem class="resource">kernel-*-debuginfo</systemitem>\n"</para>
    </listitem>
    <listitem>
-    <para><systemitem class="resource">kernel-*-devel</systemitem></para>
+    <para>"\n  <systemitem class="resource">kernel-*-devel</systemitem>\n"</para>
    </listitem>
    <listitem>
-    <para><systemitem class="resource">kernel-source-*</systemitem></para>
+    <para>"\n  <systemitem class="resource">kernel-source-*</systemitem>\n"</para>
    </listitem>
    <listitem>
-    <para><systemitem class="resource">gcc</systemitem></para>
+    <para>"\n  <systemitem class="resource">gcc</systemitem>\n"</para>
    </listitem>
   </itemizedlist>
 
@@ -328,31 +328,31 @@
 
   <para>上記のコマンドを実行すると、スクリプトを実行して現在動作しているカーネルに対してプローブを設定し、出力を返します。出力が下記のような内容になっていれば、 &stap; は問題なく配置できたことになります:</para>
 
-<screen><?dbsuse-fo font-size="0.71em"?>Pass <co xml:id="co.tuning.stap.pass1"/>: parsed user script and 59 library script(s) in 80usr/0sys/214real ms.
-Pass <co xml:id="co.tuning.stap.pass2"/>: analyzed script: 1 probe(s), 11 function(s), 2 embed(s), 1 global(s) in
+<screen><?dbsuse-fo font-size="0.71em"?>Pass <co xml:id="co-tuning-stap-pass1"/>: parsed user script and 59 library script(s) in 80usr/0sys/214real ms.
+Pass <co xml:id="co-tuning-stap-pass2"/>: analyzed script: 1 probe(s), 11 function(s), 2 embed(s), 1 global(s) in
  140usr/20sys/412real ms.
-Pass <co xml:id="co.tuning.stap.pass3"/>: translated to C into
+Pass <co xml:id="co-tuning-stap-pass3"/>: translated to C into
  "/tmp/stapDwEk76/stap_1856e21ea1c246da85ad8c66b4338349_4970.c" in 160usr/0sys/408real ms.
-Pass <co xml:id="co.tuning.stap.pass4"/>: compiled C into "stap_1856e21ea1c246da85ad8c66b4338349_4970.ko" in
+Pass <co xml:id="co-tuning-stap-pass4"/>: compiled C into "stap_1856e21ea1c246da85ad8c66b4338349_4970.ko" in
  2030usr/360sys/10182real ms.
-Pass <co xml:id="co.tuning.stap.pass5"/>: starting run.
+Pass <co xml:id="co-tuning-stap-pass5"/>: starting run.
  read performed
-Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257real ms. </screen>
+Pass <xref linkend="co-tuning-stap-pass5"/>: run completed in 10usr/20sys/257real ms. </screen>
 
   <calloutlist>
-   <callout arearefs="co.tuning.stap.pass1">
+   <callout arearefs="co-tuning-stap-pass1">
     <para>スクリプトと <filename>/usr/share/systemtap/tapset/</filename> 内にある既存のタップセットライブラリをチェックしています。タップセットとはあらかじめ作成されたプローブや関数を集めたライブラリで、 &stap; スクリプト内から使用できる仕組みです。</para>
    </callout>
-   <callout arearefs="co.tuning.stap.pass2">
+   <callout arearefs="co-tuning-stap-pass2">
     <para>スクリプトのコンポーネントを調べています。</para>
    </callout>
-   <callout arearefs="co.tuning.stap.pass3">
+   <callout arearefs="co-tuning-stap-pass3">
     <para>スクリプトを C 言語に変換しています。その後、作成された C 言語のソースコードを C コンパイラに通して、カーネルモジュールを作成しています。変換後の C 言語ソースコード ( <filename>*.c</filename> ) とカーネルモジュール ( <filename>*.ko</filename> ) が、 <filename>~/.systemtap</filename> にある &stap; キャッシュ内に保管されます。</para>
    </callout>
-   <callout arearefs="co.tuning.stap.pass4">
+   <callout arearefs="co-tuning-stap-pass4">
     <para>モジュールを読み込んだあと、スクリプト内に指定されている全てのプローブ (イベントおよびハンドラ) をカーネル内のフックとして設置し、有効化しています。この例で使用しているプローブは、仮想ファイルシステム (Virtual File System; VFS) の読み込み処理になります。任意のプロセッサ内で対象のイベントが発生すると、対応するハンドラが実行 (この例では、 <literal>read performed</literal> と表示しています) され、エラー無しに終了しています。</para>
    </callout>
-   <callout arearefs="co.tuning.stap.pass5">
+   <callout arearefs="co-tuning-stap-pass5">
     <para>&stap; のセッションが終了すると、プローブは無効化され、カーネルモジュールの読み込みも解除されます。</para>
    </callout>
   </calloutlist>
@@ -361,7 +361,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
 
 <!-- </sect2>-->
 
-<!-- <sect2 id="sec.tuning.systemtap.setup.client-server">
+<!-- <sect2 id="sec-tuning-systemtap-setup-client-server">
    <title>Client-Server Setup</title>
    <remark>taroth 2011-10-07: argh, this section needs a major revamp with systemtap 1.5... see the
     systemtap 1.5 RN: "The following deprecated tools have been removed: stap-client
@@ -390,7 +390,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
       (<command>staprun</command>), with only the front-end requiring access
       to kernel information packages for compiling the &stap; script into C
       code and for creating a kernel module. For more information, refer to
-      <xref linkend="sec.tuning.systemtap.concept.cmd"/>.
+      <xref linkend="sec-tuning-systemtap-concept-cmd"/>.
      </para>
     </listitem>
 <!-\-taroth 2010-06-01: commenting for this release; based on tonyj's answer-\->
@@ -423,11 +423,11 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      <para>
       Use of &stap; groups with different privileges. For more information,
       refer to <xref
-    linkend="sec.tuning.systemtap.concept.cmd"/>.
+    linkend="sec-tuning-systemtap-concept-cmd"/>.
      </para>
     </listitem>
    </itemizedlist>
-   <sect3 id="sec.tuning.systemtap.setup.inst">
+   <sect3 id="sec-tuning-systemtap-setup-inst">
     <title>Installing &stap;</title>
     <para>
      For this setup, install the following packages (using &yast; or
@@ -495,7 +495,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
       2010-05-25: The only non-testing case I can think of is for minus minus unpriviliged</remark>
       </para>-\->
    </sect3>
-   <sect3 id="sec.tuning.systemtap.setup.server">
+   <sect3 id="sec-tuning-systemtap-setup-server">
     <title>Setting Up the Server</title>
     <para>
      You have two choices for setting up the &stap; compile server: you can
@@ -515,7 +515,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      <literal>systemtap-server</literal> user's home directory:
      <filename>~/.systemtap/ssl/server</filename>.
     </para>
-    <procedure id="pro.tuning.stap.setup.server.non-root">
+    <procedure id="pro-tuning-stap-setup-server-non-root">
      <title>Running the Compile Server as Non-&rootuser; User</title>
      <para>
       For this setup, it is advisable to create a dedicated system group and
@@ -526,7 +526,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
        Log in as &rootuser;.
       </para>
      </step>
-     <step id="step.stap.setup.server.homedir">
+     <step id="step-stap-setup-server-homedir">
       <para>
        Create a home directory for the compile server user, for example:
       </para>
@@ -555,7 +555,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
        specified with <option>-c</option> and the options
        <option>-g</option> and <literal>-d</literal> specify the user's main
        group (<literal>stap-server</literal>) and their home directory you
-       created in <xref linkend="step.stap.setup.server.homedir"/>,
+       created in <xref linkend="step-stap-setup-server-homedir"/>,
        respectively. The user account will be a system account (specified
        with <option>-r</option>) and the user will not be able to log in, as
        their login shell is set to <filename>/sbin/nologin</filename> with the
@@ -624,10 +624,10 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
       </para>
      </step>
     </procedure>
-    <procedure id="pro.tuning.stap.setup.server.root">
+    <procedure id="pro-tuning-stap-setup-server-root">
      <title>Running the Compile Server as &rootuser; User</title>
      <para>
-      Compared to <xref linkend="pro.tuning.stap.setup.server.non-root"/>,
+      Compared to <xref linkend="pro-tuning-stap-setup-server-non-root"/>,
       this setup is much simpler but it has security implications.
      </para>
      <warning>
@@ -693,7 +693,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      page.
     </para>
    </sect3>
-   <sect3 id="sec.tuning.systemtap.setup.client">
+   <sect3 id="sec-tuning-systemtap-setup-client">
     <title>Setting Up the Client</title>
     <para>
      To be able to invoke <command>stap-client</command> from another host,
@@ -706,7 +706,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      machine or only for clients that are run by a
      <emphasis>specific</emphasis> user.
     </para>
-    <procedure id="pro.tuning.stap.setup.">
+    <procedure id="pro-tuning-stap-setup">
      <step>
       <para>
        Log in to the client machine.
@@ -761,7 +761,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      </step>
     </procedure>
    </sect3>
-   <sect3 id="sec.tuning.systemtap.setup.use">
+   <sect3 id="sec-tuning-systemtap-setup-use">
     <title>Using the Client</title>
     <para>
      After you have set up the &stap; compile server and client as described
@@ -775,7 +775,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      <command>staprun</command>. For more information about a &stap; session
      and the individual passes, see
      <xref
-     linkend="sec.tuning.systemtap.setup.classic"/>.
+     linkend="sec-tuning-systemtap-setup-classic"/>.
     </para>
     <note>
      <title>Executing <command>stap-client</command></title>
@@ -788,7 +788,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
        >stapdev</systemitem>
       group. For more information, refer to
       <xref
-       linkend="sec.tuning.systemtap.concept.cmd"/>.
+       linkend="sec-tuning-systemtap-concept-cmd"/>.
      </para>
     </note>
     <para>
@@ -798,7 +798,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
      of the &stap; client-server setup and covers the most common commands
      and options needed for that.
     </para>
-    <procedure id="pro.tuning.stap.usage">
+    <procedure id="pro-tuning-stap-usage">
      <step>
       <para>
        To make sure that a compatible &stap; server is running on your local
@@ -826,7 +826,7 @@ Pass <xref linkend="co.tuning.stap.pass5"/>: run completed in 10usr/20sys/257rea
       <para>
        Note that <command>stap-start-server</command> does not work for the
        initial setup as described in
-       <xref linkend="pro.tuning.stap.setup.server.root"/>, where
+       <xref linkend="pro-tuning-stap-setup-server-root"/>, where
        <command>/usr/bin/stap-serverd</command> is used instead.
        <command>stap-start-server</command> puts the server in the
        background&mdash;thus, you would not see the prompt asking for the
@@ -887,7 +887,7 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
 
    See "UNPRIVILEGED USERS" in the stap-client man page.-\->
    </sect3>
-   <sect3 id="sec.tuning.systemtap.setup.trouble">
+   <sect3 id="sec-tuning-systemtap-setup-trouble">
     <title>Troubleshooting</title>
     <para>
      There are several things that can go wrong when using the &stap;
@@ -1006,7 +1006,7 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
         If running an <command>stap-client</command> command fails because
         the certificate database was not found, check if you have set up the
         &stap; client correctly. For details, refer to
-        <xref linkend="sec.tuning.systemtap.setup.client"/>.
+        <xref linkend="sec-tuning-systemtap-setup-client"/>.
        </para>
       </listitem>
      </varlistentry>
@@ -1014,20 +1014,20 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
    </sect3>
   </sect2>-->
  </sect1>
- <sect1 xml:id="sec.tuning.systemtap.syntax">
+ <sect1 xml:id="sec-tuning-systemtap-syntax">
   <title>スクリプトの文法</title>
 
   <para>&stap; のスクリプトは、下記に示す 2 つのコンポーネントから構成されています:</para>
 
   <variablelist>
    <varlistentry>
-    <term><xref linkend="sec.tuning.systemtap.syntax.events" xrefstyle="select:title"/></term>
+    <term>"\n  <xref linkend="sec-tuning-systemtap-syntax-events" xrefstyle="select:title"/>\n"</term>
     <listitem>
      <para>カーネル内のどのイベントでスクリプトを実行するのかを表わしている箇所です。特定の関数内に入ったタイミングや特定の関数を出たタイミング、もしくはタイマーの経過後やセッションの開始および停止などに設定することができます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><xref linkend="sec.tuning.systemtap.syntax.handlers" xrefstyle="select:title"/></term>
+    <term>"\n  <xref linkend="sec-tuning-systemtap-syntax-handlers" xrefstyle="select:title"/>\n"</term>
     <listitem>
      <para>特定のイベントが発生した際に実行すべきスクリプトを表わしている箇所です。これは通常、イベント内の情報を抽出したり、それらを内部の変数に格納したり、結果を出力したりする処理を行ないます。</para>
     </listitem>
@@ -1038,49 +1038,49 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
 
   <para>コメントは &stap; スクリプト内の任意の箇所に配置することができます。コメントの書式は、 <literal>#</literal>, <literal>/* */</literal> , <literal>//</literal> のいずれかです。</para>
 
-  <sect2 xml:id="sec.tuning.systemtap.syntax.probe">
+  <sect2 xml:id="sec-tuning-systemtap-syntax-probe">
    <title>プローブの書式</title>
    <para>&stap; のスクリプトには複数のプローブを設定することができます。プローブは下記の書式で作成します:</para>
 <screen>probe <replaceable>イベント名</replaceable> {<replaceable>ステートメント</replaceable>}</screen>
    <para>それぞれのプローブには対応するステートメントブロックを設定します。ステートメントブロックは <literal>{ }</literal> で括らなければならず、かつイベントごとに実行すべきステートメントを含むものとします。</para>
-   <example xml:id="ex.tuning.stap.simple">
+   <example xml:id="ex-tuning-stap-simple">
     <title>シンプルな &stap; スクリプト</title>
     <para>下記はシンプルな &stap; スクリプトの例です。</para>
-<screen>probe<co xml:id="co.tuning.stap.probe"/> begin<co xml:id="co.tuning.stap.event.begin"/>
-{<co xml:id="co.tuning.stap.handler.start"/>
-   printf<co xml:id="co.tuning.stap.handler.function.printf"/> ("hello world
-")<co xml:id="co.tuning.stap.handler.string"/>
-   exit ()<co xml:id="co.tuning.stap.handler.function.exit"/>
-}<co xml:id="co.tuning.stap.handler.end"/></screen>
+<screen>probe<co xml:id="co-tuning-stap-probe"/> begin<co xml:id="co-tuning-stap-event-begin"/>
+{<co xml:id="co-tuning-stap-handler-start"/>
+   printf<co xml:id="co-tuning-stap-handler-function-printf"/> ("hello world
+")<co xml:id="co-tuning-stap-handler-string"/>
+   exit ()<co xml:id="co-tuning-stap-handler-function-exit"/>
+}<co xml:id="co-tuning-stap-handler-end"/></screen>
     <calloutlist>
-     <callout arearefs="co.tuning.stap.probe">
+     <callout arearefs="co-tuning-stap-probe">
       <para>プローブの開始位置です。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.event.begin">
+     <callout arearefs="co-tuning-stap-event-begin">
       <para>イベント <literal>begin</literal> (&stap; セッションの開始) の指定です。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.handler.start">
+     <callout arearefs="co-tuning-stap-handler-start">
       <para><literal>{</literal> で示されているとおり、ハンドラ定義の開始位置です。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.handler.function.printf">
+     <callout arearefs="co-tuning-stap-handler-function-printf">
       <para>ハンドラ内での最初の関数です。この例では <literal>printf</literal> 関数を使用しています。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.handler.string">
+     <callout arearefs="co-tuning-stap-handler-string">
       <para><literal>printf</literal> 関数で出力すべき文字列を指定しています。末尾には改行 ( <literal>/n</literal> ) が書かれています。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.handler.function.exit">
+     <callout arearefs="co-tuning-stap-handler-function-exit">
       <para>ハンドラ内での 2 つめの関数です。この例では <literal>exit()</literal> 関数を使用しています。なお、 &stap; スクリプトは <literal>exit()</literal> 関数を実行するまでは、動作し続けることに注意してください。この関数を実行する前にスクリプトの実行を停止したい場合は、 <keycombo> <keycap function="control"/> <keycap>C</keycap> </keycombo> を押します。</para>
      </callout>
-     <callout arearefs="co.tuning.stap.handler.end">
+     <callout arearefs="co-tuning-stap-handler-end">
       <para><literal>}</literal> で示されているとおり、ハンドラ定義の終了位置です。 </para>
      </callout>
     </calloutlist>
-    <para>イベント <literal>begin</literal> <xref linkend="co.tuning.stap.event.begin" xrefstyle="select:label nopage"/> (&stap; セッションの開始) が発生すると、 <literal>{ }</literal> で括られたハンドラを実行します。ここでは、 <literal>printf</literal> 関数 <xref linkend="co.tuning.stap.handler.function.printf" xrefstyle="select:label nopage"/> になります。この場合、 <literal>hello world</literal> という文字列に加えて改行 <xref linkend="co.tuning.stap.handler.string" xrefstyle="select:label nopage"/> を出力しています。出力が終わると、スクリプトは終了します。</para>
+    <para>イベント <literal>begin</literal> <xref linkend="co-tuning-stap-event-begin" xrefstyle="select:label nopage"/> (&stap; セッションの開始) が発生すると、 <literal>{ }</literal> で括られたハンドラを実行します。ここでは、 <literal>printf</literal> 関数 <xref linkend="co-tuning-stap-handler-function-printf" xrefstyle="select:label nopage"/> になります。この場合、 <literal>hello world</literal> という文字列に加えて改行 <xref linkend="co-tuning-stap-handler-string" xrefstyle="select:label nopage"/> を出力しています。出力が終わると、スクリプトは終了します。</para>
    </example>
    <para>ステートメント内に複数の記述が存在する場合、 &stap; ではそれらを順次実行します。言い換えると、複数のステートメントを記述するにあたって、特殊な区切り文字や終端などを入れる必要はありません。 &stap; 内では一般に、ステートメントブロックは C プログラミング言語と同じ書式になっています。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.systemtap.syntax.events">
+  <sect2 xml:id="sec-tuning-systemtap-syntax-events">
    <title>&stap; イベント (プローブポイント)</title>
    <para>&stap; にはいくつかの内蔵イベントが用意されています。</para>
    <para>一般的なイベント名はドットで区切った <!-- NOTE: to understand easily; DNS-like --> DNS のような命名体系になっています。この仕組みにより、名前をツリー構造で管理できるようになっています。また、ドット区切り内の各コンポーネントには、文字列や数値によるパラメータを設定できるようになっていて、見た目では関数のような表現になっています。また、コンポーネントに <literal>*</literal> を指定した場合、複数のプローブポイントにマッチするようなイベント名にすることができます。また、プローブポイントの後には <literal>?</literal> が付けられることもあります。この場合、それが任意指定のものであることを示し、展開に失敗した場合もエラーが無視されるようになります。 <remark>tonyj 2010-05-8: Maybe an example? There are lots of them in syscalls.stp tapset (/usr/share/ systemptap/tapset/syscalls.stp). - taroth 2010-05-10: for next revision, no time left now</remark> また、プローブポイントの後ろに <literal>!</literal> を付けた場合、任意指定でかつ十分な存在であることを示します。</para>
@@ -1089,7 +1089,7 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
      <para>同期型イベント: 任意のプロセスが、カーネルコード内の特定の箇所に達した場合に発生するイベントです。これは他のイベントに対して参照ポイント (インストラクションアドレス) を与え、ここから多くのコンテキスト情報を取得できるようになります。</para>
-     <para>同期型イベントの例として、 <literal>vfs.<replaceable>ファイル操作</replaceable></literal> があります。これは仮想ファイルシステム (Virtual File System; VFS) 内の <replaceable>ファイル操作</replaceable> イベントを表わすもので、たとえば <xref linkend="sec.tuning.systemtap.setup"/>  では、 <literal>read</literal> が <replaceable>ファイル操作</replaceable> の箇所にあたります。 <!--taroth 2011-10-17: sysemtap 1.5, original linkend--> <!-- <xref linkend="sec.tuning.systemtap.setup.classic"/>--> <!--If you also want to monitor the exit of the <replaceable>FILE_OPERATION</replaceable> operation, append a <literal>.return</literal> to the event (for example, <literal>vfs.read.return</literal>).--></para>
+     <para>同期型イベントの例として、 <literal>vfs.<replaceable>ファイル操作</replaceable></literal> があります。これは仮想ファイルシステム (Virtual File System; VFS) 内の <replaceable>ファイル操作</replaceable> イベントを表わすもので、たとえば <xref linkend="sec-tuning-systemtap-setup"/>  では、 <literal>read</literal> が <replaceable>ファイル操作</replaceable> の箇所にあたります。 <!--taroth 2011-10-17: sysemtap 1.5, original linkend--> <!-- <xref linkend="sec.tuning.systemtap.setup.classic"/>--> <!--If you also want to monitor the exit of the <replaceable>FILE_OPERATION</replaceable> operation, append a <literal>.return</literal> to the event (for example, <literal>vfs.read.return</literal>).--></para>
     </listitem>
     <listitem>
      <para>非同期型イベント: 特定のインストラクションやカーネルコード内の位置に結びつかないイベントです。このようなプローブポイントとしては、カウンターやタイマーなどの構造があります。</para>
@@ -1097,7 +1097,7 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
      <para>タイマーイベントは、他のプローブと併用することで、定期的なデータ更新を行なうことができるようになるほか、時間が経過するたびに変化していくような情報を追跡することができるようになります。</para>
     </listitem>
    </itemizedlist>
-   <example xml:id="ex.tuning.stap.async">
+   <example xml:id="ex-tuning-stap-async">
     <title>タイマーイベントのプローブ</title>
     <para>たとえば下記のようなプローブを設定すると、 <quote>hello world</quote> を 4 秒間隔で出力します:</para>
 <screen>probe timer.s(4)
@@ -1109,33 +1109,33 @@ root  4700  4160  0 18:05 ttyS0  00:00:00 grep avahi</screen>
    <para>対応するイベントの詳細について、詳しくは <command>stapprobes</command> のマニュアルページをお読みください。マニュアルページ内の <citetitle>See Also</citetitle> セクションには、特定のサブシステムやコンポーネントに対するイベントを含む、他のマニュアルページへのリンクが書かれています。</para>
   </sect2>
 
-  <sect2 xml:id="sec.tuning.systemtap.syntax.handlers">
+  <sect2 xml:id="sec-tuning-systemtap-syntax-handlers">
    <title>&stap; ハンドラ (プローブボディ)</title>
    <para>&stap; イベントには対応するハンドラが指定されます。ハンドラ内では、ステートメントブロックから構成される処理を記述します。</para>
-   <sect3 xml:id="sec.tuning.systemtap.syntax.handlers.functions">
+   <sect3 xml:id="sec-tuning-systemtap-syntax-handlers-functions">
     <title>関数</title>
     <para>複数のプローブ内で同じステートメントを実行する必要がある場合は、それらの共通部分を関数として取り出して、再利用しやすくすることをお勧めします。関数はキーワード <literal>function</literal> に続いて関数名を指定することで、定義を行なうことができます。また、任意の数の文字列や数値 (いずれも値渡し) をパラメータとして取ることができ、返り値は単一の文字列もしくは数値を設定することができます。</para>
 <screen>function <replaceable>関数名</replaceable>(<replaceable>パラメータ</replaceable>) {<replaceable>ステートメント</replaceable>}
 probe <replaceable>イベント</replaceable> {<replaceable>関数名</replaceable>(<replaceable>パラメータ</replaceable>)}</screen>
     <para>上記の例では、 <replaceable>イベント</replaceable> のハンドラが実行されると、 <replaceable>関数名</replaceable> の関数が実行されます。 <replaceable>パラメータ</replaceable> は任意指定のもので、関数に渡すパラメータを指定します。</para>
     <para>関数はスクリプト内の任意の場所に記述することができます。</para>
-    <para>よく使用する関数の例として、既に <xref linkend="ex.tuning.stap.simple"/> で紹介を行なっている <literal>printf</literal> 関数があります。この関数は書式を指定してデータを出力するための関数で、書式ではどれだけの数のパラメータを出力するのか、およびどのように整形して出力するのかを指定します。書式文字列は二重引用符で括り、書式指定は <literal>%</literal> 文字で書き始めます。</para>
+    <para>よく使用する関数の例として、既に <xref linkend="ex-tuning-stap-simple"/> で紹介を行なっている <literal>printf</literal> 関数があります。この関数は書式を指定してデータを出力するための関数で、書式ではどれだけの数のパラメータを出力するのか、およびどのように整形して出力するのかを指定します。書式文字列は二重引用符で括り、書式指定は <literal>%</literal> 文字で書き始めます。</para>
     <para>どのような書式指定文字列を使用するのかは、そのパラメータに依存して決まります。書式指定文字列は複数個指定することができ、その際にはパラメータをカンマ区切りで指定します。</para>
-    <example xml:id="ex.tuning.stap.printf.formatspec">
+    <example xml:id="ex-tuning-stap-printf-formatspec">
      <title>書式指定を伴う <literal>printf</literal> 関数</title>
-<screen>printf ("<co xml:id="co.tuning.stap.formatstring.start"/>%s<co xml:id="co.tuning.stap.string.spec"/>(%d<co xml:id="co.tuning.stap.int.spec"/>) open
-<co xml:id="co.tuning.stap.formatstring.end"/>", execname(), pid())</screen>
+<screen>printf ("<co xml:id="co-tuning-stap-formatstring-start"/>%s<co xml:id="co-tuning-stap-string-spec"/>(%d<co xml:id="co-tuning-stap-int-spec"/>) open
+<co xml:id="co-tuning-stap-formatstring-end"/>", execname(), pid())</screen>
      <calloutlist>
-      <callout arearefs="co.tuning.stap.formatstring.start">
+      <callout arearefs="co-tuning-stap-formatstring-start">
        <para><literal>"</literal> で示されているとおり、書式指定文字列の開始位置です。</para>
       </callout>
-      <callout arearefs="co.tuning.stap.string.spec">
+      <callout arearefs="co-tuning-stap-string-spec">
        <para>文字列の書式指定です。</para>
       </callout>
-      <callout arearefs="co.tuning.stap.int.spec">
+      <callout arearefs="co-tuning-stap-int-spec">
        <para>整数の書式指定です。</para>
       </callout>
-      <callout arearefs="co.tuning.stap.formatstring.end">
+      <callout arearefs="co-tuning-stap-formatstring-end">
        <para><literal>"</literal> で示されているとおり、書式指定文字列の終了位置です。</para>
       </callout>
      </calloutlist>
@@ -1146,7 +1146,7 @@ vmware-guestd(2206) open
 hald(2360) open
 [...]
    </screen>
-    <para><xref linkend="ex.tuning.stap.printf.formatspec"/> で使用している <literal>execname()</literal> や <literal>pid()</literal> のほかにも、 <literal>printf</literal> のパラメータとしては様々な関数を指定することができます。</para>
+    <para><xref linkend="ex-tuning-stap-printf-formatspec"/> で使用している <literal>execname()</literal> や <literal>pid()</literal> のほかにも、 <literal>printf</literal> のパラメータとしては様々な関数を指定することができます。</para>
     <para>&stap; で最もよく使用される関数は下記のとおりです:</para>
     <variablelist>
      <varlistentry>
@@ -1207,10 +1207,10 @@ hald(2360) open
     </variablelist>
     <para>提供されている &stap; 関数に関する詳細な情報については、 <command>stapfuncs</command> のマニュアルページをお読みください。</para>
    </sect3>
-   <sect3 xml:id="sec.tuning.systemtap.syntax.handlers.others">
+   <sect3 xml:id="sec-tuning-systemtap-syntax-handlers-others">
     <title>その他の基本構造</title>
     <para>関数のほかに、 &stap; ハンドラ内ではその他の一般的な構造を作成することができます。具体的には変数や条件分岐 (<literal>if</literal> / <literal>else</literal>) 、 <literal>while</literal> ループや <literal>for</literal> ループ、そして配列やコマンドラインパラメータなどがあります。</para>
-    <sect4 xml:id="sec.tuning.systemtap.syntax.handlers.others.variables">
+    <sect4 xml:id="sec-tuning-systemtap-syntax-handlers-others-variables">
      <title>変数</title>
      <para>変数はスクリプト内の任意の場所に定義することができます。変数を定義したい場合は、単純に名前を選んで関数や表現を代入するだけです:</para>
 <screen>foo = gettimeofday( )</screen>
@@ -1232,7 +1232,7 @@ probe timer.ms(12345)
       <para>上記の例では、 jiffies とミリ秒によるタイマーを利用して、カーネルの CONFIG_HZ の設定を計算しています。 jiffy/jiffies はシステムのタイマー割り込みの回数を数えるもので、プロセッサのクロック周波数によって間隔が変化するものであることから、これを実時間で割ることで、クロック周波数を計算しています。ここでの <literal>global</literal> 定義は <literal>count_jiffies</literal> と <literal>count_ms</literal> ですが、これらはそれぞれのタイマー値を保存しておくためのものです。また、 <literal>++</literal> という演算子は、変数の値を <literal>1</literal> だけ足す意味です。</para>
      </example>
     </sect4>
-    <sect4 xml:id="sec.tuning.systemtap.syntax.handlers.others.conditional">
+    <sect4 xml:id="sec-tuning-systemtap-syntax-handlers-others-conditional">
      <title>条件分岐</title>
      <para>&stap; スクリプト内で使用できる条件分岐には、いくつかのものがあります。一般的に最もよく使用されるものを下記に示します:</para>
      <variablelist>
@@ -1240,25 +1240,25 @@ probe timer.ms(12345)
        <term>If/Else ステートメント</term>
        <listitem>
         <para>下記のように記述します:</para>
-<screen>if (<replaceable>条件</replaceable>)<co xml:id="co.tuning.systemtap.cond.if"/><replaceable>ステートメント_1</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement1"/>
-else<co xml:id="co.tuning.systemtap.cond.else"/><replaceable>ステートメント_2</replaceable><co xml:id="co.tuning.systemtap.cond.if.statement2"/></screen>
-        <para><literal>if</literal> ステートメントは、整数表現がゼロであるかどうかを調べます。 <xref linkend="co.tuning.systemtap.cond.if" xrefstyle="select:label nopage"/> の結果がゼロ以外であった場合、最初のステートメント <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/> が実行されます。逆に、ゼロであった場合は、 2 番目のステートメント <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> が実行されます。 else 句 ( <xref linkend="co.tuning.systemtap.cond.else" xrefstyle="select:label nopage"/> および <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> ) は任意指定で、指定しても指定しなくてもかまいません。また、 <xref linkend="co.tuning.systemtap.cond.if.statement1" xrefstyle="select:label nopage"/> と <xref linkend="co.tuning.systemtap.cond.if.statement2" xrefstyle="select:label nopage"/> には、ステートメントブロックを指定することもできます。</para>
+<screen>if (<replaceable>条件</replaceable>)<co xml:id="co-tuning-systemtap-cond-if"/><replaceable>ステートメント_1</replaceable><co xml:id="co-tuning-systemtap-cond-if-statement1"/>
+else<co xml:id="co-tuning-systemtap-cond-else"/><replaceable>ステートメント_2</replaceable><co xml:id="co-tuning-systemtap-cond-if-statement2"/></screen>
+        <para><literal>if</literal> ステートメントは、整数表現がゼロであるかどうかを調べます。 <xref linkend="co-tuning-systemtap-cond-if" xrefstyle="select:label nopage"/> の結果がゼロ以外であった場合、最初のステートメント <xref linkend="co-tuning-systemtap-cond-if-statement1" xrefstyle="select:label nopage"/> が実行されます。逆に、ゼロであった場合は、 2 番目のステートメント <xref linkend="co-tuning-systemtap-cond-if-statement2" xrefstyle="select:label nopage"/> が実行されます。 else 句 ( <xref linkend="co-tuning-systemtap-cond-else" xrefstyle="select:label nopage"/> および <xref linkend="co-tuning-systemtap-cond-if-statement2" xrefstyle="select:label nopage"/> ) は任意指定で、指定しても指定しなくてもかまいません。また、 <xref linkend="co-tuning-systemtap-cond-if-statement1" xrefstyle="select:label nopage"/> と <xref linkend="co-tuning-systemtap-cond-if-statement2" xrefstyle="select:label nopage"/> には、ステートメントブロックを指定することもできます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
        <term>While ループ</term>
        <listitem>
         <para>下記のように記述します:</para>
-<screen>while (<replaceable>条件</replaceable>)<co xml:id="co.tuning.systemtap.cond.while"/><replaceable>ステートメント</replaceable><co xml:id="co.tuning.systemtap.cond.while.statement"/></screen>
-        <para><replaceable>条件</replaceable> がゼロ以外であった場合、 <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/> を実行します。 <xref linkend="co.tuning.systemtap.cond.while.statement" xrefstyle="select:label nopage"/> はステートメントブロックでもかまいません。最終的に <replaceable>条件</replaceable> がゼロになるまで、繰り返し実行します。</para>
+<screen>while (<replaceable>条件</replaceable>)<co xml:id="co-tuning-systemtap-cond-while"/><replaceable>ステートメント</replaceable><co xml:id="co-tuning-systemtap-cond-while-statement"/></screen>
+        <para><replaceable>条件</replaceable> がゼロ以外であった場合、 <xref linkend="co-tuning-systemtap-cond-while-statement" xrefstyle="select:label nopage"/> を実行します。 <xref linkend="co-tuning-systemtap-cond-while-statement" xrefstyle="select:label nopage"/> はステートメントブロックでもかまいません。最終的に <replaceable>条件</replaceable> がゼロになるまで、繰り返し実行します。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
        <term>For ループ</term>
        <listitem>
         <para><literal>while</literal> ループのショートカットとして規定されているもので、下記のように記述します:</para>
-<screen>for (<replaceable>初期化</replaceable><co xml:id="co.tuning.systemtap.cond.for.init"/>; <replaceable>条件</replaceable><co xml:id="co.tuning.systemtap.cond.for.cond"/>; <replaceable>増加処理</replaceable><co xml:id="co.tuning.systemtap.cond.for.increment"/>) <replaceable>ステートメント</replaceable></screen>
-        <para><xref linkend="co.tuning.systemtap.cond.for.init" xrefstyle="select:label nopage"/> に記述したステートメントはカウンタの初期化用に使用すべき箇所で、ループの開始前に実行されます。ループは <xref linkend="co.tuning.systemtap.cond.for.cond" xrefstyle="select:label nopage"/> のステートメントの結果が false になるまで繰り返されます (判断処理はループの処理前に行なわれます) 。また、 <xref linkend="co.tuning.systemtap.cond.for.increment" xrefstyle="select:label nopage"/> はループカウンタの増加処理で使用すべき箇所です。こちらはループ処理後に実行されます。</para>
+<screen>for (<replaceable>初期化</replaceable><co xml:id="co-tuning-systemtap-cond-for-init"/>; <replaceable>条件</replaceable><co xml:id="co-tuning-systemtap-cond-for-cond"/>; <replaceable>増加処理</replaceable><co xml:id="co-tuning-systemtap-cond-for-increment"/>) <replaceable>ステートメント</replaceable></screen>
+        <para><xref linkend="co-tuning-systemtap-cond-for-init" xrefstyle="select:label nopage"/> に記述したステートメントはカウンタの初期化用に使用すべき箇所で、ループの開始前に実行されます。ループは <xref linkend="co-tuning-systemtap-cond-for-cond" xrefstyle="select:label nopage"/> のステートメントの結果が false になるまで繰り返されます (判断処理はループの処理前に行なわれます) 。また、 <xref linkend="co-tuning-systemtap-cond-for-increment" xrefstyle="select:label nopage"/> はループカウンタの増加処理で使用すべき箇所です。こちらはループ処理後に実行されます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
@@ -1288,7 +1288,7 @@ else<co xml:id="co.tuning.systemtap.cond.else"/><replaceable>ステートメン�
    </sect3>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.tuning.systemtap.example">
+ <sect1 xml:id="sec-tuning-systemtap-example">
   <title>スクリプト例</title>
 
   <para><systemitem class="resource">systemtap-docs</systemitem> パッケージをインストールしていれば、 <filename>/usr/share/doc/packages/systemtap/examples</filename> 内に &stap; のスクリプト例がいくつか用意されています。</para>
@@ -1342,12 +1342,12 @@ probe kernel.function("tcp_accept").return?,
   <para>すると、画面内に出力が表示されるようになります。スクリプトを手作業で停止するには、 <keycombo> <keycap function="control"/> <keycap>C</keycap> </keycombo> を押します。</para>
  </sect1>
 <!--taroth 2013-11-22: http://doccomments.provo.novell.com/admin/viewcomment/14466-->
- <sect1 xml:id="sec.tuning.systemtap.userspace">
+ <sect1 xml:id="sec-tuning-systemtap-userspace">
   <title>ユーザスペースプローブ</title>
 
   <para><remark>taroth 2013-12-05: this will need adjustment for SLE 12 where user-space probes will use uprobes/uretprobes instead (which are in mainline) - according to tonyj everything except itrace is supposed to work</remark> DTrace のようにユーザスペースで動作するアプリケーションをデバッグする目的で、 &productname; &productnumber; では、 &stap; でユーザスペースのプローブを行なうことができます。ユーザスペースのプローブでは、アプリケーション内の任意の場所にプローブポイントを設置することができます。これにより、 &stap; はカーネルスペースとユーザスペースの両方を調査できることになり、結果としてシステム全体を調査できるようになっています。</para>
 
-  <para>ユーザスペースのプローブを設置する際に必要となる utrace インフラストラクチャと uprobe カーネルモジュールを取得するには、 <xref linkend="sec.tuning.systemtap.setup"/> に示されているパッケージに加え、 <systemitem class="resource">kernel-trace</systemitem> パッケージをインストールする必要があります。</para>
+  <para>ユーザスペースのプローブを設置する際に必要となる utrace インフラストラクチャと uprobe カーネルモジュールを取得するには、 <xref linkend="sec-tuning-systemtap-setup"/> に示されているパッケージに加え、 <systemitem class="resource">kernel-trace</systemitem> パッケージをインストールする必要があります。</para>
 
   <para><command>utrace</command> はユーザスペースの処理を制御するためのフレームワークを実装するものです。様々なトレーシング <quote>エンジン</quote> で使用することのできるインターフェイスを提供し、これ自身は読み込み可能なカーネルモジュールとして提供されます。エンジンは特定のイベントに対してコールバック関数を登録し、トレース対象のスレッドに結びつけられます。コールバックはカーネル内の <quote>安全な</quote> 場所から行なわれるため、関数が実行できる処理の種類に大きな余裕ができることになります。 utrace では、たとえばシステムコールの開始と終了、 fork() やタスクに送信されるシグナルなど、様々なイベントを監視することができます。 utrace のインフラストラクチャについて、詳しくは <link xlink:href="http://sourceware.org/systemtap/wiki/utrace"/> (英語) をお読みください。</para>
 
@@ -1359,26 +1359,26 @@ probe kernel.function("tcp_accept").return?,
 
   <para>ユーザスペースのプローブについて、詳しくは <link xlink:href="https://sourceware.org/systemtap/SystemTap_Beginners_Guide/userspace-probing.html"/> (英語) をお読みください。</para>
  </sect1>
- <sect1 xml:id="sec.tuning.systemtap.more">
+ <sect1 xml:id="sec-tuning-systemtap-more">
   <title>さらなる情報</title>
 
   <para>本章では、 &stap; の概要部までしか言及できていません。 &stap; に関する詳細な情報を得たい場合は、それぞれ下記を参照してください (英語のみの提供である場合もあります):</para>
 
   <variablelist>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/"/></term>
+    <term>"\n  <link xlink:href="http://sourceware.org/systemtap/"/>\n"</term>
     <listitem>
      <para>&stap; プロジェクトの Web ページです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/wiki/"/></term>
+    <term>"\n  <link xlink:href="http://sourceware.org/systemtap/wiki/"/>\n"</term>
     <listitem>
      <para>&stap; に関する便利な情報を数多く集めているサイトです。ユーザに対する詳しい説明から開発者向けの資料のほか、他のツールとの比較やレビュー、よくある質問とその回答 (FAQ) やヒントなどが書かれています。また、 &stap; スクリプトの例もあり、使用例や &stap; に関する直近の対話、ペーパーなども用意されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><link xlink:href="http://sourceware.org/systemtap/documentation.html"/></term>
+    <term>"\n  <link xlink:href="http://sourceware.org/systemtap/documentation.html"/>\n"</term>
     <listitem>
      <para>PDF および HTML 形式で、 <citetitle>&stap; Tutorial</citetitle> (&stap; チュートリアル), <citetitle>&stap; Beginner's Guide</citetitle> (&stap; 初心者ガイド), <citetitle>Tapset Developer's Guide</citetitle> (タップセット開発者ガイド), <citetitle>&stap; Language Reference</citetitle> (&stap; 言語リファレンス) などが用意されています。</para>
     </listitem>

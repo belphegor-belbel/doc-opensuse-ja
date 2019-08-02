@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.apparmor.hat">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-apparmor-hat">
  <title>チェンジハット機能による Web アプリケーションのプロファイル作成</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -18,19 +18,19 @@
  <para>ハットとして使用する予定の外部サブプロファイルがある場合、そのサブプロファイルの冒頭には <literal>hat</literal> もしくは <literal>^</literal> 文字で始まらなければなりません。</para>
  <para>下記の 2 つのサブプロファイルは、いずれもハットとして使用 <emphasis>できない</emphasis> ものです:</para>
 <screen>/foo//bar { }</screen>
- <para><!-- NOTE: nothing needed for Japanese --></para>
+ <para>"\n  <!-- NOTE: nothing needed for Japanese -->\n"</para>
 <screen>profile /foo//bar { }</screen>
  <para>逆に、下記の 2 つはいずれもハットとして扱われます:</para>
 <screen>^/foo//bar { }</screen>
- <para><!-- NOTE: nothing needed for Japanese --></para>
+ <para>"\n  <!-- NOTE: nothing needed for Japanese -->\n"</para>
 <screen>hat /foo//bar { } # (vim では、この書式はハイライト表示されません)</screen>
  <para>なお、ハットを使用する場合のセキュリティは、完全なプロファイルを使用する場合に比べると、比較的弱くなることに注意してください。プログラム内に特定の種類のバグが存在した場合、攻撃者はプロファイル内に含まれるハットに退避することができてしまいます。これは、ハットのセキュリティがプロセス側で保持される機密鍵のみによって成り立っているためで、ハット側内のコードからは鍵に対するアクセスを許可してはならないことによるものです。そのためチェンジハット機能は、プロセス内に含まれるメモリに対して直接的にアクセスする手段のない、インタプリタ型の言語 (Perl, PHP, Java など) で作成されたアプリケーションサーバに対して、最も便利な仕組みとなっています。</para>
- <para>本章の以下の項目では、 Apache でのチェンジハット機能の使用方法について説明しています。この Apache では <literal>mod_perl</literal> および <literal>mod_php</literal> を利用して、 Web サーバコンポーネントを動作させているものとします。同様のアプローチで、 Apache における <literal>mod_apparmor</literal> と同様 (詳しくは <xref linkend="sec.apparmor.hat.config.directives"/> で説明しています) に、その他のアプリケーションサーバでもチェンジハット機能を利用することができます。</para>
+ <para>本章の以下の項目では、 Apache でのチェンジハット機能の使用方法について説明しています。この Apache では <literal>mod_perl</literal> および <literal>mod_php</literal> を利用して、 Web サーバコンポーネントを動作させているものとします。同様のアプローチで、 Apache における <literal>mod_apparmor</literal> と同様 (詳しくは <xref linkend="sec-apparmor-hat-config-directives"/> で説明しています) に、その他のアプリケーションサーバでもチェンジハット機能を利用することができます。</para>
  <tip>
   <title>さらなる情報について</title>
   <para>更に詳しい情報をご希望の場合は、 <command>change_hat</command> のマニュアルページをお読みください。</para>
  </tip>
- <sect1 xml:id="sec.apparmor.hat.config" role="General">
+ <sect1 xml:id="sec-apparmor-hat-config" role="General">
   <title><systemitem>mod_apparmor</systemitem> を利用するための Apache の設定</title>
 
   <para>&aa; には、 Apache Web サーバ <phrase os="sled"> (&sls; のみに含まれています)</phrase> 向けの <literal>mod_apparmor</literal> (<systemitem class="resource">apache2-mod-apparmor</systemitem> パッケージ) が提供されています。このモジュールを使用することで、 Apache Web サーバをチェンジハット対応にすることができます。 Apache Web サーバと共にインストールしてください。</para>
@@ -42,10 +42,10 @@
     <para>URI 固有のハット。例: <filename>^www_app_name/templates/classic/images/bar_left.gif</filename></para>
    </listitem>
    <listitem>
-    <para><literal>DEFAULT_URI</literal></para>
+    <para>"\n  <literal>DEFAULT_URI</literal>\n"</para>
    </listitem>
    <listitem>
-    <para><literal>HANDLING_UNTRUSTED_INPUT</literal></para>
+    <para>"\n  <literal>HANDLING_UNTRUSTED_INPUT</literal>\n"</para>
    </listitem>
   </itemizedlist>
 
@@ -57,7 +57,7 @@
 
   <para>Apache は純粋なテキスト形式の設定ファイルにディレクティブを配置することで、設定を行なうことができます。メインとなる設定ファイルは <filename>/etc/apache2/httpd.conf</filename> です。 Apache を独自にコンパイルして使用している場合は、コンパイル時の設定にあわせてファイルを選択してください。ディレクティブは Apache の動作を変更するためのもので、設定ファイル内の任意の場所に配置することができます。メインの設定ファイルを変更したあとは、 <command>sudo systemctl reload apache2</command> を実行することで、変更点を反映させることができます。</para>
 
-  <sect2 xml:id="sec.apparmor.hat.config.vhost">
+  <sect2 xml:id="sec-apparmor-hat-config-vhost">
    <title>仮想ホストのディレクティブ</title>
    <para>&lt;VirtualHost&gt; と &lt;/VirtualHost&gt; のディレクティブを利用して、特定の仮想ホストにのみ適用されるディレクティブの範囲を指定します。 Apache における仮想ホストの設定方法について、詳しくは <link xlink:href="http://httpd.apache.org/docs/2.4/ja/mod/core.html#virtualhost"/> をお読みください。</para>
    <para>チェンジハット機能固有の設定キーワードは <literal>AADefaultHatName</literal> です。これは <literal>AAHatName</literal> に似た設定で、 <literal>AADefaultHatName My_Funky_Default_Hat</literal> のように指定します。</para>
@@ -65,7 +65,7 @@
    <para>全くどのハットも設定されていない場合は、 <quote>親</quote> プロセスである Apache のハットが適用されます。</para>
   </sect2>
 
-  <sect2 xml:id="sec.apparmor.hat.config.directives">
+  <sect2 xml:id="sec-apparmor-hat-config-directives">
    <title>Location と Directory のディレクティブ</title>
    <para>設定ファイル内の Location および Directory のディレクティブの中でハット名を指定することで、 Apache が URI やディレクトリを処理する際、指定したセキュリティプロファイルを適用するようになります。 Apache における Location および Directory ディレクティブの使い方について、詳しくは <link xlink:href="http://httpd.apache.org/docs/2.4/ja/sections.html"/> をお読みください。</para>
    <para>下記に示す Location ディレクティブでは、指定した場所に対して、 <literal>mod_apparmor</literal> が特定のハットを使用するように指定しています:</para>
@@ -81,7 +81,7 @@
 &lt;/Directory&gt;</screen>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.apparmor.hat.apache.managing">
+ <sect1 xml:id="sec-apparmor-hat-apache-managing">
   <title>チェンジハット対応のアプリケーションの管理</title>
 
   <para>前の章では <literal>mod_apparmor</literal> に関する情報と、特定の Web アプリケーションのセキュリティを向上させる方法について学んできました。この章では、 Web アプリケーションに対してハットを作成するための現実的な例と、 &aa; のチェンジハット機能の使用方法について説明しています。なお、本章では &aa; のコマンドラインツールを利用して説明を行なっていますが、これは &yast; の &aa; モジュールではすべての機能を提供しているわけではないためのものです。</para>
@@ -247,7 +247,7 @@ Severity: 3
 [(A)llow] / (D)eny / (G)lob / Glob w/(E)xt / (N)ew / Abo(r)t / (F)inish / (O)pts</screen>
     <para><command>aa-logprof</command> のメッセージによると、下記のとおり <systemitem>adminer</systemitem> のハットが正しく認識されていることが分かります:</para>
 <screen>Profile:  /usr/sbin/httpd2-prefork^adminer</screen>
-    <para><command>aa-logprof</command> は、検出されたそれぞれの &aa; イベントから、適切なルールを選択するよう依頼します。使用したいルールを指定したあと <guimenu>Allow</guimenu> を選択します。 <command>aa-genprof</command> と <command>aa-logprof</command> の使用方法について、詳しくは <xref linkend="sec.apparmor.commandline.profiling.summary.genprof"/> をお読みください。</para>
+    <para><command>aa-logprof</command> は、検出されたそれぞれの &aa; イベントから、適切なルールを選択するよう依頼します。使用したいルールを指定したあと <guimenu>Allow</guimenu> を選択します。 <command>aa-genprof</command> と <command>aa-logprof</command> の使用方法について、詳しくは <xref linkend="sec-apparmor-commandline-profiling-summary-genprof"/> をお読みください。</para>
     <tip>
      <para><command>aa-logprof</command> では通常、特定のイベントに対して複数のルール候補を提示して選択を求めます。場合によっては <emphasis>抽象</emphasis> と呼ばれる、特定の目的向けのルールセットをまとめた仕組みを提案することもあります。このような場合は、直接のルールではなく抽象を選択したほうが便利な場合があります:</para>
 <screen> 1 - #include &lt;abstractions/php5&gt;
@@ -289,12 +289,12 @@ apparmor module is loaded.
    <para><filename>^adminer</filename> プロファイルは、親プロファイルである <filename>usr.sbin.httpd2-prefork</filename> の中で動作するプロセスから見た場合にのみ利用することができます。</para>
   </note>
   </sect2>
-  <sect2 xml:id="sec.apparmor.hat.apache.managing.add">
+  <sect2 xml:id="sec-apparmor-hat-apache-managing-add">
    <title>&yast; によるハットと項目の追加方法</title>
-   <para><guimenu><!-- NOTE: not "Edit Profile" --> 既存のプロファイルを管理</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.yast.edit"/> を参照) を使用するか、もしくは <guimenu>手作業でプロファイルを追加</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec.apparmor.yast.add"/> を参照) を使用することで、 &aa; のプロファイル内にハット (サブプロファイル) を追加することができます。 <guimenu>&aa; プロファイルダイアログ</guimenu> ウインドウ内でチェンジハットのサブプロファイルを追加するには、下記のようにして行ないます。</para>
+   <para><guimenu><!-- NOTE: not "Edit Profile" --> 既存のプロファイルを管理</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-edit"/> を参照) を使用するか、もしくは <guimenu>手作業でプロファイルを追加</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-add"/> を参照) を使用することで、 &aa; のプロファイル内にハット (サブプロファイル) を追加することができます。 <guimenu>&aa; プロファイルダイアログ</guimenu> ウインドウ内でチェンジハットのサブプロファイルを追加するには、下記のようにして行ないます。</para>
    <informalfigure>
     <mediaobject>
-     <textobject role="description"><phrase>&aa; プロファイルダイアログ</phrase></textobject>
+     <textobject role="description">"\n  <phrase>&aa; プロファイルダイアログ</phrase>\n"</textobject>
      <imageobject role="fo">
       <imagedata format="PNG" fileref="hats_in_profiles.png" width="75%"/>
      </imageobject>
@@ -308,7 +308,7 @@ apparmor module is loaded.
      <para><guimenu>&aa; プロファイルダイアログ</guimenu> のウインドウ内で、 <guimenu>項目の追加</guimenu> を押し、 <guimenu>ハット</guimenu> を選択します。 <guimenu>追加するハット名</guimenu> のダイアログが表示されます:</para>
      <informalfigure>
       <mediaobject>
-       <textobject role="description"><phrase>ハット名の入力</phrase></textobject>
+       <textobject role="description">"\n  <phrase>ハット名の入力</phrase>\n"</textobject>
        <imageobject role="fo">
         <imagedata format="PNG" fileref="hat_createhat.png" width="50%"/>
        </imageobject>

@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.tuning.kexec">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-kexec">
  <title>Kexec と Kdump</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -12,7 +12,7 @@
       </dm:docmanager>
     </info>
     <para>&kexec; は現在動作中のカーネルから他のカーネルを高速に起動するための仕組みです。これにより、ハードウエアの初期化を行なわず、高速にシステムを再起動することができます。必要であれば、システムがクラッシュした際、もう 1 つのカーネルを起動することもできます。</para>
- <sect1 xml:id="cha.tuning.kexec.intro">
+ <sect1 xml:id="cha-tuning-kexec-intro">
   <title>概要</title>
 
   <para>&kexec; を使用することで、ハードウエアによる再起動を行なうことなく、別のカーネルを起動することができるようになります。このツールは、下記のような用途で使用されます:</para>
@@ -36,7 +36,7 @@
    </listitem>
   </itemizedlist>
  </sect1>
- <sect1 xml:id="cha.tuning.kexec.pkgs">
+ <sect1 xml:id="cha-tuning-kexec-pkgs">
   <title>必要なパッケージ</title>
 
   <para>&productnamereg; で &kexec; を使用すると、再起動を高速化したり潜在的なハードウエア問題を回避したりすることができます。 &kexec; を使用するには、 <systemitem>kexec-tools</systemitem> パッケージをインストールしてください。このパッケージには <command>kexec-bootloader</command> というスクリプトが含まれていますが、これはブートローダの設定からカーネルのコマンドラインオプションを読み出し、そのコマンドラインオプションを利用して新しいカーネルを起動することができます。</para>
@@ -54,7 +54,7 @@
 
   <para>&productname; での &kdump; の使用方法は、 &yast; の &kdump; モジュールで設定することができます。 &yast; モジュールを使用する場合は、 <literal>yast2-kdump</literal> パッケージをインストールしておいてください。</para>
  </sect1>
- <sect1 xml:id="cha.tuning.kexec.internals">
+ <sect1 xml:id="cha-tuning-kexec-internals">
   <title>&kexec; の内部構造</title>
 
   <para>&kexec; で最も重要なコンポーネントは <filename>/sbin/kexec</filename> です。 &kexec; でカーネルを読み込む際、 2 種類の方法で行なうことができます:</para>
@@ -73,7 +73,7 @@
   </itemizedlist>
 
   <para>システムがクラッシュした際、本番用のカーネルのデータを保持したまま、もう 1 つのカーネルを起動したい場合は、システムメモリ内に専用の領域を用意する必要があります。その領域は常に空けておかなければならないものであることから、この専用領域には本番用のカーネルが読み込まれることはありません。この領域は情報採取用のカーネルが使用するもので、このような仕組みによって、本番用のカーネルのメモリページを保持させることができるようになっています。</para>
-  <para>このような領域を予約するには、本番用のカーネルの起動コマンドライン内に、 <option>crashkernel</option> というオプションを追加します。 <option>crashkernel</option> で必要な値を判断するには、 <xref linkend="sec.tuning.kexec.crashkernel"/> に書かれた手順に従ってください。</para>
+  <para>このような領域を予約するには、本番用のカーネルの起動コマンドライン内に、 <option>crashkernel</option> というオプションを追加します。 <option>crashkernel</option> で必要な値を判断するには、 <xref linkend="sec-tuning-kexec-crashkernel"/> に書かれた手順に従ってください。</para>
   <para>なお、上記のパラメータは情報採取用のカーネルのパラメータではありません。情報採取用のカーネルでは &kexec; を使用しません。</para>
 
   <para>情報採取用のカーネルは専用の領域に読み込まれ、カーネルがクラッシュするのを待ちます。いったんクラッシュが発生すると、 &kdump; は情報採取用のカーネルに制御を移します。これは、クラッシュした時点で、元のカーネルは信頼できる状態ではなくなるためです。これはつまり、 &kdump; 自身も失敗する可能性があることを示しています。</para>
@@ -84,7 +84,7 @@
   <para>読み込んでおいたカーネルはいつでも解放することができます。 <option>-l</option> オプションで読み込んでおいたカーネルを解放したい場合は、 <command>kexec</command> <option>-u</option> コマンドを実行してください。また、 <option>-p</option> オプションで読み込んでおいたカーネルの場合は、 <command>kexec</command> <option>-p</option> <option>-u</option> コマンドを実行してください。</para>
  </sect1>
 
- <sect1 xml:id="sec.tuning.kexec.crashkernel">
+ <sect1 xml:id="sec-tuning-kexec-crashkernel">
   <title><option>crashkernel</option> 割り当てサイズの計算</title>
 
   <para>&kexec; で情報採取用のカーネルを起動する <!-- "and to use &kdump; in any way" ? --> 場合、このカーネル用のメモリ領域を割り当てておく必要があります。割り当てるべきサイズはコンピュータのハードウエア設定によって異なりますので、あらかじめ指定しておく必要があります。</para>
@@ -259,7 +259,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
   </tip>
  </sect1>
 
- <sect1 xml:id="cha.tuning.kexec.basic_usage">
+ <sect1 xml:id="cha-tuning-kexec-basic-usage">
   <title>基本的な &kexec; の使用方法</title>
 
   <para>&kexec; を使用するには、まず対応するサービスを有効化し、動作させる必要があります:</para>
@@ -289,19 +289,19 @@ cio_ignore=all,!da5d,!f500-f502</screen>
   </tip>
 
  </sect1>
- <sect1 xml:id="cha.tuning.kexec.config">
+ <sect1 xml:id="cha-tuning-kexec-config">
   <title>日々の再起動に対する &kexec; の設定方法</title>
 
   <para>&kexec; は定期的な再起動処理でも使用することができます。たとえばハードウエア検出ルーチンに長い時間がかかるような環境であったり、起動時の信頼性があまり高くないシステムなどで有用です。</para>
 
   <para>ただし、 &kexec; でシステムを再起動する際は、ファームウエアやブートローダを使用しないことに注意してください。ブートローダ側で設定を変更していても、物理的な (&kexec; を使用しない) 再起動を行なうまで、それらは反映されません。</para>
  </sect1>
- <sect1 xml:id="cha.tuning.kdump.basic">
+ <sect1 xml:id="cha-tuning-kdump-basic">
   <title>基本的な &kexec; の設定</title>
 
   <para>&kdump; を使用することで、カーネルのダンプ情報を保存することができます。これは、カーネルがクラッシュしてしまった場合、その時点のメモリ内容をファイルシステムに保存する機能です。この仕組みにより、カーネルがクラッシュした時点で何が起こっていたのかを調べることができるようになります。これを <quote>コアダンプ</quote> と呼びます。</para>
 
-  <para>&kdump; は &kexec; と同じ仕組みで動作するものです (詳しくは <xref linkend="cha.tuning.kexec"/> をお読みください) 。この場合、本番用のカーネルがクラッシュした際に、情報採取用のカーネルを起動します。ただし、 &kexec; では本番用のカーネルをそのまま置き換えて動作するのに対して、 &kdump; ではクラッシュした本番用のカーネルのメモリを保持し続ける点が異なります。これにより、 &kdump; カーネルの環境内から、クラッシュしたカーネルのメモリ領域を保存できることになります。</para>
+  <para>&kdump; は &kexec; と同じ仕組みで動作するものです (詳しくは <xref linkend="cha-tuning-kexec"/> をお読みください) 。この場合、本番用のカーネルがクラッシュした際に、情報採取用のカーネルを起動します。ただし、 &kexec; では本番用のカーネルをそのまま置き換えて動作するのに対して、 &kdump; ではクラッシュした本番用のカーネルのメモリを保持し続ける点が異なります。これにより、 &kdump; カーネルの環境内から、クラッシュしたカーネルのメモリ領域を保存できることになります。</para>
 
   <tip>
    <title>ネットワーク経由でのダンプについて</title>
@@ -313,12 +313,12 @@ cio_ignore=all,!da5d,!f500-f502</screen>
    <para>&kdump; を設定する際、採取したダンプイメージの保存先の場所を指定することができます (既定値: <filename>/var/crash</filename>) 。この保存先は &kdump; の設定時点でマウントしておかなければなりません。設定時点でマウントを行なっていないと、設定が失敗します。</para>
   </important>
 
-  <sect2 xml:id="cha.tuning.kdump.basic.manual">
+  <sect2 xml:id="cha-tuning-kdump-basic-manual">
    <title>手作業での &kdump; の設定</title>
    <para>&kdump; では設定を <filename>/etc/sysconfig/kdump</filename> ファイルから読み込みます。お使いのシステムで &kdump; を動作させるにあたって、事前の設定は特に必要ありません。 &kdump; を既定の設定値のままで動作させたい場合は、下記の手順を実施してください:</para>
    <procedure>
     <step>
-     <para><xref linkend="sec.tuning.kexec.crashkernel"/> の手順に従って、 &kdump; で必要なメモリ量を決定します。決定後、 <option>crashkernel</option> のカーネルパラメータを設定します。</para>
+     <para><xref linkend="sec-tuning-kexec-crashkernel"/> の手順に従って、 &kdump; で必要なメモリ量を決定します。決定後、 <option>crashkernel</option> のカーネルパラメータを設定します。</para>
     </step>
     <step>
      <para>コンピュータを再起動します。</para>
@@ -326,7 +326,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
     <step>
      <para>&kdump; サービスを有効化します:</para>
 <screen>&prompt.root;<command>systemctl</command> enable kdump</screen>
-     <para><!--taroth 2014-03-19: systemd - according to fcrozat, no more boot.* stuff: <command>chkconfig boot.kdump <option>on</option></command>--></para>
+     <para>"\n  <!--taroth 2014-03-19: systemd - according to fcrozat, no more boot.* stuff: <command>chkconfig boot.kdump <option>on</option></command>-->\n"</para>
     </step>
     <step>
      <para>必要であれば <filename>/etc/sysconfig/kdump</filename> ファイルを編集します。それぞれのオプションの意味について、詳しくはファイル内のコメント (英語) をお読みください。</para>
@@ -362,7 +362,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
     <para><literal>KDUMP_KEEP_OLD_DUMPS</literal> オプションは、カーネルダンプの保存数 (既定値: 5) を指定するためのものです。圧縮を行なわない場合、ダンプのサイズは最大で物理メモリのサイズそのものになります。そのため、 <filename>/var</filename> のパーティションに対しては、十分な空き領域を用意しておいてください。</para>
    </important>
    <para>情報採取用のカーネルが起動して、クラッシュしたほうのカーネルのメモリ状態をファイルシステムに保存します。保存先は <literal>KDUMP_SAVEDIR</literal> オプションで設定します (既定値: <filename>/var/crash</filename>) 。 <literal>KDUMP_IMMEDIATE_REBOOT</literal> を <literal>yes</literal> に設定していると、本番用のカーネルを利用してシステムを自動的に再起動します。再起動が終わったらログインを行ない、 <filename>/var/crash</filename> 内にダンプファイルが作成されていることを確認してください。</para>
-   <sect3 xml:id="sec.tuning.kdump.basic.manual.static_ip">
+   <sect3 xml:id="sec-tuning-kdump-basic-manual-static-ip">
     <title>&kdump; に対する固定 IP の設定</title>
     <para>&kdump; でネットワークデバイスに対して固定 IP アドレスを設定する場合は、必要なネットワーク設定を <filename>/etc/sysconfig/kdump</filename> 内の <envar>KDUMP_COMMANDLINE_APPEND</envar> 変数に追加します。</para>
     <example>
@@ -398,10 +398,10 @@ KDUMP_NET_TIMEOUT=30</screen>
    </sect3>
   </sect2>
 
-  <sect2 xml:id="cha.tuning.kdump.basic.yast">
+  <sect2 xml:id="cha-tuning-kdump-basic-yast">
    <title>&yast; での設定</title>
    <para>&yast; で &kdump; を設定するには、まず <systemitem>yast2-kdump</systemitem> パッケージをインストールする必要があります。インストール後は &rootuser; で &yastcc; 内の <guimenu>システム</guimenu> カテゴリにある <guimenu>カーネル Kdump</guimenu> を起動するか、もしくはコマンドラインで <command>yast2 kdump</command> と入力して実行します。</para>
-   <figure xml:id="fig.tuning.kdump.basic.yast.kdump1">
+   <figure xml:id="fig-tuning-kdump-basic-yast-kdump1">
     <title>&yast; &kdump; モジュール: 最初のページ</title>
     <mediaobject>
      <imageobject role="fo">
@@ -410,15 +410,15 @@ KDUMP_NET_TIMEOUT=30</screen>
      <imageobject role="html">
       <imagedata fileref="yast2_kdump_startup.png" width="70%" format="PNG"/>
      </imageobject>
-     <textobject><phrase>&yast; &kdump; モジュールのスクリーンショット</phrase></textobject>
+     <textobject>"\n  <phrase>&yast; &kdump; モジュールのスクリーンショット</phrase>\n"</textobject>
     </mediaobject>
    </figure>
    <para>まずは <guimenu>起動</guimenu> ウインドウ内で <guimenu>Kdump の有効化</guimenu> を選択します。</para>
-   <para>ウインドウを始めた開いたタイミングで、 <guimenu>&kdump; メモリ</guimenu> の値が自動的に設定されます。しかしながら、環境によっては自動生成の値では不十分な場合があります。正しい値を設定するには、 <xref linkend="sec.tuning.kexec.crashkernel"/> の手順に従って判断を行ない、値を入力してください。</para>
+   <para>ウインドウを始めた開いたタイミングで、 <guimenu>&kdump; メモリ</guimenu> の値が自動的に設定されます。しかしながら、環境によっては自動生成の値では不十分な場合があります。正しい値を設定するには、 <xref linkend="sec-tuning-kexec-crashkernel"/> の手順に従って判断を行ない、値を入力してください。</para>
    <important>
     <title>ハードウエア変更後の <guimenu>&kdump; メモリ</guimenu> の再設定について</title>
     <para>コンピュータ内で &kdump; を設定し、後からメモリ量や利用可能なハードディスクを変更した場合、 &yast; では古い環境での値を表示し続けてしまいます。</para>
-    <para>この問題を回避するには、 <xref linkend="sec.tuning.kexec.crashkernel"/> で書かれている手順に従って必要なメモリ量を判断して、 &yast; で設定をやり直してください。</para>
+    <para>この問題を回避するには、 <xref linkend="sec-tuning-kexec-crashkernel"/> で書かれている手順に従って必要なメモリ量を判断して、 &yast; で設定をやり直してください。</para>
    </important>
    <para>左のペイン内で <guimenu>ダンプフィルタリング</guimenu> を選択して、ダンプ内に含めるべきページを選択します。カーネルの問題をデバッグするだけであれば、これらのページは必要ではありません:</para>
    <itemizedlist mark="bullet" spacing="normal">
@@ -443,7 +443,7 @@ KDUMP_NET_TIMEOUT=30</screen>
    <para>&kdump; に対して、そのイベントが発生した際に電子メールで通知を行ないたい場合は、 <guimenu>電子メール通知</guimenu> のウインドウ内で設定を行ないます。また、必要であれば <guimenu>熟練者向け設定</guimenu> で必要な設定を行ないます。設定が完了したら <guimenu>OK</guimenu> を押すことで、設定が完了します。</para>
   </sect2>
 
-  <sect2 xml:id="cha.tuning.kdump.ssh">
+  <sect2 xml:id="cha-tuning-kdump-ssh">
    <title>SSH 経由での &kdump;</title>
    <para>ダンプファイルには不用意に開示してはならない様々な機密情報が含まれています。このような機密情報を含むデータを信頼できないネットワーク経由で送信できるようにするため、 &kdump; には、 SSH プロトコルを介してリモートのマシンにダンプファイルを送信できる機能が用意されています。</para>
    <procedure>
@@ -493,7 +493,7 @@ KDUMP_NET_TIMEOUT=30</screen>
    </procedure>
   </sect2>
  </sect1>
- <sect1 xml:id="cha.tuning.kdump.analyze">
+ <sect1 xml:id="cha-tuning-kdump-analyze">
   <title>クラッシュダンプの解析</title>
 
   <para>ダンプファイルを保存することができたら、あとは解析するだけです。解析方法にはいくつかあります。</para>
@@ -533,16 +533,16 @@ KDUMP_NET_TIMEOUT=30</screen>
    <para>&productname; には <command>kdumpid</command> と呼ばれるユーティリティ (同名のパッケージに含まれています) が存在し、これによって未知のカーネルダンプの情報を表示することができます。このユーティリティは、アーキテクチャやカーネルリリースなど、基本的な情報を抽出することができます。また、このユーティリティは lkcd, diskdump, &kdump;, ELF ダンプの各形式に対応しているほか、 <option>-v</option> オプションを付けて実行すると、マシンの種類やカーネルのバナー文字列、カーネルの設定フレーバーなども表示することができます。</para>
   </tip>
 
-  <sect2 xml:id="cha.tuning.kdump.analyze.binformat">
+  <sect2 xml:id="cha-tuning-kdump-analyze-binformat">
    <title>カーネルのバイナリ形式</title>
    <para>Linux カーネルは Executable and Linkable Format (ELF) 形式で提供されます。このファイルは通常 <literal>vmlinux</literal> と呼ばれ、コンパイル処理時に直接生成されます。ただし、特に &x86-64; アーキテクチャで顕著ではありますが、全てのブートローダが ELF 形式に対応しているというわけではありません。 &productnamereg; で対応しているアーキテクチャごとに、下記のような仕組みになっています。</para>
-   <sect3 xml:id="cha.tuning.kdump.analyze.binformat.x86">
+   <sect3 xml:id="cha-tuning-kdump-analyze-binformat-x86">
     <title>&x86-64;</title>
     <para>&suse; が提供する &x86-64; 向けのカーネルパッケージには、 <filename>vmlinuz</filename> と <filename>vmlinux.gz</filename> という 2 つのファイルが含まれています。</para>
     <itemizedlist>
      <listitem>
       <formalpara>
-       <title><filename>vmlinuz</filename></title>
+       <title>"\n  <filename>vmlinuz</filename>\n"</title>
        <para>ブートローダから直接実行するほうのファイルです。</para>
       </formalpara>
       <para>Linux カーネルは 2 種類のパーツから構成されています。 1 つはカーネルそれ自身 ( <literal>vmlinux</literal> ) 、もう 1 つはブートローダが実行するセットアップコードです。これら 2 つのパーツを 1 つにまとめて <filename>vmlinuz</filename> というファイルに仕立て上げています (末尾が <literal>x</literal> ではなく <literal>z</literal> であることに注意してください) 。</para>
@@ -550,13 +550,13 @@ KDUMP_NET_TIMEOUT=30</screen>
      </listitem>
      <listitem>
       <formalpara>
-       <title><filename>vmlinux.gz</filename></title>
+       <title>"\n  <filename>vmlinux.gz</filename>\n"</title>
        <para>こちらは <command>crash</command> や GDB が使用するファイルで、圧縮された ELF イメージの形態になっています。 ELF イメージは &x86-64; のブートローダから使用されることがありませんので、圧縮されたファイルのみを提供しています。</para>
       </formalpara>
      </listitem>
     </itemizedlist>
    </sect3>
-   <sect3 xml:id="cha.tuning.kdump.analyze.binformat.ppc">
+   <sect3 xml:id="cha-tuning-kdump-analyze-binformat-ppc">
     <title>&power;</title>
     <para>&power; 上で動作する <systemitem>yaboot</systemitem> ブートローダは ELF イメージの読み込みに対応していますが、圧縮されたファイルには対応していません。そのため、 &power; アーキテクチャ向けのカーネルパッケージには、 <filename>vmlinux</filename> という ELF 形式の Linux カーネルファイルが含まれています。 <command>crash</command> を動作させる前提で考えると、最も単純なアーキテクチャであると言えます。</para>
     <para>なお、他のマシンでダンプを解析する場合は、コンピュータのアーキテクチャとデバッグに必要なファイルの両方を確認しなければならないことに注意してください。</para>
@@ -647,7 +647,7 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
    </sect3>
   </sect2>
  </sect1>
- <sect1 xml:id="cha.tuning.kdump.advanced">
+ <sect1 xml:id="cha-tuning-kdump-advanced">
   <title>高度な &kdump; の設定</title>
 
   <para>&kdump; の設定は <filename>/etc/sysconfig/kdump</filename> 内に保存されています。設定は &yast; を利用しても行なうことができます。 &kdump; の設定オプションは、 &yastcc; 内の <menuchoice><guimenu>システム</guimenu> <guimenu>カーネル Kdump</guimenu></menuchoice> 内に存在しています。下記の &kdump; オプションが用意されています。</para>
@@ -663,7 +663,7 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
    <para><filename>/etc/sysconfig/kdump</filename> ファイルを変更した場合は、その変更点を反映させるため、必ず <command>systemctl restart kdump</command> を実行する必要があります。実行しておかないと、設定の適用は次回のシステム再起動以降となります。</para>
   </important>
  </sect1>
- <sect1 xml:id="cha.tuning.kdump.moreinfo">
+ <sect1 xml:id="cha-tuning-kdump-moreinfo">
   <title>さらなる情報</title>
 
   <para>&kexec; や &kdump; の使用方法については、 1 箇所にまとまった情報源が存在していないのが現状です。下記にさまざまな側面で使用できる情報源 (いずれも英語のみ) を示します:</para>

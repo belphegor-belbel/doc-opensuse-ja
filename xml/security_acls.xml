@@ -3,7 +3,7 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha.security.acls">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-security-acls">
  <title>Linux でのアクセス制御リスト</title>
  <info>
       <abstract>
@@ -16,34 +16,34 @@
     </info>
 
  <para><emphasis>POSIX ACL</emphasis> という名称からもおわかりのとおり、こちらは正式な POSIX ( <emphasis>Portable Operating System Interface</emphasis> ) 標準として規定されています。関連するドラフトは POSIX 1003.1e と POSIX 1003.2c で、いずれも諸事情により撤回されています。しかしながら、 Unix ファミリに属する多くのオペレーティングシステムと同様に、 ACL はこれらのドラフトをベースにしているほか、ファイルシステム側の ACL (本章で説明しています) 実装は、これら 2 つの標準に従って行なわれています。</para>
- <sect1 xml:id="sec.security.acls.traditional">
+ <sect1 xml:id="sec-security-acls-traditional">
   <title>従来型のファイルアクセス権</title>
   <para>&productname; で提供されている全てのファイルに対するアクセス権 (パーミッション) は、よく考えられて設定されています。そのため、追加のソフトウエアやファイルをインストールする場合は、パーミッションの設定に注意してください。 <command>ls</command> コマンドに <option>-l</option> オプションを指定することで、正しく設定されていないパーミッションを即時に見つけることができます。なお、パーミッションの設定は、ファイルの内容の変更や削除に影響するだけではありません。 &rootuser; が実行するプログラム自身を書き換えることもできてしまいますし、設定を書き換えて不正な動作を行なわせることもできてしまいます。このように、パーミッションの設定は攻撃の可能性を増やすことにも繋がります。</para>
   <para>&productnamereg; システム内の <filename>/etc</filename> ディレクトリには、 <filename>permissions</filename> , <filename>permissions.easy</filename> , <filename>permissions.secure</filename> , <filename>permissions.paranoid</filename> の各ファイルが用意されています。これらのファイルは、全てのユーザが書き込みできるディレクトリやファイル、 setuser ID (setuid) ビットなどの特殊なパーミッションを定義するためのファイルです。 setuser ID ビットが設定されたプログラムは、そのプログラムを起動したユーザの権限で動作することはなく、ファイルの所有者 (通常は &rootuser;) の権限で動作します。管理者側では、 <filename>/etc/permissions.local</filename> というファイルを利用することで、独自の設定を行なうことができます。</para>
   <para>利用可能なプロファイルからいずれかを選択したい場合は、 &yast; の <guimenu>セキュリティとユーザ</guimenu> 内にある <!-- NOTE: different yast module name? --> <guimenu>セキュリティセンターとセキュリティの強化</guimenu> をお使いください。また、パーミッションに関する詳細については、 <filename>/etc/permissions</filename> 内のコメント (英語) もしくは <command>man chmod</command> で表示されるマニュアルページをお読みください。</para>
   <para>従来型のファイルパーミッションに関する詳しい説明については、 GNU coreutils の info ページ内にある <emphasis>File permissions</emphasis> ( <command>info coreutils "File permissions"</command> ) (英語) の項をお読みください。 setuid, setgid, sticky の各ビットに対する説明も用意されています。</para>
 
-  <sect2 xml:id="sec.security.acls.traditional.setuid">
+  <sect2 xml:id="sec-security-acls-traditional-setuid">
    <title>setuid ビット</title>
    <para>状況によっては、アクセスパーミッションの仕組みでは制限が大きすぎることがあります。そのため Linux には、特定の処理に対して現在のユーザやグループを一時的に変更することのできる機能が用意されています。たとえば <command>passwd</command> プログラムは <filename>/etc/passwd</filename> ファイルにアクセスすることから、通常であれば root の権限が必要となります。ただし、このファイルには各ユーザのホームディレクトリのほか、ユーザやグループの ID などの重要な情報が含まれています。このような構造から、一般ユーザに <filename>passwd</filename> ファイルへの書き込み許可を与えてしまうと、自分以外の情報も変更できてしまいますので、実質的には管理者権限を与えるのと同じになってしまい、セキュリティの意味がなくなってしまいます。このような状況下でも、自分自身のパスワードだけを書き換えることができるようにする必要があることから、 <emphasis>setuid</emphasis> という仕組みが考えられました。 setuid (set user ID) は特殊なファイル属性で、そのファイルの所有者に成り代わってプログラムを実行することができます。たとえば <command>passwd</command> コマンドは下記のようになっています:</para>
 <screen>-rwsr-xr-x  1 root shadow 80036 2004-10-02 11:08 /usr/bin/passwd</screen>
    <para>ユーザパーミッションの欄に <literal>s</literal> が書かれていることで、 setuid ビットが設定されていることが分かります。 setuid ビットの意味により、 <command>passwd</command> コマンドは <systemitem class="username">root</systemitem> の権限下で動作することになります。</para>
   </sect2>
 
-  <sect2 xml:id="sec.security.acls.traditional.setgid">
+  <sect2 xml:id="sec-security-acls-traditional-setgid">
    <title>setgid ビット</title>
    <para>setuid ビットはユーザに対して適用される仕組みです。それと同様に、グループに対する仕組みも用意されています。これを <emphasis>setgid</emphasis> ビットと呼びます。このビットが設定されたプログラムは、どのユーザから実行された場合であっても、そのプログラムに設定されたグループ ID で実行されることになります。 setgid ビットが設定されたディレクトリ内では、新しく作成されたファイルやサブディレクトリは、そのディレクトリに対して設定されているグループに割り当てられます。たとえば下記のようなディレクトリが存在するものとします:</para>
 <screen>drwxrws--- 2 &exampleuser_plain; archive 48 Nov 19 17:12  backup</screen>
    <para>グループパーミッションの欄に <literal>s</literal> が書かれていることで、 setgid ビットが設定されていることが分かります。このディレクトリの所有者と <systemitem class="groupname">archive</systemitem> グループのメンバーは、パーミッションに書かれているとおり、このディレクトリにアクセスすることができます。このグループのメンバーではないユーザは、対応するグループに <quote>マッピング</quote> されます。さらに、書き込まれた全てのファイルの実効グループ ID は <systemitem class="groupname">archive</systemitem> に設定されます。たとえば、グループ ID <systemitem class="groupname">archive</systemitem> で実行されたバックアッププログラムは、 root の権限を取得することなく、このディレクトリにアクセスすることができます。</para>
   </sect2>
 
-  <sect2 xml:id="sec.security.acls.traditional.sticky">
+  <sect2 xml:id="sec-security-acls-traditional-sticky">
    <title>sticky ビット</title>
    <para>このほか、 <emphasis>sticky ビット</emphasis> と呼ばれる仕組みも用意されています。これは実行可能なプログラムに対して設定されているのか、もしくはディレクトリに対して設定されているのかによって、異なる意味を持ちます。プログラムに対して設定されている場合、このプログラムはメモリに読み込まれ、使用されるごとにハードディスクから読み込む処理を行なわなくなります。新しいハードウエアであれば、ハードディスクも十分に高速なものであることから、この仕組みはあまり使用されていません。ディレクトリに対して設定されている場合は、異なるユーザが作成したファイルを削除できないようにするフラグとして動作します。一般的には <filename>/tmp</filename> や <filename>/var/tmp</filename> ディレクトリに設定します:</para>
 <screen>drwxrwxrwt 2 root root 1160 2002-11-19 17:15 /tmp</screen>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.security.acls.intro">
+ <sect1 xml:id="sec-security-acls-intro">
   <title>ACL の利点</title>
 
   <para>従来の Linux システムでは、 3 種類のパーミッションセット (ファイルの所有者に対するセット／所有グループに対するセット／その他に対するセット) を各オブジェクトに設定していました。各セット内には読み込み ( <literal>r</literal> ), 書き込み ( <literal>w</literal> ), 実行 ( <literal>x</literal> ) のパーミッションが存在し、これらでアクセス許可を構築していました。これに加えて、 <emphasis>set user id</emphasis> , <emphasis>set group id</emphasis> , <emphasis>sticky</emphasis> の各ビットが追加されて、従来型のパーミッションを構成していました。このような無駄のない仕組みは、ほとんどの動作環境で十分なものではありましたが、より複雑なシナリオや高度な用途では不足することもあります。このような場合は、システム管理者が様々な回避策を講じることで、従来型のパーミッションの考え方に収まるよう、うまく設計する必要がありました。</para>
@@ -52,7 +52,7 @@
 
   <para>ACL の利点は、 Windows サーバを Linux サーバで入れ替えたりするような場合に顕著に働きます。移行前に Windows サーバに接続されていた作業端末は、移行が終わった後も引き続き使い続けることができなければなりませんが、 Linux では Windows クライアント向けのファイルおよび印刷サービスとして、 Samba が提供されています。 Samba には ACL へのサポートが提供されているため、 Linux サーバ内でも Windows 側のグラフィカルなインターフェイスを使用した場合 (Windows NT もしくはそれ以降が必要です) でも、ユーザへのアクセス許可を自由に設定できるようになります。また、 Samba スイートの一部として提供されている <command>winbindd</command> を使用することで、 Linux サーバ内には存在していない Windows ドメインのユーザに対して、アクセス許可を設定することもできます。</para>
  </sect1>
- <sect1 xml:id="sec.security.acls.defs">
+ <sect1 xml:id="sec-security-acls-defs">
   <title>定義</title>
 
   <variablelist>
@@ -82,16 +82,16 @@
    </varlistentry>
   </variablelist>
  </sect1>
- <sect1 xml:id="sec.security.acls.handle">
+ <sect1 xml:id="sec-security-acls-handle">
   <title>ACL の処理</title>
 
-  <para><xref linkend="tab.entrytype"/> には、 ACL エントリとして存在しうる 6 つの種類が示されています。それぞれはユーザ自身やユーザのグループを表わす仕組みで、<emphasis>所有者</emphasis> はファイルやディレクトリを所有しているユーザの許可を、 <emphasis>所有グループ</emphasis> はファイルを所有しているグループの許可をそれぞれ表わしています。スーパーユーザは <command>chown</command> や <command>chgrp</command> のコマンドで所有者や所有グループを変更することができますが、これらのコマンドで変更を行なうと、変更後の所有者や所有グループに対して作用することになります。また、 <emphasis>特定ユーザ</emphasis> はエントリ内の修飾子内で指定されているユーザに対する許可を、 <emphasis>特定グループ</emphasis> はエントリ内の修飾子内で指定されているグループに対する許可をそれぞれ表わします。 <emphasis>特定ユーザ</emphasis> および <emphasis>特定グループ</emphasis> のエントリである場合にのみ、修飾子に値が設定されます。 <emphasis>その他</emphasis> のエントリでは、それ以外の全てのユーザに対する許可を表わします。</para>
+  <para><xref linkend="tab-entrytype"/> には、 ACL エントリとして存在しうる 6 つの種類が示されています。それぞれはユーザ自身やユーザのグループを表わす仕組みで、<emphasis>所有者</emphasis> はファイルやディレクトリを所有しているユーザの許可を、 <emphasis>所有グループ</emphasis> はファイルを所有しているグループの許可をそれぞれ表わしています。スーパーユーザは <command>chown</command> や <command>chgrp</command> のコマンドで所有者や所有グループを変更することができますが、これらのコマンドで変更を行なうと、変更後の所有者や所有グループに対して作用することになります。また、 <emphasis>特定ユーザ</emphasis> はエントリ内の修飾子内で指定されているユーザに対する許可を、 <emphasis>特定グループ</emphasis> はエントリ内の修飾子内で指定されているグループに対する許可をそれぞれ表わします。 <emphasis>特定ユーザ</emphasis> および <emphasis>特定グループ</emphasis> のエントリである場合にのみ、修飾子に値が設定されます。 <emphasis>その他</emphasis> のエントリでは、それ以外の全てのユーザに対する許可を表わします。</para>
 
-  <para><emphasis>マスク</emphasis> は特定ユーザや特定グループ、所有グループの各エントリに対して許可された内容のうち、どの項目を無効化して、どの項目を有効化するのかを表わします。上述のいずれかのエントリ内で許可されていて、マスクエントリでも有効として設定されている場合、その許可はそのまま許可されます。逆に、マスクエントリ内にのみ存在した場合や、上述のいずれかのエントリ内にのみ存在した許可については、有効化されません。つまり、許可されなくなります。なお、所有者と所有グループに対するエントリは、マスクにかかわらず常に有効となります。詳しい仕組みについては、 <xref linkend="tab.mask"/> をご覧ください。</para>
+  <para><emphasis>マスク</emphasis> は特定ユーザや特定グループ、所有グループの各エントリに対して許可された内容のうち、どの項目を無効化して、どの項目を有効化するのかを表わします。上述のいずれかのエントリ内で許可されていて、マスクエントリでも有効として設定されている場合、その許可はそのまま許可されます。逆に、マスクエントリ内にのみ存在した場合や、上述のいずれかのエントリ内にのみ存在した許可については、有効化されません。つまり、許可されなくなります。なお、所有者と所有グループに対するエントリは、マスクにかかわらず常に有効となります。詳しい仕組みについては、 <xref linkend="tab-mask"/> をご覧ください。</para>
 
   <para>ACL は 2 種類に分類することができます。 1 つは <emphasis>最小</emphasis> ACL と呼ばれ、所有者／所有グループ／その他に対するエントリのみを持ちます。これらはファイルやディレクトリに対する従来のパーミッションと同じ意味を持ちます。それに対して <emphasis>拡張</emphasis> ACL では、それより多くのエントリを持ちます。拡張 ACL ではマスクエントリを持たなければならないほか、必要に応じて特定ユーザや特定グループのエントリを持ちます。</para>
 
-  <table xml:id="tab.entrytype">
+  <table xml:id="tab-entrytype">
    <title>ACL エントリの種類</title>
    <tgroup cols="2">
     <thead>
@@ -110,7 +110,7 @@
        <para>所有者</para>
       </entry>
       <entry>
-       <para><literal>user::rwx</literal></para>
+       <para>"\n  <literal>user::rwx</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -118,7 +118,7 @@
        <para>特定ユーザ</para>
       </entry>
       <entry>
-       <para><literal>user:name:rwx</literal></para>
+       <para>"\n  <literal>user:name:rwx</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -126,7 +126,7 @@
        <para>所有グループ</para>
       </entry>
       <entry>
-       <para><literal>group::rwx</literal></para>
+       <para>"\n  <literal>group::rwx</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -134,7 +134,7 @@
        <para>特定グループ</para>
       </entry>
       <entry>
-       <para><literal>group:name:rwx</literal></para>
+       <para>"\n  <literal>group:name:rwx</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -142,7 +142,7 @@
        <para>マスク</para>
       </entry>
       <entry>
-       <para><literal>mask::rwx</literal></para>
+       <para>"\n  <literal>mask::rwx</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -150,14 +150,14 @@
        <para>その他</para>
       </entry>
       <entry>
-       <para><literal>other::rwx</literal></para>
+       <para>"\n  <literal>other::rwx</literal>\n"</para>
       </entry>
      </row>
     </tbody>
    </tgroup>
   </table>
 
-  <table xml:id="tab.mask">
+  <table xml:id="tab-mask">
    <title>アクセス許可のマスク</title>
    <tgroup cols="3">
     <thead>
@@ -179,10 +179,10 @@
        <para>特定ユーザ</para>
       </entry>
       <entry>
-       <para><literal>user:geeko:r-x</literal></para>
+       <para>"\n  <literal>user:geeko:r-x</literal>\n"</para>
       </entry>
       <entry>
-       <para><literal>r-x</literal></para>
+       <para>"\n  <literal>r-x</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -190,10 +190,10 @@
        <para>マスク</para>
       </entry>
       <entry>
-       <para><literal>mask::rw-</literal></para>
+       <para>"\n  <literal>mask::rw-</literal>\n"</para>
       </entry>
       <entry>
-       <para><literal>rw-</literal></para>
+       <para>"\n  <literal>rw-</literal>\n"</para>
       </entry>
      </row>
      <row>
@@ -204,17 +204,17 @@
        <para>適用されるパーミッション:</para>
       </entry>
       <entry>
-       <para><literal>r--</literal></para>
+       <para>"\n  <literal>r--</literal>\n"</para>
       </entry>
      </row>
     </tbody>
    </tgroup>
   </table>
 
-  <sect2 xml:id="sec.security.acls.handle.fmbits">
+  <sect2 xml:id="sec-security-acls-handle-fmbits">
    <title>ACL エントリとファイルモード許可ビットの関係</title>
-   <para><xref linkend="fig.acls.map.mini"/> と <xref linkend="fig.acls.map.ext"/> には、最小 ACL と拡張 ACL の例を示しています。この図は 3 つのブロックから構成され、左から順に <quote>ACL エントリの種類指定</quote>, <quote>ACL の例</quote>, <quote>対応する従来型のパーミッションビット</quote> (たとえば <command>ls</command> <option>-l</option> で表示されるもの) をそれぞれ示しています。いずれの場合であっても、 <emphasis>所有者クラス</emphasis> のビットは ACL の所有者エントリに紐づけられ、 <emphasis>その他のクラス</emphasis> はその他の種類のエントリに紐づけられます。ただし、 <emphasis>グループクラス</emphasis> の部分については、この 2 つの例で対応付けが異なることに注意してください。</para>
-   <figure xml:id="fig.acls.map.mini">
+   <para><xref linkend="fig-acls-map-mini"/> と <xref linkend="fig-acls-map-ext"/> には、最小 ACL と拡張 ACL の例を示しています。この図は 3 つのブロックから構成され、左から順に <quote>ACL エントリの種類指定</quote>, <quote>ACL の例</quote>, <quote>対応する従来型のパーミッションビット</quote> (たとえば <command>ls</command> <option>-l</option> で表示されるもの) をそれぞれ示しています。いずれの場合であっても、 <emphasis>所有者クラス</emphasis> のビットは ACL の所有者エントリに紐づけられ、 <emphasis>その他のクラス</emphasis> はその他の種類のエントリに紐づけられます。ただし、 <emphasis>グループクラス</emphasis> の部分については、この 2 つの例で対応付けが異なることに注意してください。</para>
+   <figure xml:id="fig-acls-map-mini">
     <title>最小 ACL: ACL エントリと許可ビットとの比較</title>
     <mediaobject>
      <imageobject role="fo">
@@ -225,8 +225,8 @@
      </imageobject>
     </mediaobject>
    </figure>
-   <para>最小 ACL の (マスクエントリがない) 場合、グループクラスのパーミッションは、 <xref linkend="fig.acls.map.mini"/> に示されているとおり、そのまま ACL の所有グループのエントリに対応します。拡張 ACL の (マスクエントリがある) 場合は、 <xref linkend="fig.acls.map.ext"/> に示されているとおり、グループクラスのパーミッションはマスクエントリに対応することになります。</para>
-   <figure xml:id="fig.acls.map.ext">
+   <para>最小 ACL の (マスクエントリがない) 場合、グループクラスのパーミッションは、 <xref linkend="fig-acls-map-mini"/> に示されているとおり、そのまま ACL の所有グループのエントリに対応します。拡張 ACL の (マスクエントリがある) 場合は、 <xref linkend="fig-acls-map-ext"/> に示されているとおり、グループクラスのパーミッションはマスクエントリに対応することになります。</para>
+   <figure xml:id="fig-acls-map-ext">
     <title>拡張 ACL: ACL エントリと許可ビットとの比較</title>
     <mediaobject>
      <imageobject role="fo">
@@ -241,7 +241,7 @@
    <para>このようなマッピングの仕組みが存在することで、アプリケーション側が ACL に対応していない場合でも、問題なく動作できるようになっています。つまり、 ACL は従来のパーミッションビットに対する <quote>微調整</quote> として働くことになります。なお、パーミッションビット側を変更することで ACL 側も反映されますし、逆に ACL を変更することでパーミッションビット側にも反映されます。</para>
   </sect2>
 
-  <sect2 xml:id="sec.security.acls.handle.accacl">
+  <sect2 xml:id="sec-security-acls-handle-accacl">
    <title>ACL の設定されたディレクトリ</title>
    <para>コマンドラインで <command>getfacl</command> と <command>setfacl</command> の各ツールを使用することで、 ACL を参照したり制御したりすることができるようになります。本章では、これらのコマンドの使用方法について説明しています。</para>
    <para>まずはディレクトリを作成する前に、 <command>umask</command> コマンドを利用してファイルオブジェクトの作成時におけるパーミッションのマスク値を設定してください。 <command>umask</command> <option>027</option> のように実行することで、所有者には全ての許可を ( <literal>0</literal> ) 、グループに対しては書き込みビットを禁止し ( <literal>2</literal> ) 、その他に対しては全てを禁止する ( <literal>7</literal> ) ように設定します。 <command>umask</command> では、パーミッションのビットのうち、マスク (無効化) したいビットを 1 にします。詳しくは <command>umask</command> のマニュアルページをお読みください。</para>
@@ -272,7 +272,7 @@ other::---</screen>
 <screen>drwxrwx---+ ... tux project3 ... mydir</screen>
    <para>行頭には従来型のパーミッションビットが表示されていますが、ここに <literal>+</literal> という表示が追加されているのが分かります。これにより、この項目に対して <emphasis>拡張</emphasis> ACL が存在していることを表わしています。</para>
    <para><command>ls</command> の出力にもあるとおり、マスクエントリの許可には書き込み許可が含まれています。従来型のパーミッションの仕組みでは、このビットが設定されていれば、所有グループ (上記の例では <literal>project3</literal> ) が、そのディレクトリ (上記の例では <filename>mydir</filename>) に対して書き込み権限があることを表わしていました。</para>
-   <para>しかしながら、所有グループに対する実際の許可は、所有グループに対するアクセス許可とマスクエントリの許可に従って動作することになります。この例では <literal>r-x</literal> が適用されます (<xref linkend="tab.mask"/> をお読みください) 。そのため、この例における所有グループに対する実際の許可については、 ACL を追加したあとも特に変わっていないことになります。</para>
+   <para>しかしながら、所有グループに対する実際の許可は、所有グループに対するアクセス許可とマスクエントリの許可に従って動作することになります。この例では <literal>r-x</literal> が適用されます (<xref linkend="tab-mask"/> をお読みください) 。そのため、この例における所有グループに対する実際の許可については、 ACL を追加したあとも特に変わっていないことになります。</para>
    <para>さらに <command>setfacl</command> や <command>chmod</command> でマスクエントリを編集します。たとえば <command>chmod</command> <option>g-w mydir</option> のように実行します。こちらを実行後、 <command>ls</command> <option>-dl mydir</option> を実行すると、下記のような表示になります:</para>
 <screen>drwxr-x---+ ... tux project3 ... mydir</screen>
    <para><command>getfacl</command> <option>mydir</option> の出力は下記のようになります:</para>
@@ -288,10 +288,10 @@ other::---</screen>
    <para><command>chmod</command> を実行してグループクラスのビットから書き込み権限を取り除くと、 <command>ls</command> の出力でマスクビットが適切に変更されていることがわかるようになります。これにより、書き込み権限は <filename>mydir</filename> の所有者に限定されることになります。 <command>getfacl</command> でも同じ内容を確認することができます。出力には上記のようなコメント部分 (#) が含まれるようになり、マスクエントリによって実際に作用するアクセス許可と元々のアクセス許可に差異があることを示すようになります。元のアクセス許可に戻したい場合は、 <command>chmod g+w mydir</command> を実行してください。</para>
   </sect2>
 
-  <sect2 xml:id="sec.security.acls.handle.defacl">
+  <sect2 xml:id="sec-security-acls-handle-defacl">
    <title>既定の ACL が設定されたディレクトリ</title>
    <para>ディレクトリには既定の ACL を設定することができます。既定の ACL は特殊な ACL で、ディレクトリ内に作成されたオブジェクト (サブディレクトリやファイル) に対して適用される、既定のアクセス権として動作します。</para>
-   <sect3 xml:id="sec.security.acls.handle.defacl.eff">
+   <sect3 xml:id="sec-security-acls-handle-defacl-eff">
     <title>既定の ACL の効果</title>
     <para>ディレクトリに対して設定された既定の ACL が、ファイルやサブディレクトリに適用される場合は、下記の仕組みで動作します:</para>
     <itemizedlist mark="bullet" spacing="normal">
@@ -304,7 +304,7 @@ other::---</screen>
     </itemizedlist>
     <para>ファイルシステムのオブジェクトを作成する際、全てのシステムコールは <literal>mode</literal> パラメータを使用します。このパラメータは、新しく作成するファイルシステムオブジェクトに対して、アクセス許可を設定するためのものです。親ディレクトリに既定の ACL が設定されていない場合、 <literal>mode</literal> パラメータで指定された値から、 <literal>umask</literal> で指定されたビットを取り除いてアクセス許可を生成し、新しいオブジェクトに適用します。親ディレクトリに既定の ACL が存在する場合は、既定の ACL と <literal>mode</literal> パラメータとの間で重複するビットのみを新しいオブジェクトに設定します。この場合、 <literal>umask</literal> の設定は無視されます。</para>
    </sect3>
-   <sect3 xml:id="sec.security.acls.handle.defacl.prac">
+   <sect3 xml:id="sec-security-acls-handle-defacl-prac">
     <title>既定の ACL の使用例</title>
     <para>下記に示す 3 つの例では、ディレクトリと既定の ACL に対する主な操作を説明しています:</para>
     <orderedlist spacing="normal">
@@ -364,27 +364,27 @@ group::r-x          # effective:r--
 group:mascots:r-x   # effective:r--
 mask::r--
 other::---</screen>
-      <para><command>touch</command> コマンドは新しいファイルを作成する際、 <literal>mode</literal> パラメータに <literal>0666</literal> を指定しますので、 <command>umask</command> や既定の ACL (詳しくは <xref linkend="sec.security.acls.handle.defacl.eff"/> をお読みください) で制限を設定しない限り、全てのユーザクラスに対して読み込みと書き込みを許可する形でファイルを作成します。つまり、 <literal>mode</literal> パラメータに含まれていない全てのアクセス権限が、対応する ACL エントリから削除されていることになります。ただし、グループクラスの ACL エントリからはビットを削除せず、マスクエントリを変更して <literal>mode</literal> で指定されていないビットが設定されないようにします。</para>
+      <para><command>touch</command> コマンドは新しいファイルを作成する際、 <literal>mode</literal> パラメータに <literal>0666</literal> を指定しますので、 <command>umask</command> や既定の ACL (詳しくは <xref linkend="sec-security-acls-handle-defacl-eff"/> をお読みください) で制限を設定しない限り、全てのユーザクラスに対して読み込みと書き込みを許可する形でファイルを作成します。つまり、 <literal>mode</literal> パラメータに含まれていない全てのアクセス権限が、対応する ACL エントリから削除されていることになります。ただし、グループクラスの ACL エントリからはビットを削除せず、マスクエントリを変更して <literal>mode</literal> で指定されていないビットが設定されないようにします。</para>
       <para>このような仕組みにより、 ACL とアプリケーション (たとえばコンパイラ) を円滑に作用させることができるようになっています。たとえばコンパイラなどでは、不用意に実行されたりしないように、いったん厳しめのアクセス権を設定しておいて、あとから実行可能にすることがあります。 <command>mask</command> の仕組みにより、必要なユーザやグループに対してだけ、実行できるようにすることができます。</para>
      </listitem>
     </orderedlist>
    </sect3>
   </sect2>
 
-  <sect2 xml:id="sec.security.acls.handle.alg">
+  <sect2 xml:id="sec-security-acls-handle-alg">
    <title>ACL チェックアルゴリズム</title>
    <para>ACL で保護されたファイルシステムオブジェクトに対して、プロセスやアプリケーションがアクセスを行なう場合、事前にチェックアルゴリズムが適用されます。基本的な考え方としては、所有者エントリ, 特定ユーザエントリ, 所有グループエントリ, 特定グループエントリ, その他の順で確認が行なわれます。アクセスは、そのプロセスに最も適したエントリに従って処理されます。また、権限では複数のエントリを合成して判断するようなことはおこないません。</para>
    <para>プロセスが複数のグループに属していて、複数のグループエントリに該当するような場合は、さらに複雑な処理になります。この場合は、該当する複数のエントリの中からランダムにエントリが選択され、必要なアクセス許可を得ることになります。この処理は、どのエントリが最終的に <quote>アクセスを許可する</quote> という結果を引き出すのかはわかりません。同様に、該当する複数のエントリグループの中のどれであってもアクセスが許可されない場合、ランダムに選択されたエントリから、最終結果である <quote>アクセス拒否</quote> が発行されます。</para>
   </sect2>
  </sect1>
- <sect1 xml:id="sec.security.acls.future">
+ <sect1 xml:id="sec-security-acls-future">
   <title>アプリケーション内での ACL サポート</title>
 
   <para>ACL は新しいアプリケーションの要件を満たすため、非常に複雑な許可シナリオを実装しています。従来型のパーミッションと ACL の両方の考え方は、賢く組み合わせることができます。基本的なファイルコマンド ( <command>cp</command> , <command>mv</command> , <command>ls</command> など) も、 Samba, Nautilus と同様に ACL に対応しています。</para>
 
   <para>vi, vim, emacs はいずれも ACL に完全対応していて、バックアップを含め、ファイルへの書き込み時にアクセス許可を保持することができます。ただし、残念なことにその他のエディタやファイルマネージャには、 ACL への対応がありません。その他のエディタでファイルを修正した場合は、エディタのバックアップ方式によって、ファイルの ACL が保持される場合と保持されない場合があります。エディタ側が元のファイルに対して書き込みを行なうような場合であれば、 ACL は保持されるものの、古いほうのファイルをバックアップファイルとしてリネームしてから、新しいファイルに更新後のものを書き込むような場合は、エディタ側が ACL に対応していない限り、 ACL が失われてしまうことになります。また、 <command>star</command> 以外のアーカイバを使用した場合は、 ACL を保持したままバックアップを行なうことはできません。</para>
  </sect1>
- <sect1 xml:id="sec.security.acls.info">
+ <sect1 xml:id="sec-security-acls-info">
   <title>さらなる情報</title>
 
   <para>ACL に関する詳細については、 <command>getfacl(1)</command> , <command>acl(5)</command> , <command>setfacl(1)</command> の各マニュアルページをお読みください。</para>
