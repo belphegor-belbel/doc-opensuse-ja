@@ -56,32 +56,32 @@ noop deadline [cfq]</screen>
    <para><systemitem class="resource">CFQ</systemitem> は公平性を重視したスケジューラで、 &productname; では既定で使用されるスケジューラでもあります。このアルゴリズムでは、 I/O をディスクに送信することのできる各スレッドに対して、同じだけのタイムスライスを割り当てます。この仕組みにより、各スレッドに公平な I/O スループットを割り当てることになります。なおスケジューリングの決定においては、 I/O 優先順位も考慮して割り当てが行なわれることになります (詳しくは <xref linkend="cha-tuning-resources-disk-ionice"/> をお読みください) 。また、 <systemitem class="resource">CFQ</systemitem> スケジューラには下記のチューナブルパラメータが用意されています:</para>
    <variablelist>
     <varlistentry>
-     <term>"\n  <filename> /sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/slice_idle_us </filename>\n"</term>
+     <term><filename> /sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/slice_idle_us </filename></term>
      <listitem>
       <para>タスクに対して割り当てられたタイムスライス内で、それ以上送信すべき I/O がなくなった場合、 I/O スケジューラはしばらく待機してから次のスレッドに移行します。 <filename>slice_idle_us</filename> では、そのような I/O スケジューラの待機時間を、マイクロ秒単位で指定することができます。 <filename>slice_idle</filename> でも同じ設定を行なうことができますが、こちらはミリ秒単位での指定になります。 I/O を待機する時間を長くすることで、 I/O のローカリティ (局所性) を改善することになります。これに加えて、依存関係にある複数の I/O を行なっているプロセスに対して、タイムスライスを多く割り当てる結果になることから、この処理も改善することができます。依存関係にある I/O とは、一方の I/O が他方の I/O を生み出すような結果になる場合を指します。たとえば、読み込むべきデータブロックを知るためにインデックス (索引) ブロックを読み出すような処理があった場合、それらは依存関係にある I/O であると言えます。</para>
       <para>なお、ローカリティが性能面で大きな意味を持たない (たとえば SSD や多数のディスクが搭載された SAN など) メディアである場合は、 <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/slice_idle_us</filename> を <literal>0</literal> に設定することで、スループットをかなり改善することができます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>"\n  <filename> /sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/quantum </filename>\n"</term>
+     <term><filename> /sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/quantum </filename></term>
      <listitem>
       <para>このオプションは、デバイス側で一括で処理されるリクエストの最大数を指定します。既定値は <literal>4</literal> です。複数のディスクから構成されるストレージの場合、この設定では不必要なリクエスト同時処理数を設定することになってしまいます。そのため、そのような環境であれば、値を増やすことで性能を改善することができます。ただし、この設定を増やしてしまうことで、ストレージ内にバッファリングされたリクエストが増えることになってしまいますので、特定の I/O 操作が遅延する結果になることもあります。この値を変更する場合は、 <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/slice_async_rq</filename> (既定値: <literal>2</literal> ) についても、変更を検討してください。こちらの値は、一定のタイムスライス内に送信することのできる、非同期リクエスト (通常は書き込みリクエスト) の最大数を指定するためのものです。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/low_latency</filename>\n"</term>
+     <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/low_latency</filename></term>
      <listitem>
       <para>有効化した場合 (&productname; では既定で有効化されています) 、スケジューラは <literal>target_latency</literal> というチューニングパラメータで指定された値になるよう、動的にタイムスライスを調整するようになります。タイムスライスは、この <literal>target_latency</literal> に適合するように再計算され、限られた時間内でプロセスが公平にアクセスを取得できるようにします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/target_latency</filename>\n"</term>
+     <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/target_latency</filename></term>
      <listitem>
       <para><systemitem class="resource">CFQ</systemitem> に対する待機時間の目標値を指定します。 <systemitem class="resource">CFQ</systemitem> では、この値を利用して、各タスクに割り当てるタイムスライスを調整します。</para>
      </listitem>
     </varlistentry>
      <varlistentry>
-       <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/group_idle_us</filename>\n"</term>
+       <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/group_idle_us</filename></term>
        <listitem>
          <para>依存関係にある I/O を行なう際、 blkio cgroup の処理時間が枯渇することを防ぐため、 CFQ は異なる blkio cgroup に対する I/O スケジューリングを行なう前に、 I/O が完了しても少しの時間だけ待機する処理を行ないます。 <literal>slice_idle_us</literal> が設定されている場合、このパラメータを設定しても大きな影響は編ません。しかしながら高速なメディアの場合、 <literal>slice_idle_us</literal> によるオーバーヘッドは無視できない大きさになってしまいます。 <literal>slice_idle_us</literal> を無効化して <literal>group_idle_us</literal> を指定することで、依存関係にある I/O をより低いオーバーヘッドで blkio cgroup に処理時間を与えられるようになります。なお、 <filename>group_idle</filename> というチューナブルもありますが、こちらはミリ秒の単位で指定します。</para>
        </listitem>
@@ -186,7 +186,7 @@ sys     0m1.516s</screen>
   </sect2>
 
   <sect2 xml:id="sec-tuning-io-schedulers-noop">
-   <title>"\n  <systemitem class="resource">NOOP</systemitem>\n"</title>
+   <title><systemitem class="resource">NOOP</systemitem></title>
    <para>届いた I/O リクエストをそのまま流すだけの単純なスケジューラです。他のスケジューラとの比較のために用意されていて、たとえばチューニングによって性能が悪化していないことを確認するために使用します。</para>
    <para>このスケジューラは、デバイス側で I/O スケジューリングを実施するような、たとえばインテリジェント型ストレージやマルチパス環境などでお勧めです。ホスト側でより複雑なスケジューラを選択してしまうと、ホスト側とデバイス側のスケジューリングが競合してしまい、性能が落ちてしまうことがあるからです。このようなストレージデバイスの場合は、デバイス側で I/O のスケジュールを実施するのが適切です。</para>
    <para>同様の理由により、このスケジューラは仮想マシンにもお勧めです。</para>
@@ -194,24 +194,24 @@ sys     0m1.516s</screen>
   </sect2>
 
   <sect2 xml:id="sec-tuning-io-schedulers-deadline">
-   <title>"\n  <systemitem class="resource">DEADLINE</systemitem>\n"</title>
+   <title><systemitem class="resource">DEADLINE</systemitem></title>
    <para><systemitem class="resource">DEADLINE</systemitem> は遅延時間の削減を重視したスケジューラです。それぞれの I/O リクエストには期限が設定されます。通常はセクタ番号順に並べ替えられてキュー (読み込みおよび書き込み) 内に保存されますが、 <systemitem class="resource">DEADLINE</systemitem> アルゴリズムでは期限順に並べ替えられた 2 種類の追加キュー (読み込みおよび書き込み) を管理します。リクエストの期限が切れない限り、 <quote>セクタ順</quote> のキューを使用します。いったん期限切れのものが発生すると、期限切れのリクエストがなくなるまで、 <quote>期限順</quote> のキューを使用して処理を行なうようになります。また、一般的にアルゴリズムは書き込みよりも読み込みを優先します。</para>
    <para>このスケジューラは、いくつかのスレッドが読み込みと書き込みを行なっているものの、公平性を重視しないような環境で、 <systemitem class="resource">CFQ</systemitem> I/O スケジューラよりも高い性能を提供します。たとえば SAN とデータベースから読み込みを行なっているプロセスがいくつか存在しているような場合 (特に <quote>TCQ</quote> ディスクを使用しているような場合) がそれにあたります。 <systemitem class="resource">DEADLINE</systemitem> スケジューラには、下記のようなチューナブルパラメータが用意されています:</para>
    <variablelist>
     <varlistentry>
-     <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/writes_starved</filename>\n"</term>
+     <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/writes_starved</filename></term>
      <listitem>
       <para>ディスクに対して書き込みを送信できるようになるまでに、どれだけの数の読み込みをディスクに送信できるようにするのかを制御します。たとえば <literal>3</literal> という値であれば、 1 回の書き込み要求に対して 3 回の読み込み処理を行なうことになります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/read_expire</filename>\n"</term>
+     <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/read_expire</filename></term>
      <listitem>
       <para>ミリ秒単位で読み込み処理の期限 (現在時刻からの経過時間) を指定します。既定値は 500 です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>"\n  <filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/write_expire</filename>\n"</term>
+     <term><filename>/sys/block/<replaceable>デバイス名</replaceable>/queue/iosched/write_expire</filename></term>
      <listitem>
       <para><!-- NOTE: invalid explanation? it is for read_expire.. -->ミリ秒単位で書き込み処理の期限 (現在時刻からの経過時間) を指定します。既定値は 500 です。</para>
      </listitem>
