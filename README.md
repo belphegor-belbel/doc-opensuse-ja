@@ -18,3 +18,6 @@ Please do not translate XML files directly. Please use PO files instead.
 ## License
 GNU Free Documentaion license 1.2.
 
+## Built manuals
+* HTML version is available at: https://www.belbel.or.jp/opensuse-manuals_ja/
+* RPM packaged version (including HTML/PDF version) is available at: http://download.opensuse.org/repositories/home:/belphegor_belbel:/doc/
