@@ -69,6 +69,19 @@
     </listitem>
    </itemizedlist>
    <para>&productname; の既定のカーネルであれば &selnx; に対応していますので、ツールを使用するだけで管理を行なうことができます。そのため、管理者にとって最も重要な作業は、 &selnx; のポリシー管理ということになります。</para>
+   <warning xml:id="sec-selinux-reference-policy">
+       <title>No Default Policy Included</title>
+       <para>
+           No default or reference policy is provided in
+          &productname;.  &selnx; will not operate without a policy, 
+    so you must build and install one. The &selnx; Reference Policy Project
+    (<link xlink:href="https://github.com/SELinuxProject/refpolicy/wiki"/>)
+    should be helpful in providing examples and detailed information on creating
+    your own policies, and this chapter also provides guidance on managing
+    your &selnx; policy.
+</para>
+</warning>
+   
    <para>&selnx; のポリシーでは、 Linux サーバ内の様々なオブジェクトに対して、セキュリティラベルを設定します。これらのオブジェクトには、ユーザやポート、プロセスやファイルなどが含まれます。このようなセキュリティラベルを使用することで、サーバ内での許可を判断することになります。ただし、既定の &selnx; ではすべてのものを拒否する仕組みであることから、どうしても必要なアクセスのみを許可する適切なルール構築が重要となります。そのため、ルールはシステム内で使用するすべてのプログラムに対して存在していなければならないことになります。システムの一部に対して制限を撤廃することもできますが、その場合は、制限を撤廃したポートやプログラム、ユーザやディレクトリなどが、 &selnx; で保護されないことになります。このモードでは、重要なサービスのみを &selnx; で保護し、その他のサービスについては何もしないようにすることができます。ただし、システムの安全性という観点では、このような構成は避けるべきものです。</para>
    <para>お使いのシステムに対して適切な保護を実現するには、 &selnx; のポリシーを設定する必要があります。これはすべてのファイルに対してラベルを提供するよう仕立て上げられたポリシーでなければならず、すべてのサービスやユーザに対してセキュリティラベルを設定し、サーバ内でどのファイルやディレクトリにアクセスを許可するのかを設定するものでなければなりません。このようなポリシーの作成には、途方もない労力が必要となります。</para>
    <para>&selnx; は複雑な仕組みであることから、その使用を避けられる理由の 1 つにもなってしまっています。一般的な Linux システムも非常に複雑な仕組みであることから、何らかの考慮漏れを生み出す原因になってしまっていて、システムに侵入できる突破口を残してしまう原因にもなっています。また、あるべき姿で完全に設定した場合であっても、 &selnx; に関わるすべての要素を管理者が網羅するのは非常に難しいものです。複雑性という観点では、 &aa; は全く異なるアプローチになっています。 &aa; では、管理者がその保護を設定する際、何が起こっているのかを理解するのに十分な自動化を提供しています。</para>
@@ -78,7 +91,12 @@
  <sect1 xml:id="sec-selinux-policy">
   <title>ポリシー</title>
 
-  <para>上述のとおり、 &selnx; で鍵となるコンポーネントはポリシーそのものです。このポリシーは、システムに存在するファイルやディレクトリ、ポートやプロセスに対して、アクセスルールを規定するものです。これを実現するために、これらすべてに対してセキュリティコンテキストを定義しています。 &selnx; のシステムでは、ファイルシステム内でラベルを設定し、ポリシーを構成しています。任意のディレクトリで <command>ls -Z</command> のように入力して実行すると、そのディレクトリ内に存在するファイルに対して、割り当てられているセキュリティコンテキストを表示することができます。 <xref linkend="ex-selnx-con-set" xrefstyle="select:label quotedtitle nopage"/> では、 &selnx; のラベルが設定された &productname; システムで、 <filename>/</filename> に対するセキュリティコンテキストの設定を示しています。</para>
+  <para>
+   The policy is the key component in &selnx;. Note that no default or reference
+   policy is included in &productname;, and you must build and install one that is customized for 
+   your needs before proceeding. (See <xref linkend="sec-selinux-reference-policy"/>. )
+   </para>
+   <para>上述のとおり、 &selnx; で鍵となるコンポーネントはポリシーそのものです。このポリシーは、システムに存在するファイルやディレクトリ、ポートやプロセスに対して、アクセスルールを規定するものです。これを実現するために、これらすべてに対してセキュリティコンテキストを定義しています。 &selnx; のシステムでは、ファイルシステム内でラベルを設定し、ポリシーを構成しています。任意のディレクトリで <command>ls -Z</command> のように入力して実行すると、そのディレクトリ内に存在するファイルに対して、割り当てられているセキュリティコンテキストを表示することができます。 <xref linkend="ex-selnx-con-set" xrefstyle="select:label quotedtitle nopage"/> では、 &selnx; のラベルが設定された &productname; システムで、 <filename>/</filename> に対するセキュリティコンテキストの設定を示しています。</para>
 
   <example xml:id="ex-selnx-con-set">
    <title><command>ls -Z</command> を使用したセキュリティコンテキスト設定</title>
@@ -182,16 +200,13 @@ system_u:object_r:var_t var</screen>
  <sect1 xml:id="sec-selinux-compilepolicy">
   <title>&selnx; のポリシー</title>
 
-  <para>&selnx; ではポリシーが最も重要なコンポーネントです。 &productname; &productnumber; では、 <package>selinux-policy-minimum</package> というパッケージ名で、 <emphasis>最小限の</emphasis> &selnx; リファレンスポリシーが用意されています。本章の例では、特記しない限り、このパッケージ内のポリシーを説明しています。</para>
-<!-- fs 2018-09-27: Packages no longer exist
-  <tip>
-   <para>
-    To install a different policy, you need to download it from
-    <link xlink:href="https://build.opensuse.org/package/binaries/security:SELinux/selinux-policy?repository=SLE_12"/>
-    and install:</para>
-<screen>&prompt.sudo;zypper in selinux-policy-targeted-<replaceable>VERSION_NUMBER</replaceable>.noarch.rpm</screen>
-  </tip>
--->
+  <para>
+   The policy is an essential component of &selnx;. &productname; &productnumber;
+   does not include a default or reference policy, and you must build a policy that is
+   customized for your installation. For testing and learning, see The &selnx; Reference 
+   Policy Project at <link xlink:href="https://github.com/SELinuxProject/refpolicy/wiki"/>.
+   You must have a policy, as &selnx; will not operate without one.
+  </para>
   <para>ポリシーをインストールしたら、ファイルシステムに対するラベル付けを行ないます。下記のとおり入力して実行してください:</para>
 
 <screen>&prompt.sudo;restorecon -Rp /</screen>
@@ -602,7 +617,6 @@ gen_context(system_u:object_r:httpd_modules_t,s0)</screen>
     directory.
    </para>
    -->
-   <para>管理者の観点では、 &selnx; のポリシーパッケージに付属するポリシーファイルの内容は、一般に変更することがありません。 <command>semanage fcontext</command> コマンドを利用して、ファイル側のコンテキストを変更するほうの作業を行ないます。もしも <command>audit2allow</command> を使用してサーバ向けのポリシーを生成しようとしている場合は、ポリシーファイルについても変更を行なう必要があることに注意してください。</para>
    <para>ポリシーモジュールファイル内の内容を変更するには、まずは変更点を新しいポリシーモジュールファイルにコンパイルする必要があります。これを行なうには、 <systemitem>selinux-policy-devel</systemitem> パッケージをインストールしたあと、 <command>audit2allow</command> コマンドで作成したファイルのあるディレクトリ内で、下記のように入力して実行します:</para>
    <screen>&prompt.user;make -f /usr/share/selinux/devel/Makefile</screen>
    <para><command>make</command> の処理が完了したあとは、 <command>semodule -i</command> を使用することで、モジュールを手作業でシステムに読み込むことができるようになります。</para>
