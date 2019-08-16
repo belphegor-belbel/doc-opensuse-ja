@@ -10,13 +10,14 @@
    <para>&krb; は暗号化の機能も提供するネットワーク認証プロトコルです。本章では &krb; の設定方法のほか、 LDAP や NFS のようなサービスとの統合方法について説明しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker>
-   </dm:bugtracker>
+   <dm:bugtracker/>
   </dm:docmanager>
  </info>
  <sect1 xml:id="sec-security-kerberos-overview">
   <title>考え方の概要</title>
+
   <para>通常のオープンなネットワークの場合、ワークステーションがユーザを認証する際、パスワード以外の方法を取ることができません。一般的なインストール環境では、ネットワーク内に存在する各サービスにアクセスするごとに、パスワードの入力が求められます。 &krb; を利用すると、ユーザの認証を一度行なうだけで、他の連携サービスにも自動的に接続できるようになります。なお、ネットワークの機密を保持するため、下記の要件に適合していなければなりません:</para>
+
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
     <para>各サービスを利用するユーザが自身の識別情報をきちんと管理し、第三者によって識別情報を利用されてしまうことがないようにすること。</para>
@@ -25,6 +26,7 @@
     <para>それぞれのネットワークサービスの提供側 (サーバ) でも、識別情報を保持すること。サーバ側でも識別情報を持っておかないと、攻撃者は容易にサーバになりすますことができてしまいますので、これによってサーバに送信されるはずの認証情報を窃取することができるようになってしまいます。このような考え方は、クライアントがサーバに対して認証を行なうだけでなく、その逆の認証も行なうことになることから、 <emphasis>相互認証</emphasis> と呼んでいます。</para>
    </listitem>
   </itemizedlist>
+
   <para>&krb; では、強力に暗号化された認証の仕組みによって、このような要件を満たすようになっています。なお、本章での &krb; の説明は、基本的な考え方にとどまります。より詳しい技術的な説明をご希望の場合は、 &krb; のドキュメンテーションをお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-security-kerberos-terms">
@@ -55,8 +57,7 @@
     <term>プリンシパル</term>
     <listitem>
      <para>&krb; でのプリンシパルとは、チケットを割り当てた先を表わすユニークな実体 (ユーザやサービス) を表わします。プリンシパルは、下記のような形式で表わされます:</para>
-     <screen><replaceable>プライマリ</replaceable>/<replaceable>インスタンス名</replaceable>@<replaceable>レルム</replaceable></screen>
-
+<screen><replaceable>プライマリ</replaceable>/<replaceable>インスタンス名</replaceable>@<replaceable>レルム</replaceable></screen>
      <itemizedlist>
       <listitem>
        <formalpara>
@@ -383,6 +384,44 @@ group:          files</screen>
      </formalpara>
     </step>
    </procedure>
+   <sect3 xml:id="sec-security-kerberos-admin-kdc-configure">
+    <title>KDC の設定</title>
+    <para>
+     Configuring a &krb; server is highly variable, dependent on your network
+     architecture, DNS and DHCP configuration, realms, and many other
+     considerations. You must have a default realm, and domain- to-realm
+     mappings. The following example demonstrates a minimal configuration. This
+     is not a copy-and-paste example; see
+     <link xlink:href="https://web.mit.edu/kerberos/krb5-latest/doc/admin/conf_files/index.html"/>
+     for detailed information on &krb; configuration.
+    </para>
+    <example xml:id="sec-security-kerberos-example-config">
+     <title>Example KDC Configuration, <filename>/etc/krb5.conf</filename></title>
+<screen>[libdefaults]
+ dns_canonicalize_hostname = false
+ rdns = false
+ default_realm = &exampledomain;
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+
+[realms]
+  &exampledomain; = {
+  kdc = kdc.&exampledomain;.:88
+  admin_server = kdc.&exampledomain;
+  default_domain = &exampledomain;
+ }
+ 
+ [logging]
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+ default = SYSLOG:NOTICE:DAEMON
+
+[domain_realm]
+ .&exampledomain; = &exampledomain;
+ &exampledomain; = &exampledomain;
+</screen>
+    </example>
+   </sect3>
    <sect3 xml:id="sec-security-kerberos-admin-kdc-database">
     <title>データベースの設定</title>
     <para>まずは &krb; がプリンシパルに対する全ての情報を保存するための、データベースを準備します。また、特にテープメディアにバックアップを採取した場合など、不用意に漏洩してしまうような事態を避けるため、データベースのマスターキーを設定しておくこともお勧めします。マスターキーはパスフレーズから生成するもので、 stash と呼ばれるファイル内に補完されます。この仕組みにより、 KDC の起動時に毎回パスフレーズを入力しなくても済むようになっています。なお、書籍内の適当なページを開いて目に付いた文章など、適切なパスフレーズを設定するようにしてください。</para>
@@ -450,14 +489,14 @@ sudo systemctl start kadmind</screen>
   <sect2 xml:id="sec-security-kerberos-admin-client">
    <title>&krb; クライアントの設定</title>
    <para>対応するインフラストラクチャ (DNS, NTP) を用意し、 KDC を正しく設定して開始することができたら、あとはクライアント側のマシンの設定になります。 &krb; のクライアントを設定するには、下記で説明している 2 つの手作業のうち、いずれかを実施してください。</para>
-   <!-- <sect3 xml:id="sec-security-kerberos-admin-client-man"> -->
-   <!--  <title>Manually Configuring &krb; Clients</title> -->
-    <para>&krb; を設定するにあたっては、 2 種類のアプローチをとることができます。 1 つは <filename>/etc/krb5.conf</filename> ファイルを利用したクライアントごとの手動の設定方法、もう 1 つは DNS を利用した動的な設定方法です。 DNS を利用する場合、 &krb; のアプリケーションは DNS レコードを利用して KDC サービスがどこにあるのかを判断します。クライアントごとの設定を行なう場合は、 <filename>krb5.conf</filename> 内に KDC サーバのホスト名を設定します (この場合、 KDC を別のホストに移動させるには、設定ファイルの更新を行なうか、その他の方法で再設定を行なう必要があります) 。</para>
-    <para>DNS ベースの設定のほうがより柔軟な構成を取ることができるほか、クライアントごとの設定作業も大幅に削減することができます。ですが、レルム名と DNS ドメイン名が一致しているか、もしくはレルム名が DNS ドメインのサブドメインでなければならなくなります。それ以外にも、ネームサーバを攻撃してダウンさせてしまったり、 DNS レコードを偽装させたりするなどの方法で、 &krb; のインフラストラクチャを混乱させることができてしまいます。とはいえ、最大限に攻撃が成功したとしても、サービスの提供を妨害するまでのことしかできませんし、クライアントごとの設定でも、 <filename>krb5.conf</filename> 内に IP アドレスではなくホスト名を記述してしまうと、 DNS への攻撃による妨害は発生しうることになります。</para>
-    <sect3 xml:id="sec-security-kerberos-admin-client-stat">
-     <title>手動での設定</title>
-     <para>&krb; の設定方法のうちの 1 つとして、 <filename>/etc/krb5.conf</filename> ファイルを編集する方法があります。このファイルは既定でインストールされるファイルで、いくつかの設定例が書かれています。設定を行なう際には、これら全てを削除してから実施してください。また、 <filename>krb5.conf</filename> ファイルは複数のセクション (節) から構成されていますが、セクションは <literal>[this]</literal> のように、大括弧で括られて表わされます。</para>
-     <para>&krb; クライアントを設定するには、下記のセクションを <filename>krb5.conf</filename> ファイルに追加します (なお、 <systemitem class="fqdomainname">kdc.example.com</systemitem> の箇所には、お使いの KDC のホスト名を入れてください):</para>
+<!-- <sect3 xml:id="sec-security-kerberos-admin-client-man"> -->
+<!--  <title>Manually Configuring &krb; Clients</title> -->
+   <para>&krb; を設定するにあたっては、 2 種類のアプローチをとることができます。 1 つは <filename>/etc/krb5.conf</filename> ファイルを利用したクライアントごとの手動の設定方法、もう 1 つは DNS を利用した動的な設定方法です。 DNS を利用する場合、 &krb; のアプリケーションは DNS レコードを利用して KDC サービスがどこにあるのかを判断します。クライアントごとの設定を行なう場合は、 <filename>krb5.conf</filename> 内に KDC サーバのホスト名を設定します (この場合、 KDC を別のホストに移動させるには、設定ファイルの更新を行なうか、その他の方法で再設定を行なう必要があります) 。</para>
+   <para>DNS ベースの設定のほうがより柔軟な構成を取ることができるほか、クライアントごとの設定作業も大幅に削減することができます。ですが、レルム名と DNS ドメイン名が一致しているか、もしくはレルム名が DNS ドメインのサブドメインでなければならなくなります。それ以外にも、ネームサーバを攻撃してダウンさせてしまったり、 DNS レコードを偽装させたりするなどの方法で、 &krb; のインフラストラクチャを混乱させることができてしまいます。とはいえ、最大限に攻撃が成功したとしても、サービスの提供を妨害するまでのことしかできませんし、クライアントごとの設定でも、 <filename>krb5.conf</filename> 内に IP アドレスではなくホスト名を記述してしまうと、 DNS への攻撃による妨害は発生しうることになります。</para>
+   <sect3 xml:id="sec-security-kerberos-admin-client-stat">
+    <title>手動での設定</title>
+    <para>&krb; の設定方法のうちの 1 つとして、 <filename>/etc/krb5.conf</filename> ファイルを編集する方法があります。このファイルは既定でインストールされるファイルで、いくつかの設定例が書かれています。設定を行なう際には、これら全てを削除してから実施してください。また、 <filename>krb5.conf</filename> ファイルは複数のセクション (節) から構成されていますが、セクションは <literal>[this]</literal> のように、大括弧で括られて表わされます。</para>
+    <para>&krb; クライアントを設定するには、下記のセクションを <filename>krb5.conf</filename> ファイルに追加します (なお、 <systemitem class="fqdomainname">kdc.example.com</systemitem> の箇所には、お使いの KDC のホスト名を入れてください):</para>
 <screen>[libdefaults]
         default_realm = EXAMPLE.COM
 
@@ -466,49 +505,49 @@ sudo systemctl start kadmind</screen>
                 kdc = kdc.example.com
                 admin_server = kdc.example.com
         }</screen>
-     <para>上記の例の <literal>default_realm</literal> 行は、 &krb; での既定のレルムを指定しています。複数のレルムを使用する場合は、 <literal>[realms]</literal> セクション内でそれぞれのレルムを設定してください。</para>
-     <para>また、このファイルでは、ホスト名とレルムをどのようにして対応づけるのかを設定することもできます。たとえばリモートのホストに接続する際、 &krb; ライブラリ側ではそのホストがどのレルムに属しているのかを知る必要が発生するためです。この設定は <literal>[domain_realms]</literal> セクション内で設定しなければなりません:</para>
+    <para>上記の例の <literal>default_realm</literal> 行は、 &krb; での既定のレルムを指定しています。複数のレルムを使用する場合は、 <literal>[realms]</literal> セクション内でそれぞれのレルムを設定してください。</para>
+    <para>また、このファイルでは、ホスト名とレルムをどのようにして対応づけるのかを設定することもできます。たとえばリモートのホストに接続する際、 &krb; ライブラリ側ではそのホストがどのレルムに属しているのかを知る必要が発生するためです。この設定は <literal>[domain_realms]</literal> セクション内で設定しなければなりません:</para>
 <screen>[domain_realm]
 .example.com = EXAMPLE.COM
 www.example.org = EXAMPLE.COM</screen>
-     <para>上記のように設定することで、 <filename>example.com</filename> の DNS ドメイン名のホストは <filename>EXAMPLE.COM</filename> の &krb; レルムに属していることになります。これに加えて、 <filename>www.example.org</filename> というドメイン名のホストについても、 <filename>EXAMPLE.COM</filename> レルムのメンバーであることを宣言しています。</para>
-    </sect3>
-    <sect3 xml:id="sec-security-kerberos-admin-client-dns">
-     <title>DNS ベースの設定</title>
-     <para>DNS ベースの &krb; 設定では、 DNS の SRV レコードを多用します。詳しくは <link xlink:href="http://www.ietf.org"/> にある <emphasis>(RFC2052) A DNS RR for specifying the location of services (サービスの場所を指定するための DNS 資源レコード)</emphasis> (英語) をお読みください。</para>
-     <para>&krb; に関連する SRV レコードは、 <literal><replaceable>_サービス</replaceable>.<replaceable>_プロトコル</replaceable>.<replaceable>レルム</replaceable></literal> の書式になっていなければなりません (<replaceable>レルム</replaceable> は &krb; のレルムです) 。また、 DNS 内のドメイン名は大文字と小文字を区別しない仕組みであるため、区別する &krb; ではこの方式がうまく動作しない場合があります。なお <replaceable>_サービス</replaceable> はサービス名 (KDC やパスワードサービスなどで別々の名前を使用します) 、 <replaceable>_プロトコル</replaceable> は <literal>_udp</literal> もしくは <literal>_tcp</literal> のいずれかになります (ただし、全てのサービスが両方のプロトコルに対応しているとは限りません) 。</para>
-     <para>SRV リソースのデータ部分には、優先順位と重み、ポート番号とホスト名をそれぞれ設定します。優先順位は接続を試すべき順序 (低い値ほど優先度が高いことを表わします) を、重みは同じ優先順位内での負荷分散用の値を、それぞれ表わします。特に必要がなければ、いずれの値とも 0 に設定してかまいません。</para>
-     <para>MIT &krb; では、サービスを参照する際に下記の名前を使用します:</para>
-     <variablelist>
-      <varlistentry>
-       <term>_kerberos</term>
-       <listitem>
-        <para>KDC デーモン (認証サーバおよびチケット発行許諾サーバ) の場所を定義します。たとえば下記のように設定します:</para>
+    <para>上記のように設定することで、 <filename>example.com</filename> の DNS ドメイン名のホストは <filename>EXAMPLE.COM</filename> の &krb; レルムに属していることになります。これに加えて、 <filename>www.example.org</filename> というドメイン名のホストについても、 <filename>EXAMPLE.COM</filename> レルムのメンバーであることを宣言しています。</para>
+   </sect3>
+   <sect3 xml:id="sec-security-kerberos-admin-client-dns">
+    <title>DNS ベースの設定</title>
+    <para>DNS ベースの &krb; 設定では、 DNS の SRV レコードを多用します。詳しくは <link xlink:href="http://www.ietf.org"/> にある <emphasis>(RFC2052) A DNS RR for specifying the location of services (サービスの場所を指定するための DNS 資源レコード)</emphasis> (英語) をお読みください。</para>
+    <para>&krb; に関連する SRV レコードは、 <literal><replaceable>_サービス</replaceable>.<replaceable>_プロトコル</replaceable>.<replaceable>レルム</replaceable></literal> の書式になっていなければなりません (<replaceable>レルム</replaceable> は &krb; のレルムです) 。また、 DNS 内のドメイン名は大文字と小文字を区別しない仕組みであるため、区別する &krb; ではこの方式がうまく動作しない場合があります。なお <replaceable>_サービス</replaceable> はサービス名 (KDC やパスワードサービスなどで別々の名前を使用します) 、 <replaceable>_プロトコル</replaceable> は <literal>_udp</literal> もしくは <literal>_tcp</literal> のいずれかになります (ただし、全てのサービスが両方のプロトコルに対応しているとは限りません) 。</para>
+    <para>SRV リソースのデータ部分には、優先順位と重み、ポート番号とホスト名をそれぞれ設定します。優先順位は接続を試すべき順序 (低い値ほど優先度が高いことを表わします) を、重みは同じ優先順位内での負荷分散用の値を、それぞれ表わします。特に必要がなければ、いずれの値とも 0 に設定してかまいません。</para>
+    <para>MIT &krb; では、サービスを参照する際に下記の名前を使用します:</para>
+    <variablelist>
+     <varlistentry>
+      <term>_kerberos</term>
+      <listitem>
+       <para>KDC デーモン (認証サーバおよびチケット発行許諾サーバ) の場所を定義します。たとえば下記のように設定します:</para>
 <screen>_kerberos._udp.EXAMPLE.COM.  IN  SRV    0 0 88 kdc.example.com.
 _kerberos._tcp.EXAMPLE.COM.  IN  SRV    0 0 88 kdc.example.com.</screen>
-       </listitem>
-      </varlistentry>
-      <varlistentry>
-       <term>_kerberos-adm</term>
-       <listitem>
-        <para>リモート管理サービスの場所を定義します。たとえば下記のように設定します:</para>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>_kerberos-adm</term>
+      <listitem>
+       <para>リモート管理サービスの場所を定義します。たとえば下記のように設定します:</para>
 <screen>
 _kerberos-adm._tcp.EXAMPLE.COM. IN  SRV    0 0 749 kdc.example.com.</screen>
-        <para>なお、 kadmind は UDP に対応していないため、 <literal>_udp</literal> のレコードは存在すべきではありません。</para>
-       </listitem>
-      </varlistentry>
-     </variablelist>
-     <para>手動での設定と同様に、 <literal>example.com</literal> ドメイン以下に存在していないホストに対しても、 <literal>EXAMPLE.COM</literal> レルムの配下として設定する仕組みが用意されています。このような設定を行ないたい場合は、 TXT レコードで <literal>_kerberos.<replaceable>ホスト名</replaceable></literal> のようなレコードを作成してください。たとえば下記のようになります:</para>
+       <para>なお、 kadmind は UDP に対応していないため、 <literal>_udp</literal> のレコードは存在すべきではありません。</para>
+      </listitem>
+     </varlistentry>
+    </variablelist>
+    <para>手動での設定と同様に、 <literal>example.com</literal> ドメイン以下に存在していないホストに対しても、 <literal>EXAMPLE.COM</literal> レルムの配下として設定する仕組みが用意されています。このような設定を行ないたい場合は、 TXT レコードで <literal>_kerberos.<replaceable>ホスト名</replaceable></literal> のようなレコードを作成してください。たとえば下記のようになります:</para>
 <screen>_kerberos.www.example.org.  IN TXT "EXAMPLE.COM"</screen>
-    </sect3>
-    <sect3 xml:id="sec-security-kerberos-admin-client-clockskew">
-     <title>時計の許容誤差の設定</title>
-     <para><emphasis>クロックスキュー</emphasis> とは、ホスト側のシステム時計と厳密に一致していないタイムスタンプを持つチケットに対して、どの範囲までを許容するのかを指定する項目です。通常、クロックスキューは 300 秒 (5 分) 程度に設定しておきます。この設定の場合、サーバの時計と比較して最大 5 分までの遅れ、および進みまでを許す意味になります。</para>
-     <para>NTP を利用して全てのホストの時刻同期を行なう環境であれば、この値を 1 分程度にまで縮めることができます。この場合、 <filename>/etc/krb5.conf</filename> 内でのクロックスキューの設定は下記のようになります:</para>
+   </sect3>
+   <sect3 xml:id="sec-security-kerberos-admin-client-clockskew">
+    <title>時計の許容誤差の設定</title>
+    <para><emphasis>クロックスキュー</emphasis> とは、ホスト側のシステム時計と厳密に一致していないタイムスタンプを持つチケットに対して、どの範囲までを許容するのかを指定する項目です。通常、クロックスキューは 300 秒 (5 分) 程度に設定しておきます。この設定の場合、サーバの時計と比較して最大 5 分までの遅れ、および進みまでを許す意味になります。</para>
+    <para>NTP を利用して全てのホストの時刻同期を行なう環境であれば、この値を 1 分程度にまで縮めることができます。この場合、 <filename>/etc/krb5.conf</filename> 内でのクロックスキューの設定は下記のようになります:</para>
 <screen>[libdefaults]
         clockskew = 60</screen>
-    </sect3>
-   <!-- </sect3> -->
+   </sect3>
+<!-- </sect3> -->
   </sect2>
 
   <sect2 xml:id="sec-security-kerberos-admin-remote">
@@ -664,14 +703,13 @@ kadmin:</screen>
    <warning>
     <title>不完全な設定を行なってしまうと、ユーザが締め出されてしまう問題について</title>
     <para>&krb; を不完全に設定してしまうと、 root ユーザを含め全てのユーザが締め出されてしまうことがあります。このような問題が起こらないようにするには、既存の PAM 設定内に <option>pam_krb5</option> を追加した <emphasis>あと</emphasis> 、 <option>pam_krb5</option> モジュールに <option>ignore_unknown_principals</option> ディレクティブを追加してください。具体的には、下記を実行します:</para>
-    <screen>&prompt.sudo;<command>pam-config --add --krb5-ignore_unknown_principals</command></screen>
+<screen>&prompt.sudo;<command>pam-config --add --krb5-ignore_unknown_principals</command></screen>
     <para>これにより、 <option>pam_krb5</option> モジュールがアカウントフェーズの失敗を引き起こすいくつかのエラーを無視するようになります。</para>
    </warning>
    <para>&productnamereg; には <option>pam_krb5</option> と呼ばれる PAM モジュールが用意されています。このモジュールは &krb; のログインとパスワード更新に対応しており、コンソールのログインや <command>su</command> 、もしくは GDM のようなグラフィカルログイン時に使用することができます。つまり、ユーザ側でパスワードを入力することで、ユーザに成り代わって初期の &krb; チケットを取得するような、全ての用途に使用することができるモジュールです。 PAM で &krb; に対応するように設定するには、下記のコマンドを実行します:</para>
 <screen>&prompt.sudo;<command>pam-config --add --krb5</command></screen>
    <para>上記のコマンドを実行すると、既存の PAM 設定ファイル内に <option>pam_krb5</option> を追加し、適切な順序で呼び出されるように設定を調整します。 <option>pam_krb5</option> に対してより詳しい設定を行ないたい場合は、 <filename>/etc/krb5.conf</filename> ファイルを編集したあと、 PAM に既定のアプリケーションを追加してください。詳しくは <command>man 5 pam_krb5</command> で表示されるマニュアルページをお読みください。</para>
    <para><option>pam_krb5</option> モジュールは、 &krb; のチケットをユーザ認証処理の一部として受け付けるような、ネットワークサービス向けには設計されていません。このような用途については、後続の章をお読みください。</para>
-
   </sect2>
 
   <sect2 xml:id="sec-security-kerberos-admin-sshd">
@@ -707,41 +745,38 @@ GSSAPICleanupCredentials yes</screen>
    <para>SASL フレームワークを使用することで、サーバへの認証方式に異なる仕組みを使用することができます。たとえば &krb; の場合、認証は常に相互的に動作します。つまり、 &ds389; サーバに対して認証を行なっているだけでなく、 &ds389; 自身もあなたに対して認証を行なっていることになります。これは特に、攻撃者が不正に作成した偽サーバにアクセスしたりせず、正しい LDAP サーバに接続していることを確認するために必要な仕組みです。</para>
    <para>&krb; から &ds389; に接続するようにするには、 <literal>ldap/&ldapname;</literal> というプリンシパルを作成して、それを keytab 内に追加する必要があります。 &ds389; が認証時に使用する認可情報は、 keytab によって他のサーバに送信されます。 &ds389; では keytab を <varname>KRB5_KTNAME</varname> という環境変数を介して割り当てます。</para>
    <procedure>
-   <para>値を設定するには下記の手順を実施します:</para>
+    <para>値を設定するには下記の手順を実施します:</para>
     <step>
-     <screen>&prompt.sudo;systemctl edit dirsrv@<replaceable>インスタンス名</replaceable></screen>
+<screen>&prompt.sudo;systemctl edit dirsrv@<replaceable>インスタンス名</replaceable></screen>
      <para>&ds389; の既定のインスタンス名を使用している場合は、 <replaceable>インスタンス名</replaceable> の箇所を <literal>localhost</literal> にしてください。</para>
     </step>
     <step>
      <para>あとは下記を追加します:</para>
-     <screen>[Service]
+<screen>[Service]
   Environment=KRB5_KTNAME=/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab</screen>
     </step>
     <step>
      <para>keytab ファイルは &ds389; の動作するアカウント (例: <literal>dirserv</literal>) が読み込めるようにする必要があります:</para>
-     <screen>&prompt.sudo;chown dirsrv:dirsrv /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab
+<screen>&prompt.sudo;chown dirsrv:dirsrv /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab
 &prompt.sudo;chmod 600 /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/krb5.keytab</screen>
     </step>
-  </procedure>
-
+   </procedure>
    <sect3 xml:id="sec-security-kerberos-admin-ldap-auth">
     <title>LDAP を利用した &krb; 認証の使用</title>
     <para><remark>taroth 2019-07-15: FIXME, add content by wbrown, sent via mail on 2019-07-11</remark></para>
-    <!--$ kinit william@REALM
+<!--$ kinit william@REALM
         $ ldapwhoami
         ldapwhoami shows you that GSSAPI authentication worked and an encryption
         layer was used-->
    </sect3>
-
    <sect3 xml:id="sec-security-kerberos-admin-ldap-sasl">
     <title>SASL 識別子マッピングの設定</title>
-
     <para>SASL バインド要求を処理する際、 &ds389; は SASL の認証 ID (ディレクトリサーバとの間で認証時に使用するもの) とサーバ内に保存されている LDAP エントリの紐付け (マッピング) を行ないます。 Kerberos を使用している場合、 SASL のユーザ ID は <literal><replaceable>ユーザ_ID</replaceable>@<replaceable>レルム</replaceable></literal>  (例: &exampleuser;@&exampledomain;) のような書式になります。 ID はディレクトリサーバ内のユーザの DN 、つまり <literal>uid=&exampleuser_plain;,ou=people,dc=example,dc=com</literal> などに変換されなければなりません。 &ds389; では、よくある構成向けの既定のマッピングが提供されていますが、必要であれば独自のマップを作成することもできます。 <xref linkend="pro-krb-389-ds-mapping"/> では、マップの表示方法や削除方法、独自のマップを作成する方法について説明しています。</para>
     <procedure xml:id="pro-krb-389-ds-mapping">
      <title>マップの管理</title>
      <step>
       <para>既存の SASL マップを一覧表示するには、下記のように入力して実行します:</para>
-      <screen>&prompt.user;dsconf <replaceable>インスタンス名</replaceable> sasl list
+<screen>&prompt.user;dsconf <replaceable>インスタンス名</replaceable> sasl list
 Kerberos uid mapping
 rfc 2829 dn syntax
 rfc 2829u syntax
@@ -749,7 +784,7 @@ uid mapping</screen>
      </step>
      <step>
       <para>マップを表示するには、下記のように入力して実行します:</para>
-      <screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl get "Kerberos uid mapping"
+<screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl get "Kerberos uid mapping"
 dn: cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config
 cn: Kerberos uid mapping
 nsSaslMapBaseDNTemplate: dc=\2,dc=\3
@@ -761,20 +796,20 @@ objectClass: nsSaslMapping
      </step>
      <step>
       <para>既定のマップでは、お使いの環境の dc が 2 つのコンポーネントから構成されている場合にのみ動作します。 (お使いの環境に合わないなどの理由で) マップを削除するには、下記のように入力して実行します:</para>
-      <screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl delete "Kerberos uid mapping"
+<screen>&prompt.sudo;dsconf <replaceable>インスタンス名</replaceable> sasl delete "Kerberos uid mapping"
 Deleting SaslMapping cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config :
 Successfully deleted cn=Kerberos uid mapping,cn=mapping,cn=sasl,cn=config</screen>
      </step>
      <step>
       <para>新しいマップを作成するには、下記のように入力して実行します:</para>
-      <screen>&prompt.sudo;dsconf localhost sasl create --cn=bhgssapi --nsSaslMapRegexString "\
+<screen>&prompt.sudo;dsconf localhost sasl create --cn=bhgssapi --nsSaslMapRegexString "\
 (.*\)@EXAMPLE.NET.DE" --nsSaslMapBaseDNTemplate="dc=example,dc=net,dc=de" --nsSaslMapFilterTemplate="(uid=\1)"
 &prompt.sudo;Enter value for nsSaslMapPriority :
 Successfully created bhgssapi</screen>
      </step>
      <step>
       <para>新しく作成したマップを表示するには、下記のように入力して実行します:</para>
-      <screen>&prompt.sudo;dsconf localhost sasl get "bhgssapi"
+<screen>&prompt.sudo;dsconf localhost sasl get "bhgssapi"
 dn: cn=bhgssapi,cn=mapping,cn=sasl,cn=config
 cn: bhgssapi
 nsSaslMapBaseDNTemplate: dc=example,dc=net,dc=de
@@ -789,12 +824,15 @@ objectClass: nsSaslMapping</screen>
    </sect3>
   </sect2>
  </sect1>
-
  <sect1 xml:id="sec-security-kerberos-yast-client">
   <title><guimenu>LDAP および &krb; クライアント</guimenu> を利用した &krb; の設定</title>
+
   <para>&yast; には <guimenu>LDAP および &krb; クライアント</guimenu> と呼ばれるモジュールが含まれ、 LDAP や &krb; を含む認証シナリオでの設定を支援しています。</para>
+
   <para>&krb; と LDAP は個別に参加させるように設定することができますが、たとえば &ad; (LDAP と &krb; を組み合わせて使用します) への参加など多くの場合、下記で説明する以外のモジュールを使用したほうが適切である場合があります。詳しくは <xref linkend="sec-security-auth-yast-client"/> をお読みください。</para>
+
   <para>モジュールを起動するには、 <menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>LDAP および &krb; クライアント</guimenu> </menuchoice> を選択します。</para>
+
   <figure xml:id="fig-yast2-ldapkerberos-kerberos">
    <title><guimenu>LDAP および &krb; クライアント</guimenu> のウインドウ</title>
    <mediaobject>
@@ -808,6 +846,7 @@ objectClass: nsSaslMapping</screen>
   </figure>
 
   <para>&krb; クライアントを設定するには、下記の手順を実施します:</para>
+
   <procedure xml:id="pro-security-auth-kerberos">
    <step>
     <para><guimenu>LDAP および &krb; クライアント</guimenu> のウインドウ内で、 <guimenu>設定の変更</guimenu> ボタンを押します。</para>
@@ -878,16 +917,22 @@ objectClass: nsSaslMapping</screen>
     <para>必要に応じて、 &yast; が追加のパッケージをインストールします。</para>
    </step>
   </procedure>
+
   <para><remark>taroth 2019-07-25: ToDo - integrate following info by wbrown</remark> <!-- info by wbrown, via mail (2019-07-02)after you follow the Yast KDB setup steps, you can then do:# kadmin.localkadmin.local: listprincskadmin.local: ank admin@EXAMPLE.COM# ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost# admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.comdn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=comkrbLoginFailedCount: 0krbPrincipalName: admin@EXAMPLE.COMkrbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=krbLastPwdChange: 20190702032802ZkrbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=krbExtraData:: AAgBAA==objectClass: krbprincipalobjectClass: krbprincipalauxobjectClass: krbTicketPolicyAuxobjectClass: toplinux-go62:/home/admin # kinit admin@EXAMPLE.COMPassword for admin@EXAMPLE.COM:linux-go62:/home/admin # klistTicket cache: DIR::/run/user/0/krb5cc/tktDefault principal: admin@EXAMPLE.COMValid starting Expires Service principal07/02/19 13:29:04 07/03/19 13:29:04 krbtgt/EXAMPLE.COM@EXAMPLE.COM--></para>
  </sect1>
-
  <sect1 xml:id="sec-security-kerberos-nfs">
   <title>&krb; と NFS</title>
+
   <para>ほとんどの NFS サーバでは、 <option>sec=sys</option> として知られている <quote>ネットワークベースの信頼</quote> と、 <option>sec=krb5</option> , <option>sec=krb5i</option> , <option>sec=krb5p</option> として知られている 3 種類の &krb; ベースのセキュリティを任意に組み合わせてファイルシステムを公開することができます。<option>sec</option> オプションはクライアント側のマウントオプションとして指定します。 NFS サービスによっては、いったん <option>sec=sys</option> を利用して設定および接続を行ない、その後 &krb; を適用するものもあります。この場合、サーバ側では <option>sec=sys</option> といずれかの &krb; レベルの両方に対応するよう設定されたあと、全てのクライアントを遷移させてから <option>sec=sys</option> サポートを無効化してください。これにより、セキュリティを確実にすることができます。なお、 &krb; への遷移は手順通り行なわれる限り、完全に透過的に動作します。しかしながら、 NFS 側には微妙な動作の違いが存在することもありますので、 &krb; を使用した場合にはうまくいかないこともあります。そのため、 NFS サーバを &krb; で使用するにあたっては、詳細をよくご確認のうえ設定を行なう必要があります。詳しくは <xref linkend="sec-security-kerberos-overview-group"/> をお読みください。</para>
+
   <para>3 種類の &krb; レベルは、それぞれ異なるセキュリティレベルを構成します。セキュリティレベルを高めれば高めるほど、メッセージの暗号化や解読に際してプロセッサの処理能力が必要になります。 NFS 向けに &krb; を開放するにあたっては、双方で適切なバランスを保つよう選択してください。</para>
+
   <para><literal>krb5</literal> は認証機能のみを提供します。サーバはリクエストを送信した相手を知っていますし、クライアントは応答を送ったサーバを知っています。ただし、リクエストや応答の内容に対する追加のセキュリティ機能は提供されないため、様々な方法でサーバやクライアントになりすますことができてしまいます。認証済みのユーザが読み込んだり変更したりできなかったファイルに対して、攻撃者が読み込んだり変更したりすることはできませんが、それ以外のほぼ全てのことができてしまいます。</para>
+
   <para><literal>krb5i</literal> は全てのメッセージに対してチェック機能を追加します。 <literal>krb5i</literal> では、攻撃者がリクエストや応答を書き換えたりすることができなくなりますが、交換されているデータは全て盗聴できてしまいます。そのため、読み込んでいるファイルの内容などは容易に盗聴できてしまいます。</para>
+
   <para><literal>krb5p</literal> はプロトコルにプライバシー機能を追加します。信頼性のある認証機能とチェック機能に加えて、全てのメッセージが暗号化されます。そのため、攻撃者はサーバとクライアントとの間でメッセージが交換されていることを知ることはできますが、メッセージ内に直接含まれている情報は抽出できなくなります。なお、メッセージのタイミングから、どのような状況にあるのかは推測できてしまいますが、こちらは &krb; では対応のできない範疇外のものとなります。</para>
+
   <sect2 xml:id="sec-security-kerberos-overview-group">
    <title>グループのメンバー</title>
    <para><option>sec=sys</option> と &krb; のセキュリティレベルとの間で、動作が大きく異なるのは、グループのメンバー関係に関する箇所です。 Unix や Linux では、ファイルシステムへのアクセスはプロセスから届くものであり、そのプロセスには特定のユーザとグループが結びつけられています。また、ユーザは複数のグループに対するメンバーとなることができます。このような仕組みから、ファイルへのアクセス権は所有者とグループをベースにして行なわれます。</para>
@@ -897,6 +942,7 @@ objectClass: nsSaslMapping</screen>
    <para>なお、 &krb; ではグループに関する情報は全く送信されません。ユーザが (&krb; の <quote>プリンシパル</quote> で) 認証されると、ユーザ ID とそのプリンシパルに対するグループリストを元にして、検索を行なうだけです。つまり、ユーザが 16 種類以上のグループに対するメンバーであった場合、ファイルへのアクセス許可判断は、それら全てのグループメンバー情報をもとに行なわれることになります。しかしながら、ユーザがクライアント側でグループ ID を変更しても、サーバ側にはその変更が送信されないため、アクセス権の判断には影響しません。</para>
    <para>多くの場合、多数のグループにアクセスできるようになったことで、大きな利益がもたらされますが、グループが変更できなくてもあまり実害はありません。ただし、 &krb; を使用しているサイトの管理者はその情報を認識し、実際に問題を引き起こしたりすることがないようご注意ください。</para>
   </sect2>
+
   <sect2 xml:id="sec-security-kerberos-overview-performance">
    <title>性能とスケーラビリティ</title>
    <para>セキュリティ確保の目的で &krb; を使用すると、メッセージの暗号化や解読に際して、 CPU の負荷がかかるようになります。どれだけの CPU 性能が必要かや、通常時と比べてどれだけ負荷が高くなるのかは、ハードウエアや用途によって大きく異なります。もしもサーバやクライアント側の CPU 性能が限界に達しているような場合は、 <literal>sec=sys</literal> を &krb; に切り替えることで、顕著な性能劣化が現われることになります。 CPU の性能に余裕がある場合であれば、この移行作業で性能が変わることはありません。 &krb; を使用することによる性能変化は、実際のハードウエアと環境でテストしてお確かめください。</para>
@@ -907,6 +953,7 @@ objectClass: nsSaslMapping</screen>
    <para>DNS や LDAP などの名前検索サービスなどの他のコアサービスと KDC サーバとの間は適度に "近く" なるように設計し、各クライアントに対する適度な可用性を提供するようにしてください。 &krb; ではデータベースの伝搬のために柔軟なモデルを採用しているため、複数の KDC サーバを用意することができます。これにより、キャンパス単位やビル単位、キャビネット単位でも、必要なサーバをわかりやすく配置することができます。それぞれのクライアントが近くにある &krb; サーバを検出できるようにするための適切な方式として、それぞれのビルなどに DNS を水平展開して、それぞれで異なる応答をするように設定するやり方があります。このような方式を採用できない場合は、 <filename>/etc/krb5.conf</filename> ファイルをビルごとに別々の値にするなどして、適度に分散させるように設計してください。</para>
    <para>&krb; KDC へのアクセスはあまり頻繁に発生しないことから、負荷として考慮すべきことはピークタイムとなります。たとえば 9:00 から 9:05 の間に多くの人々がログインするような場合、夜間に比べるとその時間帯は非常に多くの毎分リクエストを受け付けることになります。 &krb; サーバの負荷は LDAP サーバの負荷よりも高くなりやすいのですが、桁違いというほどではありません。一般的には、 LDAP のレプリカと同じやり方で &krb; のレプリカを配置したあと、さらにサーバを増設する必要があるかどうかを性能監視で判断するのが良いでしょう。</para>
   </sect2>
+
   <sect2 xml:id="sec-security-kerberos-overview-kdc">
    <title>マスター KDC／複数ドメイン／信頼関係</title>
    <para>&krb; KDC のサービスは、パスワードの変更や新しいユーザの作成などの処理を扱う必要があることから、容易には分散させることができません。これらの処理は、単一のマスター KDC で行なわなければなりません。</para>
@@ -915,17 +962,16 @@ objectClass: nsSaslMapping</screen>
    <para>複数ドメインを扱う際の最も簡単な方法は、グローバルドメイン (例: EXAMPLE.COM) とローカルドメイン (例: ASIA.EXAMPLE.COM, EUROPE.EXAMPLE.COM など) をそれぞれ構築する方法です。グローバルドメインはそれぞれのローカルドメインを信頼するように設定し、それぞれのローカルドメインはグローバルドメインを信頼するように設定すれば、任意のドメイン間で完全な信頼を実現できますので、どのドメインに属するプリンシパルであっても、任意のサービスを利用できるようになります。なお、リソースに対して適切なアクセス許可を設定する作業については、ユーザ名の参照方法や NFS ファイルサーバの機能によって異なりますので、ここでは説明していません。</para>
   </sect2>
  </sect1>
-
-
  <sect1 xml:id="sec-security-kerberos-info">
   <title>さらなる情報</title>
 
   <para>MIT &krb; の公式サイトは <link xlink:href="http://web.mit.edu/kerberos"/> にあります。ここには &krb; のインストールから利用、管理ガイドに至るまで、様々な &krb; の情報に対するリンクが提供されています。</para>
 
- <!-- Paper is from 1995, not sure whether it is a good idea to link it
+<!-- Paper is from 1995, not sure whether it is a good idea to link it
  again. The official homepage has a section "How Kerberos Works" too. -
  sknorr, 2017-05-19 -->
- <!-- <para>
+
+<!-- <para>
    The paper at
    <link xlink:href="https://www.usenix.org/publications/library/proceedings/ec95/full_papers/davis.ps"/>
    gives quite an extensive insight to the basic principles of &krb;,
