@@ -7,7 +7,7 @@
  <title>virsh を利用した仮想マシンの設定</title>
  <info>
   <abstract>
-   <para>&vmguest; を設定するにあたっては、仮想マシンマネージャだけでなく <command>virsh</command> も使用することができます。 <command>virsh</command> は KVM や Xen, VMWare, LXC などの仮想化ソフトウエアで作成された仮想マシンを、管理するためのコマンドラインツールです。 <command>virsh</command> を利用することで、 VM の制御や設定の変更、他のホストへの移行などを行なうことができます。下記の章では、 virsh を利用した管理の方法について説明しています。作業例としては、メモリの割当量の変更や入力デバイスの変更、 CPU やビデオの設定などを行なっています。</para>
+   <para>&vmguest; を設定するにあたっては、仮想マシンマネージャだけでなく <command>virsh</command> も使用することができます。 <command>virsh</command> は、 &kvm; や &xen;, &vmware;, LXC などの仮想化ソフトウエアで作成された仮想マシンを管理するためのコマンドラインツールです。 <command>virsh</command> を利用することで、 VM の制御や設定の変更、他のホストへの移行などを行なうことができます。下記の章では、 virsh を利用した管理の方法について説明しています。作業例としては、メモリの割当量の変更や入力デバイスの変更、 CPU やビデオの設定などを行なっています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -16,7 +16,7 @@
  <sect1 xml:id="sec-libvirt-config-editing-virsh">
   <title>VM の設定変更</title>
 
-  <para>仮想マシンの設定ファイルは <filename>/etc/libvirtd/qemu/</filename> 内に保存されていて、下記のような内容になっているはずです:</para>
+  <para>仮想マシンの設定ファイルは <filename>/etc/libvirtd/qemu/</filename> 内に XML 形式で保存されていて、下記のような内容になっているはずです:</para>
 
   <example>
    <title>XML 設定ファイルの例</title>
@@ -135,7 +135,7 @@ Id    名前                           状態
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
    <step>
-    <para>仮想マシンに対して割り当てられている CPU 数が変更されていることを確認します:</para>
+    <para>VM に対して割り当てられている CPU 数が変更されていることを確認します:</para>
 <screen>
 &prompt.sudo;<command>virsh vcpuinfo sled15</command>
 VCPU:           0
@@ -216,13 +216,13 @@ CPU Affinity:   yy
 ...</screen>
     </step>
     <step>
-     <para>同様に <tag>initrd</tag> タグを追加し、ホスト側での initrd ファイルのパスを指定します:</para>
+     <para>同様に <tag>initrd</tag> タグを追加し、ホスト内での initrd ファイルのパスを指定します:</para>
 <screen>...
 &lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
 ...</screen>
     </step>
     <step>
-     <para>あとは仮想マシンを起動すると、新しいカーネルでの起動が行なわれます。</para>
+     <para>あとは VM を起動すると、新しいカーネルでの起動が行なわれます:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
     </step>
    </procedure>
@@ -321,7 +321,7 @@ CPU Affinity:   yy
 <screen>&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command></screen>
    </step>
    <step>
-    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた <!-- NOTE: "USB"? --> デバイスにアクセスできるようになります。</para>
+    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた PCI デバイスにアクセスできるようになります:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
@@ -354,11 +354,11 @@ Bus 001 Device 003: ID <emphasis role="bold">0557:2221</emphasis> ATEN Internati
     </tip>
    </step>
    <step>
-    <para>ホスト側で &selnx; が動作している場合は、 &vmguest; をシャットダウンして &selnx; を無効化します。</para>
+    <para>ホスト内で &selnx; が動作している場合は、 &vmguest; をシャットダウンして &selnx; を無効化します。</para>
 <screen>&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command></screen>
    </step>
    <step>
-    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた <!-- NOTE: "USB"? --> デバイスにアクセスできるようになります。</para>
+    <para>&vmguest; を起動すると、 &vmguest; から割り当てられた PCI デバイスにアクセスできるようになります:</para>
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
@@ -476,7 +476,7 @@ WantedBy=multi-user.target
 #WantedBy=graphical.target</screen>
     </step>
     <step>
-     <para>また仮想マシンを起動する前に、もう 1 つのサービスファイル ( <filename>after-local.service</filename> ) を作成し、 NIC の切り離しを行なうスクリプト <filename>/etc/init.d/after.local</filename> を実行するように設定します。これを行なわないと、 VM の起動が失敗するようになってしまいます:</para>
+     <para>また VM を起動する前に、もう 1 つのサービスファイル ( <filename>after-local.service</filename> ) を作成し、 NIC の切り離しを行なうスクリプト <filename>/etc/init.d/after.local</filename> を実行するように設定します。これを行なわないと、 VM の起動が失敗するようになってしまいます:</para>
 <screen>[Unit]
 Description=/etc/init.d/after.local Compatibility
 After=libvirtd.service
@@ -584,7 +584,7 @@ pci_0000_04_11_5</screen>
 &lt;/interface&gt;</screen>
      <calloutlist>
       <callout arearefs="sriov-iface">
-       <para>VF は固定の MAC アドレスを取得しません。ホストが再起動されるたびに MAC アドレスが変更される形になります。この場合、 <tag class="attribute">hostdev</tag> で通常通りにネットワークデバイスを追加すると、ホスト側の再起動が発生するたびに MAC アドレスが変わってしまうため、 &vmguest; 側のネットワークデバイスを再設定する必要が生じてしまいます。このような問題を回避するため、 &libvirt; では <tag class="attvalue">hostdev</tag> という値が提供されるようになり、これによってデバイスの割り当て前にネットワーク固有のデータを設定できるようになっています。</para>
+       <para>VF は固定の MAC アドレスを取得しません。ホストが再起動されるたびに MAC アドレスが変更される形になります。この場合、 <tag class="attribute">hostdev</tag> で <quote>従来の方法を利用して</quote> ネットワークデバイスを追加すると、ホスト側の再起動が発生するたびに MAC アドレスが変わってしまうため、 &vmguest; 側のネットワークデバイスを再設定する必要が生じてしまいます。このような問題を回避するため、 &libvirt; では <tag class="attvalue">hostdev</tag> という値が提供されるようになり、これによってデバイスの割り当て <emphasis>前</emphasis> にネットワーク固有のデータを設定できるようになっています。</para>
       </callout>
       <callout arearefs="sriov-data">
        <para>以前の手順で取得したデータを指定します。</para>
@@ -692,10 +692,10 @@ pci_0000_04_11_5</screen>
 
   <itemizedlist>
    <listitem>
-    <para><tag>driver</tag>: ドライバとバスに関する情報を指定します。これらは &vmhost; 側での管理方法などを指定します。</para>
+    <para><tag>driver</tag> にはドライバとバスに関する情報を指定します。ここには &vmguest; 側での処理方法などを指定します。</para>
    </listitem>
    <listitem>
-    <para><tag>target</tag>: &vmguest; 内でのデバイス名の設定が含まれます。ここには任意指定の bus 属性 (接続されているストレージバスに関する情報) を含むことができます。</para>
+    <para><tag>target</tag> には &vmguest; 内でのデバイス名の設定が含まれます。ここには任意指定の bus 属性 (接続されているストレージバスに関する情報) を含むことができます。</para>
    </listitem>
   </itemizedlist>
 
@@ -707,7 +707,7 @@ pci_0000_04_11_5</screen>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para><tag>disk</tag> タグを追加し、その中に <tag class="attvalue">type</tag> と <tag class="attvalue">device</tag> の属性を追加します。</para>
+    <para><tag>disk</tag> 要素内に <tag>disk</tag> 要素を追加し、その中に <tag class="attvalue">type</tag> と <tag class="attvalue">device</tag> の属性を追加します。</para>
 <screen>&lt;disk type='file' device='disk'&gt;</screen>
    </step>
    <step>
@@ -768,7 +768,7 @@ pci_0000_04_11_5</screen>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
     </step>
     <step>
-     <para>2D/3D アクセラレーション機能を有効化／無効化するには、それぞれ <literal>accel3d</literal> もしくは <literal>accel2d</literal> の設定を変更します。</para>
+     <para>2D/3D アクセラレーション機能を有効化／無効化するには、それぞれ <literal>accel3d</literal> もしくは <literal>accel2d</literal> の設定を変更します:</para>
 <screen>&lt;video&gt;
 &lt;acceleration accel3d='yes' accel2d='no'&gt;
 ...
