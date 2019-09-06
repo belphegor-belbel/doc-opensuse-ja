@@ -4080,7 +4080,7 @@ config:type="boolean"&gt;true&lt;/diag&gt;</screen>
 
    <example>
     <title>アップグレードとバックアップ</title>
-<screen>&lt;upgrade&gt;
+    <screen>&lt;upgrade&gt;
     &lt;stop_on_solver_conflict config:type="boolean"&gt;true&lt;/stop_on_solver_conflict&gt;
   &lt;/upgrade&gt;
   &lt;backup&gt;
@@ -4155,8 +4155,7 @@ config:type="boolean"&gt;true&lt;/diag&gt;</screen>
    </informaltable>
 
    <para>&ay; のアップグレードモードを開始するには、下記のようにして行ないます:</para>
-
-   <procedure xml:id="pro-upgrade-upgrade-mode">
+   <procedure xml:id="pro-upgrade-offline-upgrade-mode">
     <title>アップグレードモードでの &ay; の起動</title>
     <step>
      <para>作成した &ay; のプロファイルを、 ファイルシステム内の <filename>/root/autoupg.xml</filename> にコピーします。</para>
@@ -4169,15 +4168,28 @@ config:type="boolean"&gt;true&lt;/diag&gt;</screen>
     </step>
     <step>
      <para>コマンドラインには <varname>autoupgrade=1</varname> を設定します。</para>
-     <remark condition="clarity">
-      2016-07-29 - fs: What about network setup with ifcfg= ?? Otherwise this
-      command line won't work??
-     </remark>
     </step>
     <step>
      <para><keycap function="enter"/> を押すとアップグレード処理が始まります。</para>
     </step>
    </procedure>
+
+   <procedure xml:id="pro-upgrade-online-upgrade-mode">
+    <title>アップグレードモードでの &ay; の起動</title>
+    <step>
+     <para>インストールメディアからシステムを起動します。</para>
+    </step>
+    <step>
+     <para><literal>インストール</literal> を選択します。</para>
+    </step>
+    <step>
+      <para>コマンドラインには <varname>autoupgrade=1</varname> を設定します。</para>
+      <para>Here network will be setup via DHCP.</para>
+    </step>
+    <step>
+     <para><keycap function="enter"/> を押すとアップグレード処理が始まります。</para>
+    </step>
+    </procedure>
   </sect1>
 
   <sect1 xml:id="CreateProfile-Services">
@@ -11319,7 +11331,9 @@ echo -n 100
          <para><literal>autoupgrade</literal></para>
         </entry>
         <entry>
-         <para>&ay; を利用して自動アップグレードの処理を開始します。詳しくは <xref linkend="CreateProfile-upgrade"/> をお読みください。なお、用途によっては <literal>autoyast</literal> パラメータを指定する必要もあります (詳しくは <xref linkend="Commandline-ay"/> をお読みください) 。</para>
+         <para>
+          Initiate an automatic upgrade using &ay;; see <xref linkend="CreateProfile-upgrade"/>.
+         </para>
         </entry>
        </row>
        <row>
@@ -11328,14 +11342,6 @@ echo -n 100
         </entry>
         <entry>
          <para>自動インストールの際に使用する制御ファイルの場所を指定します。詳しくは <xref linkend="Commandline-ay"/> をお読みください。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast2</literal></para>
-        </entry>
-        <entry>
-         <para>自動インストールの際に使用する制御ファイルの場所を指定します。 <literal>autoyast</literal> とは異なり、 <command>linuxrc</command> 側で指定された値を解釈し、たとえば必要に応じてネットワークの設定などを行なうようになります。 &ay; と <command>linuxrc</command> の URI 書式の違いについて、詳しくは <command>linuxrc</command> の付録 <xref linkend="appendix-linuxrc"/> をお読みください。 &ay; のルールとクラスには対応して <emphasis>いません</emphasis> 。</para>
         </entry>
        </row>
        <row>
@@ -11474,6 +11480,18 @@ echo -n 100
     <para>これらの値やキーワードはシステムを起動する際に使用され、 &yast; がメインの制御ファイルを得るまでの間使用されます。現時点ではソースメディアは自動検出されるようになっていますので、場合によっては <command>linuxrc</command> に特段の設定を行なわなくても、自動インストールの処理を開始することができるようになっています。</para>
     <para>従来の <command>linuxrc</command> の設定ファイル ( <filename>info</filename> ) には、インストールサーバやソースの場所など、クライアントに対して十分な情報を提供する機能が用意されてきました。通常はこのファイルを用意する必要はありませんが、 DHCP も BOOTP も使用していないような環境であったり、特殊なカーネルモジュールを読み込む必要があるような環境では、必要となる場合もあります。</para>
     <para><command>linuxrc</command> にキーワードを渡したい場合は、カーネルのコマンドラインを使用することができます。これはいくつかの方法で設定することができます。通常のメディアからの起動時に、その他のカーネルパラメータとともに <command>linurc</command> キーワードを指定することができるほか、ネットワーク経由で起動するディスクイメージを作成して、そこにカーネルパラメータを設定する方法もあります。また、 Etherboot や PXE との組み合わせで、 DHCP サーバ側でカーネルのパラメータを設定することもできます。</para>
+    <note>
+      <title><literal>autoyast</literal> と <literal>autoyast2</literal> のオプションの違いについて</title>
+      <para>
+          The <literal>autoyast2</literal> option is similar to the <literal>autoyast</literal> option, but
+          <command>linuxrc</command> parses the provided value and, for example,
+          tries to configure a network when needed. This option is not described in this documentation.
+	  For information about differences between the &ay; and
+	  <command>linuxrc</command> URI syntax, see the <command>linuxrc</command> appendix:
+          <xref linkend="appendix-linuxrc"/>. &ay;'s rules and classes are
+          <emphasis>not</emphasis> supported.
+      </para>
+    </note>
     <para>コマンドライン変数 <literal>autoyast</literal> には、 <xref linkend="Commandline-ay"/> の表に示すような書式を使用することができます。</para>
     <table xml:id="Commandline-ay">
      <title>&ay; の書式</title>
@@ -11495,14 +11513,21 @@ echo -n 100
         </entry>
         <entry>
          <para>自動アップグレードの場合は、 <literal>autoyast</literal> 変数を指定する必要はありません。詳しくは <xref linkend="pro-upgrade-upgrade-mode"/> をお読みください。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=default</literal></para>
-        </entry>
-        <entry>
-         <para>既定の自動インストールオプションを使用します。</para>
+	 <para>
+	   Installation: &ay; will be started if a file named <filename>autoinst.xml</filename> is in the following
+	   three places:
+	   </para>
+           <orderedlist>
+             <listitem>
+               <para>USB メモリのルートディレクトリ</para>
+             </listitem>
+             <listitem>
+               <para>インストールメディアのルートディレクトリ</para>
+             </listitem>
+             <listitem>
+               <para>システムを起動する際に使用した初期 RAM ディスクのルートディレクトリ</para>
+             </listitem>
+           </orderedlist>
         </entry>
        </row>
        <row>
@@ -11518,7 +11543,7 @@ echo -n 100
          <para><literal>autoyast=device://<replaceable>デバイス</replaceable>/<replaceable>ファイル名</replaceable></literal></para>
         </entry>
         <entry>
-         <para>指定したストレージデバイス内の制御ファイルを読み込みます。この場合、デバイスに対するフルパスではなく、デバイス名のみを指定してください。また、デバイス名を省略する (例: <literal>autoyast=device:///<replaceable>ファイル名</replaceable></literal> ) と、 &ay; は全てのデバイスを検索するようになります。</para>
+          <para>指定したストレージデバイス内の制御ファイルを読み込みます。この場合、デバイスに対するフルパスではなく、デバイス名のみを指定してください。また、デバイス名を省略する (例: <literal>autoyast=device:///<replaceable>ファイル名</replaceable></literal> ) と、 &ay; は全てのデバイスを検索するようになります。</para>
         </entry>
        </row>
        <row>
@@ -11574,15 +11599,11 @@ echo -n 100
          <para><literal>autoyast=relurl://<replaceable>パス</replaceable></literal></para>
         </entry>
         <entry>
-         <para>インストール元 (install=....) から制御ファイルを取得します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=slp</literal></para>
-        </entry>
-        <entry>
-         <para>SLP サーバに対して制御ファイルの場所を尋ねます (service:autoyast:...) 。必要であれば、 <literal>description=</literal> 属性を追加して、 URL をより分かりやすく <quote>翻訳</quote> することもできます ( <literal>autoyast=slp:/?descr=*SLES*</literal> ) 。</para>
+          <para>
+	    Retrieve the control file from the installation source. Either from the
+            default installation source or from the installation source defined in
+            <literal>install=<replaceable>INSTALLATION_SOURCE_PATH</replaceable></literal>.
+         </para>
         </entry>
        </row>
        <row>
@@ -11613,12 +11634,23 @@ echo -n 100
       <listitem>
        <para>&productname; の DVD-ROM を使用する場合、制御ファイルは USB メモリやネットワーク内に存在している必要があります:</para>
        <formalpara>
-        <title>USB メモリ</title>
+        <title>Flash Disk (e.g. USB stick)</title>
         <para><literal>autoyast=usb://<replaceable>パス</replaceable></literal> オプションを指定して制御ファイルにアクセスを行なうことができます。</para>
        </formalpara>
        <formalpara>
         <title>ネットワーク</title>
-        <para>下記のいずれかのコマンドで制御ファイルにアクセスすることができます: <literal>autoyast=nfs://..</literal> , <literal>autoyast=ftp://..</literal> , <literal>autoyast=http://..</literal> , <literal>autoyast=https://..</literal> , <literal>autoyast=tftp://..</literal> , <literal>autoyast=cifs://..</literal></para>
+        <para>
+         Access the control file via the following commands:
+         <literal>autoyast=nfs://..</literal>,
+         <literal>autoyast=ftp://..</literal>,
+         <literal>autoyast=http://..</literal>,
+         <literal>autoyast=https://..</literal>,
+         <literal>autoyast=tftp://..</literal>, or
+         <literal>autoyast=cifs://..</literal>.
+         Network access needs to be defined using the boot options in linuxrc.
+         This can be done via DHCP:
+	 <command>netsetup=dhcp autoyast=http://163.122.3.5/autoyast.xml</command>
+        </para>
        </formalpara>
       </listitem>
      </varlistentry>
@@ -11626,7 +11658,6 @@ echo -n 100
       <term>独自の DVD-ROM を使用する場合</term>
       <listitem>
        <para>この場合、制御ファイルを DVD-ROM 内に直接含めることができます。制御ファイルはルートディレクトリ内に配置し、 <filename>autoinst.xml</filename> というファイル名にしておいてください。これにより、インストール時に自動検出され、使用されるようになります。もちろん <literal>autoyast=file:///<replaceable>パス</replaceable></literal> のように指定すれば、他のパスにある制御ファイルを指定して使用することもできます。</para>
-       <para>自動インストールで DVD-ROM を使用する場合は、インストーラに対してネットワークにアクセスして必要なファイルを取得するのではなく、 DVD-ROM 内にあるファイルを使用するように指定する必要があります。これはカーネルのコマンドライン内に <literal>instmode=cd</literal> を指定することで設定することができます (なお、 DVD 内の <filename>isolinux.cfg</filename> 内にオプションを追加すれば、これも自動化することができます) 。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -11634,7 +11665,7 @@ echo -n 100
       <listitem>
        <para>自動インストールではこのインストール方法が最も多いでしょう。複数のマシンにインストールを行なう場合、 SLP や NFS のサーバのほか、 BOOTP や DHCP などのネットワークサービスを併用することが多いためです。この場合、制御ファイルの配置にあたって最も簡単な方法は、インストールソースとして使用するディレクトリのルートに、制御ファイルを配置する方法です。ファイル名は <filename>autoinst.xml</filename> というファイル名にしてください。この場合、インストール時に自動検出され、自動インストールが行なわれるようになります。制御ファイルは下記のような場所に配置することもできます:</para>
        <formalpara>
-        <title>USB メモリ</title>
+        <title>Flash Disk (e.g. USB stick)</title>
         <para><literal>autoyast=usb://<replaceable>パス</replaceable></literal> オプションを指定して制御ファイルにアクセスを行なうことができます。</para>
        </formalpara>
        <formalpara>
@@ -11648,30 +11679,6 @@ echo -n 100
      <title>ネットワークと DHCP の無効化について</title>
      <para>インストール時にネットワークが不要である場合や利用できない場合、たとえば DVD-ROM から自動インストールを行なうような場合、ネットワークを無効化するには、 <command>linuxrc</command> オプションに <literal>netsetup=0</literal> を指定することで、ネットワークの設定を無効化することができます。</para>
     </note>
-    <note>
-     <title><literal>autoyast</literal> と <literal>autoyast2</literal> のオプションの違いについて</title>
-     <para><literal>autoyast</literal> と <literal>autoyast2</literal> のオプションは非常に似通っていますが、下記のような大きな違いが存在します:</para>
-     <itemizedlist>
-      <listitem>
-       <para><literal>autoyast=http://...</literal> を使用した場合は、 <command>linuxrc</command> でネットワーク設定を行なう必要があります。</para>
-      </listitem>
-      <listitem>
-       <para><literal>autoyast2=http://...</literal> を使用した場合は、 <command>linuxrc</command> が自動的にネットワークの設定を行ないます。</para>
-      </listitem>
-     </itemizedlist>
-    </note>
-    <para><literal>autoyast=default</literal> を指定した場合、 &yast; は下記の場所のいずれかに存在する <filename>autoinst.xml</filename> を読み込もうとします:</para>
-    <orderedlist>
-     <listitem>
-      <para>USB メモリのルートディレクトリ</para>
-     </listitem>
-     <listitem>
-      <para>インストールメディアのルートディレクトリ</para>
-     </listitem>
-     <listitem>
-      <para>システムを起動する際に使用した初期 RAM ディスクのルートディレクトリ</para>
-     </listitem>
-    </orderedlist>
     <para><literal>default</literal> を除く全ての &ay; オプションでは、下記のような方式で制御ファイルの場所を指定することができます:</para>
 <!-- numeration="arabic" -->
     <orderedlist>
@@ -11683,6 +11690,13 @@ echo -n 100
       <para>複数の制御ファイルが配置されているディレクトリを指定する方法:</para>
 <screen>autoyast=http://192.168.1.1/control-files/</screen>
       <para>この場合、対応する制御ファイルは IP アドレスの 16 進数表記によるファイル名で取得することになります (後述) 。</para>
+      <para>ユーザに対してライセンスへの同意を求めるかどうかを指定します。既定値は <literal>false</literal> です。</para>
+      <para>
+        The files in the directory must not have any extension, for example <literal>.xml</literal>.
+        So the filename has to be the IP or MAC address only.
+      </para>
+      <screen>&prompt.user;ls -r control-files
+C00002 0080C8F6484C default</screen>
      </listitem>
     </orderedlist>
     <para>パスのプレフィクスのみを指定した場合、 &yast; は下記の流れで制御ファイルへのアクセスを試みます:</para>
