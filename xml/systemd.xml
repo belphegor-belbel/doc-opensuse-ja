@@ -13,31 +13,7 @@
  </info>
  <para>&systemd; プログラムはプロセス ID 1 のプロセスで、システムを必要に応じて準備する仕組みを担っています。 &systemd; はカーネルから直接起動され、通常であればプロセスを強制終了させるシグナル 9 を受けても耐えられる仕組みを備えています。 &systemd; 以外のプログラムは systemd から直接起動されるか、直接起動されたプロセスの子プロセスとして起動されます。</para>
  <para>systemd は System V init デーモンを置き換えるために作られた仕組みです。 &systemd; は System V init と完全な互換性があり、 init スクリプトにも対応しています。 systemd を利用する利点の 1 つは、積極的にサービスを並行起動することで、起動時間を大きく短縮できるという点です。これに加えて、 systemd では必要に応じてサービスを開始する仕組みも存在します。常にシステムの起動時に開始するのではなく、必要になったタイミングで起動を行なうことができます。また、 systemd ではカーネルコントロールグループ (cgroups) にも対応しているほか、スナップショットやシステムの状態の保存と復元なども行なうことができます。詳しくは <link xlink:href="http://www.freedesktop.org/wiki/Software/systemd/"/> をお読みください。</para>
-<!-- fs 2012-06-20:
-       according to fcrozat:
-        * too complex
-        * it is up to packagers to enable such behavior (socket activation on
-          demand) and we don't have a lot of packages doing so atm
-
-  <para>
-   Services depend on each other. For example the <systemitem
-   class="daemon">sshd</systemitem> daemon requires the network to be set up
-   before it can be started. Each service provides a socket accepting
-   connections or a mount point in the file system. Starting <systemitem
-   class="daemon">sshd</systemitem> is only successful if all sockets it
-   connects to, are available. Using System V results in serializing the
-   services start-up&mdash;a service is not started until all other services it
-   depends on, have been successfully started.
-  </para>
-  <para>
-   &systemd; has a different approach. It provides provide sockets and mount
-   points for all services. Afterward all services are started at once and
-   get <quote>their</quote> socket passed on execution.  This allows to
-   considerably speed up the boot process by starting all services in
-   parallel.
-  </para>
-
-  -->
+ 
  <sect1 xml:id="sec-boot-systemd-concept">
   <title>systemd の考え方</title>
 
@@ -1194,12 +1170,29 @@ WantedBy=multi-user.target
      </listitem>
     </varlistentry>
    </variablelist>
-   <warning>
-    <title>D-Bus サービスの終了や再起動の禁止について</title>
-    <para>D-Bus サービスは systemd クライアントと systemd マネージャ (プロセス ID=1) との間のメッセージバスとなるサービスです。 <systemitem class="daemon">dbus</systemitem> は単独のデーモンではありますが、初期化インフラストラクチャでは必須の構成部品です。</para>
+  </sect2>
+  <sect2 xml:id="sec-boot-systemd-dbus">
+   <title>Important Notes on the D-Bus Service</title>
+
+   <para>D-Bus サービスは systemd クライアントと systemd マネージャ (プロセス ID=1) との間のメッセージバスとなるサービスです。 <systemitem class="daemon">dbus</systemitem> は単独のデーモンではありますが、初期化インフラストラクチャでは必須の構成部品です。</para>
+   
     <para>動作中のシステムで <systemitem class="daemon">dbus</systemitem> を終了したり再起動したりする行為は、 PID 1 の終了や再起動と同様であり、 systemd のクライアント／サーバ間通信を破壊してしまい、 systemd が正しく動作しなくなってしまいます。</para>
+    
     <para>そのため、 <systemitem class="daemon">dbus</systemitem> の終了や再起動は非推奨であるほか、サポートの対象外となっています。</para>
-   </warning>
+    
+    <para>
+     Updating the <systemitem>dbus</systemitem> or
+     <systemitem>dbus</systemitem>-related packages requires a reboot. When in
+     doubt whether a reboot is necessary, run the <command>sudo zypper ps
+     -s</command>. If <literal>dbus</literal> appears among the listed
+     services, you need to reboot the system.
+    </para>
+
+    <para>
+     Keep in mind that <systemitem>dbus</systemitem> is updated even when
+     automatic updates are configured to skip the packages that require reboot.
+    </para>
+    
   </sect2>
 
 <!-- debug section should be at the end to be more positive -->
