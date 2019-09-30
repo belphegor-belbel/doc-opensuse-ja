@@ -4247,7 +4247,7 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 
    <para>第 2 ステージでは、追加のパッケージのインストールが設定されていると、そのインストール処理はネットワークの設定が行なわれる前に動作してしまいます。このようなパッケージのインストールでネットワークを利用できるようにするため、 <literal>keep_install_network</literal> は既定で <literal>true</literal> に設定されています。第 1 ステージで必要なパッケージを全てインストールしていて、第 2 ステージの冒頭ではネットワークが不要である場合は、 <literal>keep_install_network</literal> を <literal>false</literal> に設定することで、設定のコピーを防ぐことができます。</para>
 
-   <para>ネットワークの設定を適用してネットワークが正しく動作するようにするには、ネットワーク全体の設定を保存するためのグローバルリソースを 1 つだけ使用してください。</para>
+   <para>ネットワークの設定を適用してネットワークが正しく動作するようにするには、ネットワーク全体の設定を保存するためのグローバルリソース <literal>&lt;networking&gt;</literal> を 1 つだけ使用してください。</para>
 
    <example xml:id="ex-ay-network-config-general">
     <title>ネットワークの設定</title>
@@ -4266,7 +4266,6 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       &lt;search&gt;&exampledomain;&lt;/search&gt;
       &lt;search&gt;&exampledomain1;&lt;/search&gt;
     &lt;/searchlist&gt;
-    &lt;write_hostname config:type="boolean"&gt;false&lt;/write_hostname&gt;
   &lt;/dns&gt;
   &lt;interfaces config:type="list"&gt;
     &lt;interface&gt;
@@ -4274,22 +4273,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       &lt;device&gt;eth0&lt;/device&gt;
       &lt;startmode&gt;auto&lt;/startmode&gt;
     &lt;/interface&gt;
-    &lt;interface&gt;
-      &lt;bootproto&gt;static&lt;/bootproto&gt;
-      &lt;broadcast&gt;127.255.255.255&lt;/broadcast&gt;
-      &lt;device&gt;lo&lt;/device&gt;
-      &lt;firewall&gt;no&lt;/firewall&gt;
-      &lt;ipaddr&gt;127.0.0.1&lt;/ipaddr&gt;
-      &lt;netmask&gt;255.0.0.0&lt;/netmask&gt;
-      &lt;network&gt;127.0.0.0&lt;/network&gt;
-      &lt;prefixlen&gt;8&lt;/prefixlen&gt;
-      &lt;startmode&gt;nfsroot&lt;/startmode&gt;
-      &lt;usercontrol&gt;no&lt;/usercontrol&gt;
-    &lt;/interface&gt;
   &lt;/interfaces&gt;
   &lt;ipv6 config:type="boolean"&gt;true&lt;/ipv6&gt;
   &lt;keep_install_network config:type="boolean"&gt;false&lt;/keep_install_network&gt;
-  &lt;managed config:type="boolean"&gt;false&lt;/managed&gt;       ###### NetworkManager?
+  &lt;managed config:type="boolean"&gt;false&lt;/managed&gt;       ####  True を指定すると NetworkManager を、 False を指定すると wicked を使用します。
   &lt;net-udev config:type="list"&gt;
     &lt;rule&gt;
       &lt;name&gt;eth0&lt;/name&gt;
@@ -4331,29 +4318,23 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 &lt;/networking&gt;</screen>
    </example>
 
-   <para>
-    As shown in the example above, the <literal>&lt;networking&gt;</literal> section can be
-    composed of a few subsections:
-   </para>
+   <para>上述の例のとおり、 <literal>&lt;networking&gt;</literal> 内にはいくつかの項目が存在しています:</para>
 
    <itemizedlist>
     <listitem>
-     <para><literal>interfaces</literal> describes the configuration of the
-     network interfaces, including their IP addresses, how they are started,
-     etc.</para>
+     <para><literal>interfaces</literal> 内にはネットワークインターフェイスの設定を記述します。ここには IP アドレスのほか、起動方法などを指定することができます。</para>
     </listitem>
     <listitem>
-     <para><literal>dns</literal> specifies DNS related settings, as the
-     host name, the list of name servers, etc.</para>
+     <para><literal>dns</literal> 内には DNS 関連の設定を記述します。ここにはホスト名のほか、ネームサーバの一覧などを指定します。</para>
     </listitem>
     <listitem>
-     <para><literal>timezone</literal>: タイムゾーンの設定。</para>
+     <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
     </listitem>
     <listitem>
-     <para><literal>s390-devices</literal> s390-specific devices settings.</para>
+     <para><literal>s390-devices</literal> 内には s390 固有のデバイス設定を記述します。</para>
     </listitem>
     <listitem>
-     <para><literal>free</literal>: デバイス内の未使用領域のみを使用し、それ以外のパーティションについては何も変更しないようにします。</para>
+     <para><literal>net-udev</literal> 内には、デバイス名を固定させるための udev ルールを記述します。</para>
     </listitem>
    </itemizedlist>
 
@@ -4394,14 +4375,8 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
    </tip>
 
    <sect2 xml:id="CreateProfile-Network-Interfaces">
-    <title>Interfaces</title>
-    <para>
-     The <literal>interfaces</literal> section allows the user to define the
-     interfaces configuration, including how they are started, their IP
-     addresses, networks, and more. The following elements must be enclosed
-     in <literal>&lt;interfaces&gt;...&lt;/interfaces&gt;</literal>
-     tags.
-    </para>
+    <title>インターフェイス</title>
+    <para><literal>interfaces</literal> セクションにはネットワークインターフェイス関連の設定を記述します。ここにはインターフェイスの起動方法や IP アドレス、サブネットマスクなどを記述します。それぞれ下記の要素は、 <literal>&lt;interfaces&gt;...&lt;/interfaces&gt;</literal> タグ内に記述しなければなりません。</para>
     <informaltable>
      <tgroup cols="3">
       <thead>
@@ -4420,63 +4395,44 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       <tbody>
        <row>
         <entry>
-         <para><literal>boot_root</literal></para>
+         <para><literal>bootproto</literal></para>
         </entry>
         <entry>
-         <para>
-          Boot protocol used by the interface. Possible values:
-         </para>
+         <para>インターフェイスが使用する起動プロトコルを指定します。設定可能な値は下記のとおりです:</para>
           <itemizedlist>
            <listitem>
-            <para>
-             <literal>static</literal> for statically assigned addresses. It is
-             required to specify the IP using the <literal>ipaddr</literal>
-             element.
-            </para>
+            <para>固定のアドレスを設定したい場合は、 <literal>static</literal> を指定します。 <literal>ipaddr</literal> 要素を利用して IP アドレスを割り当てたい場合は、これを指定してください。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>dhcp4</literal>, <literal>dhcp6</literal> or
-             <literal>dhcp</literal> for setting the IP address with DHCP
-             (IPv4, IPv6 or any).
-            </para>
+            <para>DHCP を利用して IP アドレスを割り当てたい場合は、 <literal>dhcp4</literal> (IPv4), <literal>dhcp6</literal> (IPv6), <literal>dhcp</literal> (IPv4 もしくは IPv6) のいずれかを指定します。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>dhcp+autoip</literal> to get the IPv4 configuration from
-             <emphasis>Zeroconf</emphasis> and get IPv6 from DHCP.
-            </para>
+            <para>IPv4 の設定を <emphasis>Zeroconf</emphasis> から取得し、 IPv6 の設定を DHCP から取得したい場合は、 <literal>dhcp+autoip</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>autoip</literal> to get the IPv4 configuration from
-             <emphasis>Zeroconf</emphasis>.
-            </para>
+            <para>IPv4 の設定を <emphasis>Zeroconf</emphasis> から取得したい場合は、 <literal>autoip</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para><literal>Host</literal> にはホスト名や IP アドレスを指定することができますが、何も指定しなくてもかまいません。</para>
+            <para>iBFT プロトコルを利用して IP アドレスを取得したい場合は、 <literal>ibft</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>none</literal> to skip setting an address. This value is
-             used for bridges and bonding slaves.
-            </para>
+            <para>アドレスの設定を行ないたくない場合は <literal>none</literal> を指定します。ブリッジやボンディングを使用する場合の指定です。</para>
            </listitem>
           </itemizedlist>
         </entry>
         <entry>
-         <para>必須</para>
+         <para>必須です。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>product</literal></para>
+         <para><literal>broadcast</literal></para>
         </entry>
         <entry>
-         <para>ポート番号。</para>
+         <para>ブロードキャスト IP アドレスを指定します。</para>
         </entry>
         <entry>
-         <para><literal>autoyast</literal> 起動オプションのみの使用について</para>
+         <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
         </entry>
        </row>
        <row>
@@ -4484,10 +4440,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>device</literal></para>
         </entry>
         <entry>
-         <para>デバイスマップ</para>
+         <para>デバイス名を指定します。</para>
         </entry>
         <entry>
-         <para>既定値は <literal>false</literal> です。</para>
+         <para>廃止予定です。代わりに <literal>name</literal> を使用してください。</para>
         </entry>
        </row>
        <row>
@@ -4495,51 +4451,43 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>name</literal></para>
         </entry>
         <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
+         <para>デバイス名 (例: <literal>eth0</literal>) を設定します。</para>
         </entry>
         <entry>
-         <para>必須</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>uid</literal></para>
-        </entry>
-        <entry>
-         <para>ホストの IP アドレス</para>
-        </entry>
-        <entry>
-         <para>
-          Used only with <literal>static</literal> boot protocol. It can include a network prefix,
-          for example: <literal>192.168.1.1/24</literal>.
-         </para>
+         <para>必須です。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>remove_old</literal></para>
+         <para><literal>ipaddr</literal></para>
         </entry>
         <entry>
-         <para>
-          Remote IP address for Point-to-Point connections.
-         </para>
+         <para>インターフェイスに割り当てる IP アドレスを指定します。</para>
         </entry>
         <entry>
-         <para><literal>autoyast</literal> 起動オプションのみの使用について</para>
+         <para>起動プロトコルで <literal>static</literal> を指定する必要があります。また、 <literal>192.168.1.1/24</literal> のように、ネットワークプレフィクスを指定することもできます。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>Umask</literal></para>
+         <para><literal>remote_ipaddr</literal></para>
         </entry>
         <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
+         <para>Point-to-Point 接続で使用する対向の IP アドレスを指定します。</para>
         </entry>
         <entry>
-         <para>
-          Deprecated. Use <literal>prefixlen</literal> instead or include the network prefix in the
-          <literal>ipaddr</literal> element.
-         </para>
+         <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>netmask</literal></para>
+        </entry>
+        <entry>
+         <para>ネットマスクを指定します (例: <literal>255.255.255.0</literal>) 。</para>
+        </entry>
+        <entry>
+         <para>廃止予定です。代わりに <literal>prefixlen</literal> を使用して指定するか、 <literal>ipaddr</literal> 要素でネットワークプレフィクスを指定してください。</para>
         </entry>
        </row>
        <row>
@@ -4547,62 +4495,47 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>network</literal></para>
         </entry>
         <entry>
-         <para>ホストのネットワークアドレス</para>
+         <para>ネットワーク IP アドレスを指定します。</para>
         </entry>
         <entry>
-         <para><literal>location</literal> もしくは <literal>source</literal> を定義しなければなりません。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>file</literal></para>
-        </entry>
-        <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
-        </entry>
-        <entry>
-         <para><literal>autoyast</literal> 起動オプションのみの使用について</para>
+         <para>廃止予定です。 <literal>ipaddr</literal> と <literal>prefixlen</literal> 要素を使用してください。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>instmode</literal></para>
+         <para><literal>prefixlen</literal></para>
         </entry>
         <entry>
-         <para>
-          When to bring up an interface. Possible values are:
-         </para>
+         <para>ネットワークプレフィクスを指定します (例: <literal>24</literal>)。</para>
+        </entry>
+        <entry>
+         <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>startmode</literal></para>
+        </entry>
+        <entry>
+         <para>インターフェイスの起動タイミングを指定します。設定可能な値は下記のとおりです:</para>
           <itemizedlist>
            <listitem>
-            <para>
-             <literal>hotplug</literal> when the device is plugged in. Useful
-             for USB network cards, for example.
-            </para>
+            <para>USB 接続のネットワークカードなど、デバイスの接続時に起動を行ないたい場合は、 <literal>hotplug</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para><literal>location</literal> もしくは <literal>source</literal> を定義しなければなりません。</para>
+            <para>システムの起動時に起動を行ないたい場合は <literal>auto</literal> を指定します。 <literal>onboot</literal> でも同じ意味になりますが、こちらは廃止予定となっています。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>ifplugd</literal> when the device is managed by the
-             <literal>ifplugd</literal> daemon.
-            </para>
+            <para><literal>ifplugd</literal> デーモンで管理したい場合は、 <literal>ifplugd</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>manual</literal> when the device is supposed to be started
-             manually.
-            </para>
+            <para>デバイスを手作業で起動したい場合は、 <literal>manual</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para>
-             <literal>nfsroot</literal> when the device is needed to mount the
-             root file system, for example, when <literal>/</literal> is on a NFS
-             volume.
-            </para>
+            <para><literal>/</literal> が NFS ボリューム内に存在する場合など、ルートファイルシステムをマウントする際に特定のネットワークデバイスが必要な場合は、 <literal>nfsroot</literal> を指定します。</para>
            </listitem>
            <listitem>
-            <para><literal>file</literal>: ローカルディスクへの保存</para>
+            <para>デバイスを起動したくない場合は、 <literal>off</literal> を指定します。</para>
            </listitem>
           </itemizedlist>
         </entry>
@@ -4613,71 +4546,54 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>priority</literal></para>
+         <para><literal>ifplugd_priority</literal></para>
         </entry>
         <entry>
-         <para>
-          Priority for <literal>ifplugd</literal> daemon. It determines in which
-          order the devices are activated.
-         </para>
+         <para><literal>ifplugd</literal> での優先順位を指定します。この優先順位の高い順にデバイスの有効化を行ないます。</para>
         </entry>
         <entry>
-         <para>既定値は <literal>false</literal> です。</para>
+         <para>起動タイミングの指定で <literal>ifplugd</literal> を指定する必要があります。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>used_pool</literal></para>
+         <para><literal>usercontrol</literal></para>
         </entry>
         <entry>
-         <para>
-          Parameter is no longer used.
-         </para>
+         <para>このパラメータは現在使用していません。</para>
         </entry>
         <entry>
-         <para>
-          Deprecated.
-         </para>
+         <para>廃止予定です。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>slaves</literal></para>
+         <para><literal>bonding_slaveX</literal></para>
         </entry>
         <entry>
-         <para>
-          Name of the bonding device.
-         </para>
+         <para>ボンディングデバイスの名前を指定します。</para>
         </entry>
         <entry>
-         <para>
-          Required for bonding devices. <literal>X</literal> is replaced by a
-          number starting from 0, for example <literal>bonding_slave0</literal>. Each
-          slave needs to have a unique number.
-         </para>
+         <para>ボンディングデバイスを設定する際には必ず指定します。なお、 <literal>X</literal> の部分には 0 から始まる数値 (例: <literal>bonding_slave0</literal>) を指定します。それぞれのスレーブには別々の番号を指定する必要があります。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>instmode</literal></para>
+         <para><literal>bonding_module_opts</literal></para>
         </entry>
         <entry>
-         <para>
-          Options for bonding device.
-         </para>
+         <para>ボンディングデバイスに対するオプションを指定します。</para>
         </entry>
         <entry>
-         <para>読み込み専用でマウント ( <literal>ro</literal> )</para>
+         <para><literal>bond</literal> デバイスの場合にのみ指定することができます。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>mount</literal></para>
+         <para><literal>mtu</literal></para>
         </entry>
         <entry>
-         <para>
-          Maximum transmission unit for the interface.
-         </para>
+         <para>インターフェイスに対して設定する最大伝送単位 (MTU) を指定します。</para>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -4685,25 +4601,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>other_options</literal></para>
+         <para><literal>ethtool_options</literal></para>
         </entry>
         <entry>
-         <para>
-          Ethtool options during device activation.
-         </para>
-        </entry>
-        <entry>
-         <para>任意指定です。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>zones</literal></para>
-        </entry>
-        <entry>
-         <para>
-          Firewall zone name which the interface is assigned to.
-         </para>
+         <para>デバイスの有効化時に使用する ethtool 向けのオプションを指定します。</para>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -4711,76 +4612,79 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>uid</literal></para>
+         <para><literal>zone</literal></para>
         </entry>
         <entry>
-         <para>
-          Identifier used for this VLAN.
-         </para>
+         <para>インターフェイスの割り当て先となるファイアウオールのゾーン名を指定します。</para>
         </entry>
         <entry>
-         <para><literal>インストール</literal> を選択します。</para>
+         <para>任意指定です。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>device</literal></para>
+         <para><literal>vlan_id</literal></para>
         </entry>
         <entry>
-         <para>
-          Device to which VLAN is attached.
-         </para>
+         <para>この VLAN の識別 ID を指定します。</para>
         </entry>
         <entry>
-         <para>
-          Used only with a <literal>vlan</literal> device and required for it.
-         </para>
+         <para><literal>vlan</literal> デバイスの場合にのみ指定することができます。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>range</literal> (範囲指定)</para>
+         <para><literal>etherdevice</literal></para>
         </entry>
         <entry>
-         <para><literal>iface</literal>: インターフェイス名</para>
+         <para>VLAN の接続先デバイスを指定します。</para>
         </entry>
         <entry>
-         <para>
-          Deprecated. It is inferred from other attributes.
-         </para>
+         <para><literal>vlan</literal> デバイスの場合にのみ必ず指定します。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>ports</literal></para>
+         <para><literal>bridge</literal></para>
         </entry>
         <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
+         <para>インターフェイスがブリッジである場合、 <literal>yes</literal> を指定します。</para>
         </entry>
         <entry>
-         <para>具体的には、 <literal>drive</literal> セクション内に下記を追加してください:</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>raid_type</literal></para>
-        </entry>
-        <entry>
-         <para><literal>DIAG</literal> を使用するかどうかを指定します。指定可能な値は <literal>true</literal> (有効化) もしくは <literal>false</literal> (無効化) のいずれかです。</para>
-        </entry>
-        <entry>
-         <para>既定値は <literal>raid1</literal> です。</para>
+         <para>廃止予定です。この設定は他の属性から自動的に判断するようになっています。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>board</literal></para>
+         <para><literal>bridge_ports</literal></para>
         </entry>
         <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
+         <para>ブリッジで使用するネットワークデバイスをスペース区切りで指定します (例: <literal>eth0 eth1</literal>) 。</para>
         </entry>
         <entry>
-         <para><literal>DIAG</literal> を使用するかどうかを指定します。指定可能な値は <literal>true</literal> (有効化) もしくは <literal>false</literal> (無効化) のいずれかです。</para>
+         <para><literal>bridge</literal> デバイスの場合にのみ必ず指定します。</para>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>bridge_stp</literal></para>
+        </entry>
+        <entry>
+         <para>スパニングツリープロトコル (STP) を有効化するかどうかを指定します。 <literal>on</literal> を指定すると有効に、 <literal>off</literal> を指定すると無効になります。</para>
+        </entry>
+        <entry>
+         <para><literal>bridge</literal> デバイスの場合にのみ指定することができます。</para>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>bridge_forward_delay</literal></para>
+        </entry>
+        <entry>
+         <para>ブリッジに対する転送遅延 (例: <literal>15</literal>) を指定します。</para>
+        </entry>
+        <entry>
+         <para><literal>bridge</literal> デバイスの場合にのみ指定することができます。設定可能な値は <literal>4</literal> から <literal>30</literal> までのいずれかです。</para>
         </entry>
        </row>
        <!-- TODO: all wireless attributes, but not so many users configure wireless with autoyast -->
@@ -4791,10 +4695,7 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 
    <sect2 xml:id="CreateProfile-Network-names">
     <title>ネットワークインターフェイス名の固定</title>
-    <para>
-     The <literal>net-udev</literal> element allows to specify a set of udev rules that can be used to
-     assign persistent names to interfaces.
-    </para>
+    <para><literal>net-udev</literal> 要素では、インターフェイス名を固定させるために使用する udev のルールを指定します。</para>
     <informaltable>
      <tgroup cols="3">
       <thead>
@@ -4816,10 +4717,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>name</literal></para>
         </entry>
         <entry>
-         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します</para>
+         <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します。</para>
         </entry>
         <entry>
-         <para>必須</para>
+         <para>必須です。</para>
         </entry>
        </row>
        <row>
@@ -4827,7 +4728,7 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>rule</literal></para>
         </entry>
         <entry>
-         <para>MAC アドレスベースのルールを作成するには <literal>ATTR{address}</literal> を、バス ID ベースのルールを作成するには <literal>KERNELS</literal> を指定します</para>
+         <para>MAC アドレスベースのルールを作成するには <literal>ATTR{address}</literal> を、バス ID ベースのルールを作成するには <literal>KERNELS</literal> を指定します。</para>
         </entry>
         <entry>
          <para>必須</para>
@@ -4838,10 +4739,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>value</literal></para>
         </entry>
         <entry>
-         <para>MAC アドレスベースのルールの場合は <literal>f0:de:f1:6b:da:69</literal> のように、バス ID ベースのルールの場合は <literal>0000:00:1c.1 or 0.0.0700</literal> のように指定します</para>
+         <para>MAC アドレスベースのルールの場合は <literal>f0:de:f1:6b:da:69</literal> のように、バス ID ベースのルールの場合は <literal>0000:00:1c.1</literal> もしくは <literal>0.0.0700</literal> のように指定します。</para>
         </entry>
         <entry>
-         <para>必須</para>
+         <para>必須です。</para>
         </entry>
        </row>
       </tbody>
@@ -4854,23 +4755,20 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
     </tip>
 
     <example>
-     <title>Assigning a Persistent Name Using the MAC Address</title>
-<screen>&lt;groups config:type="list"&gt;
-  &lt;group&gt;
-    &lt;gid&gt;100&lt;gid&gt;
-    &lt;groupname&gt;users&lt;/groupname&gt;
-    &lt;userlist&gt;bob,alice&lt;/userlist&gt;
-  &lt;/group&gt;
-&lt;/groups&gt;</screen>
+     <title>MAC アドレスを使用したデバイス名の設定例</title>
+<screen>&lt;net-udev config:type="list"&gt;
+  &lt;rule&gt;
+  &lt;name&gt;eth1&lt;/name&gt;
+  &lt;rule&gt;ATTR{address}&lt;/rule&gt;
+  &lt;value&gt;52:54:00:68:54:fb&lt;/value&gt;
+  &lt;/rule&gt;
+&lt;/net-udev&gt;</screen>
     </example>
    </sect2>
 
    <sect2 xml:id="CreateProfile-Network-DNS">
-    <title>ホストのドメイン名</title>
-    <para>
-     The <literal>dns</literal> section is used to define name-service related
-     settings, such as the host name, or name servers.
-    </para>
+    <title>ドメインネームシステム (DNS)</title>
+    <para><literal>dns</literal> セクションでは、ホスト名やネームサーバなど、ネームサービスに関連する設定を行なうことができます。</para>
 
     <informaltable>
      <tgroup cols="3">
@@ -4890,31 +4788,25 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       <tbody>
        <row>
         <entry>
-         <para><literal>host name</literal></para>
+         <para><literal>hostname</literal></para>
         </entry>
         <entry>
-         <para>
-          Host name, excluding the domain name part. For example:
-          <literal>foo</literal> (instead of <literal>foo.bar</literal>).
-          </para>
+         <para>ホスト名を指定します。ここにはドメイン名を含めないでください (例: <literal>foo.bar</literal> ではなく <literal>foo</literal> とだけ指定します) 。</para>
         </entry>
         <entry>
-         <para>
-          If a host name is not specified and is not taken from a DHCP server (see <literal>dhcp_hostname</literal>),
-          &ay; will generate a random one.
-         </para>
+         <para>ここでホスト名を指定しない場合で、 DHCP サーバからもホスト名を取得できない場合 (<literal>dhcp_hostname</literal> についてもお読みください) は、 &ay; がランダムな名前を生成します。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>server</literal></para>
+         <para><literal>nameservers</literal></para>
         </entry>
         <entry>
-         <para>サービスの一覧</para>
-<screen>&lt;crash_kernel config:type="list"&gt;
-  &lt;listentry&gt;72M,low&lt;/listentry&gt;
-  &lt;listentry&gt;256M,high&lt;/listentry&gt;
-&lt;/crash_kernel&gt;</screen>
+         <para>ネームサーバの一覧を指定します。たとえば下記のように指定します:</para>
+<screen>&lt;nameservers config:type="list"&gt;
+  &lt;nameserver&gt;&dnsip;&lt;/nameserver&gt;
+  &lt;nameserver&gt;&dnsip117;&lt;/nameserver&gt;
+&lt;/nameservers&gt;</screen>
         </entry>
         <entry>
          <para>
@@ -4923,15 +4815,13 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>userlist</literal></para>
+         <para><literal>searchlist</literal></para>
         </entry>
         <entry>
-         <para>
-          Search list for host name lookup.
-         </para>
-<screen>&lt;bcache_caching_for config:type="list"&gt;
-  &lt;listentry&gt;/dev/bcache0&lt;/listentry&gt;
-&lt;/bcache_caching_for&gt;</screen>
+         <para>ホスト名の参照時に使用する検索リストを指定します。</para>
+<screen>&lt;searchlist config:type="list"&gt;
+  &lt;search&gt;&exampledomain;&lt;/search&gt;
+&lt;/searchlist&gt;</screen>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -4939,14 +4829,11 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>host name</literal></para>
+         <para><literal>dhcp_hostname</literal></para>
         </entry>
         <entry>
-         <para>
-          Specifies whether the host name must be taken from DHCP or not.
-         </para>
-<screen>&lt;chrooted config:type="boolean"
-&gt;true&lt;/chrooted&gt;</screen>
+         <para>ホスト名を DHCP 経由で取得するかどうかを指定します。</para>
+<screen>&lt;dhcp_hostname config:type="boolean"&gt;true&lt;/dhcp_hostname&gt;</screen>
         </entry>
         <entry>
          <para>
@@ -4959,11 +4846,8 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
    </sect2>
 
    <sect2 xml:id="CreateProfile-Network-Routing">
-    <title>レポート</title>
-    <para>
-     The <literal>routing</literal> table allows to specify a list of routes and
-     the packets forwarding settings for IPv4 and IPv6.
-    </para>
+    <title>ルーティング</title>
+    <para><literal>routing</literal> テーブルには経路情報を設定することができるほか、 IPv4 や IPv6 での中継機能を有効化するかどうかを指定することができます。</para>
 
     <informaltable>
      <tgroup cols="3">
@@ -4983,21 +4867,10 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       <tbody>
        <row>
         <entry>
-         <para><literal>board</literal></para>
+         <para><literal>ipv4_forward</literal></para>
         </entry>
         <entry>
-         <para>Whether IP forwarding must be enabled for IPv4.</para>
-        </entry>
-        <entry>
-         <para>任意指定です。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>board</literal></para>
-        </entry>
-        <entry>
-         <para>Whether IP forwarding must be enabled for IPv6.</para>
+         <para>IPv4 での IP 中継機能を有効化するかどうかを指定します。</para>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -5005,10 +4878,21 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>rules</literal></para>
+         <para><literal>ipv6_forward</literal></para>
         </entry>
         <entry>
-         <para>グループの一覧</para>
+         <para>IPv6 での IP 中継機能を有効化するかどうかを指定します。</para>
+        </entry>
+        <entry>
+         <para>任意指定です。</para>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>routes</literal></para>
+        </entry>
+        <entry>
+         <para>経路の一覧を記述します。</para>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -5018,9 +4902,7 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
      </tgroup>
     </informaltable>
 
-    <para>
-     The following table describes how routes are defined.
-    </para>
+    <para>経路情報の設定方法を下記の表に示します。</para>
 
     <informaltable>
      <tgroup cols="3">
@@ -5040,14 +4922,13 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
       <tbody>
        <row>
         <entry>
-         <para><literal>description</literal></para>
+         <para><literal>destination</literal></para>
         </entry>
         <entry>
-         <para>Route destination. An address prefix can be specified, for
-          example: <literal>192.168.122.0/24</literal>.</para>
+         <para>経路の宛先を指定します。 <literal>192.168.122.0/24</literal> のように、プレフィクス付きのアドレスを指定することができます。</para>
         </entry>
         <entry>
-         <para>必須</para>
+         <para>必須です。</para>
         </entry>
        </row>
        <row>
@@ -5055,18 +4936,18 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
          <para><literal>device</literal></para>
         </entry>
         <entry>
-         <para>Interface associated to the route.</para>
+         <para>その経路に行き着くためのインターフェイスを指定します。</para>
         </entry>
         <entry>
-         <para>必須</para>
+         <para>必須です。</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para><literal>greater</literal> (より大きい)</para>
+         <para><literal>gateway</literal></para>
         </entry>
         <entry>
-         <para>Gateway's IP address.</para>
+         <para>ゲートウエイの IP アドレスを指定します。</para>
         </entry>
         <entry>
          <para>任意指定です。</para>
@@ -5074,14 +4955,13 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        </row>
        <row>
         <entry>
-         <para><literal>Umask</literal></para>
+         <para><literal>netmask</literal></para>
         </entry>
         <entry>
-         <para>Destination's netmask.</para>
+         <para>経路の宛先のネットマスクを指定します。</para>
         </entry>
         <entry>
-         <para>Deprecated. Specifying the prefix as part of the <literal>destination</literal> value
-         is preferred.</para>
+         <para>廃止予定です。 <literal>destination</literal> でネットワークプレフィクスを指定するようにしてください。</para>
         </entry>
        </row>
       </tbody>
