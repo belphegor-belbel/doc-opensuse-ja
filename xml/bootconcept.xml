@@ -75,8 +75,8 @@
     <para>BIOS/UEFI のマシンがネットワーク経由での起動に対応している場合は、ブートローダ内で起動用のサーバを指定することができます。システムは PXE を介して起動することになります。この場合は、 BIOS/UEFI がブートローダとしての機能を持つことになります。起動用のサーバから起動用のイメージを取得して、システムを起動します。この仕組みは、ローカルのハードディスクを全く使用することなく起動できるものです。</para>
    </sect3>
    <sect3 xml:id="sec-boot-proc-initialization-zsystems" arch="zseries">
-    <title>IBM &zseries; における初期化とブートローダの処理フェーズ</title>
-    <para>IBM &zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなければなりません。 <command>zipl</command> では様々なファイルシステムを読み込むことができますが、 &slea; の既定のファイルシステム (btrfs) やスナップショットからの起動には対応していません。そのため、 &productname; は 2 ステージから構成される起動処理を使用して、起動時から btrfs に対応できるようにしています:</para>
+    <title>&zseries; における初期化とブートローダの処理フェーズ</title>
+    <para>&zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなければなりません。 <command>zipl</command> では様々なファイルシステムを読み込むことができますが、 &slea; の既定のファイルシステム (btrfs) やスナップショットからの起動には対応していません。そのため、 &productname; は 2 ステージから構成される起動処理を使用して、起動時から btrfs に対応できるようにしています:</para>
     <procedure>
      <step>
       <para><command>zipl</command> は ext2 でフォーマットされたパーティション <filename>/boot/zipl</filename> から起動します。このパーティションには最小限のカーネルのほか、メモリに読み込まれる initramfs が含まれています。 initramfs には btrfs のドライバなどと共に &grub; が含まれ、これによってそのカーネルに <literal>initgrub</literal> を渡して &grub; を起動します。</para>
@@ -166,7 +166,7 @@
        <screen>(cd /boot &amp;&amp; ln -sf <replaceable>MY_INITRAMFS</replaceable> initrd)</screen>
       </step>
       <step arch="zseries">
-       <para>IBM &zseries; アーキテクチャでは、あわせて <command>grub2-install</command> を実行してください。</para>
+       <para>&zseries; アーキテクチャでは、あわせて <command>grub2-install</command> を実行してください。</para>
       </step>
      </procedure>
     </sect4>
@@ -226,7 +226,7 @@
      <varlistentry>
       <term>ハードウエア検出の実行と適切なカーネルモジュールの読み込み</term>
       <listitem>
-       <para><xref linkend="sec-boot-initrd"/> でも説明しているとおり、起動処理はほとんどのハードウエア設定で使用できる最小セットのドライバで開始されます。 &aarch64;, &power;, &x86-64; の各マシンでは、 <command>linuxrc</command> が初期のハードウエア検出処理を行ない、お使いのハードウエア設定でどのようなドライバが必要なのかを判別します。 IBM &zseries; では、 linuxrc や parmfile などで、ドライバとパラメータの一覧を指定する必要があります。</para>
+       <para><xref linkend="sec-boot-initrd"/> でも説明しているとおり、起動処理はほとんどのハードウエア設定で使用できる最小セットのドライバで開始されます。 &aarch64;, &power;, &x86-64; の各マシンでは、 <command>linuxrc</command> が初期のハードウエア検出処理を行ない、お使いのハードウエア設定でどのようなドライバが必要なのかを判別します。 &zseries; では、 linuxrc や parmfile などで、ドライバとパラメータの一覧を指定する必要があります。</para>
        <para>これらのドライバは、システムを起動するのに必要な独自の <systemitem>initramfs</systemitem> を生成するために使用されることになります。なお、起動時にはモジュールを必要としないコールドプラグ型のハードウエアの場合は、それらのモジュールは &systemd; 側で読み込みます。詳しくは <xref linkend="sec-boot-systemd-advanced-kernel-modules"/> をお読みください。</para>
       </listitem>
      </varlistentry>
