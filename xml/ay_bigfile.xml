@@ -1472,8 +1472,10 @@ openssl x509 -noout -fingerprint -sha256
          <para><literal>suse_btrfs</literal></para>
         </entry>
         <entry>
-         <para><literal>true</literal> に設定すると、 btrfs のスナップショットからの起動に対応するようになります。</para>
-<screen>&lt;suse_btrfs config:type="boolean"&gt;false&lt;/suse_btrfs&gt;</screen>
+         <para>
+          Obsolete and no longer used. Booting from Btrfs snapshots is
+          automatically enabled since SLES 12 SP2.
+         </para>
         </entry>
        </row>
        <row>
@@ -1485,6 +1487,18 @@ openssl x509 -noout -fingerprint -sha256
 <screen>&lt;serial&gt;
   serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1
 &lt;/serials&gt;</screen>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>securenets</literal></para>
+        </entry>
+        <entry>
+         <para>
+          If set to <literal>false</literal>, then UEFI secure boot is disabled.
+          Works only for <literal>grub2-efi</literal> bootloader.
+         </para>
+<screen>&lt;boot_boot&gt;false&lt;/boot_boot&gt;</screen>
         </entry>
        </row>
        <row>
@@ -1503,6 +1517,19 @@ openssl x509 -noout -fingerprint -sha256
         <entry>
          <para>既定の起動項目を自動的に起動するまでの待機時間を、秒単位で指定します。</para>
 <screen>&lt;timeout config:type="integer"&gt;10&lt;/timeout&gt;</screen>
+        </entry>
+       </row>
+       <row>
+        <entry>
+         <para><literal>trustdom/</literal></para>
+        </entry>
+        <entry>
+         <para>
+          If set to <literal>true</literal>, then Trusted GRUB is used.
+          Trusted GRUB supports Trusted Platform Module (TPM).
+          Works only for <literal>grub2</literal> bootloader.
+         </para>
+<screen>&lt;boot_boot&gt;false&lt;/boot_boot&gt;</screen>
         </entry>
        </row>
        <row>
@@ -12026,15 +12053,7 @@ echo -n 100
     <para><command>linuxrc</command> にキーワードを渡したい場合は、カーネルのコマンドラインを使用することができます。これはいくつかの方法で設定することができます。通常のメディアからの起動時に、その他のカーネルパラメータとともに <command>linurc</command> キーワードを指定することができるほか、ネットワーク経由で起動するディスクイメージを作成して、そこにカーネルパラメータを設定する方法もあります。また、 Etherboot や PXE との組み合わせで、 DHCP サーバ側でカーネルのパラメータを設定することもできます。</para>
     <note>
       <title><literal>autoyast</literal> ではなく <literal>autoyast2</literal> のオプションを使用すべき点について</title>
-      <para>
-          The <literal>autoyast2</literal> option is similar to the <literal>autoyast</literal> option, but
-          <command>linuxrc</command> parses the provided value and, for example,
-          tries to configure a network when needed. This option is not described in this documentation.
-	  For information about differences between the &ay; and
-	  <command>linuxrc</command> URI syntax, see the <command>linuxrc</command> appendix:
-          <xref linkend="appendix-linuxrc"/>. &ay;'s rules and classes are
-          <emphasis>not</emphasis> supported.
-      </para>
+      <para><literal>autoyast2</literal> オプションと <literal>autoyast</literal> オプションは似通った仕組みですが、 <command>linuxrc</command> は指定された値を処理するだけでなく、必要に応じてネットワークの設定も行なおうとします。このオプションについては本文書内では説明していません。 &ay; での違いと <command>linuxrc</command> URI の書式について、詳しくは <xref linkend="appendix-linuxrc"/> にある <command>linuxrc</command> の付録をお読みください。ここでは &ay; のルールやクラスには <emphasis>対応していません</emphasis> 。</para>
     </note>
     <para>コマンドライン変数 <literal>autoyast</literal> には、 <xref linkend="Commandline-ay"/> の表に示すような書式を使用することができます。</para>
     <table xml:id="Commandline-ay">
@@ -12057,10 +12076,7 @@ echo -n 100
         </entry>
         <entry>
          <para>アップグレード: 自動オフラインアップグレードの場合は、 <literal>autoyast</literal> 変数を指定する必要はありません。詳しくは <xref linkend="pro-upgrade-offline-upgrade-mode"/> をお読みください。</para>
-	 <para>
-	   Installation: &ay; will be started if a file named <filename>autoinst.xml</filename> is in the following
-	   three places:
-	   </para>
+         <para>インストール: <filename>autoinst.xml</filename> ファイルが下記 3 箇所のうちのいずれかの場所に存在すると、 &ay; が開始されます:</para>
            <orderedlist>
              <listitem>
                <para>フラッシュメモリ (USB メモリなど) のルートディレクトリ</para>
@@ -12143,11 +12159,7 @@ echo -n 100
          <para><literal>autoyast=relurl://<replaceable>パス</replaceable></literal></para>
         </entry>
         <entry>
-          <para>
-	    Retrieve the control file from the installation source. Either from the
-            default installation source or from the installation source defined in
-            <literal>install=<replaceable>INSTALLATION_SOURCE_PATH</replaceable></literal>.
-         </para>
+          <para>インストール元から制御ファイルを取得します。これは既定のインストール元の場合のほか、 <literal>install=<replaceable>インストール元のパス</replaceable></literal> で指定したものである場合があります。</para>
         </entry>
        </row>
        <row>
@@ -12183,18 +12195,7 @@ echo -n 100
        </formalpara>
        <formalpara>
         <title>ネットワーク</title>
-        <para>
-         Access the control file via the following commands:
-         <literal>autoyast=nfs://..</literal>,
-         <literal>autoyast=ftp://..</literal>,
-         <literal>autoyast=http://..</literal>,
-         <literal>autoyast=https://..</literal>,
-         <literal>autoyast=tftp://..</literal>, or
-         <literal>autoyast=cifs://..</literal>.
-         Network access needs to be defined using the boot options in linuxrc.
-         This can be done via DHCP:
-	 <command>netsetup=dhcp autoyast=http://163.122.3.5/autoyast.xml</command>
-        </para>
+        <para>下記のいずれかのコマンドで制御ファイルにアクセスすることができます: <literal>autoyast=nfs://..</literal> , <literal>autoyast=ftp://..</literal> , <literal>autoyast=http://..</literal> , <literal>autoyast=https://..</literal> , <literal>autoyast=tftp://..</literal> , or <literal>autoyast=cifs://..</literal> 。ネットワークへのアクセスを使用する場合は、 linuxrc の起動オプションで設定を行なう必要があります。たとえば DHCP を使用する場合、 <command>netsetup=dhcp autoyast=http://163.122.3.5/autoyast.xml</command> のようになります。</para>
        </formalpara>
       </listitem>
      </varlistentry>
