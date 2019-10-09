@@ -1605,11 +1605,44 @@ Bus 001 Device 001: ID 0000:0000</screen>
   <sect2 xml:id="sec-util-hardware-mcelog">
    <title>MCELog: マシンチェック例外 (MCE; Machine Check Exceptions)</title>
    <para><systemitem class="resource">mcelog</systemitem> パッケージは、ハードウエアエラー (メモリエラーを含む) が発生した際に発せられるマシンチェック例外 (Machine Check Exceptions (MCE)) を記録し、解釈／翻訳するためのパッケージです。以前のバージョンでは、 cron ジョブとして 1 時間に 1 回動作していましたが、現在は mcelog デーモンの形で、ハードウエアエラーを即時に処理するようになっています。</para>
-   <para>ただし、 mcelog サービスは既定では有効化されていません。そのため、メモリエラーも CPU エラーも既定では記録されないことになります。 <remark>sknorr, 2014-07-23: check usage of "(to) offline sth." It does not make for a great verb.</remark> また、 mcelog にはエラーにあるページを予測してオフラインにしたり、キャッシュエラーが発生した場合に自動的にコアを無効化したりする新しい機能が用意されています。</para>
-   <para>サービスは &yast; <!-- NOTE: "yast system services editor"? --> サービスマネージャモジュールを使用するか、下記のコマンドラインを実行することで、有効化することができます:</para>
+   <note>
+       <title>Support for AMD Scalable MCA</title>
+       <para>
+           Since the 15.0 release, &sle; supports AMD's Scalable Machine Check 
+           Architecture (Scalable MCA). Scalable MCA improves hardware error 
+           reporting in AMD Zen processors. It expands information logged in 
+           MCA banks for improved error handling and better diagnosability.
+       </para>
+       <para>
+           mcelog captures MCA messages (rasdaemon and dmesg also capture MCA 
+           messages). See section 3.1 Machine Check Architecture of 
+           <citetitle>Processor ProgrammingReference (PPR)for AMD Family 
+               17hModel 01h, Revision B1Processors</citetitle> for detailed 
+           information 
+           (<link xlink:href="http://developer.amd.com/wordpress/media/2017/11/54945_PPR_Family_17h_Models_00h-0Fh.pdf"/>).
+       </para>
+   </note>
+   <para>
+       mcelog is configured in <filename>/etc/mcelog/mcelog.conf</filename>. 
+       Configuration options are documented in 
+       <command>man mcelog</command>, and at 
+       <link xlink:href="http://mcelog.org/"/>. The following example shows
+       only changes to the default file:
+  </para>
+  <screen>daemon = yes
+filter = yes
+filter-memory-errors = yes
+no-syslog = yes 
+logfile = /var/log/mcelog
+run-credentials-user = root
+run-credentials-group = nobody
+client-group = root
+socket-path = /var/run/mcelog-client
+</screen>
+  <para>サービスは &yast; <!-- NOTE: "yast system services editor"? --> サービスマネージャモジュールを使用するか、下記のコマンドラインを実行することで、有効化することができます:</para>
 <screen>&prompt.root;systemctl enable mcelog
 &prompt.root;systemctl start mcelog</screen>
-  </sect2>
+   </sect2>
 
   <sect2 xml:id="sec-util-hardware-dmicecode" arch="x86_64">
    <title>x86_64: dmidecode: DMI テーブルデコーダ</title>
