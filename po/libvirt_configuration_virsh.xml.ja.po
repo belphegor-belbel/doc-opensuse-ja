@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt_configuration_virsh.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2019-08-19 22:15+0000\n"
+"POT-Creation-Date: 2019-10-11 01:52+0000\n"
 "PO-Revision-Date: 2019-08-20 07:38+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -40,12 +40,12 @@ msgid ""
 msgstr ""
 "&vmguest; を設定するにあたっては、仮想マシンマネージャだけでなく "
 "<command>virsh</command> も使用することができます。 <command>virsh</command> "
-"は、 &kvm; や &xen;, &vmware;, LXC などの仮想化ソフトウエアで作成された仮想マシンを"
-"管理するためのコマンドラインツールです。 <command>virsh</command> を利用する"
-"ことで、 VM の制御や設定の変更、他のホストへの移行などを行なうことができま"
-"す。下記の章では、 virsh を利用した管理の方法について説明しています。作業例と"
-"しては、メモリの割当量の変更や入力デバイスの変更、 CPU やビデオの設定などを行"
-"なっています。"
+"は、 &kvm; や &xen;, &vmware;, LXC などの仮想化ソフトウエアで作成された仮想マ"
+"シンを管理するためのコマンドラインツールです。 <command>virsh</command> を利"
+"用することで、 VM の制御や設定の変更、他のホストへの移行などを行なうことがで"
+"きます。下記の章では、 virsh を利用した管理の方法について説明しています。作業"
+"例としては、メモリの割当量の変更や入力デバイスの変更、 CPU やビデオの設定など"
+"を行なっています。"
 
 #. Tag: title
 #: libvirt_configuration_virsh.xml:27
@@ -60,8 +60,8 @@ msgid ""
 "The configuration of a VM is stored in an XML file in <filename>/etc/"
 "libvirtd/qemu/</filename> and looks like this:"
 msgstr ""
-"仮想マシンの設定ファイルは <filename>/etc/libvirtd/qemu/</filename> 内に"
-" XML 形式で保存されていて、下記のような内容になっているはずです:"
+"仮想マシンの設定ファイルは <filename>/etc/libvirtd/qemu/</filename> 内に XML "
+"形式で保存されていて、下記のような内容になっているはずです:"
 
 #. Tag: title
 #: libvirt_configuration_virsh.xml:35
@@ -181,13 +181,105 @@ msgstr ""
 "設定内容のチェックを行ないます。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:88
+#: libvirt_configuration_virsh.xml:89
+#, fuzzy, no-c-format
+msgid "Managing Guest Memory Allocation (&xen; only)"
+msgstr "メモリ割り当ての設定"
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:90
+#, no-c-format
+msgid ""
+"<command>libvirt</command> now includes support for adjusting memory "
+"allocation per guest with <command>virsh</command> . &xen; paravirtual "
+"devices connect to the <literal>xenbus </literal> controller, which is "
+"analogous to a physical device bus such as a PCI controller. &xen;'s "
+"<literal>max_grant_frames</literal> attribute sets how many frames, which "
+"are analogous to memory, are allocated to the <literal>xenbus </literal> "
+"controller for each guest."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:99
+#, no-c-format
+msgid ""
+"The default is 32, and this can be increased as needed, up to the amount set "
+"for dom0, or decreased. How much is enough? This depends on the number of "
+"devices and workload demand, such as a saturated network interface or heavy "
+"I/O. Use <command>xen-diag</command> to see your current used and maximum "
+"<literal>max_grant_frames</literal> values for dom0 and your guests. The "
+"guests must be running:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:108
+#, no-c-format
+msgid ""
+"&prompt.sudo;virsh list \n"
+" Id   Name             State\n"
+"--------------------------------\n"
+" 0    Domain-0         running\n"
+" 3    sle15sp1         running\n"
+" \n"
+" &prompt.sudo;xen-diag gnttab_query_size 0\n"
+"domid=0: nr_frames=1, max_nr_frames=256\n"
+"\n"
+"&prompt.sudo;xen-diag gnttab_query_size 3\n"
+"domid=3: nr_frames=3, max_nr_frames=32\n"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:120
+#, no-c-format
+msgid ""
+"The sle15sp1 guest is using only 3 frames out of 32. If you are seeing "
+"performance issues, and log entries that point to insufficient frames, "
+"increase the value with <command>virsh</command> . Look for the <literal>&lt;"
+"controller type='xenbus'</literal> line in the guest's configuration file "
+"and add the <literal>maxGrantFrames</literal> control element:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:129
+#, no-c-format
+msgid ""
+"&prompt.sudo;virsh edit sle15sp1\n"
+" &lt;controller type='xenbus' index='0' maxGrantFrames='40'/&gt;\n"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:132
+#, no-c-format
+msgid ""
+"Save your changes and restart the guest. Now it should show your change:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:136
+#, no-c-format
+msgid ""
+"&prompt.sudo;xen-diag gnttab_query_size 3\n"
+"domid=3: nr_frames=3, max_nr_frames=40\n"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:139
+#, no-c-format
+msgid ""
+"See the <citetitle>Controllers</citetitle> section of the libvirt "
+"<citetitle>Domain XML format</citetitle> manual at <link xlink:href="
+"\"https://libvirt.org/formatdomain.html#elementsControllers\"/> for more "
+"information."
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:148
 #, no-c-format
 msgid "Changing the Machine Type"
 msgstr "マシンの種類の変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:90
+#: libvirt_configuration_virsh.xml:150
 #, no-c-format
 msgid ""
 "When installing with the <command>virt-install</command> tool, the machine "
@@ -201,13 +293,13 @@ msgstr ""
 "tag> というタグ要素内に書かれています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:98
+#: libvirt_configuration_virsh.xml:158
 #, no-c-format
 msgid "&lt;type arch='x86_64' machine='pc-i440fx-2.3'&gt;hvm&lt;/type&gt;"
 msgstr "&lt;type arch='x86_64' machine='pc-i440fx-2.3'&gt;hvm&lt;/type&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:100
+#: libvirt_configuration_virsh.xml:160
 #, no-c-format
 msgid ""
 "As an example, the following procedure shows how to change this value to the "
@@ -225,19 +317,19 @@ msgstr ""
 "has also been improved. -->"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:112
+#: libvirt_configuration_virsh.xml:172
 #, no-c-format
 msgid "Changing Machine Type"
 msgstr "マシンの種類の変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:123
+#: libvirt_configuration_virsh.xml:183
 #, no-c-format
 msgid "Edit the configuration for this &vmguest;:"
 msgstr "この &vmguest; に対する設定を編集します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:129
+#: libvirt_configuration_virsh.xml:189
 #, no-c-format
 msgid ""
 "Replace the value of the <tag class=\"attribute\">machine</tag> attribute "
@@ -247,13 +339,13 @@ msgstr ""
 "class=\"attvalue\">pc-q35-2.0</tag> に変更します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:136
+#: libvirt_configuration_virsh.xml:196
 #, no-c-format
 msgid "&lt;type arch='x86_64' machine='pc-q35-2.0'&gt;hvm&lt;/type&gt;"
 msgstr "&lt;type arch='x86_64' machine='pc-q35-2.0'&gt;hvm&lt;/type&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:145
+#: libvirt_configuration_virsh.xml:205
 #, no-c-format
 msgid ""
 "Check if the machine type has changed. Log in to the &vmguest; and run the "
@@ -263,7 +355,7 @@ msgstr ""
 "し、下記のコマンドを実行します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:149
+#: libvirt_configuration_virsh.xml:209
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>dmidecode | grep Product</command>\n"
@@ -273,13 +365,13 @@ msgstr ""
 "Product Name: Standard PC (Q35 + ICH9, 2009)"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:155
+#: libvirt_configuration_virsh.xml:215
 #, no-c-format
 msgid "Machine Type Update Recommendations"
 msgstr "マシンの種類を更新した際の推奨事項について"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:156
+#: libvirt_configuration_virsh.xml:216
 #, no-c-format
 msgid ""
 "Whenever the QEMU version on the host system is upgraded (for example, when "
@@ -295,7 +387,7 @@ msgstr ""
 "い。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:162
+#: libvirt_configuration_virsh.xml:222
 #, no-c-format
 msgid ""
 "The default machine type <literal>pc-i440fx</literal> , for example, is "
@@ -313,13 +405,13 @@ msgstr ""
 "とになり、不具合の修正や将来の互換性維持に役立つことになります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:174
+#: libvirt_configuration_virsh.xml:234
 #, no-c-format
 msgid "Configuring CPU Allocation"
 msgstr "CPU 割り当ての設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:176
+#: libvirt_configuration_virsh.xml:236
 #, no-c-format
 msgid ""
 "The number of allocated CPUs is stored in the &vmguest;'s XML configuration "
@@ -331,13 +423,13 @@ msgstr ""
 "ています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:183
+#: libvirt_configuration_virsh.xml:243
 #, no-c-format
 msgid "&lt;vcpu placement='static'&gt;1&lt;/vcpu&gt;"
 msgstr "&lt;vcpu placement='static'&gt;1&lt;/vcpu&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:185
+#: libvirt_configuration_virsh.xml:245
 #, no-c-format
 msgid ""
 "In this example, the &vmguest; has only one allocated CPU. The following "
@@ -347,13 +439,13 @@ msgstr ""
 "下記の手順では、 &vmguest; 側への CPU の割り当て数の変更方法を説明しています:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:192
+#: libvirt_configuration_virsh.xml:252
 #, no-c-format
 msgid "Check whether your &vmguest; is inactive:"
 msgstr "まずは &vmguest; が停止していることを確認します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:195
+#: libvirt_configuration_virsh.xml:255
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh list --inactive</command>\n"
@@ -367,31 +459,31 @@ msgstr ""
 "-     sles15                         シャットオフ"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:207
+#: libvirt_configuration_virsh.xml:267
 #, no-c-format
 msgid "Change the number of allocated CPUs:"
 msgstr "CPU の割り当て数を変更して保存します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:210
+#: libvirt_configuration_virsh.xml:270
 #, no-c-format
 msgid "&lt;vcpu placement='static'&gt;2&lt;/vcpu&gt;"
 msgstr "&lt;vcpu placement='static'&gt;2&lt;/vcpu&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:213
+#: libvirt_configuration_virsh.xml:273
 #, no-c-format
 msgid "Restart the &vmguest;:"
 msgstr "&vmguest; を起動し直します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:219
+#: libvirt_configuration_virsh.xml:279
 #, no-c-format
 msgid "Check if the number of CPUs in the VM has changed."
 msgstr "VM に対して割り当てられている CPU 数が変更されていることを確認します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:222
+#: libvirt_configuration_virsh.xml:282
 #, no-c-format
 msgid ""
 "\n"
@@ -425,13 +517,13 @@ msgstr ""
 "      "
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:240
+#: libvirt_configuration_virsh.xml:300
 #, no-c-format
 msgid "Changing Boot Options"
 msgstr "起動オプションの変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:242
+#: libvirt_configuration_virsh.xml:302
 #, no-c-format
 msgid ""
 "The boot menu of the &vmguest; can be found in the <tag>os</tag> element and "
@@ -441,7 +533,7 @@ msgstr ""
 "容になっています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:248
+#: libvirt_configuration_virsh.xml:308
 #, no-c-format
 msgid ""
 "&lt;os&gt;\n"
@@ -471,7 +563,7 @@ msgstr ""
 "  &lt;/os&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:259
+#: libvirt_configuration_virsh.xml:319
 #, no-c-format
 msgid ""
 "In this example, two devices are available, <tag class=\"attvalue\">hd</tag> "
@@ -485,13 +577,13 @@ msgstr ""
 "<tag class=\"attvalue\">cdrom</tag> の起動が試されることになります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:272
+#: libvirt_configuration_virsh.xml:332
 #, no-c-format
 msgid "Changing Boot Order"
 msgstr "起動順序の変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:273
+#: libvirt_configuration_virsh.xml:333
 #, no-c-format
 msgid ""
 "The &vmguest;'s boot order is represented through the order of devices in "
@@ -502,19 +594,19 @@ msgstr ""
 "り、デバイスのタグを入れ替えることで起動順序を変更できることになります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:280
+#: libvirt_configuration_virsh.xml:340
 #, no-c-format
 msgid "Open the &vmguest;'s XML configuration."
 msgstr "&vmguest; の XML 設定ファイルを開きます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:286
+#: libvirt_configuration_virsh.xml:346
 #, no-c-format
 msgid "Change the sequence of the bootable devices."
 msgstr "デバイスの順序を入れ替えます。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:289
+#: libvirt_configuration_virsh.xml:349
 #, no-c-format
 msgid ""
 "\n"
@@ -532,7 +624,7 @@ msgstr ""
 "      "
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:297
+#: libvirt_configuration_virsh.xml:357
 #, no-c-format
 msgid ""
 "Check if the boot order was changed successfully by looking at the boot menu "
@@ -542,13 +634,13 @@ msgstr ""
 "とを確認します。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:306
+#: libvirt_configuration_virsh.xml:366
 #, no-c-format
 msgid "Using Direct Kernel Boot"
 msgstr "直接カーネル起動の使用"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:307
+#: libvirt_configuration_virsh.xml:367
 #, no-c-format
 msgid ""
 "Direct Kernel Boot allows you to boot from a kernel and initrd stored on the "
@@ -560,7 +652,7 @@ msgstr ""
 "<tag>initrd</tag> のタグを追加してファイルを指定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:315
+#: libvirt_configuration_virsh.xml:375
 #, no-c-format
 msgid ""
 "&lt;os&gt;\n"
@@ -578,13 +670,13 @@ msgstr ""
 "&lt;os&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:321
+#: libvirt_configuration_virsh.xml:381
 #, no-c-format
 msgid "To enable Direct Kernel Boot:"
 msgstr "直接カーネル起動を有効化するには、下記の手順を実施します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:332
+#: libvirt_configuration_virsh.xml:392
 #, no-c-format
 msgid ""
 "Inside the <tag>os</tag> element, add a <tag>kernel</tag> element and the "
@@ -594,7 +686,7 @@ msgstr ""
 "ファイルのパスを指定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:339
+#: libvirt_configuration_virsh.xml:399
 #, no-c-format
 msgid ""
 "...\n"
@@ -606,15 +698,16 @@ msgstr ""
 "..."
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:344
+#: libvirt_configuration_virsh.xml:404
 #, no-c-format
-msgid "Add an <tag>initrd</tag> element and the path to the initrd file on the host:"
+msgid ""
+"Add an <tag>initrd</tag> element and the path to the initrd file on the host:"
 msgstr ""
 "同様に <tag>initrd</tag> タグを追加し、ホスト内での initrd ファイルのパスを指"
 "定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:349
+#: libvirt_configuration_virsh.xml:409
 #, no-c-format
 msgid ""
 "...\n"
@@ -626,19 +719,19 @@ msgstr ""
 "..."
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:354
+#: libvirt_configuration_virsh.xml:414
 #, no-c-format
 msgid "Start your VM to boot from the new kernel:"
 msgstr "あとは VM を起動すると、新しいカーネルでの起動が行なわれます:"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:363
+#: libvirt_configuration_virsh.xml:423
 #, no-c-format
 msgid "Configuring Memory Allocation"
 msgstr "メモリ割り当ての設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:365
+#: libvirt_configuration_virsh.xml:425
 #, no-c-format
 msgid ""
 "The amount of memory allocated for the &vmguest; can also be configured with "
@@ -649,19 +742,20 @@ msgstr ""
 "施します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:374
+#: libvirt_configuration_virsh.xml:434
 #, no-c-format
 msgid "Open the &vmguest;'s XML configuration:"
 msgstr "&vmguest; の XML 設定を開きます:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:380
+#: libvirt_configuration_virsh.xml:440
 #, no-c-format
-msgid "Search for the <tag>memory</tag> element and set the amount of allocated RAM:"
+msgid ""
+"Search for the <tag>memory</tag> element and set the amount of allocated RAM:"
 msgstr "<tag>memory</tag> タグを検索して、メモリの割り当て量を変更します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:385
+#: libvirt_configuration_virsh.xml:445
 #, no-c-format
 msgid ""
 "...\n"
@@ -673,25 +767,25 @@ msgstr ""
 "..."
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:390
+#: libvirt_configuration_virsh.xml:450
 #, no-c-format
 msgid "Check the amount of allocated RAM in your VM by running:"
 msgstr "あとは仮想マシン内で、割り当てられているメモリ量を確認します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:393
+#: libvirt_configuration_virsh.xml:453
 #, no-c-format
 msgid "&prompt.user;<command>cat /proc/meminfo</command>"
 msgstr "&prompt.user;<command>cat /proc/meminfo</command>"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:398
+#: libvirt_configuration_virsh.xml:458
 #, no-c-format
 msgid "Adding a PCI Device"
 msgstr "PCI デバイスの追加"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:400
+#: libvirt_configuration_virsh.xml:460
 #, no-c-format
 msgid ""
 "To assign a PCI device to &vmguest; with <command>virsh</command> , follow "
@@ -701,7 +795,7 @@ msgstr ""
 "には、下記の手順を実施します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:407
+#: libvirt_configuration_virsh.xml:467
 #, no-c-format
 msgid ""
 "Identify the host PCI device to assign to the &vmguest;. In the following "
@@ -711,7 +805,7 @@ msgstr ""
 "は、 DEC 社のネットワークカードをゲストに割り当てようとしています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:411
+#: libvirt_configuration_virsh.xml:471
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>lspci -nn</command>\n"
@@ -729,13 +823,14 @@ msgstr ""
 "[...]"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:416
+#: libvirt_configuration_virsh.xml:476
 #, no-c-format
 msgid "Write down the device ID ( <literal>03:07.0</literal> in this case)."
-msgstr "デバイス ID (上記の例では <literal>03:07.0</literal>) をメモしておきます。"
+msgstr ""
+"デバイス ID (上記の例では <literal>03:07.0</literal>) をメモしておきます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:421
+#: libvirt_configuration_virsh.xml:481
 #, no-c-format
 msgid ""
 "Gather detailed information about the device using <command>virsh nodedev-"
@@ -752,7 +847,7 @@ msgstr ""
 "<literal>pci_0000_03_07_0</literal> になります) を指定して実行します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:428
+#: libvirt_configuration_virsh.xml:488
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_03_07_0</command>\n"
@@ -796,7 +891,7 @@ msgstr ""
 "&lt;/device&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:446
+#: libvirt_configuration_virsh.xml:506
 #, no-c-format
 msgid ""
 "Write down the values for domain, bus, and function (see the previous XML "
@@ -807,7 +902,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:452
+#: libvirt_configuration_virsh.xml:512
 #, no-c-format
 msgid ""
 "Detach the device from the host system prior to attaching it to the "
@@ -817,7 +912,7 @@ msgstr ""
 "す:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:456
+#: libvirt_configuration_virsh.xml:516
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh nodedev-detach pci_0000_03_07_0</command>\n"
@@ -827,13 +922,13 @@ msgstr ""
 "  Device pci_0000_03_07_0 detached"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:459
+#: libvirt_configuration_virsh.xml:519
 #, no-c-format
 msgid "Multi-Function PCI Devices"
 msgstr "多機能型 PCI デバイスについて"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:460
+#: libvirt_configuration_virsh.xml:520
 #, no-c-format
 msgid ""
 "When using a multi-function PCI device that does not support FLR (function "
@@ -851,7 +946,7 @@ msgstr ""
 "なっています。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:471
+#: libvirt_configuration_virsh.xml:531
 #, no-c-format
 msgid ""
 "Convert the domain, bus, slot, and function value from decimal to "
@@ -863,7 +958,7 @@ msgstr ""
 "実行して変換を行ないます。なお、指定の順序を間違えないようにしてください:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:476
+#: libvirt_configuration_virsh.xml:536
 #, no-c-format
 msgid ""
 "&prompt.user;<command>printf \"&lt;address domain='0x%x' bus='0x%x' slot='0x"
@@ -873,19 +968,19 @@ msgstr ""
 "%x' function='0x%x'/&gt;\\n\" 0 3 7 0</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:477
+#: libvirt_configuration_virsh.xml:537
 #, no-c-format
 msgid "This results in:"
 msgstr "上記を実行すると、下記のように出力されるはずです:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:480
+#: libvirt_configuration_virsh.xml:540
 #, no-c-format
 msgid "&lt;address domain='0x0' bus='0x3' slot='0x7' function='0x0'/&gt;"
 msgstr "&lt;address domain='0x0' bus='0x3' slot='0x7' function='0x0'/&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:483
+#: libvirt_configuration_virsh.xml:543
 #, no-c-format
 msgid ""
 "Run <command>virsh edit</command> on your domain, and add the following "
@@ -897,7 +992,7 @@ msgstr ""
 "付けます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:488
+#: libvirt_configuration_virsh.xml:548
 #, no-c-format
 msgid ""
 "&lt;hostdev mode='subsystem' type='pci' managed='yes'&gt;\n"
@@ -913,13 +1008,14 @@ msgstr ""
 "&lt;/hostdev&gt;"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:494
+#: libvirt_configuration_virsh.xml:554
 #, no-c-format
 msgid "<literal>managed</literal> Compared to <literal>unmanaged</literal>"
-msgstr "<literal>managed</literal> と <literal>unmanaged</literal> の違いについて"
+msgstr ""
+"<literal>managed</literal> と <literal>unmanaged</literal> の違いについて"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:495
+#: libvirt_configuration_virsh.xml:555
 #, no-c-format
 msgid ""
 "<systemitem>libvirt</systemitem> recognizes two modes for handling PCI "
@@ -949,7 +1045,7 @@ msgstr ""
 "処理をユーザ側で行なわなければなりません。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:511
+#: libvirt_configuration_virsh.xml:571
 #, no-c-format
 msgid ""
 "In the example above, the <literal>managed='yes'</literal> option means that "
@@ -974,21 +1070,22 @@ msgstr ""
 "側で認識できるように再設定する必要があります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:525
+#: libvirt_configuration_virsh.xml:585
 #, no-c-format
-msgid "Shut down the &vmguest; and disable &selnx; if it is running on the host."
+msgid ""
+"Shut down the &vmguest; and disable &selnx; if it is running on the host."
 msgstr ""
 "ホスト側で &selnx; が動作している場合は、 &vmguest; をシャットダウンして "
 "&selnx; を無効化します。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:539
+#: libvirt_configuration_virsh.xml:599
 #, no-c-format
 msgid "Adding a USB Device"
 msgstr "USB デバイスの追加"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:541
+#: libvirt_configuration_virsh.xml:601
 #, no-c-format
 msgid ""
 "To assign a USB device to &vmguest; using <command>virsh</command> , follow "
@@ -998,13 +1095,13 @@ msgstr ""
 "て下記のように実施します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:548
+#: libvirt_configuration_virsh.xml:608
 #, no-c-format
 msgid "Identify the host USB device to assign to the &vmguest;:"
 msgstr "&vmguest; に接続されている USB デバイスを識別します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:551
+#: libvirt_configuration_virsh.xml:611
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>lsusb</command>\n"
@@ -1020,7 +1117,7 @@ msgstr ""
 "[...]"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:555
+#: libvirt_configuration_virsh.xml:615
 #, no-c-format
 msgid ""
 "Write down the vendor and product IDs. In our example, the vendor ID is "
@@ -1030,7 +1127,7 @@ msgstr ""
 "literal> 、製品 ID が <literal>2221</literal> となります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:561
+#: libvirt_configuration_virsh.xml:621
 #, no-c-format
 msgid ""
 "Run <command>virsh edit</command> on your domain, and add the following "
@@ -1042,7 +1139,7 @@ msgstr ""
 "product の箇所にそれぞれメモした値を指定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:566
+#: libvirt_configuration_virsh.xml:626
 #, no-c-format
 msgid ""
 "&lt;hostdev mode='subsystem' type='usb'&gt;\n"
@@ -1060,7 +1157,7 @@ msgstr ""
 "&lt;/hostdev&gt;"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:573
+#: libvirt_configuration_virsh.xml:633
 #, no-c-format
 msgid "Vendor/Product or Device's Address"
 msgstr ""
@@ -1068,7 +1165,7 @@ msgstr ""
 "(address) を設定する方法について"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:574
+#: libvirt_configuration_virsh.xml:634
 #, no-c-format
 msgid ""
 "Instead of defining the host device with <tag class=\"emptytag\">vendor</"
@@ -1082,35 +1179,36 @@ msgstr ""
 "\">address</tag> タグを利用して割り当てる方法もあります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:587
+#: libvirt_configuration_virsh.xml:647
 #, no-c-format
-msgid "Shut down the &vmguest; and disable &selnx; if it is running on the host:"
+msgid ""
+"Shut down the &vmguest; and disable &selnx; if it is running on the host:"
 msgstr ""
 "ホスト内で &selnx; が動作している場合は、 &vmguest; をシャットダウンして "
 "&selnx; を無効化します。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:590
+#: libvirt_configuration_virsh.xml:650
 #, no-c-format
 msgid "&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command>"
 msgstr "&prompt.sudo;<command>setsebool -P virt_use_sysfs 1</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:593
+#: libvirt_configuration_virsh.xml:653
 #, no-c-format
 msgid "Start your &vmguest; to make the assigned PCI device available:"
 msgstr ""
-"&vmguest; を起動すると、 &vmguest; から割り当てられた PCI デバイスに"
-"アクセスできるようになります:"
+"&vmguest; を起動すると、 &vmguest; から割り当てられた PCI デバイスにアクセス"
+"できるようになります:"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:601
+#: libvirt_configuration_virsh.xml:661
 #, no-c-format
 msgid "Adding SR-IOV Devices"
 msgstr "SR-IOV デバイスの追加"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:603
+#: libvirt_configuration_virsh.xml:663
 #, no-c-format
 msgid ""
 "Single Root I/O Virtualization ( <xref linkend=\"vt-io-sriov\"/> ) capable "
@@ -1125,7 +1223,7 @@ msgstr ""
 "ができます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:610
+#: libvirt_configuration_virsh.xml:670
 #, no-c-format
 msgid ""
 "<xref linkend=\"vt-io-sriov\"/> is an industry specification that was "
@@ -1157,13 +1255,13 @@ msgstr ""
 "と小さくなります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:627
+#: libvirt_configuration_virsh.xml:687
 #, no-c-format
 msgid "Requirements"
 msgstr "要件"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:628
+#: libvirt_configuration_virsh.xml:688
 #, no-c-format
 msgid ""
 "The following requirements must be met to use <xref linkend=\"vt-io-sriov\"/"
@@ -1173,7 +1271,7 @@ msgstr ""
 "ばなりません:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:634
+#: libvirt_configuration_virsh.xml:694
 #, no-c-format
 msgid ""
 "An <xref linkend=\"vt-io-sriov\"/> -capable network card (as of <phrase role="
@@ -1185,7 +1283,7 @@ msgstr ""
 "(&productname; ではネットワークカードのみに対応しています) 。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:643
+#: libvirt_configuration_virsh.xml:703
 #, no-c-format
 msgid ""
 "An AMD64/Intel 64 host supporting hardware virtualization (AMD-V or Intel VT-"
@@ -1197,7 +1295,7 @@ msgstr ""
 "hardware\"/> をお読みください。</phrase>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:650
+#: libvirt_configuration_virsh.xml:710
 #, no-c-format
 msgid ""
 "A chipset that supports device assignment (AMD-Vi or Intel <xref linkend="
@@ -1207,13 +1305,13 @@ msgstr ""
 "vtd\"/>) に対応したチップセットであること。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:656
+#: libvirt_configuration_virsh.xml:716
 #, no-c-format
 msgid "&libvirt; 0.9.10 or better"
 msgstr "&libvirt; 0.9.10 もしくはそれ以降が存在すること。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:661
+#: libvirt_configuration_virsh.xml:721
 #, no-c-format
 msgid ""
 "<xref linkend=\"vt-io-sriov\"/> drivers must be loaded and configured on the "
@@ -1223,7 +1321,7 @@ msgstr ""
 "されていること。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:667
+#: libvirt_configuration_virsh.xml:727
 #, no-c-format
 msgid ""
 "A host configuration that meets the requirements listed at <xref linkend="
@@ -1233,19 +1331,21 @@ msgstr ""
 "たしていること。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:673
+#: libvirt_configuration_virsh.xml:733
 #, no-c-format
-msgid "A list of the PCI addresses of the VF(s) that will be assigned to &vmguest;s"
-msgstr "&vmguest; に割り当てる予定の VF の PCI アドレスの一覧を用意していること。"
+msgid ""
+"A list of the PCI addresses of the VF(s) that will be assigned to &vmguest;s"
+msgstr ""
+"&vmguest; に割り当てる予定の VF の PCI アドレスの一覧を用意していること。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:680
+#: libvirt_configuration_virsh.xml:740
 #, no-c-format
 msgid "Checking if a Device is SR-IOV-Capable"
 msgstr "デバイスが SR-IOV に対応しているかどうかの確認方法"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:681
+#: libvirt_configuration_virsh.xml:741
 #, no-c-format
 msgid ""
 "The information whether a device is SR-IOV-capable can be obtained from its "
@@ -1259,7 +1359,7 @@ msgstr ""
 "するデバイスである場合、下記のような表示が現われるはずです:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:687
+#: libvirt_configuration_virsh.xml:747
 #, no-c-format
 msgid ""
 "Capabilities: [160 v1] Single Root I/O Virtualization (<xref linkend=\"vt-io-"
@@ -1269,13 +1369,13 @@ msgstr ""
 "sriov\"/>)"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:690
+#: libvirt_configuration_virsh.xml:750
 #, no-c-format
 msgid "Adding an SR-IOV Device at &vmguest; Creation"
 msgstr "&vmguest; の作成時における SR-IOV デバイスの追加について"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:691
+#: libvirt_configuration_virsh.xml:751
 #, no-c-format
 msgid ""
 "Before adding an SR-IOV device to a &vmguest; when initially setting it up, "
@@ -1287,13 +1387,13 @@ msgstr ""
 "おく必要があります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:700
+#: libvirt_configuration_virsh.xml:760
 #, no-c-format
 msgid "Loading and Configuring the SR-IOV Host Drivers"
 msgstr "SR-IOV ホストドライバの読み込みと設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:701
+#: libvirt_configuration_virsh.xml:761
 #, no-c-format
 msgid ""
 "To access and initialize VFs, an SR-IOV-capable driver needs to be loaded on "
@@ -1303,7 +1403,7 @@ msgstr ""
 "に読み込んでおく必要があります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:707
+#: libvirt_configuration_virsh.xml:767
 #, no-c-format
 msgid ""
 "Before loading the driver, make sure the card is properly detected by "
@@ -1315,7 +1415,7 @@ msgstr ""
 "command> がデュアルポートの Intel 82576NS ネットワークカードを検出しています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:713
+#: libvirt_configuration_virsh.xml:773
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>/sbin/lspci | grep 82576</command>\n"
@@ -1339,7 +1439,7 @@ msgstr ""
 "Connection (rev 01)"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:718
+#: libvirt_configuration_virsh.xml:778
 #, no-c-format
 msgid ""
 "In case the card is not detected, it is likely that the hardware "
@@ -1352,7 +1452,7 @@ msgstr ""
 "か同化を調べるには、ホスト側の BIOS 設定をご確認ください。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:726
+#: libvirt_configuration_virsh.xml:786
 #, no-c-format
 msgid ""
 "Check whether the <xref linkend=\"vt-io-sriov\"/> driver is already loaded "
@@ -1369,7 +1469,7 @@ msgstr ""
 "なります。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:733
+#: libvirt_configuration_virsh.xml:793
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>/sbin/lsmod | egrep \"^igb \"</command>\n"
@@ -1379,7 +1479,7 @@ msgstr ""
 "igb                   185649  0"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:737
+#: libvirt_configuration_virsh.xml:797
 #, no-c-format
 msgid ""
 "Skip the following step if the driver is already loaded. If the <xref "
@@ -1397,13 +1497,13 @@ msgstr ""
 "\"vt-io-sriov\"/> 非対応ドライバの読み込みを解除しています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:746
+#: libvirt_configuration_virsh.xml:806
 #, no-c-format
 msgid "&prompt.sudo;<command>/sbin/rmmod igbvf</command>"
 msgstr "&prompt.sudo;<command>/sbin/rmmod igbvf</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:749
+#: libvirt_configuration_virsh.xml:809
 #, no-c-format
 msgid ""
 "Load the <xref linkend=\"vt-io-sriov\"/> driver subsequently using the "
@@ -1415,25 +1515,25 @@ msgstr ""
 "( <literal>max_vfs</literal> ) を必ず指定してください:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:754
+#: libvirt_configuration_virsh.xml:814
 #, no-c-format
 msgid "&prompt.sudo;<command>/sbin/modprobe igb max_vfs=8</command>"
 msgstr "&prompt.sudo;<command>/sbin/modprobe igb max_vfs=8</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:758
+#: libvirt_configuration_virsh.xml:818
 #, no-c-format
 msgid "As an alternative, you can also load the driver via SYSFS:"
 msgstr "代わりの方法として、 SYSFS を介してドライバを読み込む方法もあります:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:763
+#: libvirt_configuration_virsh.xml:823
 #, no-c-format
 msgid "Find the PCI ID of the physical NIC by listing Ethernet devices:"
 msgstr "イーサネットデバイスの一覧を表示して、物理 NIC の PCI ID を確認します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:766
+#: libvirt_configuration_virsh.xml:826
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>lspci | grep Eth</command>\n"
@@ -1449,7 +1549,7 @@ msgstr ""
 "(rev 10)"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:771
+#: libvirt_configuration_virsh.xml:831
 #, no-c-format
 msgid ""
 "To enable VFs, echo the number of desired VFs to load to the "
@@ -1459,7 +1559,7 @@ msgstr ""
 "な VF 数を書き込みます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:775
+#: libvirt_configuration_virsh.xml:835
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>echo 1 &gt; /sys/bus/pci/devices/0000:06:00.1/"
@@ -1469,13 +1569,13 @@ msgstr ""
 "sriov_numvfs</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:778
+#: libvirt_configuration_virsh.xml:838
 #, no-c-format
 msgid "Verify that the VF NIC was loaded:"
 msgstr "VF NIC が読み込まれたことを確認します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:781
+#: libvirt_configuration_virsh.xml:841
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>lspci | grep Eth</command>\n"
@@ -1495,7 +1595,7 @@ msgstr ""
 "(rev 10)"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:787
+#: libvirt_configuration_virsh.xml:847
 #, no-c-format
 msgid "Obtain the maximum number of VFs available:"
 msgstr ""
@@ -1503,7 +1603,7 @@ msgstr ""
 "ます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:790
+#: libvirt_configuration_virsh.xml:850
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>lspci -vvv -s 06:00.1 | grep 'Initial VFs'</command>\n"
@@ -1515,7 +1615,7 @@ msgstr ""
 "Function Dependency Link: 01"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:795
+#: libvirt_configuration_virsh.xml:855
 #, no-c-format
 msgid ""
 "Create a <filename>/etc/systemd/system/before.service</filename> file which "
@@ -1525,7 +1625,7 @@ msgstr ""
 "システムの起動時に SYSFS 経由で VF を自動設定するように設定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:799
+#: libvirt_configuration_virsh.xml:859
 #, no-c-format
 msgid ""
 "[Unit]\n"
@@ -1559,7 +1659,7 @@ msgstr ""
 "#WantedBy=graphical.target"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:813
+#: libvirt_configuration_virsh.xml:873
 #, no-c-format
 msgid ""
 "Prior to starting the VM, it is required to create another service file "
@@ -1567,13 +1667,13 @@ msgid ""
 "init.d/after.local</filename> script that detaches the NIC. Otherwise the VM "
 "would fail to start:"
 msgstr ""
-"また VM を起動する前に、もう 1 つのサービスファイル ( <filename>after-"
-"local.service</filename> ) を作成し、 NIC の切り離しを行なうスクリプト "
-"<filename>/etc/init.d/after.local</filename> を実行するように設定します。これ"
-"を行なわないと、 VM の起動が失敗するようになってしまいます:"
+"また VM を起動する前に、もう 1 つのサービスファイル ( <filename>after-local."
+"service</filename> ) を作成し、 NIC の切り離しを行なうスクリプト <filename>/"
+"etc/init.d/after.local</filename> を実行するように設定します。これを行なわな"
+"いと、 VM の起動が失敗するようになってしまいます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:819
+#: libvirt_configuration_virsh.xml:879
 #, no-c-format
 msgid ""
 "[Unit]\n"
@@ -1601,13 +1701,13 @@ msgstr ""
 "WantedBy=multi-user.target"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:832
+#: libvirt_configuration_virsh.xml:892
 #, no-c-format
 msgid "Copy it to <filename>/etc/systemd/system</filename> ."
 msgstr "上記の内容を <filename>/etc/systemd/system</filename> にコピーします。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:835
+#: libvirt_configuration_virsh.xml:895
 #, no-c-format
 msgid ""
 "#! /bin/sh\n"
@@ -1619,13 +1719,14 @@ msgstr ""
 "virsh nodedev-detach pci_0000_06_08_0"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:838
+#: libvirt_configuration_virsh.xml:898
 #, no-c-format
 msgid "Save it as <filename>/etc/init.d/after.local</filename> ."
-msgstr "上記の内容を <filename>/etc/init.d/after.local</filename> に保存します。"
+msgstr ""
+"上記の内容を <filename>/etc/init.d/after.local</filename> に保存します。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:843
+#: libvirt_configuration_virsh.xml:903
 #, no-c-format
 msgid ""
 "Reboot the machine and check if the SR-IOV driver is loaded by re-running "
@@ -1639,7 +1740,7 @@ msgstr ""
 "れているはずです:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:849
+#: libvirt_configuration_virsh.xml:909
 #, no-c-format
 msgid ""
 "01:00.0 Ethernet controller: Intel Corporation 82576NS Gigabit Network "
@@ -1689,13 +1790,13 @@ msgstr ""
 "[...]"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:866
+#: libvirt_configuration_virsh.xml:926
 #, no-c-format
 msgid "Adding a VF Network Device to a &vmguest;"
 msgstr "&vmguest; に対する VF ネットワークデバイスの追加"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:867
+#: libvirt_configuration_virsh.xml:927
 #, no-c-format
 msgid ""
 "When the <xref linkend=\"vt-io-sriov\"/> hardware is properly set up on the "
@@ -1707,13 +1808,13 @@ msgstr ""
 "は、まずいくつかのデータを収集しておく必要があります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:873
+#: libvirt_configuration_virsh.xml:933
 #, no-c-format
 msgid "Adding a VF Network Device to an Existing &vmguest;"
 msgstr "既存の &vmguest; に対する VF ネットワークデバイスの追加"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:874
+#: libvirt_configuration_virsh.xml:934
 #, no-c-format
 msgid ""
 "The following procedure uses example data. Make sure to replace it by "
@@ -1723,7 +1824,7 @@ msgstr ""
 "て実行してください。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:879
+#: libvirt_configuration_virsh.xml:939
 #, no-c-format
 msgid ""
 "Use the <command>virsh nodedev-list</command> command to get the PCI address "
@@ -1747,7 +1848,7 @@ msgstr ""
 "ルポートイーサネットカードでの PCI ID を取得しています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:890
+#: libvirt_configuration_virsh.xml:950
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh nodedev-list | grep 0000_04_</command>\n"
@@ -1787,7 +1888,7 @@ msgstr ""
 "pci_0000_04_11_5"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:907
+#: libvirt_configuration_virsh.xml:967
 #, no-c-format
 msgid ""
 "The first two entries represent the <emphasis role=\"bold\">PFs</emphasis> , "
@@ -1797,7 +1898,7 @@ msgstr ""
 "VF を表わしています。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:913
+#: libvirt_configuration_virsh.xml:973
 #, no-c-format
 msgid ""
 "Run the following <command>virsh nodedev-dumpxml</command> command on the "
@@ -1807,7 +1908,7 @@ msgstr ""
 "PCI ID を取得します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:917
+#: libvirt_configuration_virsh.xml:977
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_04_10_0</command>\n"
@@ -1847,37 +1948,37 @@ msgstr ""
 "&lt;/device&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:933
+#: libvirt_configuration_virsh.xml:993
 #, no-c-format
 msgid "The following data is needed for the next step:"
 msgstr "次の手順では、下記のデータが必要となります:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:938
+#: libvirt_configuration_virsh.xml:998
 #, no-c-format
 msgid "<literal>&lt;domain&gt;0&lt;/domain&gt;</literal>"
 msgstr "<literal>&lt;domain&gt;0&lt;/domain&gt;</literal>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:943
+#: libvirt_configuration_virsh.xml:1003
 #, no-c-format
 msgid "<literal>&lt;bus&gt;4&lt;/bus&gt;</literal>"
 msgstr "<literal>&lt;bus&gt;4&lt;/bus&gt;</literal>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:948
+#: libvirt_configuration_virsh.xml:1008
 #, no-c-format
 msgid "<literal>&lt;slot&gt;16&lt;/slot&gt;</literal>"
 msgstr "<literal>&lt;slot&gt;16&lt;/slot&gt;</literal>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:953
+#: libvirt_configuration_virsh.xml:1013
 #, no-c-format
 msgid "<literal>&lt;function&gt;0&lt;/function&gt;</literal>"
 msgstr "<literal>&lt;function&gt;0&lt;/function&gt;</literal>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:960
+#: libvirt_configuration_virsh.xml:1020
 #, no-c-format
 msgid ""
 "Create a temporary XML file (for example <filename>/tmp/vf-interface.xml</"
@@ -1891,7 +1992,7 @@ msgstr ""
 "ようになります:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:966
+#: libvirt_configuration_virsh.xml:1026
 #, no-c-format
 msgid ""
 "&lt;interface type='hostdev'&gt;<co xml:id=\"sriov-iface\"/>\n"
@@ -1909,7 +2010,7 @@ msgstr ""
 "&lt;/interface&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:973
+#: libvirt_configuration_virsh.xml:1033
 #, no-c-format
 msgid ""
 "VFs do not get a fixed MAC address; it changes every time the host reboots. "
@@ -1922,21 +2023,22 @@ msgid ""
 msgstr ""
 "VF は固定の MAC アドレスを取得しません。ホストが再起動されるたびに MAC アドレ"
 "スが変更される形になります。この場合、 <tag class=\"attribute\">hostdev</"
-"tag> で <quote>従来の方法を利用して</quote> ネットワークデバイスを追加すると、"
-"ホスト側の再起動が発生するたびに MAC アドレスが変わってしまうため、 &vmguest; 側の"
-"ネットワークデバイスを再設定する必要が生じてしまいます。このような問題を回避するため、"
-" &libvirt; では <tag class=\"attvalue\">hostdev</tag> という値が提供されるようになり、"
-"これによってデバイスの割り当て <emphasis>前</emphasis> にネットワーク固有のデータを設定"
-"できるようになっています。"
+"tag> で <quote>従来の方法を利用して</quote> ネットワークデバイスを追加する"
+"と、ホスト側の再起動が発生するたびに MAC アドレスが変わってしまうため、 "
+"&vmguest; 側のネットワークデバイスを再設定する必要が生じてしまいます。このよ"
+"うな問題を回避するため、 &libvirt; では <tag class=\"attvalue\">hostdev</"
+"tag> という値が提供されるようになり、これによってデバイスの割り当て "
+"<emphasis>前</emphasis> にネットワーク固有のデータを設定できるようになってい"
+"ます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:985
+#: libvirt_configuration_virsh.xml:1045
 #, no-c-format
 msgid "Specify the data you acquired in the previous step here."
 msgstr "以前の手順で取得したデータを指定します。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:992
+#: libvirt_configuration_virsh.xml:1052
 #, no-c-format
 msgid ""
 "In case a device is already attached to the host, it cannot be attached to a "
@@ -1947,19 +2049,19 @@ msgstr ""
 "にしてホスト側から切り離しを行なってください:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:997
+#: libvirt_configuration_virsh.xml:1057
 #, no-c-format
 msgid "&prompt.sudo;<command>virsh nodedev-detach pci_0000_04_10_0</command>"
 msgstr "&prompt.sudo;<command>virsh nodedev-detach pci_0000_04_10_0</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1000
+#: libvirt_configuration_virsh.xml:1060
 #, no-c-format
 msgid "Add the VF interface to an existing &vmguest;:"
 msgstr "あとは既存の &vmguest; に VF インターフェイスを追加します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1003
+#: libvirt_configuration_virsh.xml:1063
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh attach-device <replaceable>GUEST</replaceable> /"
@@ -1970,7 +2072,7 @@ msgstr ""
 "command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1004
+#: libvirt_configuration_virsh.xml:1064
 #, no-c-format
 msgid ""
 "<replaceable>GUEST</replaceable> needs to be replaced by the domain name, ID "
@@ -1982,13 +2084,13 @@ msgstr ""
 "replaceable> の部分には下記を指定することができます:"
 
 #. Tag: term
-#: libvirt_configuration_virsh.xml:1011
+#: libvirt_configuration_virsh.xml:1071
 #, no-c-format
 msgid "<option>--persistent</option>"
 msgstr "<option>--persistent</option>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1014
+#: libvirt_configuration_virsh.xml:1074
 #, no-c-format
 msgid ""
 "This option will always add the device to the domain's persistent XML. In "
@@ -1998,13 +2100,13 @@ msgstr ""
 "マシンが動作中である場合、ホットプラグで接続することもできます。"
 
 #. Tag: term
-#: libvirt_configuration_virsh.xml:1021
+#: libvirt_configuration_virsh.xml:1081
 #, no-c-format
 msgid "<option>--config</option>"
 msgstr "<option>--config</option>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1024
+#: libvirt_configuration_virsh.xml:1084
 #, no-c-format
 msgid ""
 "This option will only affect the persistent XML, even if the domain is "
@@ -2014,13 +2116,13 @@ msgstr ""
 "の場合、ホットプラグは行なわれず、次回の再起動以降に現われるようになります。"
 
 #. Tag: term
-#: libvirt_configuration_virsh.xml:1031
+#: libvirt_configuration_virsh.xml:1091
 #, no-c-format
 msgid "<option>--live</option>"
 msgstr "<option>--live</option>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1034
+#: libvirt_configuration_virsh.xml:1094
 #, no-c-format
 msgid ""
 "This option will only affect a running domain. If the domain is inactive, "
@@ -2032,13 +2134,13 @@ msgstr ""
 "動を行なうとデバイスが消えてしまいます。"
 
 #. Tag: term
-#: libvirt_configuration_virsh.xml:1042
+#: libvirt_configuration_virsh.xml:1102
 #, no-c-format
 msgid "<option>--current</option>"
 msgstr "<option>--current</option>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1045
+#: libvirt_configuration_virsh.xml:1105
 #, no-c-format
 msgid ""
 "This option affects the current state of the domain. If the domain is "
@@ -2052,7 +2154,7 @@ msgstr ""
 "イルには追加されないようになります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1056
+#: libvirt_configuration_virsh.xml:1116
 #, no-c-format
 msgid ""
 "To detach a VF interface, use the <command>virsh detach-device</command> "
@@ -2062,13 +2164,13 @@ msgstr ""
 "マンドを使用します。オプション類は上記と同じです。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1065
+#: libvirt_configuration_virsh.xml:1125
 #, no-c-format
 msgid "Dynamic Allocation of VFs from a Pool"
 msgstr "プールからの動的な VF の割り当て"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1066
+#: libvirt_configuration_virsh.xml:1126
 #, no-c-format
 msgid ""
 "If you define the PCI address of a VF into a &vmguest;'s configuration "
@@ -2084,7 +2186,7 @@ msgstr ""
 "ばならなくなってしまいます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1073
+#: libvirt_configuration_virsh.xml:1133
 #, no-c-format
 msgid ""
 "Another approach is to create a &libvirt; network with a device pool that "
@@ -2100,13 +2202,13 @@ msgstr ""
 "で、他のゲストから使用できるようになります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1081
+#: libvirt_configuration_virsh.xml:1141
 #, no-c-format
 msgid "Defining Network with Pool of VFs on &vmhost;"
 msgstr "&vmhost; 内の VF プールを利用したネットワークの定義"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1082
+#: libvirt_configuration_virsh.xml:1142
 #, no-c-format
 msgid ""
 "The following example of network definition creates a pool of all VFs for "
@@ -2118,7 +2220,7 @@ msgstr ""
 "io-sriov\"/> デバイスである VF のプールを作成しています:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1087
+#: libvirt_configuration_virsh.xml:1147
 #, no-c-format
 msgid ""
 "&lt;network&gt;\n"
@@ -2136,7 +2238,7 @@ msgstr ""
 "  &lt;/network&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1093
+#: libvirt_configuration_virsh.xml:1153
 #, no-c-format
 msgid ""
 "To use this network on the host, save the above code to a file, for example "
@@ -2151,7 +2253,7 @@ msgstr ""
 "さい:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1100
+#: libvirt_configuration_virsh.xml:1160
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>virsh net-define /tmp/passthrough.xml</command>\n"
@@ -2163,13 +2265,13 @@ msgstr ""
 "&prompt.sudo;<command>virsh net-start passthrough</command>"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1105
+#: libvirt_configuration_virsh.xml:1165
 #, no-c-format
 msgid "Configuring &vmguest;s to Use VF from the Pool"
 msgstr "プールから VF を使用するための &vmguest; 側の設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1106
+#: libvirt_configuration_virsh.xml:1166
 #, no-c-format
 msgid ""
 "The following example of &vmguest; device interface definition uses a VF of "
@@ -2184,7 +2286,7 @@ msgstr ""
 "PF に結びつけられた VF の一覧を自動的に取得します。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1113
+#: libvirt_configuration_virsh.xml:1173
 #, no-c-format
 msgid ""
 "&lt;interface type='network'&gt;\n"
@@ -2196,7 +2298,7 @@ msgstr ""
 "&lt;/interface&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1116
+#: libvirt_configuration_virsh.xml:1176
 #, no-c-format
 msgid ""
 "After the first &vmguest; starts that uses the network with the pool of VFs, "
@@ -2209,7 +2311,7 @@ msgstr ""
 "実行します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1121
+#: libvirt_configuration_virsh.xml:1181
 #, no-c-format
 msgid ""
 "&lt;network connections='1'&gt;\n"
@@ -2257,13 +2359,13 @@ msgstr ""
 "  &lt;/network&gt;"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1139
+#: libvirt_configuration_virsh.xml:1199
 #, no-c-format
 msgid "Configuring Storage Devices"
 msgstr "ストレージデバイスの設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1141
+#: libvirt_configuration_virsh.xml:1201
 #, no-c-format
 msgid ""
 "Storage devices are defined within the <tag>disk</tag> element. The usual "
@@ -2275,7 +2377,7 @@ msgstr ""
 "す:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1152
+#: libvirt_configuration_virsh.xml:1212
 #, no-c-format
 msgid ""
 "The <tag class=\"attribute\">type</tag> attribute describes the source of "
@@ -2291,7 +2393,7 @@ msgstr ""
 "を指定します。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1170
+#: libvirt_configuration_virsh.xml:1230
 #, no-c-format
 msgid ""
 "The <tag class=\"attribute\">device</tag> attribute indicates how the disk "
@@ -2305,70 +2407,72 @@ msgstr ""
 "class=\"attvalue\">cdrom</tag> (CD-ROM) などがあります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1186
+#: libvirt_configuration_virsh.xml:1246
 #, no-c-format
 msgid "The following child elements are the most important:"
 msgstr "子要素として最も重要なものは下記のとおりです:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1192
+#: libvirt_configuration_virsh.xml:1252
 #, no-c-format
 msgid ""
 "<tag>driver</tag> contains the driver and the bus. These are used by the "
 "&vmguest; to work with the new disk device."
 msgstr ""
-"<tag>driver</tag> にはドライバとバスに関する情報を指定します。ここには &vmguest; "
-"側での処理方法などを指定します。"
+"<tag>driver</tag> にはドライバとバスに関する情報を指定します。ここには "
+"&vmguest; 側での処理方法などを指定します。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1199
+#: libvirt_configuration_virsh.xml:1259
 #, no-c-format
 msgid ""
 "The <tag>target</tag> element contains the device name under which the new "
 "disk is shown in the &vmguest;. It also contains the optional bus attribute, "
 "which defines the type of bus on which the new disk should operate."
 msgstr ""
-"<tag>target</tag> には &vmguest; 内でのデバイス名の設定が含まれます。ここには任意"
-"指定の bus 属性 (接続されているストレージバスに関する情報) を含むことができま"
-"す。"
+"<tag>target</tag> には &vmguest; 内でのデバイス名の設定が含まれます。ここには"
+"任意指定の bus 属性 (接続されているストレージバスに関する情報) を含むことがで"
+"きます。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1209
+#: libvirt_configuration_virsh.xml:1269
 #, no-c-format
-msgid "The following procedure shows how to add storage devices to the &vmguest;:"
+msgid ""
+"The following procedure shows how to add storage devices to the &vmguest;:"
 msgstr "&vmguest; にストレージデバイスを追加するには、下記の手順を実施します:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1221
+#: libvirt_configuration_virsh.xml:1281
 #, no-c-format
 msgid ""
 "Add a <tag>disk</tag> element inside the <tag>disk</tag> element together "
 "with the attributes <tag class=\"attvalue\">type</tag> and <tag class="
 "\"attvalue\">device</tag> :"
 msgstr ""
-"<tag>disk</tag> 要素内に <tag>disk</tag> 要素を追加し、その中に <tag class=\""
-"attvalue\">type</tag> と <tag class=\"attvalue\">device</tag> の属性を追加します。"
+"<tag>disk</tag> 要素内に <tag>disk</tag> 要素を追加し、その中に <tag class="
+"\"attvalue\">type</tag> と <tag class=\"attvalue\">device</tag> の属性を追加"
+"します。"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1231
+#: libvirt_configuration_virsh.xml:1291
 #, no-c-format
 msgid "&lt;disk type='file' device='disk'&gt;"
 msgstr "&lt;disk type='file' device='disk'&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1234
+#: libvirt_configuration_virsh.xml:1294
 #, no-c-format
 msgid "Specify a <tag>driver</tag> element and use the default values:"
 msgstr "<tag>driver</tag> タグでは下記のような既定値を指定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1239
+#: libvirt_configuration_virsh.xml:1299
 #, no-c-format
 msgid "&lt;driver name='qemu' type='qcow2'/&gt;"
 msgstr "&lt;driver name='qemu' type='qcow2'/&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1242
+#: libvirt_configuration_virsh.xml:1302
 #, no-c-format
 msgid ""
 "Create a disk image, which will be used as a source for the new virtual disk "
@@ -2376,7 +2480,7 @@ msgid ""
 msgstr "新しい仮想ディスクデバイスのソースとなるディスクイメージを作成します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1246
+#: libvirt_configuration_virsh.xml:1306
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>qemu-img create -f qcow2 /var/lib/libvirt/images/"
@@ -2386,19 +2490,19 @@ msgstr ""
 "sles15.qcow2 32G</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1249
+#: libvirt_configuration_virsh.xml:1309
 #, no-c-format
 msgid "Add the path for the disk source:"
 msgstr "あとは <tag>source</tag> タグでソースを指定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1252
+#: libvirt_configuration_virsh.xml:1312
 #, no-c-format
 msgid "&lt;source file='/var/lib/libvirt/images/sles15.qcow2'/&gt;"
 msgstr "&lt;source file='/var/lib/libvirt/images/sles15.qcow2'/&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1255
+#: libvirt_configuration_virsh.xml:1315
 #, no-c-format
 msgid ""
 "Define the target device name in the &vmguest; and the bus on which the disk "
@@ -2408,25 +2512,25 @@ msgstr ""
 "き、接続先を表わす <tag>bus</tag> 属性も設定しておきます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1259
+#: libvirt_configuration_virsh.xml:1319
 #, no-c-format
 msgid "&lt;target dev='vda' bus='virtio'/&gt;"
 msgstr "&lt;target dev='vda' bus='virtio'/&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1262
+#: libvirt_configuration_virsh.xml:1322
 #, no-c-format
 msgid "Restart your VM:"
 msgstr "あとは仮想マシンを再起動します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1265
+#: libvirt_configuration_virsh.xml:1325
 #, no-c-format
 msgid "&prompt.sudo;<command>virsh start sles15</command>"
 msgstr "&prompt.sudo;<command>virsh start sles15</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1269
+#: libvirt_configuration_virsh.xml:1329
 #, no-c-format
 msgid "Your new storage device should be available in the &vmguest; OS."
 msgstr ""
@@ -2434,13 +2538,13 @@ msgstr ""
 "なります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1274
+#: libvirt_configuration_virsh.xml:1334
 #, no-c-format
 msgid "Configuring Video Devices"
 msgstr "ビデオデバイスの設定"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1276
+#: libvirt_configuration_virsh.xml:1336
 #, no-c-format
 msgid ""
 "When using the Virtual Machine Manager, only the Video device model can be "
@@ -2452,19 +2556,19 @@ msgstr ""
 "XML の設定を編集することでしか設定することができません。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1283
+#: libvirt_configuration_virsh.xml:1343
 #, no-c-format
 msgid "Changing the Amount of Allocated VRAM"
 msgstr "VRAM の割り当て量の変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1292
+#: libvirt_configuration_virsh.xml:1352
 #, no-c-format
 msgid "Change the size of the allocated VRAM:"
 msgstr "VRAM に割り当てるサイズを変更するには、下記のように設定します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1295
+#: libvirt_configuration_virsh.xml:1355
 #, no-c-format
 msgid ""
 "&lt;video&gt;\n"
@@ -2480,7 +2584,7 @@ msgstr ""
 "&lt;/video&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1302
+#: libvirt_configuration_virsh.xml:1362
 #, no-c-format
 msgid ""
 "Check if the amount of VRAM in the VM has changed by looking at the amount "
@@ -2490,25 +2594,25 @@ msgstr ""
 "ズを確認してください。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1311
+#: libvirt_configuration_virsh.xml:1371
 #, no-c-format
 msgid "Changing the State of 2D/3D Acceleration"
 msgstr "2D/3D アクセラレーションの設定変更"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1314
+#: libvirt_configuration_virsh.xml:1374
 #, no-c-format
 msgid "Edit the configuration for an existing &vmguest;:"
 msgstr "既存の &vmguest; に対する設定を編集します:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1317
+#: libvirt_configuration_virsh.xml:1377
 #, no-c-format
 msgid "&prompt.sudo;<command>virsh edit sles15</command>"
 msgstr "&prompt.sudo;<command>virsh edit sles15</command>"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1320
+#: libvirt_configuration_virsh.xml:1380
 #, no-c-format
 msgid ""
 "To enable/disable 2D/3D acceleration, change the value of <literal>accel3d</"
@@ -2519,7 +2623,7 @@ msgstr ""
 "ます:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1324
+#: libvirt_configuration_virsh.xml:1384
 #, no-c-format
 msgid ""
 "&lt;video&gt;\n"
@@ -2535,13 +2639,13 @@ msgstr ""
 "&lt;/video&gt;"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1332
+#: libvirt_configuration_virsh.xml:1392
 #, no-c-format
 msgid "Enabling 2D/3D Acceleration"
 msgstr "2D/3D アクセラレーションの有効化について"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1333
+#: libvirt_configuration_virsh.xml:1393
 #, no-c-format
 msgid ""
 "Only <literal>vbox</literal> video devices are capable of 2D/3D "
@@ -2552,13 +2656,13 @@ msgstr ""
 "有効化することができません。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1341
+#: libvirt_configuration_virsh.xml:1401
 #, no-c-format
 msgid "Using Macvtap to Share &vmhost; Network Interfaces"
 msgstr "&vmhost; のネットワークインターフェイスを共有するための macvtap の使用"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1343
+#: libvirt_configuration_virsh.xml:1403
 #, no-c-format
 msgid ""
 "Macvtap provides direct attachment of a &vmguest; virtual interface to a "
@@ -2574,13 +2678,13 @@ msgstr ""
 "&vmhost; をそれぞれ同じスイッチに接続する形になります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1352
+#: libvirt_configuration_virsh.xml:1412
 #, no-c-format
 msgid "Macvtap Cannot Be Used with a Linux Bridge"
 msgstr "Linux ブリッジでは macvtap を使用することができない問題について"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1353
+#: libvirt_configuration_virsh.xml:1413
 #, no-c-format
 msgid ""
 "Macvtap cannot be used with network interfaces already connected to a Linux "
@@ -2592,13 +2696,13 @@ msgstr ""
 "ターフェイスを削除しておく必要があります。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1361
+#: libvirt_configuration_virsh.xml:1421
 #, no-c-format
 msgid "&vmguest; to &vmhost; Communication with Macvtap"
 msgstr "macvtap を利用した &vmguest; と &vmhost; の通信"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1362
+#: libvirt_configuration_virsh.xml:1422
 #, no-c-format
 msgid ""
 "When using macvtap, a &vmguest; can communicate with other &vmguest;s, and "
@@ -2622,7 +2726,7 @@ msgstr ""
 "なっています。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1375
+#: libvirt_configuration_virsh.xml:1435
 #, no-c-format
 msgid ""
 "Virtual network interfaces based on macvtap are supported by libvirt by "
@@ -2633,7 +2737,7 @@ msgstr ""
 "よって実現することができます。たとえば下記のようになります:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1380
+#: libvirt_configuration_virsh.xml:1440
 #, no-c-format
 msgid ""
 "&lt;interface type='direct'&gt;\n"
@@ -2649,7 +2753,7 @@ msgstr ""
 "   &lt;/interface&gt;"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1386
+#: libvirt_configuration_virsh.xml:1446
 #, no-c-format
 msgid ""
 "The operation mode of the macvtap device can be controlled with the "
@@ -2660,7 +2764,7 @@ msgstr ""
 "ことができます。下記の一覧には、設定可能な値とそれらの説明を示しています:"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1394
+#: libvirt_configuration_virsh.xml:1454
 #, no-c-format
 msgid ""
 "<literal>vepa</literal> : All &vmguest; packets are sent to an external "
@@ -2674,7 +2778,7 @@ msgstr ""
 "ではありません) 。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1402
+#: libvirt_configuration_virsh.xml:1462
 #, no-c-format
 msgid ""
 "<literal>bridge</literal> : Packets whose destination is on the same "
@@ -2690,7 +2794,7 @@ msgstr ""
 "必要になります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1411
+#: libvirt_configuration_virsh.xml:1471
 #, no-c-format
 msgid ""
 "<literal>private</literal> : All packets are sent to the external bridge and "
@@ -2705,7 +2809,7 @@ msgstr ""
 "がプライベートモードである場合の動作になります。"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1420
+#: libvirt_configuration_virsh.xml:1480
 #, no-c-format
 msgid ""
 "<literal>passthrough</literal> : A special mode that gives more power to the "
@@ -2727,13 +2831,13 @@ msgstr ""
 "想機能は &vmguest; の <literal>passthrough</literal> モードと比較されます。"
 
 #. Tag: title
-#: libvirt_configuration_virsh.xml:1435
+#: libvirt_configuration_virsh.xml:1495
 #, no-c-format
 msgid "Disabling a Memory Balloon Device"
 msgstr "メモリバルーンデバイスの無効化"
 
 #. Tag: para
-#: libvirt_configuration_virsh.xml:1436
+#: libvirt_configuration_virsh.xml:1496
 #, no-c-format
 msgid ""
 "Memory Balloon has become a default option for KVM. The device will be added "
@@ -2749,7 +2853,7 @@ msgstr ""
 "<literal>model='none'</literal> を指定する必要があります:"
 
 #. Tag: screen
-#: libvirt_configuration_virsh.xml:1444
+#: libvirt_configuration_virsh.xml:1504
 #, no-c-format
 msgid ""
 "&lt;devices&gt;\n"
@@ -2759,4 +2863,3 @@ msgstr ""
 "&lt;devices&gt;\n"
 "   &lt;memballoon model='none'/&gt;\n"
 "&lt;/device&gt;"
-
