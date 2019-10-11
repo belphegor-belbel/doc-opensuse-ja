@@ -64,25 +64,9 @@
  </sect1>
  
  <sect1 xml:id="sec-libvirt-config-maxgrantframes-virsh">
-     <title>メモリ割り当ての設定</title>
-         <para>
-             <command>libvirt</command> now includes support for adjusting
-             memory allocation per guest with <command>virsh</command>. &xen; 
-             paravirtual devices connect to the  <literal>xenbus </literal> controller, which is 
-             analogous to a physical device bus such as a PCI controller.        
-             &xen;'s <literal>max_grant_frames</literal> attribute sets how many
-             frames, which are analogous to memory, are allocated to
-             the <literal>xenbus </literal> controller for each guest. 
-         </para>
-         <para>
-             The default is 32, and this can be increased as needed, up to the 
-             amount set for dom0, or decreased. How much is enough? 
-             This depends on the number of devices and workload demand,
-             such as a saturated network interface or heavy I/O.
-             Use <command>xen-diag</command> to see your current used
-             and maximum <literal>max_grant_frames</literal> values for 
-             dom0 and your  guests. The guests must be running:
-         </para>
+     <title>ゲスト側のメモリ割り当ての設定 (&xen; のみ)</title>
+         <para><command>libvirt</command> には <command>virsh</command> でメモリの割り当て量を調整するための仕組みが提供されています。 &xen; 準仮想化デバイスは PCI コントローラのようなデバイスバスに似た <literal>xenbus</literal> コントローラに接続されているほか、 &xen; の <literal>max_grant_frames</literal> 属性を設定することで、メモリに似た割り当て設定を変更することができるようになっていますが、この割り当ては <literal>xenbus</literal> コントローラに割り当てるフレーム数を設定する項目になります。</para>
+         <para>既定値は 32 で、必要に応じて最大で dom0 のサイズまで増やしたり、減らしたりすることができます。サイズが十分かどうかは、接続されているデバイス数や負荷 (ネットワークインターフェイスや I/O の負荷) によって異なります。 dom0 やその他のゲストに対して、使用済みの <literal>max_grant_frames</literal> の値や最大値を確認したい場合は、 <command>xen-diag</command> コマンドをお使いください。なお、ゲストは動作中でなければなりません:</para>
          <screen>&prompt.sudo;virsh list 
  Id   Name             State
 --------------------------------
@@ -95,31 +79,15 @@ domid=0: nr_frames=1, max_nr_frames=256
 &prompt.sudo;xen-diag gnttab_query_size 3
 domid=3: nr_frames=3, max_nr_frames=32
 </screen>
-<para>
-    The sle15sp1 guest is using only 3 frames out of 32. If you
-    are seeing performance issues, and log entries that point
-    to insufficient frames, increase the value with 
-    <command>virsh</command>. Look for the
-    <literal>&lt;controller type='xenbus'</literal> line 
-    in the guest's configuration file and
-    add the <literal>maxGrantFrames</literal> control element:
-</para>
+<para>上記では、 sle15sp1 のゲストは 32 フレームのうちの 3 フレームしか使用していません。性能面で何らかの問題がある場合や、フレーム数が不足している旨のログが記録されているような場合は、 <command>virsh</command> でフレーム数を増やしてください。ゲスト側の設定ファイル内にある <literal>&lt;controller type='xenbus'</literal> という行を探して、 <literal>maxGrantFrames</literal> という制御要素を追加します:</para>
 <screen>&prompt.sudo;virsh edit sle15sp1
  &lt;controller type='xenbus' index='0' maxGrantFrames='40'/&gt;
 </screen>
-<para>
-    Save your changes and restart the guest. Now it should show
-    your change:
-</para>
+<para>設定を保存してゲストを再起動してください。これで設定が反映されます:</para>
 <screen>&prompt.sudo;xen-diag gnttab_query_size 3
 domid=3: nr_frames=3, max_nr_frames=40
 </screen>
-<para>
-    See the <citetitle>Controllers</citetitle> section of the libvirt
-    <citetitle>Domain XML format</citetitle> manual at 
-    <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/>
-    for more information.
-</para>
+<para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/> (英語) にある libvirt <citetitle>Domain XML format</citetitle> マニュアルの中にある、 <citetitle>Controllers</citetitle> 章をお読みください。</para>
 </sect1>      
          
  <sect1 xml:id="sec-libvirt-config-machinetype-virsh">
