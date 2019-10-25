@@ -441,41 +441,15 @@ PRE_DOWN_SCRIPT='systemd:openvpn@client'</screen>
 
   <sect2 xml:id="sec-security-vpn-certs">
    <title>証明機関の作成</title>
-   <para>VPN の接続を確立する前に、クライアントとサーバとの間を互いに認証しなければなりません。これを <emphasis>相互認証</emphasis> と呼びます。証明書を作成するにあたっては、 &yast; 証明機関モジュールを使用することができます。詳しくは <xref linkend="cha-security-yast-ca"/> をお読みください。</para>
-   <para>
-    Creating certificates is not supported on &productname;. The following
-    assumes you have created a CA certificate, a server certificate and a
-    client certificate on another system.
-   </para>
-   <para>
-    The server certificate is required in the PEM and unencrypted
-    key in PEM formats. Copy the PEM version to
-    <filename>/etc/openvpn/server_crt.pem</filename> on the VPN server. The
-    unencrypted version needs to go to
-    <filename>/etc/openvpn/server_key.pem</filename>.
-   </para>
-   <para>
-    Client certificates need to be of the format PKCS12 (preferred) or PEM. The
-    certificate in PKCS12 format needs to contain the CA chain and needs to be
-    copied to
-    <filename>/etc/openvpn/<replaceable>CLIENT</replaceable>.p12</filename>. In
-    case you have client certificates in PEM format containing the CA chain,
-    copy them to
-    <filename>/etc/openvpn/<replaceable>CLIENT</replaceable>.pem</filename>. In
-    case you have split the PEM certificates into client certificate
-    (<filename>*.ca</filename>, client key (<filename>*.key</filename>), and
-    the CA certificate (<filename>*.ca</filename>), copy these files to
-    <filename>/etc/openvpn/</filename> on each client.
-   </para>
-   <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択し、 <filename>/etc/openvpn/vpn_ca.pem</filename> に保存します。</para>
+   <para>VPN の接続を確立する前に、クライアントはサーバが提示する証明書を認証し、サーバはクライアントが提示する証明書を認証しなければなりません。これを <emphasis>相互認証</emphasis> と呼びます。</para>
+   <para>証明書の作成を行なうための直接的な機能は、 &productname; には用意されていません。下記の手順では CA の証明書とサーバの証明書、そしてクライアントの証明書を他のシステムで作成したものとして説明しています。</para>
+   <para>サーバの証明書は PEM 形式で保存し、それに対応する機密鍵も暗号化することなく PEM 形式で保存しておきます。証明書は VPN サーバ内の <filename>/etc/openvpn/server_crt.pem</filename> に、 (暗号化していない) 機密鍵は <filename>/etc/openvpn/server_key.pem</filename> にそれぞれ置いておきます。</para>
+   <para>クライアント証明書は PKCS12 (推奨) 形式、もしくは PEM 形式で保存しておきます。 PKCS12 形式の場合は、その中に CA の証明書を含めておく必要があるほか、ファイルは <filename>/etc/openvpn/<replaceable>クライアント名</replaceable>.p12</filename> というファイル名で保存しておきます。 PEM 形式で、 CA の証明書が含まれているものの場合は、 <filename>/etc/openvpn/<replaceable>クライアント名</replaceable>.pem</filename> というファイル名で保存しておきます。 PEM 形式で CA の証明書が含まれていないものの場合は、それぞれのクライアント内の <filename>/etc/openvpn/</filename> ディレクトリにそれらを保存します。</para>
+   <para>また、 CA の証明書は、サーバおよびクライアント内の <filename>/etc/openvpn/vpn_ca.pem</filename> にコピーしておく必要があります。</para>
 
    <important>
-    <title>証明機関の作成</title>
-    <para>
-     If you split client certificates into client certificate, client key, and
-     the CA certificate, you need to provide the respective filenames in the
-     OpenVPN configuration file on the respective clients (see <xref linkend="ex-vpn-serv-config"/>).
-    </para>
+    <title>クライアント証明書を分割した場合について</title>
+    <para>クライアント証明書と対応する機密鍵、そして CA の証明書をそれぞれ別々のファイルに分割している場合は、それらのファイル名を各クライアント内の OpenVPN の設定ファイルで指定する必要があります (詳しくは <xref linkend="ex-vpn-serv-config"/> をお読みください) 。</para>
    </important>
   </sect2>
 <!--
@@ -864,7 +838,7 @@ verb 4</screen>
      <para>これ以降の行には、証明機関の証明書 ( <literal>ca</literal> ) と <!-- NOTE: not "root CA key" but "server cert"? --> サーバ証明書 ( <literal>cert</literal> ) 、そしてサーバ証明書の鍵 ( <literal>key</literal> ) をそれぞれ指定しています。これらのファイルは <xref linkend="sec-security-vpn-certs"/> で生成したものです。</para>
     </callout>
     <callout arearefs="co-vpn-servconfig-remote-cert-tls">
-     <para>相手側に要求する証明書の種類を指定しています。この場合、 RFC3280 TLS rules で規定されている key usage と extended key usage (鍵の用途) について、明確な署名のある証明書のみを受け入れる設定です。鍵の用途を指定した証明書の作成について、詳しくは <xref linkend="pro-security-vpn-serverca"/> をお読みください。</para>
+     <para>相手側に要求する証明書の種類を指定しています。この場合、 RFC3280 TLS rules で規定されている key usage と extended key usage (鍵の用途) について、明確な署名のある証明書のみを受け入れる設定です。 <!-- 鍵の用途を指定した証明書の作成について、詳しくは <xref linkend="pro-security-vpn-serverca"/> をお読みください。 --></para>
     </callout>
 <!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=910148-->
     <callout arearefs="co-vpn-servconfig-dh">
