@@ -195,7 +195,7 @@ cd /etc/openvpn
          <imagedata fileref="vpn_routed1.png" width="80%"/>
         </imageobject>
         <imageobject role="fo">
-         <imagedata fileref="vpn_routed1.svg" width="80%"/>
+         <imagedata fileref="vpn_routed1.svg" width="50%"/>
         </imageobject>
        </mediaobject>
       </figure>
@@ -224,7 +224,7 @@ cd /etc/openvpn
          <imagedata fileref="vpn_bridged1.png" width="80%"/>
         </imageobject>
         <imageobject role="fo">
-         <imagedata fileref="vpn_bridged1.svg" width="80%"/>
+         <imagedata fileref="vpn_bridged1.svg" width="50%"/>
         </imageobject>
        </mediaobject>
       </figure>
@@ -253,7 +253,7 @@ cd /etc/openvpn
          <imagedata fileref="vpn_bridged2.png" width="80%"/>
         </imageobject>
         <imageobject role="fo">
-         <imagedata fileref="vpn_bridged2.svg" width="80%"/>
+         <imagedata fileref="vpn_bridged2.svg" width="50%"/>
         </imageobject>
        </mediaobject>
       </figure>
@@ -282,7 +282,7 @@ cd /etc/openvpn
          <imagedata fileref="vpn_bridged3.png" width="80%"/>
         </imageobject>
         <imageobject role="fo">
-         <imagedata fileref="vpn_bridged3.svg" width="80%"/>
+         <imagedata fileref="vpn_bridged3.svg" width="50%"/>
         </imageobject>
        </mediaobject>
       </figure>
@@ -442,164 +442,377 @@ PRE_DOWN_SCRIPT='systemd:openvpn@client'</screen>
   <sect2 xml:id="sec-security-vpn-certs">
    <title>証明機関の作成</title>
    <para>VPN の接続を確立する前に、クライアントとサーバとの間を互いに認証しなければなりません。これを <emphasis>相互認証</emphasis> と呼びます。証明書を作成するにあたっては、 &yast; 証明機関モジュールを使用することができます。詳しくは <xref linkend="cha-security-yast-ca"/> をお読みください。</para>
-   <para>VPN の証明機関を作成し、サーバとクライアントの証明書を作成するには、下記の手順で行ないます:</para>
+   <para>
+    Creating certificates is not supported on &productname;. The following
+    assumes you have created a CA certificate, a server certificate and a
+    client certificate on another system.
+   </para>
+   <para>
+    The server certificate is required in the PEM and unencrypted
+    key in PEM formats. Copy the PEM version to
+    <filename>/etc/openvpn/server_crt.pem</filename> on the VPN server. The
+    unencrypted version needs to go to
+    <filename>/etc/openvpn/server_key.pem</filename>.
+   </para>
+   <para>
+    Client certificates need to be of the format PKCS12 (preferred) or PEM. The
+    certificate in PKCS12 format needs to contain the CA chain and needs to be
+    copied to
+    <filename>/etc/openvpn/<replaceable>CLIENT</replaceable>.p12</filename>. In
+    case you have client certificates in PEM format containing the CA chain,
+    copy them to
+    <filename>/etc/openvpn/<replaceable>CLIENT</replaceable>.pem</filename>. In
+    case you have split the PEM certificates into client certificate
+    (<filename>*.ca</filename>, client key (<filename>*.key</filename>), and
+    the CA certificate (<filename>*.ca</filename>), copy these files to
+    <filename>/etc/openvpn/</filename> on each client.
+   </para>
+   <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択し、 <filename>/etc/openvpn/vpn_ca.pem</filename> に保存します。</para>
+
+   <important>
+    <title>証明機関の作成</title>
+    <para>
+     If you split client certificates into client certificate, client key, and
+     the CA certificate, you need to provide the respective filenames in the
+     OpenVPN configuration file on the respective clients (see <xref linkend="ex-vpn-serv-config"/>).
+    </para>
+   </important>
+  </sect2>
+<!--
+    To create such certificates, use the
+    &yast; CA module. See <xref linkend="cha-security-yast-ca"/> for more
+    details.
+
+   </para>
+   <para>
+    To create a VPN root, server, and client CA, proceed as follows:
+   </para>
    <procedure xml:id="pro-security-vpn-serverca">
-    <title>VPN サーバ証明書の作成</title>
+    <title>Creating a VPN Server Certificate</title>
     <step xml:id="st-security-vpn-serverca-vpnrootca">
-     <para>まずは VPN 用の証明機関 (CA) を作成します:</para>
+     <para>
+      Prepare a common VPN Certificate Authority (CA):
+     </para>
      <substeps performance="required">
       <step>
-       <para><!-- NOTE: yast2 CA module was obsolete since 15.0? --> &yast; の証明機関モジュールを起動します。</para>
+       <para>
+        Start the &yast; CA module.
+       </para>
       </step>
       <step>
-       <para><guimenu>ルート証明機関の作成</guimenu> を押します。</para>
+       <para>
+        Click <guimenu>Create Root CA</guimenu>.
+       </para>
       </step>
       <step>
-       <para><guimenu>証明機関名</guimenu> と <guimenu>共通名</guimenu> をそれぞれ入力します。たとえば <literal>VPN-Server-CA</literal> のように入力します。</para>
+       <para>
+        Enter a <guimenu>CA Name</guimenu> and a <guimenu>Common
+        Name</guimenu>, for example <literal>VPN-Server-CA</literal>.
+       </para>
       </step>
       <step>
-       <para>電子メールアドレスや組織など、その他の項目を必要に応じて入力し、 <guimenu>次へ</guimenu> を押します。</para>
+       <para>
+        Fill out the other boxes like e-mail addresses, organization, etc.
+        and proceed with <guimenu>Next</guimenu>.
+       </para>
       </step>
       <step>
-       <para>パスワードを 2 回入力し、 <guimenu>次へ</guimenu> を押します。</para>
+       <para>
+        Enter your password twice and proceed with <guimenu>Next</guimenu>.
+       </para>
       </step>
       <step>
-       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで証明機関が作成され、概要に表示されるようになります。</para>
+       <para>
+        Review the summary. &yast; displays the current settings for
+        confirmation. Click <guimenu>Create</guimenu>. The root CA is
+        created and displayed in the overview.
+       </para>
       </step>
      </substeps>
     </step>
     <step xml:id="st-security-vpn-serverca-vpnserverca">
-     <para>続けて VPN のサーバ側の証明書を作成します:</para>
+     <para>
+      Create a VPN server certificate:
+     </para>
      <substeps performance="required">
       <step>
-       <para><xref linkend="st-security-vpn-serverca-vpnrootca"/> の手順で作成した証明機関を選択して、 <guimenu>証明機関に入る</guimenu> を押します。</para>
+       <para>
+        Select the root CA you created in
+        <xref linkend="st-security-vpn-serverca-vpnrootca"/> and click
+        <guimenu>Enter CA</guimenu>.
+       </para>
       </step>
       <step>
-       <para><guimenu>証明機関のパスワードの入力</guimenu> を求められたら、パスワードを入力します。</para>
+       <para>
+        When prompted, enter the <guimenu>CA Password</guimenu>.
+       </para>
       </step>
       <step>
-       <para><guimenu>証明書</guimenu> タブを選択して <menuchoice> <guimenu>追加</guimenu> <guimenu>サーバ証明書の追加</guimenu> </menuchoice> を押します。</para>
+       <para>
+        Click the <guimenu>Certificate</guimenu> tab and click <menuchoice>
+        <guimenu>Add</guimenu> <guimenu>Add Server Certificate</guimenu>
+        </menuchoice>.
+       </para>
       </step>
       <step>
-       <para><guimenu>共通名</guimenu> に名前を入力 (例: <systemitem class="fqdomainname">openvpn.example.com</systemitem>) して、 <guimenu>次へ</guimenu> を押します。</para>
+       <para>
+        Specify a <guimenu>Common Name</guimenu>, for example,
+        <systemitem class="fqdomainname">openvpn.example.com</systemitem>
+        and proceed with <guimenu>Next</guimenu>.
+       </para>
       </step>
       <step>
-       <para><guimenu>パスワード</guimenu> と <guimenu>パスワードの確認</guimenu> にそれぞれパスワードを入力して、 <guimenu>詳細オプション</guimenu> を押します。</para>
-       <para>ツリー表示から <menuchoice> <guimenu>詳細設定</guimenu> <guimenu>Key Usage</guimenu> </menuchoice> を選択し、下記のいずれかの組み合わせで選択を行ないます:</para>
+       <para>
+        Specify your password and confirm it. Then click <guimenu>Advanced
+        options</guimenu>.
+       </para>
+       <para>
+        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
+        <guimenu>Key Usage</guimenu> </menuchoice> list and check one of the
+        following sets:
+       </para>
        <itemizedlist mark="bullet" spacing="normal">
         <listitem>
-         <para><option>digitalSignature</option> と <option>keyEncipherment</option> の両方を選択</para>
+         <para>
+          <option>digitalSignature</option> and
+          <option>keyEncipherment</option>, or,
+         </para>
         </listitem>
         <listitem>
-         <para><option>digitalSignature</option> と <option>keyAgreement</option> の両方を選択</para>
+         <para>
+          <option>digitalSignature</option> and
+          <option>keyAgreement</option>
+         </para>
         </listitem>
        </itemizedlist>
-       <para>さらにツリー構造から <menuchoice> <guimenu>熟練者設定</guimenu> <guimenu>extendedKeyUsage</guimenu> </menuchoice> を選択して、サーバ証明書の場合は <option>serverAuth</option> と入力します。</para>
+       <para>
+        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
+        <guimenu>extendedKeyUsage</guimenu> </menuchoice> and type
+        <option>serverAuth</option> for a server certificate.
+       </para>
        <important>
-        <title>中間者攻撃の危険性について</title>
-        <para>証明書を検証する際、 <option>remote-cert-tls server</option> や <option>remote-cert-tls client</option> の方式を選択している場合、鍵の使用回数を制限するように設定してください。これにより、中間者攻撃を防ぐことができます。</para>
-        <para>詳しくは <link xlink:href="http://openvpn.net/index.php/open-source/documentation/howto.html#mitm"/> をお読みください。</para>
+        <title>Avoiding Man-in-the-Middle Attacks</title>
+        <para>
+         If you are using the method <option>remote-cert-tls server</option> or
+         <option>remote-cert-tls client</option> to verify certificates, limit
+         the number of times a key can be used. This mitigates
+         man-in-the-middle attacks.
+        </para>
+        <para>
+         For more information, see
+         <link xlink:href="http://openvpn.net/index.php/open-source/documentation/howto.html#mitm"/>.
+        </para>
        </important>
-       <para><guimenu>Ok</guimenu> を押して閉じ、 <guimenu>次へ</guimenu> を押します。</para>
+       <para>
+        Finish with <guimenu>Ok</guimenu> and proceed with
+        <guimenu>Next</guimenu>.
+       </para>
       </step>
       <step>
-       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで VPN サーバの証明書が作成され、 <guimenu>証明書</guimenu> の一覧に表示されるようになります。</para>
+       <para>
+        Review the summary. &yast; displays the current settings for
+        confirmation. Click <guimenu>Create</guimenu>. When the VPN server
+        certificate is created, it is displayed in the
+        <guimenu>Certificates</guimenu> tab.
+       </para>
       </step>
      </substeps>
     </step>
     <step xml:id="st-security-vpn-serverca-vpnclientca">
-     <para>続けて VPN のクライアント側の証明書を作成します:</para>
+     <para>
+      Create VPN client certificates:
+     </para>
      <substeps performance="required">
       <step>
-       <para><guimenu>証明書</guimenu> タブを選択します。</para>
+       <para>
+        Make sure you are on the <guimenu>Certificates</guimenu> tab.
+       </para>
       </step>
       <step>
-       <para><menuchoice> <guimenu>追加</guimenu> <guimenu>クライアント証明書の追加</guimenu> </menuchoice> を押します。</para>
+       <para>
+        Click <menuchoice> <guimenu>Add</guimenu> <guimenu>Add Client
+        Certificate</guimenu> </menuchoice>.
+       </para>
       </step>
       <step>
-       <para><guimenu>共通名</guimenu> に名前を入力します (例: <systemitem class="fqdomainname">client1.example.com</systemitem>) 。</para>
+       <para>
+        Enter a <guimenu>Common Name</guimenu>, for example,
+        <systemitem class="fqdomainname">client1.example.com</systemitem>.
+       </para>
       </step>
       <step>
-       <para>クライアントに対する電子メールアドレスを入力し (例: <systemitem class="resource">user1@client1.example.com</systemitem>) 、 <guimenu>追加</guimenu> を押します。電子メールアドレスを追加したら <guimenu>次へ</guimenu> を押します。</para>
+       <para>
+        Enter the e-mail addresses for your client, for example,
+        <systemitem class="resource">user1@client1.example.com</systemitem>,
+        and click <guimenu>Add</guimenu>. Proceed with
+        <guimenu>Next</guimenu>.
+       </para>
       </step>
       <step>
-       <para><guimenu>パスワード</guimenu> と <guimenu>パスワードの確認</guimenu> にそれぞれパスワードを入力して、 <guimenu>詳細オプション</guimenu> を押します。</para>
-       <para>ツリー表示から <menuchoice> <guimenu>詳細設定</guimenu> <guimenu>Key Usage</guimenu> </menuchoice> を選択し、下記のいずれかの組み合わせで選択を行ないます:</para>
+       <para>
+        Enter your password twice and click <guimenu>Advanced
+        options</guimenu>.
+       </para>
+       <para> Switch to <menuchoice>
+                  <guimenu>Advanced Settings</guimenu>
+                  <guimenu>Key Usage</guimenu>
+                </menuchoice> list and check one of the following flags: </para>
        <itemizedlist mark="bullet" spacing="normal">
         <listitem>
-         <para><option>digitalSignature</option> のみを選択</para>
+         <para>
+          <option>digitalSignature</option> or,
+         </para>
         </listitem>
         <listitem>
-         <para><option>keyAgreement</option> のみを選択</para>
+         <para>
+          <option>keyAgreement</option> or,
+         </para>
         </listitem>
         <listitem>
-         <para><option>digitalSignature</option> と <option>keyAgreement</option> の両方を選択</para>
+         <para>
+          <option>digitalSignature</option> and
+          <option>keyAgreement</option>.
+         </para>
         </listitem>
        </itemizedlist>
-       <para>さらにツリー構造から <menuchoice> <guimenu>熟練者設定</guimenu> <guimenu>extendedKeyUsage</guimenu> </menuchoice> を選択して、<!-- NOTE: not "server certificate"? -->クライアント証明書の場合は <option>clientAuth</option> と入力します。</para>
+       <para>
+        Switch to the <menuchoice> <guimenu>Advanced Settings</guimenu>
+        <guimenu>extendedKeyUsage</guimenu> </menuchoice> and type
+        <option>clientAuth</option> for a server certificate.
+       </para>
       </step>
       <step>
-       <para>&yast; がこれまでに設定した内容を元に、概要を表示します。内容に問題がなければ <guimenu>作成</guimenu> を押します。これで VPN クライアントの証明書が作成され、 <guimenu>証明書</guimenu> の一覧に表示されるようになります。</para>
+       <para>
+        Review the summary. &yast; displays the current settings for
+        confirmation. Click <guimenu>Create</guimenu>. The VPN client
+        certificate is created and is displayed in the
+        <guimenu>Certificates</guimenu> tab.
+       </para>
       </step>
       <step>
-       <para>さらに別のクライアント向けの証明書を作成したい場合は、 <xref linkend="st-security-vpn-serverca-vpnclientca"/> からの手順を繰り返します。</para>
+       <para>
+        If you need certificates for more clients, repeat
+        <xref linkend="st-security-vpn-serverca-vpnclientca"/>.
+       </para>
       </step>
      </substeps>
     </step>
    </procedure>
-   <para><xref linkend="pro-security-vpn-serverca"/> の手順を実施することで、証明機関の証明書と VPN サーバの証明書、そして VPN クライアントの証明書をそれぞれ作成することができました。あとはそれぞれ作成した証明書を取り出す作業を行ないます:</para>
+   <para>
+    After you have successfully finished
+    <xref linkend="pro-security-vpn-serverca"/> you have a VPN root CA, a
+    VPN server CA, and one or more VPN client CAs. To finish the task,
+    proceed with the following procedure:
+   </para>
    <procedure>
     <step>
-     <para><guimenu>証明書</guimenu> タブを選択します。</para>
+     <para>
+      Choose the <guimenu>Certificates</guimenu> tab.
+     </para>
     </step>
     <step>
-     <para>VPN サーバの証明書を、証明書と機密鍵の 2 つのファイルに分けてエクスポート (取り出) します。</para>
+     <para>
+      Export the VPN server certificate in two formats: PEM and unencrypted
+      key in PEM.
+     </para>
      <substeps performance="required">
       <step xml:id="st-security-vpn-selectserverca">
-       <para>VPN サーバの証明書 (この例では <systemitem class="fqdomainname">openvpn.example.com</systemitem>) を選択し、 <menuchoice> <guimenu>エクスポート</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
+       <para>
+        Select your VPN server certificate
+        (<systemitem class="fqdomainname">openvpn.example.com</systemitem>
+        in our example) and choose <menuchoice> <guimenu>Export</guimenu>
+        <guimenu>Export to File</guimenu> </menuchoice>.
+       </para>
       </step>
       <step xml:id="st-security-vpn-selectsaveca">
-       <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択したあと、設定した証明書のパスワードを入力して、 <filename>/etc/openvpn/server_crt.pem</filename> に保存します。</para>
+       <para>
+        Select <guimenu>Only the Certificate in PEM Format</guimenu>, enter
+        your VPN server certificate password and save the file to
+        <filename>/etc/openvpn/server_crt.pem</filename>.
+       </para>
       </step>
       <step>
-       <para><xref linkend="st-security-vpn-selectserverca"/> と <xref linkend="st-security-vpn-selectsaveca"/> の手順を繰り返しますが、このとき <guimenu>鍵だけを暗号化せずに PEM 形式で</guimenu> を選択して行ないます。 <!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=910133--> このとき、保存先のファイルは <filename>/etc/openvpn/server_key.pem</filename> とします。</para>
+       <para>
+        Repeat <xref linkend="st-security-vpn-selectserverca"/> and
+        <xref linkend="st-security-vpn-selectsaveca"/>, but choose the
+        format <guimenu>Only the Key Unencrypted in PEM Format</guimenu>.
+        Save the file to <filename>/etc/openvpn/server_key.pem</filename>.
+       </para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>VPN クライアントの証明書を、証明書と機密鍵の 2 つのファイルに分けてエクスポートする (取り出す) か、 PKCS12 (推奨) 形式でエクスポートします。クライアントごとに下記を実施してください:</para>
+     <para>
+      Export the VPN client certificates and choose an export format, PEM or
+      PKCS12 (preferred). For each client:
+     </para>
      <substeps performance="required">
       <step xml:id="st-security-vpn-selectclient-ca">
-       <para>VPN クライアントの証明書 (この例では <systemitem class="fqdomainname">client1.example.com</systemitem>) を選択し、 <menuchoice> <guimenu>エクスポート</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
+       <para>
+        Select your VPN client certificate
+        (<systemitem class="fqdomainname">client1.example.com</systemitem>
+        in our example) and choose <menuchoice> <guimenu>Export</guimenu>
+        <guimenu>Export to File</guimenu> </menuchoice>.
+       </para>
       </step>
-<!--taroth 2014-12-19: fix for https://bugzilla.suse.com/show_bug.cgi?id=909494-->
       <step>
-       <para><guimenu>関連する証明機関を繋げた PKCS #12 形式で</guimenu> を選択したあと、設定した証明書のパスワードを入力して、 <guimenu>ファイル名</guimenu> を指定します。今回は <filename>/etc/openvpn/client1.p12</filename> に保存します。</para>
+       <para> Select <guimenu>Like PKCS12 and Include the CA
+                  Chain</guimenu>, enter your VPN client certificate key
+                password and provide a PKCS12 password. Enter a
+                  <guimenu>File Name</guimenu>, click
+                  <guimenu>Browse</guimenu> and save the file to
+                  <filename>/etc/openvpn/client1.p12</filename>. </para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>ファイルをクライアント (今回の例では <systemitem class="fqdomainname">client1.example.com</systemitem>) にコピーします。</para>
+     <para>
+      Copy the files to your client (in our example,
+      <systemitem class="fqdomainname">client1.example.com</systemitem>).
+     </para>
     </step>
     <step>
-     <para>続けて、 VPN 用の証明機関 (今回の例では <systemitem>VPN-Server-CA</systemitem>) の証明書をエクスポートします:</para>
+     <para>
+      Export the VPN CA (in our example
+      <systemitem>VPN-Server-CA</systemitem>):
+     </para>
      <substeps performance="required">
       <step>
-       <para><guimenu>説明</guimenu> タブに切り替えます。</para>
+       <para>
+        Switch to the <guimenu>Description</guimenu> tab.
+       </para>
       </step>
       <step>
-       <para><menuchoice> <guimenu>詳細設定</guimenu> <guimenu>ファイルにエクスポート</guimenu> </menuchoice> を選択します。</para>
+       <para>
+        Select <menuchoice> <guimenu>Advanced</guimenu> <guimenu>Export to
+        File</guimenu> </menuchoice>.
+       </para>
       </step>
       <step>
-       <para><guimenu>証明書のみを PEM 形式で</guimenu> を選択し、 <filename>/etc/openvpn/vpn_ca.pem</filename> に保存します。</para>
+       <para>
+        Mark <guimenu>Only the Certificate in PEM Format</guimenu> and save
+        the file to <filename>/etc/openvpn/vpn_ca.pem</filename>.
+       </para>
       </step>
      </substeps>
     </step>
    </procedure>
-   <para>必要であれば、クライアント側の PKCS12 ファイルを PEM 形式に変換することができます:</para>
+   <para>
+    If desired, the client PKCS12 file can be converted into the PEM format
+    using this command:
+   </para>
 <screen>openssl pkcs12 -in client1.p12 -out client1.pem</screen>
-   <para><filename>client1.pem</filename> を作成するにあたっては、クライアント側の証明書のパスワードを入力する必要があります。この PEM ファイルにはクライアントの証明書のほか、鍵と証明機関の証明書が含まれています。あとはテキストエディタなどを使用すれば、これらを 3 つのファイルに分割することもできます。作成したファイルは、 OpenVPN 設定ファイル内の <option>ca</option> , <option>cert</option> , <option>key</option> の各設定で指定することができます。</para>
+   <para>
+    Enter your client password to create the
+    <filename>client1.pem</filename> file. The PEM file contains the client
+    certificate, client key, and the CA certificate. You can split this
+    combined file using a text editor and create three separate files. The
+    file names can be used for the <option>ca</option>,
+    <option>cert</option>, and <option>key</option> options in the OpenVPN
+    configuration file (see <xref linkend="ex-vpn-serv-config"/>).
+   </para>
   </sect2>
+-->
 
   <sect2 xml:id="sec-security-vpn-config-server">
    <title>VPN サーバの設定</title>
