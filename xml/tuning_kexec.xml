@@ -94,7 +94,14 @@
    <title>&x86-64; でのサイズの割り当て</title>
    <step>
     <para>コンピュータに対する基礎値を得るには、下記のコマンドを入力して実行します:</para>
-    <screen>&prompt.root;<command>kdumptool</command> calibrate</screen>
+    <screen>&prompt.root;<command>kdumptool</command> calibrate
+Total: 49074
+Low: 72
+High: 180
+MinLow: 72
+MaxLow: 3085
+MinHigh: 0
+MaxHigh: 45824 </screen>
     <para>このコマンドを実行すると、いくつかの値が表示されます。それぞれはメガバイト単位です。</para>
    </step>
    <step>
@@ -102,7 +109,19 @@
     <note>
      <title><literal>Low</literal> と <literal>High</literal> の値の意味について</title>
      <para>&x86-64; コンピュータの場合、 <literal>High</literal> は利用可能な全てのメモリを予約する意味になり、 <literal>Low</literal> は DMA32 ゾーン内のメモリ (つまり 4 GB 以下の領域) を予約する意味になります。 <remark> Petr Tesarik says in bsc#948565 that High means "all memory". This is not completely true in SLE 12 SP1 RC1, but fixed for SLE 12 SP1 RC2. - sknorr, 2015-10-05 </remark></para>
-     <para><remark>The following is confusing, but probably true ( https://bugzilla.suse.com/show_bug.cgi?id=948565#c6 ). - sknorr, 2015-10-05 </remark> お使いのコンピュータに搭載されているメモリが 4 GB よりも少ない場合、 <literal>High</literal> で示されたメモリ量を割り当て、 <literal>Low</literal> の値は無視されます。 4 GB よりも多い場合は、 <literal>Low</literal> で示されたメモリ量を追加で割り当てる必要があります。</para>
+     <para>
+      <remark>The following is confusing, but probably true
+      ( https://bugzilla.suse.com/show_bug.cgi?id=948565#c6 ).
+      - sknorr, 2015-10-05
+      </remark>      
+      SIZE_LOW is the amount of memory required by 32-bit-only devices. The kernel 
+      will allocate 64M for DMA32 bounce buffers. If your server does not have any 32-bit-only 
+      devices, everything should work with the default allocation of 72M for
+      <literal>SIZE_LOW</literal>. A possible exception to this is on NUMA machines, which
+      may make it appear that more <literal>Low</literal> memory is needed. The
+      &kdump; kernel may be booted with <literal>numa=off</literal> to make sure normal 
+      kernel allocations do not use <literal>Low</literal> memory.      
+     </para>
     </note>
    </step>
    <step>
@@ -129,19 +148,6 @@
        </formalpara>
       </listitem>
      </itemizedlist>
-     <!-- Note requested by dakechi/hkuehnemund, based on information from
-     arunge. Possible info providers: ptesarik (main) and lzwang. - sknorr, 2017-07-21-->
-     <remark>
-      FIXME FIXME FIXME: This is just based on practical experience from one
-      person, without input from the main technical stakeholders.
-     </remark>
-     <important>
-      <title>大量のメモリを搭載するシステムでの調整について</title>
-      <para>お使いのマシンに 1 [TB] 以上のメモリが搭載されている場合、たとえば SAP HANA などを多数動作させているマシンなどがそれにあたりますが、この場合は &kdump; の High と Low のメモリ量を調整する必要があります。</para>
-      <para>下記は経験則によるものですが、下記の数式を使用すると成功しやすいです:</para>
-<screen>SIZE_HIGH = (<replaceable>推奨値</replaceable> * <replaceable>TB_単位のメモリ量</replaceable>) + (<replaceable>LUN_数</replaceable> / 2)</screen>
-<screen>SIZE_LOW = (<replaceable>推奨値</replaceable> * <replaceable>TB_単位のメモリ量</replaceable>) + <replaceable>ドライバ側での予約調整量</replaceable></screen>
-     </important>
     </step>
     <step>
      <para>お使いのデバイスに対応するドライバが DMA32 ゾーン内に多数の予約領域を作成する場合は、 <literal>Low</literal> の値も調整する必要があります。しかしながら、この値は簡単に計算できるものではありません。正しい値を得るには、試行錯誤を繰り返す必要があります。</para>
