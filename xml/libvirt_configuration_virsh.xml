@@ -62,12 +62,14 @@
 
   <para>なお設定の保存時には、 <command>virsh</command> が RelaxNG スキーマを利用して設定内容のチェックを行ないます。</para>
  </sect1>
- 
  <sect1 xml:id="sec-libvirt-config-maxgrantframes-virsh">
-     <title>ゲスト側のメモリ割り当ての設定 (&xen; のみ)</title>
-         <para><command>libvirt</command> には <command>virsh</command> でメモリの割り当て量を調整するための仕組みが提供されています。 &xen; 準仮想化デバイスは PCI コントローラのようなデバイスバスに似た <literal>xenbus</literal> コントローラに接続されているほか、 &xen; の <literal>max_grant_frames</literal> 属性を設定することで、メモリに似た割り当て設定を変更することができるようになっていますが、この割り当ては <literal>xenbus</literal> コントローラに割り当てるフレーム数を設定する項目になります。</para>
-         <para>既定値は 32 で、必要に応じて最大で dom0 のサイズまで増やしたり、減らしたりすることができます。サイズが十分かどうかは、接続されているデバイス数や負荷 (ネットワークインターフェイスや I/O の負荷) によって異なります。 dom0 やその他のゲストに対して、使用済みの <literal>max_grant_frames</literal> の値や最大値を確認したい場合は、 <command>xen-diag</command> コマンドをお使いください。なお、ゲストは動作中でなければなりません:</para>
-         <screen>&prompt.sudo;virsh list 
+  <title>ゲスト側のメモリ割り当ての設定 (&xen; のみ)</title>
+
+  <para><command>libvirt</command> には <command>virsh</command> でメモリの割り当て量を調整するための仕組みが提供されています。 &xen; 準仮想化デバイスは PCI コントローラのようなデバイスバスに似た <literal>xenbus</literal> コントローラに接続されているほか、 &xen; の <literal>max_grant_frames</literal> 属性を設定することで、メモリに似た割り当て設定を変更することができるようになっていますが、この割り当ては <literal>xenbus</literal> コントローラに割り当てるフレーム数を設定する項目になります。</para>
+
+  <para>既定値は 32 で、必要に応じて最大で dom0 のサイズまで増やしたり、減らしたりすることができます。サイズが十分かどうかは、接続されているデバイス数や負荷 (ネットワークインターフェイスや I/O の負荷) によって異なります。 dom0 やその他のゲストに対して、使用済みの <literal>max_grant_frames</literal> の値や最大値を確認したい場合は、 <command>xen-diag</command> コマンドをお使いください。なお、ゲストは動作中でなければなりません:</para>
+
+<screen>&prompt.sudo;virsh list 
  Id   Name             State
 --------------------------------
  0    Domain-0         running
@@ -79,17 +81,21 @@ domid=0: nr_frames=1, max_nr_frames=256
 &prompt.sudo;xen-diag gnttab_query_size 3
 domid=3: nr_frames=3, max_nr_frames=32
 </screen>
-<para>上記では、 sle15sp1 のゲストは 32 フレームのうちの 3 フレームしか使用していません。性能面で何らかの問題がある場合や、フレーム数が不足している旨のログが記録されているような場合は、 <command>virsh</command> でフレーム数を増やしてください。ゲスト側の設定ファイル内にある <literal>&lt;controller type='xenbus'</literal> という行を探して、 <literal>maxGrantFrames</literal> という制御要素を追加します:</para>
+
+  <para>上記では、 sle15sp1 のゲストは 32 フレームのうちの 3 フレームしか使用していません。性能面で何らかの問題がある場合や、フレーム数が不足している旨のログが記録されているような場合は、 <command>virsh</command> でフレーム数を増やしてください。ゲスト側の設定ファイル内にある <literal>&lt;controller type='xenbus'</literal> という行を探して、 <literal>maxGrantFrames</literal> という制御要素を追加します:</para>
+
 <screen>&prompt.sudo;virsh edit sle15sp1
  &lt;controller type='xenbus' index='0' maxGrantFrames='40'/&gt;
 </screen>
-<para>設定を保存してゲストを再起動してください。これで設定が反映されます:</para>
+
+  <para>設定を保存してゲストを再起動してください。これで設定が反映されます:</para>
+
 <screen>&prompt.sudo;xen-diag gnttab_query_size 3
 domid=3: nr_frames=3, max_nr_frames=40
 </screen>
-<para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/> (英語) にある libvirt <citetitle>Domain XML format</citetitle> マニュアルの中にある、 <citetitle>Controllers</citetitle> 章をお読みください。</para>
-</sect1>      
-         
+
+  <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/> (英語) にある libvirt <citetitle>Domain XML format</citetitle> マニュアルの中にある、 <citetitle>Controllers</citetitle> 章をお読みください。</para>
+ </sect1>
  <sect1 xml:id="sec-libvirt-config-machinetype-virsh">
   <title>マシンの種類の変更</title>
 
@@ -812,29 +818,29 @@ pci_0000_04_11_5</screen>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-direct">
   <title>&vmhost; のネットワークインターフェイスを共有するための macvtap の使用</title>
-  
+
   <para>macvtap は &vmguest; の仮想インターフェイスをホストのネットワークインターフェイスに直接結びつけるための方法です。 macvtap ベースのインターフェイスは &vmhost; のネットワークインターフェイスを拡張するための仕組みで、同じイーサネットセグメント内で別の MAC アドレスを使用します。通常は &vmguest; と &vmhost; をそれぞれ同じスイッチに接続する形になります。</para>
-  
+
   <note>
    <title>Linux ブリッジでは macvtap を使用することができない問題について</title>
    <para>macvtap は対象のインターフェイスが Linux ブリッジに接続されている場合、使用することができません。 macvtap インターフェイスを作成する前に、ブリッジからインターフェイスを削除しておく必要があります。</para>
   </note>
-  
+
   <note>
    <title>macvtap を利用した &vmguest; と &vmhost; の通信</title>
    <para>macvtap を使用すると、 &vmguest; 同士のほか、ネットワーク内の他のホストとも通信を行なうことができるようになります。ただし、 &vmguest; が動作している &vmhost; との間は、通信を行なうことができません。これは macvtap の意図的な動作によるもので、 &vmhost; の物理イーサネットが macvtap ブリッジに割り当てられているためです。 &vmguest; からブリッジへのトラフィックはそのまま物理インターフェイスに送信され、 &vmhost; の IP スタックに戻ることができないようになっています。これと同様に、 &vmhost; の IP スタックからのトラフィックも物理インターフェイスにそのまま送信され、 &vmguest; の macvtap に戻ることができなくなっています。</para>
   </note>
-  
+
   <para>macvtap ベースの仮想ネットワークインターフェイスは libvirt でサポートされていて、インターフェイスの種類 (type) を <literal>direct</literal> にすることによって実現することができます。たとえば下記のようになります:</para>
-  
-  <screen>&lt;interface type='direct'&gt;
+
+<screen>&lt;interface type='direct'&gt;
    &lt;mac address='aa:bb:cc:dd:ee:ff'/&gt;
    &lt;source dev='eth0' mode='bridge'/&gt;
    &lt;model type='virtio'/&gt;
    &lt;/interface&gt;</screen>
-  
+
   <para>macvtap の操作モードは、 <literal>mode</literal> 属性を設定することで制御することができます。下記の一覧には、設定可能な値とそれらの説明を示しています:</para>
-  
+
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
     <para><literal>vepa</literal> : 全ての &vmguest; パケットを外部ブリッジに送信します。同じ &vmhost; 内の &vmguest; を宛先とするパケットは、 VEPA 対応ブリッジによって &vmhost; 側に戻される動作になります (現在のブリッジは一般に VEPA 対応ではありません) 。</para>
@@ -852,10 +858,91 @@ pci_0000_04_11_5</screen>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-disable-virtio-mellon">
   <title>メモリバルーンデバイスの無効化</title>
-   <para>メモリバルーン機能は KVM では既定のオプションになっています。 &vmguest; 側には明示的にデバイスが割り当てられるようになっていますので、 &vmguest; の XML 設定ファイルには、メモリバルーンのタグを追加する必要はありません。何らかの理由で &vmguest; のメモリバルーン機能を無効化したい場合は、下記のようにして <literal>model='none'</literal> を指定する必要があります:</para>
 
-  <screen>&lt;devices&gt;
+  <para>メモリバルーン機能は KVM では既定のオプションになっています。 &vmguest; 側には明示的にデバイスが割り当てられるようになっていますので、 &vmguest; の XML 設定ファイルには、メモリバルーンのタグを追加する必要はありません。何らかの理由で &vmguest; のメモリバルーン機能を無効化したい場合は、下記のようにして <literal>model='none'</literal> を指定する必要があります:</para>
+
+<screen>&lt;devices&gt;
    &lt;memballoon model='none'/&gt;
 &lt;/device&gt;</screen>
-  </sect1>
+ </sect1>
+ <sect1 xml:id="virsh-video-dual-head">
+  <title>Configuring Multiple Monitors (Dual Head)</title>
+
+  <para>
+   &libvirt; supports a dual head configuration to display the video output of
+   the &vmguest; on multiple monitors.
+  </para>
+
+  <important>
+   <title>No Support for &xen;</title>
+   <para>
+    The &xen; hypervisor does not support dual head configuration.
+   </para>
+  </important>
+
+  <procedure>
+   <title>ストレージデバイスの設定</title>
+   <step>
+    <para>
+     While the virtual machine is running, verify that the
+     <package>xf86-video-qxl</package> package is installed in the &vmguest;:
+    </para>
+<screen>&prompt.user;rpm -q xf86-video-qxl</screen>
+   </step>
+   <step>
+    <para>初期設定時に &vmguest; に SR-IOV デバイスを追加する場合は、あらかじめ <xref linkend="sec-libvirt-config-io-config"/> で説明している手順で設定を済ませておく必要があります。</para>
+   </step>
+   <step>
+    <para>
+     Verify that the model of the virtual graphics card is 'qxl':
+    </para>
+<screen>
+&lt;video&gt;
+ &lt;model type='qxl' ... /&gt;
+</screen>
+   </step>
+   <step>
+    <para>
+     Increase the <option>heads</option> parameter in the graphics card model
+     specification from the default '1' to for example '2':
+    </para>
+<screen>&lt;hostdev mode='subsystem' type='pci' managed='yes'&gt;
+  &lt;source&gt;
+    &lt;address domain='0x0' bus='0x03' slot='0x07' function='0x0'/&gt;
+  &lt;/source&gt;
+&lt;/hostdev&gt;</screen>
+   </step>
+   <step>
+    <para>
+     Configure the virtual machine to use the Spice display instead of VNC:
+    </para>
+<screen>
+&lt;graphics type='spice' port='5916' autoport='yes' listen='0.0.0.0'&gt;
+ &lt;listen type='address' address='0.0.0.0'/&gt;
+&lt;/graphics&gt;
+</screen>
+   </step>
+   <step>
+    <para>
+     Start the virtual machine and connect to its display with
+     <command>virt-viewer</command>, for example:
+    </para>
+<screen>&prompt.user;virt-viewer --connect qemu+ssh://<replaceable>USER@VM_HOST</replaceable>/system</screen>
+   </step>
+   <step>
+    <para>
+     From the list of VMs, select the one whose configuration you have modified
+     and confirm with <guimenu>Connect</guimenu>.
+    </para>
+   </step>
+   <step>
+    <para>
+     After the graphical subsystem (Xorg) loads in the &vmguest;, select
+     <menuchoice><guimenu>View</guimenu><guimenu>Displays</guimenu><guimenu>Display
+     2</guimenu></menuchoice> to open a new window with the second monitor's
+     output.
+    </para>
+   </step>
+  </procedure>
+ </sect1>
 </chapter>
