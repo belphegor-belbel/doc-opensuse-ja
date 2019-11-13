@@ -1202,6 +1202,302 @@ node.session.iscsi.ImmediateData = Yes
    </para>
   </sect2>
  </sect1>
+
+ <sect1 xml:id="sec-iscsi-targetcli">
+  <title>Setting up Software Targets Using targetcli-fb</title>
+  <para>
+   <systemitem>targetcli</systemitem> is a shell for managing the configuration
+   of the LinuxIO (LIO) target subsystem. The shell can be called
+   interactively, or you can execute one command at a time, much like a
+   conventional shell. Similar to a conventional shell, you can traverse
+   the targetcli functional hierarchy using the <command>cd</command> command
+   and list contents with the <command>ls</command> command.
+  </para>
+  <para>
+   The available commands depend on the current directory. While each directory
+   has its own set of commands, there are also commands that are available in
+   all directories (for example, the <command>cd</command> and
+   <command>ls</command> commands).
+  </para>
+  <para>
+   <systemitem>targetcli</systemitem> commands have the following format:
+  </para>
+<screen>
+<replaceable>[DIRECTORY]</replaceable> <command>command</command> <replaceable>[ARGUMENTS]</replaceable>
+</screen>
+   <para>
+    You can use the <command>help</command> command in any directory to view a
+    list of available commands or information about any command in particular.
+   </para>
+   <para>
+    The <systemitem>targetcli</systemitem> tool is part of the
+    <package>targetcli-fb</package> package. This package is available in the
+    official &productname; software repository, and it can be installed using
+    the following command:
+   </para>
+<screen>&prompt.sudo;zypper install targetcli-fb</screen>
+   <para>
+    After the <package>targetcli-fb</package> package has been installed,
+    enable the <literal>targetcli</literal> service:
+   </para>
+<screen>&prompt.sudo;systemctl enable targetcli
+&prompt.sudo;systemctl start targetcli</screen>
+   <para>
+    To switch to the targetcli shell, run the <command>targetcli</command> as root:
+   </para>
+<screen>&prompt.sudo;targetcli</screen>
+   <para>
+    You can then run the <command>ls</command> command to see the default
+    configuration.
+   </para>
+<screen>/&gt; ls
+o- / ............................ [...]
+  o- backstores ................. [...]
+  | o- block ..... [Storage Objects: 0]
+  | o- fileio .... [Storage Objects: 0]
+  | o- pscsi ..... [Storage Objects: 0]
+  | o- ramdisk ... [Storage Objects: 0]
+  | o- rbd ....... [Storage Objects: 0]
+  o- iscsi ............... [Targets: 0]
+  o- loopback ............ [Targets: 0]
+  o- vhost ............... [Targets: 0]
+  o- xen-pvscsi .......... [Targets: 0]
+/&gt;</screen>
+   <para>
+    As the output of the <command>ls</command> command indicates, there are no
+    configured back-ends. So the first step is to configure one of the
+    supported software targets.
+   </para>
+   <para>
+    targetcli supports the following back-ends:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      <literal>fileio</literal>, local image file
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>block</literal>, block storage on a dedicated disk or partition
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>pscsi</literal>, SCSI pass-through devices
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>ramdisk</literal>, memory-based back-end
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <literal>rbd</literal>, Ceph RADOS block devices
+     </para>
+    </listitem>
+   </itemizedlist>
+   <para>
+    To familiarize yourself with functionality of targetcli, set up a local
+    image file as a software target using the <command>create</command> command:
+   </para>
+<screen>/backstores/fileio create test-disc <replaceable>/alt</replaceable>/test.img 1G</screen>
+   <para>
+    This creates the 1GB <filename>test.img</filename> image in the specified
+    location (in this case <filename>/alt</filename>). Run
+    <command>ls</command>, and you should see the following result:
+   </para>
+<screen>/&gt; ls
+o- / ........................................................... [...]
+  o- backstores ................................................ [...]
+  | o- block .................................... [Storage Objects: 0]
+  | o- fileio ................................... [Storage Objects: 1]
+  | | o- test-disc ... [/alt/test.img (1.0GiB) write-back deactivated]
+  | |   o- alua ......     .......................... [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp      .... [ALUA state: Active/optimized]
+  | o- pscsi .................................... [Storage Objects: 0]
+  | o- ramdisk .................................. [Storage Objects: 0]
+  | o- rbd ...................................... [Storage Objects: 0]
+  o- iscsi .............................................. [Targets: 0]
+  o- loopback ........................................... [Targets: 0]
+  o- vhost .............................................. [Targets: 0]
+  o- xen-pvscsi ......................................... [Targets: 0]
+/&gt;</screen>   
+   <para>
+    The output indicates that there is now a file-based back-store, under the
+    <filename>/backstores/fileio</filename> directory, called
+    <literal>test-disc</literal>, which is linked to the created file
+    <filename>/alt/test.img</filename>. Note that the new back-store is not yet
+    activated.
+   </para>
+   <para>
+    The next step is to connect an iSCSI target front-end to the back-end
+    storage. Each target must have an <literal>IQN</literal> (iSCSI Qualified
+    Name). The most commonly used IQN format is as follows:
+   </para>
+<screen>iqn.<replaceable>YYYY-MM.NAMING-AUTHORITY:UNIQUE-NAME</replaceable></screen>
+   <para>
+    The following parts of an IQN are required:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      <replaceable>YYYY-MM</replaceable>, the year and month when the naming
+      authority was established
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <replaceable>NAMING-AUTHORITY</replaceable>, reverse-syntax of the
+      Internet Domain Name of the naming authority
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <replaceable>UNIQUE-NAME</replaceable>, a domain-unique name chosen by the naming authority
+     </para>
+    </listitem>
+   </itemizedlist>
+   <para>
+    For example, for the domain <literal>open-iscsi.com</literal>, the IQN can
+    be as follows:
+   </para>
+<screen>iqn.2005-03.com.open-iscsi:<replaceable>UNIQUE-NAME</replaceable></screen>
+   <para>
+    When creating an iSCSI target, the <command>targetcli</command> command
+    allows you to assign your own IQN, as long as it follows the specified
+    format. You can also let the command create an IQN for you by omitting a
+    name when creating the target, for example:
+   </para>
+<screen>/&gt; iscsi/ create</screen>
+   <para>
+    Run the <command>ls</command> again
+   </para>
+<screen>/&gt; ls
+o- / ............................................................... [...]
+  o- backstores .................................................... [...]
+  | o- block ........................................ [Storage Objects: 0]
+  | o- fileio ....................................... [Storage Objects: 1]
+  | | o- test-disc ....... [/alt/test.img (1.0GiB) write-back deactivated]
+  | |   o- alua ......................................... [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp ............. [ALUA state: Active/optimized]
+  | o- pscsi ........................................ [Storage Objects: 0]
+  | o- ramdisk ...................................... [Storage Objects: 0]
+  | o- rbd .......................................... [Storage Objects: 0]
+  o- iscsi .................................................. [Targets: 1]
+  | o- iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456 ... [TPGs: 1]
+  |   o- tpg1 ..................................... [no-gen-acls, no-auth]
+  |     o- acls ................................................ [ACLs: 0]
+  |     o- luns ................................................ [LUNs: 0]
+  |     o- portals .......................................... [Portals: 1]
+  |       o- 0.0.0.0:3260 ........................................... [OK]
+  o- loopback ............................................... [Targets: 0]
+  o- vhost .................................................. [Targets: 0]
+  o- xen-pvscsi ............................................. [Targets: 0]
+/&gt; </screen>
+   <para>
+    The output shows the created iSCSI target node with its automatically
+    generated IQN
+    <literal>iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456</literal>
+   </para>
+   <para>
+    Note that targetcli has also created and enabled the default target portal
+    group <literal>tpg1</literal>. This is done because the variables
+    <literal>auto_add_default_portal</literal> and
+    <literal>auto_enable_tpgt</literal> at the root level are set to
+    <literal>true</literal> by default.
+   </para>
+   <para>
+    The command also created the default portal with the
+    <literal>0.0.0.0</literal> IPv4 wildcard. This means that any IPv4 address
+    can access the configured target.
+   </para>
+   <para>
+    Next step is to create a LUN (Logical Unit Number) for the iSCSI
+    target. The best way to do this is to let targetcli assign its name and
+    number automatically. Switch to the directory of the
+    iSCSI target, and then use the <command>create</command> command in the
+    <filename>lun</filename> directory to assign a LUN to the back store.
+   </para>
+<screen>/&gt; cd /iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/
+/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456&gt; cd tpg1
+/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt; luns/
+create /backstores/fileio/test-disc</screen>
+  <para>
+   Run the <command>ls</command> command to see the changes:
+  </para>
+<screen>/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt; ls
+o- tpg1 .............................................. [no-gen-acls, no-auth]
+      o- acls ..................................................... [ACLs: 0]
+      o- luns ..................................................... [LUNs: 1]
+      | o- lun0 ....... [fileio/test-disc (/alt/test.img) (default_tg_pt_gp)]
+      o- portals ............................................... [Portals: 1]
+        o- 0.0.0.0:3260 ................................................ [OK]</screen>
+   <para>
+    There is now an iSCSI target that has a 1GB file-based back-store. The
+    target has the
+    <literal>iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456</literal>
+    name, and it can be accessed from any network port of the system.
+   </para>
+   <para>
+    Finally, you need to ensure that initiators have access to the configured
+    target. One way to do this is to create an ACL rule for each initiator that
+    allows them to connect to the target. In this case, you must list each
+    desired initiator using its IQN. The IQNs of the existing initiators can be
+    found in the <filename>/etc/iscsi/initiatorname.iscsi</filename> file. Use
+    the following command to add the desired initiator (in this case, it's
+    <literal>iqn.1996-04.de.suse:01:54cab487975b</literal>):
+   </para>
+<screen>/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt; acls/ create iqn.1996-04.de.suse:01:54cab487975b
+Created Node ACL for iqn.1996-04.de.suse:01:54cab487975b
+Created mapped LUN 0.
+/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt;</screen>
+   <para>
+    Alternatively, you can run the target in a demo mode with no access
+    restrictions. This method is less secure, but it can be useful for
+    demonstration purposes and running on closed networks. To enable the demo
+    mode, use the following commands:
+   </para>
+<screen>/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt; set attribute generate_node_acls=1
+/iscsi/iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456/tpg1&gt; set attribute demo_mode_write_protect=0</screen>
+   <para>
+    The last step is to save the created configuration using the
+    <command>saveconfig</command> command available in the root directory:
+   </para>
+<screen>/&gt; saveconfig /etc/target/example.json</screen>
+   <para>
+    If at some point you need to restore configuration from the saved file, you
+    need to clear the current configuration first. Keep in mind that clearing
+    the current configuration results in data loss unless you save your
+    configuration first. Use the following command to clear and reload the
+    configuration:
+   </para>
+<screen>/&gt; clearconfig
+As a precaution, confirm=True needs to be set
+/&gt; clearconfig confirm=true
+All configuration cleared
+/&gt; restoreconfig /etc/target/example.json
+Configuration restored from /etc/target/example.json
+/&gt;</screen>   
+    <para>
+     To test whether the configured target is working, connect to it using the
+     <package>open-iscsi</package> iSCSI initiator installed on the same
+     system (replace <replaceable>HOSTNAME</replaceable> with hostname of the
+     local machine):
+    </para>
+<screen>&prompt.user;iscsiadm -m discovery -t st -p <replaceable>HOSTNAME</replaceable></screen>
+   <para>
+    This command returns a list of found targets, for example:
+   </para>
+<screen>192.168.20.3:3260,1 iqn.2003-01.org.linux-iscsi.e83.x8664:sn.8b35d04dd456</screen>
+    <para>
+     You can then connect to the listed target using the
+     <command>login</command> iSCSI command. This makes the target available as
+     a local disk.
+    </para>
+ </sect1>
+ 
  <sect1 xml:id="sec-iscsi-installation">
   <title>Using iSCSI Disks when Installing</title>
 
