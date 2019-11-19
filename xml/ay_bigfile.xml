@@ -469,7 +469,7 @@ exit 0
     <para><!-- 署名処理セクション --> <xref linkend="CreateProfile-General-signature" xrefstyle="HeadingOnPage"/></para>
    </callout>
    <callout arearefs="co-ay-general-storage">
-    <para><!-- ストレージセクション --> <xref linkend="CreateProfile-General-storage" xrefstyle="HeadingOnPage"/></para>
+    <para><!-- ストレージセクション --> <xref linkend="CreateProfile-Partitioning" xrefstyle="HeadingOnPage"/></para>
    </callout>
    <callout arearefs="co-ay-general-wait">
     <para><!-- 待機セクション --> <xref linkend="CreateProfile-General-wait" xrefstyle="HeadingOnPage"/></para>
@@ -1542,106 +1542,64 @@ openssl x509 -noout -fingerprint -sha256
   <sect1 xml:id="CreateProfile-Partitioning">
    <title>パーティション設定</title>
 
-   <para>
-    When it comes to partitioning, we can categorize &ay; use cases into three
-    different levels:
-   </para>
+   <para>パーティション設定に対して、 &ay; では 3 つの種類に分類して扱っています:</para>
 
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      Automatic partitioning. The user does not care about the partitioning and
-      trusts in &ay; to do the right thing.
-     </para>
+     <para>自動的なパーティション設定。ユーザ側にはパーティション設定に対する問い合わせを行なわず、 &ay; 側で設定を全て賄うことを指します。</para>
     </listitem>
     <listitem>
-     <para>
-      Guided partitioning. The user would like to set some basic settings.
-      E.g., a user would like to use LVM but has no idea about how to configure
-      partitions, volume groups, and so on.
-     </para>
+     <para>ガイド付きのパーティション設定。ユーザ側で LVM を使用するかどうかなどの基本設定を行なうものの、詳しいパーティション設定やボリュームグループの設定など、詳細箇所については行なわないものを指します。</para>
     </listitem>
     <listitem>
-     <para>
-      Expert partitioning. The user specifies how the layout should look.
-      However, a complete definition is not required, and AutoYaST should propose
-      reasonable defaults for missing parts.
-     </para>
+     <para>熟練者向けのパーティション設定。ユーザ側で詳細な配置の設定を行なうことを指します。ただし、全ての設定までを指定する必要はなく、必要に応じて環境に合わせた既定値を提案するものとします。</para>
     </listitem>
    </itemizedlist>
 
-   <para>
-    To some extent, it is like using the regular installer. You can skip
-    the partitioning screen and trust in &yast;, use the <emphasis>Guided
-    Proposal</emphasis>, or define the partitioning layout through the
-    <emphasis>Expert Partitioner</emphasis>.
-   </para>
+   <para>これらの分類は、通常のインストーラでも選択することができます。 <emphasis>ガイド付き設定</emphasis> を使用すれば詳細なパーティション設定画面を飛ばして &yast; 側に設定を任せることができますし、 <emphasis>熟練者向けパーティション設定</emphasis> を使用すれば、詳細な配置を設定することができます。</para>
 
    <sect2 xml:id="CreateProfile-Automatic-Partitioning">
     <title>自動的なパーティション設定</title>
 
-    <para>
-     &ay; is able to come up with a sensible partitioning layout without any
-     user indication. Although it depends on the selected product to install,
-     &ay; usually proposes a Btrfs root file system, a separate
-     <literal>/home</literal> using XFS and a swap partition. Additionally,
-     depending on the architecture, it adds any partition that might be needed
-     in order to boot (like BIOS Grub partitions).
-    </para>
+    <para>&ay; では、ユーザに対して一切問い合わせを行なわずに賢くパーティション設定を行なうことができます。インストールする製品にも依存しますが、 &ay; では通常、ルートファイルシステムに対して btrfs を、個別の <literal>/home</literal> パーティションに対して XFS をそれぞれ作成し、スワップパーティションを加えた 3 つのパーティションを作成します。これに加えて、アーキテクチャによっては起動に必要なパーティション (BIOS GRUB パーティションなど) を追加で作成することもあります。</para>
 
-    <para>
-     However, these defaults might change depending on factors like the
-     available disk space. E.g., having a separate <literal>/home</literal>
-     depends on the amount of available disk space.
-    </para>
+    <para>しかしながら、これらの既定値はディスク領域などの状況によっても変化します。たとえばディスク容量が少ない場合、個別の <literal>/home</literal> パーティションが作成されなかったりします。</para>
 
-    <para>
-     If you want to influence these default values, you can use the approach
-     described in <xref linkend="CreateProfile-Guided-Partitioning"/>.
-    </para>
+    <para>これらの既定値を調整したい場合は、 <xref linkend="CreateProfile-Guided-Partitioning"/> で説明している設定項目を調整してください。</para>
    </sect2>
 
    <sect2 xml:id="CreateProfile-Guided-Partitioning">
-    <title>自動的なパーティション設定</title>
+    <title>ガイド付きのパーティション設定</title>
 
-    <para>
-     Although &ay; can come up with a partitioning layout without any user
-     indication, sometimes it is useful to set some generic parameters and let
-     &ay; do the rest. For instance, you may be interested in using LVM or
-     encrypting your file systems without having to deal with the details. It is
-     similar to what you would do when using the guided proposal in a regular
-     installation.
-    </para>
+    <para>&ay; には、一切ユーザに対して問い合わせを行なうことなくパーティション設定を行なう機能がありますが、いくつかの一般的なパラメータのみを指定しておいて、残りを &ay; に任せたほうが都合の良い場合があります。たとえば詳細なパラメータを指定せずに LVM を使用したい場合や、ファイルシステムの暗号化を行ないたいような場合がそれにあたります。これは通常のインストール処理でも同様で、ガイド付きの設定を利用することで、基本的なパラメータのみを指定したパーティション設定を行なうことができます。</para>
 
-    <para>
-     The <literal>storage</literal> section in <xref linkend="example-lvm-guided"/> instructs &ay; to set up a partitioning
-     layout using LVM and deleting all Windows partitions, no matter if needed
-     or not.
-    </para>
+    <para><xref linkend="example-lvm-guided"/> で示している <literal>storage</literal> セクションでは、 LVM を利用するとともに、必要かどうかにかかわらず全ての Windows パーティションを削除するような設定を示しています。</para>
 
     <example xml:id="example-lvm-guided">
-     <title>詳細な自動パーティション設定</title>
+     <title>LVM ベースのガイド付きパーティション設定</title>
      <screen>&lt;general&gt;
-  &lt;mode&gt;
-    &lt;confirm config:type="boolean"&gt;false&lt;/confirm&gt;
-    &lt;second_stage config:type="boolean"&gt;false&lt;/second_stage&gt;
-  &lt;/mode&gt;
-&lt;/general&gt;</screen>
+   &lt;storage&gt;
+     &lt;proposal&gt;
+       &lt;lvm config:type="boolean"&gt;true&lt;lvm&gt;
+       &lt;windows_delete_mode config:type="symbol"&gt;all&lt;windows_delete_mode&gt;
+     &lt;/proposal&gt;
+   &lt;storage&gt;
+&lt;general&gt;</screen>
     </example>
 
     <variablelist>
      <varlistentry>
       <term>lvm</term>
       <listitem>
-       <para>任意指定です。既定値は <literal>false</literal> です。</para>
-       <screen>&lt;layer2 config:type="boolean"&gt;true&lt;/layer2&gt;</screen>
+       <para>LVM ベースの提案を作成するかどうかを指定します。既定値は <literal>false</literal> です。</para>
+       <screen>&lt;lvm config:type="boolean"&gt;true&lt;/lvm&gt;</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>resize_windows</term>
       <listitem>
-       <para><literal>true</literal> に設定した場合、 &ay; はインストール元にある新しい GPG 鍵を受け付け、データベース内に取り込むようになります。</para>
-       <screen>&lt;resize config:type="boolean"&gt;false&lt;/resize&gt;</screen>
+       <para><literal>true</literal> に設定した場合、 &ay; はインストールに必要な領域を確保するため、 Windows のパーティションのサイズ変更を行なうようになります。</para>
+       <screen>&lt;resize_windows config:type="boolean"&gt;false&lt;/resize_windows&gt;</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -1649,17 +1607,16 @@ openssl x509 -noout -fingerprint -sha256
       <listitem>
         <itemizedlist mark="bullet" spacing="normal">
          <listitem>
-          <para>デバイスを起動したくない場合は、 <literal>off</literal> を指定します。</para>
+          <para><literal>none</literal> を指定すると、 Windows パーティションを削除しないようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>linux</literal>: 既存の Linux パーティションのみを使用します。</para>
+          <para><literal>ondemand</literal> を指定すると、必要に応じて Windows パーティションを削除するようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>all</literal>: 新しいパーティションを作成する際、ディスク全体を使用するようにします。</para>
+          <para><literal>all</literal> を指定すると、全ての Windows パーティションを削除するようになります。</para>
          </listitem>
         </itemizedlist>
-       <screen>&lt;filesystem config:type="symbol"
-&gt;ext3&lt;/filesystem&gt;</screen>
+       <screen>&lt;windows_delete_mode config:type="symbol"&gt;ondemand&lt;/windows_delete_mode&gt;</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -1668,17 +1625,16 @@ openssl x509 -noout -fingerprint -sha256
 
         <itemizedlist mark="bullet" spacing="normal">
          <listitem>
-          <para><literal>linux</literal>: 既存の Linux パーティションのみを使用します。</para>
+          <para><literal>none</literal> を指定すると、 Linux パーティションを削除しないようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>linux</literal>: 既存の Linux パーティションのみを使用します。</para>
+          <para><literal>ondemand</literal> を指定すると、必要に応じて Linux パーティションを削除するようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>linux</literal>: 既存の Linux パーティションのみを使用します。</para>
+          <para><literal>all</literal> を指定すると、全ての Linux パーティションを削除するようになります。</para>
          </listitem>
         </itemizedlist>
-       <screen>&lt;filesystem config:type="symbol"
-&gt;ext3&lt;/filesystem&gt;</screen>
+       <screen>&lt;linux_delete_mode config:type="symbol"&gt;ondemand&lt;/linux_delete_mode&gt;</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -1686,91 +1642,62 @@ openssl x509 -noout -fingerprint -sha256
       <listitem>
         <itemizedlist mark="bullet" spacing="normal">
          <listitem>
-          <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
+          <para><literal>none</literal> を指定すると、その他のパーティションを削除しないようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
+          <para><literal>ondemand</literal> を指定すると、必要に応じてその他のパーティションを削除するようになります。</para>
          </listitem>
          <listitem>
-          <para><literal>all</literal>: 新しいパーティションを作成する際、ディスク全体を使用するようにします。</para>
+          <para><literal>all</literal> を指定すると、全てのその他のパーティションを削除するようになります。</para>
          </listitem>
         </itemizedlist>
-       <screen>&lt;filesystem config:type="symbol"
-&gt;ext3&lt;/filesystem&gt;</screen>
+       <screen>&lt;other_delete_mode config:type="symbol"&gt;ondemand&lt;/other_delete_mode&gt;</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>encryption_password</term>
       <listitem>
-       <para>
-        Enables encryption using the specified password. By default, encryption is disabled.
-       </para>
-       <screen>&lt;user_password&gt;some-password&lt;/user_password&gt;</screen>
+       <para>指定したパスワードで暗号化を行なうようにします。既定では暗号化を行ないません。</para>
+       <screen>&lt;encryption_password&gt;some-secret&lt;/encryption_password&gt;</screen>
       </listitem>
      </varlistentry>
     </variablelist>
    </sect2>
 
    <sect2 xml:id="CreateProfile-Expert-Partitioning">
-    <title>パーティション設定</title>
+    <title>熟練者向けパーティション設定</title>
 
-    <para>
-     As an alternative to the guided partitioning, &ay; allows to describe the
-     partitioning layout through the use of a <literal>partitioning</literal>
-     section. However, &ay; does not need to know every single detail and it is
-     able to build a sensible layout from a rather incomplete specification.
-    </para>
+    <para>ガイド付きパーティション設定よりも詳しく設定を行ないたい場合は、 &ay; のプロファイル内に <literal>partitioning</literal> セクションを挿入して指定を行ないます。ただし、 &ay; では全ての詳細までを指定する必要はありません。不完全な指定を行なっていても、適切な既定値を割り当てて設定するようになっています。</para>
 
-    <para>
-     The <literal>partitioning</literal> section is a list of
-     <literal>drive</literal> elements. Each of these sections describes an
-     element of the partitioning layout like a disk, an LVM volume group, a
-     RAID, a multi-device Btrfs file system, and so on.
-    </para>
+    <para><literal>partitioning</literal> セクション内には <literal>drive</literal> 要素の羅列を設定します。それぞれの <literal>drive</literal> 要素には、ディスクや LVM のボリュームグループ、 RAID やマルチデバイス型の btrfs ファイルシステムなどの配置要素を設定します。</para>
 
-    <para>
-     In <xref linkend="example-partitioning"/>, asks &ay; to create a
-     <literal>/</literal>, a <literal>/home</literal> and a
-     <literal>swap</literal> partition using the whole disk. Note that some
-     information is missing, like which file systems each partition should
-     use. However, that is not a problem, and &ay; will propose sensible values
-     for them.
-    </para>
+    <para><xref linkend="example-partitioning"/> の例では、 &ay; に対して、ディスク全体を使用して <literal>/</literal> , <literal>/home</literal> , <literal>swap</literal> の各パーティションを作成する設定例を示しています。なお、パーティション内で使用すべきファイルシステムの情報などの指定が省略されていることに注意してください。このような指定を行なった場合は、 &ay; 側で自動的に判断して設定を行ないます。</para>
 
     <example xml:id="example-partitioning">
-     <title>データジャーナリングモード ( <literal>ordered</literal> , <literal>journal</literal> , <literal>writeback</literal> )</title>
+     <title><literal>/</literal> , <literal>/home</literal> , <literal>swap</literal> の各パーティションを作成する場合の例</title>
      <screen>&lt;partitioning config:type="list"&gt;
   &lt;drive&gt;
-    &lt;device&gt;/dev/sda&lt;/device&gt;
+    &lt;use&gt;all&lt;/use&gt;
     &lt;partitions config:type="list"&gt;
       &lt;partition&gt;
-        &lt;create config:type="boolean"&gt;true&lt;/create&gt;
-        &lt;format config:type="boolean"&gt;true&lt;/format&gt;
         &lt;mount&gt;/&lt;/mount&gt;
+        &lt;size&gt;20GiB&lt;/size&gt;
+      &lt;/partition&gt;
+      &lt;partition&gt;
+        &lt;mount&gt;/home&lt;/mount&gt;
         &lt;size&gt;max&lt;/size&gt;
       &lt;/partition&gt;
-    &lt;/partitions&gt;
-  &lt;/drive&gt;
-  &lt;drive&gt;
-    &lt;device&gt;/dev/sdb&lt;/device&gt;
-    &lt;disklabel&gt;none&lt;/disklabel&gt;
-    &lt;partitions config:type="list"&gt;
       &lt;partition&gt;
-        &lt;format config:type="boolean"&gt;true&lt;/format&gt;
-        &lt;mount&gt;/home&lt;/mount&gt;
+        &lt;mount&gt;swap&lt;/mount&gt;
+        &lt;size&gt;1GiB&lt;/size&gt;
       &lt;/partition&gt;
     &lt;/partitions&gt;
   &lt;/drive&gt;</screen>
     </example>
 
     <tip xml:id="ay-boot-partition">
-     <title>Proposing a Boot Partition</title>
-     <para>
-      &ay; checks whether the layout described in the profile is bootable or
-      not. If that is not the case, it adds the missing partitions. So, if you
-      are unsure about which partitions are needed to boot, you can rely on &ay;
-      to make the right decision.
-     </para>
+     <title>起動パーティションの提案</title>
+     <para>&ay; では、プロファイル内に指定されたパーティション設定で問題なく起動できるかどうかを自動的に判断します。もしも起動できないものと判断された場合は、必要なパーティションを自動的に追加します。そのため、起動用のパーティションが必要かどうかがわからないような状況でも、 &ay; に設定を任せておけば正しい選択を行なってくれることになります。</para>
     </tip>
 
     <sect3 xml:id="CreateProfile-Partitioning-config">
@@ -1833,9 +1760,9 @@ openssl x509 -noout -fingerprint -sha256
          <entry>
           <para>&lt;partition&gt; 項目を入れる箇所です (詳しくは <xref linkend="ay-partition-configuration"/> をお読みください) 。</para>
           <screen>&lt;partitions config:type="list"&gt;
-  &lt;partition&gt;...&lt;/partition&gt;
-  ...
-&lt;/partitions&gt;</screen>
+          &lt;partition&gt;...&lt;/partition&gt;
+          ...
+          &lt;/partitions&gt;</screen>
          </entry>
          <entry>
           <para>任意指定です。何もパーティションを指定しない場合、 &ay; は適切なパーティション設定を自動で作成します (詳しくは <xref linkend="ay-auto-partitioning"/> をお読みください) 。</para>
@@ -1937,7 +1864,7 @@ openssl x509 -noout -fingerprint -sha256
          <entry>
           <para>type=CT_LVM のドライブでのみ意味のある項目です。論理ボリュームグループを再利用している場合、この値を <literal>true</literal> に設定すると、そのグループ内に存在する全ての既存論理ボリュームは、それらが &lt;partitioning&gt; で指定されている場合を除き、何も変更が加えられないようになります。そのため、そのままにしておくべき論理ボリュームについては、何も指定しなくて良いことになります。</para>
           <screen>&lt;keep_unknown_lv config:type="boolean"
-&gt;false&lt;/keep_unknown_lv&gt;</screen>
+          &gt;false&lt;/keep_unknown_lv&gt;</screen>
          </entry>
          <entry>
           <para>任意指定です。既定値は <literal>false</literal> です。</para>
@@ -1950,7 +1877,7 @@ openssl x509 -noout -fingerprint -sha256
          <entry>
           <para><literal>/</literal> にマウントされている btrfs ファイルシステムに対して、スナップショットを有効化します (その他のファイルシステムや、 <literal>/</literal> にマウントされていない btrfs ファイルシステムには適用されません) 。</para>
           <screen>&lt;enable_snapshots config:type="boolean"
-&gt;false&lt;/enable_snapshots&gt;</screen>
+          &gt;false&lt;/enable_snapshots&gt;</screen>
          </entry>
          <entry>
           <para>任意指定です。既定値は <literal>true</literal> です。</para>
@@ -2531,15 +2458,10 @@ openssl x509 -noout -fingerprint -sha256
     </sect3>
 
     <sect3 xml:id="ay-auto-partitioning">
-     <title>Filling the Gaps</title>
-     <para>
-      When using the Expert Partitioner approach, &ay; is able to create a
-      partition plan from a rather incomplete profile. The following profiles
-      show how you can describe just some details of the partitioning layout and
-      let &ay; do the rest.
-     </para>
+     <title>不完全な設定の補完</title>
+     <para>熟練者向けパーティション設定の方式を使用している場合、 &ay; は不完全なプロファイルからでも適切なパーティションプランを作成することができます。下記のプロファイルでは、パーティション配置に関するいくつかの詳細のみを指定し、それ以外を &ay; 側に任せる設定を示しています。</para>
      <example>
-      <title>自動的なパーティション設定</title>
+      <title>選択したドライブに対する自動的なパーティション設定</title>
       <para>下記はドライブが 1 台だけ搭載されたシステムでの例で、事前には何もパーティションを作成していないため、指定されたパーティションプランに従って自動的にパーティションを作成するように指定しています。なお、何もドライブを指定しない場合、ドライブは自動的に検出されます。</para>
       <screen>&lt;partitioning config:type="list"&gt;
   &lt;drive&gt;
@@ -2551,7 +2473,7 @@ openssl x509 -noout -fingerprint -sha256
      </example>
      <para>さらに詳しい例では、既存のパーティションが存在する場合や複数のドライブが存在する場合の処理方法について示しています。</para>
      <example>
-      <title>マルチパスデバイスの使用</title>
+      <title>マルチパスドライブへのインストール</title>
       <screen>&lt;partitioning config:type="list"&gt;
   &lt;drive&gt;
     &lt;device&gt;/dev/sda&lt;/device&gt;
@@ -3124,9 +3046,9 @@ openssl x509 -noout -fingerprint -sha256
 
   <sect2 xml:id="ay-partition-multipath">
    <title>マルチパスサポート</title>
-   <para>&ay; ではマルチパスデバイスを処理することができます。マルチパスデバイスを使用するには、まず <xref linkend="CreateProfile-General-storage"/> で説明しているマルチパスサポートの有効化を行なう必要があります。ただし、 &sle; 12 とは異なり、ドライブセクションのタイプを <literal>CT_DMMULTIPATH</literal> にする必要はありません。 <literal>CT_DISK</literal> を指定してください。ただし、従来のバージョンとの互換性維持を目的として、いずれの値も同じ意味になっています。</para>
+   <para>&ay; ではマルチパスデバイスを処理することができます。マルチパスデバイスを使用するには、まず <xref linkend="multipath-example"/> で説明しているように、マルチパスサポートの有効化を行なう必要があります。それ以外にも、カーネルのコマンドラインに <literal>LIBSTORAGE_MULTIPATH_AUTOSTART=ON</literal> を追加してもかまいません。</para>
 
-   <para>&ay; ではマルチパスデバイスを処理することができます。マルチパスデバイスを使用するには、まず <xref linkend="CreateProfile-General-storage"/> で説明しているマルチパスサポートの有効化を行なう必要があります。ただし、 &sle; 12 とは異なり、ドライブセクションのタイプを <literal>CT_DMMULTIPATH</literal> にする必要はありません。 <literal>CT_DISK</literal> を指定してください。ただし、従来のバージョンとの互換性維持を目的として、いずれの値も同じ意味になっています。</para>
+   <para>ただし、 &sle; 12 とは異なり、ドライブセクションのタイプを <literal>CT_DMMULTIPATH</literal> にする必要はありません。代わりに <literal>CT_DISK</literal> を指定してください。ただし、従来バージョンとの互換性維持を目的として、いずれの値も同じ意味になっています。</para>
 
     <example xml:id="multipath-example">
      <title>マルチパスデバイスの使用</title>
