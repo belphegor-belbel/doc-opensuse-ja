@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2019-11-08 03:47+0000\n"
+"POT-Creation-Date: 2019-11-19 22:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -1373,53 +1373,71 @@ msgstr ""
 #. Tag: para
 #: vt_best_practices.xml:1334
 #, no-c-format
-msgid "You should avoid overcommitting CPUs. Unless you know exactly how many virtual CPUs are required for a &vmguest;, you should start with a single virtual CPU per &vmguest;. Each virtual CPU should match one hardware processor or core on the &vmhost;."
+msgid "CPU overcommit occurs when the cumulative number of virtual CPUs of all &vmguest;s becomes higher than the number of host CPUs. Best performance is likely to be achieved when there is no overcommit and each virtual CPU matches one hardware processor or core on the &vmhost;. In fact, &vmguest;s running on an overcommitted host will experience increased latency and a negative effect on per-&vmguest; throughput is also likely to be observed. Therefore, you should try to avoid overcommitting CPUs."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1340
+#: vt_best_practices.xml:1345
 #, no-c-format
-msgid "You should target a CPU workload of approximately 70% inside your VM (see <xref linkend=\"sec-util-processes\"/> for information on monitoring tools). If you allocate more processors than needed in the &vmguest;, this will negatively affect the performance of host and guest: cycle efficiency will be degraded, the unused vCPU will consume timer interrupts and will idle-loop. In case you primarily run single threaded applications on a &vmguest;, a single virtual CPU is the best choice."
-msgstr ""
-
-#. Tag: title
-#: vt_best_practices.xml:1351
-#, no-c-format
-msgid "&vmguest; CPU Configuration"
+msgid "Deciding whether to allow CPU overcommit or not requires good a-priori knowledge of workload as a whole. For instance, if you know that all the &vmguest;s virtual CPUs will not be loaded more than 50% then you can assume that overcommitting the host by a factor of 2 (which means having 128 virtual CPUs in total, on a host with 64 CPUs) will work well. On the other hand, if you know that all the virtual CPUs of the &vmguest;s will try to run at 100% for most of the time then even having one virtual CPU more than than the host has CPUs is already a misconfiguration."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1352
+#: vt_best_practices.xml:1356
 #, no-c-format
-msgid "This section describes how to choose and configure a CPU type for a &vmguest;. You will also learn how to pin virtual CPUs to physical CPUs on the host system. For more information about virtual CPU configuration and tuning parameters refer to the libvirt documentation at <link xlink:href=\"https://libvirt.org/formatdomain.html#elementsCPU\"/> ."
-msgstr ""
-
-#. Tag: title
-#: vt_best_practices.xml:1361
-#, no-c-format
-msgid "Virtual CPU Models and Features"
+msgid "Overcommitting to a point where the cumulative number of virtual CPUs is higher than 8 times the number of physical cores of the &vmhost; will most likely lead to a malfunctioning and unstable system and should hence be avoided."
 msgstr ""
 
 #. Tag: para
 #: vt_best_practices.xml:1362
 #, no-c-format
+msgid "Unless you know exactly how many virtual CPUs are required for a &vmguest;, you should start with one. A good rule of thumb is to target a CPU workload of approximately 70% inside your VM (see <xref linkend=\"sec-util-processes\"/> for information on monitoring tools). If you allocate more processors than needed in the &vmguest;, this will negatively affect the performance of host and guest. Cycle efficiency will be degraded, as the unused vCPU will still cause timer interrupts. In case you primarily run single threaded applications on a &vmguest;, a single virtual CPU is the best choice."
+msgstr ""
+
+#. Tag: para
+#: vt_best_practices.xml:1373
+#, no-c-format
+msgid "A single &vmguest; with more virtual CPUs than the &vmhost; has CPUs is always a misconfiguration."
+msgstr ""
+
+#. Tag: title
+#: vt_best_practices.xml:1379
+#, no-c-format
+msgid "&vmguest; CPU Configuration"
+msgstr ""
+
+#. Tag: para
+#: vt_best_practices.xml:1380
+#, no-c-format
+msgid "This section describes how to choose and configure a CPU type for a &vmguest;. You will also learn how to pin virtual CPUs to physical CPUs on the host system. For more information about virtual CPU configuration and tuning parameters refer to the libvirt documentation at <link xlink:href=\"https://libvirt.org/formatdomain.html#elementsCPU\"/> ."
+msgstr ""
+
+#. Tag: title
+#: vt_best_practices.xml:1389
+#, no-c-format
+msgid "Virtual CPU Models and Features"
+msgstr ""
+
+#. Tag: para
+#: vt_best_practices.xml:1390
+#, no-c-format
 msgid "The CPU model and topology can be specified individually for each &vmguest;. Configuration options range from selecting specific CPU models to excluding certain CPU features. Predefined CPU models are listed in the <filename>/usr/share/libvirt/cpu_map.xml</filename> . A CPU model and topology that is similar to the host generally provides the best performance. The host system CPU model and topology can be displayed by running <command>virsh capabilities</command> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1371
+#: vt_best_practices.xml:1399
 #, no-c-format
 msgid "Note that changing the default virtual CPU configuration will require a &vmguest; shutdown when migrating it to a host with different hardware. More information on &vmguest; migration is available at <xref linkend=\"sec-libvirt-admin-migrate\"/> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1378
+#: vt_best_practices.xml:1406
 #, no-c-format
 msgid "To specify a particular CPU model for a &vmguest;, add a respective entry to the &vmguest; configuration file. The following example configures a Broadwell CPU with the invariant TSC feature:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1383
+#: vt_best_practices.xml:1411
 #, no-c-format
 msgid "&lt;cpu mode='custom' match='exact'&gt;\n"
       "  &lt;model&gt;Broadwell&lt;/model&gt;\n"
@@ -1428,13 +1446,13 @@ msgid "&lt;cpu mode='custom' match='exact'&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1387
+#: vt_best_practices.xml:1415
 #, no-c-format
 msgid "For a virtual CPU that most closely resembles the host physical CPU, <literal>&lt;cpu mode='host-passthrough'&gt;</literal> can be used. Note that a <literal>host-passthrough</literal> CPU model may not exactly resemble the host physical CPU, since by default KVM will mask any non-migratable features. For example invtsc is not included in the virtual CPU feature set. Changing the default KVM behavior is not directly supported through libvirt, although it does allow arbitrary passthrough of KVM command line arguments. Continuing with the <literal>invtsc</literal> example, you can achieve passthrough of the host CPU (including <literal>invtsc</literal> ) with the following command line passthrough in the &vmguest; configuration file:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1400
+#: vt_best_practices.xml:1428
 #, no-c-format
 msgid "&lt;domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'&gt;\n"
       "     &lt;qemu:commandline&gt;\n"
@@ -1447,37 +1465,37 @@ msgid "&lt;domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1409
+#: vt_best_practices.xml:1437
 #, no-c-format
 msgid "The <literal>host-passthrough</literal> Mode"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1410
+#: vt_best_practices.xml:1438
 #, no-c-format
 msgid "Since <literal>host-passthrough</literal> exposes the physical CPU details to the virtual CPU, migration to dissimilar hardware is not possible. See <xref linkend=\"sec-vt-best-perf-cpu-guests-vcpumigration\"/> for more information."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1420
+#: vt_best_practices.xml:1448
 #, no-c-format
 msgid "Virtual CPU Pinning"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1421
+#: vt_best_practices.xml:1449
 #, no-c-format
 msgid "Virtual CPU pinning is used to constrain virtual CPU threads to a set of physical CPUs. The <literal>vcpupin</literal> element specifies the physical host CPUs that a virtual CPU can use. If this element is not set and the attribute <literal>cpuset</literal> of the <literal>vcpu</literal> element is not specified, the virtual CPU is free to use any of the physical CPUs."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1429
+#: vt_best_practices.xml:1457
 #, no-c-format
 msgid "CPU intensive workloads can benefit from virtual CPU pinning by increasing the physical CPU cache hit ratio. To pin a virtual CPU to a specific physical CPU, run the following commands:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1434
+#: vt_best_practices.xml:1462
 #, no-c-format
 msgid "&prompt.user;virsh vcpupin <replaceable>DOMAIN_ID</replaceable> --vcpu <replaceable>vCPU_NUMBER</replaceable>\n"
       "VCPU: CPU Affinity\n"
@@ -1487,13 +1505,13 @@ msgid "&prompt.user;virsh vcpupin <replaceable>DOMAIN_ID</replaceable> --vcpu <r
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1439
+#: vt_best_practices.xml:1467
 #, no-c-format
 msgid "The last command generates the following entry in the XML configuration:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1442
+#: vt_best_practices.xml:1470
 #, no-c-format
 msgid "&lt;cputune&gt;\n"
       "   &lt;vcpupin vcpu='0' cpuset='0'/&gt;\n"
@@ -1501,97 +1519,97 @@ msgid "&lt;cputune&gt;\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1446
+#: vt_best_practices.xml:1474
 #, no-c-format
 msgid "Virtual CPU Pinning on NUMA Nodes"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1447
+#: vt_best_practices.xml:1475
 #, no-c-format
 msgid "To confine a &vmguest;'s CPUs and its memory to a NUMA node, you can use virtual CPU pinning and memory allocation policies on a NUMA system. See <xref linkend=\"sec-vt-best-perf-numa\"/> for more information related to NUMA tuning."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1455
+#: vt_best_practices.xml:1483
 #, no-c-format
 msgid "Virtual CPU Pinning and Live Migration"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1456
+#: vt_best_practices.xml:1484
 #, no-c-format
 msgid "Even though <literal>vcpupin</literal> can improve performance, it can complicate live migration. See <xref linkend=\"sec-vt-best-perf-cpu-guests-vcpumigration\"/> for more information on virtual CPU migration considerations."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1465
+#: vt_best_practices.xml:1493
 #, no-c-format
 msgid "Virtual CPU Migration Considerations"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1466
+#: vt_best_practices.xml:1494
 #, no-c-format
 msgid "Selecting a virtual CPU model containing all the latest features may improve performance of a &vmguest; workload, but often at the expense of migratability. Unless all hosts in the cluster contain the latest CPU features, migration can fail when a destination host lacks the new features. If migratability of a virtual CPU is preferred over the latest CPU features, a normalized CPU model and feature set should be used. The <command>virsh cpu-baseline</command> command can help define a normalized virtual CPU that can be migrated across all hosts. The following command, when run on each host in the migration cluster, illustrates collection of all hosts' capabilities in <literal>all-hosts-caps.xml</literal> ."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1479
+#: vt_best_practices.xml:1507
 #, no-c-format
 msgid "&prompt.user;&sudo; virsh capabilities &gt;&gt; all-hosts-cpu-caps.xml"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1480
+#: vt_best_practices.xml:1508
 #, no-c-format
 msgid "With the capabilities from each host collected in all-hosts-caps.xml, use <command>virsh cpu-baseline</command> to create a virtual CPU definition that will be compatible across all hosts."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1485
+#: vt_best_practices.xml:1513
 #, no-c-format
 msgid "&prompt.user;&sudo; virsh cpu-baseline all-hosts-caps.xml"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1486
+#: vt_best_practices.xml:1514
 #, no-c-format
 msgid "The resulting virtual CPU definition can be used as the <literal>cpu</literal> element in &vmguest; configuration file."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1490
+#: vt_best_practices.xml:1518
 #, no-c-format
 msgid "At a logical level, virtual CPU pinning is a form of hardware passthrough. Pinning couples physical resources to virtual resources, and can also be problematic for migration. For example, the migration will fail if the requested physical resources are not available on the destination host, or if the source and destination hosts have different NUMA topologies. For more recommendations about Live Migration see <xref linkend=\"libvirt-admin-live-migration-requirements\"/> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1504
+#: vt_best_practices.xml:1532
 #, no-c-format
 msgid "NUMA Tuning"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1505
+#: vt_best_practices.xml:1533
 #, no-c-format
 msgid "NUMA is an acronym for Non Uniform Memory Access. A NUMA system has multiple physical CPUs, each with local memory attached. Each CPU can also access other CPUs' memory, known as <quote>remote memory access</quote> , but it is much slower than accessing local memory. NUMA systems can negatively impact &vmguest; performance if not tuned properly. Although ultimately tuning is workload dependent, this section describes controls that should be considered when deploying &vmguest;s on NUMA hosts. Always consider your host topology when configuring and deploying VMs."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1515
+#: vt_best_practices.xml:1543
 #, no-c-format
 msgid "&productname; contains a NUMA auto-balancer that strives to reduce remote memory access by placing memory on the same NUMA node as the CPU processing it. In addition, standard tools such as <command>cgset</command> and virtualization tools such as libvirt provide mechanisms to constrain &vmguest; resources to physical resources."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1522
+#: vt_best_practices.xml:1550
 #, no-c-format
 msgid "<command>numactl</command> is used to check for host NUMA capabilities:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1525
+#: vt_best_practices.xml:1553
 #, no-c-format
 msgid "&prompt.user;&sudo; numactl --hardware\n"
       "available: 4 nodes (0-3)\n"
@@ -1620,31 +1638,31 @@ msgid "&prompt.user;&sudo; numactl --hardware\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1549
+#: vt_best_practices.xml:1577
 #, no-c-format
 msgid "The <command>numactl</command> output shows this is a NUMA system with 4 nodes or cells, each containing 36 CPUs and approximately 32G memory. <command>virsh capabilities</command> can also be used to examine the systems NUMA capabilities and CPU topology."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1556
+#: vt_best_practices.xml:1584
 #, no-c-format
 msgid "NUMA Balancing"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1557
+#: vt_best_practices.xml:1585
 #, no-c-format
 msgid "On NUMA machines, there is a performance penalty if remote memory is accessed by a CPU. Automatic NUMA balancing scans a task's address space and unmaps pages. By doing so, it detects whether pages are properly placed or whether to migrate the data to a memory node local to where the task is running. In defined intervals (configured with <literal>numa_balancing_scan_delay_ms</literal> ), the task scans the next scan size number of pages (configured with <literal>numa_balancing_scan_size_mb</literal> ) in its address space. When the end of the address space is reached the scanner restarts from the beginning."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1569
+#: vt_best_practices.xml:1597
 #, no-c-format
 msgid "Higher scan rates cause higher system overhead as page faults must be trapped and data needs to be migrated. However, the higher the scan rate, the more quickly a task's memory is migrated to a local node when the workload pattern changes. This minimizes the performance impact caused by remote memory accesses. These <command>sysctl</command> directives control the thresholds for scan delays and the number of pages scanned:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1577
+#: vt_best_practices.xml:1605
 #, no-c-format
 msgid "&prompt.user;&sudo; sysctl -a | grep numa_balancing\n"
       "kernel.numa_balancing = 1<co xml:id=\"co-numa-balancing\"/>\n"
@@ -1655,157 +1673,157 @@ msgid "&prompt.user;&sudo; sysctl -a | grep numa_balancing\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1585
+#: vt_best_practices.xml:1613
 #, no-c-format
 msgid "Enables/disables automatic page fault-based NUMA balancing"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1590
+#: vt_best_practices.xml:1618
 #, no-c-format
 msgid "Starting scan delay used for a task when it initially forks"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1595
+#: vt_best_practices.xml:1623
 #, no-c-format
 msgid "Maximum time in milliseconds to scan a task's virtual memory"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1600
+#: vt_best_practices.xml:1628
 #, no-c-format
 msgid "Minimum time in milliseconds to scan a task's virtual memory"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1605
+#: vt_best_practices.xml:1633
 #, no-c-format
 msgid "Size in megabytes' worth of pages to be scanned for a given scan"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1610
+#: vt_best_practices.xml:1638
 #, no-c-format
 msgid "For more information see <xref linkend=\"cha-tuning-numactl\"/> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1613
+#: vt_best_practices.xml:1641
 #, no-c-format
 msgid "The main goal of automatic NUMA balancing is either to reschedule tasks on the same node's memory (so the CPU follows the memory), or to copy the memory's pages to the same node (so the memory follows the CPU)."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1619
+#: vt_best_practices.xml:1647
 #, no-c-format
 msgid "Task Placement"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1620
+#: vt_best_practices.xml:1648
 #, no-c-format
 msgid "There are no rules to define the best place to run a task, because tasks could share memory with other tasks. For best performance, it is recommended to group tasks sharing memory on the same node. Check NUMA statistics with <command># cat /proc/vmstat | grep numa_</command> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1629
+#: vt_best_practices.xml:1657
 #, no-c-format
 msgid "Memory Allocation Control with the CPUset Controller"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1630
+#: vt_best_practices.xml:1658
 #, no-c-format
 msgid "The cgroups cpuset controller can be used confine memory used by a process to a NUMA node. There are three cpuset memory policy modes available:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1636
+#: vt_best_practices.xml:1664
 #, no-c-format
 msgid "<literal>interleave</literal> : This is a memory placement policy which is also known as round-robin. This policy can provide substantial improvements for jobs that need to place thread local data on the corresponding node. When the interleave destination is not available, it will be moved to another node."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1645
+#: vt_best_practices.xml:1673
 #, no-c-format
 msgid "<literal>bind</literal> : This will place memory only on one node, which means in case of insufficient memory, the allocation will fail."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1651
+#: vt_best_practices.xml:1679
 #, no-c-format
 msgid "<literal>preferred</literal> : This policy will apply a preference to allocate memory to a node. If there is not enough space for memory on this node, it will fall back to another node."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1658
+#: vt_best_practices.xml:1686
 #, no-c-format
 msgid "You can change the memory policy mode with the <command>cgset</command> tool from the <package>libcgroup-tools</package> package:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1662
+#: vt_best_practices.xml:1690
 #, no-c-format
 msgid "&prompt.user;&sudo; cgset -r cpuset.mems=<replaceable>NODE</replaceable> sysdefault/libvirt/qemu/<replaceable>KVM_NAME</replaceable>/emulator"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1663
+#: vt_best_practices.xml:1691
 #, no-c-format
 msgid "To migrate pages to a node, use the <command>migratepages</command> tool:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1666
+#: vt_best_practices.xml:1694
 #, no-c-format
 msgid "&prompt.user;migratepages <replaceable>PID</replaceable> <replaceable>FROM-NODE</replaceable> <replaceable>TO-NODE</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1667
+#: vt_best_practices.xml:1695
 #, no-c-format
 msgid "To check everything is fine. use: <command>cat /proc/<replaceable>PID</replaceable>/status | grep Cpus</command> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1672
+#: vt_best_practices.xml:1700
 #, no-c-format
 msgid "Kernel NUMA/cpuset memory policy"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1673
+#: vt_best_practices.xml:1701
 #, no-c-format
 msgid "For more information see <link xlink:href=\"https://www.kernel.org/doc/Documentation/vm/numa_memory_policy.txt\">Kernel NUMA memory policy</link> and <link xlink:href=\"https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt\">cpusets memory policy</link> . Check also the <link xlink:href=\"https://libvirt.org/formatdomain.html#elementsNUMATuning\">Libvirt NUMA Tuning documentation</link> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1685
+#: vt_best_practices.xml:1713
 #, no-c-format
 msgid "&vmguest;: NUMA Related Configuration"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1686
+#: vt_best_practices.xml:1714
 #, no-c-format
 msgid "&libvirt; allows to set up virtual NUMA and memory access policies. Configuring these settings is not supported by <command>virt-install</command> or <command>virt-manager</command> and needs to be done manually by editing the &vmguest; configuration file with <command>virsh edit</command> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1694
+#: vt_best_practices.xml:1722
 #, no-c-format
 msgid "&vmguest; Virtual NUMA Topology"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1695
+#: vt_best_practices.xml:1723
 #, no-c-format
 msgid "Creating a &vmguest; virtual NUMA (vNUMA) policy that resembles the host NUMA topology can often increase performance of traditional large, scale-up workloads. &vmguest; vNUMA topology can be specified using the <literal>numa</literal> element in the XML configuration:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1701
+#: vt_best_practices.xml:1729
 #, no-c-format
 msgid "&lt;cpu&gt;\n"
       "...\n"
@@ -1819,73 +1837,73 @@ msgid "&lt;cpu&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1713
+#: vt_best_practices.xml:1741
 #, no-c-format
 msgid "Each <literal>cell</literal> element specifies a vNUMA cell or node"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1718
+#: vt_best_practices.xml:1746
 #, no-c-format
 msgid "All cells should have an <literal>id</literal> attribute, allowing to reference the cell in other configuration blocks. Otherwise cells are assigned ids in ascending order starting from 0."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1725
+#: vt_best_practices.xml:1753
 #, no-c-format
 msgid "The CPU or range of CPUs that are part of the node"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1730
+#: vt_best_practices.xml:1758
 #, no-c-format
 msgid "The node memory"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1735
+#: vt_best_practices.xml:1763
 #, no-c-format
 msgid "Units in which node memory is specified"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1740
+#: vt_best_practices.xml:1768
 #, no-c-format
 msgid "Optional attribute which can control whether the memory is to be mapped as <option>shared</option> or <option>private</option> . This is valid only for hugepages-backed memory."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1747
+#: vt_best_practices.xml:1775
 #, no-c-format
 msgid "To find where the &vmguest; has allocated its pages. use: <command>cat /proc/<replaceable>PID</replaceable>/numa_maps</command> and <command>cat /sys/fs/cgroup/memory/sysdefault/libvirt/qemu/<replaceable>KVM_NAME</replaceable>/memory.numa_stat</command> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1753
+#: vt_best_practices.xml:1781
 #, no-c-format
 msgid "NUMA specification"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1754
+#: vt_best_practices.xml:1782
 #, no-c-format
 msgid "The &libvirt; &vmguest; NUMA specification is currently only available for &qemu;/&kvm;."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1761
+#: vt_best_practices.xml:1789
 #, no-c-format
 msgid "Memory Allocation Control with &libvirt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1762
+#: vt_best_practices.xml:1790
 #, no-c-format
 msgid "If the &vmguest; has a vNUMA topology (see <xref linkend=\"sec-vt-best-perf-numa-vmguest-topo\"/> ), memory can be pinned to host NUMA nodes using the <literal>numatune</literal> element. This method is currently only available for &qemu;/&kvm; guests. See <xref linkend=\"sec-vt-best-perf-numa-alloc-libvirt-non-vnuma\"/> for how to configure non-vNUMA &vmguest;s."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1772
+#: vt_best_practices.xml:1800
 #, no-c-format
 msgid "&lt;numatune&gt;\n"
       "    &lt;memory mode=\"strict\"<co xml:id=\"co-numat-mode\"/> nodeset=\"1-4,^3\"<co xml:id=\"co-numat-nodeset\"/>/&gt;\n"
@@ -1895,49 +1913,49 @@ msgid "&lt;numatune&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1779
+#: vt_best_practices.xml:1807
 #, no-c-format
 msgid "Policies available are: <literal>interleave</literal> (round-robin like), <literal>strict</literal> (default) or <literal>preferred</literal> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1786
+#: vt_best_practices.xml:1814
 #, no-c-format
 msgid "Specify the NUMA nodes."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1791
+#: vt_best_practices.xml:1819
 #, no-c-format
 msgid "Specify memory allocation policies for each guest NUMA node (if this element is not defined then this will fall back and use the <literal>memory</literal> element)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1798
+#: vt_best_practices.xml:1826
 #, no-c-format
 msgid "Addresses the guest NUMA node for which the settings are applied."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1803
+#: vt_best_practices.xml:1831
 #, no-c-format
 msgid "The placement attribute can be used to indicate the memory placement mode for a domain process, the value can be <literal>auto</literal> or <literal>strict</literal> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1811
+#: vt_best_practices.xml:1839
 #, no-c-format
 msgid "Non-vNUMA &vmguest;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1812
+#: vt_best_practices.xml:1840
 #, no-c-format
 msgid "On a non-vNUMA &vmguest;, pinning memory to host NUMA nodes is done like in the following example:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:1816
+#: vt_best_practices.xml:1844
 #, no-c-format
 msgid "&lt;numatune&gt;\n"
       "   &lt;memory mode=\"strict\" nodeset=\"0-1\"/&gt;\n"
@@ -1945,357 +1963,357 @@ msgid "&lt;numatune&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1819
+#: vt_best_practices.xml:1847
 #, no-c-format
 msgid "In this example, memory is allocated from the host nodes <literal>0</literal> and <literal>1</literal> . In case these memory requirements cannot be fulfilled, starting the &vmguest; will fail. <command>virt-install</command> also supports this configuration with the <option>--numatune</option> option."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1828
+#: vt_best_practices.xml:1856
 #, no-c-format
 msgid "Memory and CPU across NUMA Nodes"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1829
+#: vt_best_practices.xml:1857
 #, no-c-format
 msgid "You should avoid allocating &vmguest; memory across NUMA nodes, and prevent virtual CPUs from floating across NUMA nodes."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1839
+#: vt_best_practices.xml:1867
 #, no-c-format
 msgid "&vmguest; Images"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1841
+#: vt_best_practices.xml:1869
 #, no-c-format
 msgid "Images are virtual disks used to store the operating system and data of &vmguest;s. They can be created, maintained and queried with the <command>qemu-img</command> command. Refer to <xref linkend=\"cha-qemu-guest-inst-qemu-img-create\"/> for more information on the <command>qemu-img</command> tool and examples."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1851
+#: vt_best_practices.xml:1879
 #, no-c-format
 msgid "&vmguest; Image Formats"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1852
+#: vt_best_practices.xml:1880
 #, no-c-format
 msgid "Certain storage formats which &qemu; recognizes have their origins in other virtualization technologies. By recognizing these formats, &qemu; can leverage either data stores or entire guests that were originally targeted to run under these other virtualization technologies. Some formats are supported only in read-only mode. To use them in read/write mode, convert them to a fully supported &qemu; storage format (using <command>qemu-img</command> ). Otherwise they can only be used as read-only data store in a QEMU guest."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1862
+#: vt_best_practices.xml:1890
 #, no-c-format
 msgid "Use <command>qemu-img info <replaceable>VMGUEST.IMG</replaceable></command> to get information about an existing image, such as: the format, the virtual size, the physical size, snapshots if available."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1868
+#: vt_best_practices.xml:1896
 #, no-c-format
 msgid "Performance"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1869
+#: vt_best_practices.xml:1897
 #, no-c-format
 msgid "It is recommended to convert the disk images to either raw or qcow2 to achieve good performance."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1875
+#: vt_best_practices.xml:1903
 #, no-c-format
 msgid "Encrypted Images Cannot Be Compressed"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1876
+#: vt_best_practices.xml:1904
 #, no-c-format
 msgid "When you create an image, you cannot use compression ( <option>-c</option> ) in the output file together with the encryption option ( <option>-e</option> )."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1883
+#: vt_best_practices.xml:1911
 #, no-c-format
 msgid "Raw Format"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1887
+#: vt_best_practices.xml:1915
 #, no-c-format
 msgid "This format is simple and easily exportable to all other emulators/hypervisors."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1893
+#: vt_best_practices.xml:1921
 #, no-c-format
 msgid "It provides best performance (least I/O overhead)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1898
+#: vt_best_practices.xml:1926
 #, no-c-format
 msgid "If your file system supports holes (for example in Ext2 or Ext3 on Linux or NTFS on Windows*), then only the written sectors will reserve space."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1904
+#: vt_best_practices.xml:1932
 #, no-c-format
 msgid "The raw format allows to copy a &vmguest; image to a physical device ( <command>dd if=<replaceable>VMGUEST.RAW</replaceable> of=<replaceable>/dev/sda</replaceable></command> )."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1911
+#: vt_best_practices.xml:1939
 #, no-c-format
 msgid "It is byte-for-byte the same as what the &vmguest; sees, so this wastes a lot of space."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:1919
+#: vt_best_practices.xml:1947
 #, no-c-format
 msgid "qcow2 Format"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1923
+#: vt_best_practices.xml:1951
 #, no-c-format
 msgid "Use this to have smaller images (useful if your file system does not supports holes)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1929
+#: vt_best_practices.xml:1957
 #, no-c-format
 msgid "It has optional AES encryption (now deprecated)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1934
+#: vt_best_practices.xml:1962
 #, no-c-format
 msgid "Zlib-based compression option."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1939
+#: vt_best_practices.xml:1967
 #, no-c-format
 msgid "Support of multiple VM snapshots (internal, external)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1944
+#: vt_best_practices.xml:1972
 #, no-c-format
 msgid "Improved performance and stability."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1949
+#: vt_best_practices.xml:1977
 #, no-c-format
 msgid "Supports changing the backing file."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1954
+#: vt_best_practices.xml:1982
 #, no-c-format
 msgid "Supports consistency checks."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1959
+#: vt_best_practices.xml:1987
 #, no-c-format
 msgid "Less performance than raw format."
 msgstr ""
 
 #. Tag: term
-#: vt_best_practices.xml:1966
+#: vt_best_practices.xml:1994
 #, no-c-format
 msgid "l2-cache-size"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1968
+#: vt_best_practices.xml:1996
 #, no-c-format
 msgid "qcow2 can provide the same performance for random read/write access as raw format, but it needs a well-sized cache size. By default cache size is set to 1 MB. This will give good performance up to a disk size of 8 GB. If you need a bigger disk size, you need to adjust the cache size. For a disk size of 64 GB (64*1024 = 65536), you need 65536 / 8192B = 8 MB of cache ( <option>-drive format=qcow2,l2-cache-size=8M</option> )."
 msgstr ""
 
 #. Tag: term
-#: vt_best_practices.xml:1979
+#: vt_best_practices.xml:2007
 #, no-c-format
 msgid "Cluster Size"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1981
+#: vt_best_practices.xml:2009
 #, no-c-format
 msgid "The qcow2 format offers the capability to change the cluster size. The value must be between 512&nbsp;KB and 2&nbsp;MB. Smaller cluster sizes can improve the image file size whereas larger cluster sizes generally provide better performance."
 msgstr ""
 
 #. Tag: term
-#: vt_best_practices.xml:1990
+#: vt_best_practices.xml:2018
 #, no-c-format
 msgid "Preallocation"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:1992
+#: vt_best_practices.xml:2020
 #, no-c-format
 msgid "An image with preallocated metadata is initially larger but can improve performance when the image needs to grow."
 msgstr ""
 
 #. Tag: term
-#: vt_best_practices.xml:1999
+#: vt_best_practices.xml:2027
 #, no-c-format
 msgid "Lazy Refcounts"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2001
+#: vt_best_practices.xml:2029
 #, no-c-format
 msgid "Reference count updates are postponed with the goal of avoiding metadata I/O and improving performance. This is particularly beneficial with <option>cache=writethrough</option> . This option does not batch metadata updates, but if in case of host crash, the reference count tables must be rebuilt, this is done automatically at the next open with <command>qemu-img check -r all</command> . Note that this takes some time."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2015
+#: vt_best_practices.xml:2043
 #, no-c-format
 msgid "qed Format"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2016
+#: vt_best_practices.xml:2044
 #, no-c-format
 msgid "qed is a follow-on qcow (&qemu; Copy On Write) format. Because qcow2 provides all the benefits of qed and more, qed is now deprecated."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2022
+#: vt_best_practices.xml:2050
 #, no-c-format
 msgid "VMDK Format"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2023
+#: vt_best_practices.xml:2051
 #, no-c-format
 msgid "VMware 3, 4, or 6 image format, for exchanging images with that product."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2030
+#: vt_best_practices.xml:2058
 #, no-c-format
 msgid "Overlay Disk Images"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2031
+#: vt_best_practices.xml:2059
 #, no-c-format
 msgid "The qcow2 and qed formats provide a way to create a base image (also called backing file) and overlay images on top of the base image. A backing file is useful to be able to revert to a known state and discard the overlay. If you write to the image, the backing image will be untouched and all changes will be recorded in the overlay image file. The backing file will never be modified unless you use the <option>commit</option> monitor command (or <command>qemu-img commit</command> )."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2040
+#: vt_best_practices.xml:2068
 #, no-c-format
 msgid "To create an overlay image:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2043
+#: vt_best_practices.xml:2071
 #, no-c-format
 msgid "&prompt.root;qemu-img create -o<co xml:id=\"co-1-minoro\"/>backing_file=vmguest.raw<co xml:id=\"co-1-backingfile\"/>,backing_fmt=raw<co xml:id=\"co-1-backingfmt\"/>\\\n"
       "     -f<co xml:id=\"co-1-minorf\"/> qcow2 vmguest.cow<co xml:id=\"co-1-imagename\"/>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2047
+#: vt_best_practices.xml:2075
 #, no-c-format
 msgid "Use <option>-o ?</option> for an overview of available options."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2052
+#: vt_best_practices.xml:2080
 #, no-c-format
 msgid "The backing file name."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2057
+#: vt_best_practices.xml:2085
 #, no-c-format
 msgid "Specify the file format for the backing file."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2062
+#: vt_best_practices.xml:2090
 #, no-c-format
 msgid "Specify the image format for the &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2067
+#: vt_best_practices.xml:2095
 #, no-c-format
 msgid "Image name of the &vmguest;, it will only record the differences from the backing file."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2074
+#: vt_best_practices.xml:2102
 #, no-c-format
 msgid "Backing Image Path"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2075
+#: vt_best_practices.xml:2103
 #, no-c-format
 msgid "You should not change the path to the backing image, otherwise you will need to adjust it. The path is stored in the overlay image file. To update the path, you should make a symbolic link from the original path to the new path and then use the <command>qemu-img</command> <option>rebase</option> option."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2082
+#: vt_best_practices.xml:2110
 #, no-c-format
 msgid "&prompt.root;ln -sf /var/lib/images/vmguest.raw  /var/lib/images/SLE15/vmguest.raw\n"
       "&prompt.root;qemu-img rebase<co xml:id=\"co-2-rebase\"/>-u<co xml:id=\"co-2-unsafe\"/> -b<co xml:id=\"co-2-minorb\"/> /var/lib/images/vmguest.raw /var/lib/images/SLE15/vmguest.cow<co xml:id=\"co-2-image\"/>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2084
+#: vt_best_practices.xml:2112
 #, no-c-format
 msgid "The <command>rebase</command> subcommand tells <command>qemu-img</command> to change the backing file image. The <option>-u</option> option activates the unsafe mode (see note below). The backing image to be used is specified with <option>-b</option> and the image path is the last argument of the command."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2091
+#: vt_best_practices.xml:2119
 #, no-c-format
 msgid "There are two different modes in which <option>rebase</option> can operate:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2097
+#: vt_best_practices.xml:2125
 #, no-c-format
 msgid "<emphasis>Safe</emphasis> : This is the default mode and performs a real rebase operation. The safe mode is a time-consuming operation."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2103
+#: vt_best_practices.xml:2131
 #, no-c-format
 msgid "<emphasis>Unsafe</emphasis> : The unsafe mode ( <option>-u</option> ) only changes the backing files name and the format of the file name without making any checks on the files contents. You should use this mode to rename or moving a backing file."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2112
+#: vt_best_practices.xml:2140
 #, no-c-format
 msgid "A common use is to initiate a new guest with the backing file. Let's assume we have a <filename>sle15_base.img</filename> &vmguest; ready to be used (fresh installation without any modification). This will be our backing file. Now you need to test a new package, on an updated system and on a system with a different kernel. We can use <filename>sle15_base.img</filename> to instantiate the new &sle; &vmguest; by creating a qcow2 overlay file pointing to this backing file ( <filename>sle15_base.img</filename> )."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2122
+#: vt_best_practices.xml:2150
 #, no-c-format
 msgid "In our example we will use <filename>sle15_updated.qcow2</filename> for the updated system, and <filename>sle15_kernel.qcow2</filename> for the system with a different kernel."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2127
+#: vt_best_practices.xml:2155
 #, no-c-format
 msgid "To create the two thin provisioned systems use the <command>qemu-img</command> command line with the <option>-b</option> option:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2132
+#: vt_best_practices.xml:2160
 #, no-c-format
 msgid "&prompt.root;qemu-img create -b /var/lib/libvirt/sle15_base.img -f qcow2 \\\n"
       "/var/lib/libvirt/sle15_updated.qcow2\n"
@@ -2310,25 +2328,25 @@ msgid "&prompt.root;qemu-img create -b /var/lib/libvirt/sle15_base.img -f qcow2 
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2142
+#: vt_best_practices.xml:2170
 #, no-c-format
 msgid "The images are now usable, and you can do your test without touching the initial <filename>sle15_base.img</filename> backing file. All changes will be stored in the new overlay images. Additionally, you can also use these new images as a backing file, and create a new overlay."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2148
+#: vt_best_practices.xml:2176
 #, no-c-format
 msgid "&prompt.root;qemu-img create -b sle15_kernel.qcow2 -f qcow2 sle15_kernel_TEST.qcow2"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2149
+#: vt_best_practices.xml:2177
 #, no-c-format
 msgid "When using <command>qemu-img info</command> with the option <option>--backing-chain</option> , it will return all information about the entire backing chain recursively:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2154
+#: vt_best_practices.xml:2182
 #, no-c-format
 msgid "&prompt.root;qemu-img info --backing-chain\n"
       "/var/lib/libvirt/images/sle15_kernel_TEST.qcow2\n"
@@ -2363,68 +2381,68 @@ msgid "&prompt.root;qemu-img info --backing-chain\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2185
+#: vt_best_practices.xml:2213
 #, no-c-format
 msgid "Understanding Image Overlay"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2248
+#: vt_best_practices.xml:2276
 #, no-c-format
 msgid "Opening a &vmguest; Image"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2249
+#: vt_best_practices.xml:2277
 #, no-c-format
 msgid "To access the file system of an image, use the <package>guestfs-tools</package> . If you do not have this tool installed on your system you can mount an image with other Linux tools. Avoid accessing an untrusted or unknown &vmguest;'s image system because this can lead to security issues (for more information, read <link xlink:href=\"https://www.berrange.com/posts/2013/02/20/a-reminder-why-you-should-never-mount-guest-disk-images-on-the-host-os/\">D. Berrangé's post</link> )."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2260
+#: vt_best_practices.xml:2288
 #, no-c-format
 msgid "Opening a Raw Image"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2262
+#: vt_best_practices.xml:2290
 #, no-c-format
 msgid "Mounting a Raw Image"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2264
+#: vt_best_practices.xml:2292
 #, no-c-format
 msgid "To be able to mount the image, find a free loop device. The following command displays the first unused loop device, <filename>/dev/loop1</filename> in this example."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2269
+#: vt_best_practices.xml:2297
 #, no-c-format
 msgid "&prompt.root;losetup -f\n"
       "/dev/loop1"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2273
+#: vt_best_practices.xml:2301
 #, no-c-format
 msgid "Associate an image ( <filename>SLE15.raw</filename> in this example) with the loop device:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2277
+#: vt_best_practices.xml:2305
 #, no-c-format
 msgid "&prompt.root;losetup /dev/loop1 SLE15.raw"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2280
+#: vt_best_practices.xml:2308
 #, no-c-format
 msgid "Check whether the image has successfully been associated with the loop device by getting detailed information about the loop device:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2284
+#: vt_best_practices.xml:2312
 #, no-c-format
 msgid "&prompt.root;losetup -l\n"
       "NAME       SIZELIMIT OFFSET AUTOCLEAR RO BACK-FILE\n"
@@ -2432,111 +2450,111 @@ msgid "&prompt.root;losetup -l\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2289
+#: vt_best_practices.xml:2317
 #, no-c-format
 msgid "Check the image's partitions with <command>kpartx</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2292
+#: vt_best_practices.xml:2320
 #, no-c-format
 msgid "&prompt.root;kpartx -a<co xml:id=\"co-kpartx-a\"/> -v<co xml:id=\"co-kpartx-v\"/> /dev/loop1\n"
       "add map loop1p1 (254:1): 0 29358080 linear /dev/loop1 2048"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2296
+#: vt_best_practices.xml:2324
 #, no-c-format
 msgid "Add partition device mappings."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2301
+#: vt_best_practices.xml:2329
 #, no-c-format
 msgid "Verbose mode."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2308
+#: vt_best_practices.xml:2336
 #, no-c-format
 msgid "Now mount the image partition(s) (to <filename>/mnt/sle15mount</filename> in the following example):"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2312
+#: vt_best_practices.xml:2340
 #, no-c-format
 msgid "&prompt.root;mkdir /mnt/sle15mount\n"
       "&prompt.root;mount /dev/mapper/loop1p1 /mnt/sle15mount"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2317
+#: vt_best_practices.xml:2345
 #, no-c-format
 msgid "Raw image with LVM"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2318
+#: vt_best_practices.xml:2346
 #, no-c-format
 msgid "If your raw image contains an LVM volume group you should use LVM tools to mount the partition. Refer to <xref linkend=\"sec-lvm-found\"/> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2324
+#: vt_best_practices.xml:2352
 #, no-c-format
 msgid "Unmounting a Raw Image"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2329
+#: vt_best_practices.xml:2357
 #, no-c-format
 msgid "&prompt.root;umount /mnt/sle15mount"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2332
+#: vt_best_practices.xml:2360
 #, no-c-format
 msgid "Delete partition device mappings with <command>kpartx</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2335
+#: vt_best_practices.xml:2363
 #, no-c-format
 msgid "&prompt.root;kpartx -d /dev/loop1"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2338
+#: vt_best_practices.xml:2366
 #, no-c-format
 msgid "Detach the devices with <command>losetup</command>"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2341
+#: vt_best_practices.xml:2369
 #, no-c-format
 msgid "&prompt.root;losetup -d /dev/loop1"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2346
+#: vt_best_practices.xml:2374
 #, no-c-format
 msgid "Opening a qcow2 Image"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2348
+#: vt_best_practices.xml:2376
 #, no-c-format
 msgid "Mounting a qcow2 Image"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2350
+#: vt_best_practices.xml:2378
 #, no-c-format
 msgid "First you need to load the <literal>nbd</literal> (network block devices) module. The following example loads it with support for 16 block devices ( <option>max_part=16</option> ). Check with <command>dmesg</command> whether the operation was successful:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2356
+#: vt_best_practices.xml:2384
 #, no-c-format
 msgid "&prompt.root;modprobe nbd max_part=16\n"
       "&prompt.root;dmesg | grep nbd\n"
@@ -2544,49 +2562,49 @@ msgid "&prompt.root;modprobe nbd max_part=16\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2361
+#: vt_best_practices.xml:2389
 #, no-c-format
 msgid "Connect the &vmguest; image (for example <filename>SLE15.qcow2</filename> ) to an NBD device ( <filename>/debv/nbd0</filename> in the following example) with the <command>qemu-nbd</command> command. Make sure to use a free NBD device:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2367
+#: vt_best_practices.xml:2395
 #, no-c-format
 msgid "&prompt.root;qemu-nbd -c<co xml:id=\"co-qemunbd-minusc\"/> /dev/nbd0<co xml:id=\"co-qemunbd-device\"/> SLE15.qcow2<co xml:id=\"co-qemunbd-image\"/>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2370
+#: vt_best_practices.xml:2398
 #, no-c-format
 msgid "Connect <filename>SLE15.qcow2</filename> to the local NBD device <filename>/dev/nbd0</filename>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2376
+#: vt_best_practices.xml:2404
 #, no-c-format
 msgid "NBD device to use"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2381
+#: vt_best_practices.xml:2409
 #, no-c-format
 msgid "&vmguest; image to use"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2387
+#: vt_best_practices.xml:2415
 #, no-c-format
 msgid "Checking for a free NBD Device"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2388
+#: vt_best_practices.xml:2416
 #, no-c-format
 msgid "To check whether an NBD device is free, run the following command:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2391
+#: vt_best_practices.xml:2419
 #, no-c-format
 msgid "&prompt.root;lsof /dev/nbd0\n"
       "COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF  NODE NAME\n"
@@ -2594,19 +2612,19 @@ msgid "&prompt.root;lsof /dev/nbd0\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2394
+#: vt_best_practices.xml:2422
 #, no-c-format
 msgid "If the command produces an output like in the example above, the device is busy (not free). This can also be confirmed by the presence of the <filename>/sys/devices/virtual/block/nbd0/pid</filename> file."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2402
+#: vt_best_practices.xml:2430
 #, no-c-format
 msgid "Inform the operating system about partition table changes with <command>partprobe</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2406
+#: vt_best_practices.xml:2434
 #, no-c-format
 msgid "&prompt.root;partprobe /dev/nbd0 -s\n"
       "/dev/nbd0: msdos partitions 1 2\n"
@@ -2615,13 +2633,13 @@ msgid "&prompt.root;partprobe /dev/nbd0 -s\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2412
+#: vt_best_practices.xml:2440
 #, no-c-format
 msgid "In the example above, the <filename>SLE15.qcow2</filename> contains two partitions: <filename>/dev/nbd0p1</filename> and <filename>/dev/nbd0p2</filename> . Before mounting these partitions, use <command>vgscan</command> to check whether they belong to an LVM volume:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2418
+#: vt_best_practices.xml:2446
 #, no-c-format
 msgid "&prompt.root;vgscan -v\n"
       "    Wiping cache of LVM-capable devices\n"
@@ -2632,74 +2650,74 @@ msgid "&prompt.root;vgscan -v\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2426
+#: vt_best_practices.xml:2454
 #, no-c-format
 msgid "If no LVM volume has been found, you can mount the partition with <command>mount</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2430
+#: vt_best_practices.xml:2458
 #, no-c-format
 msgid "&prompt.root;mkdir /mnt/nbd0p2\n"
       "# mount /dev/nbd0p1 /mnt/nbd0p2"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2432
+#: vt_best_practices.xml:2460
 #, no-c-format
 msgid "Refer to <xref linkend=\"sec-lvm-found\"/> for information on how to handle LVM volumes."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2439
+#: vt_best_practices.xml:2467
 #, no-c-format
 msgid "Unmounting a qcow2 Image"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2441
+#: vt_best_practices.xml:2469
 #, no-c-format
 msgid "Unmount all mounted partitions of the image, for example:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2444
+#: vt_best_practices.xml:2472
 #, no-c-format
 msgid "&prompt.root;umount /mnt/nbd0p2"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2447
+#: vt_best_practices.xml:2475
 #, no-c-format
 msgid "Disconnect the image from the <filename>/dev/nbd0</filename> device."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2450
+#: vt_best_practices.xml:2478
 #, no-c-format
 msgid "&prompt.root;qemu-nbd -d /dev/nbd0"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2455
+#: vt_best_practices.xml:2483
 #, no-c-format
 msgid "Opening Images Containing LVM"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2457
+#: vt_best_practices.xml:2485
 #, no-c-format
 msgid "Mounting Images Containing LVM"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2459
+#: vt_best_practices.xml:2487
 #, no-c-format
 msgid "To check images for LVM groups, use <command>vgscan -v</command> . If an image contains LVM groups, the output of the command looks like the following:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2464
+#: vt_best_practices.xml:2492
 #, no-c-format
 msgid "&prompt.root;vgscan -v\n"
       "Wiping cache of LVM-capable devices\n"
@@ -2711,13 +2729,13 @@ msgid "&prompt.root;vgscan -v\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2473
+#: vt_best_practices.xml:2501
 #, no-c-format
 msgid "The <literal>system</literal> LVM volume group has been found on the system. You can get more information about this volume with <command>vgdisplay <replaceable>VOLUMEGROUPNAME</replaceable></command> (in our case <replaceable>VOLUMEGROUPNAME</replaceable> is <literal>system</literal> ). You should activate this volume group to expose LVM partitions as devices so the system can mount them. Use <command>vgchange</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2482
+#: vt_best_practices.xml:2510
 #, no-c-format
 msgid "&prompt.root;vgchange -ay -v\n"
       "Finding all volume groups\n"
@@ -2745,13 +2763,13 @@ msgid "&prompt.root;vgchange -ay -v\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2507
+#: vt_best_practices.xml:2535
 #, no-c-format
 msgid "All partitions in the volume group will be listed in the <filename>/dev/mapper</filename> directory. You can simply mount them now."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2512
+#: vt_best_practices.xml:2540
 #, no-c-format
 msgid "&prompt.root;ls /dev/mapper/system-*\n"
       "/dev/mapper/system-home  /dev/mapper/system-root /dev/mapper/system-swap\n"
@@ -2765,31 +2783,31 @@ msgid "&prompt.root;ls /dev/mapper/system-*\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2524
+#: vt_best_practices.xml:2552
 #, no-c-format
 msgid "Unmounting Images Containing LVM"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2526
+#: vt_best_practices.xml:2554
 #, no-c-format
 msgid "Unmount all partitions (with <command>umount</command> )"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2529
+#: vt_best_practices.xml:2557
 #, no-c-format
 msgid "&prompt.root;umount /mnt/system-root"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2532
+#: vt_best_practices.xml:2560
 #, no-c-format
 msgid "Deactivate the LVM volume group (with <command>vgchange -an <replaceable>VOLUMEGROUPNAME</replaceable></command> )"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2536
+#: vt_best_practices.xml:2564
 #, no-c-format
 msgid "&prompt.root;vgchange -an -v system\n"
       "Using volume group(s) on command line\n"
@@ -2805,49 +2823,49 @@ msgid "&prompt.root;vgchange -an -v system\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2549
+#: vt_best_practices.xml:2577
 #, no-c-format
 msgid "Now you have two choices:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2554
+#: vt_best_practices.xml:2582
 #, no-c-format
 msgid "In case of a qcow2 image, proceed as described in <xref linkend=\"st-umount-qcow2\"/> ( <command>qemu-nbd -d /dev/nbd0</command> )."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2561
+#: vt_best_practices.xml:2589
 #, no-c-format
 msgid "In case of a raw image, proceeds as described in <xref linkend=\"st-umount-raw\"/> ( <command>kpartx -d /dev/loop1</command> ; <command>losetup -d /dev/loop1</command> )."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2569
+#: vt_best_practices.xml:2597
 #, no-c-format
 msgid "Check for a Successful Unmount"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2570
+#: vt_best_practices.xml:2598
 #, no-c-format
 msgid "You should double-check that unmounting succeeded by using a system command like <command>losetup</command> , <command>qemu-nbd</command> , <command>mount</command> or <command>vgscan</command> . If this is not the case you may have trouble using the &vmguest; because its system image is used in different places."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2584
+#: vt_best_practices.xml:2612
 #, no-c-format
 msgid "File System Sharing"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2585
+#: vt_best_practices.xml:2613
 #, no-c-format
 msgid "You can access a host directory in the &vmguest; using the <tag class=\"element\">filesystem</tag> element. In the following example we will share the <filename>/data/shared</filename> directory and mount it in the &vmguest;. Note that the <tag class=\"attribute\">accessmode</tag> parameter only works with <tag class=\"attribute\">type='mount'</tag> for the &qemu;/&kvm; drive (most other values for <tag class=\"attribute\">type</tag> are exclusively used for the LXC driver)."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2594
+#: vt_best_practices.xml:2622
 #, no-c-format
 msgid "&lt;filesystem type='mount'<co xml:id=\"co-fs-mount\"/> accessmode='mapped'<co xml:id=\"co-fs-mode\"/>&gt;\n"
       "   &lt;source dir='/data/shared'<co xml:id=\"co-fs-sourcedir\"/>&gt;\n"
@@ -2856,80 +2874,80 @@ msgid "&lt;filesystem type='mount'<co xml:id=\"co-fs-mount\"/> accessmode='mappe
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2600
+#: vt_best_practices.xml:2628
 #, no-c-format
 msgid "A host directory to mount &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2605
+#: vt_best_practices.xml:2633
 #, no-c-format
 msgid "Access mode (the security mode) set to <literal>mapped</literal> will give access with the permissions of the hypervisor. Use <literal>passthrough</literal> to access this share with the permissions of the user inside the &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2613
+#: vt_best_practices.xml:2641
 #, no-c-format
 msgid "Path to share with the &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2618
+#: vt_best_practices.xml:2646
 #, no-c-format
 msgid "Name or label of the path for the mount command."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2623
+#: vt_best_practices.xml:2651
 #, no-c-format
 msgid "To mount the <literal>shared</literal> directory on the &vmguest;, use the following commands: Under the &vmguest; now you need to mount the <literal>target dir='shared'</literal> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2628
+#: vt_best_practices.xml:2656
 #, no-c-format
 msgid "&prompt.root;mkdir /opt/mnt_shared\n"
       "&prompt.root;mount shared -t 9p /opt/mnt_shared -o trans=virtio"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2630
+#: vt_best_practices.xml:2658
 #, no-c-format
 msgid "See <link xlink:href=\"https://libvirt.org/formatdomain.html#elementsFilesystems\">&libvirt; File System </link> and <link xlink:href=\"http://wiki.qemu.org/Documentation/9psetup\">&qemu; 9psetup</link> for more information."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2640
+#: vt_best_practices.xml:2668
 #, no-c-format
 msgid "&vmguest; Configuration"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2643
+#: vt_best_practices.xml:2671
 #, no-c-format
 msgid "Virtio Driver"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2644
+#: vt_best_practices.xml:2672
 #, no-c-format
 msgid "To increase &vmguest; performance it is recommended to use paravirtualized drivers within the &vmguest;s. The virtualization standard for such drivers for &kvm; are the <literal>virtio</literal> drivers, which are designed for running in a virtual environment. &xen; uses similar paravirtualized device drivers (like <link xlink:href=\"https://www.suse.com/products/vmdriverpack/\">VMDP</link> in a Windows* guest). For a better understanding of this topic, refer to <xref linkend=\"sec-vt-io\"/> ."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2656
+#: vt_best_practices.xml:2684
 #, no-c-format
 msgid "<literal>virtio blk</literal>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2657
+#: vt_best_practices.xml:2685
 #, no-c-format
 msgid "<literal>virtio_blk</literal> is the virtio block device for disk. To use the <literal>virtio blk</literal> driver for a block device, specify the <tag class=\"attribute\">bus='virtio'</tag> attribute in the <tag class=\"element\">disk</tag> definition:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2664
+#: vt_best_practices.xml:2692
 #, no-c-format
 msgid "&lt;disk type='....' device='disk'&gt;\n"
       "    ....\n"
@@ -2938,43 +2956,43 @@ msgid "&lt;disk type='....' device='disk'&gt;\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2669
+#: vt_best_practices.xml:2697
 #, no-c-format
 msgid "Disk Device Names"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2670
+#: vt_best_practices.xml:2698
 #, no-c-format
 msgid "<literal>virtio</literal> disk devices are named <literal>/dev/vd[a-z][1-9]</literal> . If you migrate a Linux guest from a non-virtio disk you need to adjust the <literal>root=</literal> parameter in the GRUB configuration, and regenerate the <filename>initrd</filename> file. Otherwise the system cannot boot. On &vmguest;s with other operating systems, the boot loader may need to be adjusted or reinstalled accordingly, too."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2681
+#: vt_best_practices.xml:2709
 #, no-c-format
 msgid "Using <literal>virtio</literal> Disks with <command>qemu-system-ARCH</command>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2682
+#: vt_best_practices.xml:2710
 #, no-c-format
 msgid "When running <command>qemu-system-ARCH</command> , use the <option>-drive</option> option to add a disk to the &vmguest;. See <xref linkend=\"cha-qemu-guest-inst-qemu-kvm\"/> for an example. The <option>-hd[abcd]</option> option will not work for virtio disks."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2691
+#: vt_best_practices.xml:2719
 #, no-c-format
 msgid "virtio net"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2692
+#: vt_best_practices.xml:2720
 #, no-c-format
 msgid "<literal>virtio_net</literal> is the virtio network device. The kernel modules should be loaded automatically in the guest at boot time. You need to start the service to make the network available."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2697
+#: vt_best_practices.xml:2725
 #, no-c-format
 msgid "&lt;interface type='network'&gt;\n"
       "    ...\n"
@@ -2983,37 +3001,37 @@ msgid "&lt;interface type='network'&gt;\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2703
+#: vt_best_practices.xml:2731
 #, no-c-format
 msgid "virtio balloon"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2704
+#: vt_best_practices.xml:2732
 #, no-c-format
 msgid "The virtio balloon is used for host memory over-commits for guests. For Linux guests, the balloon driver runs in the guest kernel, whereas for Windows guests, the balloon driver is in the VMDP package. <literal>virtio_balloon</literal> is a PV driver to give or take memory from a &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2713
+#: vt_best_practices.xml:2741
 #, no-c-format
 msgid "<emphasis>Inflate balloon</emphasis> : Return memory from guest to host kernel (for &kvm;) or to hypervisor (for &xen;)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2719
+#: vt_best_practices.xml:2747
 #, no-c-format
 msgid "<emphasis>Deflate balloon</emphasis> : Guest will have more available memory"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2725
+#: vt_best_practices.xml:2753
 #, no-c-format
 msgid "It is controlled by the <literal>currentMemory</literal> and <literal>memory</literal> options."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2729
+#: vt_best_practices.xml:2757
 #, no-c-format
 msgid "&lt;memory unit='KiB'&gt;16777216&lt;/memory&gt;\n"
       "    &lt;currentMemory unit='KiB'&gt;1048576&lt;/currentMemory&gt;\n"
@@ -3024,31 +3042,31 @@ msgid "&lt;memory unit='KiB'&gt;16777216&lt;/memory&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2735
+#: vt_best_practices.xml:2763
 #, no-c-format
 msgid "You can also use <command>virsh</command> to change it:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2738
+#: vt_best_practices.xml:2766
 #, no-c-format
 msgid "&prompt.user;virsh setmem <replaceable>DOMAIN_ID</replaceable> <replaceable>MEMORY in KB</replaceable>"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2741
+#: vt_best_practices.xml:2769
 #, no-c-format
 msgid "Checking virtio Presence"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2742
+#: vt_best_practices.xml:2770
 #, no-c-format
 msgid "You can check the virtio block PCI with:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2745
+#: vt_best_practices.xml:2773
 #, no-c-format
 msgid "&prompt.user;find /sys/devices/ -name virtio*\n"
       "/sys/devices/pci0000:00/0000:00:06.0/virtio0\n"
@@ -3057,13 +3075,13 @@ msgid "&prompt.user;find /sys/devices/ -name virtio*\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2749
+#: vt_best_practices.xml:2777
 #, no-c-format
 msgid "To find the block device associated with <filename>vdX</filename> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2752
+#: vt_best_practices.xml:2780
 #, no-c-format
 msgid "&prompt.user;find /sys/devices/ -name virtio* -print  -exec ls {}/block 2&gt;/dev/null \\;\n"
       "/sys/devices/pci0000:00/0000:00:06.0/virtio0\n"
@@ -3073,13 +3091,13 @@ msgid "&prompt.user;find /sys/devices/ -name virtio* -print  -exec ls {}/block 2
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2757
+#: vt_best_practices.xml:2785
 #, no-c-format
 msgid "To get more information on the virtio block:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2760
+#: vt_best_practices.xml:2788
 #, no-c-format
 msgid "&prompt.user;udevadm info -p /sys/devices/pci0000:00/0000:00:08.0/virtio2\n"
       "P: /devices/pci0000:00/0000:00:08.0/virtio2\n"
@@ -3090,13 +3108,13 @@ msgid "&prompt.user;udevadm info -p /sys/devices/pci0000:00/0000:00:08.0/virtio2
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2766
+#: vt_best_practices.xml:2794
 #, no-c-format
 msgid "To check all virtio drivers being used:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2769
+#: vt_best_practices.xml:2797
 #, no-c-format
 msgid "&prompt.user;find /sys/devices/ -name virtio* -print  -exec ls -l {}/driver 2&gt;/dev/null \\;\n"
       "/sys/devices/pci0000:00/0000:00:06.0/virtio0\n"
@@ -3108,19 +3126,19 @@ msgid "&prompt.user;find /sys/devices/ -name virtio* -print  -exec ls -l {}/driv
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2783
+#: vt_best_practices.xml:2811
 #, no-c-format
 msgid "Find Device Driver Options"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2784
+#: vt_best_practices.xml:2812
 #, no-c-format
 msgid "Virtio devices and other drivers have various options. To list all of them, use the <option>help</option> parameter of the <command>qemu-system-ARCH</command> command."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2789
+#: vt_best_practices.xml:2817
 #, no-c-format
 msgid "&prompt.user;qemu-system-x86_64 -device virtio-net,help\n"
       "virtio-net-pci.ioeventfd=on/off\n"
@@ -3132,31 +3150,31 @@ msgid "&prompt.user;qemu-system-x86_64 -device virtio-net,help\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2800
+#: vt_best_practices.xml:2828
 #, no-c-format
 msgid "Cirrus Video Driver"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2801
+#: vt_best_practices.xml:2829
 #, no-c-format
 msgid "To get 16-bit color, high compatibility and better performance it is recommended to use the <literal>cirrus</literal> video driver."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2806
+#: vt_best_practices.xml:2834
 #, no-c-format
 msgid "&libvirt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2807
+#: vt_best_practices.xml:2835
 #, no-c-format
 msgid "&libvirt; ignores the <literal>vram</literal> value because video size has been hardcoded in &qemu;."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2812
+#: vt_best_practices.xml:2840
 #, no-c-format
 msgid "&lt;video&gt;\n"
       "   &lt;model type='cirrus' vram='9216' heads='1'/&gt;\n"
@@ -3164,31 +3182,31 @@ msgid "&lt;video&gt;\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2818
+#: vt_best_practices.xml:2846
 #, no-c-format
 msgid "Better Entropy"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2819
+#: vt_best_practices.xml:2847
 #, no-c-format
 msgid "Virtio RNG (random number generator) is a paravirtualized device that is exposed as a hardware RNG device to the guest. On the host side, it can be wired up to one of several sources of entropy (including a real hardware RNG device and the host's <filename>/dev/random</filename> ) if hardware support does not exist. The Linux kernel contains the guest driver for the device from version 2.6.26 and higher."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2827
+#: vt_best_practices.xml:2855
 #, no-c-format
 msgid "The system entropy is collected from various non-deterministic hardware events and is mainly used by cryptographic applications. The virtual random number generator device (paravirtualized device) allows the host to pass through entropy to &vmguest; operating systems. This results in a better entropy in the &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2834
+#: vt_best_practices.xml:2862
 #, no-c-format
 msgid "To use Virtio RNG, add an <literal>RNG</literal> device in <command>virt-manager</command> or directly in the &vmguest;'s XML configuration:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2839
+#: vt_best_practices.xml:2867
 #, no-c-format
 msgid "&lt;devices&gt;\n"
       "   &lt;rng model='virtio'&gt;\n"
@@ -3198,51 +3216,51 @@ msgid "&lt;devices&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2844
+#: vt_best_practices.xml:2872
 #, no-c-format
 msgid "The host now should used <filename>/dev/random</filename> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2847
+#: vt_best_practices.xml:2875
 #, no-c-format
 msgid "&prompt.user;lsof /dev/random\n"
       "qemu-syst 4926 qemu    6r   CHR    1,8      0t0 8199 /dev/random"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2849
+#: vt_best_practices.xml:2877
 #, no-c-format
 msgid "On the &vmguest;, the source of entropy can be checked with:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2852
+#: vt_best_practices.xml:2880
 #, no-c-format
 msgid "&prompt.user;cat /sys/devices/virtual/misc/hw_random/rng_available"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2853
+#: vt_best_practices.xml:2881
 #, no-c-format
 msgid "The current device used for entropy can be checked with:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2856
+#: vt_best_practices.xml:2884
 #, no-c-format
 msgid "&prompt.user;cat /sys/devices/virtual/misc/hw_random/rng_current\n"
       "virtio_rng.0"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2858
+#: vt_best_practices.xml:2886
 #, no-c-format
 msgid "You should install the <package>rng-tools</package> package on the &vmguest;, enable the service, and start it. Under &productname; 15, do the following:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:2863
+#: vt_best_practices.xml:2891
 #, no-c-format
 msgid "&prompt.root;zypper in rng-tools\n"
       "&prompt.root;systemctl enable rng-tools\n"
@@ -3250,187 +3268,187 @@ msgid "&prompt.root;zypper in rng-tools\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2869
+#: vt_best_practices.xml:2897
 #, no-c-format
 msgid "Disable Unused Tools and Devices"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2870
+#: vt_best_practices.xml:2898
 #, no-c-format
 msgid "Per host, use one virtualization technology only. For example, do not use &kvm; and Containers on the same computer. Otherwise, you may find yourself with a reduced amount of available resources, increased security risk and a longer software update queue. Even when the amount of resources allocated to each of the technologies is configured carefully, the host may suffer from reduced overall availability and degraded performance."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2878
+#: vt_best_practices.xml:2906
 #, no-c-format
 msgid "Minimize the amount of software and services available on hosts. Most default installations of operating systems are not optimized for VM usage. Install what you really need and remove all other components in the &vmguest;."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2884
+#: vt_best_practices.xml:2912
 #, no-c-format
 msgid "Windows* Guest:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2889
+#: vt_best_practices.xml:2917
 #, no-c-format
 msgid "Disable the screen saver"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2894
+#: vt_best_practices.xml:2922
 #, no-c-format
 msgid "Remove all graphical effects"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2899
+#: vt_best_practices.xml:2927
 #, no-c-format
 msgid "Disable indexing of hard disks if not necessary"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2909
+#: vt_best_practices.xml:2937
 #, no-c-format
 msgid "Check and remove all unneeded devices"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2914
+#: vt_best_practices.xml:2942
 #, no-c-format
 msgid "Disable system update if not needed, or configure it to avoid any delay while rebooting or shutting down the host"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2920
+#: vt_best_practices.xml:2948
 #, no-c-format
 msgid "Check the Firewall rules"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2925
+#: vt_best_practices.xml:2953
 #, no-c-format
 msgid "Schedule backups and anti-virus updates appropriately"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2930
+#: vt_best_practices.xml:2958
 #, no-c-format
 msgid "Install the <link xlink:href=\"https://www.suse.com/products/vmdriverpack/\">VMDP</link> paravirtualized driver for best performance"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2937
+#: vt_best_practices.xml:2965
 #, no-c-format
 msgid "Check the operating system recommendations, such as on the <link xlink:href=\"http://windows.microsoft.com/en-us/windows/optimize-windows-better-performance#optimize-windows-better-performance=windows-7\">Microsoft Windows* 7 better performance</link> Web page."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2944
+#: vt_best_practices.xml:2972
 #, no-c-format
 msgid "Linux Guest:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2949
+#: vt_best_practices.xml:2977
 #, no-c-format
 msgid "Remove or do not start the X Window System if not necessary"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2954
+#: vt_best_practices.xml:2982
 #, no-c-format
 msgid "Check the list of started services and disable the ones you do not need"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2959
+#: vt_best_practices.xml:2987
 #, no-c-format
 msgid "Check the OS recommendations for kernel parameters that enable better performance"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2965
+#: vt_best_practices.xml:2993
 #, no-c-format
 msgid "Only install software that you really need"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2970
+#: vt_best_practices.xml:2998
 #, no-c-format
 msgid "Optimize the scheduling of predictable tasks (system updates, hard disk checks, etc.)"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2979
+#: vt_best_practices.xml:3007
 #, no-c-format
 msgid "Updating the Guest Machine Type"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2980
+#: vt_best_practices.xml:3008
 #, no-c-format
 msgid "&qemu; machine types define details of the architecture that are particularly relevant for migration and session management. As changes or improvements to &qemu; are made, new machine types are added. Old machine types are still supported for compatibility reasons, but to take advantage of improvements, we recommend to always migrate to the latest machine type when upgrading."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2988
+#: vt_best_practices.xml:3016
 #, no-c-format
 msgid "Changing the guest's machine type for a Linux guest will mostly be transparent. For Windows* guests, we recommend to take a snapshot or backup of the guest&mdash;in case Windows* has issues with the changes it detects and subsequently the user decides to revert to the original machine type the guest was created with."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:2996
+#: vt_best_practices.xml:3024
 #, no-c-format
 msgid "Changing the Machine Type"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:2997
+#: vt_best_practices.xml:3025
 #, no-c-format
 msgid "Refer to <xref linkend=\"sec-libvirt-config-machinetype-virsh\"/> for documentation."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3005
+#: vt_best_practices.xml:3033
 #, no-c-format
 msgid "&vmguest;-Specific Configurations and Settings"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3008
+#: vt_best_practices.xml:3036
 #, no-c-format
 msgid "ACPI Testing"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3009
+#: vt_best_practices.xml:3037
 #, no-c-format
 msgid "The ability to change a &vmguest;'s state heavily depends on the operating system. It is very important to test this feature before any use of your &vmguest;s in production. For example, most Linux operating systems disable this capability by default, so this requires you to enable this operation (mostly through &pk;)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3016
+#: vt_best_practices.xml:3044
 #, no-c-format
 msgid "ACPI must be enabled in the guest for a graceful shutdown to work. To check if ACPI is enabled, run:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3020
+#: vt_best_practices.xml:3048
 #, no-c-format
 msgid "&prompt.user;virsh dumpxml <replaceable>VMNAME</replaceable> | grep acpi"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3021
+#: vt_best_practices.xml:3049
 #, no-c-format
 msgid "If nothing is printed, ACPI is not enabled for your machine. Use <command>virsh edit</command> to add the following XML under &lt;domain&gt;:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3026
+#: vt_best_practices.xml:3054
 #, no-c-format
 msgid "&lt;features&gt;\n"
       "   &lt;acpi/&gt;\n"
@@ -3438,61 +3456,61 @@ msgid "&lt;features&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3029
+#: vt_best_practices.xml:3057
 #, no-c-format
 msgid "If ACPI was enabled during a Windows Server&thrdmrk; guest installation, it is not sufficient to turn it on in the &vmguest; configuration only. For more information, see <link xlink:href=\"https://support.microsoft.com/en-us/kb/309283\"/> . <remark>FIXME: URL is for XP and Server 2003. Is there something newer? - sknorr, 2017-06-07</remark>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3039
+#: vt_best_practices.xml:3067
 #, no-c-format
 msgid "Regardless of the &vmguest;'s configuration, a graceful shutdown is always possible from within the guest operating system."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3046
+#: vt_best_practices.xml:3074
 #, no-c-format
 msgid "Keyboard Layout"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3047
+#: vt_best_practices.xml:3075
 #, no-c-format
 msgid "Though it is possible to specify the keyboard layout from a <command>qemu-system-ARCH</command> command, it is recommended to configure it in the &libvirt; XML file. To change the keyboard layout while connecting to a remote &vmguest; using vnc, you should edit the &vmguest; XML configuration file. For example, to add an <literal>en-us</literal> keymap, add in the <literal>&lt;devices&gt;</literal> section:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3055
+#: vt_best_practices.xml:3083
 #, no-c-format
 msgid "&lt;graphics type='vnc' port='-1' autoport='yes' keymap='en-us'/&gt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3056
+#: vt_best_practices.xml:3084
 #, no-c-format
 msgid "Check the <literal>vncdisplay</literal> configuration and connect to your &vmguest;:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3060
+#: vt_best_practices.xml:3088
 #, no-c-format
 msgid "&prompt.user;virsh vncdisplay sles15 127.0.0.1:0"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3064
+#: vt_best_practices.xml:3092
 #, no-c-format
 msgid "Spice default listen URL"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3065
+#: vt_best_practices.xml:3093
 #, no-c-format
 msgid "If no network interface other than <literal>lo</literal> is assigned an IPv4 address on the host, the default address on which the spice server listens will not work. An error like the following one will occur:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3070
+#: vt_best_practices.xml:3098
 #, no-c-format
 msgid "&prompt.user;virsh start sles15\n"
       "error: Failed to start domain sles15\n"
@@ -3501,55 +3519,55 @@ msgid "&prompt.user;virsh start sles15\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3074
+#: vt_best_practices.xml:3102
 #, no-c-format
 msgid "To fix this, you can change the default <literal>spice_listen</literal> value in <filename>/etc/libvirt/qemu.conf</filename> using the local IPv6 address <systemitem class=\"ipaddress\">::1</systemitem> . The spice server listening address can also be changed on a per &vmguest; basis, use <command>virsh edit</command> to add the listen XML attribute to the <literal>graphics type='spice'</literal> element:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3082
+#: vt_best_practices.xml:3110
 #, no-c-format
 msgid "&lt;graphics type='spice' listen='::1' autoport='yes'/&gt;&gt;"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3086
+#: vt_best_practices.xml:3114
 #, no-c-format
 msgid "XML to &qemu; command line"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3087
+#: vt_best_practices.xml:3115
 #, no-c-format
 msgid "Sometimes it could be useful to get the &qemu; command line to launch the &vmguest; from the XML file."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3091
+#: vt_best_practices.xml:3119
 #, no-c-format
 msgid "&prompt.user;virsh domxml-to-native<co xml:id=\"co-domxml-native\"/> qemu-argv<co xml:id=\"co-domxml-argv\"/> SLE15.xml<co xml:id=\"co-domxml-file\"/>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3094
+#: vt_best_practices.xml:3122
 #, no-c-format
 msgid "Convert the XML file in domain XML format to the native guest configuration"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3100
+#: vt_best_practices.xml:3128
 #, no-c-format
 msgid "For the &qemu;/&kvm; hypervisor, the format argument needs be qemu-argv"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3105
+#: vt_best_practices.xml:3133
 #, no-c-format
 msgid "Domain XML file to use"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3110
+#: vt_best_practices.xml:3138
 #, no-c-format
 msgid "&prompt.user;&sudo; virsh domxml-to-native qemu-argv /etc/libvirt/qemu/SLE15.xml\n"
       "LC_ALL=C PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \\\n"
@@ -3575,67 +3593,67 @@ msgid "&prompt.user;&sudo; virsh domxml-to-native qemu-argv /etc/libvirt/qemu/SL
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3134
+#: vt_best_practices.xml:3162
 #, no-c-format
 msgid "Change Kernel Parameters at Boot Time"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3136
+#: vt_best_practices.xml:3164
 #, no-c-format
 msgid "&sle; 11"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3137
+#: vt_best_practices.xml:3165
 #, no-c-format
 msgid "To change the value for &slea; 11 products at boot time, you need to modify your <filename>/boot/grub/menu.lst</filename> file by adding the <option>OPTION=parameter</option> . Then reboot your system."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3144
+#: vt_best_practices.xml:3172
 #, no-c-format
 msgid "&sle; 12 and 15"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3145
+#: vt_best_practices.xml:3173
 #, no-c-format
 msgid "To change the value for &slea; 12 and 15 products at boot time, you need to modify your <filename>/etc/default/grub</filename> file. Find the variable starting with <option>GRUB_CMDLINE_LINUX_DEFAULT</option> and add at the end <option>OPTION=parameter</option> (or change it with the correct value if it is already available)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3152
+#: vt_best_practices.xml:3180
 #, no-c-format
 msgid "Now you need to regenerate your <literal>grub2</literal> configuration:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3155
+#: vt_best_practices.xml:3183
 #, no-c-format
 msgid "# grub2-mkconfig -o /boot/grub2/grub.cfg"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3156
+#: vt_best_practices.xml:3184
 #, no-c-format
 msgid "Then reboot your system."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3163
+#: vt_best_practices.xml:3191
 #, no-c-format
 msgid "Add a Device to an XML Configuration"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3164
+#: vt_best_practices.xml:3192
 #, no-c-format
 msgid "To create a new &vmguest; based on an XML file, you can specify the &qemu; command line using the special tag <literal>qemu:commandline</literal> . For example, to add a virtio-balloon-pci, add this block at the end of the XML configuration file (before the &lt;/domain&gt; tag):"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3170
+#: vt_best_practices.xml:3198
 #, no-c-format
 msgid "&lt;qemu:commandline&gt;\n"
       "    &lt;qemu:arg value='-device'/&gt;\n"
@@ -3644,301 +3662,301 @@ msgid "&lt;qemu:commandline&gt;\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3485
+#: vt_best_practices.xml:3513
 #, no-c-format
 msgid "Hypervisors Compared to Containers"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3493
+#: vt_best_practices.xml:3521
 #, no-c-format
 msgid "Features"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3498
+#: vt_best_practices.xml:3526
 #, no-c-format
 msgid "Hypervisors"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3503
+#: vt_best_practices.xml:3531
 #, no-c-format
 msgid "Containers"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3512
+#: vt_best_practices.xml:3540
 #, no-c-format
 msgid "Technologies"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3517
+#: vt_best_practices.xml:3545
 #, no-c-format
 msgid "Emulation of a physical computing environment"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3522
+#: vt_best_practices.xml:3550
 #, no-c-format
 msgid "Use kernel host"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3529
+#: vt_best_practices.xml:3557
 #, no-c-format
 msgid "System layer level"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3534
+#: vt_best_practices.xml:3562
 #, no-c-format
 msgid "Managed by a virtualization layer (Hypervisor)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3539
+#: vt_best_practices.xml:3567
 #, no-c-format
 msgid "Rely on kernel namespaces and cgroups"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3546
+#: vt_best_practices.xml:3574
 #, no-c-format
 msgid "Level (layer)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3551
+#: vt_best_practices.xml:3579
 #, no-c-format
 msgid "Hardware level"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3556
+#: vt_best_practices.xml:3584
 #, no-c-format
 msgid "Software level"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3563
+#: vt_best_practices.xml:3591
 #, no-c-format
 msgid "Virtualization mode available"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3568
+#: vt_best_practices.xml:3596
 #, no-c-format
 msgid "FV or PV"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3573
+#: vt_best_practices.xml:3601
 #, no-c-format
 msgid "None, only user space"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3580
+#: vt_best_practices.xml:3608
 #, no-c-format
 msgid "Security"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3585
+#: vt_best_practices.xml:3613
 #, no-c-format
 msgid "Strong"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3590
+#: vt_best_practices.xml:3618
 #, no-c-format
 msgid "Warning: Security is very low"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3597
+#: vt_best_practices.xml:3625
 #, no-c-format
 msgid "Confinement"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3602
+#: vt_best_practices.xml:3630
 #, no-c-format
 msgid "Full isolation"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3607
+#: vt_best_practices.xml:3635
 #, no-c-format
 msgid "Warning: Host kernel (OS must be compatible with kernel version)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3614
+#: vt_best_practices.xml:3642
 #, no-c-format
 msgid "Operating system"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3619
+#: vt_best_practices.xml:3647
 #, no-c-format
 msgid "Any operating system"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3624
+#: vt_best_practices.xml:3652
 #, no-c-format
 msgid "Only Linux (must be \"kernel\" compatible)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3631
+#: vt_best_practices.xml:3659
 #, no-c-format
 msgid "Type of system"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3636
+#: vt_best_practices.xml:3664
 #, no-c-format
 msgid "Full OS needed"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3641
+#: vt_best_practices.xml:3669
 #, no-c-format
 msgid "Scope is an instance of Linux"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3648
+#: vt_best_practices.xml:3676
 #, no-c-format
 msgid "Boot time"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3653
+#: vt_best_practices.xml:3681
 #, no-c-format
 msgid "Slow to start (OS delay)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3658
+#: vt_best_practices.xml:3686
 #, no-c-format
 msgid "Really quick start"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3665
+#: vt_best_practices.xml:3693
 #, no-c-format
 msgid "Overhead"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3670
+#: vt_best_practices.xml:3698
 #, no-c-format
 msgid "High"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3675
+#: vt_best_practices.xml:3703
 #, no-c-format
 msgid "Very low"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3682
+#: vt_best_practices.xml:3710
 #, no-c-format
 msgid "Efficiency"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3687
+#: vt_best_practices.xml:3715
 #, no-c-format
 msgid "Depends on OS"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3692
+#: vt_best_practices.xml:3720
 #, no-c-format
 msgid "Very efficient"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3699
+#: vt_best_practices.xml:3727
 #, no-c-format
 msgid "Sharing with host"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3704
+#: vt_best_practices.xml:3732
 #, no-c-format
 msgid "Warning: Complex because of isolation"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3709
+#: vt_best_practices.xml:3737
 #, no-c-format
 msgid "Sharing is easy (host sees everything; container sees its own objects)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3716
+#: vt_best_practices.xml:3744
 #, no-c-format
 msgid "Migration"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3721
+#: vt_best_practices.xml:3749
 #, no-c-format
 msgid "Supports migration (live mode)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3726
+#: vt_best_practices.xml:3754
 #, no-c-format
 msgid "Warning: Not possible"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3736
+#: vt_best_practices.xml:3764
 #, no-c-format
 msgid "Getting the Best of Both Worlds"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3737
+#: vt_best_practices.xml:3765
 #, no-c-format
 msgid "Even if the above table seems to indicate that running a single application in a highly secure way is not possible, <command>virt-sandbox</command> will allow running a single application in a &kvm; guest, starting with &sls; 12 SP1. <command>virt-sandbox</command> bootstraps any command within a Linux kernel with a minimal root file system."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3744
+#: vt_best_practices.xml:3772
 #, no-c-format
 msgid "The guest root file system can either be the root file system mounted read-only or a disk image. The following steps will show how to set up a sandbox with qcow2 disk image as root file system."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3751
+#: vt_best_practices.xml:3779
 #, no-c-format
 msgid "Create the disk image using <command>qemu-img</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3754
+#: vt_best_practices.xml:3782
 #, no-c-format
 msgid "&prompt.root;qemu-img create -f qcow2 rootfs.qcow2 6G"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3757
+#: vt_best_practices.xml:3785
 #, no-c-format
 msgid "Format the disk image:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3760
+#: vt_best_practices.xml:3788
 #, no-c-format
 msgid "&prompt.root;modprobe nbd<co xml:id=\"co-vsmkfs-modprobe\"/>\n"
       "&prompt.root;/usr/bin/qemu-nbd --format qcow2 -n -c /dev/nbd0 $PWD/test-base.qcow2<co xml:id=\"co-vsmkfs-qemu-nbd\"/>\n"
@@ -3946,37 +3964,37 @@ msgid "&prompt.root;modprobe nbd<co xml:id=\"co-vsmkfs-modprobe\"/>\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3765
+#: vt_best_practices.xml:3793
 #, no-c-format
 msgid "Make sure the nbd module is loaded: it is not loaded by default and will only be used to format the qcow image."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3771
+#: vt_best_practices.xml:3799
 #, no-c-format
 msgid "Create an NBD device for the qcow2 image. This device will then behave like any other block device. The example uses <replaceable>/dev/nbd0</replaceable> but any other free NBD device will work."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3779
+#: vt_best_practices.xml:3807
 #, no-c-format
 msgid "Format the disk image directly. Note that no partition table has been created: <command>virt-sandbox</command> considers the image to be a partition, not a disk."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3784
+#: vt_best_practices.xml:3812
 #, no-c-format
 msgid "The partition formats that can be used are limited: the Linux kernel bootstrapping the sandbox needs to have the corresponding features built in. The Ext4 module is also available at the sandbox start-up time."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3794
+#: vt_best_practices.xml:3822
 #, no-c-format
 msgid "Now populate the newly formatted image:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3797
+#: vt_best_practices.xml:3825
 #, no-c-format
 msgid "&prompt.root;guestmount -a base.qcow2 -m /dev/sda:/ /mnt<co xml:id=\"co-vsfs-mount\"/>\n"
       "\n"
@@ -3987,43 +4005,43 @@ msgid "&prompt.root;guestmount -a base.qcow2 -m /dev/sda:/ /mnt<co xml:id=\"co-v
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3806
+#: vt_best_practices.xml:3834
 #, no-c-format
 msgid "Mount the qcow2 image using the <command>guestfs</command> tools."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3811
+#: vt_best_practices.xml:3839
 #, no-c-format
 msgid "Use Zypper with the <literal>--root</literal> parameter to add a &sls; repository and install the <literal>Minimal</literal> pattern in the disk image. Any additional package or configuration change should be performed in this step."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3818
+#: vt_best_practices.xml:3846
 #, no-c-format
 msgid "Using backing chains"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3819
+#: vt_best_practices.xml:3847
 #, no-c-format
 msgid "To share the root file system between several sandboxes, create qcow2 images with a common disk image as backing chain as described in <xref linkend=\"sec-vt-best-img-overlay\"/> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3827
+#: vt_best_practices.xml:3855
 #, no-c-format
 msgid "Unmount the qcow2 image."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3834
+#: vt_best_practices.xml:3862
 #, no-c-format
 msgid "Run the sandbox, using <command>virt-sandbox</command> . This command has many interesting options, read its man page to discover them all. The command can be run as &rootuser; or as an unprivileged user."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3839
+#: vt_best_practices.xml:3867
 #, no-c-format
 msgid "&prompt.root;virt-sandbox -n <replaceable>NAME</replaceable> \\\n"
       "     -m host-image:/=$PWD/rootfs.qcow2 \\ <co xml:id=\"co-vs-rootfs\"/>\n"
@@ -4036,127 +4054,127 @@ msgid "&prompt.root;virt-sandbox -n <replaceable>NAME</replaceable> \\\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3849
+#: vt_best_practices.xml:3877
 #, no-c-format
 msgid "Mount the created disk image as the root file system. Note that without any image being mounted as <filename>/</filename> , the host root file system is read-only mounted as the guest one."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3854
+#: vt_best_practices.xml:3882
 #, no-c-format
 msgid "The host-image mount is not reserved for the root file system, it can be used to mount any disk image anywhere in the guest."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3860
+#: vt_best_practices.xml:3888
 #, no-c-format
 msgid "The host-bind mount is pretty convenient for sharing files and directories between the host and the guest. In this example the host directory <filename>/guests/www</filename> is mounted as <filename>/srv/www</filename> in the sandbox."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3868
+#: vt_best_practices.xml:3896
 #, no-c-format
 msgid "The RAM mounts are defining <literal>tmpfs</literal> mounts in the sandbox."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3874
+#: vt_best_practices.xml:3902
 #, no-c-format
 msgid "The network uses a network defined in libvirt. When running as an unprivileged user, the source can be omitted, and the &kvm; user networking feature will be used. Using this option requires the <package>dhcp-client</package> and <package>iproute2</package> packages, which are part of the &sls; <literal>Minimal</literal> pattern."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3893
+#: vt_best_practices.xml:3921
 #, no-c-format
 msgid "&xen;: Converting a Paravirtual (PV) Guest to a Fully Virtual (FV/HVM) Guest"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3895
+#: vt_best_practices.xml:3923
 #, no-c-format
 msgid "This chapter explains how to convert a &xen; paravirtual machine into a &xen; fully virtualized machine."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3901
+#: vt_best_practices.xml:3929
 #, no-c-format
 msgid "Guest Side"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3902
+#: vt_best_practices.xml:3930
 #, no-c-format
 msgid "In order to start the guest in FV mode, you have to run the following steps inside the guest."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3907
+#: vt_best_practices.xml:3935
 #, no-c-format
 msgid "Prior to converting the guest, apply all pending patches and reboot the guest."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3913
+#: vt_best_practices.xml:3941
 #, no-c-format
 msgid "FV machines use the <literal>-default</literal> kernel. If this kernel is not already installed, install the <literal>kernel-default</literal> package (while running in PV mode)."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3920
+#: vt_best_practices.xml:3948
 #, no-c-format
 msgid "PV machines typically use disk names such as <literal>vda*</literal> . These names must be changed to the FV <literal>hd*</literal> syntax. This change must be done in the following files:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3927
+#: vt_best_practices.xml:3955
 #, no-c-format
 msgid "<filename>/etc/fstab</filename>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3932
+#: vt_best_practices.xml:3960
 #, no-c-format
 msgid "<filename>/boot/grub/menu.lst</filename> (&slsa; 11 only)"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3937
+#: vt_best_practices.xml:3965
 #, no-c-format
 msgid "<filename>/boot/grub*/device.map</filename>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3942
+#: vt_best_practices.xml:3970
 #, no-c-format
 msgid "<filename>/etc/sysconfig/bootloader</filename>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3947
+#: vt_best_practices.xml:3975
 #, no-c-format
 msgid "<filename>/etc/default/grub</filename> (&slsa; 12 and 15 only)"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3953
+#: vt_best_practices.xml:3981
 #, no-c-format
 msgid "Prefer UUIDs"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3954
+#: vt_best_practices.xml:3982
 #, no-c-format
 msgid "You should use UUIDs or logical volumes within your <filename>/etc/fstab</filename> . Using UUID simplifies using attached network storage, multipathing, and virtualization. To find the UUID of your disk use the command <command>blkid</command> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3963
+#: vt_best_practices.xml:3991
 #, no-c-format
 msgid "To avoid any error regenerating the initrd with the required modules you can create a symlink from <filename>/dev/hda2</filename> to <filename>/dev/xvda2</filename> etc. by using the <command>ln</command> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3968
+#: vt_best_practices.xml:3996
 #, no-c-format
 msgid "ln -sf /dev/xvda2 /dev/hda2\n"
       "ln -sf /dev/xvda1 /dev/hda1\n"
@@ -4164,79 +4182,79 @@ msgid "ln -sf /dev/xvda2 /dev/hda2\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3973
+#: vt_best_practices.xml:4001
 #, no-c-format
 msgid "PV and FV machines use different disk and network driver modules. These FV modules must be added to the initrd manually. The expected modules are <literal>xen-vbd</literal> (for disk) and <literal>xen-vnif</literal> (for network). These are the only PV drivers for a fully virtualized &vmguest;. All other modules, such as <literal>ata_piix</literal> , <literal>ata_generic</literal> and <literal>libata</literal> , should be added automatically."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:3983
+#: vt_best_practices.xml:4011
 #, no-c-format
 msgid "Adding Modules to the initrd"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3986
+#: vt_best_practices.xml:4014
 #, no-c-format
 msgid "On &slsa; 11, you can add modules to the <literal>INITRD_MODULES</literal> line in the <filename>/etc/sysconfig/kernel</filename> file. For example:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:3991
+#: vt_best_practices.xml:4019
 #, no-c-format
 msgid "INITRD_MODULES=\"xen-vbd xen-vnif\""
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3992
+#: vt_best_practices.xml:4020
 #, no-c-format
 msgid "Run <command>mkinitrd</command> to build a new initrd containing the modules."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:3998
+#: vt_best_practices.xml:4026
 #, no-c-format
 msgid "On &slsa; 12 and 15, open or create <filename>/etc/dracut.conf.d/10-virt.conf</filename> and add the modules with <literal>force_drivers</literal> by adding a line as in the example below (mind the leading whitespace):"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4004
+#: vt_best_practices.xml:4032
 #, no-c-format
 msgid "force_drivers+=\" xen-vbd xen-vnif\""
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4005
+#: vt_best_practices.xml:4033
 #, no-c-format
 msgid "Run <command>dracut -f --kver <replaceable>KERNEL_VERSION</replaceable>-default</command> to build a new initrd (for the default version of the kernel) that contains the required modules."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:4012
+#: vt_best_practices.xml:4040
 #, no-c-format
 msgid "Find Your Kernel Version"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4013
+#: vt_best_practices.xml:4041
 #, no-c-format
 msgid "Use the <command>uname -r</command> command to get the current version used on your system."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4023
+#: vt_best_practices.xml:4051
 #, no-c-format
 msgid "Before shutting down the guest, set the default boot parameter to the <literal>-default</literal> kernel using <command>yast bootloader</command> ."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4030
+#: vt_best_practices.xml:4058
 #, no-c-format
 msgid "Under &productname; 11, if you have an X server running on your guest, you need to adjust the <filename>/etc/X11/xorg.conf</filename> file in order to adjust the X driver. Search for <literal>fbdev</literal> and change to <literal>cirrus</literal> ."
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4036
+#: vt_best_practices.xml:4064
 #, no-c-format
 msgid "Section \"Device\"\n"
       "          Driver       \"cirrus\"\n"
@@ -4245,49 +4263,49 @@ msgid "Section \"Device\"\n"
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:4041
+#: vt_best_practices.xml:4069
 #, no-c-format
 msgid "&productname; 12/15 and Xorg"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4042
+#: vt_best_practices.xml:4070
 #, no-c-format
 msgid "Under &productname; 12/15, Xorg will automatically adjust the driver needed to be able to get a working X server."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4049
+#: vt_best_practices.xml:4077
 #, no-c-format
 msgid "Shut down the guest."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:4056
+#: vt_best_practices.xml:4084
 #, no-c-format
 msgid "Host Side"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4057
+#: vt_best_practices.xml:4085
 #, no-c-format
 msgid "The following steps explain the action you have to perform on the host."
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4061
+#: vt_best_practices.xml:4089
 #, no-c-format
 msgid "To start the guest in FV mode, the configuration of the VM must be modified to match an FV configuration. Editing the configuration of the VM can easily be done using <command>virsh edit [DOMAIN]</command> . The following changes are recommended:"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4069
+#: vt_best_practices.xml:4097
 #, no-c-format
 msgid "Make sure the machine, the type and the <literal>loader</literal> entries in the OS section are changed from <literal>xenpv</literal> to <literal>xenfv</literal> . The updated OS section should look similar to:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4074
+#: vt_best_practices.xml:4102
 #, no-c-format
 msgid "&lt;os&gt;\n"
       "          &lt;type arch='x86_64' machine='xenfv'&gt;hvm&lt;/type&gt;\n"
@@ -4297,61 +4315,61 @@ msgid "&lt;os&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4081
+#: vt_best_practices.xml:4109
 #, no-c-format
 msgid "In the OS section remove anything that is specific to PV guest:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4086
+#: vt_best_practices.xml:4114
 #, no-c-format
 msgid "&lt;bootloader&gt;pygrub&lt;/bootloader&gt;"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4089
+#: vt_best_practices.xml:4117
 #, no-c-format
 msgid "&lt;kernel&gt;/usr/lib/grub2/x86_64-xen/grub.xen&lt;/kernel&gt;"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4092
+#: vt_best_practices.xml:4120
 #, no-c-format
 msgid "&lt;cmdline&gt;xen-fbfront.video=4,1024,768&lt;/cmdline&gt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4097
+#: vt_best_practices.xml:4125
 #, no-c-format
 msgid "In the devices section, add the qemu emulator as:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4100
+#: vt_best_practices.xml:4128
 #, no-c-format
 msgid "&lt;emulator&gt;/usr/lib/xen/bin/qemu-system-i386&lt;/emulator&gt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4103
+#: vt_best_practices.xml:4131
 #, no-c-format
 msgid "Update the disk configuration so the target device and bus use the FV syntax. This requires replacing the <literal>xen</literal> disk bus with <literal>ide</literal> , and the <literal>vda</literal> target device with <literal>hda</literal> . The changes should look similar to:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4109
+#: vt_best_practices.xml:4137
 #, no-c-format
 msgid "&lt;target dev='hda' bus='ide'/&gt;"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4112
+#: vt_best_practices.xml:4140
 #, no-c-format
 msgid "Change the bus for the mouse and keyboard from <literal>xen</literal> to <literal>ps2</literal> . Also add a new USB tablet device:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4116
+#: vt_best_practices.xml:4144
 #, no-c-format
 msgid "&lt;input type='mouse' bus='ps2'/&gt;\n"
       "          &lt;input type='keyboard' bus='ps2'/&gt;\n"
@@ -4359,13 +4377,13 @@ msgid "&lt;input type='mouse' bus='ps2'/&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4121
+#: vt_best_practices.xml:4149
 #, no-c-format
 msgid "Change the console target type from <literal>xen</literal> to <literal>serial</literal> :"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4125
+#: vt_best_practices.xml:4153
 #, no-c-format
 msgid "&lt;console type='pty'&gt;\n"
       "          &lt;target type='serial' port='0'/&gt;\n"
@@ -4373,13 +4391,13 @@ msgid "&lt;console type='pty'&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4130
+#: vt_best_practices.xml:4158
 #, no-c-format
 msgid "Change the video configuration from <literal>xen</literal> to <literal>cirrus</literal> , with 8&nbsp;MB of VRAM:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4134
+#: vt_best_practices.xml:4162
 #, no-c-format
 msgid "&lt;video&gt;\n"
       "          &lt;model type='cirrus' vram='8192' heads='1' primary='yes'/&gt;\n"
@@ -4387,13 +4405,13 @@ msgid "&lt;video&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4139
+#: vt_best_practices.xml:4167
 #, no-c-format
 msgid "If desired, add <literal>acpi</literal> and <literal>apic</literal> to the features of the VM:"
 msgstr ""
 
 #. Tag: screen
-#: vt_best_practices.xml:4143
+#: vt_best_practices.xml:4171
 #, no-c-format
 msgid "&lt;features&gt;\n"
       "          &lt;acpi/&gt;\n"
@@ -4402,109 +4420,109 @@ msgid "&lt;features&gt;\n"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4151
+#: vt_best_practices.xml:4179
 #, no-c-format
 msgid "Start the guest (using <command>virsh</command> or <command>virt-manager</command> ). If the guest is running kernel-default (as verified through <command>uname -a</command> ), the machine is running in Fully Virtual mode."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:4161
+#: vt_best_practices.xml:4189
 #, no-c-format
 msgid "guestfs-tools"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4162
+#: vt_best_practices.xml:4190
 #, no-c-format
 msgid "To script this process, or work on disk images directly, you can use the guestfs-tools suite (see <xref linkend=\"sec-guestfs-tools\"/> for more information). Numerous tools exist there to help modify disk images."
 msgstr ""
 
 #. Tag: title
-#: vt_best_practices.xml:4170
+#: vt_best_practices.xml:4198
 #, no-c-format
 msgid "External References"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4176
+#: vt_best_practices.xml:4204
 #, no-c-format
 msgid "<link xlink:href=\"https://kernel.org/doc/ols/2009/ols2009-pages-19-28.pdf\">Increasing memory density using KSM</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4182
+#: vt_best_practices.xml:4210
 #, no-c-format
 msgid "<link xlink:href=\"http://www.linux-kvm.org/page/KSM\">linux-kvm.org KSM</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4188
+#: vt_best_practices.xml:4216
 #, no-c-format
 msgid "<link xlink:href=\"https://www.kernel.org/doc/Documentation/vm/ksm.txt\">KSM's kernel documentation</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4194
+#: vt_best_practices.xml:4222
 #, no-c-format
 msgid "<link xlink:href=\"https://lwn.net/Articles/329123/\">ksm - dynamic page sharing driver for linux v4</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4200
+#: vt_best_practices.xml:4228
 #, no-c-format
 msgid "<link xlink:href=\"http://www.espenbraastad.no/post/memory-ballooning/\">Memory Ballooning</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4206
+#: vt_best_practices.xml:4234
 #, no-c-format
 msgid "<link xlink:href=\"http://wiki.libvirt.org/page/Virtio\">libvirt virtio</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4212
+#: vt_best_practices.xml:4240
 #, no-c-format
 msgid "<link xlink:href=\"https://www.kernel.org/doc/Documentation/block/cfq-iosched.txt\">CFQ's kernel documentation</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4218
+#: vt_best_practices.xml:4246
 #, no-c-format
 msgid "<link xlink:href=\"https://www.kernel.org/doc/Documentation/sysctl/kernel.txt\">Documentation for sysctl</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4225
+#: vt_best_practices.xml:4253
 #, no-c-format
 msgid "<link xlink:href=\"https://lwn.net/Articles/525459/\">LWN Random Number</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4231
+#: vt_best_practices.xml:4259
 #, no-c-format
 msgid "<link xlink:href=\"http://wiki.mikejung.biz/KVM_/_Xen\">&kvm; / &xen; tweaks</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4237
+#: vt_best_practices.xml:4265
 #, no-c-format
 msgid "<link xlink:href=\"http://events.linuxfoundation.org/sites/events/files/slides/CloudOpen2013_Khoa_Huynh_v3.pdf\">Dr. Khoa Huynh, IBM Linux Technology Center</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4244
+#: vt_best_practices.xml:4272
 #, no-c-format
 msgid "<link xlink:href=\"https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/plain/Documentation/admin-guide/kernel-parameters.txt\">Kernel Parameters</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4251
+#: vt_best_practices.xml:4279
 #, no-c-format
 msgid "<link xlink:href=\"http://lwn.net/Articles/374424/\">Huge pages Administration (Mel Gorman)</link>"
 msgstr ""
 
 #. Tag: para
-#: vt_best_practices.xml:4257
+#: vt_best_practices.xml:4285
 #, no-c-format
 msgid "<link xlink:href=\"https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt\">kernel hugetlbpage</link>"
 msgstr ""
