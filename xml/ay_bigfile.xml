@@ -3698,11 +3698,7 @@ config:type="boolean"&gt;true&lt;/diag&gt;</screen>
         <para>キーボードレイアウト</para>
        </entry>
        <entry>
-        <para>
-         A list of available keymap aliases can be found in
-         <literal>/usr/share/YaST2/data/keyboards.rb</literal>.
-	 E.g. <literal>english-us, english-uk, german, german-deadkey,...</literal>
-        </para>
+        <para>設定可能なキーボードレイアウトの一覧については、 <literal>/usr/share/YaST2/data/keyboard_raw.ycp</literal> ファイルをご覧ください (例: <literal>english-us, english-uk, japanese, german, german-deadkey,...</literal>) 。</para>
        </entry>
       </row>
      </tbody>
@@ -12227,27 +12223,33 @@ echo -n 100
       <para><literal>autoyast2</literal> オプションと <literal>autoyast</literal> オプションは似通った仕組みですが、 <command>linuxrc</command> は指定された値を処理するだけでなく、必要に応じてネットワークの設定も行なおうとします。このオプションについては本文書内では説明していません。 &ay; での違いと <command>linuxrc</command> URI の書式について、詳しくは <xref linkend="appendix-linuxrc"/> にある <command>linuxrc</command> の付録をお読みください。ここでは &ay; のルールやクラスには <emphasis>対応していません</emphasis> 。</para>
     </note>
     <para>コマンドライン変数 <literal>autoyast</literal> には、 <xref linkend="Commandline-ay"/> の表に示すような書式を使用することができます。</para>
-    <table xml:id="Commandline-ay">
-     <title>&ay; の書式</title>
-     <tgroup cols="2">
-      <thead>
-       <row>
-        <entry>
-         <para>コマンドライン変数</para>
-        </entry>
-        <entry>
-         <para>説明</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para>(無し)</para>
-        </entry>
-        <entry>
-         <para>アップグレード: 自動オフラインアップグレードの場合は、 <literal>autoyast</literal> 変数を指定する必要はありません。詳しくは <xref linkend="pro-upgrade-offline-upgrade-mode"/> をお読みください。</para>
-         <para>インストール: <filename>autoinst.xml</filename> ファイルが下記 3 箇所のうちのいずれかの場所に存在すると、 &ay; が開始されます:</para>
+    <variablelist xml:id="Commandline-ay">
+        <title>&ay; の制御ファイル (プロファイル)</title>
+        <varlistentry>
+            <term>書式</term>
+            <listitem>
+                <para>
+                    The <literal>autoyast</literal> syntax for the URIs for your control file 
+                    locations can be confusing. The format is SCHEMA://HOST/PATH-TO-FILE.
+                    The number of forward slashes to use varies. For remote locations of 
+                    your control file, the URI looks like this example for an NFS server, with 
+                    two slashes: <literal>autoyast=nfs://SERVER/PATH</literal>.
+                </para>
+                <para>
+                    It is different when your control file is on a local filesystem. For example, 
+                    <literal>autoyast=usb:///profile.xml</literal> is the same as 
+                    <literal>autoyast=usb://localhost/profile.xml</literal>.
+                    You may omit the local host name, but you must keep the third slash.
+                    <literal>autoyast=usb://profile.xml</literal> will fail because 
+                    <literal>profile.xml</literal> is interpreted as the host name.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>When no control file specification is needed</term>
+            <listitem>
+                <para>アップグレード: 自動オフラインアップグレードの場合は、 <literal>autoyast</literal> 変数を指定する必要はありません。詳しくは <xref linkend="pro-upgrade-offline-upgrade-mode"/> をお読みください。</para>
+                <para>インストール: <filename>autoinst.xml</filename> ファイルが下記 3 箇所のうちのいずれかの場所に存在すると、 &ay; が開始されます:</para>
            <orderedlist>
              <listitem>
                <para>フラッシュメモリ (USB メモリなど) のルートディレクトリ</para>
@@ -12259,99 +12261,75 @@ echo -n 100
                <para>システムを起動する際に使用した初期 RAM ディスクのルートディレクトリ</para>
              </listitem>
            </orderedlist>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=file:///<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>指定したパス内の制御ファイルを読み込みます。ソースメディアのルートディレクトリからの相対パスを指定します。たとえば CD/DVD から起動している場合、 <literal>file:///autoinst.xml</literal> のように指定すると、 CD/DVD-ROM のルートディレクトリ内のファイルを読み込むようになります。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=device://<replaceable>デバイス</replaceable>/<replaceable>ファイル名</replaceable></literal></para>
-        </entry>
-        <entry>
-          <para>指定したストレージデバイス内の制御ファイルを読み込みます。この場合、デバイスに対するフルパスではなく、デバイス名のみを指定してください (例: <literal>device://vda1/autoyast.xml</literal>) 。また、デバイス名を省略する (例: <literal>autoyast=device:///<replaceable>ファイル名</replaceable></literal> ) と、 &ay; は全てのデバイスを検索するようになります。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=nfs://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>NFS サーバ内の制御ファイルを読み込みます。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=http://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>HTTP プロトコルを利用して、 Web サーバから制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=https://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>HTTPS プロトコルを利用して、 Web サーバから制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=tftp://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>TFTP 経由で制御ファイルを取得します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=ftp://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>FTP プロトコルを利用して制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=usb://<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>USB デバイスから制御ファイルを取得します (&ay; は接続されている全ての USB デバイスを検索します) 。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=relurl://<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-          <para>インストール元から制御ファイルを取得します。これは既定のインストール元の場合のほか、 <literal>install=<replaceable>インストール元のパス</replaceable></literal> で指定したものである場合があります。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=cifs://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>CIFS サーバ内にある制御ファイルを読み込みます。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>autoyast=label://<replaceable>ラベル</replaceable>/<replaceable>パス</replaceable></literal></para>
-        </entry>
-        <entry>
-         <para>指定したラベルのデバイス内にある制御ファイルを読み込みます。</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </table>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><literal>autoyast=file:///<replaceable>パス</replaceable></literal></term>
+            <listitem>
+                <para>指定したパス内の制御ファイルを読み込みます。ソースメディアのルートディレクトリからの相対パスを指定します。たとえば CD/DVD から起動している場合、 <literal>file:///autoinst.xml</literal> のように指定すると、 CD/DVD-ROM のルートディレクトリ内のファイルを読み込むようになります。</para>
+         </listitem>
+     </varlistentry>
+     <varlistentry>
+         <term><literal>autoyast=device://<replaceable>デバイス</replaceable>/<replaceable>ファイル名</replaceable></literal></term>
+          <listitem>
+              <para>指定したストレージデバイス内の制御ファイルを読み込みます。この場合、デバイスに対するフルパスではなく、デバイス名のみを指定してください (例: <literal>device://vda1/autoyast.xml</literal>) 。また、デバイス名を省略する (例: <literal>autoyast=device:///<replaceable>ファイル名</replaceable></literal> ) と、 &ay; は全てのデバイスを検索するようになります。</para>
+         </listitem>
+     </varlistentry>
+     <varlistentry>
+         <term><literal>autoyast=nfs://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>NFS サーバ内の制御ファイルを読み込みます。</para>
+         </listitem>
+     </varlistentry> 
+     <varlistentry>
+         <term><literal>autoyast=http://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>HTTP プロトコルを利用して、 Web サーバから制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=https://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>HTTPS プロトコルを利用して、 Web サーバから制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=tftp://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>TFTP 経由で制御ファイルを取得します。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=ftp://[<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@]<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>FTP プロトコルを利用して制御ファイルを取得します。ユーザ名とパスワードの指定は任意です。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=usb://<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>USB デバイスから制御ファイルを取得します (&ay; は接続されている全ての USB デバイスを検索します) 。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=relurl://<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>インストール元から制御ファイルを取得します。これは既定のインストール元の場合のほか、 <literal>install=<replaceable>インストール元のパス</replaceable></literal> で指定したものである場合があります。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=cifs://<replaceable>サーバ</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>CIFS サーバ内にある制御ファイルを読み込みます。</para>
+         </listitem>
+     </varlistentry>     
+     <varlistentry>
+         <term><literal>autoyast=label://<replaceable>ラベル</replaceable>/<replaceable>パス</replaceable></literal></term>
+          <listitem>
+              <para>指定したラベルのデバイス内にある制御ファイルを読み込みます。</para>
+         </listitem>
+     </varlistentry>        
+    </variablelist>
     <para>自動インストールでは、異なる種類のインフラストラクチャとソースメディアを使用するさまざまなシナリオが考えられます。最もシンプルな方法は &productname; のソースメディア (DVD メディア) を使用する方法ですが、この場合は自動インストールを開始するのにコマンドライン変数を入力する必要があるほか、 &yast; からアクセス可能な場所に制御ファイルを配置する必要もあります。</para>
      <para>スクリプトという観点では、マシンに対してシリアルコンソールを使用することで、テキストモードによるインストールを行なう方法もあります。この場合、必要なパラメータを expect スクリプトなどで問い合わせることができます。</para>
      <para>それぞれの起動方法ごとに利用可能な、制御ファイルの提供方法を示します:</para>
