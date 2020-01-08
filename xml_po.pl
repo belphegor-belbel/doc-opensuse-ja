@@ -183,6 +183,7 @@ __EOF__
     $msgid =~ s/\\/\\\\/g;
     $msgid =~ s/\"/\\\"/g;
     $msgid =~ s/\n/\\n\"\n      \"/g;
+    $msgid =~ s/\t/\\t/g;
 
     print "#. Tag: " . $result{$r}{"nodeName"} . "\n";
     print "#: " . basename($ARGV[1]) . ":" . $result{$r}{"lineNumber"} . "\n";
@@ -284,6 +285,9 @@ __EOF__
     if ($literal) {
       $msgid =~ s/\n/\\n/g;
     }
+
+    # replace TABs with \\t
+    $msgid =~ s/\t/\\t/g;
 
     if (exists($po{$msgid})) {
       if (length($po{$msgid}) > 0) {
