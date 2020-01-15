@@ -334,70 +334,6 @@ CPU | C0   | Cx   | Freq || POLL | C1   | C2   | C3
    </sect2>
   </sect1>
 
-  <sect1 xml:id="sec-tuning-power-tools-powertop" os="sled;osuse">
-   <title>&powertop; による電力消費状況の監視</title>
-    <para>&powertop; を使用することで、システムの電力消費状況を監視することができます。この情報をもとにして、不用意に電力消費を高めている理由 (たとえば休眠状態にあるプロセッサを活動状態に戻しているプロセス) を調べて、お使いのシステムにおる性能上の問題点を解決する支援を行なうことができます。このプログラムは Intel および AMD のプロセッサに対応しています。 <phrase os="sles;sled">なお、 <systemitem class="resource">powertop</systemitem> パッケージは &sle; SDK 内に含まれています。</phrase></para>
-   <para os="sles;sled">SDK は &sle; 向けのモジュールであり、 &scc; からのオンラインチャネルを通じて取得することができます。それ以外にも、 <link xlink:href="http://download.suse.com/"/> で <literal>&sle; Software Development Kit</literal> と入力して検索を行なうことでも、ダウンロードすることができます。詳しくは <xref linkend="cha-add-ons"/> をお読みください。</para>
-   <para>&powertop; は様々な情報源からのデータを組み合わせて 1 画面に表示します。これにはプログラムやデバイスドライバの分析のほか、カーネルオプションやプロセッサを休眠状態から起こした割り込みの量および割り込みの発生源に関する情報などが含まれます。 <xref linkend="ex-tuning-power-powertop"/> には、どのような分野の情報を表示しているのかを示しています:</para>
-   <example xml:id="ex-tuning-power-powertop">
-    <title>&powertop; の出力例</title>
-<screen>Cn               Avg  residency       P-states   (frequencies)
-<co xml:id="co-powertop-cstates"/>&nbsp;                <co xml:id="co-powertop-avg"/>&nbsp;     <co xml:id="co-powertop-residency"/>&nbsp;             <co xml:id="co-powertop-pstates"/>&nbsp;           <co xml:id="co-powertop-freq"/>
-C0 (cpu running)        (11.6%)       2.00 Ghz       0.1%
-polling         0.0ms   ( 0.0%)       2.00 Ghz       0.0%
-C1              4.4ms   (57.3%)       1.87 Ghz       0.0%
-C2             10.0ms   (31.1%)       1064 Mhz      99.9%
-
-
-Wakeups-from-idle per second : 11.2     interval: 5.0s <co xml:id="co-powertop-wakeups"/>
-no ACPI power usage estimate available <co xml:id="co-powertop-power"/>
-<?dbsuse-fo font-size="0.7em"?>
-Top causes for wakeups: <co xml:id="co-powertop-culprits"/>
-96.2% (826.0)       &lt;interrupt&gt; : extra timer interrupt
- 0.9% (  8.0)     &lt;kernel core&gt; : usb_hcd_poll_rh_status (rh_timer_func)
- 0.3% (  2.4)       &lt;interrupt&gt; : megasas
- 0.2% (  2.0)     &lt;kernel core&gt; : clocksource_watchdog (clocksource_watchdog)
- 0.2% (  1.6)       &lt;interrupt&gt; : eth1-TxRx-0
- 0.1% (  1.0)       &lt;interrupt&gt; : eth1-TxRx-4
-
-[...]
-
-Suggestion: <co xml:id="co-powertop-suggestions"/> Enable SATA ALPM link power management via:
-echo min_power &gt; /sys/class/scsi_host/host0/link_power_management_policy
-or press the S key.</screen>
-    <calloutlist>
-     <callout arearefs="co-powertop-cstates">
-      <para>この列には C-ステートの情報が表示されています。 CPU が動作中である場合、ステートは <literal>0</literal> に、休眠状態にある場合は <literal>0</literal> より大きいステートになります。これは利用可能な C-ステートの数や、休眠状態の状況によって変化します。</para>
-     </callout>
-     <callout arearefs="co-powertop-avg">
-      <para>この列には、それぞれの C-ステートが設定されていた時間の累計を示しています。</para>
-     </callout>
-     <callout arearefs="co-powertop-residency">
-      <para>この列には、それぞれの C-ステートが設定されていた時間の割合を示しています。アイドル時に電力消費を減らすには、より深い C-ステートになるようにします。これに加えて、深い C-ステートに長くとどまるようにします。</para>
-     </callout>
-     <callout arearefs="co-powertop-pstates">
-      <para>この列には、プロセッサの動作周波数と、お使いのシステムで対応するカーネルドライバを表示しています。</para>
-     </callout>
-     <callout arearefs="co-powertop-freq">
-      <para>この列には、一定の時間内にそれぞれの周波数にどれだけの時間設定されていたのかを割合で表示しています。</para>
-     </callout>
-     <callout arearefs="co-powertop-wakeups">
-      <para>1 秒あたり CPU がどれだけの頻度で休眠状態から起こされたのかを表示しています (割り込みの回数と同じ意味です) 。その数値が少なければ少ないほど、よりよいシステムであると言えます。 <literal>interval</literal> は &powertop; の更新間隔を示す値で、コマンドラインオプションの <option>-t</option> で指定することができます。既定の収集間隔は 5 秒です。</para>
-     </callout>
-     <callout arearefs="co-powertop-power">
-      <para>&powertop; をラップトップで動作させている場合、この行には ACPI の情報が表示され、現在使用している電力量と、バッテリーが完全に放電されるまでの予測時間が表示されます。サーバの場合、ここには何も表示されません。</para>
-     </callout>
-     <callout arearefs="co-powertop-culprits">
-      <para>何がシステムを必要以上に休眠状態から起こしているのかを示しています。 &powertop; では、一定のサンプリング間隔内で最も休眠中の CPU を起こした項目の上位を表示します。</para>
-     </callout>
-     <callout arearefs="co-powertop-suggestions">
-      <para>このマシンで電力消費を改善するためのヒントを表示しています。</para>
-     </callout>
-    </calloutlist>
-   </example>
-   <para>詳しくは <link xlink:href="https://01.org/powertop"/> (英語) にある &powertop; プロジェクトのページをお読みください。</para>
-  </sect1>
-
  <sect1 xml:id="sec-tuning-power-options">
   <title>特殊なチューニングオプション</title>
 
@@ -539,4 +475,125 @@ or press the S key.</screen>
   <para>Baseboard Management Controller (BMC) の搭載されたプラットフォームであれば、このサービスプロセッサを通じて様々な電力管理設定にアクセスすることができます。これらの設定は製造元ごとに異なるものであるため、本章では説明していません。詳しくは製造元が提供するマニュアルをお読みください。<!-- For example, <citetitle>HP ProLiant Server Power Management on SUSE Linux Enterprise Server 11&mdash;Integration Note </citetitle> provides detailed information how the HP platform specific power management features interact with the Linux kernel. The paper is available from <link xlink:href="http://h18004.www1.hp.com/products/servers/technology/whitepapers/os-techwp.html"/>. --></para>
   <para os="sled">&powertop; に関する詳細は、 <link xlink:href="https://01.org/powertop"/> (英語) をお読みください。</para>
  </sect1>
-</chapter>
+
+  <sect1 xml:id="sec-tuning-power-tools-powertop">   
+      <title>&powertop; による電力消費状況の監視</title>
+    <para>
+    &powertop; helps to identify the causes of unnecessary high power 
+    consumption. This is especially 
+    useful for laptops, where minimizing power consumption is
+    more important. It supports both Intel and AMD processors. 
+    Install it in the usual way:
+   </para>
+   <screen><command>cpupower idle-info</command> の出力例</screen>
+   <para>&powertop; は様々な情報源からのデータを組み合わせて 1 画面に表示します。これにはプログラムやデバイスドライバの分析のほか、カーネルオプションやプロセッサを休眠状態から起こした割り込みの量および割り込みの発生源に関する情報などが含まれます。 <xref linkend="ex-tuning-power-powertop"/> には、どのような分野の情報を表示しているのかを示しています:</para>
+   <screen><command>cpupower idle-info</command> の出力例</screen>
+   
+  <figure xml:id="fig-powertop-curses">
+   <title>&powertop; in Interactive Mode</title>
+   <mediaobject>
+    <imageobject role="fo">
+     <imagedata fileref="powertop_ncurses.png" width="75%" format="PNG"/>
+    </imageobject>
+    <imageobject role="html">
+     <imagedata fileref="powertop_ncurses.png" width="75%" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </figure>
+    
+  <para>
+      &powertop; supports exporting reports to HTML and CSV.
+      The following example generates a single report of a 240-second run:
+  </para>
+  <screen>&prompt.sudo;<command>powertop --iteration=1 --time=240 --html=<replaceable>POWERREPORT.HTML</replaceable></command></screen>
+  
+  <para>
+     It can be useful to run separate reports over time. The following example runs &powertop; 10 times for 
+     20 seconds each time, and creates a separate HTML report for each run:
+ </para>  
+
+  <screen>&prompt.sudo;<command>powertop --iteration=10 --time=20 --html=<replaceable>POWERREPORT.HTML</replaceable></command></screen>
+  <para>
+      This creates 10 time-stamped reports:
+  </para>
+  <screen>powerreport-20200108-104512.html
+powerreport-20200108-104451.html
+powerreport-20200108-104431.html
+[...]</screen>
+  <para>
+      An HTML report looks like <xref linkend="fig-powertop-html"/>:
+  </para>
+  
+  <figure xml:id="fig-powertop-html">
+   <title>HTML &powertop; Report</title>
+   <mediaobject>
+    <imageobject role="fo">
+     <imagedata fileref="powertop_html.png" width="75%" format="PNG"/>
+    </imageobject>
+    <imageobject role="html">
+     <imagedata fileref="powertop_html.png" width="75%" format="PNG"/>
+    </imageobject>
+   </mediaobject>
+  </figure>
+
+  <para> 
+      The Tuning tab of the HTML reports, and the Tunables tab in the 
+      interactive mode, both provide commands for testing the various power
+      settings. The HTML report prints the commands, which you can copy 
+      to a root command line for testing, for example
+      <command>echo '0' &gt; '/proc/sys/kernel/nmi_watchdog'</command>.
+      The ncurses mode provides a simple toggle between <literal>Good</literal>
+      and <literal>Bad</literal>. <literal>Good</literal> runs a command
+      to enable power saving, and <literal>Bad</literal> turns off power saving.
+      Enable all &powertop; settings with one command:
+  </para>
+  <screen>&prompt.sudo;<command>powertop --auto-tune</command></screen>
+  <para>
+      None of these changes survive a reboot. To make any changes
+      permanent, use <command>sysctl</command>, <command>udev</command>, 
+      or &systemd; to run your selected commands at 
+      boot. &powertop; includes a &systemd; service file, 
+      <filename>/usr/lib/systemd/system/powertop.service</filename>. This
+      starts &powertop; with the <command>--auto-tune</command> option:
+  </para>
+  <screen>ExecStart=/usr/sbin/powertop --auto-tune</screen>
+  <para>
+      Test this carefully before launching the &systemd; service,
+      to see if it gives the results that you want.
+      You probably do not want USB keyboards and mice to go into
+      powersave modes because it is a nuisance to continually wake
+      them up, and there may other devices you want left alone. For easier
+      testing and configuration editing, extract the commands from
+      an HTML report with <command>awk</command>:
+  </para>
+  <screen>&prompt.user;awk -F '&lt;/?td ?&gt;' '/tune/ { print $4 }' <replaceable>POWERREPORT.HTML</replaceable></screen>
+
+  <para>
+     In calibrate mode, &powertop; sets up several runs that use different idle settings for
+     backlight, CPU, wifi, USB devices, and disks, and helps to identify optimal brightness
+     settings on battery power:
+  </para>
+  <screen>&prompt.sudo;<command>powertop --calibrate</command></screen>
+  
+  <para>
+      You may call a file that creates a workload for more accurate calibration:
+  </para>
+  <screen>&prompt.sudo;<command>powertop --calibrate --workload=<replaceable>FILENAME</replaceable> --html=POWERREPORT.HTML</command></screen>
+
+   <para>さらなる情報</para>                                  
+    <itemizedlist>
+      <listitem>
+         <para>詳しくは <link xlink:href="https://01.org/powertop"/> (英語) にある &powertop; プロジェクトのページをお読みください。</para>
+      </listitem>
+      <listitem>
+          <para><xref linkend="sec-tuning-power-options-p-states"/> もお読みください。</para>
+      </listitem>
+      <listitem>
+        <para>The systemd Daemon chapter of the &slea; &admin;</para>
+      </listitem>
+      <listitem>
+          <para>The Dynamic Kernel Device Management with udev chapter of the &slea; &admin;</para>
+      </listitem>
+    </itemizedlist>
+  </sect1> 
+ </chapter>
