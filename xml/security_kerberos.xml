@@ -755,15 +755,13 @@ GSSAPICleanupCredentials yes</screen>
    </procedure>
    <sect3 xml:id="sec-security-kerberos-admin-ldap-auth">
     <title>LDAP を利用した &krb; 認証の使用</title>
-    <para>&krb; は全てのプリンシパルに対する情報と、認証時に使用する機密鍵を保持しています。詳しくは <xref linkend="sec-security-kerberos-admin-kdc-database"/> をお読みください。</para>
+    <para>チケット発行許諾チケットを取得およびキャッシュしたい場合は、 <xref linkend="sec-security-kerberos-admin-kdc-princ"/> で作成したプリンシパルをお使いください:</para>
     <screen>&prompt.user;kinit &exampleuserIII;@EXAMPLE.COM</screen>
-     <para>
-     To check if GSSAPI authentication works, run:</para>
+     <para>GSSAPI 認証が動作していることを確認するには、下記の手順を実施します:</para>
     <screen>&prompt.user;ldapwhoami -Y GSSAPI -H ldap://ldapkdc.example.com
 dn: uid=testuser,ou=People,dc=example,dc=com
     <remark>@firstyear: do you have an example output we could add here?</remark></screen>
-    <para>GSSAPI uses the <literal>ccache</literal> to authenticate the user to the
-     &ds389; server without the user's password.</para>
+    <para>GSSAPI は <literal>ccache</literal> を利用して &ds389; サーバに対してユーザの認証を実施します。このとき、パスワードの入力は不要です。</para>
    </sect3>
    <sect3 xml:id="sec-security-kerberos-admin-ldap-sasl">
     <title>SASL 識別子マッピングの設定</title>
@@ -914,45 +912,49 @@ objectClass: nsSaslMapping</screen>
    </step>
   </procedure>
 <!-- info by wbrown, via mail (2019-07-02)-->
-  <para>
-   To check if the setup of the Kerberos back-end inside of LDAP was successful,
-   proceed as follows:
-  </para>
+  <para>LDAP の Kerberos バックエンドの設定が正しく行なわれていることを確認するには、下記の手順を実施します:</para>
   <procedure>
    <step>
-    <para>
-     Directly access the KDC database on the host of the &ds389;:
-    </para>
+    <para>まずは &ds389; のホスト内の KDC データベースに対して、直接アクセスを行ないます:</para>
     <screen>&prompt.sudo;kadmin.local</screen>
    </step>
    <step>
-    <para>プリンシパル</para>
+    <para>プリンシパルの一覧を取得します:</para>
     <screen>kadmin.local &gt; listprincs</screen>
    </step>
    <step>
-    <para>プリンシパルの作成</para>
+    <para>プリンシパルを作成します:</para>
     <screen>kadmin.local &gt; ank admin@EXAMPLE.COM</screen>
-    <para>It is written to the &ds389; database.</para>
+    <para>これで &ds389; データベース内に書き込みが行なわれます。</para>
    </step>
    <step>
-    <para>
-     <remark>FIXME</remark>
-     </para>
+    <para><remark>FIXME</remark></para>
     <screen>&prompt.sudo;ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost</screen>
    </step>
    <step>
-    <para>
-    Check if the principle data from Kerberos is stored in LDAP. If yes, you get an output similar
-    to the following:
-    </para>
-    <screen><remark>taroth 2019-07-25: ToDo - integrate following info by wbrown</remark> <!-- info by wbrown, via mail (2019-07-02)after you follow the Yast KDB setup steps, you can then do:# kadmin.localkadmin.local: listprincskadmin.local: ank admin@EXAMPLE.COM# ldapsearch -D 'cn=Directory Manager' -w password -b 'cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com' -H ldaps://localhost# admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.comdn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=comkrbLoginFailedCount: 0krbPrincipalName: admin@EXAMPLE.COMkrbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=krbLastPwdChange: 20190702032802ZkrbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=krbExtraData:: AAgBAA==objectClass: krbprincipalobjectClass: krbprincipalauxobjectClass: krbTicketPolicyAuxobjectClass: toplinux-go62:/home/admin # kinit admin@EXAMPLE.COMPassword for admin@EXAMPLE.COM:linux-go62:/home/admin # klistTicket cache: DIR::/run/user/0/krb5cc/tktDefault principal: admin@EXAMPLE.COMValid starting Expires Service principal07/02/19 13:29:04 07/03/19 13:29:04 krbtgt/EXAMPLE.COM@EXAMPLE.COM--></screen>
+    <para>Kerberos から LDAP に対して、プリンシパルのデータが保存されていることを確認します。正しく保存されていれば、下記のような出力が現われるはずです:</para>
+    <screen>&prompt.sudo;admin@EXAMPLE.COM, EXAMPLE.COM, kdc, example.com
+dn: krbprincipalname=admin@EXAMPLE.COM,cn=EXAMPLE.COM,cn=kdc,dc=example,dc=com
+krbLoginFailedCount: 0
+krbPrincipalName: admin@EXAMPLE.COM
+krbPrincipalKey:: MIG2oAMCAQGhAwIBAaIDAgEBowMCAQGkgZ8wgZwwVKAHMAWgAwIBAKFJMEeg
+ AwIBEqFABD4gAKXAsMf7oV5vITzV5OpclhdomR+SdIRCkouS2GeNF9lVgxjT29RpnipNlCjgGOkpr
+ 93d0nh82WhrrAF6bzBEoAcwBaADAgEAoTkwN6ADAgERoTAELhAAFiGRiI0yUjBteGHhTB6ESJYsYJ
+ WxFa4UslUNZD1GEQGlZ/0nltLsyD2ytGc=
+krbLastPwdChange: 20190702032802Z
+krbExtraData:: AAJCzxpdcm9vdC9hZG1pbkBFWEFNUExFLkNPTQA=
+krbExtraData:: AAgBAA==
+objectClass: krbprincipal
+objectClass: krbprincipalaux
+objectClass: krbTicketPolicyAux
+objectClass: top</screen>
    </step>
    <step>
-    <para>チケット発行許諾チケット</para>
-    <screen>&prompt.sudo;kdb5_util create -r EXAMPLE.COM -s</screen>
+    <para>初期チケット発行許諾チケットを取得し、キャッシュします:</para>
+    <screen>&prompt.sudo;kinit admin@EXAMPLE.COM</screen>
    </step>
    <step>
-    <para>Display a list of currently cashed Kerberos tickets:</para>
+    <para>現在キャッシュされている Kerberos チケットの一覧を表示します:</para>
     <screen>&prompt.sudo;klist
 Ticket cache: DIR::/run/user/0/krb5cc/tkt
 Default principal: admin@EXAMPLE.COM
