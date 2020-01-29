@@ -174,28 +174,22 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
   <title>&ds389; 向けのソフトウエアのインストール</title>
    <para><systemitem>389-ds</systemitem> パッケージには、 &ds389; と管理ツールが含まれています。パッケージをインストールしていない場合は、下記のコマンドを入力して実行し、インストールを行なってください:</para>
     <screen>&prompt.sudo;zypper install 389-ds</screen>
-    <para>インストールを行なった後は、サーバを手作業で設定してもかまいませんし、 &yast; で設定してもかまいません。このほか、 &yast; を利用することで、 LDAP のユーザやグループを管理することができるほか、 LDAP クライアントの設定も行なうことができます:</para>
-   <itemizedlist os="sles;osuse">
-    <listitem>
-     <para><xref linkend="sec-security-ldap-server"/></para>
-    </listitem>
-   <listitem>
-    <para><xref linkend="sec-security-auth-yast"/></para>
-   </listitem>
-   <listitem>
-    <para><xref linkend="sec-security-ldap-yast-usergr"/></para>
-   </listitem>
-   <listitem>
-    <para><xref linkend="sec-security-ldap-yast-client"/></para>
-   </listitem>
-  </itemizedlist>
+    <para>
+     After installation, you can set up the server either manually
+     <phrase os="sles;osuse">(as described in <xref linkend="sec-security-ldap-server" xrefstyle="select:label"/>)</phrase> or create a
+     very basic setup with &yast; <phrase os="sles;osuse">(as described in
+      <xref linkend="sec-security-ldap-server-yast" xrefstyle="select:label"/>)</phrase>.
+    </para>
  </sect1>
 
  <sect1 xml:id="sec-security-ldap-server" os="sles;osuse">
   <title>&ds389; サーバの手動設定</title>
   <para>&ds389; の設定作業は下記の流れで行ないます:</para>
   <procedure>
-    <step>
+   <step>
+    <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
+   </step>
+   <step>
     <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
    </step>
    <step>
@@ -287,6 +281,78 @@ instance 'Localhost' is running</screen>
   </procedure>
  </sect2>
 
+<sect2 xml:id="sec-security-ldap-server-ca">
+ <title>Using CA Certificates for TSL</title>
+ <para>
+  You can manage the CA certificates for &ds389; with the following command
+  line tools: <command>certutil</command>, <command>openssl</command>, and
+  <command>pk12util</command>.
+ </para>
+ <para>テスト用に証明書を作成したい場合は、 <command>dscreate</command> コマンドで自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename> にあるものとして扱われます。必要に応じて <command>ds*</command> コマンドを実行するクライアントマシンにコピーしてください。</para>
+ <para>
+ Make sure to meet the following requirements before executing the procedure below:
+ </para>
+ <itemizedlist>
+  <listitem>
+   <para>
+    You have a server certificate and a private key to use for the TSL connection.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    You have set up an NSS (Network Security Services) database (for example,
+    with the <command>certutil</command> command).
+   </para>
+  </listitem>
+ </itemizedlist>
+
+ <procedure>
+  <para>
+  Before you can import an existing private key and certificate into the NSS
+  (Network Security Services) database, you need to create a bundle of the
+  private key and the server certificate. This results in a <filename>*.p12</filename>
+  file.
+  </para>
+  <important>
+  <title>ローカル管理用の <filename>.dsrc</filename>　ファイル</title>
+  <para>
+   When creating the PKCS12 bundle, you must encode a <quote>friendly name</quote>
+   in the <filename>*.p12</filename> file.
+  </para>
+  <para>
+   Make sure to use <literal>Server-Cert</literal> as friendly name. Otherwise
+   the TLS connection will fail, because the &ds389; searches for this exact string.
+  </para>
+  <para>
+   As soon as you have imported the <filename>*.p12</filename> file in the NSS
+   database, the friendly name cannot be changed any more.
+  </para>
+ </important>
+ <step>
+  <para>
+   To create the PKCS12 bundle with the required friendly name:
+  </para>
+ <screen>&prompt.root;openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> \
+  -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> \
+  -name Server-Cert</screen>
+  <para>
+   Replace <replaceable>SERVER.crt</replaceable> with the server certificate
+   and <replaceable>SERVER.key</replaceable> with the private key to be bundled.
+   With <option>-out</option>, specify the name of the <filename>*.p12</filename>
+   file. Use <option>-name</option> to set the friendly name to use,
+   <literal>Server-Cert</literal>.
+  </para>
+ </step>
+ <step>
+  <para>
+   After you have created the required <replaceable>SERVER.p12</replaceable> file,
+   import the file into your NSS database:
+  </para>
+  <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>PATH_TO_NSS_DB</replaceable></screen>
+ </step>
+ </procedure>
+</sect2>
+
  <sect2 xml:id="sec-security-ldap-server-credentials">
   <title>リモート／ローカルアクセス用の管理者の設定</title>
    <para>&ds389; のリモート管理やローカル管理を行なう目的で、お使いのホームディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。このファイルには、ユーザ名や接続の詳細を保存しておくことができます。 <xref linkend="ex-security-ldap-server-credentials-remote" xrefstyle="select:label"/> にはリモート管理用の設定ファイル例が、 <xref linkend="ex-security-ldap-server-credentials-local" xrefstyle="select:label"/> にはローカル管理用の設定ファイル例が、それぞれ示されています。</para>
@@ -303,8 +369,10 @@ tls_cacertdir = /etc/dirsrv/slapd-localhost/ <co xml:id="co-ldap-server-dsrc-rem
      <para>LDAP サーバインスタンスを示すように設定する必要があります。何も指定しない場合、既定のインスタンス名として <literal>localhost</literal> が使用されます。</para>
     </callout>
     <callout arearefs="co-ldap-server-dsrc-remote-cert">
-     <para>テスト用に証明書を作成したい場合は、 <command>dscreate</command> コマンドで自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename> にあるものとして扱われます。必要に応じて <command>ds*</command> コマンドを実行するクライアントマシンにコピーしてください。</para>
-     <para>本番環境向けに証明書を設定する場合は、証明機関に問い合わせてサーバおよびクライアントの証明書を申請して取得し、ルート証明書とともに設定してください。 <remark>taroth 2020-01-17: @firstyear: after receiving them, where to put them? how to adjust the example above for a production environment? and last but not least: is there more to add on how to create a request for and how to use a certificate from a trusted CA?</remark></para>
+     <para>
+      Path to the certificate at a readable location or on the client machine from
+      which you use the <command>ds*</command> commands.
+     </para>
     </callout>
    </calloutlist>
   </example>
@@ -443,44 +511,204 @@ systemctl start sssd</screen>
    </step>
   </procedure>
  </sect2>
- </sect1>
+</sect1>
 
-<sect1 xml:id="sec-security-ldap-yast-usergr">
-  <title>&yast; での LDAP ユーザとグループの設定</title>
+<sect1 xml:id="sec-security-ldap-server-yast" os="sles;osuse">
+ <title>Setting Up a &ds389; with &yast;</title>
+  <para>
+   You can use &yast; to quickly create a very basic setup of the &ds389;.
+  </para>
+ <sect2 xml:id="sec-security-ldap-server-yast-create">
+  <title>&ds389; インスタンスの作成</title>
   <procedure>
    <step>
-    <para>&yast; から <menuchoice> <guimenu>セキュリティとユーザ</guimenu><guimenu>ユーザとグループの管理</guimenu></menuchoice> を選択して、ユーザとグループの管理モジュールを起動します。</para>
+   <para>
+    In &yast;, click <menuchoice>
+    <guimenu>Network Services</guimenu>
+    <guimenu>Create New Directory Server</guimenu>
+   </menuchoice>. Alternatively, start the module from command line with
+   <command>yast2 ldap-server</command>.
+   </para>
+   <para>
+    In the window that opens, you need to fill in all mandatory text fields.
+   </para>
+  </step>
+  <step>
+   <para>
+    Enter the <guimenu>Fully qualified domain name</guimenu> of the &ds389;.
+    It must be resolvable from the host.
+   </para>
+  </step>
+  <step>
+   <para>
+    In <guimenu>Directory server instance name</guimenu>, enter a local name for
+    the LDAP server instance.</para>
+   <note>
+    <title>インスタンス名</title>
+    <para>
+     The instance name <emphasis>cannot</emphasis> be changed after the instance
+     has been created. If you plan for only one LDAP server, use the default
+     instance name <literal>localhost</literal>. However, if you plan to host
+     multiple LDAP servers, use meaningful names for the individual instances.
+    </para>
+   </note>
+  </step>
+  <step>
+   <para>
+   In <guimenu>Directory suffix</guimenu>, enter the base domain name of the LDAP
+   tree. It is your domain name split by component. For example,
+   <literal>example.com</literal> becomes <literal>dc=example,dc=com</literal>.
+   </para>
+  </step>
+  <step>
+   <para>
+    In the mandatory security options, enter the password for the directory manager
+    (LDAP's root/admin account) and repeat the password in the next step. The
+    password must be at least 8 characters long.
+   </para>
+  </step>
+    <step>
+     <para>
+      To run &ds389; with a CA certificate, specify both of the following options:
+     </para>
+     <substeps>
+      <step>
+       <para>
+        Enter the path to the <guimenu>Server TLS certificate authority in PEM
+        format</guimenu>, with which the server certificates have been signed.
+        <remark>taroth 2020-01-22: string may be simplified in the future, see
+         https://github.com/yast/yast-auth-server/issues/55</remark>
+       </para>
+      </step>
+      <step>
+       <para>
+        Enter the path to the <guimenu>Server TLS certificate and key in PKCS12
+        format with friendly name "Server-Cert"</guimenu>. The
+        <filename>*.p12</filename> file contains the server's private key and
+        certificate. These must have been signed by the CA in PEM format that you
+        have specified above. The <guimenu>friendly name</guimenu> must be
+        <literal>Server-Cert</literal>, see <xref linkend="sec-security-ldap-server-ca"/>
+        for details.
+        <remark>taroth 2020-01-22: string may be  simplified in the future, see
+        https://github.com/yast/yast-auth-server/issues/55</remark>
+       </para>
+       <para>
+        If you do not specify a CA certificate here, a self-signed certificate
+        will be created automatically. After the instance has been created,
+        find the related files in
+        <filename>/etc/dirsrv/slapd-<replaceable>INSTANCENAME</replaceable></filename>.
+       </para>
+      </step>
+     </substeps>
+    </step>
+   <step>
+   <para>LDAP ユーザの表示と管理を行なうには、 <guimenu>ユーザ</guimenu> タブを選択します。</para>
+   <informalfigure>
+    <mediaobject>
+     <imageobject role="fo">
+      <imagedata fileref="yast2-ldap-server.png" width="95%" format="PNG"/>
+     </imageobject>
+     <imageobject role="html">
+      <imagedata fileref="yast2-ldap-server.png" width="90%" format="PNG"/>
+     </imageobject>
+    </mediaobject>
+   </informalfigure>
+   <para>&yast; displays a message whether the creation was successful and where
+    to find the log files.
+   </para>
+  </step>
+  </procedure>
+
+ <!--taroth 2020-01-28: disabling reference to commented section-->
+ <!--
+ <para>
+  After you have created the instance, you can configure LDAP users and groups
+  as shown in <xref linkend="sec-security-ldap-yast-usergr" xrefstyle="select:label"/>.
+ </para>-->
+ <para>
+  The setup with &yast; provides only a very basic configuration of the &ds389;.
+  To fine-tune more settings, see <xref linkend="sec-security-ldap-server"/>
+  or the documentation mentioned in <xref linkend="sec-security-ldap-info"/>.
+ </para>
+</sect2>
+
+<!--taroth 2020-01-27: commenting this section for now as agreed with firstyear-->
+<!--<sect2 xml:id="sec-security-ldap-yast-usergr">
+  <title>Configuring LDAP Users and Groups in &yast;</title>
+  <procedure>
+   <step>
+    <para>
+     Access the &yast; user administration with <menuchoice>
+     <guimenu>Security and Users</guimenu><guimenu>User and Group
+     Management</guimenu></menuchoice>.
+    </para>
    </step>
    <step>
-    <para>LDAP ユーザの表示と管理を行なうには、 <guimenu>ユーザ</guimenu> タブを選択します。</para>
+    <para>
+     To view and manage LDAP users, click the <guimenu>Users</guimenu> tab.
+    </para>
    </step>
    <step>
-    <para><menuchoice><guimenu>フィルタの設定</guimenu><guimenu>LDAP ユーザ</guimenu></menuchoice> を選択し、 Root DN に対するパスワードを入力します。</para>
+    <para>
+     Select <menuchoice><guimenu>Set Filter</guimenu>
+     <guimenu>LDAP Users</guimenu></menuchoice> and enter the password for
+     Root DN.
+     <remark>taroth 2020-01-24: argh, this does not work for me, need to check
+     with firstyear</remark>
+    </para>
    </step>
    <step>
-    <para><guimenu>追加</guimenu> を押してユーザ設定を入力します。表示されたダイアログには、 4 つのタブがあります:</para>
+    <para>
+     Click <guimenu>Add</guimenu> to enter the user configuration. A dialog
+     with four tabs opens:
+    </para>
     <substeps performance="required">
      <step>
-      <para><guimenu>ユーザ情報</guimenu> のタブでは、ユーザのフルネームとログイン名、パスワードをそれぞれ設定します。</para>
+      <para>
+       Specify the user's name, login name, and password in the
+       <guimenu>User Data</guimenu> tab.
+      </para>
      </step>
      <step>
-      <para><guimenu>詳細</guimenu> タブでは、そのユーザが所属するグループやログイン時に使用するシェル、そしてホームディレクトリなどを設定します。必要に応じて変更してください。 <!-- The default values (as well as those of the password settings) can be defined with the procedure described in <xref linkend="sec-security-auth-yast-client-conf-mod"/>.--></para>
+      <para>
+       Check the <guimenu>Details</guimenu> tab for the group membership,
+       login shell, and home directory of the new user. If necessary, change
+       the default to values that better suit your needs.
+<!-\- The default values
+       (as well as those of the password settings) can be defined with the
+       procedure described in
+       <xref linkend="sec-security-auth-yast-client-conf-mod"/>.-\->
+      </para>
      </step>
      <step>
-      <para><guimenu>パスワードの設定</guimenu> タブでは、必要であれば設定を変更します。</para>
+      <para>
+       Modify or accept the default <guimenu>Password Settings</guimenu>.
+      </para>
      </step>
      <step>
-      <para><guimenu>プラグイン</guimenu> タブでは LDAP プラグインを選択して <guimenu>起動</guimenu> を押し、新しいユーザに設定する追加の LDAP 属性を指定します <!-- (see <xref linkend="fig-ldap-y2-adset"/>).--> 。</para>
+      <para>
+       Enter the <guimenu>Plug-Ins</guimenu> tab, select the LDAP plug-in,
+       and click <guimenu>Launch</guimenu> to configure additional LDAP
+       attributes assigned to the new user.
+<!-\- (see
+       <xref linkend="fig-ldap-y2-adset"/>).-\->
+      </para>
      </step>
     </substeps>
    </step>
    <step>
-    <para><guimenu>OK</guimenu> を押して設定を適用し、ユーザ設定を終了します。</para>
+    <para>
+     Click <guimenu>OK</guimenu> to apply your settings and leave the user
+     configuration.
+    </para>
    </step>
   </procedure>
 
- <para>グループを管理する場合は、 <guimenu>グループ</guimenu> タブで上記と同様に管理を行ないます。</para>
-<!--
+ <para>
+  You can administer groups in a similar way on the <guimenu>Groups</guimenu>
+  tab.
+</para>
+<!-\-
   <figure id="fig-ldap-y2-adset">
    <title>&yast;: Additional LDAP Settings</title>
    <mediaobject>
@@ -492,12 +720,18 @@ systemctl start sssd</screen>
     </imageobject>
    </mediaobject>
   </figure>
-  -->
+  -\->
 
-  <para>ユーザ管理モジュールで最初に表示されるフォーム内では、 <guimenu>LDAP オプション</guimenu> を指定することができます。このオプションを設定することにより、特定のユーザのみを表示するための検索フィルタを適用することができます。この方法以外にも、 <guimenu>LDAP ユーザとグループの設定</guimenu> を選択してユーザとグループを設定することもできます。</para>
- </sect1>
-
-<sect1 xml:id="sec-security-ldap-yast-client">
+  <para>
+   The initial input form of user administration offers <guimenu>LDAP
+   Options</guimenu>. This allows you to apply LDAP search filters to the
+   set of available users. Alternatively open the module for configuring
+   LDAP users and groups by selecting <guimenu>LDAP User and Group
+   Configuration</guimenu>.
+  </para>
+ </sect2>
+-->
+<sect2 xml:id="sec-security-ldap-yast-client">
   <title>&yast; による LDAP クライアントの設定</title>
   <para>&yast; には <guimenu>LDAP および Kerberos クライアント</guimenu> モジュールが用意されています。このモジュールでは、 LDAP や Kerberos を利用する認証を設定することができます。</para>
   <para>Kerberos と LDAP を個別に参加させるように使用することもできます。そのような場合、たとえば &ad; への参加 (LDAP と Kerberos を組み合わせて使用します) などでは、 このモジュールは最初の選択とはならないかもしれません。詳しくは <xref linkend="sec-security-auth-yast-client"/> をお読みください。</para>
@@ -594,6 +828,7 @@ systemctl start sssd</screen>
     <para>全ての設定が終わったら、 <guimenu>完了</guimenu> を押して閉じます。</para>
    </step>
   </procedure>
+ </sect2>
 </sect1>
 
  <sect1 xml:id="sec-security-ldap-data" os="sles;osuse">
