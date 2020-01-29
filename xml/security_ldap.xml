@@ -174,12 +174,7 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
   <title>&ds389; 向けのソフトウエアのインストール</title>
    <para><systemitem>389-ds</systemitem> パッケージには、 &ds389; と管理ツールが含まれています。パッケージをインストールしていない場合は、下記のコマンドを入力して実行し、インストールを行なってください:</para>
     <screen>&prompt.sudo;zypper install 389-ds</screen>
-    <para>
-     After installation, you can set up the server either manually
-     <phrase os="sles;osuse">(as described in <xref linkend="sec-security-ldap-server" xrefstyle="select:label"/>)</phrase> or create a
-     very basic setup with &yast; <phrase os="sles;osuse">(as described in
-      <xref linkend="sec-security-ldap-server-yast" xrefstyle="select:label"/>)</phrase>.
-    </para>
+    <para>インストールを行なった後は、サーバを手作業で設定してもかまいません <phrase os="sles;osuse">(詳しくは <xref linkend="sec-security-ldap-server" xrefstyle="select:label"/> をお読みください)</phrase> し、 &yast; で非常に基本的な設定を行なってもかまいません <phrase os="sles;osuse">(詳しくは <xref linkend="sec-security-ldap-server-yast" xrefstyle="select:label"/> をお読みください)</phrase> 。</para>
  </sect1>
 
  <sect1 xml:id="sec-security-ldap-server" os="sles;osuse">
@@ -190,7 +185,7 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
     <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
    </step>
    <step>
-    <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
+    <para><!--TSL 接続のための CA 証明書の使用--> <xref linkend="sec-security-ldap-server-ca" xrefstyle="select:title"/></para>
    </step>
    <step>
     <para><!--リモート／ローカルアクセス用の管理者の設定--> <xref linkend="sec-security-ldap-server-credentials" xrefstyle="select:title"/></para>
@@ -282,73 +277,37 @@ instance 'Localhost' is running</screen>
  </sect2>
 
 <sect2 xml:id="sec-security-ldap-server-ca">
- <title>Using CA Certificates for TSL</title>
- <para>
-  You can manage the CA certificates for &ds389; with the following command
-  line tools: <command>certutil</command>, <command>openssl</command>, and
-  <command>pk12util</command>.
- </para>
- <para>テスト用に証明書を作成したい場合は、 <command>dscreate</command> コマンドで自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename> にあるものとして扱われます。必要に応じて <command>ds*</command> コマンドを実行するクライアントマシンにコピーしてください。</para>
- <para>
- Make sure to meet the following requirements before executing the procedure below:
- </para>
+ <title>TSL 向けの CA (証明機関) 証明書の使用</title>
+ <para>&ds389; 向けの CA 証明書の管理にあたっては、下記に示すコマンドラインツールを使用することができます: <command>certutil</command> , <command>openssl</command> , <command>pk12util</command></para>
+ <para>テスト用に証明書を作成したい場合は、 <command>dscreate</command> コマンドで自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/slapd-localhost/ca.crt</filename> にあるものとして扱われます。リモートから管理を行なう場合は、証明書を読み取り可能な場所にコピーしておいてください。本番環境の場合は、ご利用の証明機関にお問い合わせのうえ、サーバ証明書とクライアント証明書、そしてルート証明書をそれぞれ取得してください。</para>
+ <para>下記の手順を実行する前に、まずは以下の要件を全て満たしていることをご確認ください:</para>
  <itemizedlist>
   <listitem>
-   <para>
-    You have a server certificate and a private key to use for the TSL connection.
-   </para>
+   <para>TSL 接続時に使用するサーバ証明書と、それに対応する機密鍵を保持していること。</para>
   </listitem>
   <listitem>
-   <para>
-    You have set up an NSS (Network Security Services) database (for example,
-    with the <command>certutil</command> command).
-   </para>
+   <para>NSS (Network Security Services) データベースを設定してあること (例: <command>certutil</command> コマンド) 。</para>
   </listitem>
  </itemizedlist>
 
  <procedure>
-  <para>
-  Before you can import an existing private key and certificate into the NSS
-  (Network Security Services) database, you need to create a bundle of the
-  private key and the server certificate. This results in a <filename>*.p12</filename>
-  file.
-  </para>
+  <para>NSS (Network Security Services) データベース内に機密鍵と証明書を取り込む場合には、あらかじめ機密鍵とサーバ証明書をひとまとめにしておく必要があります。ひとまとめにしたファイルは <filename>*.p12</filename> (PKCS12 形式) というファイル名になります。</para>
   <important>
-  <title>ローカル管理用の <filename>.dsrc</filename>　ファイル</title>
-  <para>
-   When creating the PKCS12 bundle, you must encode a <quote>friendly name</quote>
-   in the <filename>*.p12</filename> file.
-  </para>
-  <para>
-   Make sure to use <literal>Server-Cert</literal> as friendly name. Otherwise
-   the TLS connection will fail, because the &ds389; searches for this exact string.
-  </para>
-  <para>
-   As soon as you have imported the <filename>*.p12</filename> file in the NSS
-   database, the friendly name cannot be changed any more.
-  </para>
+  <title><filename>*.p12</filename> ファイルとフレンドリ名について</title>
+  <para>PKCS12 形式のファイル (<filename>*.p12</filename>) を作成する場合、鍵と証明書の対に対して、 <quote>フレンドリ名</quote> を設定しなければなりません。</para>
+  <para>本手順で TLS 接続を有効化する場合は、フレンドリ名を <literal>Server-Cert</literal> にしなければなりません。それ以外の名前を使用してしまうと、 &ds389; が証明書を検出することができず、 TLS 接続ができなくなってしまいます。</para>
+  <para>また、 <filename>*.p12</filename> ファイルを NSS データベースに取り込んだ後は、フレンドリ名を変更できないことにも注意してください。</para>
  </important>
  <step>
-  <para>
-   To create the PKCS12 bundle with the required friendly name:
-  </para>
+  <para>PKCS12 ファイルを指定のフレンドリ名で作成するには、下記のように入力して実行します:</para>
  <screen>&prompt.root;openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> \
   -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> \
   -name Server-Cert</screen>
-  <para>
-   Replace <replaceable>SERVER.crt</replaceable> with the server certificate
-   and <replaceable>SERVER.key</replaceable> with the private key to be bundled.
-   With <option>-out</option>, specify the name of the <filename>*.p12</filename>
-   file. Use <option>-name</option> to set the friendly name to use,
-   <literal>Server-Cert</literal>.
-  </para>
+  <para>ここで、 <replaceable>SERVER.crt</replaceable> にはサーバの証明書として使用するファイルを、 <replaceable>SERVER.key</replaceable> には対応する機密鍵のファイルをそれぞれ指定します。なお、 <option>-out</option> では <filename>*.p12</filename> ファイルのファイル名を指定します。 <option>-name</option> はフレンドリ名を指定する箇所で、ここは必ず <literal>Server-Cert</literal> のままにしておいてください。</para>
  </step>
  <step>
-  <para>
-   After you have created the required <replaceable>SERVER.p12</replaceable> file,
-   import the file into your NSS database:
-  </para>
-  <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>PATH_TO_NSS_DB</replaceable></screen>
+  <para><replaceable>SERVER.p12</replaceable> ファイルを作成したあとは、そのファイルを NSS データベース内に取り込みます:</para>
+  <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></screen>
  </step>
  </procedure>
 </sect2>
@@ -363,16 +322,13 @@ instance 'Localhost' is running</screen>
 uri = ldaps://localhost <co xml:id="co-ldap-server-dsrc-remote-localhost"/>
 basedn = dc=example,dc=com
 binddn = cn=Directory Manager
-tls_cacertdir = /etc/dirsrv/slapd-localhost/ <co xml:id="co-ldap-server-dsrc-remote-cert"/></screen>
+tls_cacertdir = 証明書ディレクトリのパス <co xml:id="co-ldap-server-dsrc-remote-cert"/></screen>
    <calloutlist>
     <callout arearefs="co-ldap-server-dsrc-remote-localhost">
      <para>LDAP サーバインスタンスを示すように設定する必要があります。何も指定しない場合、既定のインスタンス名として <literal>localhost</literal> が使用されます。</para>
     </callout>
     <callout arearefs="co-ldap-server-dsrc-remote-cert">
-     <para>
-      Path to the certificate at a readable location or on the client machine from
-      which you use the <command>ds*</command> commands.
-     </para>
+     <para>読み取り可能な場所にある証明書のパス、もしくは <command>ds*</command> コマンドを使用するクライアントマシン側でのパスを指定します。</para>
     </callout>
    </calloutlist>
   </example>
@@ -388,7 +344,7 @@ binddn = cn=Directory Manager
 </screen>
    <calloutlist>
     <callout arearefs="co-ldap-server-dsrc-remote-ldapi">
-      <para><!--Question: “When I use ldapi on the server that has the DS instance, why don’t I need to provide my password?”--> &ds389; インスタンスが動作しているのと同じマシンで実行する場合、 <literal>ldapi</literal> を指定することで、 UID/GID を自動的に検出するようになります。これが <literal>0/0 </literal> である場合 (つまり、 &rootuser; である場合) 、 <literal>ldapi</literal> はディレクトリサーバインスタンスの root dn ( <literal>cn=Directory Manager</literal> ) でバインドすることができます。これにより、 &rootuser; はサーバ内ローカルでの管理を行なうことができますが、 <literal>cn=Directory Manager</literal> のパスワードを知らなくても管理ができることになります。つまり、 &ds389; のインスタンスが動作するサーバ内で管理者権限を持っていれば、誰でも <literal>cn=Directory Manager</literal> として接続できることになります。</para>
+      <para><!--Question: “When I use ldapi on the server that has the DS instance, why don’t I need to provide my password?”--> &ds389; インスタンスが動作しているのと同じマシンで実行する場合、 <literal>ldapi</literal> を指定することで、 UID/GID を自動的に検出するようになります。これが <literal>0/0</literal> である場合 (つまり、 &rootuser; である場合) 、 <literal>ldapi</literal> はディレクトリサーバインスタンスの root dn ( <literal>cn=Directory Manager</literal> ) でバインドすることができます。これにより、 &rootuser; はサーバ内ローカルでの管理を行なうことができますが、 <literal>cn=Directory Manager</literal> のパスワードを知らなくても管理ができることになります。つまり、 &ds389; のインスタンスが動作するサーバ内で管理者権限を持っていれば、誰でも <literal>cn=Directory Manager</literal> として接続できることになります。</para>
     </callout>
    </calloutlist>
   </example>
@@ -514,95 +470,45 @@ systemctl start sssd</screen>
 </sect1>
 
 <sect1 xml:id="sec-security-ldap-server-yast" os="sles;osuse">
- <title>Setting Up a &ds389; with &yast;</title>
-  <para>
-   You can use &yast; to quickly create a very basic setup of the &ds389;.
-  </para>
+ <title>&yast; での &ds389; の設定</title>
+  <para>&yast; を使用することで、 &ds389; の非常に基本的な設定を素早く行なうことができます。</para>
  <sect2 xml:id="sec-security-ldap-server-yast-create">
-  <title>&ds389; インスタンスの作成</title>
+  <title>&yast; による &ds389; インスタンスの作成</title>
   <procedure>
    <step>
-   <para>
-    In &yast;, click <menuchoice>
-    <guimenu>Network Services</guimenu>
-    <guimenu>Create New Directory Server</guimenu>
-   </menuchoice>. Alternatively, start the module from command line with
-   <command>yast2 ldap-server</command>.
-   </para>
-   <para>
-    In the window that opens, you need to fill in all mandatory text fields.
-   </para>
+   <para>&yast; を起動して、 <menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>Create New Directory Server</guimenu> </menuchoice> を選択します。それ以外にも、コマンドラインから <command>yast2 ldap-server</command> と入力して実行してもかまいません。</para>
+   <para>新しいウインドウが表示されたら、必須の項目にそれぞれ入力を行ないます。</para>
   </step>
   <step>
-   <para>
-    Enter the <guimenu>Fully qualified domain name</guimenu> of the &ds389;.
-    It must be resolvable from the host.
-   </para>
+   <para>まずは &ds389; の <guimenu>完全修飾ドメイン名</guimenu> を入力します。この名前は、ホスト側から解決可能なものでなければなりません。</para>
   </step>
   <step>
-   <para>
-    In <guimenu>Directory server instance name</guimenu>, enter a local name for
-    the LDAP server instance.</para>
+   <para><guimenu>Directory server instance name</guimenu> には、 LDAP サーバインスタンスに対するローカルの名前を入力します。</para>
    <note>
     <title>インスタンス名</title>
-    <para>
-     The instance name <emphasis>cannot</emphasis> be changed after the instance
-     has been created. If you plan for only one LDAP server, use the default
-     instance name <literal>localhost</literal>. However, if you plan to host
-     multiple LDAP servers, use meaningful names for the individual instances.
-    </para>
+    <para>インスタンス名は作成後に変更 <emphasis>できません</emphasis> 。 LDAP サーバを 1 つだけ起動したい場合は、既定のインスタンス名である <literal>localhost</literal> をお使いください。複数の LDAP サーバを起動する場合は、それぞれのインスタンスを表わすわかりやすい名前を入力してください。</para>
    </note>
   </step>
   <step>
-   <para>
-   In <guimenu>Directory suffix</guimenu>, enter the base domain name of the LDAP
-   tree. It is your domain name split by component. For example,
-   <literal>example.com</literal> becomes <literal>dc=example,dc=com</literal>.
-   </para>
+   <para><guimenu>ディレクトリサフィックス</guimenu> には、 LDAP ツリー内でベースとなるドメイン名を入力します。ただし、ドメイン名はコンポーネントで区切る必要があります。たとえば <literal>example.com</literal> というドメイン名であれば、 <literal>dc=example,dc=com</literal> のようになります。</para>
   </step>
   <step>
-   <para>
-    In the mandatory security options, enter the password for the directory manager
-    (LDAP's root/admin account) and repeat the password in the next step. The
-    password must be at least 8 characters long.
-   </para>
+   <para>必須のセキュリティオプションでは、まずディレクトリマネージャ (LDAP の root (管理者) アカウント) のパスワードを 2 度入力します。パスワードは 8 文字以上でなければなりません。</para>
   </step>
     <step>
-     <para>
-      To run &ds389; with a CA certificate, specify both of the following options:
-     </para>
+     <para>CA 証明書を利用して &ds389; を動作させたい場合は、下記のオプションをそれぞれ設定します:</para>
      <substeps>
       <step>
-       <para>
-        Enter the path to the <guimenu>Server TLS certificate authority in PEM
-        format</guimenu>, with which the server certificates have been signed.
-        <remark>taroth 2020-01-22: string may be simplified in the future, see
-         https://github.com/yast/yast-auth-server/issues/55</remark>
-       </para>
+       <para><guimenu>Server TLS certificate authority in PEM format</guimenu> の欄に、サーバ証明書に対して署名を行なった証明機関の証明書を指定します。 <remark>taroth 2020-01-22: string may be simplified in the future, see https://github.com/yast/yast-auth-server/issues/55</remark></para>
       </step>
       <step>
-       <para>
-        Enter the path to the <guimenu>Server TLS certificate and key in PKCS12
-        format with friendly name "Server-Cert"</guimenu>. The
-        <filename>*.p12</filename> file contains the server's private key and
-        certificate. These must have been signed by the CA in PEM format that you
-        have specified above. The <guimenu>friendly name</guimenu> must be
-        <literal>Server-Cert</literal>, see <xref linkend="sec-security-ldap-server-ca"/>
-        for details.
-        <remark>taroth 2020-01-22: string may be  simplified in the future, see
-        https://github.com/yast/yast-auth-server/issues/55</remark>
-       </para>
-       <para>
-        If you do not specify a CA certificate here, a self-signed certificate
-        will be created automatically. After the instance has been created,
-        find the related files in
-        <filename>/etc/dirsrv/slapd-<replaceable>INSTANCENAME</replaceable></filename>.
-       </para>
+       <para>次に <guimenu>Server TLS certificate and key in PKCS12 format with friendly name "Server-Cert"</guimenu> の欄にファイルパスを入力します。ここで指定するファイルは、 <filename>*.p12</filename> 形式であり、かつサーバの機密鍵と証明書をそれぞれ含んでいるものでなければなりません。これらは上述の PEM 形式の証明書の証明機関が署名しているものでなければなりません。また、 <guimenu>フレンドリ名</guimenu> は <literal>Server-Cert</literal> でもなければなりません。詳しくは <xref linkend="sec-security-ldap-server-ca"/> をお読みください。 <remark>taroth 2020-01-22: string may be simplified in the future, see https://github.com/yast/yast-auth-server/issues/55</remark></para>
+       <para>ここで証明機関の証明書を指定しない場合は、自己署名型の証明書が自動生成されます。インスタンスを作成したあとは、 <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable></filename> にある関連ファイルをご覧ください。</para>
       </step>
      </substeps>
     </step>
    <step>
-   <para>LDAP ユーザの表示と管理を行なうには、 <guimenu>ユーザ</guimenu> タブを選択します。</para>
+   <para>必要な設定を終えたら、最後に <guimenu>OK</guimenu> を押すと、インスタンスを作成することができます。</para>
    <informalfigure>
     <mediaobject>
      <imageobject role="fo">
@@ -613,9 +519,7 @@ systemctl start sssd</screen>
      </imageobject>
     </mediaobject>
    </informalfigure>
-   <para>&yast; displays a message whether the creation was successful and where
-    to find the log files.
-   </para>
+   <para>&yast; では作成が成功したかどうかと、関連するログファイルの場所を表示します。</para>
   </step>
   </procedure>
 
@@ -625,11 +529,7 @@ systemctl start sssd</screen>
   After you have created the instance, you can configure LDAP users and groups
   as shown in <xref linkend="sec-security-ldap-yast-usergr" xrefstyle="select:label"/>.
  </para>-->
- <para>
-  The setup with &yast; provides only a very basic configuration of the &ds389;.
-  To fine-tune more settings, see <xref linkend="sec-security-ldap-server"/>
-  or the documentation mentioned in <xref linkend="sec-security-ldap-info"/>.
- </para>
+ <para>&yast; では &ds389; のごく基本的な設定機能のみを提供しています。より詳しい設定を行ないたい場合は <xref linkend="sec-security-ldap-server"/> を参照するか、 <xref linkend="sec-security-ldap-info"/> 内で言及しているドキュメンテーションをお読みください。</para>
 </sect2>
 
 <!--taroth 2020-01-27: commenting this section for now as agreed with firstyear-->
