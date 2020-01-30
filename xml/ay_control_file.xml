@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="cha-autoyast-control-file">
- <title>The &ay; Control File</title>
+ <title>制御ファイル</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -13,52 +13,26 @@
  </info>
 
   <sect1 xml:id="Profile-Intro">
-   <title>Introduction</title>
+   <title>紹介</title>
 
-   <para>
-    The control file is a configuration description for a single
-    system. It consists of sets of resources with properties including
-    support for complex structures such as lists, records, trees and large
-    embedded or referenced objects.
-   </para>
+   <para>制御ファイルは通常、単一のシステムに対する設定を記述します。リストやレコード、ツリーや巨大組み込み形式や参照オブジェクトなど、複雑な構造に対応したプロパティリソースから構成されています。</para>
 
    <important>
-    <title>Control Files from &slsa; 11 Releases are Incompatible</title>
-    <para>
-     A lot of major changes were introduced with &productname; 12 (the
-     switch to systemd and &grub; for example). These changes also
-     required fundamental changes in &ay;, therefore you cannot use
-     &ay; control files created on &productname; 11 to install
-     &productname; &productnumber; and vice versa.
-    </para>
+    <title>&slea; 11 リリース以降の制御ファイルの非互換性について</title>
+    <para>&productname; 12 では多数の大規模変更 (systemd への切り替えや &grub; など) が加えられています。これらの変更に伴い、 &ay; も大きく変更が加えられていますので、 &productname; 11 で作成された &ay; の制御ファイルは &productname; &productnumber; で使用することができません。逆に &productname; &productnumber; 向けの制御ファイルを &productname; 11 で使用することもできません。</para>
    </important>
   </sect1>
   <sect1 xml:id="Profile-Format">
-   <title>Format</title>
+   <title>書式</title>
 
-   <para>
-    The XML configuration format provides a consistent file structure, which
-    is easy to learn and to remember when attempting to configure a new
-    system.
-   </para>
+   <para>設定ファイルの形式に XML を採用していることにより、ファイル構造の一貫性が保たれているほか、新しいシステムを設定しようとする場合でも、学びやすく覚えやすい仕組みになっています。</para>
 
-   <para>
-    The &ay; control file uses XML to describe the system installation
-    and configuration. XML is a commonly used markup, and many users are
-    familiar with the concepts of the language and the tools used to process
-    XML files. If you edit an existing control file or create a control file
-    using an editor from scratch, it is strongly recommended to validate the
-    control file. This can be done using a validating XML parser such as
-    <literal>xmllint</literal> or <literal>jing</literal>, for example
-    (see  <xref linkend="CreateProfile-Manual"/>).
-   </para>
+   <para>&ay; の制御ファイルでは、 XML を利用してシステムのインストールや設定を表現します。 XML は汎用目的のマークアップ言語で、多くのユーザが慣れ親しんでいる構造であるほか、 XML ファイルを処理するためのツールも多数用意されています。既存の制御ファイルを編集する場合でも、何もない状態から制御ファイルを作成する場合でも、制御ファイルの構造が正しいことを検証しておくことを強くお勧めします。これは <literal>xmllint</literal> や <literal>jing</literal> のような検証型 XML パーサーを使用することで行なうことができます (たとえば <xref linkend="CreateProfile-Manual"/> をご覧ください) 。</para>
 
-   <para>
-    The following example shows a control file in XML format:
-   </para>
+   <para>下記は XML 形式での制御ファイルの例です:</para>
 
    <example>
-    <title>&ay; Control File (Profile)</title>
+    <title>&ay; の制御ファイル (プロファイル)</title>
 <screen>&lt;?xml version="1.0"?&gt;
 &lt;!DOCTYPE profile&gt;
 &lt;profile
@@ -102,74 +76,37 @@ exit 0
    </example>
   </sect1>
   <sect1 xml:id="Profile-Structure">
-   <title>Structure</title>
+   <title>構造</title>
 
-   <para>
-    Below is an example of a basic control file container, the actual
-    content of which is explained later on in this chapter.
-   </para>
+   <para>下記は制御ファイルのコンテナで、この中に実際の設定を書き込んでいくものです。</para>
 
    <example>
-    <title>Control file container</title>
+    <title>制御ファイルのコンテナ</title>
 <screen>&lt;?xml version="1.0"?&gt;
 &lt;!DOCTYPE profile&gt;
 &lt;profile
   xmlns="http://www.suse.com/1.0/yast2ns"
   xmlns:config="http://www.suse.com/1.0/configns"&gt;
-  &lt;!-- RESOURCES --&gt;
+  &lt;!-- リソース --&gt;
 &lt;/profile&gt;</screen>
    </example>
 
-   <para>
-    The <literal>&lt;profile&gt;</literal> element (root node)
-    contains one or more distinct resource elements. The permissible
-    resource elements are specified in the schema files
-   </para>
+   <para><literal>&lt;profile&gt;</literal> の要素 (ルートノード) には、 1 つもしくは複数のリソース要素を追加します。指定可能なリソース要素は、スキーマファイル内で指定されています。</para>
 
    <sect2 xml:id="Profile-Format-ressources">
-    <title>Resources and Properties</title>
-    <para>
-     A resource element either contains multiple and distinct property and
-     resource elements, or multiple instances of the same resource element,
-     or it is empty. The permissible content of a resource element is
-     specified in the schema files.
-    </para>
-    <para>
-     A property element is either empty or contains a literal value. The
-     permissible property elements and values in each resource element are
-     specified in the schema files
-    </para>
-    <para>
-     An element can be either a container of other elements (a resource) or
-     it has a literal value (a property); it can never be both. This
-     restriction is specified in the schema files. A configuration component
-     with more than one value must either be represented as an embedded list in a property value or as a nested resource.
-    </para>
-    <para>
-      An empty element, such as
-      <literal>&lt;foo&gt;&lt;/foo&gt;</literal> or
-      <literal>&lt;bar/&gt;</literal>, will <emphasis>not</emphasis> be
-      present in the parsed data model. Usually this is interpreted as
-      wanting a sensible default value. In cases where you need an
-      explicitly empty string instead, use a CDATA section:
-      <literal>&lt;foo&gt;&lt;![CDATA[]]&gt;&lt;/foo&gt;</literal>.
-    </para>
+    <title>リソースとプロパティ</title>
+    <para>リソース要素には複数の重複しないプロパティ要素や子リソース要素を含めることができるほか、同じ子リソース要素を複数インスタンスとして追加することもできます。もちろん何も含めない指定も行なうことができます。リソース要素内に含めることのできる要素は、スキーマファイル内で指定されています。</para>
+    <para>プロパティ要素には値としてリテラルを指定することができます。もちろん値を指定しなくてもかまいません。それぞれのリソース要素内で指定可能なプロパティ要素とその値についても、スキーマファイル内で指定がされています。</para>
+    <para>要素は他の要素に対するコンテナとする (リソース) ことができるほか、値としてリテラルを持つ (プロパティ) こともできますが、両方を同時に使用することはできません。この制限についても、スキーマファイル内に記述されています。 1 つ以上の値を持つ設定のコンポーネントは、プロパティ値内で組み込みのリストとして表現するか、入れ子型のリソースとして表現します。</para>
+    <para><literal>&lt;foo&gt;&lt;/foo&gt;</literal> や <literal>&lt;bar/&gt;</literal> のような空要素は、処理済みのデータモデル内に存在すべきでは <emphasis>ありません</emphasis> 。通常、これらには適切な既定値を設定すべきです。意図的に空要素を指定したい場合は、 CDATA セクションを使用して <literal>&lt;foo&gt;&lt;![CDATA[]]&gt;&lt;/foo&gt;</literal> のように指定し、空文字列を設定してください。</para>
    </sect2>
 
    <sect2 xml:id="Profile-Format-ressources-nested">
-    <title>Nested Resources</title>
-    <para>
-     Nested resource elements allow a tree-like structure of configuration
-     components to be built to any level.
-    </para>
-    <para>
-     There are two kinds of nested resources: maps and lists. Maps, also
-     known as associative arrays, hashes, or dictionaries, contain mixed
-     contents, identified by their tag names. Lists, or arrays, have all
-     items of the same type.
-    </para>
+    <title>入れ子になったリソース設定</title>
+    <para>入れ子になったリソース要素を使用することで、任意の階層構造からなるツリー状の設定コンポーネントを作成することができます。</para>
+    <para>入れ子になったリソースとしては、マップとリストの 2 種類が存在します。マップ (連想配列やハッシュ、辞書と呼ばれることもあります) にはタグ名とそれに対応する値の対を含めることができます。リスト (配列と呼ばれることもあります) には、単純に値の羅列を含めることができます。</para>
     <example>
-     <title>Nested Resources</title>
+     <title>入れ子になったリソース設定</title>
 <screen>...
 &lt;drive&gt;
   &lt;device&gt;/dev/sda&lt;/device&gt;
@@ -186,49 +123,15 @@ exit 0
 &lt;/drive&gt;
 ....</screen>
     </example>
-    <para>
-     In the example above, the <literal>drive</literal> resource is a map
-     consisting of a <literal>device</literal> property and a
-     <literal>partitions</literal> resource. The <literal>partitions</literal>
-     resource is a list containing multiple instances of the
-     <literal>partition</literal> resource. Each <literal>partition</literal>
-     resource is a map containing a <literal>size</literal> and
-     <literal>mount</literal> property.
-    </para>
-    <para>
-     The default type of a nested resource is map. Lists must be marked as
-     such using the <literal>config:type="list"</literal> attribute.
-    </para>
+    <para>上記の例では、 <literal>drive</literal> リソースは <literal>device</literal> プロパティと <literal>partitions</literal> リソースから構成されるマップの形態になっています。 <literal>partitions</literal> リソースは複数の <literal>partition</literal> から構成されるリストで、その <literal>partition</literal> リソースは <literal>size</literal> と <literal>mount</literal> のプロパティを含むマップの形態になっています。</para>
+    <para>入れ子になったリソースの場合、既定ではマップとして処理されます。リストを使用したい場合は、 <literal>config:type="list"</literal> の属性を明示的に指定しなければなりません。</para>
    </sect2>
 
    <sect2 xml:id="Profile-Format-attributes">
-    <title>Attributes</title>
-    <para>
-     Global attributes are used to define metadata on resources and
-     properties. Attributes are used to define context switching. They are
-     also used for naming and typing properties as shown in the previous
-     sections. Attributes are in a separate namespace so they do not need to
-     be treated as reserved words in the default namespace.
-    </para>
-    <para>
-     The <literal>config:type</literal> attribute determines the type of the
-     resource or property in the parsed data model. For resources, lists need
-     a <literal>list</literal> type whereas a map is the default type that
-     does not need an attribute. For properties, <literal>boolean</literal>,
-     <literal>symbol</literal>, and <literal>integer</literal> can be used,
-     the default being a string.
-    </para>
-    <para>
-     Attributes are not optional. It may appear that attributes are optional,
-     because various parts of the schema are not very consistent in their usage
-     of data types. In some places an enumeration is represented by a symbol,
-     elsewhere a string is required. One resource needs
-     <literal>config:type="integer"</literal>, another will parse the number
-     from a string property. Some resources use
-     <literal>config:type="boolean"</literal>, others want
-     <literal>yes</literal> or even <literal>1</literal>. If in doubt, consult
-     the schema file.
-    </para>
+    <title>属性</title>
+    <para>グローバル属性は、リソースやプロパティ内のメタデータを定義する際に使用します。属性はコンテキストの切り替えを定義するために使用します。これらは上記の章に示されているプロパティの名前付けや型指定で使用されます。属性については独自のネームスペース内に存在していることから、既定のネームスペース内で予約語として扱う必要はありません。</para>
+    <para><literal>config:type</literal> 属性は処理済みのデータモデル内で、リソースやプロパティの型を設定するためのものです。リソースの場合、リスト型を指定したい場合は <literal>list</literal> を設定する必要がありますが、マップ型の場合は既定の型であるため、属性の設定は不要となります。プロパティの場合、 <literal>boolean</literal> , <literal>symbol</literal> , <literal>integer</literal> の各型を指定することができます。こちらの場合は既定値は <literal>string</literal> となります。</para>
+    <para>属性は基本的に任意指定ではありません。ただし、スキーマ内のさまざまな場所でさまざまな指定がされていて一貫性が無いことから、中には任意指定の属性も存在します。また、場所によっては、値を列挙するのにシンボルで表わす場合があるほか、文字列を必要とするような場合も存在します。また一方のリソースでは <literal>config:type="integer"</literal> の指定が必要となるのに対して、他方では文字列属性で数値を処理する箇所もあります。またリソースによっては <literal>config:type="boolean"</literal> を使用するのに対して、他のリソースでは <literal>yes</literal> や <literal>1</literal> などを使用することもあります。詳しくはスキーマファイルをご覧ください。</para>
    </sect2>
   </sect1>
  </chapter>

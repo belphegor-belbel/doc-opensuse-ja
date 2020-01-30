@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="CreateProfile-kdump">
-  <title>Kernel Dumps</title>
+  <title>カーネルダンプ</title>
 
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -16,68 +16,49 @@
 <!-- {{{ Kdump -->
 
    <note os="sles">
-    <title>Availability</title>
-    <para>
-     This feature is not available on the &zseries; (s390x)
-     architecture.
-    </para>
+    <title>提供可否について</title>
+    <para>この機能は &zseries; (s390x) アーキテクチャでは使用できません。</para>
    </note>
 
-   <para>
-    With Kdump the system can create crashdump files if the whole kernel
-    crashes. Crash dump files contain the memory contents while the system
-    crashed. Such core files can be analyzed later by support or a (kernel)
-    developer to find the reason for the system crash. Kdump is mostly
-    useful for servers where you cannot easily reproduce such crashes but it
-    is important to get the problem fixed.
-   </para>
+   <para>Kdump を使用することで、カーネル全体がクラッシュしてしまった際にクラッシュダンプファイルを作成することができるようになります。クラッシュダンプファイルには、システムがクラッシュした時点でのメモリ内容が含まれます。クラッシュダンプファイルはコアファイルとも呼ばれ、 (カーネルの) 開発者がクラッシュの原因を調査する際に使用します。 Kdump はクラッシュの再現が難しいものの、問題の修正が重要となるサーバ用途で特に有用です。</para>
 
-   <para>
-    There is a downside to this. Enabling Kdump requires between 64 MB and 128 MB of
-    additional system RAM reserved for Kdump in case the system crashes and the dump needs to be generated.
-   </para>
+   <para>なお、 Kdump にはマイナス面もあります。 Kdump を有効化すると、 64 MB から 128 MB 程度の追加のメモリが Kdump 向けに予約されます。この領域を利用してダンプファイルを動作させるためです。</para>
 
-   <para>
-    This section only describes how to set up Kdump with &ay;. It does
-    not describe how Kdump works. For details, refer to the kdump(7) manual
-    page.
-   </para>
+   <para>本章では、 &ay; で Kdump を設定する際の説明のみを行なっています。 Kdump の動作については、 kdump(7) のマニュアルページなどをお読みください。</para>
 
-   <para>
-    The following example shows a general Kdump configuration.
-   </para>
+   <para>下記の例では、一般的な Kdump 設定を行なっています。</para>
 
    <example>
-    <title>Kdump configuration</title>
+    <title>Kdump の設定</title>
 <screen>&lt;kdump&gt;
-  &lt;!-- memory reservation --&gt;
+  &lt;!-- メモリ予約 --&gt;
   &lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;
   &lt;crash_kernel&gt;256M-:64M&lt;/crash_kernel&gt;
   &lt;general&gt;
 
-    &lt;!-- dump target settings --&gt;
+    &lt;!-- ダンプ先の設定 --&gt;
     &lt;KDUMP_SAVEDIR&gt;ftp://stravinsky.suse.de/incoming/dumps&lt;/KDUMP_SAVEDIR&gt;
     &lt;KDUMP_COPY_KERNEL&gt;true&lt;/KDUMP_COPY_KERNEL&gt;
     &lt;KDUMP_FREE_DISK_SIZE&gt;64&lt;/KDUMP_FREE_DISK_SIZE&gt;
     &lt;KDUMP_KEEP_OLD_DUMPS&gt;5&lt;/KDUMP_KEEP_OLD_DUMPS&gt;
 
-    &lt;!-- filtering and compression --&gt;
+    &lt;!-- フィルタと圧縮 --&gt;
     &lt;KDUMP_DUMPFORMAT&gt;compressed&lt;/KDUMP_DUMPFORMAT&gt;
     &lt;KDUMP_DUMPLEVEL&gt;1&lt;/KDUMP_DUMPLEVEL&gt;
 
-    &lt;!-- notification --&gt;
+    &lt;!-- 通知 --&gt;
     &lt;KDUMP_NOTIFICATION_TO&gt;&exampleuser_plain;@&exampledomain;&lt;/KDUMP_NOTIFICATION_TO&gt;
     &lt;KDUMP_NOTIFICATION_CC&gt;spam@&exampledomain; devnull@&exampledomain;&lt;/KDUMP_NOTIFICATION_CC&gt;
     &lt;KDUMP_SMTP_SERVER&gt;&mailname;&lt;/KDUMP_SMTP_SERVER&gt;
     &lt;KDUMP_SMTP_USER&gt;&lt;/KDUMP_SMTP_USER&gt;
     &lt;KDUMP_SMTP_PASSWORD&gt;&lt;/KDUMP_SMTP_PASSWORD&gt;
 
-    &lt;!-- kdump kernel --&gt;
+    &lt;!-- kdump カーネル --&gt;
     &lt;KDUMP_KERNELVER&gt;&lt;/KDUMP_KERNELVER&gt;
     &lt;KDUMP_COMMANDLINE&gt;&lt;/KDUMP_COMMANDLINE&gt;
     &lt;KDUMP_COMMANDLINE_APPEND&gt;&lt;/KDUMP_COMMANDLINE_APPEND&gt;
 
-    &lt;!-- expert settings --&gt;
+    &lt;!-- 熟練者向け設定 --&gt;
     &lt;KDUMP_IMMEDIATE_REBOOT&gt;yes&lt;/KDUMP_IMMEDIATE_REBOOT&gt;
     &lt;KDUMP_VERBOSE&gt;15&lt;/KDUMP_VERBOSE&gt;
     &lt;KEXEC_OPTIONS&gt;&lt;/KEXEC_OPTIONS&gt;
@@ -88,57 +69,18 @@
 <!-- {{{ Memory Reservation -->
 
    <sect2 xml:id="CreateProfile-kdump-reservation">
-    <title>Memory Reservation</title>
-    <para>
-     The first step is to reserve memory for Kdump at boot-up. Because the
-     memory must be reserved very early during the boot process, the
-     configuration is done via a kernel command line parameter called
-     <literal>crashkernel</literal>. The reserved memory will be used to
-     load a second kernel which will be executed without rebooting if the
-     first kernel crashes. This second kernel has a special initrd, which
-     contains all programs necessary to save the dump over the network or to
-     disk, send a notification e-mail, and finally reboot.
-    </para>
-    <para>
-     To reserve memory for Kdump, specify the <literal>amount</literal>
-     (such as <literal>64M</literal> to reserve 64 MB of memory from the
-     RAM) and the <literal>offset</literal>. The syntax is
-     <literal>crashkernel=AMOUNT@OFFSET</literal>. The kernel can
-     auto-detect the right offset (except for the &xen; hypervisor, where
-     you need to specify <literal>16M</literal> as offset). The amount of
-     memory that needs to be reserved depends on architecture and main
-     memory. Refer to
-     <xref linkend="cha-tuning-kdump-basic-manual"/> for recommendations on
-     the amount of memory to reserve for Kdump.
-    </para>
-    <para>
-     You can also use the extended command line syntax to specify the amount
-     of reserved memory depending on the System RAM. That is useful if you
-     share one &ay; control file for multiple installations or if you
-     often remove or install memory on one machine. The syntax is:
-    </para>
-<screen>BEGIN_RANGE_1-END_RANGE_1:AMOUNT_1,BEGIN_RANGE_2-END_RANGE_2:AMOUNT_2@OFFSET</screen>
-    <para>
-     <literal>BEGIN_RANGE_1</literal> is the start of the first memory range
-     (for example: <literal>0M</literal>) and <literal>END_RANGE_1</literal>
-     is the end of the first memory range (can be empty in case
-     <literal>infinity</literal> should be assumed) and so on. For example,
-     <literal>256M-2G:64M,2G-:128M</literal> reserves 64 MB of
-     crashkernel memory if the system has between 256 MB and 2 GB RAM and
-     reserves 128 MB of crashkernel memory if the system has more than 2 GB
-     RAM.
-    </para>
-    <para>
-     On the other hand, it is possible to specify multiple values for the
-     <literal>crashkernel</literal> parameter. For example, when you need to
-     reserve different segments of low and high memory, use values like
-     <literal>72M,low</literal> and <literal>256M,high</literal>:
-    </para>
+    <title>メモリ予約</title>
+    <para>Kdump ではまず、起動時にメモリを予約する処理を行ないます。このメモリは起動時のかなり早い段階で予約しなければならないものであることから、設定はカーネルのコマンドラインパラメータの <literal>crashkernel</literal> で行ないます。予約されたメモリは、通常使用しているカーネルがクラッシュした際に呼び出される <quote>第二のカーネル</quote> で使用されます。第二のカーネルには特殊な initrd が設定され、ここにはネットワークやディスクにダンプを保存する機能やメールを送信する機能、そして最後にシステムの再起動を行なう機能がそれぞれ用意されています。</para>
+    <para>Kdump でメモリを予約するには、 <literal>メモリ量</literal> (<literal>64M</literal> のように指定すると、 64MB のメモリを予約する意味になります) と <literal>オフセット値</literal> を指定します。これらをあわせて <literal>crashkernel=<replaceable>メモリ量</replaceable>@<replaceable>オフセット値</replaceable></literal> のように指定します。カーネルは適切なオフセット値を検出することができます (ただし、 &xen; ハイパーバイザを使用している場合は例外で、オフセット値に <literal>16M</literal> を指定する必要があります) 。メモリ量はお使いのアーキテクチャとメインメモリの量によって異なります。詳しくは <xref linkend="cha-tuning-kdump-basic-manual"/> をお読みください。</para>
+    <para>システムのメモリ量に応じて予約するメモリ量を変更するようにするため、複雑なコマンドライン文法を使用することもできます。これは &ay; の制御ファイル 1 つで複数の環境に対応するような場合に有用であるほか、マシンのメインメモリを増やしたり減らしたりするような環境で使用することができます。書式は下記のとおりです:</para>
+<screen><replaceable>範囲開始_1</replaceable>-<replaceable>範囲終了_1</replaceable>:<replaceable>メモリ量_1</replaceable>,<replaceable>範囲開始_2</replaceable>-<replaceable>範囲終了_2</replaceable>:<replaceable>メモリ量_2</replaceable>@<replaceable>オフセット</replaceable></screen>
+    <para><replaceable>範囲開始_1</replaceable> には 1 つ目のシステムのメモリ量範囲の開始 (例: <literal>0M</literal>) を、 <replaceable>範囲終了_1</replaceable> には 1 つ目のメモリ量範囲の終了をそれぞれ指定します。 2 つ目以降も同様です。なお、範囲終了の値を省略すると、 <literal>無限大</literal> の意味になります。たとえば <literal>256M-2G:64M,2G-:128M</literal> のように指定すると、システムのメモリ量が 256 MB から 2GB までの範囲であれば 64MB 分の予約が、それより大きければ 128MB 分の予約が行なわれる意味になります。</para>
+    <para>それとは別に、 <literal>crashkernel</literal> パラメータに対して複数の値を設定することもできます。たとえば低メモリと高メモリで別々のセグメントを予約する必要がある場合は、 <literal>72M,low</literal> と <literal>256M,high</literal> のように指定します。</para>
     <example>
-    <title>Kdump memory reservation with multiple values</title>
+    <title>複数の値を設定した Kdump メモリ予約</title>
 <screen>
 &lt;kdump&gt;
-  &lt;!-- memory reservation (high and low) --&gt;
+  &lt;!-- メモリ予約 (高/低) --&gt;
   &lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;
   &lt;crash_kernel config:type="list"&gt;
     &lt;listentry&gt;72M,low&lt;/listentry&gt;
@@ -146,72 +88,51 @@
   &lt;/crash_kernel&gt;
 &lt;/kdump&gt; </screen>
    </example>
-    <para>
-     The following table shows the settings necessary to reserve memory:
-    </para>
+    <para>下記の表には、メモリ予約を行なう際に必要な設定を示しています:</para>
     <table>
-     <title>Kdump Memory Reservation Settings:XML Representation</title>
+     <title>Kdump メモリ予約設定: XML 表記</title>
      <tgroup cols="3">
       <thead>
        <row>
         <entry>
-         <para>
-          Element
-         </para>
+         <para>要素</para>
         </entry>
         <entry>
-         <para>
-          Description
-         </para>
+         <para>説明</para>
         </entry>
         <entry>
-         <para>
-          Comment
-         </para>
+         <para>コメント</para>
         </entry>
        </row>
       </thead>
       <tbody>
        <row>
         <entry>
-         <para>
-          <literal>add_crash_kernel</literal>
-         </para>
+         <para><literal>add_crash_kernel</literal></para>
         </entry>
         <entry>
-         <para>
-          Set to <literal>true</literal> if memory should be reserved and
-          Kdump enabled.
-         </para>
+         <para>メモリを予約して Kdump を有効化する場合、 <literal>true</literal> を指定します。</para>
 <screen>&lt;add_crash_kernel config:type="boolean"&gt;true&lt;/add_crash_kernel&gt;</screen>
         </entry>
         <entry>
-         <para>
-          required
-         </para>
+         <para>必須</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>crash_kernel</literal>
-         </para>
+         <para><literal>crash_kernel</literal></para>
         </entry>
         <entry>
-         <para>
-          Use the syntax of the crashkernel command line as discussed above.
-         </para>
+         <para>上述の crashkernel コマンドラインの書式で設定を行ないます。</para>
 <screen>&lt;crash_kernel&gt;256M:64M&lt;/crash_kernel&gt;</screen>
-        <para>A list of values is also supported.</para>
+        <para>値のリストを指定することもできます。</para>
 <screen>&lt;crash_kernel config:type="list"&gt;
   &lt;listentry&gt;72M,low&lt;/listentry&gt;
   &lt;listentry&gt;256M,high&lt;/listentry&gt;
 &lt;/crash_kernel&gt;</screen>
         </entry>
         <entry>
-         <para>
-          required
-         </para>
+         <para>必須</para>
         </entry>
        </row>
       </tbody>
@@ -220,194 +141,103 @@
    </sect2>
 
    <sect2 xml:id="CreateProfile-kdump-saving">
-    <title>Dump Saving</title>
-    <para>
-     This section describes where and how crash dumps will be stored.
-    </para>
+    <title>ダンプの保存</title>
+    <para>本章では、クラッシュダンプの保存場所と保存方法を説明しています。</para>
     <sect3 xml:id="CreateProfile-kdump-saving-target">
-     <title>Target</title>
-     <para>
-      The element <literal>KDUMP_SAVEDIR</literal> specifies the URL to
-      where the dump is saved. The following methods are possible:
-     </para>
+     <title>ターゲット</title>
+     <para><literal>KDUMP_SAVEDIR</literal> では、ダンプの保存先 URL を指定します。指定可能なプロトコルは下記のとおりです:</para>
      <itemizedlist mark="bullet" spacing="normal">
       <listitem>
-       <para>
-        <literal>file</literal> to save to the local disk,
-       </para>
+       <para><literal>file</literal>: ローカルディスクへの保存</para>
       </listitem>
       <listitem>
-       <para>
-        <literal>ftp</literal> to save to an FTP server (without
-        encryption),
-       </para>
+       <para><literal>ftp</literal>: FTP サーバへの保存 (暗号化無し)</para>
       </listitem>
       <listitem>
-       <para>
-        <literal>sftp</literal> to save to an SSH2 SFTP server,
-       </para>
+       <para><literal>sftp</literal>: SSH2 SFTP サーバへの保存</para>
       </listitem>
       <listitem>
-       <para>
-        <literal>nfs</literal> to save to an NFS location and
-       </para>
+       <para><literal>nfs</literal>: NFS 共有内への保存</para>
       </listitem>
       <listitem>
-       <para>
-        <literal>cifs</literal> to save the dump to a CIFS/SMP export from
-        Samba or Microsoft Windows.
-       </para>
+       <para><literal>cifs</literal>: Samba もしくは Microsoft Windows が提供する CIFS/SMB 共有への保存</para>
       </listitem>
      </itemizedlist>
-     <para>
-      For details see the kdump(5) manual page. Two examples are:
-      <literal>file:///var/crash</literal> (which is the default location
-      according to FHS) and
-      <literal>ftp://user:password@host:port/incoming/dumps</literal>. A
-      subdirectory, with the time stamp contained in the name, will be
-      created and the dumps saved there.
-     </para>
-     <para>
-      When the dump is saved to the local disk,
-      <literal>KDUMP_KEEP_OLD_DUMPS</literal> can be used to delete old
-      dumps automatically. Set it to the number of old dumps that should be
-      kept. If the target partition would end up with less free disk space
-      than specified in <literal>KDUMP_FREE_DISK_SIZE</literal>, the dump is
-      not saved.
-     </para>
-     <para>
-      To save the whole kernel and the debug information (if
-      installed) to the same directory, set
-      <literal>KDUMP_COPY_KERNEL</literal> to <literal>true</literal>. You
-      will have everything you need to analyze the dump in one directory
-      (except kernel modules and their debugging information).
-     </para>
+     <para>詳細は kdump(5) のマニュアルページをお読みください。たとえば <literal>file:///var/crash</literal> のように指定すると、 FHS に準拠した既定の場所に保存することができますし、 <literal>ftp://user:password@host:port/incoming/dumps</literal> のように指定することもできます。なお、指定したディレクトリ以下に名前とタイムスタンプを含むサブディレクトリが作成され、そのサブディレクトリ内にダンプが保存されます。</para>
+     <para>ダンプをローカルのディスクに保存する場合は、 <literal>KDUMP_KEEP_OLD_DUMPS</literal> を指定することで、古いダンプを自動削除することができます。ここで指定する値は、保存しておくべきダンプ数になります。また、 <literal>KDUMP_FREE_DISK_SIZE</literal> で指定した値よりも空き容量が少ない場合、ダンプを保存しないように設定することもできます。</para>
+     <para>カーネル全体とデバッグ情報 (インストールされていれば) を同じディレクトリ内に保存したい場合は、 <literal>KDUMP_COPY_KERNEL</literal> を <literal>true</literal> に設定します。これにより、カーネルモジュールとそのデバッグ情報を除き、ダンプの解析に必要なデータを 1 箇所にまとめることができるようになります。</para>
     </sect3>
     <sect3 xml:id="CreateProfile-kdump-saving-compression">
-     <title>Filtering and Compression</title>
-     <para>
-      The kernel dump is uncompressed and unfiltered. It can get as large as
-      your system RAM. To get smaller files, compress the dump file
-      afterward. The dump needs to be decompressed before opening.
-     </para>
-     <para>
-      To use page compression, which compresses every page and allows
-      dynamic decompression with the crash(8) debugging tool, set
-      <literal>KDUMP_DUMPFORMAT</literal> to <literal>compressed</literal>
-      (default).
-     </para>
-     <para>
-      You may not want to save all memory pages, for example those filled
-      with zeroes. To filter the dump, set the
-      <literal>KDUMP_DUMPLEVEL</literal>. 0 produces a full dump and 31 is
-      the smallest dump. The manual pages kdump(5) and makedumpfile(8) list
-      for each value which pages will be saved.
-     </para>
+     <title>フィルタリングと圧縮</title>
+     <para>カーネルのダンプは通常圧縮されておらず、フィルタもされていません。そのため、搭載されているメモリの分だけ巨大なファイルになります。より小さいファイルにしたい場合は、ダンプファイルを圧縮するように設定してください。なお、ダンプファイルを開く際には、あらかじめ展開する必要が生じるようになります。</para>
+     <para>crash(8) デバッグツールで使用できるように各ページを圧縮し、動的な展開を行なうようページ圧縮を設定したい場合は、 <literal>KDUMP_DUMPFORMAT</literal> に <literal>compressed</literal> (既定値) を指定します。</para>
+     <para>ゼロで埋められているページなど、全てのメモリページを保存したくない場合もあります。このようにダンプをフィルタしたい場合は、 <literal>KDUMP_DUMPLEVEL</literal> を指定します。 0 を指定すると完全なダンプを、 31 を指定すると最も小さなダンプを生成することになります。それぞれの値の意味と保存されるページについて、詳しくは kdump(5) と makedumpfile(8) のマニュアルページをお読みください。</para>
     </sect3>
     <sect3 xml:id="CreateProfile-kdump-saving-summary">
-     <title>Summary</title>
+     <title>概要</title>
      <table>
-      <title>Dump Target Settings: XML Representation</title>
+      <title>ダンプターゲットの設定: XML 表記</title>
       <tgroup cols="3">
        <thead>
         <row>
          <entry>
-          <para>
-           Element
-          </para>
+          <para>要素</para>
          </entry>
          <entry>
-          <para>
-           Description
-          </para>
+          <para>説明</para>
          </entry>
          <entry>
-          <para>
-           Comment
-          </para>
+          <para>コメント</para>
          </entry>
         </row>
        </thead>
        <tbody>
         <row>
          <entry>
-          <para>
-           <literal>KDUMP_SAVEDIR</literal>
-          </para>
+          <para><literal>KDUMP_SAVEDIR</literal></para>
          </entry>
          <entry>
-          <para>
-           A URL that specifies the target to which the dump and related
-           files will be saved.
-          </para>
+          <para>ダンプと関連ファイルを保存する先を URL で指定します。</para>
 <screen>&lt;KDUMP_SAVEDIR&gt;file:///var/crash/&lt;/KDUMP_SAVEDIR&gt;</screen>
          </entry>
          <entry>
-          <para>
-           required
-          </para>
+          <para>必須</para>
          </entry>
         </row>
         <row>
          <entry>
-          <para>
-           <literal>KDUMP_COPY_KERNEL</literal>
-          </para>
+          <para><literal>KDUMP_COPY_KERNEL</literal></para>
          </entry>
          <entry>
-          <para>
-           Set to <literal>true</literal>, if not only the dump should be
-           saved to <literal>KDUMP_SAVEDIR</literal> but also the kernel and
-           its debugging information (if installed).
-          </para>
+          <para><literal>true</literal> を指定すると、 <literal>KDUMP_SAVEDIR</literal> にはダンプだけでなくカーネルとデバッグ情報 (インストールされていれば) も保存するようになります。</para>
 <screen>&lt;KDUMP_COPY_KERNEL&gt;false&lt;/KDUMP_COPY_KERNEL&gt;</screen>
          </entry>
          <entry>
-          <para>
-           optional
-          </para>
+          <para>任意指定</para>
          </entry>
         </row>
         <row>
          <entry>
-          <para>
-           <literal>KDUMP_FREE_DISK_SIZE</literal>
-          </para>
+          <para><literal>KDUMP_FREE_DISK_SIZE</literal></para>
          </entry>
          <entry>
-          <para>
-           Disk space in megabytes that must remain free after saving the
-           dump. If not enough space is available, the dump will not be
-           saved.
-          </para>
+          <para>ダンプを保存した後に残しておかなければならない空き容量を、メガバイト単位で指定します。十分な空き容量が存在しない場合、ダンプは保存されなくなります。</para>
 <screen>&lt;KDUMP_FREE_DISK_SIZE&gt;64&lt;/KDUMP_FREE_DISK_SIZE&gt;</screen>
          </entry>
          <entry>
-          <para>
-           optional
-          </para>
+          <para>任意指定</para>
          </entry>
         </row>
         <row>
          <entry>
-          <para>
-           <literal>KDUMP_KEEP_OLD_DUMPS</literal>
-          </para>
+          <para><literal>KDUMP_KEEP_OLD_DUMPS</literal></para>
          </entry>
          <entry>
-          <para>
-           The number of dumps that are kept (not deleted) if
-           <literal>KDUMP_SAVEDIR</literal> points to a local directory.
-           Specify 0 if you do not want any dumps to be automatically
-           deleted, specify -1 if all dumps except the current one should be
-           deleted.
-          </para>
+          <para><literal>KDUMP_SAVEDIR</literal> がローカルのディレクトリを指し示している場合、削除せず残しておくべきダンプ数を指定します。 0 を指定するとダンプの削除を無効化します。 -1 を指定すると、最新のものを除いて全て削除するようになります。</para>
 <screen>&lt;KDUMP_KEEP_OLD_DUMPS&gt;4&lt;/KDUMP_KEEP_OLD_DUMPS&gt;</screen>
          </entry>
          <entry>
-          <para>
-           optional
-          </para>
+          <para>任意指定</para>
          </entry>
         </row>
        </tbody>
@@ -417,150 +247,89 @@
    </sect2>
 
    <sect2 xml:id="CreateProfile-kdump-notification">
-    <title>E-Mail Notification</title>
-    <para>
-     Configure e-mail notification if you want to be informed when a machine
-     crashes and a dump is saved.
-    </para>
-    <para>
-     Because Kdump runs in the initrd, a local mail server cannot send the
-     notification e-mail. An SMTP server needs to be specified (see below).
-    </para>
-    <para>
-     You need to provide exactly one address in
-     <literal>KDUMP_NOTIFICATION_TO</literal>. More addresses can be
-     specified in <literal>KDUMP_NOTIFICATION_CC</literal>. Only use e-mail
-     addresses in both cases, not a real name.
-    </para>
-    <para>
-     Specify <literal>KDUMP_SMTP_SERVER</literal> and (if the server needs
-     authentication) <literal>KDUMP_SMTP_USER</literal> and
-     <literal>KDUMP_SMTP_PASSWORD</literal>. Support for TLS/SSL is not
-     available but may be added in the future.
-    </para>
+    <title>電子メール通知</title>
+    <para>マシンがクラッシュしてダンプが保存された際、電子メールによる通知を受け取りたい場合の設定です。</para>
+    <para>Kdump は initrd 内で動作する仕組みであることから、ローカルのメールサーバはメールを送信することができません。 SMTP サーバを指定して送信する必要があります (下記参照) 。</para>
+    <para>なお、 <literal>KDUMP_NOTIFICATION_TO</literal> には宛先のアドレスを 1 つだけ指定する必要があります。複数のアドレスを指定したい場合は、 <literal>KDUMP_NOTIFICATION_CC</literal> に設定してください。なお、いずれの設定でも、電子メールアドレスだけを指定するものとし、名前などは含めないでください。</para>
+    <para><literal>KDUMP_SMTP_SERVER</literal> のほか、メールサーバ側で認証を行なう必要がある場合は、 <literal>KDUMP_SMTP_USER</literal> と <literal>KDUMP_SMTP_PASSWORD</literal> も指定してください。 TLS/SSL への対応は提供されていませんが、将来的に追加される予定です。</para>
 <!-- {{{ Table: XML representation of the e-mail notification settings -->
     <table>
-     <title>E-Mail Notification Settings: XML Representation</title>
+     <title>電子メール通知の設定: XML 表記</title>
      <tgroup cols="3">
       <thead>
        <row>
         <entry>
-         <para>
-          Element
-         </para>
+         <para>要素</para>
         </entry>
         <entry>
-         <para>
-          Description
-         </para>
+         <para>説明</para>
         </entry>
         <entry>
-         <para>
-          Comment
-         </para>
+         <para>コメント</para>
         </entry>
        </row>
       </thead>
       <tbody>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_NOTIFICATION_TO</literal>
-         </para>
+         <para><literal>KDUMP_NOTIFICATION_TO</literal></para>
         </entry>
         <entry>
-         <para>
-          Exactly one e-mail address to which the e-mail should be sent.
-          Additional recipients can be specified in
-          <literal>KDUMP_NOTIFICATION_CC</literal>.
-         </para>
+         <para>電子メールの送信先となるメールアドレスを 1 つだけ指定します。追加の受信者を設定したい場合は、 <literal>KDUMP_NOTIFICATION_CC</literal> で設定してください。</para>
 <screen>&lt;KDUMP_NOTIFICATION_TO
 &gt;&exampleuser_plain;@&exampledomain;&lt;/KDUMP_NOTIFICATION_TO&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional (notification disabled if empty)
-         </para>
+         <para>任意指定 (何も指定しない場合、通知が無効化されます)</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_NOTIFICATION_CC</literal>
-         </para>
+         <para><literal>KDUMP_NOTIFICATION_CC</literal></para>
         </entry>
         <entry>
-         <para>
-          Zero, one or more recipients that are in the cc line of the
-          notification e-mail.
-         </para>
+         <para>通知メールのコピー送信先となるメールアドレスを任意の数 (0 個以上) だけ指定します。</para>
 <screen>&lt;KDUMP_NOTIFICATION_CC
 &gt;&exampleuserII_plain;@&exampledomain; &exampleuserIII_plain;@&exampledomain;&lt;/KDUMP_NOTIFICATION_CC&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_SMTP_SERVER</literal>
-         </para>
+         <para><literal>KDUMP_SMTP_SERVER</literal></para>
         </entry>
         <entry>
-         <para>
-          Host name of the SMTP server used for mail delivery. SMTP
-          authentication is supported (see
-          <literal>KDUMP_SMTP_USER</literal> and
-          <literal>KDUMP_SMTP_PASSWORD</literal>) but TLS/SSL are
-          not.
-         </para>
+         <para>メールの配送に使用する SMTP サーバのホスト名を指定します。 SMTP 認証を設定する必要である場合は、 <literal>KDUMP_SMTP_USER</literal> と <literal>KDUMP_SMTP_PASSWORD</literal> を指定してください。 TLS/SSL には未対応です。</para>
 <screen>&lt;KDUMP_SMTP_SERVER&gt;email.suse.de&lt;/KDUMP_SMTP_SERVER&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional (notification disabled if empty)
-         </para>
+         <para>任意指定 (何も指定しない場合、通知が無効化されます)</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_SMTP_USER</literal>
-         </para>
+         <para><literal>KDUMP_SMTP_USER</literal></para>
         </entry>
         <entry>
-         <para>
-          User name used together with
-          <literal>KDUMP_SMTP_PASSWORD</literal> for SMTP authentication.
-         </para>
+         <para>SMTP 認証で使用するユーザ名を指定します。 <literal>KDUMP_SMTP_PASSWORD</literal> についても設定を行なってください。</para>
 <screen>&lt;KDUMP_SMTP_USER&gt;bwalle&lt;/KDUMP_SMTP_USER&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_SMTP_PASSWORD</literal>
-         </para>
+         <para><literal>KDUMP_SMTP_PASSWORD</literal></para>
         </entry>
         <entry>
-         <para>
-          Password used together with <literal>KDUMP_SMTP_USER</literal> for
-          SMTP authentication.
-         </para>
+         <para>SMTP 認証で使用するパスワードを指定します。 <literal>KDUMP_SMTP_USER</literal> についても設定を行なってください。</para>
 <screen>&lt;KDUMP_SMTP_PASSWORD&gt;geheim&lt;/KDUMP_SMTP_PASSWORD&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
       </tbody>
@@ -569,108 +338,63 @@
    </sect2>
 
    <sect2 xml:id="CreateProfile-kdump-kernel">
-    <title>Kdump Kernel Settings</title>
-    <para>
-     As already mentioned, a special kernel is booted to save the dump. If
-     you do not want to use the auto-detection mechanism to find out which
-     kernel is used (see the kdump(5) manual page that describes the
-     algorithm which is used to find the kernel), you can specify the
-     version of a custom kernel in <literal>KDUMP_KERNELVER</literal>. If
-     you set it to <literal>foo</literal>, then the kernel located in
-     <filename>/boot/vmlinuz-foo</filename> or
-     <filename>/boot/vmlinux-foo</filename> (in that order on platforms that
-     have a <filename>vmlinuz</filename> file) will be used.
-    </para>
-    <para>
-     You can specify the command line used to boot the Kdump kernel.
-     Normally the boot command line is used, minus settings that are not
-     relevant for Kdump (like the <literal>crashkernel</literal> parameter)
-     plus some settings needed by Kdump (see the manual page kdump(5)). To
-     specify additional parameters, use <literal>KDUMP_COMMANDLINE_APPEND</literal>. If you
-     know what you are doing and you want to specify the entire command line,
-     set <literal>KDUMP_COMMANDLINE</literal>.
-    </para>
+    <title>Kdump カーネル設定</title>
+    <para>上述のとおり、ダンプを保存する際には特別なカーネルを起動します。どのカーネルを使用するのかを自動検出する仕組みを使用したくない場合 (詳しくは kdump(5) のマニュアルページをお読みください) は、 <literal>KDUMP_KERNELVER</literal> でカーネルのバージョンを指定することができます。たとえば、この値を <literal>foo</literal> に設定すると、 <filename>/boot/vmlinuz-foo</filename> もしくは <filename>/boot/vmlinux-foo</filename> (<filename>vmlinuz</filename> ファイルが存在するプラットフォームの場合の順序) を使用するようになります。</para>
+    <para>また、 Kdump カーネルの起動する際のコマンドラインも設定することができます。通常は起動時のコマンドラインから、 Kdump には無関係な設定 (たとえば <literal>crashkernel</literal> パラメータなど) を取り除き、 Kdump で必要な設定 (詳しくは kdump(5) のマニュアルページをお読みください) を追加して設定することになります。追加のパラメータを指定したい場合は、 <literal>KDUMP_COMMANDLINE_APPEND</literal> を指定してください。コマンドライン全体を設定したい場合は、 <literal>KDUMP_COMMANDLINE</literal> を指定してください (この場合、必要なパラメータ全てを設定しなければならないことに注意してください) 。</para>
     <table>
-     <title>Kernel Settings: XML Representation</title>
+     <title>カーネル設定: XML 表記</title>
      <tgroup cols="3">
       <thead>
        <row>
         <entry>
-         <para>
-          Element
-         </para>
+         <para>要素</para>
         </entry>
         <entry>
-         <para>
-          Description
-         </para>
+         <para>説明</para>
         </entry>
         <entry>
-         <para>
-          Comment
-         </para>
+         <para>コメント</para>
         </entry>
        </row>
       </thead>
       <tbody>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_KERNELVER</literal>
-         </para>
+         <para><literal>KDUMP_KERNELVER</literal></para>
         </entry>
         <entry>
-         <para>
-          Version string for the kernel used for Kdump. Leave it empty to
-          use the auto-detection mechanism (strongly recommended).
-         </para>
+         <para>Kdump で使用するカーネルのバージョン文字列を指定します。自動検出の仕組みを使用する場合は、指定しないでください (自動検出のほうを強くお勧めします) 。</para>
 <screen>&lt;KDUMP_KERNELVER
 &gt;2.6.27-default&lt;/KDUMP_KERNELVER&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional (auto-detection if empty)
-         </para>
+         <para>任意指定 (何も指定しなければ自動検出)</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_COMMANDLINE_APPEND</literal>
-         </para>
+         <para><literal>KDUMP_COMMANDLINE_APPEND</literal></para>
         </entry>
         <entry>
-         <para>
-          Additional command line parameters for the Kdump kernel.
-         </para>
+         <para>Kdump カーネルに渡す追加のコマンドラインパラメータ。</para>
 <screen>&lt;KDUMP_COMMANDLINE_APPEND
 &gt;console=ttyS0,57600&lt;/KDUMP_COMMANDLINE_APPEND&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_Command Line</literal>
-         </para>
+         <para><literal>KDUMP_Command Line</literal></para>
         </entry>
         <entry>
-         <para>
-          Overwrite the automatically generated Kdump command line. Use with
-          care. Usually, <literal>KDUMP_COMMANDLINE_APPEND</literal> should
-          suffice.
-         </para>
+         <para>Kdump のコマンドラインとして生成されたものを上書きするための設定です。注意してお使いください。通常は <literal>KDUMP_COMMANDLINE_APPEND</literal> のほうを指定します。</para>
 <screen>&lt;KDUMP_COMMANDLINE_APPEND
 &gt;root=/dev/sda5 maxcpus=1 irqpoll&lt;/KDUMP_COMMANDLINE&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
       </tbody>
@@ -679,88 +403,59 @@
    </sect2>
 
    <sect2 xml:id="CreateProfile-kdump-expert">
-    <title>Expert Settings</title>
+    <title>熟練者向け設定</title>
     <table>
-     <title>Expert Settings: XML Representations</title>
+     <title>熟練者向け設定: XML 表記</title>
      <tgroup cols="3">
       <thead>
        <row>
         <entry>
-         <para>
-          Element
-         </para>
+         <para>要素</para>
         </entry>
         <entry>
-         <para>
-          Description
-         </para>
+         <para>説明</para>
         </entry>
         <entry>
-         <para>
-          Comment
-         </para>
+         <para>コメント</para>
         </entry>
        </row>
       </thead>
       <tbody>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_IMMEDIATE_REBOOT</literal>
-         </para>
+         <para><literal>KDUMP_IMMEDIATE_REBOOT</literal></para>
         </entry>
         <entry>
-         <para>
-          <literal>true</literal> if the system should be rebooted
-          automatically after the dump has been saved,
-          <literal>false</literal> otherwise. The default is to reboot the
-          system automatically.
-         </para>
+         <para><literal>true</literal> を指定すると、ダンプの保存完了後に自動的に再起動を行なうようになります。 <literal>false</literal> を指定すると再起動を行なわなくなります。既定では自動的に再起動します。</para>
 <screen>&lt;KDUMP_IMMEDIATE_REBOOT
 &gt;true&lt;/KDUMP_IMMEDIATE_REBOOT&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KDUMP_VERBOSE</literal>
-         </para>
+         <para><literal>KDUMP_VERBOSE</literal></para>
         </entry>
         <entry>
-         <para>
-          Bitmask that specifies how verbose the Kdump process should be.
-          Read kdump(5) for details.
-         </para>
+         <para>Kdump の冗長出力度をビットマスクで指定します。詳しくは kdump(5) をお読みください。</para>
 <screen>&lt;KDUMP_VERBOSE&gt;3&lt;/KDUMP_VERBOSE&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <literal>KEXEC_OPTIONS</literal>
-         </para>
+         <para><literal>KEXEC_OPTIONS</literal></para>
         </entry>
         <entry>
-         <para>
-          Additional options that are passed to kexec when loading the Kdump
-          kernel. Normally empty.
-         </para>
+         <para>Kdump カーネルを読み込む際に kexec に渡す追加のオプションを指定します。通常は何も指定しません。</para>
 <screen>&lt;KEXEC_OPTIONS&gt;--noio&lt;/KEXEC_OPTIONS&gt;</screen>
         </entry>
         <entry>
-         <para>
-          optional
-         </para>
+         <para>任意指定</para>
         </entry>
        </row>
       </tbody>
