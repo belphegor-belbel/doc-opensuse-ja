@@ -270,64 +270,6 @@ ip route show</screen>
   </note>
   <sect3 xml:id="sec-network-manconf-ip">
    <title><command>ip</command> を利用したネットワークインターフェイスの設定</title>
-   <remark>
-From: Marius Tomaschewski mt@suse.de&gt;
-Subject: Re: Manual Network Config
-To: Karl Eichwalder ke@suse.de&gt;
-Date: Mon, 24 Aug 2009 14:21:44 +0200
-
-Das ifconfig utility ist obsolete und unterstützt nur Interface-
-Namen bis 9 Zeichen, z.B. "foo012345". Die restlichen Zeichen
-werden abgeschnitten und nicht angezeigt.
-Das "ip" utility unterstützt hingegen die derzeit volle Länge von
-15 Zeichen, z.B. "foo012345678901".
-
-Statt "ifconfig" sollte "ip addr" und "ip link" verwendet werden,
-um routing zu konfigurieren, sollte nicht "route", sondern "ip route"
-verwendendet werden.
-
-...
-
-IMO besser wäre es die Beispiel-Ausgaben von route und ifconfig zu
-entfernen und stattdessen Beispiel-Ausgaben von:
-
-"ip link show", "ip addr show",
-"ip -4 route show", "ip -6 route show"
-(und ggf. auch "ip rule show")
-
-im "Configuring a Network Interface with ip" zu bringen. Eventuell
-mit ein Paar Beispielen als eine Art Kurzanleitung, in etwa:
-
-ip link set up dev eth0
-
-ip addr add 192.168.0.100/24 dev eth0
-ip addr add 2001:DB8:cafe::dead/64 dev eth0
-
-ip route add 192.168.1.0/24 via 192.168.0.200 dev eth0
-ip route add 2001:DB8:cafe:1::/64 via 2001:DB8:cafe::feed dev eth0
-
-ip route add default via 192.168.0.254 dev eth0
-ip route add default via 2001:DB8:cafe::beef dev eth0
-
-ip addr show dev eth0
-ip -4 route show # dev eth0
-ip -6 route show # dev eth0
-
-ip route del 192.168.1.0/24 via 192.168.0.200 dev eth0
-ip route del 2001:DB8:cafe:1::/64 via 2001:DB8:cafe::feed dev eth0
-
-ip route del default via 192.168.0.254 dev eth0
-ip route del default via 2001:DB8:cafe::beef dev eth0
-
-ip addr del 192.168.0.100/24 dev eth0
-ip addr del 2001:DB8:cafe::dead/64 dev eth0
-
-ip link set down dev eth0
-</remark>
-   <remark>
- ke 2014-05-15: ifconfig and route is removed sind quite some time.
- Maybe, we should add more ip examples as Marius proposes...
-</remark>
    <para><command>ip</command> コマンドは、ネットワークデバイスやルーティング、ポリシールーティングやトンネルなどを設定したり、設定を取得したりするためのツールです。</para>
    <para><command>ip</command> コマンドは非常に複雑なツールです。一般的には <command>ip</command> &nbsp; <option><replaceable>オプション</replaceable> <replaceable>オブジェクト</replaceable> <replaceable>コマンド</replaceable></option> の形式で実行します。オブジェクトには下記のものがあります:</para>
    <variablelist>
@@ -381,11 +323,97 @@ ip link set down dev eth0
     </varlistentry>
    </variablelist>
    <para>何もコマンドを指定しない場合は、指定のコマンド (通常は <command>list</command>) が指定されているものと見なします。</para>
-   <para>デバイスの状態を変更したい場合は、 <command>ip link set</command> &nbsp; <option><replaceable>デバイス名</replaceable></option> &nbsp; <command/> のように実行します。たとえば eth0 デバイスを無効化したい場合は、 <command>ip link set</command> <option>eth0 down</option> と入力して実行します。逆に有効化したい場合は、 <command>ip link set</command> <option>eth0 up</option> と入力して実行します。</para>
-   <para>デバイスを有効化したあとは、設定を行なうことができます。 IP アドレスを設定するには、<command>ip addr add</command> &nbsp; <option><replaceable>IP_アドレス</replaceable> + dev <replaceable>デバイス名</replaceable></option> のように実行します。たとえば eth0 インターフェイスに対して 192.168.12.154/30 というアドレスを設定し、標準的なブロードキャスト (<option>brd</option>) を設定したい場合は、 <command>ip addr</command> &nbsp; <option>add 192.168.12.154/30 brd + dev eth0</option> と入力して実行します。</para>
-   <para>既に物理的な接続を行なっている場合は、デフォルトゲートウエイを設定することもできます。デフォルトゲートウエイを設定するには、 <command>ip route add</command> &nbsp; <option>ゲートウエイの_IP_アドレス</option> のように実行します。なお、一方の IP アドレスから他方の IP アドレスに変換を行ないたい場合は、 <command>nat</command> を指定して、 <command>ip route add nat</command> &nbsp; <option>IP_アドレス</option> &nbsp; <command>via</command> &nbsp; <option>他の_IP_アドレス</option> のように実行します。</para>
-   <para>全てのデバイスを表示するには、 <command>ip link ls</command> を実行します。動作中のデバイスのみを表示したい場合は、 <command>ip link ls up</command> を実行します。また、デバイスのインターフェイス統計情報を表示したい場合は、 <command>ip -s link ls</command> を実行します。デバイスに設定されているアドレスを表示したい場合は、 <command>ip addr</command> を実行します。なお、 <command>ip addr</command> の出力には、デバイスの MAC アドレスも表示されます。このほか、全てのルーティング情報を表示するには、 <command>ip route show</command> を実行します。</para>
+   <para>
+    Change the state of a device with the command:
+   </para>
+<screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+   <para>
+    For example, to deactivate device eth0, enter
+    </para>
+<screen>&prompt.sudo;ip link set eth0 down</screen>
+   <para>
+    To activate it again, use
+   </para>
+<screen>&prompt.sudo;ip link set eth0 up</screen>
+   <tip>
+    <title>Disconnecting NIC Device</title>
+    <para>
+     If you deactivate a device with
+    </para>
+    <screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+    <para>
+     it disables the network interface on a software level.
+    </para>
+    <para>
+     If you want to simulate losing the link as if the ethernet cable is unplugged
+     or the connected switch is turned off, run
+    </para>
+    <screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+    <para>
+     For example, while <command>ip link set
+      <replaceable>DEV_NAME</replaceable> down</command> drops all routes using
+     <replaceable>DEV_NAME</replaceable>, <command>ip link set DEV carrier
+      off</command> does not. Be aware that <command>carrier off</command>
+     requires support from the network device driver.
+    </para>
+    <para>
+     To connect the device back to the physical network, run
+    </para>
+    <screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+   </tip>
+   <para>
+    After activating a device, you can configure it. To set the IP address, use
+   </para>
+<screen>&prompt.sudo;ip addr add <replaceable>IP_ADDRESS</replaceable> + dev <replaceable>DEV_NAME</replaceable></screen>
+   <para>
+    For example, to set the address of the interface eth0 to 192.168.12.154/30
+    with standard broadcast (option <option>brd</option>), enter
+   </para>
+<screen>&prompt.sudo;ip addr add 192.168.12.154/30 brd + dev eth0</screen>
+   <para>
+    To have a working connection, you must also configure the default gateway.
+    To set a gateway for your system, enter
+   </para>
+<screen>&prompt.sudo;ip route add default via gateway_ip_address</screen>
+   <para>
+    To display all devices, use
+   </para>
+   <screen>&prompt.sudo;ip link ls</screen>
+   <para>
+    To display the running interfaces only, use
+   </para>
+<screen>&prompt.sudo;ip link ls up</screen>
+   <para>
+    To print interface statistics for a device, enter
+   </para>
+<screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+    <para>
+     To view additional useful information, specifically about virtual
+     network devices, enter
+    </para>
+<screen>wicked show all
+wicked show <replaceable>インターフェイス名</replaceable></screen>
+    <para>
+     Moreover, to view network layer (IPv4, IPv6) addresses of your devices,
+     enter
+    </para>
+<screen>&prompt.sudo;ip addr</screen>
+    <para>
+					In the output, you can find information about MAC addresses of your
+					devices. To show all routes, use
+   </para>
+<screen>&prompt.sudo;ip route show</screen>
    <para><command>ip</command> コマンドの使用方法について、詳しくは <command>ip</command> &nbsp; <option>help</option> を実行すると表示されるヘルプ、もしくは <systemitem>ip(8)</systemitem> のマニュアルページをお読みください。なお、 <option>help</option> オプションは <command>ip</command> のサブコマンド全てでもご利用いただけます。たとえば <command>ip</command> &nbsp; <option>addr</option> に対するヘルプを読みたい場合は、 <command>ip</command> &nbsp; <option>addr help</option> と入力して実行してください。また、 <command>ip</command> コマンドのマニュアルは<filename>/usr/share/doc/packages/iproute2/ip-cref.pdf</filename> にあります。</para>
+<screen>&prompt.sudo;ip addr help</screen>
+   <para>
+    Find the <command>ip</command> manual in
+    <filename>/usr/share/doc/packages/iproute2/ip-cref.pdf</filename>.
+   </para>
   </sect3>
   <sect3 xml:id="sec-network-manconf-testingping">
    <title>ping による通信テスト</title>
