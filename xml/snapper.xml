@@ -11,11 +11,40 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
   <abstract>
-   <para>Linux でファイルシステムのスナップショットを採取し、必要に応じてロールバック (巻き戻し) を行なう機能は、長年待ち望まれてきた機能でした。現在は Snapper と <literal>Btrfs</literal> もしくはシン・プロビジョン型の LVM ボリュームを併用することで、その機能が実現できるようになりました。</para>
-
-   <para><literal>Btrfs</literal> は Linux における新しいコピーオンライト型のファイルシステムで、 1 つの物理パーティション内に 1 つ以上のサブボリュームを作成し、それぞれ別々にマウントできる機能のほか、ファイルシステムのスナップショット機能 (特定の時点におけるファイルシステムの状態のコピー) にも対応しています。スナップショットはシン・プロビジョン型の LVM ボリュームでも利用することができます。こちらの場合、ファイルシステムは XFS, Ext4, Ext3 のいずれかを利用することができます。 Snapper では、これらのボリュームに対して、スナップショットを作成したり管理したりする機能を提供します。コマンドラインインターフェイスのほか、 &yast; も用意されています。また、 <phrase os="sles;sled">&sls; 12</phrase> <phrase os="osuse">&opensuse; Leap</phrase> 以降のバージョンでは、 <literal>Btrfs</literal> スナップショットからの起動にも対応しています。詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
+   <para>
+    Snapper allows creating and managing file system snapshots.
+    File system snapshots allow keeping a copy of the state of a file system
+    at a certain point of time.
+    The standard setup of Snapper is designed to allow rolling back system
+    changes.
+    However, you can also use it to create on-disk backups of user data.
+    As the basis for this functionality, Snapper uses the Btrfs file system or
+    thinly-provisioned LVM volumes with an XFS or Ext4 file system.
+   </para>
   </abstract>
  </info>
+
+ <para>
+  Snapper has a command-line interface and a &yast; interface.
+  Snapper lets you create and manage file system snapshots on the following
+  types of file systems:
+ </para>
+ <itemizedlist>
+  <listitem>
+   <para>
+    Btrfs, a copy-on-write file system for Linux that natively supports
+    file system snapshots of subvolumes.
+    (Subvolumes are separately mountable file systems within a physical
+    partition.)
+   </para>
+   <para>スナップショットからの起動によるシステム全体の巻き戻し。詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
+  </listitem>
+  <listitem>
+   <para>
+    Thinly-provisioned LVM volumes formatted with XFS or Ext4.
+   </para>
+  </listitem>
+ </itemizedlist>
  <para>Snapper を利用することで、下記のようなことができるようになります:</para>
  <itemizedlist mark="bullet" spacing="normal">
   <listitem>
@@ -31,6 +60,7 @@
    <para>スナップショットは手作業でも作成することができるほか、既存のスナップショットを管理することもできます。詳しくは <xref linkend="sec-snapper-manage"/> をお読みください。</para>
   </listitem>
  </itemizedlist>
+
  <sect1 xml:id="sec-snapper-setup">
   <title>既定の設定</title>
 
@@ -43,7 +73,6 @@
    <para>あとは <xref linkend="sec-snapper-setup-customize-auto-snapshots"/> で説明している手順に従って、スナップショットの種類を有効化します。</para>
    <para>なお、スナップショットを採取するには、インストーラで提案したサブボリューム設定でルートファイルシステムを設定し、パーティションのサイズが少なくとも 16 GB 以上である必要があります。</para>
   </tip>
-
 
   <para>スナップショットを作成すると、スナップショットと元のブロックはファイルシステム内で同じブロックを指し示します。そのため、スナップショットを採取した時点では、追加のディスク領域を必要とすることはありません。ただし、スナップショットを作成した時点からファイルが変更されると、変更した部分のデータブロックが新しく確保され、元の (スナップショットを採取した時点の) データブロックがそのまま保持されるようになります。そのためスナップショットは、修正された分だけのデータに対応するブロックを占有することになります。また、時間が経過するごとにスナップショットが占有する領域が定期的に増えていくことにも繋がります。そのため、 <literal>Btrfs</literal> ファイルシステムでファイルを削除しても、ディスクの空き領域を増やすことには繋がらない場合があり得ます。</para>
 
@@ -840,7 +869,7 @@ local  | /local</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>NUMBER_*</term>
+      <term><literal>NUMBER_CLEANUP</literal></term>
       <listitem>
        <para>インストールスナップショットと管理スナップショットに対するクリーンアップアルゴリズムを指定します。詳しくは <xref linkend="sec-snapper-clean-up-number"/> をお読みください。</para>
       </listitem>
@@ -1420,7 +1449,9 @@ ID      gen     top level       path
    </qandaentry>
    <qandaentry xml:id="faq-snapper-permanent">
     <question>
-     <para>スナップショットを恒久化するには？</para>
+     <para>
+      Can a snapshot be protected from deletion?
+     </para>
     </question>
     <answer>
      <para>現時点では、スナップショットを手作業による削除から保護する方法はありません。しかしながら、クリーンアップアルゴリズムで自動削除されないように設定することは可能です。手作業で採取したスナップショットの場合 (詳しくは <xref linkend="sec-snapper-manage-create"/> をお読みください) 、 <option>--cleanup-algorithm</option> でクリーンアップアルゴリズムを指定しない限り、何もクリーンアップアルゴリズムが割り当てられません。また、自動的に採取されたスナップショットには、 <literal>number</literal> または <literal>timeline</literal> のいずれかのアルゴリズムが割り当てられます。 1 つまたは複数のスナップショットに対して、この割り当てを削除したい場合は、下記のようにして行ないます:</para>
