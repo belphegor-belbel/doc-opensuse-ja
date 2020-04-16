@@ -11,38 +11,18 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
   <abstract>
-   <para>
-    Snapper allows creating and managing file system snapshots.
-    File system snapshots allow keeping a copy of the state of a file system
-    at a certain point of time.
-    The standard setup of Snapper is designed to allow rolling back system
-    changes.
-    However, you can also use it to create on-disk backups of user data.
-    As the basis for this functionality, Snapper uses the Btrfs file system or
-    thinly-provisioned LVM volumes with an XFS or Ext4 file system.
-   </para>
+   <para>snapper はファイルシステムのスナップショットを作成したり、管理したりするためのツールです。ファイルシステムのスナップショットには、あの特定の時点におけるファイルシステムの状態に対するコピーが含まれていて、通常はシステムに対して行なった変更を元に戻すために使用します。このほか、ユーザデータのディスク内バックアップ用途にも使用することができます。 snapper の機能は btrfs ファイルシステムのほか、 xfs や ext4 ファイルシステムを使用したシン・プロビジョン型の LVM ボリュームに対して使用することができます。</para>
   </abstract>
  </info>
 
- <para>
-  Snapper has a command-line interface and a &yast; interface.
-  Snapper lets you create and manage file system snapshots on the following
-  types of file systems:
- </para>
+ <para>snapper にはコマンドラインインターフェイスのほか、 &yast; インターフェイスも提供されています。これにより、下記のような種類のファイルシステムに対して、ファイルシステムのスナップショットを作成したり管理したりすることができます:</para>
  <itemizedlist>
   <listitem>
-   <para>
-    Btrfs, a copy-on-write file system for Linux that natively supports
-    file system snapshots of subvolumes.
-    (Subvolumes are separately mountable file systems within a physical
-    partition.)
-   </para>
-   <para>スナップショットからの起動によるシステム全体の巻き戻し。詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
+   <para>btrfs: コピーオンライト型の Linux ファイルシステムで、ファイルシステム内にサブボリュームの機能とスナップショットの機能が用意されています (サブボリュームとは、それぞれ別々にマウントすることのできる、ファイルシステム内パーティションです) 。</para>
+   <para>このほか、 <literal>btrfs</literal> スナップショットからの起動を行なうこともできます。詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
   </listitem>
   <listitem>
-   <para>
-    Thinly-provisioned LVM volumes formatted with XFS or Ext4.
-   </para>
+   <para>xfs もしくは ext4 でフォーマットされたシン・プロビジョン型の LVM ボリューム。</para>
   </listitem>
  </itemizedlist>
  <para>Snapper を利用することで、下記のようなことができるようになります:</para>
@@ -57,21 +37,21 @@
    <para>スナップショットからの起動によるシステム全体の巻き戻し。詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
   </listitem>
   <listitem>
-   <para>スナップショットは手作業でも作成することができるほか、既存のスナップショットを管理することもできます。詳しくは <xref linkend="sec-snapper-manage"/> をお読みください。</para>
+   <para>システムが動作している状態での手作業によるスナップショットの作成と管理。詳しくは <xref linkend="sec-snapper-manage"/> をお読みください。</para>
   </listitem>
  </itemizedlist>
 
  <sect1 xml:id="sec-snapper-setup">
   <title>既定の設定</title>
 
-  <para>&productname; での Snapper は、システムの変更に対する <quote>巻き戻しと復元のためのツール</quote> として動作するように設定されています。 &productname; の既定では、ルートパーティション ( <filename>/</filename> ) が <literal>Btrfs</literal> でフォーマットされます。また、ルートパーティション <filename>/</filename> が十分に大きい (おおよそ 16 GB 以上) 場合、スナップショットの採取が自動的に有効化されます。<filename>/</filename> 以外のパーティションに対するスナップショットは、既定では有効化されません。</para>
+  <para>&productname; での Snapper は、システムの変更に対する巻き戻しと復元のためのツールとして動作するように設定されています。既定では、ルートパーティション ( <filename>/</filename> ) が <literal>btrfs</literal> でフォーマットされます。また、ルートパーティション <filename>/</filename> が十分に大きい (おおよそ 16 GB 以上) 場合、スナップショットの採取が自動的に有効化されます。 <filename>/</filename> 以外のパーティションに対するスナップショットは、既定では無効化されます。</para>
 
   <tip>
    <title>インストール済みシステムにおける Snapper の有効化</title>
-   <para>インストール時に Snapper を無効化している場合は、あとから有効化することもできます。有効化するには、下記を実行して既定の Snapper 設定を作成してください:</para>
+   <para>インストール時に Snapper を無効化している場合は、任意の時点であとから有効化することもできます。有効化するには、下記を実行して既定の Snapper 設定を作成してください:</para>
    <screen>&prompt.sudo;snapper -c root create-config /</screen>
    <para>あとは <xref linkend="sec-snapper-setup-customize-auto-snapshots"/> で説明している手順に従って、スナップショットの種類を有効化します。</para>
-   <para>なお、スナップショットを採取するには、インストーラで提案したサブボリューム設定でルートファイルシステムを設定し、パーティションのサイズが少なくとも 16 GB 以上である必要があります。</para>
+   <para>なお、 btrfs を設定したルートファイルシステムを使用する場合、スナップショットを採取するには、インストーラで提案したサブボリューム設定でルートファイルシステムを設定し、パーティションのサイズが少なくとも 16 GB 以上である必要があります。</para>
   </tip>
 
   <para>スナップショットを作成すると、スナップショットと元のブロックはファイルシステム内で同じブロックを指し示します。そのため、スナップショットを採取した時点では、追加のディスク領域を必要とすることはありません。ただし、スナップショットを作成した時点からファイルが変更されると、変更した部分のデータブロックが新しく確保され、元の (スナップショットを採取した時点の) データブロックがそのまま保持されるようになります。そのためスナップショットは、修正された分だけのデータに対応するブロックを占有することになります。また、時間が経過するごとにスナップショットが占有する領域が定期的に増えていくことにも繋がります。そのため、 <literal>Btrfs</literal> ファイルシステムでファイルを削除しても、ディスクの空き領域を増やすことには繋がらない場合があり得ます。</para>
@@ -81,7 +61,7 @@
    <para>スナップショットは、採取したファイルシステムと同じパーティションやサブボリューム内に存在します。異なるパーティションやサブボリュームに保存することはできません。</para>
   </note>
 
-  <para>そのため、スナップショットを含むパーティションは、 <quote>通常の</quote> パーティションよりもサイズを大きくする必要があります。正確な容量は、保持すべきスナップショットの数とデータ変更の容量によって異なりますが、一般的には通常必要とするサイズの 2 倍程度を確保しておくことをお勧めします。ディスクの空き容量が枯渇してしまうことがないよう、古いスナップショットは自動的にクリーンアップしておくとよいでしょう。詳しくは <xref linkend="sec-snapper-setup-customize-archiving"/> をお読みください。</para>
+  <para>そのため、スナップショットを含むパーティションは、通常のパーティションよりもサイズを大きくする必要があります。正確な容量は、保持すべきスナップショットの数とデータ変更の容量によって異なりますが、一般的には通常必要とするサイズの 2 倍程度を確保しておくことをお勧めします。なお、ディスクの空き容量が枯渇してしまうことがないよう、古いスナップショットは自動的にクリーンアップしておくとよいでしょう。詳しくは <xref linkend="sec-snapper-setup-customize-archiving"/> をお読みください。</para>
 
   <sect2 xml:id="snapper-default-settings">
    <title>既定の設定</title>
@@ -259,8 +239,8 @@
    </sect3>
    <sect3 xml:id="sec-snapper-lvm">
     <title>シン・プロビジョン型の LVM ボリュームにおける Snapper の使用</title>
-    <para><literal>Btrfs</literal> ファイルシステムに対するスナップショット機能とは別に、 Snapper では xfs/ext4/ext3 でフォーマットされたシン・プロビジョン型の LVM ボリュームに対するスナップショット機能にも対応しています (通常型の LVM ボリュームに対するスナップショットには <emphasis>対応していません</emphasis> ) 。 LVM ボリュームに関する詳細やセットアップ手順については、 <xref linkend="sec-yast-system-lvm"/> をお読みください。</para>
-    <para>シン・プロビジョン型の LVM ボリュームに対して、 Snapper を使用するには、まず Snapper の設定を作成する必要があります。 LVM の場合、ファイルシステムの種類を <option>--fstype=lvm(<replaceable>ファイルシステムの種類名</replaceable>)</option> で指定する必要があります。 <replaceable>ファイルシステムの種類名</replaceable> には、 <literal>ext3</literal> , <literal>ext4</literal> , <literal>xfs</literal> のいずれかを指定します。たとえば下記のようになります:</para>
+    <para><literal>Btrfs</literal> ファイルシステムに対するスナップショット機能とは別に、 Snapper では xfs/ext4/ext3 でフォーマットされたシン・プロビジョン型の LVM ボリュームに対するスナップショットにも対応しています (通常型の LVM ボリュームに対するスナップショットには対応していません) 。 LVM ボリュームに関する詳細やセットアップ手順については、 <xref linkend="sec-yast-system-lvm"/> をお読みください。</para>
+    <para>シン・プロビジョン型の LVM ボリュームに対して Snapper を使用するには、まず Snapper の設定を作成する必要があります。 LVM の場合、ファイルシステムの種類を <option>--fstype=lvm(<replaceable>ファイルシステムの種類名</replaceable>)</option> で指定する必要があります。 <replaceable>ファイルシステムの種類名</replaceable> には、 <literal>ext3</literal> , <literal>ext4</literal> , <literal>xfs</literal> のいずれかを指定します。たとえば下記のようになります:</para>
 <screen>&prompt.sudo;snapper -c lvm create-config --fstype="lvm(xfs)" /thin_lvm</screen>
     <para>ここで書き込んだ設定は、必要に応じて変更することができます。詳しくは <xref linkend="sec-snapper-config-modify"/> をお読みください。</para>
    </sect3>
@@ -802,7 +782,7 @@ single | 0 |       |      | root   |                | current |
 
   <sect2 xml:id="sec-snapper-config-modify">
    <title>既存の設定の管理</title>
-   <para><command>snapper</command> には、既存の設定を管理するためのいくつかのサブコマンドが用意されています。一覧表示のほか、表示と削除、修正にそれぞれ対応しています:</para>
+   <para><command>snapper</command> コマンドには、既存の設定を管理するためのいくつかのサブコマンドが用意されています。一覧表示のほか、表示と削除、修正にそれぞれ対応しています:</para>
    <variablelist>
     <varlistentry>
      <term>設定の一覧表示</term>
@@ -869,7 +849,7 @@ local  | /local</screen>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term><literal>NUMBER_CLEANUP</literal></term>
+      <term><literal>NUMBER_*</literal></term>
       <listitem>
        <para>インストールスナップショットと管理スナップショットに対するクリーンアップアルゴリズムを指定します。詳しくは <xref linkend="sec-snapper-clean-up-number"/> をお読みください。</para>
       </listitem>
@@ -925,11 +905,11 @@ local  | /local</screen>
      <title>一般ユーザに対する Snapper の使用の許可</title>
      <para>ここで示す手順は、いずれも &rootuser; で実施すべきものです。</para>
      <step>
-      <para>Snapper によるスナップショットを採取したいパーティションやサブボリュームに対して、まだ設定を作成していない場合は設定を作成します。詳しい手順は <xref linkend="sec-snapper-config"/> をお読みください。たとえば下記のように実行します:</para>
+      <para>Snapper の設定をまだ作成していない場合は、設定を作成します。詳しい手順は <xref linkend="sec-snapper-config"/> をお読みください。たとえば下記のように実行します:</para>
 <screen>&prompt.sudo;snapper --config web_data create /srv/www</screen>
      </step>
      <step>
-      <para>すると、 <filename>/etc/snapper/configs/<replaceable>設定</replaceable></filename> に設定が作成されます (ここで、 <replaceable>設定</replaceable> には <option>-c/--config</option> で指定した値が入ります。たとえば上記の例では、 <filename>/etc/snapper/configs/web_data</filename> になります) 。必要に応じて設定を変更することもできます。詳しくは <xref linkend="sec-snapper-config-modify"/> をお読みください。</para>
+      <para>設定ファイルは <filename>/etc/snapper/configs/<replaceable>設定</replaceable></filename> に作成されます (ここで、 <replaceable>設定</replaceable> には <option>-c/--config</option> で指定した値が入ります。たとえば上記の例では、 <filename>/etc/snapper/configs/web_data</filename> になります) 。必要に応じて設定を変更することもできます。詳しくは <xref linkend="sec-snapper-config-modify"/> をお読みください。</para>
      </step>
      <step>
       <para>アクセスを許可したいユーザやグループを、 <envar>ALLOW_USERS</envar> および <envar>ALLOW_GROUPS</envar> でそれぞれ指定します。複数のユーザやグループを指定したい場合は、 <keycap function="space"/> で区切って指定してください。なお、 <systemitem class="username">www_admin</systemitem> ユーザに対して許可を与えたい場合は、下記のように実行します:</para>
@@ -937,7 +917,7 @@ local  | /local</screen>
      </step>
      <step>
       <para>これで指定した Snapper の設定を指定したユーザやグループから使用できるようになります。たとえば <literal>list</literal> のようなコマンドで、利用できることを確認することができます:</para>
-<screen>www_admin:~ &gt; snapper -c web_data list</screen>
+<screen><prompt>www_admin:~ &gt; </prompt>snapper -c web_data list</screen>
      </step>
     </procedure>
    </sect3>
@@ -1026,7 +1006,7 @@ local  | /local</screen>
    </sect3>
    <sect3 xml:id="sec-snapper-manage-metadata-cleanup">
     <title>クリーンアップアルゴリズム</title>
-    <para>Snapper には、古いスナップショットをクリーンアップ (清掃) するためのアルゴリズムが 3 種類あります。アルゴリズムは日々の cron ジョブで実行されます。また、複数のスナップショットの種類に対して設定を行ない、 Snapper の設定内に保持することもできます (詳しくは <xref linkend="sec-snapper-config-modify"/> をお読みください) 。</para>
+    <para>Snapper には、古いスナップショットをクリーンアップ (清掃) するためのアルゴリズムが 3 種類存在しています。アルゴリズムは日々の <systemitem class="daemon">cron</systemitem> ジョブで実行されます。また snapper の設定内に、複数の種類のスナップショットを設定することもできます (詳しくは <xref linkend="sec-snapper-config-modify"/> をお読みください) 。</para>
     <variablelist>
      <varlistentry>
       <term>number</term>
@@ -1055,7 +1035,7 @@ local  | /local</screen>
    <para>スナップショットの採取は、 <command>snapper create</command> を実行するか、もしくは &yast; モジュールの <guimenu>Snapper</guimenu> で <guimenu>作成</guimenu> を押すことで作成することができます。下記の例では、コマンドラインからスナップショットを採取する方法を示しています。 &yast; インターフェイスであれば、より簡単に採取することができます。</para>
    <tip>
     <title>スナップショットの説明</title>
-    <para>スナップショットの説明にはわかりやすい説明を記述しておいて、後から何のために採取したものなのかを判別できるようにしておくことをお勧めします。 userdata オプションを使用すると、さらに詳しい情報を保存することができます。</para>
+    <para>スナップショットの説明にはわかりやすい説明を記述しておいて、後から何のために採取したものなのかを判別できるようにしておくことをお勧めします。 <option>--userdata</option> オプションを使用すると、さらに詳しい情報を保存することができます。</para>
    </tip>
    <para/>
    <variablelist>
@@ -1080,7 +1060,7 @@ local  | /local</screen>
     <varlistentry>
      <term><command>snapper --config home create --description "Daily data backup" --cleanup-algorithm timeline</command> &gt;</term>
      <listitem>
-      <para><literal>home</literal> という設定に対して単一の (single) スナップショットを作成し、説明文を指定した場合の例です。クリーンアップアルゴリズム (cleanup-algorithm) に timeline を指定しているため、条件を満たすと自動的に削除されます。</para>
+      <para><literal>home</literal> という独自の設定に対して単一の (single) スナップショットを作成し、説明文を指定した場合の例です。クリーンアップアルゴリズム (cleanup-algorithm) に timeline を指定しているため、その条件を満たすと自動的に削除されるようにもなっています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -1128,7 +1108,7 @@ local  | /local</screen>
   <sect2 xml:id="sec-snapper-manage-delete">
    <title>スナップショットの削除</title>
    <para>&yast; <guimenu>Snapper</guimenu> モジュールでスナップショットを削除するには、一覧からスナップショットを選んで <guimenu>削除</guimenu> を押します。</para>
-   <para>コマンドラインツールからスナップショットを削除するには、まずスナップショットの番号を知っておく必要があります。スナップショットの一覧と番号を表示するには、 <command>snapper list</command> を実行してください。その後、<command>snapper delete</command> <replaceable>番号</replaceable> と入力して実行すると、削除を行なうことができます。</para>
+   <para>コマンドラインツールからスナップショットを削除するには、まずスナップショットの番号を知っておく必要があります。スナップショットの一覧と番号を表示するには、 <command>snapper list</command> を実行してください。その後、<command>snapper delete</command> <replaceable>番号</replaceable> と入力して実行します。</para>
    <para>現在の既定のサブボリュームスナップショットを削除することはできません。</para>
    <para>Snapper でスナップショットを削除する場合は、裏で動作する btrfs のプロセスが空き領域を開放します。そのため、空き領域の表示も遅れて反映されることになるほか、空き領域を利用する場合もしばらく待ってから行なう必要があります。空き領域を即時に反映させたい場合は、 delete コマンドに <option>--sync</option> オプションを指定してください。</para>
    <tip>
@@ -1433,7 +1413,7 @@ ID      gen     top level       path
   <qandaset defaultlabel="qanda">
    <qandaentry>
     <question>
-     <para>Snapper が  <filename>/var/log</filename> や <filename>/tmp</filename> などの変更を表示しないのはなぜ？</para>
+     <para>Snapper が  <filename>/var/log</filename> や <filename>/tmp</filename> などのディレクトリ内の変更を表示しないのはなぜ？</para>
     </question>
     <answer>
      <para>ディレクトリによってはスナップショットから除外されているものがあります。詳しい一覧とその理由については、 <xref linkend="snapper-dir-excludes"/> をご覧ください。スナップショットからの除外にあたっては、サブボリュームを作成して対応しています。</para>
@@ -1441,7 +1421,7 @@ ID      gen     top level       path
    </qandaentry>
    <qandaentry>
     <question>
-     <para>ブートローダからスナップショットを起動するには？</para>
+     <para>ブートローダから特定のスナップショットを起動するには？</para>
     </question>
     <answer>
      <para>詳しくは <xref linkend="sec-snapper-snapshot-boot"/> をお読みください。</para>
@@ -1449,9 +1429,7 @@ ID      gen     top level       path
    </qandaentry>
    <qandaentry xml:id="faq-snapper-permanent">
     <question>
-     <para>
-      Can a snapshot be protected from deletion?
-     </para>
+     <para>スナップショットを削除されたりしないように保護することはできますか？</para>
     </question>
     <answer>
      <para>現時点では、スナップショットを手作業による削除から保護する方法はありません。しかしながら、クリーンアップアルゴリズムで自動削除されないように設定することは可能です。手作業で採取したスナップショットの場合 (詳しくは <xref linkend="sec-snapper-manage-create"/> をお読みください) 、 <option>--cleanup-algorithm</option> でクリーンアップアルゴリズムを指定しない限り、何もクリーンアップアルゴリズムが割り当てられません。また、自動的に採取されたスナップショットには、 <literal>number</literal> または <literal>timeline</literal> のいずれかのアルゴリズムが割り当てられます。 1 つまたは複数のスナップショットに対して、この割り当てを削除したい場合は、下記のようにして行ないます:</para>
