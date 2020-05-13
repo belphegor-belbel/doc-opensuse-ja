@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2019-10-25 23:08+0000\n"
+"POT-Creation-Date: 2020-05-13 22:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -1500,7 +1500,7 @@ msgstr ""
 #. Tag: title
 #: systemd.xml:1401
 #, no-c-format
-msgid "Customization of <systemitem>systemd</systemitem>"
+msgid "Customizing <systemitem>systemd</systemitem>"
 msgstr ""
 
 #. Tag: para
@@ -1512,77 +1512,110 @@ msgstr ""
 #. Tag: title
 #: systemd.xml:1409
 #, no-c-format
-msgid "Avoiding Overwritten Customization"
+msgid "Avoiding Your Customization from Being Overwritten"
 msgstr ""
 
 #. Tag: para
 #: systemd.xml:1410
 #, no-c-format
-msgid "Always do systemd customization in <filename>/etc/systemd/</filename> , <emphasis>never</emphasis> in <filename>/usr/lib/systemd/</filename> . Otherwise your changes will be overwritten by the next update of systemd."
+msgid "When customizing systemd, always use the directory <filename>/etc/systemd/</filename> , <emphasis>never</emphasis> use <filename>/usr/lib/systemd/</filename> . Otherwise your changes will be overwritten by the next update of systemd."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1418
+#: systemd.xml:1419
 #, no-c-format
 msgid "Customizing Unit Files"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1419
+#: systemd.xml:1420
 #, no-c-format
-msgid "The systemd unit files are located in <filename>/usr/lib/systemd/system</filename> . If you want to customize them, proceed as follows:"
+msgid "The recommended way to customize unit files is to use the <command>systemctl edit <replaceable>SERVICE</replaceable></command> command. This command starts the default text editor and creates a directory with the <filename>override.conf</filename> file in <filename>/etc/systemd/system/<replaceable>NAME</replaceable>.service.d/</filename> . The command also ensures that the running systemd process is notified about the changes."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1426
+#: systemd.xml:1429
 #, no-c-format
-msgid "Copy the files you want to modify from <filename>/usr/lib/systemd/system</filename> to <filename>/etc/systemd/system</filename> . Keep the file names identical to the original ones."
+msgid "Alternatively, you can open a copy of the original file for editing instead of a blank file by running <command>systemctl edit --full <replaceable>SERVICE</replaceable></command> . When editing the file, make sure that you do not remove any of the existing sections."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1434
+#: systemd.xml:1436
 #, no-c-format
-msgid "Modify the copies in <filename>/etc/systemd/system</filename> according to your needs."
+msgid "As an exercise, change how long the system waits for &mariadb; to start. As root, run <command>systemctl edit --full mariadb.service</command> . The file opened will look similar to the following:"
 msgstr ""
 
-#. Tag: para
-#: systemd.xml:1440
+#. Tag: screen
+#: systemd.xml:1441
 #, no-c-format
-msgid "For an overview of your configuration changes, use the <command>systemd-delta</command> command. It can compare and identify configuration files that override other configuration files. For details, refer to the <command>systemd-delta</command> man page."
-msgstr ""
-
-#. Tag: para
-#: systemd.xml:1448
-#, no-c-format
-msgid "The modified files in <filename>/etc/systemd</filename> will take precedence over the original files in <filename>/usr/lib/systemd/system</filename> , provided that their file name is the same."
-msgstr ""
-
-#. Tag: title
-#: systemd.xml:1455
-#, no-c-format
-msgid "Converting <systemitem>xinetd</systemitem> Services to &systemd;"
-msgstr ""
-
-#. Tag: para
-#: systemd.xml:1456
-#, no-c-format
-msgid "Since the release of &productname; 15, the <systemitem>xinetd</systemitem> infrastructure has been removed. This section outlines how to convert existing custom <systemitem>xinetd</systemitem> service files to &systemd; sockets."
-msgstr ""
-
-#. Tag: para
-#: systemd.xml:1462
-#, no-c-format
-msgid "For each <systemitem>xinetd</systemitem> service file, you need at least two &systemd; unit files: the socket file ( <filename>*.socket</filename> ) and an associated service file ( <filename>*.service</filename> ). The socket file tells &systemd; which socket to create, and the service file tells &systemd; which executable to start."
+msgid "\n"
+      "[Unit]\n"
+      "Description=MySQL server\n"
+      "Wants=basic.target\n"
+      "Conflicts=mariadb.target\n"
+      "After=basic.target network.target\n"
+      "\n"
+      "[Install]\n"
+      "WantedBy=multi-user.target\n"
+      "Alias=mysql.service\n"
+      "\n"
+      "[Service]\n"
+      "Restart=on-abort\n"
+      "Type=notify\n"
+      "ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  install\n"
+      "ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  upgrade\n"
+      "ExecStart=/usr/lib/mysql/mysql-systemd-helper     start\n"
+      "\n"
+      "# Configures the time to wait for start-up/stop\n"
+      "TimeoutSec=300\n"
+      "\n"
+      "# Prevent writes to /usr, /boot, and /etc\n"
+      "ProtectSystem=full\n"
+      "\n"
+      "# Prevent accessing /home, /root and /run/user\n"
+      "ProtectHome=true\n"
+      "\n"
+      "UMask=007"
 msgstr ""
 
 #. Tag: para
 #: systemd.xml:1469
 #, no-c-format
+msgid "Adjust the <literal>TimeoutSec</literal> value and save the changes. To enable the changes, as root, run <command>systemctl daemon-reload</command> ."
+msgstr ""
+
+#. Tag: para
+#: systemd.xml:1474
+#, no-c-format
+msgid "For further information, refer to the man pages that can be evoked with the <command>man 1 systemctl</command> command."
+msgstr ""
+
+#. Tag: title
+#: systemd.xml:1479
+#, no-c-format
+msgid "Converting <systemitem>xinetd</systemitem> Services to &systemd;"
+msgstr ""
+
+#. Tag: para
+#: systemd.xml:1480
+#, no-c-format
+msgid "Since the release of &productname; 15, the <systemitem>xinetd</systemitem> infrastructure has been removed. This section outlines how to convert existing custom <systemitem>xinetd</systemitem> service files to &systemd; sockets."
+msgstr ""
+
+#. Tag: para
+#: systemd.xml:1486
+#, no-c-format
+msgid "For each <systemitem>xinetd</systemitem> service file, you need at least two &systemd; unit files: the socket file ( <filename>*.socket</filename> ) and an associated service file ( <filename>*.service</filename> ). The socket file tells &systemd; which socket to create, and the service file tells &systemd; which executable to start."
+msgstr ""
+
+#. Tag: para
+#: systemd.xml:1493
+#, no-c-format
 msgid "Consider the following example <systemitem>xinetd</systemitem> service file:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1473
+#: systemd.xml:1497
 #, no-c-format
 msgid "&prompt.root;cat /etc/xinetd.d/example\n"
       "service example\n"
@@ -1601,13 +1634,13 @@ msgid "&prompt.root;cat /etc/xinetd.d/example\n"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1487
+#: systemd.xml:1511
 #, no-c-format
 msgid "To convert it to &systemd;, you need the following two matching files:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1490
+#: systemd.xml:1514
 #, no-c-format
 msgid "&prompt.root;cat /usr/lib/systemd/system/example.socket\n"
       "[Socket]\n"
@@ -1619,7 +1652,7 @@ msgid "&prompt.root;cat /usr/lib/systemd/system/example.socket\n"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1497
+#: systemd.xml:1521
 #, no-c-format
 msgid "&prompt.root;cat /usr/lib/systemd/system/example.service\n"
       "[Unit]\n"
@@ -1634,140 +1667,140 @@ msgid "&prompt.root;cat /usr/lib/systemd/system/example.service\n"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1507
+#: systemd.xml:1531
 #, no-c-format
 msgid "For a complete list of the &systemd; 'socket' and 'service' file options, refer to the systemd.socket and systemd.service manual pages ( <command>man 5 systemd.socket</command> , <command>man 5 systemd.service</command> )."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1516
+#: systemd.xml:1540
 #, no-c-format
 msgid "Creating <quote>Drop-in</quote> Files"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1517
+#: systemd.xml:1541
 #, no-c-format
 msgid "If you only want to add a few lines to a configuration file or modify a small part of it, you can use so-called <quote>drop-in</quote> files. Drop-in files let you extend the configuration of unit files without having to edit or override the unit files themselves."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1523
+#: systemd.xml:1547
 #, no-c-format
 msgid "For example, to change one value for the <replaceable>FOOBAR</replaceable> service located in <filename>/usr/lib/systemd/system/<replaceable>FOOBAR.SERVICE</replaceable></filename> , proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1531
+#: systemd.xml:1555
 #, no-c-format
 msgid "Create a directory called <filename>/etc/systemd/system/<replaceable>FOOBAR</replaceable>.service.d/</filename> ."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1535
+#: systemd.xml:1559
 #, no-c-format
 msgid "Note the <literal>.d</literal> suffix. The directory must otherwise be named like the service that you want to patch with the drop-in file."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1541
+#: systemd.xml:1565
 #, no-c-format
 msgid "In that directory, create a file <filename><replaceable>WHATEVERMODIFICATION</replaceable>.conf</filename> ."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1545
+#: systemd.xml:1569
 #, no-c-format
 msgid "Make sure it only contains the line with the value that you want to modify."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1551
+#: systemd.xml:1575
 #, no-c-format
 msgid "Save your changes to the file. It will be used as an extension of the original file."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1560
+#: systemd.xml:1584
 #, no-c-format
 msgid "Creating Custom Targets"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1561
+#: systemd.xml:1585
 #, no-c-format
 msgid "On System V init &suse; systems, runlevel 4 is unused to allow administrators to create their own runlevel configuration. systemd allows you to create any number of custom targets. It is suggested to start by adapting an existing target such as <systemitem>graphical.target</systemitem> ."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1570
+#: systemd.xml:1594
 #, no-c-format
 msgid "Copy the configuration file <filename>/usr/lib/systemd/system/graphical.target</filename> to <filename>/etc/systemd/system/<replaceable>MY_TARGET</replaceable>.target</filename> and adjust it according to your needs."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1578
+#: systemd.xml:1602
 #, no-c-format
 msgid "The configuration file copied in the previous step already covers the required ( <quote>hard</quote> ) dependencies for the target. To also cover the wanted ( <quote>soft</quote> ) dependencies, create a directory <filename>/etc/systemd/system/<replaceable>MY_TARGET</replaceable>.target.wants</filename> ."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1586
+#: systemd.xml:1610
 #, no-c-format
 msgid "For each wanted service, create a symbolic link from <filename>/usr/lib/systemd/system</filename> into <filename>/etc/systemd/system/<replaceable>MY_TARGET</replaceable>.target.wants</filename> ."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1593
+#: systemd.xml:1617
 #, no-c-format
 msgid "When you have finished setting up the target, reload the systemd configuration to make the new target available:"
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1603
+#: systemd.xml:1627
 #, no-c-format
 msgid "Advanced Usage"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1605
+#: systemd.xml:1629
 #, no-c-format
 msgid "The following sections cover advanced topics for system administrators. For even more advanced systemd documentation, refer to Lennart Pöttering's series about systemd for administrators at <link xlink:href=\"http://0pointer.de/blog/projects\"/> ."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1613
+#: systemd.xml:1637
 #, no-c-format
 msgid "Cleaning Temporary Directories"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1614
+#: systemd.xml:1638
 #, no-c-format
 msgid "&systemd; supports cleaning temporary directories regularly. The configuration from the previous system version is automatically migrated and active. <literal>tmpfiles.d</literal> &mdash;which is responsible for managing temporary files&mdash;reads its configuration from <filename>/etc/tmpfiles.d/*.conf</filename> , <filename>/run/tmpfiles.d/*.conf</filename> , and <filename>/usr/lib/tmpfiles.d/*.conf</filename> files. Configuration placed in <filename>/etc/tmpfiles.d/*.conf</filename> overrides related configurations from the other two directories ( <filename>/usr/lib/tmpfiles.d/*.conf</filename> is where packages store their configuration files)."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1627
+#: systemd.xml:1651
 #, no-c-format
 msgid "The configuration format is one line per path containing action and path, and optionally mode, ownership, age and argument fields, depending on the action. The following example unlinks the X11 lock files:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1632
+#: systemd.xml:1656
 #, no-c-format
 msgid "Type Path               Mode UID  GID  Age Argument\n"
       "r    /tmp/.X[0-9]*-lock"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1634
+#: systemd.xml:1658
 #, no-c-format
 msgid "To get the status the tmpfile timer:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1637
+#: systemd.xml:1661
 #, no-c-format
 msgid "&prompt.sudo;systemctl status systemd-tmpfiles-clean.timer\n"
       "systemd-tmpfiles-clean.timer - Daily Cleanup of Temporary Directories\n"
@@ -1781,158 +1814,158 @@ msgid "&prompt.sudo;systemctl status systemd-tmpfiles-clean.timer\n"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1646
+#: systemd.xml:1670
 #, no-c-format
 msgid "For more information on temporary files handling, see <command>man 5 tmpfiles.d</command> ."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1653
+#: systemd.xml:1677
 #, no-c-format
 msgid "System Log"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1654
+#: systemd.xml:1678
 #, no-c-format
 msgid "<xref linkend=\"sec-boot-systemd-basics-services-debugging\"/> explains how to view log messages for a given service. However, displaying log messages is not restricted to service logs. You can also access and query the complete log messages written by &systemd;&mdash;the so-called <quote>Journal</quote> . Use the command <command>journalctl</command> to display the complete log messages starting with the oldest entries. Refer to <command>man 1 journalctl</command> for options such as applying filters or changing the output format."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1668
+#: systemd.xml:1692
 #, no-c-format
 msgid "Snapshots"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1669
+#: systemd.xml:1693
 #, no-c-format
 msgid "You can save the current state of &systemd; to a named snapshot and later revert to it with the <command>isolate</command> subcommand. This is useful when testing services or custom targets, because it allows you to return to a defined state at any time. A snapshot is only available in the current session and will automatically be deleted on reboot. A snapshot name must end in <filename>.snapshot</filename> ."
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1679
+#: systemd.xml:1703
 #, no-c-format
 msgid "Create a Snapshot"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1681
+#: systemd.xml:1705
 #, no-c-format
 msgid "&prompt.sudo;systemctl snapshot <replaceable>MY_SNAPSHOT</replaceable>.snapshot"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1685
+#: systemd.xml:1709
 #, no-c-format
 msgid "Delete a Snapshot"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1687
+#: systemd.xml:1711
 #, no-c-format
 msgid "&prompt.sudo;systemctl delete <replaceable>MY_SNAPSHOT</replaceable>.snapshot"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1691
+#: systemd.xml:1715
 #, no-c-format
 msgid "View a Snapshot"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1693
+#: systemd.xml:1717
 #, no-c-format
 msgid "&prompt.sudo;systemctl show <replaceable>MY_SNAPSHOT</replaceable>.snapshot"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1697
+#: systemd.xml:1721
 #, no-c-format
 msgid "Activate a Snapshot"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1699
+#: systemd.xml:1723
 #, no-c-format
 msgid "&prompt.sudo;systemctl isolate <replaceable>MY_SNAPSHOT</replaceable>.snapshot"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1711
+#: systemd.xml:1735
 #, no-c-format
 msgid "With &systemd;, kernel modules can automatically be loaded at boot time via a configuration file in <filename>/etc/modules-load.d</filename> . The file should be named <replaceable>MODULE</replaceable> .conf and have the following content:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1717
+#: systemd.xml:1741
 #, no-c-format
 msgid "# load module <replaceable>MODULE</replaceable> at boot time\n"
       "<replaceable>MODULE</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1719
+#: systemd.xml:1743
 #, no-c-format
 msgid "In case a package installs a configuration file for loading a kernel module, the file gets installed to <filename>/usr/lib/modules-load.d</filename> . If two configuration files with the same name exist, the one in <filename>/etc/modules-load.d</filename> tales precedence."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1726
+#: systemd.xml:1750
 #, no-c-format
 msgid "For more information, see the <systemitem>modules-load.d(5)</systemitem> man page."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1735
+#: systemd.xml:1759
 #, no-c-format
 msgid "Performing Actions before Loading a Service"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1736
+#: systemd.xml:1760
 #, no-c-format
 msgid "With System V init actions that need to be performed before loading a service, needed to be specified in <filename>/etc/init.d/before.local </filename> . This procedure is no longer supported with systemd. If you need to do actions before starting services, do the following:"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1744
+#: systemd.xml:1768
 #, no-c-format
 msgid "Loading Kernel Modules"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1746
+#: systemd.xml:1770
 #, no-c-format
 msgid "Create a drop-in file in <filename>/etc/modules-load.d</filename> directory (see <command>man modules-load.d</command> for the syntax)"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1753
+#: systemd.xml:1777
 #, no-c-format
 msgid "Creating Files or Directories, Cleaning-up Directories, Changing Ownership"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1758
+#: systemd.xml:1782
 #, no-c-format
 msgid "Create a drop-in file in <filename>/etc/tmpfiles.d</filename> (see <command>man tmpfiles.d</command> for the syntax)"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1765
+#: systemd.xml:1789
 #, no-c-format
 msgid "Other Tasks"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1767
+#: systemd.xml:1791
 #, no-c-format
 msgid "Create a system service file, for example <filename>/etc/systemd/system/before.service</filename> , from the following template:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1772
+#: systemd.xml:1796
 #, no-c-format
 msgid "[Unit]\n"
       "Before=<replaceable>NAME OF THE SERVICE YOU WANT THIS SERVICE TO BE STARTED BEFORE</replaceable>\n"
@@ -1949,62 +1982,62 @@ msgid "[Unit]\n"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1784
+#: systemd.xml:1808
 #, no-c-format
 msgid "When the service file is created, you should run the following commands (as &rootuser;):"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1788
+#: systemd.xml:1812
 #, no-c-format
 msgid "&prompt.sudo;systemctl daemon-reload\n"
       "&prompt.sudo;systemctl enable before"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1790
+#: systemd.xml:1814
 #, no-c-format
 msgid "Every time you modify the service file, you need to run:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1793
+#: systemd.xml:1817
 #, no-c-format
 msgid "&prompt.sudo;systemctl daemon-reload"
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1802
+#: systemd.xml:1826
 #, no-c-format
 msgid "Kernel Control Groups (cgroups)"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1803
+#: systemd.xml:1827
 #, no-c-format
 msgid "On a traditional System V init system it is not always possible to clearly assign a process to the service that spawned it. Some services, such as Apache, spawn a lot of third-party processes (for example CGI or Java processes), which themselves spawn more processes. This makes a clear assignment difficult or even impossible. Additionally, a service may not terminate correctly, leaving some children alive."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1811
+#: systemd.xml:1835
 #, no-c-format
 msgid "systemd solves this problem by placing each service into its own cgroup. cgroups are a kernel feature that allows aggregating processes and all their children into hierarchical organized groups. systemd names each cgroup after its service. Since a non-privileged process is not allowed to <quote>leave</quote> its cgroup, this provides an effective way to label all processes spawned by a service with the name of the service."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1819
+#: systemd.xml:1843
 #, no-c-format
 msgid "To list all processes belonging to a service, use the command <command>systemd-cgls</command> . The result will look like the following (shortened) example:"
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1825
+#: systemd.xml:1849
 #, no-c-format
 msgid "List all Processes Belonging to a Service"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1826
+#: systemd.xml:1850
 #, no-c-format
 msgid "&prompt.root;systemd-cgls --no-pager\n"
       "├─1 /usr/lib/systemd/systemd --switched-root --system --deserialize 20\n"
@@ -2034,151 +2067,151 @@ msgid "&prompt.root;systemd-cgls --no-pager\n"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1852
+#: systemd.xml:1876
 #, no-c-format
 msgid "See <xref linkend=\"cha-tuning-cgroups\"/> for more information about cgroups."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1859
+#: systemd.xml:1883
 #, no-c-format
 msgid "Terminating Services (Sending Signals)"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1860
+#: systemd.xml:1884
 #, no-c-format
 msgid "As explained in <xref linkend=\"sec-boot-systemd-advanced-cgroups\"/> , it is not always possible to assign a process to its parent service process in a System V init system. This makes it difficult to terminate a service and all of its children. Child processes that have not been terminated will remain as zombie processes."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1867
+#: systemd.xml:1891
 #, no-c-format
 msgid "systemd's concept of confining each service into a cgroup makes it possible to clearly identify all child processes of a service and therefore allows you to send a signal to each of these processes. Use <command>systemctl kill</command> to send signals to services. For a list of available signals refer to <command>man 7 signals</command> ."
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1876
+#: systemd.xml:1900
 #, no-c-format
 msgid "Sending <systemitem>SIGTERM</systemitem> to a Service"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1878
+#: systemd.xml:1902
 #, no-c-format
 msgid "<systemitem>SIGTERM</systemitem> is the default signal that is sent."
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1881
+#: systemd.xml:1905
 #, no-c-format
 msgid "&prompt.sudo;systemctl kill <replaceable>MY_SERVICE</replaceable>"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1885
+#: systemd.xml:1909
 #, no-c-format
 msgid "Sending <replaceable>SIGNAL</replaceable> to a Service"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1887
+#: systemd.xml:1911
 #, no-c-format
 msgid "Use the <option>-s</option> option to specify the signal that should be sent."
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1891
+#: systemd.xml:1915
 #, no-c-format
 msgid "&prompt.sudo;systemctl kill -s <replaceable>SIGNAL</replaceable> <replaceable>MY_SERVICE</replaceable>"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1895
+#: systemd.xml:1919
 #, no-c-format
 msgid "Selecting Processes"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1897
+#: systemd.xml:1921
 #, no-c-format
 msgid "By default the <command>kill</command> command sends the signal to <option>all</option> processes of the specified cgroup. You can restrict it to the <option>control</option> or the <option>main</option> process. The latter is for example useful to force a service to reload its configuration by sending <systemitem>SIGHUP</systemitem> :"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1904
+#: systemd.xml:1928
 #, no-c-format
 msgid "&prompt.sudo;systemctl kill -s SIGHUP --kill-who=main <replaceable>MY_SERVICE</replaceable>"
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1910
+#: systemd.xml:1934
 #, no-c-format
 msgid "Important Notes on the D-Bus Service"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1912
+#: systemd.xml:1936
 #, no-c-format
 msgid "The D-Bus service is the message bus for communication between systemd clients and the systemd manager that is running as pid 1. Even though <systemitem class=\"daemon\">dbus</systemitem> is a stand-alone daemon, it is an integral part of the init infrastructure."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1919
+#: systemd.xml:1943
 #, no-c-format
 msgid "Terminating <systemitem class=\"daemon\">dbus</systemitem> or restarting it in the running system is similar to an attempt to terminate or restart pid 1. It will break systemd client/server communication and make most systemd functions unusable."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1926
+#: systemd.xml:1950
 #, no-c-format
 msgid "Therefore, terminating or restarting <systemitem class=\"daemon\">dbus</systemitem> is neither recommended nor supported."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1933
+#: systemd.xml:1957
 #, no-c-format
 msgid "Updating the <systemitem>dbus</systemitem> or <systemitem>dbus</systemitem> -related packages requires a reboot. When in doubt whether a reboot is necessary, run the <command>sudo zypper ps -s</command> . If <literal>dbus</literal> appears among the listed services, you need to reboot the system."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1941
+#: systemd.xml:1965
 #, no-c-format
 msgid "Keep in mind that <systemitem>dbus</systemitem> is updated even when automatic updates are configured to skip the packages that require reboot."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:1951
+#: systemd.xml:1975
 #, no-c-format
 msgid "Debugging Services"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1952
+#: systemd.xml:1976
 #, no-c-format
 msgid "By default, systemd is not overly verbose. If a service was started successfully, no output will be produced. In case of a failure, a short error message will be displayed. However, <command>systemctl status</command> provides means to debug start-up and operation of a service."
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1959
+#: systemd.xml:1983
 #, no-c-format
 msgid "systemd comes with its own logging mechanism ( <quote>The Journal</quote> ) that logs system messages. This allows you to display the service messages together with status messages. The <command>status</command> command works similar to <command>tail</command> and can also display the log messages in different formats, making it a powerful debugging tool."
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1968
+#: systemd.xml:1992
 #, no-c-format
 msgid "Show Service Start-Up Failure"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1970
+#: systemd.xml:1994
 #, no-c-format
 msgid "Whenever a service fails to start, use <command>systemctl status <replaceable>MY_SERVICE</replaceable></command> to get a detailed error message:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1975
+#: systemd.xml:1999
 #, no-c-format
 msgid "&prompt.root;systemctl start apache2\n"
       "Job failed. See system journal and 'systemctl status' for details.\n"
@@ -2193,122 +2226,122 @@ msgid "&prompt.root;systemctl start apache2\n"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:1988
+#: systemd.xml:2012
 #, no-c-format
 msgid "Show Last <replaceable>N</replaceable> Service Messages"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:1990
+#: systemd.xml:2014
 #, no-c-format
 msgid "The default behavior of the <command>status</command> subcommand is to display the last ten messages a service issued. To change the number of messages to show, use the <option>--lines=<replaceable>N</replaceable></option> parameter:"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:1996
+#: systemd.xml:2020
 #, no-c-format
 msgid "&prompt.sudo;systemctl status chronyd\n"
       "&prompt.sudo;systemctl --lines=20 status chronyd"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2001
+#: systemd.xml:2025
 #, no-c-format
 msgid "Show Service Messages in Append Mode"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2003
+#: systemd.xml:2027
 #, no-c-format
 msgid "To display a <quote>live stream</quote> of service messages, use the <option>--follow</option> option, which works like <command>tail</command> <option>-f</option> :"
 msgstr ""
 
 #. Tag: screen
-#: systemd.xml:2008
+#: systemd.xml:2032
 #, no-c-format
 msgid "&prompt.sudo;systemctl --follow status chronyd"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2012
+#: systemd.xml:2036
 #, no-c-format
 msgid "Messages Output Format"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2014
+#: systemd.xml:2038
 #, no-c-format
 msgid "The <option>--output=<replaceable>MODE</replaceable></option> parameter allows you to change the output format of service messages. The most important modes available are:"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2021
+#: systemd.xml:2045
 #, no-c-format
 msgid "<option>short</option>"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2024
+#: systemd.xml:2048
 #, no-c-format
 msgid "The default format. Shows the log messages with a human readable time stamp."
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2031
+#: systemd.xml:2055
 #, no-c-format
 msgid "<option>verbose</option>"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2034
+#: systemd.xml:2058
 #, no-c-format
 msgid "Full output with all fields."
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2040
+#: systemd.xml:2064
 #, no-c-format
 msgid "<option>cat</option>"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2043
+#: systemd.xml:2067
 #, no-c-format
 msgid "Terse output without time stamps."
 msgstr ""
 
 #. Tag: title
-#: systemd.xml:2055
+#: systemd.xml:2079
 #, no-c-format
 msgid "More Information"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2057
+#: systemd.xml:2081
 #, no-c-format
 msgid "For more information on systemd refer to the following online resources:"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2063
+#: systemd.xml:2087
 #, no-c-format
 msgid "Homepage"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2065
+#: systemd.xml:2089
 #, no-c-format
 msgid "<link xlink:href=\"http://www.freedesktop.org/wiki/Software/systemd\"/>"
 msgstr ""
 
 #. Tag: term
-#: systemd.xml:2071
+#: systemd.xml:2095
 #, no-c-format
 msgid "systemd for Administrators"
 msgstr ""
 
 #. Tag: para
-#: systemd.xml:2073
+#: systemd.xml:2097
 #, no-c-format
 msgid "Lennart Pöttering, one of the systemd authors, has written a series of blog entries (13 at the time of writing this chapter). Find them at <link xlink:href=\"http://0pointer.de/blog/projects\"/> ."
 msgstr ""

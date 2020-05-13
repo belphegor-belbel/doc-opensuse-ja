@@ -889,25 +889,67 @@ WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
   <para>下記の章では、 <systemitem>systemd</systemitem> のカスタマイズを行なうにあたっての例をいくつか示しています。</para>
 
   <warning>
-   <title>カスタマイズ時の注意事項</title>
+   <title>Avoiding Your Customization from Being Overwritten</title>
    <para>systemd のカスタマイズは <filename>/etc/systemd/</filename> 内で行なうものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行なわないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行なってしまうと、次回の systemd の更新でそれらが上書きされて消えてしまいます。</para>
   </warning>
 
   <sect2 xml:id="sec-boot-systemd-custom-service">
    <title>ユニットファイルのカスタマイズ</title>
-   <para>systemd のユニットファイルは <filename>/usr/lib/systemd/system</filename> 内に配置されます。カスタマイズを実施したい場合は、下記の手順で実施します:</para>
-   <procedure>
-    <step>
-     <para>まずは <filename>/usr/lib/systemd/system</filename> にあるファイルを <filename>/etc/systemd/system</filename> にコピーします。ファイル名は変更せず、元のままにしておいてください。</para>
-    </step>
-    <step>
-     <para>あとは必要に応じて <filename>/etc/systemd/system</filename> 内のコピーを編集します。</para>
-    </step>
-    <step>
-     <para>変更した設定の概要を知るには、 <command>systemd-delta</command> コマンドを使用します。このコマンドは設定ファイル同士を比較する機能を提供します。詳しくは <command>systemd-delta</command> のマニュアルページをお読みください。</para>
-    </step>
-   </procedure>
-   <para>なお、 <filename>/etc/systemd</filename> に配置されたファイルは、 <filename>/usr/lib/systemd/system</filename> に配置されているファイルよりも優先して読み込まれます。ただし、ファイル名が同じでなければなりません。</para>
+   <para>
+    The recommended way to customize unit files is to use the
+    <command>systemctl edit <replaceable>SERVICE</replaceable></command>
+    command. This command starts the default text editor and creates a
+    directory with the <filename>override.conf</filename> file in
+    <filename>/etc/systemd/system/<replaceable>NAME</replaceable>.service.d/</filename>. The
+    command also ensures that the running systemd process is notified
+    about the changes.
+   </para>
+   <para>
+    Alternatively, you can open a copy of the original
+    file for editing instead of a blank file by running
+    <command>systemctl edit --full <replaceable>SERVICE</replaceable></command>.
+    When editing the file, make sure that you do not remove any of the
+    existing sections.
+   </para>
+   <para>
+    As an exercise, change how long the system waits for &mariadb; to start.
+    As root, run <command>systemctl edit --full mariadb.service</command>.
+    The file opened will look similar to the following:
+   </para>
+<screen>
+[Unit]
+Description=MySQL server
+Wants=basic.target
+Conflicts=mariadb.target
+After=basic.target network.target
+
+[Install]
+WantedBy=multi-user.target
+Alias=mysql.service
+
+[Service]
+Restart=on-abort
+Type=notify
+ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  install
+ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  upgrade
+ExecStart=/usr/lib/mysql/mysql-systemd-helper     start
+
+# Configures the time to wait for start-up/stop
+TimeoutSec=300
+
+# Prevent writes to /usr, /boot, and /etc
+ProtectSystem=full
+
+# Prevent accessing /home, /root and /run/user
+ProtectHome=true
+
+UMask=007</screen>
+   <para>
+    Adjust the <literal>TimeoutSec</literal> value and save the
+    changes. To enable the changes, as root, run
+    <command>systemctl daemon-reload</command>.
+   </para>
+   <para>一時ファイルの処理方法について、より詳しく知るには <command>man 5 tmpfiles.d</command> をお読みください。</para>
    <sect3 xml:id="systemd-xinetd-conversion">
     <title><systemitem>xinetd</systemitem> から &systemd; へのサービス変換</title>
     <para>&productname; 15 のリリース以降では、 <systemitem>xinetd</systemitem> のインフラストラクチャが削除されています。この章では、独自の <systemitem>xinetd</systemitem> サービスファイルを &systemd; のソケットファイルに変換する方法を説明しています。</para>
