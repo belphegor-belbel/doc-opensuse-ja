@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2019-12-19 22:20+0000\n"
+"POT-Creation-Date: 2020-05-28 08:54+0000\n"
 "PO-Revision-Date: 2018-06-28 07:14+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -4440,117 +4440,129 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3073
+#: hardening.xml:3074
 #, no-c-format
 msgid ""
-"Create a rules file <filename>/etc/polkit-1/rules.d/01-restrict-removable-"
-"media.rules</filename> similar to the following:"
+"Create a user group whose users will be allowed to mount and eject removable "
+"devices, for example <replaceable>mmedia_all</replaceable> :"
 msgstr ""
 
 #. Tag: screen
 #: hardening.xml:3078
 #, no-c-format
-msgid ""
-"// Allow users in group 'mmedia_all' to mount/unmount all type of drives\n"
-"// Allow users in group 'mmedia_removable' to mount/umount USB storage "
-"drives\n"
-"// Allow users in group 'mmedia_optical' to mount/unmount Optical drives\n"
-"polkit.addRule(function(action, subject) {\n"
-"  if (/^org\\.freedesktop\\.udisks2\\.filesystem-.*mount.*$/.test(action.id) "
-"&amp;&amp;\n"
-"  action.lookup(\"drive.removable\") == \"true\") {\n"
-"    if (subject.isInGroup(\"mmedia_all\")) {\n"
-"      return polkit.Result.YES;\n"
-"    } else {\n"
-"      if (/.*optical.*/.test(action.lookup(\"drive.removable.media\"))) {\n"
-"        if (subject.isInGroup(\"mmedia_optical\"))\n"
-"        return polkit.Result.YES;\n"
-"      } else if (action.lookup(\"drive.removable.bus\") == \"usb\") {\n"
-"        if (subject.isInGroup(\"mmedia_removable\"))\n"
-"        return polkit.Result.YES;\n"
-"      }\n"
-"      return polkit.Result.NO;\n"
-"    }\n"
-"  }\n"
-"});"
-msgstr ""
-
-#. Tag: title
-#: hardening.xml:3099
-#, no-c-format
-msgid "Naming of the Rules File"
+msgid "&prompt.sudo;groupadd <replaceable>mmedia_all</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3100
+#: hardening.xml:3081
+#, no-c-format
+msgid "Add a specific user &exampleuser; to the new group:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3084
 #, no-c-format
 msgid ""
-"Rules files are processed in alphabetical order. Functions are called in the "
-"order they were added until one of the functions returns a value. Hence, to "
-"add an authorization rule that is processed before other rules, put it in a "
-"file in /etc/polkit-1/rules.d with a name that sorts before other rules "
-"files, for example <filename>01-restrict-removable-media.rules</filename> . "
-"Each function should return a value from <literal>polkit.Result</literal> ."
+"&prompt.sudo;usermod -a -G <replaceable>mmedia_all</replaceable> "
+"&exampleuser;"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3087
+#, no-c-format
+msgid ""
+"Create the <filename>/etc/polkit-1/rules.d/10-mount.rules</filename> file "
+"with the following content:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3091
+#, no-c-format
+msgid ""
+"\n"
+"&prompt.user;cat /etc/polkit-1/rules.d/10-mount.rules\n"
+"polkit.addRule(function(action, subject) {\n"
+" if (action.id ==\"org.freedesktop.udisks2.eject-media\"\n"
+"  &amp;&amp; subject.isInGroup(\"<replaceable>mmedia_all</replaceable>\")) "
+"{\n"
+"   return polkit.Result.YES;\n"
+"  }\n"
+"});\n"
+"\n"
+"polkit.addRule(function(action, subject) {\n"
+" if (action.id ==\"org.freedesktop.udisks2.filesystem-mount\"\n"
+"  &amp;&amp; subject.isInGroup(\"<replaceable>mmedia_all</replaceable>\")) "
+"{\n"
+"   return polkit.Result.YES;\n"
+"  }\n"
+"});\n"
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3108
+#, no-c-format
+msgid "Naming of the Rules File"
 msgstr ""
 
 #. Tag: para
 #: hardening.xml:3109
 #, no-c-format
 msgid ""
-"<!-- http://doccomments.provo.novell.com/comments/29432 --> The name of a "
-"rules file must start with a digit, otherwise it will be ignored."
+"The name of a rules file must start with a digit, otherwise it will be "
+"ignored."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3117
+#: hardening.xml:3113
+#, no-c-format
+msgid ""
+"Rules files are processed in alphabetical order. Functions are called in the "
+"order they were added until one of the functions returns a value. Therefore, "
+"to add an authorization rule that is processed before other rules, put it in "
+"a file in /etc/polkit-1/rules.d with a name that sorts before other rules "
+"files, for example <filename>/etc/polkit-1/rules.d/10-mount.rules</"
+"filename> . Each function should return a value from <literal>polkit.Result</"
+"literal> ."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3125
 #, no-c-format
 msgid "Restart <systemitem>udisks2</systemitem> :"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3120
+#: hardening.xml:3128
 #, no-c-format
 msgid "&prompt.root;systemctl restart udisks2"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3123
+#: hardening.xml:3131
 #, no-c-format
 msgid "Restart <systemitem>polkit</systemitem>"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3126
+#: hardening.xml:3134
 #, no-c-format
 msgid "&prompt.root;systemctl restart polkit"
 msgstr ""
 
-#. Tag: para
-#: hardening.xml:3129
-#, no-c-format
-msgid ""
-"In &yast;, click <menuchoice><guimenu>Security and Users</"
-"guimenu><guimenu>User and Group Management</guimenu><guimenu>Groups</"
-"guimenu></menuchoice> to create the three groups <literal>mmedia_all</"
-"literal> , <literal>mmedia_optical</literal> , and "
-"<literal>mmedia_removable</literal> . Then add the users to these groups as "
-"wanted."
-msgstr ""
-
 #. Tag: title
-#: hardening.xml:3143
+#: hardening.xml:3140
 #, no-c-format
 msgid "Various Account Checks"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3148
+#: hardening.xml:3143
 #, no-c-format
 msgid "Unlocked Accounts"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3149
+#: hardening.xml:3144
 #, no-c-format
 msgid ""
 "It is important that all system and vendor accounts that are not used for "
@@ -4570,13 +4582,13 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3166
+#: hardening.xml:3161
 #, no-c-format
 msgid "&prompt.root;egrep -v ':\\*|:\\!' /etc/shadow | awk -F: '{print $1}'"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3167
+#: hardening.xml:3162
 #, no-c-format
 msgid ""
 "Also make sure all accounts have a <literal>x</literal> in the password "
@@ -4585,13 +4597,13 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3173
+#: hardening.xml:3168
 #, no-c-format
 msgid "&prompt.root;grep -v ':x:' /etc/passwd"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3174
+#: hardening.xml:3169
 #, no-c-format
 msgid ""
 "An <literal>x</literal> in the password fields means that the password has "
@@ -4603,13 +4615,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3185
+#: hardening.xml:3180
 #, no-c-format
 msgid "Unused Accounts"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3186
+#: hardening.xml:3181
 #, no-c-format
 msgid ""
 "All system or vendor accounts that are not being used by users, "
@@ -4619,7 +4631,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3192
+#: hardening.xml:3187
 #, no-c-format
 msgid ""
 "&prompt.root;find / -path /proc -prune -o -user <replaceable>ACCOUNT</"
@@ -4627,7 +4639,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3193
+#: hardening.xml:3188
 #, no-c-format
 msgid ""
 "The <option>-prune</option> option in this example is used to skip the /proc "
@@ -4636,13 +4648,13 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3198
+#: hardening.xml:3193
 #, no-c-format
 msgid "&prompt.root;userdel -r <replaceable>ACCOUNT</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3199
+#: hardening.xml:3194
 #, no-c-format
 msgid ""
 "Without the <option>-r</option> option <command>userdel</command> will not "
@@ -4652,13 +4664,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3208
+#: hardening.xml:3203
 #, no-c-format
 msgid "Enabling Password Aging"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3210
+#: hardening.xml:3205
 #, no-c-format
 msgid ""
 "Password expiration is a general best practice&mdash;but might need to be "
@@ -4668,7 +4680,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3217
+#: hardening.xml:3212
 #, no-c-format
 msgid ""
 "Typically a corporate policy should be developed that dictates rules/"
@@ -4679,7 +4691,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3225
+#: hardening.xml:3220
 #, no-c-format
 msgid ""
 "The following files and parameters in the table can be used when a new "
@@ -4693,25 +4705,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3247
+#: hardening.xml:3242
 #, no-c-format
 msgid "<literal>PASS_MAX_DAYS</literal>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3252
+#: hardening.xml:3247
 #, no-c-format
 msgid "Maximum number of days a password is valid."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3264
+#: hardening.xml:3259
 #, no-c-format
 msgid "<literal>PASS_MIN_DAYS</literal>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3269
+#: hardening.xml:3264
 #, no-c-format
 msgid ""
 "Minimum number of days before a user can change the password since the last "
@@ -4719,61 +4731,61 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3277
+#: hardening.xml:3272
 #, no-c-format
 msgid "<filename>/etc/login.defs</filename>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3282
+#: hardening.xml:3277
 #, no-c-format
 msgid "<literal>PASS_WARN_AGE</literal>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3287
+#: hardening.xml:3282
 #, no-c-format
 msgid "Number of days when the password change reminder starts."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3299
+#: hardening.xml:3294
 #, no-c-format
 msgid "<literal>INACTIVE</literal>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3304
+#: hardening.xml:3299
 #, no-c-format
 msgid "Number of days after password expiration that account is disabled."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3311
+#: hardening.xml:3306
 #, no-c-format
 msgid "<filename>/etc/default/useradd</filename>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3316
+#: hardening.xml:3311
 #, no-c-format
 msgid "<literal>EXPIRE</literal>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3321
+#: hardening.xml:3316
 #, no-c-format
 msgid "Account expiration date in the format YYYY-MM-DD."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3331
+#: hardening.xml:3326
 #, no-c-format
 msgid "Users created prior to these modifications will not be affected."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3336
+#: hardening.xml:3331
 #, no-c-format
 msgid ""
 "Ensure that the above parameters are changed in the <filename>/etc/login."
@@ -4783,13 +4795,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3344
+#: hardening.xml:3339
 #, no-c-format
 msgid "To create a new user account, execute the following command:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3348
+#: hardening.xml:3343
 #, no-c-format
 msgid ""
 "&prompt.root;useradd -c \"<replaceable>TEST_USER</replaceable>\" -g "
@@ -4797,14 +4809,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3350
+#: hardening.xml:3345
 #, no-c-format
 msgid ""
 "The <option>-g</option> option specifies the primary group for this account:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3355
+#: hardening.xml:3350
 #, no-c-format
 msgid ""
 "&prompt.root;id <replaceable>TEST</replaceable>\n"
@@ -4812,7 +4824,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3358
+#: hardening.xml:3353
 #, no-c-format
 msgid ""
 "The settings in <filename>/etc/login.defs</filename> and <filename>/etc/"
@@ -4821,7 +4833,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3364
+#: hardening.xml:3359
 #, no-c-format
 msgid ""
 "&prompt.root;grep <replaceable>TEST</replaceable> /etc/shadow\n"
@@ -4829,7 +4841,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3367
+#: hardening.xml:3362
 #, no-c-format
 msgid ""
 "Password aging can be modified at any time by use of the <command>chage</"
@@ -4838,31 +4850,31 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3374
+#: hardening.xml:3369
 #, no-c-format
 msgid "&prompt.root;chage -M -1 <replaceable>SYSTEM_ACCOUNT_NAME</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3376
+#: hardening.xml:3371
 #, no-c-format
 msgid "To get password expiration information:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3380
+#: hardening.xml:3375
 #, no-c-format
 msgid "&prompt.root;chage -l <replaceable>SYSTEM_ACCOUNT_NAME</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3382
+#: hardening.xml:3377
 #, no-c-format
 msgid "For example:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3386
+#: hardening.xml:3381
 #, no-c-format
 msgid ""
 "&prompt.root;chage -l <replaceable>TEST</replaceable>\n"
@@ -4877,13 +4889,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3397
+#: hardening.xml:3392
 #, no-c-format
 msgid "Stronger Password Enforcement"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3399
+#: hardening.xml:3394
 #, no-c-format
 msgid ""
 "On an audited system it is important to restrict people from using simple "
@@ -4897,7 +4909,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3410
+#: hardening.xml:3405
 #, no-c-format
 msgid ""
 "At any rate, it is important to practice effective password management "
@@ -4908,13 +4920,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3420
+#: hardening.xml:3415
 #, no-c-format
 msgid "Preventing Accidental Denial of Service"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3422
+#: hardening.xml:3417
 #, no-c-format
 msgid ""
 "Linux allows you to set limits on the amount of system resources that users "
@@ -4931,13 +4943,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3437
+#: hardening.xml:3432
 #, no-c-format
 msgid "Example for Restricting System Resources"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3438
+#: hardening.xml:3433
 #, no-c-format
 msgid ""
 "The following example demonstrates the practical usage of setting or "
@@ -4947,7 +4959,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3445
+#: hardening.xml:3440
 #, no-c-format
 msgid ""
 "Most shells like Bash provide control over various resources (for example "
@@ -4957,13 +4969,13 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3451
+#: hardening.xml:3446
 #, no-c-format
 msgid "&prompt.root;ulimit -a"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3452
+#: hardening.xml:3447
 #, no-c-format
 msgid ""
 "For more information on <command>ulimit</command> for the Bash shell, "
@@ -4971,13 +4983,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3457
+#: hardening.xml:3452
 #, no-c-format
 msgid "Setting Limits for SSH Sessions"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3458
+#: hardening.xml:3453
 #, no-c-format
 msgid ""
 "Setting \"hard\" and \"soft\" limits might not behave as expected when using "
@@ -4993,13 +5005,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3473
+#: hardening.xml:3468
 #, no-c-format
 msgid "Disabling Password Logins via <command>ssh</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3474
+#: hardening.xml:3469
 #, no-c-format
 msgid ""
 "You can add some extra security to your server by disabling password "
@@ -5009,7 +5021,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3481
+#: hardening.xml:3476
 #, no-c-format
 msgid ""
 "UseLogin no\n"
@@ -5019,7 +5031,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3486
+#: hardening.xml:3481
 #, no-c-format
 msgid ""
 "In this example, a change to the number of file handles or open files that "
@@ -5028,7 +5040,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3492
+#: hardening.xml:3487
 #, no-c-format
 msgid ""
 "oracle           soft    nofile          4096\n"
@@ -5036,7 +5048,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3494
+#: hardening.xml:3489
 #, no-c-format
 msgid ""
 "The soft limit in the first line defines the limit on the number of file "
@@ -5048,19 +5060,19 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3502
+#: hardening.xml:3497
 #, no-c-format
 msgid "&prompt.root;ulimit -n 63536"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3503
+#: hardening.xml:3498
 #, no-c-format
 msgid "You can set the soft and hard limits higher if necessary."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3507
+#: hardening.xml:3502
 #, no-c-format
 msgid ""
 "It is important to be judicious with the usage of ulimits. Allowing a \"hard"
@@ -5072,7 +5084,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3516
+#: hardening.xml:3511
 #, no-c-format
 msgid ""
 "You also need to ensure that <literal>pam_limits</literal> is either "
@@ -5081,25 +5093,25 @@ msgid ""
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3522
+#: hardening.xml:3517
 #, no-c-format
 msgid "<filename>/etc/pam.d/sshd</filename> (for SSH)"
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3523
+#: hardening.xml:3518
 #, no-c-format
 msgid "<filename>/etc/pam.d/su</filename> (for su)"
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3524
+#: hardening.xml:3519
 #, no-c-format
 msgid "<filename>/etc/pam.d/login</filename> (local logins and telnet)"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3526
+#: hardening.xml:3521
 #, no-c-format
 msgid ""
 "If you do not want to enable it for all logins, there is a specific PAM "
@@ -5108,7 +5120,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3531
+#: hardening.xml:3526
 #, no-c-format
 msgid ""
 "session     required      /lib/security/pam_limits.so\n"
@@ -5116,7 +5128,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3533
+#: hardening.xml:3528
 #, no-c-format
 msgid ""
 "It is important to note that changes are not immediate and require a new "
@@ -5124,7 +5136,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3537
+#: hardening.xml:3532
 #, no-c-format
 msgid ""
 "&prompt.root;su – oracle\n"
@@ -5133,7 +5145,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3540
+#: hardening.xml:3535
 #, no-c-format
 msgid ""
 "Note that these examples are specific to the Bash shell - <command>ulimit</"
@@ -5144,7 +5156,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3547
+#: hardening.xml:3542
 #, no-c-format
 msgid ""
 "&prompt.root;su – oracle\n"
@@ -5156,7 +5168,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3553
+#: hardening.xml:3548
 #, no-c-format
 msgid ""
 "Making this permanent requires the addition of the setting, <literal>ulimit -"
@@ -5169,7 +5181,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3563
+#: hardening.xml:3558
 #, no-c-format
 msgid ""
 "&prompt.root;su - oracle\n"
@@ -5179,13 +5191,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3570
+#: hardening.xml:3565
 #, no-c-format
 msgid "Displaying Login Banners"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3572
+#: hardening.xml:3567
 #, no-c-format
 msgid ""
 "It is often necessary to place a banner on login screens on all servers for "
@@ -5193,7 +5205,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3578
+#: hardening.xml:3573
 #, no-c-format
 msgid ""
 "If you want to print a login banner <emphasis>after</emphasis> a user logs "
@@ -5204,13 +5216,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3588
+#: hardening.xml:3583
 #, no-c-format
 msgid "Banner Length"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3589
+#: hardening.xml:3584
 #, no-c-format
 msgid ""
 "Try to keep the login banner content to a single terminal page (or less), as "
@@ -5219,7 +5231,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3596
+#: hardening.xml:3591
 #, no-c-format
 msgid ""
 "You can also have a login banner printed <emphasis>before</emphasis> a user "
@@ -5232,7 +5244,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3606
+#: hardening.xml:3601
 #, no-c-format
 msgid ""
 "For graphical logins via GDM, you can follow <link xlink:href=\"https://help."
@@ -5245,7 +5257,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3616
+#: hardening.xml:3611
 #, no-c-format
 msgid ""
 "if ! /usr/bin/gdialog --yesno '\\n<replaceable>This system is classified...</"
@@ -5256,7 +5268,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3621
+#: hardening.xml:3616
 #, no-c-format
 msgid ""
 "The text <replaceable>This system is classified...</replaceable> needs to be "
@@ -5267,19 +5279,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3632
+#: hardening.xml:3627
 #, no-c-format
 msgid "Miscellaneous"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3637
+#: hardening.xml:3632
 #, no-c-format
 msgid "Host-Based Linux Monitoring and Intrusion Detection"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3638
+#: hardening.xml:3633
 #, no-c-format
 msgid ""
 "Before you place a host into production or even on a network, consider the "
@@ -5291,7 +5303,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3646
+#: hardening.xml:3641
 #, no-c-format
 msgid ""
 "AIDE is a GPL licensed and open source intrusion detection system. It could "
@@ -5304,7 +5316,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3656
+#: hardening.xml:3651
 #, no-c-format
 msgid ""
 "By leveraging AIDE&mdash;storing a copy of the host's database in a secure "
@@ -5317,7 +5329,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3666
+#: hardening.xml:3661
 #, no-c-format
 msgid ""
 "It is outside the scope of this article to cover Linux Monitoring and "
@@ -5327,49 +5339,49 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3675
+#: hardening.xml:3670
 #, no-c-format
 msgid "Connect Accounting Utilities"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3676
+#: hardening.xml:3671
 #, no-c-format
 msgid "Here is a list of commands you can use to get data about user logins:"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3680
+#: hardening.xml:3675
 #, no-c-format
 msgid "<command>who</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3681
+#: hardening.xml:3676
 #, no-c-format
 msgid "Lists currently logged in users."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3686
+#: hardening.xml:3681
 #, no-c-format
 msgid "<command>w</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3687
+#: hardening.xml:3682
 #, no-c-format
 msgid "Shows who is logged in and what they are doing."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3692
+#: hardening.xml:3687
 #, no-c-format
 msgid "<command>last</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3693
+#: hardening.xml:3688
 #, no-c-format
 msgid ""
 "Shows a list of last logged in users, including login time, logout time, "
@@ -5377,13 +5389,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3699
+#: hardening.xml:3694
 #, no-c-format
 msgid "<command>lastb</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3700
+#: hardening.xml:3695
 #, no-c-format
 msgid ""
 "Same as <command>last</command> , except that by default it shows <filename>/"
@@ -5391,13 +5403,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3707
+#: hardening.xml:3702
 #, no-c-format
 msgid "<command>lastlog</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3708
+#: hardening.xml:3703
 #, no-c-format
 msgid ""
 "This command reports data maintained in <filename>/var/log/lastlog</"
@@ -5405,13 +5417,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3715
+#: hardening.xml:3710
 #, no-c-format
 msgid "<command>ac</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3716
+#: hardening.xml:3711
 #, no-c-format
 msgid ""
 "Available after installing the <systemitem>acct</systemitem> package. Prints "
@@ -5420,13 +5432,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3723
+#: hardening.xml:3718
 #, no-c-format
 msgid "<command>dump-utmp</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3724
+#: hardening.xml:3719
 #, no-c-format
 msgid ""
 "Converts raw data from /var/run/utmp or <filename>/var/log/wtmp</filename> "
@@ -5434,7 +5446,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3729
+#: hardening.xml:3724
 #, no-c-format
 msgid ""
 "Also check the <filename>/var/log/messages</filename> file, or the output of "
@@ -5443,13 +5455,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3738
+#: hardening.xml:3733
 #, no-c-format
 msgid "Other"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3739
+#: hardening.xml:3734
 #, no-c-format
 msgid ""
 "Finally, the following items are relevant to the system security as well, "
@@ -5457,7 +5469,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3745
+#: hardening.xml:3740
 #, no-c-format
 msgid ""
 "Resolver ( <filename>/etc/hosts</filename> , <filename>/var/run/netconfig/"
@@ -5465,7 +5477,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3750
+#: hardening.xml:3745
 #, no-c-format
 msgid ""
 "<filename>/etc/resolv.conf</filename> is a symbolic link to <filename>/run/"
@@ -5473,7 +5485,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3756
+#: hardening.xml:3751
 #, no-c-format
 msgid "NTP configuration ( <filename>/etc/chrony.conf</filename> )."
 msgstr ""
