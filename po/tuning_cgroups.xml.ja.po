@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: tuning_cgroups.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
 "POT-Creation-Date: 2020-06-08 22:24+0000\n"
-"PO-Revision-Date: 2020-01-22 08:08+0900\n"
+"PO-Revision-Date: 2020-06-09 08:02+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
 "Language: ja\n"
@@ -46,7 +46,7 @@ msgstr "概要"
 
 #. Tag: para
 #: tuning_cgroups.xml:30
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Every process is assigned exactly one administrative cgroup. cgroups are "
 "ordered in a hierarchical tree structure. You can set resource limitations, "
@@ -54,10 +54,9 @@ msgid ""
 "processes or for whole branches of the hierarchy tree."
 msgstr ""
 "それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は"
-"階層構造型のツリーとして管理されます。リソースに対する制限は特定の 1 つのプロ"
-"セスに対して設定することができるほか、特定の階層ツリー全体に対して設定するこ"
-"ともできます。制限には CPU やメモリのほか、ディスクの I/O やネットワーク帯域"
-"などを割り当てることができます。"
+"階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは"
+" 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などの"
+"リソース制限を割り当てます。"
 
 #. Tag: para
 #: tuning_cgroups.xml:36
@@ -75,8 +74,7 @@ msgstr ""
 #. Tag: para
 #: tuning_cgroups.xml:41
 #, no-c-format
-msgid ""
-"The command <command>systemd-cgls</command> displays the hierarchy tree."
+msgid "The command <command>systemd-cgls</command> displays the hierarchy tree."
 msgstr ""
 "<command>systemd-cgls</command> コマンドでは、階層構造を表示することができま"
 "す。"
@@ -437,7 +435,7 @@ msgstr ""
 #: tuning_cgroups.xml:225
 #, no-c-format
 msgid "Preventing Fork Bombs with TasksMax"
-msgstr ""
+msgstr "TasksMax を利用した fork ボムの防止"
 
 #. Tag: para
 #: tuning_cgroups.xml:226
@@ -449,6 +447,11 @@ msgid ""
 "security by preventing runaway processes from creating excessive forks, or "
 "spawning enough threads to exhaust system resources."
 msgstr ""
+"&systemd; 228 では <literal>DefaultTasksMax</literal> の制限が 512 に設定されて"
+"います。これは systemd の各ユニットに対して、作成できるプロセス数の制限を行なうための"
+"仕組みで、それ以前のバージョンでは制限がありませんでした。このように設定を行なった"
+"のは、 fork によって作成される過剰なプロセスやスレッドによってシステム資源が枯渇して"
+"しまうのを防ぐ、セキュリティ改善のためのものです。"
 
 #. Tag: para
 #: tuning_cgroups.xml:234
@@ -466,12 +469,21 @@ msgid ""
 "override the defaults, though there are other methods we will show in the "
 "following sections."
 msgstr ""
+"しかしながら、この既定値は全ての用途に対して適用可能なものではありません。また、"
+" CPU やメモリの使用量に対する直接的な制限ではありませんので、 512 に設定しても"
+"システムの安定性を保つことができるかどうかはわかりませんし、データベースシステム"
+"などのように 512 個以上のプロセスを動作させなければならない場合もあります。"
+" &systemd; 234 では、この値が 15% (カーネル側に設定されたプロセス数の最大値"
+"である 32768 の 15% 。詳しくは <command>cat /proc/sys/kernel/pid_max</command> "
+"をご覧ください) に設定されていますが、必要に応じて設定ファイルで変更することができます。"
+"具体的には、 <filename>/etc/systemd/system.conf</filename> ファイルを編集して"
+"設定を行なってください。なお、下記ではそれ以外の方法について説明しています。"
 
 #. Tag: title
 #: tuning_cgroups.xml:251
 #, no-c-format
 msgid "Finding the Current Default TasksMax Values"
-msgstr ""
+msgstr "現時点での規定の TasksMax 値の検出"
 
 #. Tag: para
 #: tuning_cgroups.xml:252
@@ -482,6 +494,10 @@ msgid ""
 "<literal>infinity</literal> . <filename>/usr/lib/systemd/system.conf.d/20-"
 "suse-defaults.conf</filename> contains these lines:"
 msgstr ""
+"&sle; では、 systemd のユニットやユーザスライスに対する提供元の既定値を上書き"
+"するため、独自の設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> "
+"に設定されています。 1 つめの <filename>/usr/lib/systemd/system.conf.d/20-"
+"suse-defaults.conf</filename> には、下記のような設定が書かれています:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:259
@@ -492,6 +508,10 @@ msgid ""
 "DefaultTasksMax=infinity\n"
 "   "
 msgstr ""
+"\n"
+"[Manager]\n"
+"DefaultTasksMax=infinity\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:263
@@ -500,6 +520,8 @@ msgid ""
 "<filename>/usr/lib/systemd/system/user-.slice.d/20-suse-defaults.conf</"
 "filename> contains these lines:"
 msgstr ""
+"もう 1 つの存在である <filename>/usr/lib/systemd/system/user-.slice.d/"
+"20-suse-defaults.conf</filename> には、下記のような設定が書かれています:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:267
@@ -509,6 +531,9 @@ msgid ""
 "TasksMax=infinity\n"
 "   "
 msgstr ""
+"[Slice]\n"
+"TasksMax=infinity\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:270
@@ -518,12 +543,14 @@ msgid ""
 "to change the default, but setting some limits may help to prevent system "
 "crashes from runaway processes."
 msgstr ""
+"<literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更"
+"する必要はありませんが、必要であれば設定を変更してください。"
 
 #. Tag: title
 #: tuning_cgroups.xml:278
 #, no-c-format
 msgid "Overriding the DefaultTasksMax Value"
-msgstr ""
+msgstr "DefaultTasksMax 値の設定"
 
 #. Tag: para
 #: tuning_cgroups.xml:279
@@ -534,6 +561,10 @@ msgid ""
 "filename> , and write the following lines to set new default limit of 256 "
 "tasks per system unit:"
 msgstr ""
+"グローバルな <literal>DefaultTasksMax</literal> の値を変更したい場合は、設定を上書き"
+"するための新しい設定ファイル <filename>/etc/systemd/system.conf.d/10-system-tasksmax.conf"
+"</filename> を作成して対応してください。この設定ファイルには、下記のような内容を記述"
+"します (下記の例では、 systemd のユニットごとに最大 256 個までのタスク制限を設定します):"
 
 #. Tag: screen
 #: tuning_cgroups.xml:286
@@ -543,12 +574,15 @@ msgid ""
 "[Manager]\n"
 "DefaultTasksMax=256\n"
 msgstr ""
+"\n"
+"[Manager]\n"
+"DefaultTasksMax=256\n"
 
 #. Tag: para
 #: tuning_cgroups.xml:290
 #, no-c-format
 msgid "Load the new setting, then verify that it changed:"
-msgstr ""
+msgstr "新しい設定を読み込んで、設定が反映されたことを確認します:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:293
@@ -559,6 +593,10 @@ msgid ""
 "DefaultTasksMax=256\n"
 "   "
 msgstr ""
+"&prompt.sudo;systemctl daemon-reload\n"
+"&prompt.user;systemctl show --property DefaultTasksMax\n"
+"DefaultTasksMax=256\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:297
@@ -568,6 +606,9 @@ msgid ""
 "individual services as needed. This example is for MariaDB. First check the "
 "current active value:"
 msgstr ""
+"設定値はお使いのシステムの要件に合わせて指定してください。また、特定のサービスに限定"
+"して制限を高くすることもできます。たとえば MariaDB で設定を変更したい場合、まずは"
+"現在の設定値を確認します:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:302
@@ -589,6 +630,21 @@ msgid ""
 "user=mysql\n"
 "   "
 msgstr ""
+"\n"
+"&prompt.user;systemctl status mariadb.service\n"
+"  ● mariadb.service - MariaDB database server\n"
+"   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor "
+"preset&gt;\n"
+"   Active: active (running) since Tue 2020-05-26 14:15:03 PDT; 27min ago\n"
+"     Docs: man:mysqld(8)\n"
+"           https://mariadb.com/kb/en/library/systemd/\n"
+" Main PID: 11845 (mysqld)\n"
+"   Status: \"Taking your SQL requests now...\"\n"
+"    Tasks: 30 (limit: 256)\n"
+"   CGroup: /system.slice/mariadb.service\n"
+"           └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --"
+"user=mysql\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:315
@@ -600,6 +656,11 @@ msgid ""
 "a new override file with <command>systemctl edit</command> , and enter the "
 "new value:"
 msgstr ""
+"<quote>Tasks</quote> 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されて"
+"います。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば"
+" MariaDB のみを 8192 個までに拡大してみることにします。設定値を変更するには、"
+" <command>systemctl edit</command> コマンドを実行して、下記のような設定を"
+"記入します:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:320
@@ -630,6 +691,30 @@ msgid ""
 "           └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql\n"
 "   "
 msgstr ""
+"&prompt.sudo;systemctl edit mariadb.service\n"
+"       \n"
+"[Service]\n"
+"TasksMax=8192\n"
+"\n"
+"&prompt.user;systemctl status mariadb.service \n"
+"● mariadb.service - MariaDB database server\n"
+"   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor "
+"preset: disab&gt;\n"
+"  Drop-In: /etc/systemd/system/mariadb.service.d\n"
+"           └─override.conf\n"
+"   Active: active (running) since Tue 2020-06-02 17:57:48 PDT; 7min ago\n"
+"     Docs: man:mysqld(8)\n"
+"           https://mariadb.com/kb/en/library/systemd/\n"
+"  Process: 3446 ExecStartPre=/usr/lib/mysql/mysql-systemd-helper upgrade "
+"(code=exited, sta&gt;\n"
+"  Process: 3440 ExecStartPre=/usr/lib/mysql/mysql-systemd-helper install "
+"(code=exited, sta&gt;\n"
+" Main PID: 3452 (mysqld)\n"
+"   Status: \"Taking your SQL requests now...\"\n"
+"    Tasks: 30 (limit: 8192)\n"
+"   CGroup: /system.slice/mariadb.service\n"
+"           └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:341
@@ -641,12 +726,17 @@ msgid ""
 "not have to be 8192, but should be whatever limit is appropriate for your "
 "workloads."
 msgstr ""
+"<command>systemctl edit</command> コマンドは <filename>/etc/"
+"systemd/system/mariadb.service.d/override.conf</filename> という名前の上書き用"
+"設定ファイルを作成します。ここには既存のユニットファイルに対する上書き値のみが"
+"保存されます。もちろん 8192 でなくてもかまいません。お使いの要件に合わせて設定して"
+"ください。"
 
 #. Tag: title
 #: tuning_cgroups.xml:351
 #, no-c-format
 msgid "Deafult TasksMax Limit on Users"
-msgstr ""
+msgstr "ユーザごとの規定の TasksMax 制限"
 
 #. Tag: para
 #: tuning_cgroups.xml:352
@@ -657,6 +747,11 @@ msgid ""
 "example <filename>/etc/systemd/system/user-.slice.d/user-taskmask.conf</"
 "filename> . The following example sets a default of 16284:"
 msgstr ""
+"ユーザに対する規定の制限値は十分に高く設定されています。これは、ユーザセッションでは"
+"より多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/"
+"systemd/system/user-.slice.d/user-taskmask.conf</filename> のような設定ファイルを"
+"作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定"
+"しています:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:359
@@ -667,12 +762,16 @@ msgid ""
 "TasksMax=16284\n"
 "   "
 msgstr ""
+"\n"
+"[Slice]\n"
+"TasksMax=16284\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:363
 #, no-c-format
 msgid "Then reload systemd to load the new value, and verify the change:"
-msgstr ""
+msgstr "あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:"
 
 #. Tag: screen
 #: tuning_cgroups.xml:366
@@ -687,6 +786,14 @@ msgid ""
 "TasksMax=16284\n"
 "   "
 msgstr ""
+"&prompt.sudo;systemctl daemon-reload\n"
+"       \n"
+"&prompt.user;systemctl show --property TasksMax user-.slice\n"
+"TasksMax=16284\n"
+"\n"
+"&prompt.user;systemctl show --property TasksMax user-1000.slice\n"
+"TasksMax=16284\n"
+"   "
 
 #. Tag: para
 #: tuning_cgroups.xml:374
@@ -699,6 +806,14 @@ msgid ""
 "connection\" and \"Error: Function call 'fork' failed with error code 11, "
 "'Resource temporarily unavailable'\"."
 msgstr ""
+"具体的にどのような設定値にすべきかについては、お使いの用途とシステム側に搭載されて"
+"いるリソースのほか、他のリソース設定によっても異なります。 TasksMax の値が低すぎる"
+"場合は、 \"Failed to fork (Resources temporarily unavailable)\" (fork に失敗した ("
+"リソースが一時的に利用できなくなっている)), \"Can't create thread to handle new "
+"connection\" (新しい接続を処理するためのスレッドが作成できない), \"Error: Function "
+"call 'fork' failed with error code 11, 'Resource temporarily unavailable'\" (エラー"
+"コード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) "
+"などのエラーが発生することになります。"
 
 #. Tag: para
 #: tuning_cgroups.xml:382
@@ -707,6 +822,8 @@ msgid ""
 "For more information on configuring system resources in systemd, see "
 "<literal>systemd.resource-control (5)</literal> ."
 msgstr ""
+"systemd でのシステムリソースの制限の設定方法について、詳しくは"
+"<literal>systemd.resource-control (5)</literal> をお読みください。"
 
 #. Tag: title
 #: tuning_cgroups.xml:390
@@ -753,3 +870,4 @@ msgid ""
 msgstr ""
 "<link xlink:href=\"http://lwn.net/Articles/236038/\"/>: Corbet, Jonathan: "
 "Process containers (2007 年)"
+

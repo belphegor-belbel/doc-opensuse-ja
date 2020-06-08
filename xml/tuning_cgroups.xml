@@ -18,7 +18,7 @@
 
  <sect1 xml:id="sec-tuning-cgroups-overview">
   <title>概要</title>
-  <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリーとして管理されます。リソースに対する制限は特定の 1 つのプロセスに対して設定することができるほか、特定の階層ツリー全体に対して設定することもできます。制限には CPU やメモリのほか、ディスクの I/O やネットワーク帯域などを割り当てることができます。</para>
+  <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などのリソース制限を割り当てます。</para>
   <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; には、 cgroup の設定を行なうためのインターフェイスも用意されています。</para>
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
   <para>本章は概要のみを説明しています。詳しい説明については、列挙されている参照先をお読みください。</para>
@@ -111,83 +111,37 @@
  </sect1>
  
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
-  <title>Preventing Fork Bombs with TasksMax</title>
-   <para>
-      &systemd; 228 shipped with a <literal>DefaultTasksMax</literal> 
-      limit of 512. This limited the number of processes any system unit 
-      can create at one time to 512. Previous versions had no default 
-      limit. The goal was to improve security by preventing runaway 
-      processes from creating excessive forks, or spawning enough 
-      threads to exhaust system resources.
-   </para> 
-   <para>
-      However, it soon became apparent that there is not a single
-      default that applies to all use cases. 512 is not low enough
-      to prevent a runaway process from crashing a system, especially 
-      when other resources such as CPU and RAM are not restricted, 
-      and not high enough for processes that create a lot of threads, 
-      such as databases. In &systemd; 234 the default was changed to 15%, 
-      which is 4915 tasks (15% of the kernel limit of 32768; 
-      see <command>cat /proc/sys/kernel/pid_max</command>). This default is
-      compiled, and can be changed in configuration files. The compiled
-      defaults are documented in
-      <filename>/etc/systemd/system.conf</filename>. You can edit this file
-      to override the defaults, though there are other methods we will
-      show in the following sections.
-   </para>
+  <title>TasksMax を利用した fork ボムの防止</title>
+   <para>&systemd; 228 では <literal>DefaultTasksMax</literal> の制限が 512 に設定されています。これは systemd の各ユニットに対して、作成できるプロセス数の制限を行なうための仕組みで、それ以前のバージョンでは制限がありませんでした。このように設定を行なったのは、 fork によって作成される過剰なプロセスやスレッドによってシステム資源が枯渇してしまうのを防ぐ、セキュリティ改善のためのものです。</para> 
+   <para>しかしながら、この既定値は全ての用途に対して適用可能なものではありません。また、 CPU やメモリの使用量に対する直接的な制限ではありませんので、 512 に設定してもシステムの安定性を保つことができるかどうかはわかりませんし、データベースシステムなどのように 512 個以上のプロセスを動作させなければならない場合もあります。 &systemd; 234 では、この値が 15% (カーネル側に設定されたプロセス数の最大値である 32768 の 15% 。詳しくは <command>cat /proc/sys/kernel/pid_max</command> をご覧ください) に設定されていますが、必要に応じて設定ファイルで変更することができます。具体的には、 <filename>/etc/systemd/system.conf</filename> ファイルを編集して設定を行なってください。なお、下記ではそれ以外の方法について説明しています。</para>
   
  <sect2 xml:id="sec-tasksmax-defaults">
-  <title>Finding the Current Default TasksMax Values</title>
-   <para>
-      &sle; ships with two custom configurations that override the upstream
-      defaults for system units and for user slices, and sets them both to 
-      <literal>infinity</literal>.  
-      <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename>
-      contains these lines:
-   </para>
+  <title>現時点での規定の TasksMax 値の検出</title>
+   <para>&sle; では、 systemd のユニットやユーザスライスに対する提供元の既定値を上書きするため、独自の設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 1 つめの <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
    <screen>
 [Manager]
 DefaultTasksMax=infinity
    </screen>
-   <para>
-      <filename>/usr/lib/systemd/system/user-.slice.d/20-suse-defaults.conf</filename>
-      contains these lines:
-   </para>
+   <para>もう 1 つの存在である <filename>/usr/lib/systemd/system/user-.slice.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
    <screen>[Slice]
 TasksMax=infinity
    </screen>
-  <para>
-      <literal>infinity</literal> means having no limit. It is not a 
-      requirement to change the default, but setting some limits may help to 
-      prevent system crashes from runaway processes.
-  </para>
+  <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、必要であれば設定を変更してください。</para>
 </sect2>
 
 <sect2 xml:id="sec-edit-taskmax-default">
- <title>Overriding the DefaultTasksMax Value</title>
-  <para>
-      Change the global <literal>DefaultTasksMax</literal> value by creating 
-      a new override file, 
-      <filename>/etc/systemd/system.conf.d/10-system-tasksmax.conf</filename>,
-      and write the following lines to set new default limit of 256 tasks per 
-      system unit:
-   </para>
+ <title>DefaultTasksMax 値の設定</title>
+  <para>グローバルな <literal>DefaultTasksMax</literal> の値を変更したい場合は、設定を上書きするための新しい設定ファイル <filename>/etc/systemd/system.conf.d/10-system-tasksmax.conf</filename> を作成して対応してください。この設定ファイルには、下記のような内容を記述します (下記の例では、 systemd のユニットごとに最大 256 個までのタスク制限を設定します):</para>
    <screen>
 [Manager]
 DefaultTasksMax=256
 </screen>
-   <para>
-       Load the new setting, then verify that it changed:
-   </para>
+   <para>新しい設定を読み込んで、設定が反映されたことを確認します:</para>
    <screen>&prompt.sudo;systemctl daemon-reload
 &prompt.user;systemctl show --property DefaultTasksMax
 DefaultTasksMax=256
    </screen>
-   <para>
-       Adjust this default value to suit your needs. You can set higher 
-       limits on individual services as needed. This example is for MariaDB. 
-       First check the current active value:
-   </para>
+   <para>設定値はお使いのシステムの要件に合わせて指定してください。また、特定のサービスに限定して制限を高くすることもできます。たとえば MariaDB で設定を変更したい場合、まずは現在の設定値を確認します:</para>
    <screen>
 &prompt.user;systemctl status mariadb.service
   ● mariadb.service - MariaDB database server
@@ -201,11 +155,7 @@ DefaultTasksMax=256
    CGroup: /system.slice/mariadb.service
            └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
    </screen>
-   <para>
-       The Tasks line shows that MariaDB currently has 30 tasks running, and has
-       an upper limit of the default 256, which is inadequate for a database. The 
-       following example demonstrates how to raise MariaDB's limit to 8192. Create a new override file with <command>systemctl edit</command>, and enter the new value:
-   </para>
+   <para><quote>Tasks</quote> 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。設定値を変更するには、 <command>systemctl edit</command> コマンドを実行して、下記のような設定を記入します:</para>
    <screen>&prompt.sudo;systemctl edit mariadb.service
        
 [Service]
@@ -227,31 +177,17 @@ TasksMax=8192
    CGroup: /system.slice/mariadb.service
            └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
    </screen>
-   <para>
-       <command>systemctl edit</command> creates an override file, 
-       <filename>/etc/systemd/system/mariadb.service.d/override.conf</filename>, 
-       that contains only the changes you want to apply to the existing unit file.
-       The value does not have to be 8192, but should be whatever limit is
-       appropriate for your workloads.
-   </para>
+   <para><command>systemctl edit</command> コマンドは <filename>/etc/systemd/system/mariadb.service.d/override.conf</filename> という名前の上書き用設定ファイルを作成します。ここには既存のユニットファイルに対する上書き値のみが保存されます。もちろん 8192 でなくてもかまいません。お使いの要件に合わせて設定してください。</para>
 </sect2>
    
 <sect2>
-    <title>Deafult TasksMax Limit on Users</title>
-   <para>
-       The default limit on users should be fairly high, because user sessions need more 
-       resources. Set your own default for users by creating a new file, for
-       example
-       <filename>/etc/systemd/system/user-.slice.d/user-taskmask.conf</filename>.
-       The following example sets a default of 16284:
-   </para>
+    <title>ユーザごとの規定の TasksMax 制限</title>
+   <para>ユーザに対する規定の制限値は十分に高く設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
    <screen>
 [Slice]
 TasksMax=16284
    </screen>
-   <para>
-       Then reload systemd to load the new value, and verify the change:
-   </para>
+   <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
    <screen>&prompt.sudo;systemctl daemon-reload
        
 &prompt.user;systemctl show --property TasksMax user-.slice
@@ -260,18 +196,8 @@ TasksMax=16284
 &prompt.user;systemctl show --property TasksMax user-1000.slice
 TasksMax=16284
    </screen>
-   <para>
-       How do you know what values to use? This varies according to your workloads,
-       system resources, and other resource configurations. When your TasksMax 
-       value is too low, you will see error messages like "Failed to fork (Resources
-       temporarily unavailable)", "Can't create thread to handle 
-       new connection" and "Error: Function call 'fork' failed with error code 11, 
-       'Resource temporarily unavailable'".
-   </para>
-   <para>
-       For more information on configuring system resources in systemd, see
-       <literal>systemd.resource-control (5)</literal>.
-   </para>
+   <para>具体的にどのような設定値にすべきかについては、お使いの用途とシステム側に搭載されているリソースのほか、他のリソース設定によっても異なります。 TasksMax の値が低すぎる場合は、 "Failed to fork (Resources temporarily unavailable)" (fork に失敗した (リソースが一時的に利用できなくなっている)), "Can't create thread to handle new connection" (新しい接続を処理するためのスレッドが作成できない), "Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'" (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生することになります。</para>
+   <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
 </sect2>
 </sect1>
 
