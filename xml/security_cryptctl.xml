@@ -5,79 +5,35 @@
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-configure-cryptctl">
     
-  <title>Storage Encryption for Hosted Applications with cryptctl
- </title>
-   <para>
-    Databases and similar applications are often hosted on external
-    servers that are serviced by third-party staff. Certain data center
-    maintenance tasks require third-party staff to directly access affected
-    systems. In such cases, privacy requirements necessitate disk encryption.
-   </para>
-   <para>
-    <command>cryptctl</command> allows encrypting sensitive directories using
-    LUKS and offers the following additional features:
-   </para>
+  <title>cryptctl を利用したアプリケーション向けのストレージ暗号化</title>
+   <para>データベースなどのアプリケーションは、サードパーティ製の製品として提供される専用のサーバの形態で提供されることがあります。そのような環境を使用する場合、メーカー側のスタッフと連携してデータセンターのメンテナンスタスクを実行する必要があります。また、プライバシーの要件を満たすためにディスクの暗号化を行なう必要があるかもしれません。</para>
+   <para><command>cryptctl</command> は LUKS を利用して機密情報を含むディレクトリを暗号化するほか、下記のような追加機能も提供します:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Encryption keys are located on a central server, which can be located on
-      customer premises.
-     </para>
+     <para>暗号鍵を中央のサーバに配置することができます。通常は中央のサーバは顧客側の施設に設置します。</para>
     </listitem>
     <listitem>
-     <para>
-      Encrypted partitions are automatically remounted after an unplanned
-      reboot.
-     </para>
+     <para>不用意な再起動が発生したような場合でも、暗号化されたパーティションを自動的に再マウントすることができます。</para>
     </listitem>
    </itemizedlist>
-  <para>
-   <command>cryptctl</command> consists of two components:
-  </para>
+  <para><command>cryptctl</command> は下記の 2 つのコンポーネントから構成されています:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     A client is a machine that has one or more encrypted partitions but does
-     not permanently store the necessary key to decrypt those partitions.
-     For example, clients can be cloud or otherwise hosted machines.
-    </para>
+    <para>1 つもしくは複数の暗号化されたパーティションをマウントするクライアントマシン。この場合、パーティションの暗号を解読するのに必要な鍵を恒久的な場所 (別のディスクなど) に保存しません。クライアントは、クラウドなどのホスティング環境が該当します。</para>
    </listitem>
    <listitem>
-    <para>
-     The server holds encryption keys that can be requested by clients to
-     unlock encrypted partitions.
-    </para>
-    <para>
-     You can also set up the <command>cryptctl</command> server to store
-     encryption keys on a KMIP 1.3-compatible (Key Management
-     Interoperability Protocol) server. In that case, the
-     <command>cryptctl</command> server will not store the encryption keys of
-     clients and is dependent upon the KMIP-compatible server to provide
-     these.
-    </para>
+    <para>クライアント側からの要求に応じて、パーティションを解読するための暗号鍵を提供するサーバ。</para>
+    <para><command>cryptctl</command> サーバを設定することで、 KMIP (Key Management Interoperability Protocol; 鍵管理相互運用プロトコル) 1.3 互換のサーバを構築することもできます。この場合、 <command>cryptctl</command> サーバにはクライアント向けの暗号鍵は保存されず、その代わり KMIP 互換のサーバ内に保存することになります。</para>
    </listitem>
   </itemizedlist>
   <warning>
-   <title><command>cryptctl</command> Server Maintenance</title>
-   <para>
-    Since the <command>cryptctl</command> server manages timeouts for the
-    encrypted disks and, depending on the configuration, can also hold
-    encryption keys, it
-    should be under your direct control and managed only by trusted
-    personnel.
-   </para>
-   <para>
-    Additionally, it should be backed up regularly. Losing the server's data
-    means losing access to encrypted partitions on the clients.
-   </para>
+   <title><command>cryptctl</command> サーバのメンテナンスについて</title>
+   <para><command>cryptctl</command> サーバは暗号化されたディスクに対するタイムアウトを管理するほか、必要であれば暗号鍵そのものを保持することもできます。暗号鍵そのものを保持させる場合は、不正にアクセスされることがなく、信頼できるユーザからのみアクセスできるように設定する必要があります。</para>
+   <para>これに加えて、サーバのバックアップは定期的に採取する必要があります。サーバのデータが失われてしまうと、クライアントがマウントする暗号化パーティションにもアクセスができなくなってしまうためです。</para>
   </warning>
-  <para>
-   To handle encryption, <command>cryptctl</command> uses LUKS with
-   aes-xts-256 encryption and 512-bit keys. Encryption keys are transferred
-   using TLS with certificate verification.
-  </para>
+  <para>暗号化を処理するため、 <command>cryptctl</command> は aes-xts-256 と 512 ビット鍵による LUKS を使用しています。暗号鍵は証明書の検証機能のある TLS を利用して転送されます。</para>
   <figure xml:id="fig-cryptctl-retrieve">
-   <title>Key Retrieval with <command>cryptctl</command> (Model Without Connection to KMIP Server)</title>
+   <title><command>cryptctl</command> による鍵の取得 (KMIP サーバへの接続を行なわない場合の例)</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="cryptctl-keyretrieval.png" format="PNG"/>
@@ -85,223 +41,103 @@
     <imageobject role="fo">
      <imagedata fileref="cryptctl-keyretrieval.svg" width="70%" format="SVG"/>
     </imageobject>
-    <textobject role="description">
-     <phrase>The client asks the server for the disk decryption key, the server
-     responds</phrase>
-    </textobject>
+    <textobject role="description"><phrase>クライアントはディスクの暗号鍵をサーバに問い合わせ、サーバがそれに応じています。</phrase></textobject>
    </mediaobject>
   </figure>
   <note>
-   <title>Install <command>cryptctl</command></title>
-   <para>
-    Before continuing, make sure the package <package>cryptctl</package> is
-    installed on all machines you intend to set up as servers or clients.
-   </para>
+   <title><command>cryptctl</command> のインストール</title>
+   <para>下記の手順を実行する前に、まずはサーバやクライアントとして動作させる全てのマシン内に <package>cryptctl</package> パッケージがインストールされていることをご確認ください。</para>
   </note>
   <sect1 xml:id="sec-configure-cryptctl-server">
-   <title>Setting Up a <command>cryptctl</command> Server</title>
-   <para>
-    Before you can define a machine as a <command>cryptctl</command> client,
-    you need to set up a machine as a <command>cryptctl</command> server.
-   </para>
-   <para>
-    Before beginning, choose whether to use a self-signed certificate to
-    secure communication between the server and clients. If not, generate a
-    TLS certificate for the server and have it signed by a certificate
-    authority.
-   </para>
-   <para>
-    Additionally, you can have clients authenticate to the server using
-    certificates signed by a certificate authority. To use this extra
-    security measure, make sure to have a CA certificate at hand before
-    starting this procedure.
-   </para>
+   <title><command>cryptctl</command> の設定</title>
+   <para><command>cryptctl</command> のクライアントを構築するよりも前に、 <command>cryptctl</command> サーバを設定する必要があります。</para>
+   <para>まずはサーバとクライアントとの間で機密を保持するために使用する証明書を作成します。自己署名型の証明書であれば、一般的な手順で証明書を作成してください。公的な証明書を使用する場合は、サーバ向けの証明書を作成して証明機関に提出し、署名を受けてください。</para>
+   <para>クライアント側の証明書も同様に、公的な証明機関で署名してもらうことができます。このような追加のセキュリティ機能を使用する場合は、あらかじめ証明機関の証明書を手元に用意してください。</para>
    <procedure>
     <step>
-     <para>
-      As <systemitem class="username">root</systemitem>, run:
-     </para>
+     <para><systemitem class="username">root</systemitem> で下記を実行します:</para>
      <screen>&prompt.root;<command>cryptctl init-server</command></screen>
     </step>
     <step>
-     <para>
-      Answer each of the following prompts and press <keycap function="enter"/>
-      after every answer. If there is a default answer, it is shown in square
-      brackets at the end of the prompt.
-     </para>
+     <para>それぞれ表示された質問に対して回答を入力し、 <keycap function="enter"/> を押していきます。このとき、既定値は質問の末尾に角括弧で括られて表示されます。</para>
      <substeps>
       <step>
-       <para>
-        Choose a password with at least 10 characters and confirm it. This
-        password assumes the role of a master password, able to unlock all
-        partitions that are registered on the server.
-       </para>
+       <para>最小でも 10 文字以上のパスワードを二度入力してください。このパスワードはマスターパスワードと呼ばれ、サーバ内に登録されている全てのパーティションの暗号を解除することができるものです。</para>
       </step>
       <step>
-       <para>
-        Specify the path to a PEM-encoded TLS certificate or certificate chain
-        file or leave the field empty to create a self-signed certificate. If
-        you specify a path, use an absolute path.
-       </para>
+       <para>次に PEM エンコードされた TLS 証明書、もしくは TLS 証明書のチェインのパスを指定します。自己署名型の証明書を使用する場合は、何も指定しないでください。また、パスを指定する場合は、絶対パスで指定してください。</para>
       </step>
       <step>
-       <para>
-        If you want the server to be identified by a host name other than the
-        default shown, specify a host name. <command>cryptctl</command> will
-        then generate certificates which include the host name.
-       </para>
+       <para>既定で表示されるホスト名以外の名前を使用したい場合は、ここでホスト名を指定してください。 <command>cryptctl</command> では、指定したホスト名を含む証明書を生成します。</para>
       </step>
       <step>
-       <para>
-        Specify the IP address that belongs to the network interface that you
-        want to listen on for decryption requests from the clients, then set
-        a port number (the default is port 3737).
-       </para>
-       <para>
-        The default IP address setting,
-        <systemitem class="ipaddress">0.0.0.0</systemitem> means that
-        <command>cryptctl</command> will listen on
-        all network interfaces for client requests using IPv4.
-       </para>
+       <para>クライアント側からの解読要求を受け付けるネットワークインターフェイスの IP アドレスを指定し、続けてポート番号を指定します (既定のポートは 3737 です) 。</para>
+       <para>IP アドレスの既定値である <systemitem class="ipaddress">0.0.0.0</systemitem> を使用すると、 <command>cryptctl</command> は IPv4 を利用する全てのネットワークインターフェイスを介して、クライアントからの要求を受け付けるようになります。</para>
        <!-- IPv6 should work too but not with 0.0.0.0, however: this is
        untested. - sknorr, 2016-12-02 -->
       </step>
       <step>
-       <para>
-        Specify a directory on the server that will hold the decryption keys
-        for clients.
-       </para>
+       <para>クライアントに対する暗号鍵を保存するための、サーバ内のディレクトリを指定します。</para>
       </step>
       <step>
-       <para>
-        Specify whether clients need to authenticate to the server using a
-        TLS certificate. If you choose <guimenu>No</guimenu>, this means that
-        clients authenticate using disk UUIDs only. (However, communication
-        will be encrypted using the server certificate in any case.)
-       </para>
-       <para>
-        If you choose <guimenu>Yes</guimenu>, pick a PEM-encoded certificate
-        authority to use for signing client certificates.
-       </para>
+       <para>次にクライアントとの通信を行なう際、クライアントに対して認証を要求するかどうかを指定します。ここで <guimenu>No</guimenu> (いいえ) を選択すると、クライアント側からはディスクの UUID のみを認証として使用します (なお、いずれを選択した場合でも、サーバの証明書を利用して通信が暗号化されます) 。</para>
+       <para><guimenu>Yes</guimenu> (はい) を選択した場合は、クライアントの証明書に署名する証明機関を PEM 形式で指定してください。</para>
       </step>
       <step>
-       <para>
-        Specify whether to use a KMIP 1.3-compatible server (or multiple such
-        servers) to store encryption keys of clients. If you choose this
-        option, provide the host names and ports for one or multiple
-        KMIP-compatible servers.
-       </para>
-       <para>
-        Additionally, provide a user name, password, a CA certificate for the
-        KMIP server, and a client identity certificate for the
-        <command>cryptctl</command> server.
-       </para>
+       <para>次に KMIP 1.3 互換のサーバ (1 つまたは複数) を使用するかどうかを選択します。 KMIP 1.3 互換のサーバを使用すると、クライアントの暗号鍵をそこに保存することができるようになります。こちらを選択した場合は、 1 つまたは複数の KMIP 互換サーバのホスト名およびポートを指定してください。</para>
+       <para>このほか、 KMIP サーバに対して使用するユーザ名やパスワード、証明機関の証明書などを設定します。また、 <command>cryptctl</command> のサーバで使用するクライアントの識別証明書を設定することもできます。</para>
        <important>
-        <title>No Easy Reconfiguration of KMIP Setting</title>
-        <para>
-         The setting to use a KMIP server cannot easily be changed later. To
-         change this setting, both the <command>cryptctl</command> server and
-         its clients need to be configured afresh.
-        </para>
+        <title>KMIP の再設定の難しさについて</title>
+        <para>KMIP サーバを使用する場合、後からの再設定は簡単ではありません。この設定を変更するには、 <command>cryptctl</command> サーバだけでなく、クライアントについても設定を修正する必要があるためです。</para>
        </important>
       </step>
       <step>
-       <para>
-        Finally, configure an SMTP server for e-mail notifications for
-        encryption and decryption requests or leave the prompt empty to skip
-        setting up e-mail notifications.
-       </para>
+       <para>最後に電子メールによる暗号化／解読要求の通知を行なうため、 SMTP サーバを設定します。電子メールによる通知機能は、設定しなくてもかまいません。</para>
        <note>
-        <title>Password-Protected Servers</title>
-        <para>
-         <command>cryptctl</command> currently cannot send e-mail using
-         authentication-protected SMTP servers. If that is necessary, set up
-         a local SMTP proxy.
-        </para>
+        <title>パスワードで保護されたサーバについて</title>
+        <para><command>cryptctl</command> では、パスワードによる認証が必要な SMTP サーバを指定して、電子メールを送信することはできません。認証が必要な場合は、ローカルの SMTP プロキシを設定してください。</para>
        </note>
       </step>
       <step>
-       <para>
-        When asked whether to start the <command>cryptctl</command> server,
-        enter <literal>y</literal>.
-       </para>
+       <para><command>cryptctl</command> サーバの起動を行なうかどうかを尋ねられた場合は、 <literal>y</literal> (はい) と入力してください。</para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>
-      To check the status of the service
-      <systemitem class="daemon">cryptctl-server</systemitem>, use:
-     </para>
+     <para>設定が終わったら、 <systemitem class="daemon">cryptctl-server</systemitem> サービスの状態を確認します:</para>
      <screen>&prompt.root;<command>systemctl status cryptctl-server</command></screen>
     </step>
    </procedure>
-   <para>
-    To reconfigure the server later, do either of the following:
-   </para>
+   <para>サーバを後から再設定する場合は、下記のいずれかを行なってください:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Run the command <command>cryptctl init-server</command> again.
-      <command>cryptctl</command> will then propose the existing settings as
-      the defaults, so that you only need to the specify the values that you want
-      to change.
-     </para>
+     <para><command>cryptctl init-server</command> を再度実行します。 <command>cryptctl</command> は現在の設定値を既定値として表示しますので、必要な箇所のみを変更することになります。</para>
     </listitem>
     <listitem>
-     <para>
-      Make changes directly in the configuration file
-      <filename>/etc/sysconfig/cryptctl-server</filename>.
-     </para>
-     <para>
-      However, to avoid issues, do not change the settings
-      <option>AUTH_PASSWORD_HASH</option> and
-      <option>AUTH_PASSWORD_SALT</option> manually. The values of these
-      options need to be calculated correctly.
-     </para>
+     <para>設定ファイルである <filename>/etc/sysconfig/cryptctl-server</filename> ファイルを直接編集してもかまいません。</para>
+     <para>ただし直接編集する場合は、 <option>AUTH_PASSWORD_HASH</option> と <option>AUTH_PASSWORD_SALT</option>  の値を変更してはなりません。これらのオプションは、適切な手段で計算する必要があるためです。</para>
     </listitem>
    </itemizedlist>
   </sect1>
   <sect1 xml:id="sec-configure-cryptctl-client">
-   <title>Setting Up a <command>cryptctl</command> Client</title>
-   <para>
-    The following interactive setup of <command>cryptctl</command> is
-    currently the only setup method.
-   </para>
-   <para>
-    Make sure the following preconditions are fulfilled:
-   </para>
+   <title><command>cryptctl</command> クライアントの設定</title>
+   <para>下記に示す <command>cryptctl</command> の対話型の設定が、唯一の設定手段となります。</para>
+   <para>まずは下記の要件を全て満たしていることを確認します:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      A <command>cryptctl</command> server is available over the network.
-     </para>
+     <para>ネットワーク内に <command>cryptctl</command> サーバが既に存在していること。</para>
     </listitem>
     <listitem>
-     <para>
-      There is a directory to encrypt.
-     </para>
+     <para>暗号化の対象となるディレクトリが存在すること。</para>
     </listitem>
     <listitem>
-     <para>
-      The client machine has an empty partition available that is large
-      enough to fit the directory to encrypt.
-     </para>
+     <para>暗号化対象のディレクトリを保持するのに十分なサイズのある、未使用のパーティションがクライアントマシン内に存在すること。</para>
     </listitem>
     <listitem>
-     <para>
-      When using a self-signed certificate, the certificate
-      (<filename>*.crt</filename> file) generated on the server is
-      available locally on the client. Otherwise, the certificate authority
-      of the server certificate must be trusted by the client.
-     </para>
+     <para>自己署名型の証明書を使用する場合、サーバ側で生成された証明書 ( <filename>*.crt</filename> ファイル) をクライアント側にも配置する必要があります。クライアント側で信頼している証明機関で署名された証明書であれば、この必要はありません。</para>
     </listitem>
     <listitem>
-     <para>
-      If you set up the server to require clients to authenticate using a
-      client certificate, prepare a TLS certificate for the client which is
-      signed by the CA certificate you chose for the server.
-     </para>
+     <para>サーバ側でクライアントを認証する際、証明書を利用して行なうように設定した場合は、サーバ側で選択した証明機関の署名が付いた TLS 証明書を用意してください。</para>
      <remark>
       FIXME: needs openssl command-line-fu, or maybe xref to
       doc-sle/sec.apache2.ssl.certificate - though some parts there are
@@ -312,276 +148,133 @@
    </itemizedlist>
    <procedure>
     <step>
-     <para>
-      As <systemitem class="username">root</systemitem>, run:
-     </para>
+     <para><systemitem class="username">root</systemitem> で下記を実行します:</para>
      <screen>&prompt.root;<command>cryptctl encrypt</command></screen>
     </step>
     <step>
-     <para>
-      Answer each of the following prompts and press <keycap function="enter"/>
-      after every answer. If there is a default answer, it is shown in square
-      brackets at the end of the prompt.
-     </para>
+     <para>それぞれ表示された質問に対して回答を入力し、 <keycap function="enter"/> を押していきます。このとき、既定値は質問の末尾に角括弧で括られて表示されます。</para>
      <substeps>
       <step>
-       <para>
-        Specify the host name and port to connect to on the
-        <command>cryptctl</command> server.
-       </para>
+       <para>接続先となる <command>cryptctl</command> サーバのホスト名とポートを指定します。</para>
       </step>
       <step>
-       <para>
-        If you configured the server to have clients authenticate to it using a
-        TLS certificate, specify a certificate and a key file for the client.
-        The client certificate must be signed by the certificate
-        authority chosen when setting up the server.
-       </para>
+       <para>サーバ側で TLS 証明書を利用してクライアントの認証を行なうように設定している場合は、対応する証明書とその鍵を指定します。証明書はサーバ側で選択した証明機関による署名が必要となります。</para>
       </step>
       <step>
-       <para>
-        Specify the absolute path to the server certificate (the
-        <filename>*.crt</filename> file).
-       </para>
+       <para>次にサーバの証明書 (<filename>*.crt</filename> ファイル) の絶対パスを指定します。</para>
       </step>
       <step>
-       <para>
-        Enter the encryption password that you specified when setting up the
-        server.
-       </para>
+       <para>サーバを設定する際に指定した暗号化パスワードを入力します。</para>
       </step>
       <step>
-       <para>
-        Specify the path to the directory to encrypt. Specify the path to the
-        empty partition that will contain the encrypted content of the
-        directory.
-       </para>
+       <para>暗号化の対象となるディレクトリを指定し、その後にそのディレクトリを暗号化したあとのデータを保存するための空きパーティションのパスを指定します。</para>
       </step>
       <step>
-       <para>
-        Specify the number of machines that are allowed to decrypt the
-        partition simultaneously.
-       </para>
-       <para>
-        Then specify the timeout in seconds before additional machines are
-        allowed to decrypt the partition after the last vital sign was
-        received from the client or clients.
-       </para>
-       <para>
-        When a machine unexpectedly stops working and then reboots, it needs to
-        be able to unlock its partitions again. That means this timeout
-        should be set to a time slightly shorter than the reboot time of the
-        client.
-       </para>
+       <para>パーティションを同時に解読することのできるマシンの台数を指定します。</para>
+       <para>続いてクライアントからの通信が途絶えた際、追加でパーティションの解読を許可するようにするまでの時間を、秒単位で指定します。</para>
+       <para>マシンが何らかの理由で停止して再起動した場合には、パーティションを再度解読できるようにする必要があります。そのため一般には、クライアント側の再起動にかかる時間よりも少し短めの値を、タイムアウトとして設定する必要があります。</para>
        <important>
-        <title>Timeout Length</title>
-        <para>
-         If the time is set too long, the machine cannot decrypt
-         encrypted partitions on the first try. <command>cryptctl</command> will
-         then continue to periodically check whether the encryption key has
-         become available. However, this will introduce a delay.
-        </para>
-        <para>
-         If the timeout is set too short, machines with a copy of
-         the encrypted partition have an increased chance of unlocking the
-         partition first.
-        </para>
+        <title>タイムアウトの設定値について</title>
+        <para>タイムアウトとして設定する時間が長すぎると、初回の試行では暗号化されたパーティションの解読が失敗するようになります。 <command>cryptctl</command> では定期的に暗号鍵の取得を試すようになっていますが、次の試行までには時間が空きますので、遅延を発生させることになってしまいます。</para>
+        <para>逆にタイムアウトが短すぎると、暗号化されたパーティションをそのままコピーするだけで、不正なマシンが暗号を解読できることになってしまいます。</para>
        </important>
       </step>
      </substeps>
     </step>
     <step>
-     <para>
-      To start encryption, enter <literal>yes</literal>.
-     </para>
-     <para>
-      <command>cryptctl</command> will now encrypt the specified directory to
-      the previously empty partition and then mount the newly encrypted
-      partition. The file system type will be of the same type as the
-      original unencrypted file system.
-     </para>
-     <para>
-      Before creating the encrypted partition,
-      <command>cryptctl</command> moves the unencrypted content of the
-      original directory to a location prefixed with
-      <literal>cryptctl-moved-</literal>.
-     </para>
+     <para>暗号化を開始するには、 <literal>yes</literal> (はい) と入力します。</para>
+     <para>すると、 <command>cryptctl</command> は指定したディレクトリの暗号化を行ない、結果を空きパーティション内に保存するようになります。保存が完了すると、暗号化されたパーティションのマウントが行なわれます。ファイルシステムの種類は、暗号化前のファイルシステムと同じ種類になります。</para>
+     <para>暗号化されたパーティションを作成する前に、 <command>cryptctl</command> は暗号化前のディレクトリ内にある内容を、 <literal>cryptctl-moved-</literal> という接頭辞の付いたディレクトリ内に移動します。</para>
     </step>
     <step>
-     <para>
-      To check that the directory is indeed mounted correctly, use:
-     </para>
+     <para>ディレクトリが正しく暗号化されたことを確認するには、下記のように入力して実行します:</para>
      <screen>
 &prompt.user;<command>lsblk -o NAME,MOUNTPOINT,UUID</command>
 NAME                        MOUNTPOINT          UUID
 [...]
 sdc
-└─sdc1                                          <replaceable>PARTITION_UUID</replaceable>
-  └─cryptctl-unlocked-sdc1  /secret-partition   <replaceable>UNLOCKED_UUID</replaceable>
+└─sdc1                                          <replaceable>パーティションの_UUID</replaceable>
+  └─cryptctl-unlocked-sdc1  /secret-partition   <replaceable>解読後の_UUID</replaceable>
       </screen>
-     <para>
-      <command>cryptctl</command> identifies the encrypted partition by its
-      UUID. For the previous example, that is the UUID displayed next to
-      <literal>sdc1</literal>.
-     </para>
-     <para>
-      On the server, you can check whether the directory was decrypted using
-      <command>cryptctl</command>.
-     </para>
+     <para><command>cryptctl</command> では、暗号化されたパーティションを UUID で識別します。上記の例では、 <literal>sdc1</literal> の UUID がそれにあたります。</para>
+     <para>サーバ側でディレクトリが解読されているかどうかを確認するには、 <command>cryptctl</command> コマンドを使用します:</para>
      <screen>&prompt.root;<command>cryptctl list-keys</command></screen>
-     <para>
-      For a successfully decrypted partition, you will see output like:
-     </para>
+     <para>正しく解読されていれば、下記のような出力が現われるはずです:</para>
      <screen>
 2019/06/06 15:50:00 ReloadDB: successfully loaded database of 1 records
 Total: 1 records (date and time are in zone EDT)
 Used By     When                 UUID  Max.Users  Num.Users  Mount Point
 <replaceable>IP_ADDRESS</replaceable>  2019-06-06 15:00:50  <replaceable>UUID</replaceable>  1          1          /secret-partition</screen>
-     <para>
-      For a partition not decrypted successfully, you will see output like:
-     </para>
+     <para>解読できていないパーティションの場合は、下記のような出力になります:</para>
      <screen>2019/06/06 15:50:00 ReloadDB: successfully loaded database of 1 records
 Total: 1 records (date and time are in zone EDT)
 Used By      When                 UUID  Max.Users  Num.Users  Mount Point
              2019-06-06 15:00:50  <replaceable>UUID</replaceable>  1          1          /secret-partition</screen>
-     <para>See the difference in the empty <literal>Used by</literal> column.</para>
-     <para>
-      Verify that the UUID shown is that of the previously encrypted partition.
-     </para>
+     <para><literal>Used by</literal> 列の違いに着目してください。</para>
+     <para>表示された UUID が暗号化されたパーティションのものであることを確認してください。</para>
     </step>
     <step>
-     <para>
-      After verifying that the encrypted partition works, delete the
-      unencrypted content from the client. For example, use <command>rm</command>.
-      For more
-      safety, overwrite the content of the files before deleting them, for
-      example, using <command>shred -u</command>.
-     </para>
+     <para>パーティションの暗号化が正しく動作していることを確認したら、あとはクライアント側にある元のディレクトリ (暗号化されていないディレクトリ) を削除してください。たとえば <command>rm</command> などを使用して削除します。より安全に削除したい場合は、削除を行なう前にファイルに対して <command>shred -u</command> などを使用して、ファイルの内容を上書きしてもかまいません。</para>
      <important>
-      <title><command>shred</command> Does Not Guarantee That Data Is Completely Erased</title>
-      <para>
-       Depending on the type of storage media, using
-       <command>shred</command> is not a guarantee that all data is
-       completely removed. In particular, SSDs usually employ wear leveling
-       strategies that render <command>shred</command> ineffective.
-      </para>
+      <title><command>shred</command> コマンドはデータが完全に消すことを保証するわけではない問題について</title>
+      <para>ストレージメディアの種類によっては、 <command>shred</command> コマンドを使用してもデータが完全には消えない場合があります。特に SSD などではウエアレベリングの仕組みが存在することから、 <command>shred</command> を実行しても同じ場所には書き込んでくれないこともあります。</para>
      </important>
     </step>
    </procedure>
-   <para>
-    The configuration for the connection from client to server is stored in
-    <filename>/etc/sysconfig/cryptctl-client</filename> and can be edited
-    manually.
-   </para>
-   <para>
-    The server stores an encryption key for the client partition in
-    <filename>/var/lib/cryptctl/keydb/<replaceable>PARTITION_UUID</replaceable></filename>.
-   </para>
+   <para>クライアントからサーバに対する接続は、 <filename>/etc/sysconfig/cryptctl-client</filename> ファイルで設定します。このファイルは手作業で編集してもかまいません。</para>
+   <para>クライアントのパーティションに対する暗号鍵は、サーバ内の <filename>/var/lib/cryptctl/keydb/<replaceable>パーティションの_UUID</replaceable></filename> 内に保存されています。</para>
   </sect1>
   <sect1 xml:id="sec-configure-cryptctl-status">
-   <title>Checking Partition Unlock Status Using Server-side Commands</title>
-   <para>
-    When a <command>cryptctl</command> client is active, it will send a
-    <quote>heartbeat</quote> to the <command>cryptctl</command> server every
-    10 seconds. If the server does not receive a heartbeat from the client
-    for the length of the timeout configured during the client setup, the
-    server will assume that the client is offline. It will then allow another
-    client to connect (or allow the same client to reconnect after a reboot).
-   </para>
-   <para>
-    To see the usage status of all keys, use:
-   </para>
+   <title>サーバ側のコマンドでパーティションの解読状態を確認する方法</title>
+   <para><command>cryptctl</command> のクライアントが動作している場合、クライアント側からは 10 秒間隔で <command>cryptctl</command> のサーバに <quote>生存通知</quote> (ハートビート) を送信します。クライアント側で設定した時間以上にクライアント側からの生存通知がサーバに届かない場合、サーバはクライアントがオフラインになったものと判断します。これにより、別のクライアント (もしくは再起動後の同じクライアント) から接続ができるようになります。</para>
+   <para>全ての鍵に対する使用状況を確認するには、下記のコマンドを入力して実行します:</para>
    <screen>
 &prompt.root;<command>cryptctl list-keys</command>
    </screen>
-   <para>
-    The information under <literal>Num. Users</literal> shows whether the key
-    is currently in use. To see more detail on a single key, use:
-   </para>
+   <para><literal>Num. Users</literal> 以下に、どの鍵が使用されているのかが表示されます。それぞれの鍵に対する詳細を表示したい場合は、下記のようなコマンドを入力して実行します:</para>
    <screen>
 &prompt.root;<command>cryptctl show-key <replaceable>UUID</replaceable></command>
    </screen>
-   <para>
-    This command will show information about mount point, mount options,
-    usage options, the last retrieval of the key and the last three
-    heartbeats from clients.
-   </para>
-   <para>
-    Additionally, you can use <command>journalctl</command> to find logs of
-    when keys were retrieved.
-   </para>
+   <para>このコマンドを実行すると、マウントポイントやマウントオプション、使用時のオプションや鍵の最終取得時刻、そしてクライアントからの直近 3 回分の生存通知が表示されます。</para>
+   <para>これに加えて、 <command>journalctl</command> コマンドを使用することで、鍵をいつ取得したのかのログを確認することができます。</para>
   </sect1>
   <sect1 xml:id="sec-configure-cryptctl-unlock">
-   <title>Unlocking Encrypted Partitions Manually</title>
-   <para>
-    There are two ways of unlocking a partition manually, both of which are run
-    on a client:
-   </para>
+   <title>手作業での暗号化パーティションの解読</title>
+   <para>パーティションを手作業で解読するにあたっては、 2 種類の方法が存在しています。いずれもクライアント側で実行します:</para>
    <itemizedlist>
     <listitem>
      <formalpara>
-      <title>Online Unlocking</title>
-      <para>
-       Online unlocking allows circumventing timeout or user limitations.
-       This method can be used when there is a network connection between
-       client and server but the client could not (yet) unlock the partition
-       automatically. This method will unlock all encrypted
-       partitions on a machine.
-      </para>
+      <title>オンライン解錠</title>
+      <para>オンライン解錠を利用すると、タイムアウトの問題を回避したりユーザ制限を行なったりすることができます。この方式は、クライアントとサーバとの間がネットワークで繋がっているものの、クライアント側で自動マウントができないような場合に使用することができます。また、この方式を使用することで、全ての暗号化されたパーティションを解読することができます。</para>
      </formalpara>
-     <para>
-      To use it, run <command>cryptctl online-unlock</command>. Be prepared to
-      enter the password specified when setting up the server.
-     </para>
+     <para>オンライン解錠を実行するには、 <command>cryptctl online-unlock</command> コマンドを実行します。サーバ側で設定したパスワードを入力する必要があることに注意してください。</para>
     </listitem>
     <listitem>
      <formalpara>
-      <title>Offline Unlocking</title>
-      <para>
-       This method can be used when a client cannot or must not be brought
-       online to communicate with its server. The encryption key from the
-       server must still be available. This method is meant as a last resort
-       only and can only unlock a single partition at a time.
-      </para>
+      <title>オフライン解錠</title>
+      <para>この方式は、クライアント側からサーバに接続できない状態や、接続すると何らかの理由で困ってしまうような場合に使用します。この方式を実行するには、サーバ側に暗号鍵を用意しておく必要があることに注意してください。また、この方式は最終手段としてのみ使用されるべきものであるほか、同時に 1 つのパーティションしか解錠できないことにも注意してください。</para>
      </formalpara>
-     <para>
-      To use it, run <command>cryptctl offline-unlock</command>. The
-      server's key file for the requisite partition
-      (<filename>/var/lib/cryptctl/keydb/<replaceable>PARTITION_UUID</replaceable></filename>)
-      needs to be available on the client.
-     </para>
+     <para>オフライン解錠を実行するには、 <command>cryptctl offline-unlock</command> コマンドを実行します。これを実行するには、あらかじめ対象のパーティションに対応するサーバ側の鍵ファイル ( <filename>/var/lib/cryptctl/keydb/<replaceable>パーティションの_UUID</replaceable></filename> ) を用意しておく必要があります。</para>
     </listitem>
    </itemizedlist>
   </sect1>
   <sect1 xml:id="sec-configure-cryptctl-lock">
-   <title>Maintenance Downtime Procedure</title>
-   <para>
-    To ensure that partitions cannot be decrypted during a maintenance
-    downtime, turn off the client and disable the
-    <command>cryptctl</command> server. You can do so by either:
-   </para>
+   <title>メンテナンス時の停止手順</title>
+   <para>メンテナンス中にパーティションが不正に解読されてしまわないようにするため、メンテナンス時にはクライアント側を停止し、 <command>cryptctl</command> サーバを無効化しておくことをお勧めします。具体的には、下記のいずれかを実行します:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Stopping the service
-      <systemitem class="daemon">cryptctl-server</systemitem>:
-     </para>
+     <para><systemitem class="daemon">cryptctl-server</systemitem> サービスを停止します:</para>
      <screen>
 &prompt.root;<command>systemctl stop cryptctl-server</command>
      </screen>
     </listitem>
     <listitem>
-     <para>
-      Unplugging the <command>cryptctl</command> server from the network.
-     </para>
+     <para><command>cryptctl</command> サーバをネットワークから切り離します。</para>
     </listitem>
    </itemizedlist>
   </sect1>
  <sect1 xml:id="sec-configure-cryptctl-more">
-  <title>For More Information</title>
-  <para>
-   For more information, also see the project home page
-   <link xlink:href="https://github.com/HouzuoGuo/cryptctl/"/>.
-  </para>
+  <title>さらなる情報</title>
+  <para>さらに詳しい情報については、プロジェクトのホームページ <link xlink:href="https://github.com/HouzuoGuo/cryptctl/"/> をご覧ください。</para>
  </sect1>
  </chapter>
