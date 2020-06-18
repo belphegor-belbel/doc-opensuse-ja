@@ -106,18 +106,9 @@ Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
   </tip>
  </sect1>
  <sect1 xml:id="sec-libvirt-hypervisor-features-virsh">
-  <title>ネットワークデバイスの設定</title>
+  <title>ハイパーバイザ機能の設定</title>
 
-  <para>
-   <command>libvirt</command> automatically enables a default set of hypervisor features that
-   are sufficient in most circumstances, but also allows enabling and disabling
-   features as needed. As an example, Xen does not support enabling PCI
-   passthrough by default. It must be enabled with the
-   <literal>passthrough</literal> setting. Hypervisor features can be configured
-   with &virsh;. Look for the <tag>&lt;features&gt;</tag> element in the
-   &vmguest;'s configuration file and adjust the various features as required.
-   Continuing with the &xen; passthrough example:
-  </para>
+  <para><command>libvirt</command> はほとんどの状況下において適切なハイパーバイザ設定を行なうよう自動設定されていますが、必要に応じて特定の機能を有効化したり無効化したりすることができます。たとえば Xen の既定では PCI パススルーが有効化されていませんが、 <literal>passthrough</literal> を設定することで有効化することができます。ハイパーバイザの機能は &virsh; を利用して、 &vmguest; の設定ファイル内に <tag>&lt;features&gt;</tag> 要素を指定して設定します。たとえば &xen; での PCI パススルー機能を有効化するには、下記のように設定します:</para>
 
 <screen>&prompt.sudo;virsh edit sle15sp1
  &lt;features&gt;
@@ -127,9 +118,9 @@ Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
  &lt;/features&gt;
 </screen>
 
-  <para>設定を保存してゲストを再起動してください。これで設定が反映されます:</para>
+  <para>あとは設定を保存して &vmguest; を再起動してください。</para>
 
-  <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/> (英語) にある libvirt <citetitle>Domain XML format</citetitle> マニュアルの中にある、 <citetitle>Controllers</citetitle> 章をお読みください。</para>
+  <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsFeatures"/> (英語) にある libvirt の <citetitle>Domain XML format</citetitle> 内の <citetitle>Hypervisor features</citetitle> の章をお読みください。</para>
  </sect1>
  <sect1 xml:id="libvirt-cpu-virsh">
   <title>CPU 割り当ての設定</title>
@@ -761,24 +752,13 @@ pci_0000_04_11_5</screen>
   <para>これで、 &vmguest; の OS 内から新しいストレージデバイスにアクセスできるようになります。</para>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-controllers-virsh">
-  <title>ストレージデバイスの設定</title>
+  <title>コントローラデバイスの設定</title>
 
-  <para>
-   <command>libvirt</command> generally manages controllers automatically
-   based on the type of virtual devices used by the &vmguest;. If the &vmguest;
-   contains PCI and SCSI devices, PCI and SCSI controllers will be created and
-   managed automatically. <command>libvirt</command> will also model controllers
-   that are hypervisor-specific, for example, a <literal>virtio-serial</literal> controller for KVM
-   &vmguest;s or a <literal>xenbus</literal> controller for Xen &vmguest;s. Although the default
-   controllers and their configuration are generally fine, there may be use cases
-   where controllers or their attributes need to be adjusted manually. For example
-   a virtio-serial controller may need more ports, or a xenbus controller may need
-   more memory or more virtual interrupts.
-  </para> 
+  <para><command>libvirt</command> では一般に、 &vmguest; が使用する仮想デバイスの種類に応じて、自動的にコントローラを管理することができます。たとえば &vmguest; 内に PCI デバイスや SCSI デバイスが存在する場合、 PCI や SCSI のコントローラは自動的に作成され管理されます。このほか、 <command>libvirt</command> ではハイパーバイザ固有のコントローラ、たとえば KVM の &vmguest; であれば <literal>virtio-serial</literal> 、 Xen の &vmguest; であれば <literal>xenbus</literal> を作成することができます。通常は既定のコントローラとそれに付随する設定で問題なく動作しますが、必要に応じてコントローラやその設定を調整することもできます。たとえば virtio-serial でより多くのポートが必要となっている場合や、 xenbus コントローラに対してより多くのメモリを割り当てたり、割り込みを多く割り当てたりするような場合がそれに該当します。</para> 
 
-  <para><command>libvirt</command> には、 <command>virsh</command> でメモリの割り当て量を調整するための仕組みが提供されています。 &xen; 準仮想化デバイスは PCI コントローラのようなデバイスバスに似た <literal>xenbus</literal> コントローラに接続されていますので、 &xen; の <literal>max_grant_frames</literal> 属性を設定することで、擬似的なメモリの割り当て設定を変更できるようになっています。なお、この割り当ては <literal>xenbus</literal> コントローラに割り当てるフレーム数を設定する項目になります。</para>
+  <para>xenbus コントローラは、全ての Xen 準仮想化デバイスに対するコントローラとして動作する点でユニークなものであると言えます。また、 &vmguest; に数多くのディスクやネットワークデバイスが接続されるような場合には、コントローラに対してもメモリを多く割り当てる必要があるかもしれません。 Xen の <literal>max_grant_frames</literal> 属性は許可するフレームの数、もしくは共有メモリのブロック数を指定しますが、これはそれぞれの &vmguest; に対する <literal>xenbus</literal> コントローラに対して割り当てられます。</para>
 
-  <para>既定値は 32 で、必要に応じて最大で dom0 のサイズまで増やしたり、減らしたりすることができます。サイズが十分かどうかは、接続されているデバイス数や負荷 (ネットワークインターフェイスや I/O の負荷) によって異なります。 dom0 やその他のゲストに対して、使用済みの <literal>max_grant_frames</literal> の値や最大値を確認したい場合は、 <command>xen-diag</command> コマンドをお使いください。なお、ゲストは動作中でなければなりません:</para>
+  <para>既定値は 32 で、ほとんどの環境において十分な値ではありますが、 I/O デバイスの多い &vmguest; や I/O 負荷の高いシステムでは、フレームの枯渇によって性能が落ちることがあります。このような場合、 <command>xen-diag</command> コマンドを利用して dom0 およびお使いの &vmguest; の <literal>max_grant_frames</literal> の現在値および最大値を確認してください。なお、ゲストは動作中でなければなりません:</para>
 
 <screen>&prompt.sudo;virsh list
  Id   Name             State
@@ -793,7 +773,7 @@ domid=0: nr_frames=1, max_nr_frames=256
 domid=3: nr_frames=3, max_nr_frames=32
 </screen>
 
-  <para>上記では、 sle15sp1 のゲストは 32 フレームのうちの 3 フレームしか使用していません。性能面で何らかの問題がある場合や、フレーム数が不足している旨のログが記録されているような場合は、 &virsh; でフレーム数を増やしてください。具体的には、ゲスト側の設定ファイル内にある <literal>&lt;controller type='xenbus'</literal> という行を探して、 <literal>maxGrantFrames</literal> という制御要素を追加します:</para>
+  <para>上記では、 <literal>sle15sp1</literal> のゲストは 32 フレームのうちの 3 フレームしか使用していません。性能面で何らかの問題がある場合や、フレーム数が不足している旨のログが記録されているような場合は、 &virsh; でフレーム数を増やしてください。具体的には、ゲスト側の設定ファイル内にある <literal>&lt;controller type='xenbus'</literal> という行を探して、 <literal>maxGrantFrames</literal> という制御要素を追加します:</para>
 
 <screen>&prompt.sudo;virsh edit sle15sp1
  &lt;controller type='xenbus' index='0' maxGrantFrames='40'/&gt;
@@ -805,18 +785,10 @@ domid=3: nr_frames=3, max_nr_frames=32
 domid=3: nr_frames=3, max_nr_frames=40
 </screen>
 
-  <para>
-   Similar to maxGrantFrames, the xenbus controller also supports
-   <option>maxEventChannels</option>. Event channels are like paravirtual interrupts, and in
-   conjunction with grant frames, form a data transfer mechanism for paravirtual
-   drivers. They are also used for inter-processor interrupts. &vmguest;s
-   with a large number of vcpus and/or many paravirtual devices many need to
-   increase the maximum default value of 1023. maxEventChannels can be changed
-   similar to maxGrantFrames:
-  </para>
+  <para>maxGrantFrames と同様に、 xenbus コントローラには <option>maxEventChannels</option> という設定値も用意されています。それぞれのチャンネルは準仮想化された割り込みのような動作をするもので、許可するフレーム数と同時に、準仮想化ドライバ向けのデータ転送構造を構築するためのものです。仮想 CPU 数の多い &vmguest; や多数の準仮想化デバイスが接続されている &vmguest; の場合は、既定値である 1023 よりも大きい値を設定する必要があります。 maxEventChannels は maxGrantFrames と同じように変更することができます:</para>
 
 <screen>&prompt.sudo;virsh edit sle15sp1
- &lt;controller type='xenbus' index='0' maxGrantFrames='40'/&gt;
+ &lt;controller type='xenbus' index='0' maxGrantFrames='128' maxEventChannels='2047'/&gt;
 </screen>
 
   <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsControllers"/> (英語) にある libvirt <citetitle>Domain XML format</citetitle> マニュアルの中にある、 <citetitle>Controllers</citetitle> 章をお読みください。</para>
