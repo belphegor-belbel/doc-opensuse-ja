@@ -101,23 +101,47 @@ STARTMODE="hotplug"
      </screen>
      </step>
      <step>
-      <para><filename>/etc/sysconfig/&susefirewallfiles;</filename> ファイルを編集し、下記の設定を追加します:</para>
+      <para>
+       Ensure that IP forwarding is enabled:
+      </para>
+      <substeps>
+       <step>
+        <para>
+         In &yast;, go to <menuchoice><guimenu>Network
+           Settings</guimenu><guimenu>Routing</guimenu></menuchoice>.
+        </para>
+       </step>
+       <step>
+        <para>
+         Enter the <guimenu>Routing</guimenu> tab and activate <guimenu>Enable
+          IPv4 Forwarding</guimenu> and <guimenu>Enable IPv6
+          Forwarding</guimenu> options.
+        </para>
+       </step>
+       <step>
+        <para>
+         Confirm the setting and quit &yast;.
+        </para>
+       </step>
+      </substeps>
+     </step>
+     <step>
+      <para>
+       Apply the following configuration to &firewalld;:
+       </para>
       <itemizedlist mark="bullet" spacing="normal">
        <listitem>
         <para>FW_DEV_EXT のデバイス内に &xenguest;.0 を追加します:</para>
-<screen>FW_DEV_EXT="br0 &xenguest;.0"</screen>
-       </listitem>
-       <listitem>
-        <para>ファイアウオールでルーティングを有効化します:</para>
-<screen>FW_ROUTE="yes"</screen>
+<screen>&prompt.sudo;firewall-cmd --zone=public --add-interface=&xenguest;.0</screen>
        </listitem>
        <listitem>
         <para>転送すべきアドレスをファイアウオールに設定します:</para>
-<screen>FW_FORWARD="&xenguestip;/32,0/0"</screen>
+<screen>&prompt.sudo;firewall-cmd --zone=public \
+--add-forward-port=port=80:proto=tcp:toport=80:toaddr="&xenguestip;/32,0/0"</screen>
        </listitem>
        <listitem>
-        <para>最後にファイアウオールを再起動します:</para>
-<screen>&prompt.sudo;systemctl restart &susefirewallfiles;</screen>
+        <para>新しい設定を適用し、 &vmguest; を起動します。</para>
+<screen>&prompt.sudo;firewall-cmd --runtime-to-permanent</screen>
        </listitem>
       </itemizedlist>
      </step>
