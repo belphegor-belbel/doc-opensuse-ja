@@ -7,7 +7,12 @@
  <title>ネットワークの管理</title>
  <info>
   <abstract>
-   <para>本章では、 &libvirt; でサポートされる一般的な (使用するハイパーバイザには依存しない) ネットワーク設定について説明しています。本章の内容は、 &kvm; や &xen; など、 &libvirt; で対応する全てのハイパーバイザで利用することができます。また、これらの設定は &vmm; のグラフィカルインターフェイスと <command>virsh</command> のコマンドラインツールのいずれでも設定することができます。</para>
+    <para>
+     This chapter describes common network configurations for a &vmhost;,
+     including those supported natively by the &vmhost; and &libvirt;.
+     The configurations are valid for all hypervisors supported by &productname;,
+     such as &kvm; or &xen;.
+   </para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -16,22 +21,225 @@
  <para>&vmguest; に対してネットワーク接続を提供する場合、下記の 2 種類の設定方法が存在します:</para>
  <itemizedlist>
   <listitem>
-   <para>ゲストに対する <emphasis>仮想ネットワーク</emphasis></para>
-  </listitem>
-  <listitem>
    <para>ホストの物理ネットワークインターフェイスをゲストから使用させるための <emphasis>ネットワークブリッジ</emphasis></para>
   </listitem>
+  <listitem>
+   <para>ゲストに対する <emphasis>仮想ネットワーク</emphasis></para>
+  </listitem>
  </itemizedlist>
+ <sect1 xml:id="libvirt-networks-bridged">
+  <title>ネットワークブリッジの追加</title>
+
+  <para>
+   The network bridge configuration provides a Layer 2 switch for &vmguest;s,
+   switching Layer 2 Ethernet packets between ports on the bridge based on MAC
+   addresses associated with the ports. This gives the &vmguest; Layer 2 access
+   to the &vmhost;'s network. This configuration is analogous to connecting the
+   &vmguest;'s virtual Ethernet cable into a hub that is shared with the host
+   and other &vmguest;s running on the host. The configuration is often referred
+   to as <emphasis>shared physical device</emphasis>.
+  </para>
+
+  <para>
+   The network bridge configuration is the default configuration of
+   &productname; when configured as a &kvm; or &xen; hypervisor. It is the
+   preferred configuration when you simply want to connect &vmguest;s to the
+   &vhhost;'s LAN.
+  </para>
+
+  <sect2 xml:id="libvirt-networks-bridged-yast">
+   <title>&yast; を利用したネットワークブリッジの管理</title>
+   <para>本章では、 &yast; を利用してネットワークブリッジの追加と削除について、手順を説明しています。</para>
+   <sect3 xml:id="libvirt-networks-bridged-yast-add">
+    <title>ネットワークブリッジの追加</title>
+    <para>&vmhost; 内にネットワークブリッジを追加するには、下記の手順を実施します:</para>
+    <procedure>
+     <step>
+      <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択します。</para>
+     </step>
+     <step>
+      <para><guimenu>概要</guimenu> タブを選択し、 <guimenu>追加</guimenu> を押します。</para>
+     </step>
+     <step>
+      <para><guimenu>デバイスの種類</guimenu> の一覧から <guimenu>ブリッジ</guimenu> を選択し、 <guimenu>設定名</guimenu> の欄にブリッジデバイス名を入力します。あとは <guimenu>次へ</guimenu> を押します。</para>
+     </step>
+     <step>
+      <para><guimenu>アドレス</guimenu> タブを選択し、 DHCP や固定 IP アドレス、サブネットマスクやホスト名などの設定を行ないます。</para>
+      <para>なお、 <guimenu>可変 IP アドレス</guimenu> の設定は、 DHCP サーバに接続されているブリッジを構成する場合にのみ使用します。</para>
+      <para>物理的なイーサネットデバイスへの接続を持たない仮想ブリッジを作成しようとしている場合は、 <guimenu>固定 IP アドレス</guimenu> を選択します。この場合、プライベート IP アドレスの範囲から選んで使用することをお勧めします。たとえば <literal>192.168.x.x</literal> や <literal>10.x.x.x</literal> などがあります。</para>
+      <para>ホスト側のシステムに接続することなく、ゲスト間のみで接続するブリッジを作成したい場合は、 IP アドレスを <literal>0.0.0.0</literal> に、サブネットマスクを <literal>255.255.255.255</literal> に設定します。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
+     </step>
+     <step>
+      <para><guimenu>ブリッジ接続デバイス</guimenu> タブを選択し、ネットワークブリッジに接続したいネットワークデバイスを選択します。</para>
+     </step>
+     <step>
+      <para><guimenu>次へ</guimenu> を押すと <guimenu>概要</guimenu> タブが表示された状態に戻ります。あとは <guimenu>OK</guimenu> を押して設定を適用してください。これで &vmhost; 内に新しいネットワークブリッジが作成されるようになります。</para>
+     </step>
+    </procedure>
+   </sect3>
+   <sect3 xml:id="libvirt-networks-bridged-yast-rm">
+    <title>ネットワークブリッジの削除</title>
+    <para>既存のネットワークブリッジを削除するには、下記の手順を実施します:</para>
+    <procedure>
+     <step>
+      <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択します。</para>
+     </step>
+     <step>
+      <para><guimenu>概要</guimenu> タブを選択して、一覧の中から削除したいブリッジデバイスを選択します。</para>
+     </step>
+     <step>
+      <para><guimenu>削除</guimenu> を押します。確認メッセージが表示されたら <guimenu>OK</guimenu> を押します。</para>
+     </step>
+    </procedure>
+   </sect3>
+  </sect2>
+
+  <sect2 xml:id="libvirt-networks-bridged-add-brctl">
+   <title>コマンドラインを利用したネットワークブリッジの管理</title>
+   <para>本章では、コマンドラインを利用してネットワークブリッジを追加したり削除したりするための手順を説明しています。</para>
+   <sect3 xml:id="libvirt-networks-bridged-add-brctl-add">
+    <title>ネットワークブリッジの追加</title>
+    <para>&vmhost; 内に新しいネットワークブリッジを追加するには、下記の手順を実施します:</para>
+    <procedure>
+     <step>
+      <para>新しくネットワークブリッジを作成したい &vmhost; に対して、 &rootuser; でログインします。</para>
+     </step>
+     <step>
+      <para>新しいブリッジの名前 (例: <replaceable>virbr_test</replaceable>) を考えて、それを下記の <replaceable>ブリッジ名</replaceable> の箇所に代入して実行します:</para>
+<screen>&prompt.root;ip link add name <replaceable>ブリッジ名</replaceable> type bridge</screen>
+     </step>
+     <step>
+      <para>&vmhost; 内にブリッジが作成されていることを確認します:</para>
+<screen>&prompt.root;bridge vlan
+[...]
+<replaceable>ブリッジ名</replaceable>  1 PVID Egress Untagged
+</screen>
+      <para><replaceable>ブリッジ名</replaceable> が存在していますが、物理ネットワークインターフェイスは何も割り当てられていない表示になります。</para>
+     </step>
+     <step>
+      <para>ネットワークブリッジを動作状態にし、ブリッジにネットワークインターフェイスを追加します:</para>
+<screen>
+&prompt.root;ip link set <replaceable>ブリッジ名</replaceable> up
+&prompt.root;ip link set eth1 master <replaceable>ブリッジ名</replaceable>
+</screen>
+      <important>
+       <title>ネットワークインターフェイスが未使用でなければならない件について</title>
+       <para>ブリッジにネットワークインターフェイスを追加するにあたっては、他のブリッジで使用されていないものである必要があります。</para>
+      </important>
+     </step>
+     <step>
+      <para>必要であれば STP (詳しくは <link xlink:href="https://ja.wikipedia.org/wiki/Spanning_Tree_Protocol">Spanning Tree Protocol</link> をお読みください) を有効化します:</para>
+<screen>&prompt.root;bridge link set dev <replaceable>ブリッジ名</replaceable> cost 4</screen>
+     </step>
+    </procedure>
+   </sect3>
+   <sect3 xml:id="libvirt-networks-bridged-add-brctl-del">
+    <title>ネットワークブリッジの削除</title>
+    <para>コマンドラインから &vmhost; 内の既存のネットワークブリッジデバイスを削除するには、下記の手順を実施します:</para>
+    <procedure>
+     <step>
+      <para>ネットワークブリッジを削除したい &vmhost; に対して、 &rootuser; でログインします。</para>
+     </step>
+     <step>
+      <para>まずは削除したいネットワークブリッジの名前を確認するため、既存のネットワークブリッジの一覧を表示します:</para>
+<screen>&prompt.root;bridge vlan
+[...]
+<replaceable>ブリッジ名</replaceable>  1 PVID Egress Untagged
+</screen>
+     </step>
+     <step>
+      <para>ブリッジを削除します:</para>
+<screen>&prompt.root;ip link delete dev <replaceable>ブリッジ名</replaceable></screen>
+     </step>
+    </procedure>
+   </sect3>
+  </sect2>
+
+  <sect2 xml:id="sec-xen-net-vlan">
+   <title>VLAN インターフェイスの使用</title>
+   <para>利用環境によっては、 2 台の &vmhost; や &vmguest; のシステム間で、プライベートな接続を作成したい要件があることがあります。たとえばホスト内の &vmguest; を異なるネットワークセグメントに移行する場合や、 &vmguest; システムだけが接続することのできるプライベートなブリッジを作成したい場合 (特に異なる &vmhost; システムで動作しているような場合) がそれにあたります。このような接続を構築するのに簡単な方法は、 VLAN ネットワークを設定することです。</para>
+   <para>VLAN インターフェイスは一般に &vmhost; 内に構築します。複数の &vmhost; システムで相互に接続することもできますし、物理インターフェイスを設定することもできるほか、仮想のみのブリッジを作成することもできます。それだけでなく、 &vmhost; には IP アドレスを割り当てず、物理インターフェイスとして VLAN のブリッジを作成することもできます。このような仕組みにより、ゲストシステムからネットワーク内のホストにアクセスすることができないようにすることができます。</para>
+   <para>&yast; モジュールの <menuchoice><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択したあと、下記の手順に従ってください:</para>
+   <procedure>
+    <title>&yast; を利用した VLAN インターフェイスの設定</title>
+    <step>
+     <para><guimenu>追加</guimenu> を押して新しいネットワークインターフェイスを作成します。</para>
+    </step>
+    <step>
+     <para><guimenu>ハードウエアダイアログ</guimenu> では、 <guimenu>デバイスの種類</guimenu> で <guimenu>VLAN</guimenu> を選びます。</para>
+    </step>
+    <step>
+     <para>必要に応じて <guimenu>設定名</guimenu> の ID を変更し、 VLAN の ID を設定します。通常は VLAN ID <literal>1</literal> を管理用に使用します。</para>
+    </step>
+    <step>
+     <para><guimenu>次へ</guimenu> を押します。</para>
+    </step>
+    <step>
+     <para><guimenu>VLAN の実インターフェイス</guimenu> 内で、接続先のデバイス名を選択します。一覧に設定したいインターフェイスが表示されていない場合は、まず対象のインターフェイスの IP アドレスを削除してからやり直してください。</para>
+    </step>
+    <step>
+     <para>この VLAN デバイスに対する IP アドレスの割り当て方法を選択します。</para>
+    </step>
+    <step>
+     <para><guimenu>次へ</guimenu> を押して設定を完了します。</para>
+    </step>
+   </procedure>
+   <para>ブリッジの物理インターフェイスとして VLAN インターフェイスを使用することもできます。これにより、複数の &vmhost; のみが接続されたネットワークを構成することができるようになり、このネットワークを介してライブマイグレーションを実施することができるようになります。</para>
+   <para>&yast; では、場合によっては IP アドレス無しの設定を許可しない場合があります。このような構成は、 &vmhost; のみのネットワークを構成する場合には不便な場合があります。その際は、 IP アドレスに <literal>0.0.0.0</literal> を、サブネットマスクに <literal>255.255.255.255</literal> を指定してください。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
+  </sect2>
+ </sect1>
  <sect1 xml:id="libvirt-networks-virtual">
   <title>仮想ネットワーク</title>
 
-  <para>仮想ネットワークとは、物理的なネットワークリンクから構成されているものではなく、仮想的なネットワークリンクを使用するネットワークを意味します。それぞれのホストには複数の仮想ネットワークを定義して使用することができます。また、仮想ネットワークはハイパーバイザ内で仮想マシン同士を接続する仮想デバイスをベースにしています。この仮想デバイスでは、 LAN 側にトラフィックを変換して発信したり、 DHCP や DNS サービスを提供したりすることができます。仮想ネットワークは物理ネットワークから <emphasis>孤立</emphasis> させることができるほか、物理ネットワークに <emphasis>転送</emphasis> するよう構成することができます。</para>
+  <para>
+   &libvirt;-managed virtual networks are similar to bridged networks, but
+   typically have no Layer 2 connection to the &vmhost;. Connectivity to
+   the &vmhost;'s physical network is accomplished with Layer 3 forwarding,
+   which introduces additional packet processing on the &vmhost; as compared
+   to a Layer 2 bridged network. Virtual networks also provide DHCP and DNS
+   services for &vmguest;s. For more information on &libvirt;s virtual networks
+   see the <citetitle>Network XML format</citetitle> documentation at
+   <link xlink:href="https://libvirt.org/formatnetwork.html"/>.
+  </para>
 
-  <para><emphasis>孤立型</emphasis> の仮想ネットワークでは、参加するゲスト同士の通信は自由に行なうことができるものの、仮想ネットワークの外側と通信することはできません。また、孤立型の仮想ネットワークに参加していないゲストについても、参加しているゲストと通信することができなくなります。</para>
+  <para>
+   A standard &libvirt; installation on &productname; already comes with a
+   predefined virtual network named <literal>default</literal> that provides
+   DHCP and DNS services for the network, along with connectivity to the
+   &vmhost;'s physical network using the network address translation (NAT)
+   forwarding mode. Although it is predefined, the <literal>default</literal>
+   virtual network must be explicitly enabled by the administrator. For more
+   information on the forwarding modes supported by &libvirt; see the
+   <citetitle>Connectivity</citetitle> section of the
+   <citetitle>Network XML format</citetitle> documentation at
+   <link xlink:href="https://libvirt.org/formatnetwork.html#elementsConnect"/>.
+  </para>
 
-  <para>それに対して <emphasis>転送型</emphasis> (Network Address Translation (NAT); ネットワークアドレス変換) の仮想ネットワーク内にあるゲストは、必要に応じて外部のネットワークと通信を行なうことができます。 &vmhost; 側では接続を受け付けるように設定することができるほか、同じ仮想ネットワークに参加する他のゲストからも接続できるようになります。その他の着信側の接続については、 <systemitem>iptables</systemitem> のルールでブロックされます。</para>
+  <para>
+   &libvirt;-managed virtual networks can be used to satisfy a wide range
+   of use-cases, but are commonly used on &vmhost;s that have a wireless
+   connection or dynamic/sporadic network connectivity such as laptops.
+   Virtual networks are also useful when the &vmhost;'s network has limited
+   IP addresses, allowing forwarding of packets between the virtual network
+   and the &vmhost;'s network. However, most server use-cases are better
+   suited for the network bridge configuration, where &vmguest;s are connected
+   to the &vmhost;'s LAN.
+  </para>
 
-  <para>&productname; で libvirt をインストールした直後の状態では、 DHCP サーバとネットワークアドレス変換 (NAT) の機能を提供する仮想ネットワーク "default" が提供されます。</para>
+  <warning>
+   <title>Enabling Forwarding Mode</title>
+   <para>
+    Enabling forwarding mode in a &libvirt; virtual network enables forwarding
+    in the &vmhost; by setting <filename>/proc/sys/net/ipv4/ip_forward</filename>
+    and <filename>/proc/sys/net/ipv6/conf/all/forwarding</filename> to 1, which
+    essentially turns the &vmhost; into a router. Restarting the &vmhost;'s
+    network may reset the values and disable forwarding. To avoid this behavior,
+    explicitly enable forwarding in the &vmhost; by editing the
+    <filename>/etc/sysctl.conf</filename> file and adding:
+   </para>
+   <screen>net.ipv4.ip_forward = 1</screen>
+   <screen>net.ipv6.conf.all.forwarding = 1</screen>
+  </warning>
 
   <sect2 xml:id="libvirt-networks-virtual-vmm">
    <title>&vmm; を利用した仮想ネットワークの管理</title>
@@ -402,154 +610,6 @@ Network vnet_isolated destroyed</screen>
 <screen>&prompt.sudo;virsh net-undefine vnet_isolated
 Network vnet_isolated has been undefined</screen>
    </sect3>
-  </sect2>
- </sect1>
- <sect1 xml:id="libvirt-networks-bridged">
-  <title>ブリッジ型ネットワーク</title>
-
-  <para>ネットワークブリッジは、 2 つ以上のネットワークセグメントを接続する際に使用する仕組みです。これは仮想的なネットワークブリッジとして動作する仕組みで、ゲストマシンは物理ネットワークインターフェイスを介して直接接続されているかのようにして接続されます。また、任意の物理デバイスや仮想デバイスをブリッジに接続することができます。</para>
-
-  <para>既に &vmhost; 内にネットワークブリッジが設定されていれば、あとは &vmguest; から直接接続するだけです。これにより、 &vmguest; は送受信ともに自由に行なうことができるようになります。</para>
-
-  <sect2 xml:id="libvirt-networks-bridged-yast">
-   <title>&yast; を利用したネットワークブリッジの管理</title>
-   <para>本章では、 &yast; を利用してネットワークブリッジの追加と削除について、手順を説明しています。</para>
-   <sect3 xml:id="libvirt-networks-bridged-yast-add">
-    <title>ネットワークブリッジの追加</title>
-    <para>&vmhost; 内にネットワークブリッジを追加するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択します。</para>
-     </step>
-     <step>
-      <para><guimenu>概要</guimenu> タブを選択し、 <guimenu>追加</guimenu> を押します。</para>
-     </step>
-     <step>
-      <para><guimenu>デバイスの種類</guimenu> の一覧から <guimenu>ブリッジ</guimenu> を選択し、 <guimenu>設定名</guimenu> の欄にブリッジデバイス名を入力します。あとは <guimenu>次へ</guimenu> を押します。</para>
-     </step>
-     <step>
-      <para><guimenu>アドレス</guimenu> タブを選択し、 DHCP や固定 IP アドレス、サブネットマスクやホスト名などの設定を行ないます。</para>
-      <para>なお、 <guimenu>可変 IP アドレス</guimenu> の設定は、 DHCP サーバに接続されているブリッジを構成する場合にのみ使用します。</para>
-      <para>物理的なイーサネットデバイスへの接続を持たない仮想ブリッジを作成しようとしている場合は、 <guimenu>固定 IP アドレス</guimenu> を選択します。この場合、プライベート IP アドレスの範囲から選んで使用することをお勧めします。たとえば <literal>192.168.x.x</literal> や <literal>10.x.x.x</literal> などがあります。</para>
-      <para>ホスト側のシステムに接続することなく、ゲスト間のみで接続するブリッジを作成したい場合は、 IP アドレスを <literal>0.0.0.0</literal> に、サブネットマスクを <literal>255.255.255.255</literal> に設定します。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
-     </step>
-     <step>
-      <para><guimenu>ブリッジ接続デバイス</guimenu> タブを選択し、ネットワークブリッジに接続したいネットワークデバイスを選択します。</para>
-     </step>
-     <step>
-      <para><guimenu>次へ</guimenu> を押すと <guimenu>概要</guimenu> タブが表示された状態に戻ります。あとは <guimenu>OK</guimenu> を押して設定を適用してください。これで &vmhost; 内に新しいネットワークブリッジが作成されるようになります。</para>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="libvirt-networks-bridged-yast-rm">
-    <title>ネットワークブリッジの削除</title>
-    <para>既存のネットワークブリッジを削除するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択します。</para>
-     </step>
-     <step>
-      <para><guimenu>概要</guimenu> タブを選択して、一覧の中から削除したいブリッジデバイスを選択します。</para>
-     </step>
-     <step>
-      <para><guimenu>削除</guimenu> を押します。確認メッセージが表示されたら <guimenu>OK</guimenu> を押します。</para>
-     </step>
-    </procedure>
-   </sect3>
-  </sect2>
-
-  <sect2 xml:id="libvirt-networks-bridged-add-brctl">
-   <title>コマンドラインを利用したネットワークブリッジの管理</title>
-   <para>本章では、コマンドラインを利用してネットワークブリッジを追加したり削除したりするための手順を説明しています。</para>
-   <sect3 xml:id="libvirt-networks-bridged-add-brctl-add">
-    <title>ネットワークブリッジの追加</title>
-    <para>&vmhost; 内に新しいネットワークブリッジを追加するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para>新しくネットワークブリッジを作成したい &vmhost; に対して、 &rootuser; でログインします。</para>
-     </step>
-     <step>
-      <para>新しいブリッジの名前 (例: <replaceable>virbr_test</replaceable>) を考えて、それを下記の <replaceable>ブリッジ名</replaceable> の箇所に代入して実行します:</para>
-<screen>&prompt.root;ip link add name <replaceable>ブリッジ名</replaceable> type bridge</screen>
-     </step>
-     <step>
-      <para>&vmhost; 内にブリッジが作成されていることを確認します:</para>
-<screen>&prompt.root;bridge vlan
-[...]
-<replaceable>ブリッジ名</replaceable>  1 PVID Egress Untagged
-</screen>
-      <para><replaceable>ブリッジ名</replaceable> が存在していますが、物理ネットワークインターフェイスは何も割り当てられていない表示になります。</para>
-     </step>
-     <step>
-      <para>ネットワークブリッジを動作状態にし、ブリッジにネットワークインターフェイスを追加します:</para>
-<screen>
-&prompt.root;ip link set <replaceable>ブリッジ名</replaceable> up
-&prompt.root;ip link set eth1 master <replaceable>ブリッジ名</replaceable>
-</screen>
-      <important>
-       <title>ネットワークインターフェイスが未使用でなければならない件について</title>
-       <para>ブリッジにネットワークインターフェイスを追加するにあたっては、他のブリッジで使用されていないものである必要があります。</para>
-      </important>
-     </step>
-     <step>
-      <para>必要であれば STP (詳しくは <link xlink:href="https://ja.wikipedia.org/wiki/Spanning_Tree_Protocol">Spanning Tree Protocol</link> をお読みください) を有効化します:</para>
-<screen>&prompt.root;bridge link set dev <replaceable>ブリッジ名</replaceable> cost 4</screen>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="libvirt-networks-bridged-add-brctl-del">
-    <title>ネットワークブリッジの削除</title>
-    <para>コマンドラインから &vmhost; 内の既存のネットワークブリッジデバイスを削除するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para>ネットワークブリッジを削除したい &vmhost; に対して、 &rootuser; でログインします。</para>
-     </step>
-     <step>
-      <para>まずは削除したいネットワークブリッジの名前を確認するため、既存のネットワークブリッジの一覧を表示します:</para>
-<screen>&prompt.root;bridge vlan
-[...]
-<replaceable>ブリッジ名</replaceable>  1 PVID Egress Untagged
-</screen>
-     </step>
-     <step>
-      <para>ブリッジを削除します:</para>
-<screen>&prompt.root;ip link delete dev <replaceable>ブリッジ名</replaceable></screen>
-     </step>
-    </procedure>
-   </sect3>
-  </sect2>
-
-  <sect2 xml:id="sec-xen-net-vlan">
-   <title>VLAN インターフェイスの使用</title>
-   <para>利用環境によっては、 2 台の &vmhost; や &vmguest; のシステム間で、プライベートな接続を作成したい要件があることがあります。たとえばホスト内の &vmguest; を異なるネットワークセグメントに移行する場合や、 &vmguest; システムだけが接続することのできるプライベートなブリッジを作成したい場合 (特に異なる &vmhost; システムで動作しているような場合) がそれにあたります。このような接続を構築するのに簡単な方法は、 VLAN ネットワークを設定することです。</para>
-   <para>VLAN インターフェイスは一般に &vmhost; 内に構築します。複数の &vmhost; システムで相互に接続することもできますし、物理インターフェイスを設定することもできるほか、仮想のみのブリッジを作成することもできます。それだけでなく、 &vmhost; には IP アドレスを割り当てず、物理インターフェイスとして VLAN のブリッジを作成することもできます。このような仕組みにより、ゲストシステムからネットワーク内のホストにアクセスすることができないようにすることができます。</para>
-   <para>&yast; モジュールの <menuchoice><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択したあと、下記の手順に従ってください:</para>
-   <procedure>
-    <title>&yast; を利用した VLAN インターフェイスの設定</title>
-    <step>
-     <para><guimenu>追加</guimenu> を押して新しいネットワークインターフェイスを作成します。</para>
-    </step>
-    <step>
-     <para><guimenu>ハードウエアダイアログ</guimenu> では、 <guimenu>デバイスの種類</guimenu> で <guimenu>VLAN</guimenu> を選びます。</para>
-    </step>
-    <step>
-     <para>必要に応じて <guimenu>設定名</guimenu> の ID を変更し、 VLAN の ID を設定します。通常は VLAN ID <literal>1</literal> を管理用に使用します。</para>
-    </step>
-    <step>
-     <para><guimenu>次へ</guimenu> を押します。</para>
-    </step>
-    <step>
-     <para><guimenu>VLAN の実インターフェイス</guimenu> 内で、接続先のデバイス名を選択します。一覧に設定したいインターフェイスが表示されていない場合は、まず対象のインターフェイスの IP アドレスを削除してからやり直してください。</para>
-    </step>
-    <step>
-     <para>この VLAN デバイスに対する IP アドレスの割り当て方法を選択します。</para>
-    </step>
-    <step>
-     <para><guimenu>次へ</guimenu> を押して設定を完了します。</para>
-    </step>
-   </procedure>
-   <para>ブリッジの物理インターフェイスとして VLAN インターフェイスを使用することもできます。これにより、複数の &vmhost; のみが接続されたネットワークを構成することができるようになり、このネットワークを介してライブマイグレーションを実施することができるようになります。</para>
-   <para>&yast; では、場合によっては IP アドレス無しの設定を許可しない場合があります。このような構成は、 &vmhost; のみのネットワークを構成する場合には不便な場合があります。その際は、 IP アドレスに <literal>0.0.0.0</literal> を、サブネットマスクに <literal>255.255.255.255</literal> を指定してください。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
   </sect2>
  </sect1>
 </chapter>
