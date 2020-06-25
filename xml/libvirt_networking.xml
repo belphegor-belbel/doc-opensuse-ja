@@ -7,12 +7,7 @@
  <title>ネットワークの管理</title>
  <info>
   <abstract>
-    <para>
-     This chapter describes common network configurations for a &vmhost;,
-     including those supported natively by the &vmhost; and &libvirt;.
-     The configurations are valid for all hypervisors supported by &productname;,
-     such as &kvm; or &xen;.
-   </para>
+    <para>本章では &vmhost; に対する一般的なネットワーク設定について説明しています。ここには  &vmhost; と &libvirt; が直接するサポートする内容も含まれます。設定項目は &productname; で利用可能な全てのハイパーバイザ (&kvm; や &xen; など) に適用することができます。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -21,31 +16,18 @@
  <para>&vmguest; に対してネットワーク接続を提供する場合、下記の 2 種類の設定方法が存在します:</para>
  <itemizedlist>
   <listitem>
-   <para>ホストの物理ネットワークインターフェイスをゲストから使用させるための <emphasis>ネットワークブリッジ</emphasis></para>
+   <para><emphasis>ネットワークブリッジ</emphasis>: レイヤ 2 スイッチとして動作させる方法</para>
   </listitem>
   <listitem>
-   <para>ゲストに対する <emphasis>仮想ネットワーク</emphasis></para>
+   <para><emphasis>仮想ネットワーク</emphasis>: &libvirt; 側でレイヤ 3 転送を有効化する方法</para>
   </listitem>
  </itemizedlist>
  <sect1 xml:id="libvirt-networks-bridged">
-  <title>ネットワークブリッジの追加</title>
+  <title>ネットワークブリッジ</title>
 
-  <para>
-   The network bridge configuration provides a Layer 2 switch for &vmguest;s,
-   switching Layer 2 Ethernet packets between ports on the bridge based on MAC
-   addresses associated with the ports. This gives the &vmguest; Layer 2 access
-   to the &vmhost;'s network. This configuration is analogous to connecting the
-   &vmguest;'s virtual Ethernet cable into a hub that is shared with the host
-   and other &vmguest;s running on the host. The configuration is often referred
-   to as <emphasis>shared physical device</emphasis>.
-  </para>
+  <para>ネットワークブリッジを設定すると、 &vmguest; をレイヤ 2 スイッチに接続するのと同じ形態になります。この場合、レイヤ 2 (イーサネット) パケットは MAC アドレスを元に配送が行なわれ、これによって &vmhost; のネットワークを &vmguest; 側から利用できるようになります。設定は &vmguest; の仮想的なイーサネットケーブルをスイッチに接続するのと同じで、 &vmhost; との間もスイッチで接続されている形になります。設定は <emphasis>共有型物理デバイス</emphasis> と呼ばれることもあります。</para>
 
-  <para>
-   The network bridge configuration is the default configuration of
-   &productname; when configured as a &kvm; or &xen; hypervisor. It is the
-   preferred configuration when you simply want to connect &vmguest;s to the
-   &vhhost;'s LAN.
-  </para>
+  <para>ネットワークブリッジの設定は、 &productname; で &kvm; や &xen; のハイパーバイザを使用した場合の既定値になっています。また、 &vmguest; を &vmhost; の LAN に簡単に接続したい場合には便利な仕組みでもあります。</para>
 
   <sect2 xml:id="libvirt-networks-bridged-yast">
    <title>&yast; を利用したネットワークブリッジの管理</title>
@@ -66,7 +48,7 @@
      <step>
       <para><guimenu>アドレス</guimenu> タブを選択し、 DHCP や固定 IP アドレス、サブネットマスクやホスト名などの設定を行ないます。</para>
       <para>なお、 <guimenu>可変 IP アドレス</guimenu> の設定は、 DHCP サーバに接続されているブリッジを構成する場合にのみ使用します。</para>
-      <para>物理的なイーサネットデバイスへの接続を持たない仮想ブリッジを作成しようとしている場合は、 <guimenu>固定 IP アドレス</guimenu> を選択します。この場合、プライベート IP アドレスの範囲から選んで使用することをお勧めします。たとえば <literal>192.168.x.x</literal> や <literal>10.x.x.x</literal> などがあります。</para>
+      <para>物理的なイーサネットデバイスへの接続を持たない仮想ブリッジを作成する場合は、 <guimenu>固定 IP アドレス</guimenu> を選択します。この場合、プライベート IP アドレスの範囲から選んで使用することをお勧めします。たとえば <literal>192.168.0.0/16</literal> , <literal>172.16.0.0/12</literal> , <literal>10.0.0.0/8</literal> などの中から選択します。</para>
       <para>ホスト側のシステムに接続することなく、ゲスト間のみで接続するブリッジを作成したい場合は、 IP アドレスを <literal>0.0.0.0</literal> に、サブネットマスクを <literal>255.255.255.255</literal> に設定します。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
      </step>
      <step>
@@ -124,7 +106,7 @@
 </screen>
       <important>
        <title>ネットワークインターフェイスが未使用でなければならない件について</title>
-       <para>ブリッジにネットワークインターフェイスを追加するにあたっては、他のブリッジで使用されていないものである必要があります。</para>
+       <para>ブリッジにネットワークインターフェイスを追加するにあたっては、他のブリッジで使用されていないものでなければなりません。</para>
       </important>
      </step>
      <step>
@@ -175,7 +157,7 @@
      <para><guimenu>次へ</guimenu> を押します。</para>
     </step>
     <step>
-     <para><guimenu>VLAN の実インターフェイス</guimenu> 内で、接続先のデバイス名を選択します。一覧に設定したいインターフェイスが表示されていない場合は、まず対象のインターフェイスの IP アドレスを削除してからやり直してください。</para>
+     <para><guimenu>VLAN の実インターフェイス</guimenu> 内で、接続先のデバイス名を選択します。一覧に設定したいインターフェイスが表示されていない場合は、まず対象のインターフェイスを IP アドレス無しで設定してからやり直してください。</para>
     </step>
     <step>
      <para>この VLAN デバイスに対する IP アドレスの割り当て方法を選択します。</para>
@@ -185,65 +167,28 @@
     </step>
    </procedure>
    <para>ブリッジの物理インターフェイスとして VLAN インターフェイスを使用することもできます。これにより、複数の &vmhost; のみが接続されたネットワークを構成することができるようになり、このネットワークを介してライブマイグレーションを実施することができるようになります。</para>
-   <para>&yast; では、場合によっては IP アドレス無しの設定を許可しない場合があります。このような構成は、 &vmhost; のみのネットワークを構成する場合には不便な場合があります。その際は、 IP アドレスに <literal>0.0.0.0</literal> を、サブネットマスクに <literal>255.255.255.255</literal> を指定してください。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
+   <para>&yast; では、場合によっては IP アドレス無しの設定を許可しない場合があります。このような表示は &vmhost; のみのネットワークを構成する場合には不便な場合があります。その際は、 IP アドレスに <literal>0.0.0.0</literal> を、サブネットマスクに <literal>255.255.255.255</literal> を指定してください。このような設定を行なうことで、 IP アドレスを指定することのない特殊なネットワークを構成することができます。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="libvirt-networks-virtual">
   <title>仮想ネットワーク</title>
 
-  <para>
-   &libvirt;-managed virtual networks are similar to bridged networks, but
-   typically have no Layer 2 connection to the &vmhost;. Connectivity to
-   the &vmhost;'s physical network is accomplished with Layer 3 forwarding,
-   which introduces additional packet processing on the &vmhost; as compared
-   to a Layer 2 bridged network. Virtual networks also provide DHCP and DNS
-   services for &vmguest;s. For more information on &libvirt;s virtual networks
-   see the <citetitle>Network XML format</citetitle> documentation at
-   <link xlink:href="https://libvirt.org/formatnetwork.html"/>.
-  </para>
+  <para>&libvirt; が管理する仮想ネットワークはブリッジ接続されたネットワークに似ていますが、 &vmhost; との間で一般的なレイヤ 2 接続が行なわれているわけではありません。接続はレイヤ 3 で行なわれ、レイヤ 2 接続とは処理内容が異なります。仮想ネットワーク内では DHCP や DNS のようなサービスを &vmguest; に提供することもできます。 &libvirt; の仮想ネットワークについて、詳しくは <link xlink:href="https://libvirt.org/formatnetwork.html"/> (英語) にある <citetitle>Network XML format</citetitle> の文書をお読みください。</para>
 
-  <para>
-   A standard &libvirt; installation on &productname; already comes with a
-   predefined virtual network named <literal>default</literal> that provides
-   DHCP and DNS services for the network, along with connectivity to the
-   &vmhost;'s physical network using the network address translation (NAT)
-   forwarding mode. Although it is predefined, the <literal>default</literal>
-   virtual network must be explicitly enabled by the administrator. For more
-   information on the forwarding modes supported by &libvirt; see the
-   <citetitle>Connectivity</citetitle> section of the
-   <citetitle>Network XML format</citetitle> documentation at
-   <link xlink:href="https://libvirt.org/formatnetwork.html#elementsConnect"/>.
-  </para>
+  <para>&productname; で標準的な &libvirt; インストールを行なった場合、 <literal>default</literal> という名前の仮想ネットワークがあらかじめ作成され、 DHCP や DNS のサービスが提供されるほか、 &vmhost; の物理ネットワークに対してはネットワークアドレス変換 (NAT) を介して接続されるようになります。 <literal>default</literal> の設定はあらかじめ作成されるものですが、使用する場合は管理者側で明示的に有効化する必要があります。 &libvirt; が対応する転送モードについての詳細は、 <link xlink:href="https://libvirt.org/formatnetwork.html#elementsConnect"/> (英語) にある <citetitle>Network XML format</citetitle> の文書をお読みください。</para>
 
-  <para>
-   &libvirt;-managed virtual networks can be used to satisfy a wide range
-   of use-cases, but are commonly used on &vmhost;s that have a wireless
-   connection or dynamic/sporadic network connectivity such as laptops.
-   Virtual networks are also useful when the &vmhost;'s network has limited
-   IP addresses, allowing forwarding of packets between the virtual network
-   and the &vmhost;'s network. However, most server use-cases are better
-   suited for the network bridge configuration, where &vmguest;s are connected
-   to the &vmhost;'s LAN.
-  </para>
+  <para>また、 &libvirt; が管理する仮想ネットワークは様々な用途において十分な仕組みを備えています。 &vmhost; に無線接続が存在するような場合や、ラップトップなどのように間欠的な接続環境でも広く使用されています。また仮想ネットワークは、 &vmhost; のネットワーク内で IP アドレスが不足しているような場合にも、仮想ネットワークとネットワークブリッジとの間でパケットを変換して転送することができるので、有用な仕組みになっています。しかしながらサーバ用途で使用する場合は、ネットワークブリッジによる接続が最適な仕組みです。</para>
 
   <warning>
-   <title>Enabling Forwarding Mode</title>
-   <para>
-    Enabling forwarding mode in a &libvirt; virtual network enables forwarding
-    in the &vmhost; by setting <filename>/proc/sys/net/ipv4/ip_forward</filename>
-    and <filename>/proc/sys/net/ipv6/conf/all/forwarding</filename> to 1, which
-    essentially turns the &vmhost; into a router. Restarting the &vmhost;'s
-    network may reset the values and disable forwarding. To avoid this behavior,
-    explicitly enable forwarding in the &vmhost; by editing the
-    <filename>/etc/sysctl.conf</filename> file and adding:
-   </para>
+   <title>転送の有効化</title>
+   <para>&libvirt; の仮想ネットワーク内で転送機能を有効化するには、 &vmhost; 側で <filename>/proc/sys/net/ipv4/ip_forward</filename> および <filename>/proc/sys/net/ipv6/conf/all/forwarding</filename> を 1 に設定します。これにより、 &vmhost; がルータとして動作するようになります。ただし &vmhost; を再起動してしまうと設定が元に戻ってしまい、転送が無効に戻ってしまいます。恒久的に有効化したい場合は、 &vmhost; 側の <filename>/etc/sysctl.conf</filename> ファイルを編集して、下記の設定を追加してください:</para>
    <screen>net.ipv4.ip_forward = 1</screen>
    <screen>net.ipv6.conf.all.forwarding = 1</screen>
   </warning>
 
   <sect2 xml:id="libvirt-networks-virtual-vmm">
    <title>&vmm; を利用した仮想ネットワークの管理</title>
-   <para>&vmm; を利用することで、孤立型／転送型にかかわらず、仮想ネットワークの作成や設定、操作などを行なうことができます。</para>
+   <para>&vmm; を利用することで仮想ネットワークの作成や設定、操作などを行なうことができます。</para>
    <sect3 xml:id="libvirt-networks-virtual-vmm-define">
     <title>仮想ネットワークの設定</title>
     <procedure>
@@ -323,16 +268,16 @@
         </imageobject>
        </mediaobject>
       </figure>
-      <para>転送型のネットワークの場合、リクエストの転送先となるネットワークインターフェイスを指定するとともに、転送モードを選択します。 <guimenu>NAT</guimenu> (Network Address Translation; ネットワークアドレス変換) を指定すると、仮想ネットワーク内のアドレス領域を変換して単一の IP アドレスを使用するようにします。 <guimenu>ルーティング</guimenu> を選択すると、アドレス変換を行なうことなく仮想スイッチをそのまま物理ホストの LAN に接続します。</para>
+      <para>転送型のネットワークの場合、リクエストの転送先となるネットワークインターフェイスを指定するとともに、転送モードを選択します。 <guimenu>NAT</guimenu> (Network Address Translation; ネットワークアドレス変換) を指定すると、仮想ネットワーク内のアドレス領域を変換して単一の IP アドレスを使用するようにします。 <guimenu>ルーティング</guimenu> を選択すると、アドレス変換を行なうことなく仮想スイッチをそのまま &vmhost; の物理 LAN に接続します。</para>
      </step>
      <step>
-      <para>以前の手順で IPv6 ネットワークアドレスを指定していない場合は、仮想マシン間で IPv6 の内部ルーティングを行なうよう設定することができます。</para>
+      <para>ここまで手順で IPv6 ネットワークアドレスを指定していない場合は、仮想マシン間で IPv6 の内部ルーティングを行なうよう設定することができます。</para>
      </step>
      <step performance="optional">
       <para>必要であれば、 DNS のドメイン名を指定します。</para>
      </step>
      <step>
-      <para><guimenu>完了</guimenu> を押すと新しい仮想ネットワークが作成されます。 &vmhost; 側では新しい仮想ネットワークブリッジ <literal>virbr<replaceable>X</replaceable></literal> が用意され、これが新しく作成された仮想ネットワークを表わすようになります。これは、 <command>bridge link</command> コマンドを実行することで確認することができます。なお、 &libvirt; では自動的に iptables のルールを追加し、新しく作成した <emphasis>virbr<replaceable>X</replaceable></emphasis> のデバイスに接続されたゲストの通信を許可するように設定を行ないます。</para>
+      <para><guimenu>完了</guimenu> を押すと新しい仮想ネットワークが作成されます。 &vmhost; 側では新しい仮想ネットワークブリッジ <literal>virbr<replaceable>X</replaceable></literal> が作成され、これが新しく作成された仮想ネットワークを表わすようになります。これは、 <command>bridge link</command> コマンドを実行することで確認することができます。なお、 &libvirt; では自動的に iptables のルールを追加し、新しく作成した <emphasis>virbr<replaceable>X</replaceable></emphasis> のデバイスに接続されたゲストの通信を許可するように設定を行ないます。</para>
      </step>
     </procedure>
    </sect3>
@@ -458,17 +403,17 @@ Networking (ヘルプのキーワード 'network'):
 <screen>
 &lt;network&gt;
 &lt;name&gt;vnet_nated&lt;/name&gt;<co xml:id="vnet-xml-name"/>
-&lt;bridge name="virbr1" /&gt;<co xml:id="vnet-xml-bridge"/>
+&lt;bridge name="virbr1"/&gt;<co xml:id="vnet-xml-bridge"/>
  &lt;forward mode="nat"/&gt;<co xml:id="vnet-xml-forward"/>
  &lt;ip address="192.168.122.1" netmask="255.255.255.0"&gt;<co xml:id="vnet-xml-ip"/>
   &lt;dhcp&gt;
-   &lt;range start="192.168.122.2" end="192.168.122.254" /&gt;<co xml:id="vnet-xml-dhcp"/>
+   &lt;range start="192.168.122.2" end="192.168.122.254"/&gt;<co xml:id="vnet-xml-dhcp"/>
    &lt;host mac="52:54:00:c7:92:da" name="host1.testing.com" \
-    ip="192.168.1.23.101" /&gt;<co xml:id="vnet-xml-dhcp-host"/>
+    ip="192.168.1.23.101"/&gt;<co xml:id="vnet-xml-dhcp-host"/>
    &lt;host mac="52:54:00:c7:92:db" name="host2.testing.com" \
-    ip="192.168.1.23.102" /&gt;
+    ip="192.168.1.23.102"/&gt;
    &lt;host mac="52:54:00:c7:92:dc" name="host3.testing.com" \
-    ip="192.168.1.23.103" /&gt;
+    ip="192.168.1.23.103"/&gt;
   &lt;/dhcp&gt;
  &lt;/ip&gt;
 &lt;/network&gt;
@@ -500,11 +445,11 @@ Networking (ヘルプのキーワード 'network'):
 <screen>
 &lt;network&gt;
  &lt;name&gt;vnet_routed&lt;/name&gt;
- &lt;bridge name="virbr1" /&gt;
+ &lt;bridge name="virbr1"/&gt;
  &lt;forward mode="route" dev="eth1"/&gt;<co xml:id="vnet-xml-route"/>
  &lt;ip address="192.168.122.1" netmask="255.255.255.0"&gt;
   &lt;dhcp&gt;
-   &lt;range start="192.168.122.2" end="192.168.122.254" /&gt;
+   &lt;range start="192.168.122.2" end="192.168.122.254"/&gt;
   &lt;/dhcp&gt;
  &lt;/ip&gt;
 &lt;/network&gt;
@@ -520,10 +465,10 @@ Networking (ヘルプのキーワード 'network'):
      <para>この設定は完全にプライベートな孤立したネットワークを作成するための設定です。 XML の定義内に &lt;forward&gt; 要素が存在しないため、ゲスト同士や &vmhost; は自由に通信ができるものの、 LAN 側には到達することができない設定となります。</para>
 <screen>&lt;network&gt;
  &lt;name&gt;vnet_isolated&lt;/name&gt;
- &lt;bridge name="virbr3" /&gt;
+ &lt;bridge name="virbr3"/&gt;
  &lt;ip address="192.168.152.1" netmask="255.255.255.0"&gt;
   &lt;dhcp&gt;
-   &lt;range start="192.168.152.2" end="192.168.152.254" /&gt;
+   &lt;range start="192.168.152.2" end="192.168.152.254"/&gt;
   &lt;/dhcp&gt;
  &lt;/ip&gt;
  &lt;/network&gt;

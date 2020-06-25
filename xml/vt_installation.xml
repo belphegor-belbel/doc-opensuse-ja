@@ -121,44 +121,27 @@
  <sect1 xml:id="sec-vt-installation-ovmf">
   <title>UEFI サポートのインストール</title>
   <para>UEFI への対応は <emphasis>OVMF</emphasis> ( <emphasis>Open Virtual Machine Firmware</emphasis> ) で提供されています。 UEFI での起動を有効化するには、まず <package>qemu-ovmf-x86_64</package> もしくは <package>qemu-uefi-aarch64</package> パッケージをインストールしてください。</para>
-  <para>
-   The firmware used by virtual machines is auto-selected. The auto-selection
-   is based on the *.json files in the
-   <package>qemu-ovmf-<replaceable>ARCH</replaceable></package> package. The
-   &libvirt; &qemu; driver parses those files when loading so it knows the
-   capabilities of the various types of firmware. Then when the user selects the type
-   of firmware and any desired features (for example, support for secure boot),
-   &libvirt; will be able to find a firmware that satisfies the user's
-   requirements.
-  </para>
-  <para>
-   For example, to specify EFI with secure boot, use the following
-   configuration:
-  </para>
+  <para>仮想マシンで使用されるファームウエアは自動的に選択されます。この自動選択の機能は <package>qemu-ovmf-<replaceable>ARCH</replaceable></package> パッケージ内の *.json ファイルをベースにしています。 &libvirt; &qemu; ドライバは読み込み時にこれらのファイルを処理して、ファームウエア側での機能を知ることができるようになっています。その後、 &libvirt; 側でユーザ側の要件に合わせ、必要な機能 (Secure Boot の有効可否など) のあるファームウエアを選択します。</para>
+  <para>たとえば EFI で Secure Boot を有効化するには、下記のような設定を追加します:</para>
 <screen>
 &lt;os firmware='efi'&gt;
  &lt;loader secure='yes'/&gt;
 &lt;/os&gt;
 </screen>
-  <para>
-   The <package>qemu-ovmf-<replaceable>ARCH</replaceable></package> packages
-   contain the following files:
-  </para>
-<screen>&prompt.root;<command>rpm -ql qemu-ovmf-x86_64</command>
+  <para><package>qemu-ovmf-<replaceable>ARCH</replaceable></package> パッケージには下記のようなファイルが含まれています:</para>
+<screen>
+&prompt.root;<command>rpm -ql qemu-ovmf-x86_64</command>
+[...]
 /usr/share/qemu/ovmf-x86_64-ms-code.bin
 /usr/share/qemu/ovmf-x86_64-ms-vars.bin
-/usr/share/qemu/ovmf-x86_64-ms.bin
-/usr/share/qemu/ovmf-x86_64-opensuse-code.bin
-/usr/share/qemu/ovmf-x86_64-opensuse-vars.bin
-/usr/share/qemu/ovmf-x86_64-opensuse.bin
+/usr/ddshare/qemu/ovmf-x86_64-ms.bin
 /usr/share/qemu/ovmf-x86_64-suse-code.bin
 /usr/share/qemu/ovmf-x86_64-suse-vars.bin
 /usr/share/qemu/ovmf-x86_64-suse.bin
-/usr/share/qemu/ovmf-x86_64-code.bin
-/usr/share/qemu/ovmf-x86_64-vars.bin
-/usr/share/qemu/ovmf-x86_64.bin</screen>
-  <para><filename>*-code.bin</filename> ファイルは UEFI ファームウエアです。 <filename>*-vars.bin</filename> ファイルは対応する変数ストアイメージで、 VM ごとの不揮発性ストア向けのテンプレートとして使用できるファイルです。 &libvirt; は VM を初めて作成する際、指定された <literal>vars</literal> テンプレートを VM ごとのパス (<filename>/var/lib/libvirt/qemu/nvram/</filename>) にコピーします。なお、ファイル名の中に <literal>code</literal> や <literal>vars</literal> を含まないファイルは、単独の UEFI イメージとして使用することができます。これらは VM のシャットダウン後には UEFI 変数が維持されない仕組みであることから、有用ではありません。</para>
-  <para><filename>*-ms*.bin</filename> ファイルには、実際のハードウエア内に存在する Microsoft 社の鍵が含まれています。そのため、これらは &libvirt; の既定で設定されるようになっています。同様に、 <filename>*-suse*.bin</filename> ファイルには、事前にインストールされる &suse; や &opensuse; の鍵が含まれています。事前にインストールされる鍵の無いファイルも提供されています。</para>
+[...]
+</screen>
+  <para><filename>*-code.bin</filename> ファイルは UEFI ファームウエアです。 <filename>*-vars.bin</filename> ファイルは対応する変数ストアイメージで、 VM ごとの不揮発性ストア向けのテンプレートとして使用できるファイルです。 &libvirt; は VM を初めて作成する際、指定された <literal>vars</literal> テンプレートを VM ごとのパス (<filename>/var/lib/libvirt/qemu/nvram/</filename>) にコピーします。なお、ファイル名の中に <literal>code</literal> や <literal>vars</literal> を含まないファイルは、単独の UEFI イメージとして使用することができるものです。これらは VM のシャットダウン後には UEFI 変数が維持されない仕組みであることから、有用ではありません。</para>
+  <para><filename>*-ms*.bin</filename> ファイルには、実際のハードウエア内に存在する Microsoft 社の鍵が含まれています。そのため、これらは &libvirt; の既定で設定されるようになっています。同様に、 <filename>*-suse*.bin</filename> ファイルには、事前にインストールされる &suse; の鍵が含まれています。このほか、事前にインストールされる鍵の無いファイルも提供されています。</para>
   <para>詳しくは <xref linkend="vle-libvirt-inst-virt-install-ovmf"/> と <link xlink:href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt"/> (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-vt-installation-nested-vms">
