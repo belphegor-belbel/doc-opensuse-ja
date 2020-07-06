@@ -434,11 +434,17 @@ nfs-rpc
   <note>
    <title>&ay; での &firewalld; 設定の作成について</title>
    <para>&ay; で &firewalld; の設定を作成する方法について、詳しくは &ayguide; 内の <citetitle>ファイアウオール設定</citetitle> の章をお読みください。</para>
- </note>
-     <para>&sle; 12.x から &sle; &productnumber; にアップグレードした場合は、 &susefirewall; はそのまま保持され、動作し続けるようになっています。 &susefirewall; から &firewalld; への自動的な移行の仕組みは提供されていないことから、移行作業は手作業で実施する必要があります。ただし、 &firewalld; には <command>susefirewall2-to-firewalld</command> と呼ばれる移行支援ツールが用意されていますので、こちらをお使いいただくことができます。ですが、このツールはご利用いただいている &susefirewall; の設定の複雑さによって、全く問題なく移行できる場合から、全く支援にならない場合までさまざまな結果になります。通常は部分的に移行が行なわれ、残りは手作業で &firewalld; の設定を調整して対応する必要が発生します。</para>
-     <para>このツールが生成した設定は、 &susefirewall; と同じような動作になるようになります。そのような背景から、 &firewalld; の機能を完全に発揮するには、既存の設定の移行ではなく全く新しく設定を作成し直すことをお考えください。また、 <command>susefirewall2-to-firewalld</command> に何もオプションを付けずに実行した場合は、恒久的な変更は行なわれなくなっていますが、ネットワーク上離れた場所から管理を行なっているような場合は、移行によって締め出されてしまうこともあります。</para>
-     <para><command>susefirewall2-to-firewalld</command> をインストールして実行するには、下記の手順を実施します:</para>
-     <screen>&prompt.root;zypper in susefirewall2-to-firewalld
+  </note>
+  <remark>
+   FIXME: Very unsure if the following upgrade scenario has _any_ bearing on
+   Leap 15.2 anymore, since we don't even support upgrades from anything before
+   Leap 15.1. Not sure whether to just profile away the entire section.
+   - sknorr, 2020-07-02
+  </remark>
+  <para>&sle; 12.x から &sle; &productnumber; にアップグレードした場合は、 &susefirewall; はそのまま保持され、動作し続けるようになっています。 &susefirewall; から &firewalld; への自動的な移行の仕組みは提供されていないことから、移行作業は手作業で実施する必要があります。ただし、 &firewalld; には <command>susefirewall2-to-firewalld</command> と呼ばれる移行支援ツールが用意されていますので、こちらをお使いいただくことができます。ですが、このツールはご利用いただいている &susefirewall; の設定の複雑さによって、全く問題なく移行できる場合から、全く支援にならない場合までさまざまな結果になります。通常は部分的に移行が行なわれ、残りは手作業で &firewalld; の設定を調整して対応する必要が発生します。</para>
+  <para>このツールが生成した設定は、 &susefirewall; と同じような動作になるようになります。そのような背景から、 &firewalld; の機能を完全に発揮するには、既存の設定の移行ではなく全く新しく設定を作成し直すことをお考えください。また、 <command>susefirewall2-to-firewalld</command> に何もオプションを付けずに実行した場合は、恒久的な変更は行なわれなくなっていますが、ネットワーク上離れた場所から管理を行なっているような場合は、移行によって締め出されてしまうこともあります。</para>
+  <para><command>susefirewall2-to-firewalld</command> をインストールして実行するには、下記の手順を実施します:</para>
+<screen>&prompt.root;zypper in susefirewall2-to-firewalld
 &prompt.root;susefirewall2-to-firewalld
 INFO: Reading the /etc/sysconfig/SuSEfirewall2 file
 INFO: Ensuring all firewall services are in a well-known state.
@@ -466,43 +472,43 @@ INFO: Stopping firewalld
 INFO: Restarting SuSEfirewall2_init
 INFO: Restarting SuSEfirewall2
 </screen>
-<para>このスクリプトを実行するとさまざまな出力が生成されますが、これをファイルに保存しておくことで、後からゆっくり読むことができるようになります:</para>
+  <para>このスクリプトを実行するとさまざまな出力が生成されますが、これをファイルに保存しておくことで、後からゆっくり読むことができるようになります:</para>
 <screen>&prompt.root;susefirewall2-to-firewalld | tee newfirewallrules.txt
 </screen>
-<para>このスクリプトには、下記のオプションが用意されています:</para>
-<variablelist>
-    <varlistentry>
-        <term><command>-c</command></term>
-        <listitem>
-            <para>変更点を恒久的に保存します。提示された設定で問題が無い場合にのみ、このオプションを指定してください。また、既存の &firewalld; の設定はリセットされますので、必ずバックアップを採取しておいてください！</para>
-        </listitem>
-    </varlistentry>
-    <varlistentry>
-        <term><command>-d</command></term>
-        <listitem>
-            <para>動作に関する詳細な情報を出力します。このスクリプトのバグを報告したい場合などに有用ですが、機密情報が含まれることもあります。</para>
-        </listitem>
-    </varlistentry>
-    <varlistentry>
-        <term><command>-h</command></term>
-        <listitem>
-            <para>このメッセージを表示します。</para>
-        </listitem>
-    </varlistentry>
-    <varlistentry>
-        <term><command>-q</command></term>
-        <listitem>
-            <para>出力を抑制します。エラーメッセージも表示されなくなります！</para>
-        </listitem>
-    </varlistentry>
-    <varlistentry>
-        <term><command>-v</command></term>
-        <listitem>
-            <para>冗長モードを指定します。警告メッセージやその他の情報に関するメッセージが出力されるようになります。</para>
-        </listitem>
-    </varlistentry>
- </variablelist>
-</sect1>
+  <para>このスクリプトには、下記のオプションが用意されています:</para>
+  <variablelist>
+   <varlistentry>
+    <term><command>-c</command></term>
+    <listitem>
+     <para>変更点を恒久的に保存します。提示された設定で問題が無い場合にのみ、このオプションを指定してください。また、既存の &firewalld; の設定はリセットされますので、必ずバックアップを採取しておいてください！</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><command>-d</command></term>
+    <listitem>
+     <para>動作に関する詳細な情報を出力します。このスクリプトのバグを報告したい場合などに有用ですが、機密情報が含まれることもあります。</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><command>-h</command></term>
+    <listitem>
+     <para>このメッセージを表示します。</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><command>-q</command></term>
+    <listitem>
+     <para>出力を抑制します。エラーメッセージも表示されなくなります！</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><command>-v</command></term>
+     <listitem>
+      <para>冗長モードを指定します。警告メッセージやその他の情報に関するメッセージが出力されるようになります。</para>
+     </listitem>
+   </varlistentry>
+  </variablelist>
+ </sect1>
 
  <sect1 xml:id="sec-security-firewall-info">
   <title>さらなる情報</title>
