@@ -1718,106 +1718,71 @@ size=40G features='0' hwhandler='0' wp=rw
   </sect2>
 
   <sect2 xml:id="ay-multidevice-btrfs">
-   <title>ドライブの設定</title>
+   <title>マルチデバイス型 btrfs の設定</title>
 
-   <para>
-    Btrfs supports creating a single volume that spans more than one
-    storage device, offering similar features to software RAID implementations
-    such as the Linux kernel's built-in <command>mdraid</command> subsystem.
-    <emphasis>Multi-device Btrfs</emphasis> offers advantages over some other
-    RAID implementations. For example, you can dynamically migrate a
-    multi-device Btrfs volume from one RAID level to another, RAID levels can
-    be set on a per-file basis, and more. However, not all of these features are
-    fully supported yet in &productname; &product-ga; SP &product-sp;.
-   </para>
+   <para>btrfs では複数のデバイスにまたがった単一ボリュームを作成することができます。この仕組みにより、 Linux カーネル内蔵の <command>mdraid</command> サブシステムのようなソフトウエア RAID に似た実装を使用することができるようになります。 <emphasis>マルチデバイス型の btrfs</emphasis> には、他の RAID 実装では提供されていないいくつかの利点があります。たとえば一方の RAID レベルから他方の RAID レベルに動的に移行できる機能や、ファイル単位での RAID レベルの設定などがあります。ただし、 &productname; &product-ga; SP &product-sp; では、これら全ての機能をサポートしているわけではないことに注意してください。</para>
     
-   <para>With &ay;, a multi-device Btrfs can be configured by specifying a drive
-    with the <literal>CT_BTRFS</literal> type. The <literal>device</literal>
-    property is used as an arbitrary name to identify each multi-device Btrfs.
-   </para>
+   <para>&ay; では <literal>CT_BTRFS</literal> を指定することで、マルチデバイス型の btrfs を設定することができます。また、 <literal>device</literal> 属性では任意の名前を設定して、マルチデバイス型の btrfs を識別することができます。</para>
 
-   <para>
-    As with RAID, you need to create all block devices first (e.g., partitions,
-    LVM logical volumes, etc.) and assign them to the Btrfs file system you want
-    to create over such block devices.
-   </para>
+   <para>RAID として使用する場合は、まず必要な全てのブロックデバイス (パーティション、 LVM 論理ボリュームなど) を作成しておいて、それらを btrfs ファイルシステムに割り当てておく必要があります。</para>
 
-   <para>
-    The following example shows a simple multi-device Btrfs configuration:
-   </para>
+   <para>下記の例では、シンプルなマルチデバイス型 btrfs 設定を示しています:</para>
 
    <example>
-    <title>ドライブの設定</title>
+    <title>マルチデバイス型 btrfs の設定</title>
       <screen>&lt;partitioning config:type="list"&gt;
   &lt;drive&gt;
     &lt;device&gt;/dev/sda&lt;/device&gt;
-    &lt;partitions config:type="list"&gt;
+    &lt;disklabel&gt;none&lt;/disklabel&gt;
+    &lt;partitions&gt;
       &lt;partition&gt;
-        &lt;mount&gt;/&lt;/mount&gt;
-        &lt;size&gt;20G&lt;/size&gt;
-      &lt;/partition&gt;
-      &lt;partition&gt;
-        &lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;
-        &lt;size&gt;max&lt;/size&gt;
+        &lt;btrfs_name&gt;root_fs&lt;/btrfs_name&gt;
       &lt;/partition&gt;
     &lt;/partitions&gt;
     &lt;use&gt;all&lt;/use&gt;
   &lt;/drive&gt;
   &lt;drive&gt;
     &lt;device&gt;/dev/sdb&lt;/device&gt;
-    &lt;disklabel&gt;none&lt;/disklabel&gt;
-    &lt;partitions config:type="list"&gt;
+    &lt;disklabel&gt;gpt&lt;/disklabel&gt;
+    &lt;partitions&gt;
       &lt;partition&gt;
-        &lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;
+        &lt;partition_nr&gt;1&lt;/partition_nr&gt;
+        &lt;size&gt;4gb&lt;/size&gt;
+        &lt;filesystem&gt;ext4&lt;/filesystem&gt;
+        &lt;btrfs_name&gt;root_fs&lt;/btrfs_name&gt;
       &lt;/partition&gt;
     &lt;/partitions&gt;
     &lt;use&gt;all&lt;/use&gt;
   &lt;/drive&gt;
   &lt;drive&gt;
-    &lt;device&gt;/dev/md/0&lt;/device&gt;
-    &lt;partitions config:type="list"&gt;
-      &lt;partition&gt;
-        &lt;mount&gt;/home&lt;/mount&gt;
-        &lt;size&gt;40G&lt;/size&gt;
-      &lt;/partition&gt;
-      &lt;partition&gt;
-        &lt;mount&gt;/srv&lt;/mount&gt;
-        &lt;size&gt;10G&lt;/size&gt;
+    &lt;device&gt;root_fs&lt;/device&gt;
+    &lt;type config:type="symbol"&gt;CT_BTRFS&lt;/type&gt;
+    &lt;partitions&gt;
+      &lt;partition config:type="list&gt;
+        &lt;mount&gt;/&lt;/mount&gt;
       &lt;/partition&gt;
     &lt;/partitions&gt;
-    &lt;raid_options&gt;
-      &lt;chunk_size&gt;4&lt;/chunk_size&gt;
-      &lt;parity_algorithm&gt;left_asymmetric&lt;/parity_algorithm&gt;
-      &lt;raid_type&gt;raid1&lt;/raid_type&gt;
-    &lt;/raid_options&gt;
-    &lt;use&gt;all&lt;/use&gt;
+    &lt;btrfs_options&gt;
+      &lt;raid_leve&gt;raid1&lt;/raid_level&gt;
+      &lt;metadata_raid_leve&gt;raid1&lt;/metadata_raid_level&gt;
+    &lt;/btrfs_options&gt;
   &lt;/drive&gt;
 &lt;/partitioning&gt;</screen>
    </example>
 
-   <para>
-    The supported data and meta-data RAID levels are: <literal>default</literal>,
-    <literal>single</literal>, <literal>dup</literal>, <literal>raid0</literal>,
-    <literal>raid1</literal>, and <literal>raid10</literal>. By default, file
-    system meta-data is mirrored across two devices and data is striped across
-    all of the devices. If only one device is present, meta-data will be
-    duplicated on that one device.
-   </para>
+   <para>サポート対象となるデータおよびメタデータの RAID レベルは、 <literal>default</literal> , <literal>single</literal> , <literal>dup</literal> , <literal>raid0</literal> , <literal>raid1</literal> , <literal>raid10</literal> のいずれかです。既定ではファイルシステムのメタデータは 2 つのデバイスに複製され、データは全てのデバイスに複製されます。デバイスが 1 つしか存在しない場合、メタデータは 1 つのデバイス内で複製されます。</para>
    
 <!--lproven 2020-06-30: omitting raid5 & raid6 for now as unsupported in 15SP2
 as per ancorgs' comment on Github-->
  
-   <para>古い形式で RAID を設定する場合、下記の点に注意してください:</para>
+   <para>マルチデバイス型の btrfs ファイルシステムを設定する際には、下記の点に注意してください:</para>
 
    <itemizedlist>
     <listitem>
-     <para>
-      Devices need to indicate the <literal>btrfs_name</literal> property to be
-      included into a multi-device Btrfs file system.
-     </para>
+     <para>マルチデバイス型の btrfs ファイルシステム内に組み込まれるよう、必要なデバイスに対しては <literal>btrfs_name</literal> 属性を設定する必要があります。</para>
     </listitem>
     <listitem>
-     <para>RAID 関連の全てのオプションは、 <literal>raid_options</literal> 内に含める必要があります。</para>
+     <para>btrfs 関連のオプションを設定する場合は、 <literal>CT_BTRFS</literal> ドライブの <literal>btrfs_options</literal> リソース内に記述します。</para>
     </listitem>
    </itemizedlist>
   </sect2>
