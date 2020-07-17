@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: xen_administrating.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2020-04-15 22:21+0000\n"
+"POT-Creation-Date: 2020-07-17 05:23+0000\n"
 "PO-Revision-Date: 2020-04-16 08:10+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -378,11 +378,13 @@ msgstr ""
 
 #. Tag: para
 #: xen_administrating.xml:201
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "All &vmhost; systems should use a similar CPU. The frequency is not so "
 "important, but they should be using the same CPU family. To get more "
-"information about the used CPU, see <command>cat /proc/cpuinfo</command> ."
+"information about the used CPU, use <command>cat /proc/cpuinfo</command> . "
+"Find more details about comparing host CPU features in <xref linkend=\"sec-"
+"xen-manage-migrate-cpu\"/> ."
 msgstr ""
 "移行に関わる全ての &vmhost; のシステムで、同じような CPU を使用する必要があり"
 "ます。動作周波数などは異なっていてもかまいませんが、同一のファミリの CPU を使"
@@ -390,7 +392,7 @@ msgstr ""
 "command> を実行すると取得することができます。"
 
 #. Tag: para
-#: xen_administrating.xml:209
+#: xen_administrating.xml:210
 #, no-c-format
 msgid ""
 "All resources that are used by a specific guest system must be available on "
@@ -402,7 +404,7 @@ msgstr ""
 "クデバイスは、両方の &vmhost; システム内に存在していなければなりません。"
 
 #. Tag: para
-#: xen_administrating.xml:216
+#: xen_administrating.xml:217
 #, no-c-format
 msgid ""
 "If the hosts included in the migration process run in different subnets, "
@@ -414,7 +416,7 @@ msgstr ""
 "設定を使用している場合、ネットワークの設定果て座興で修正する必要があります。"
 
 #. Tag: para
-#: xen_administrating.xml:223
+#: xen_administrating.xml:224
 #, no-c-format
 msgid ""
 "Using special features like <literal>&pciback;</literal> may be problematic. "
@@ -426,7 +428,7 @@ msgstr ""
 "れらの機能を使用しないでください。"
 
 #. Tag: para
-#: xen_administrating.xml:231
+#: xen_administrating.xml:232
 #, no-c-format
 msgid ""
 "For fast migrations, a fast network is mandatory. If possible, use GB "
@@ -437,13 +439,125 @@ msgstr ""
 "ことで、衝突を防ぐことができます。"
 
 #. Tag: title
-#: xen_administrating.xml:240
+#: xen_administrating.xml:241
+#, no-c-format
+msgid "Detecting CPU Features"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:242
+#, no-c-format
+msgid ""
+"By using the <systemitem>cpuid</systemitem> and <systemitem>xen_maskcalc.py</"
+"systemitem> tools, you can compare features of a CPU on the host from where "
+"you are migrating the source &vmguest; with the features of CPUs on the "
+"target hosts. This way you can better predict if the guest migrations will "
+"be successful."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:251
+#, no-c-format
+msgid ""
+"Run the <command>cpuid -1r</command> command on each &dom0; that is supposed "
+"to run or receive the migrated &vmguest; and capture the output in text "
+"files, for example:"
+msgstr ""
+
+#. Tag: screen
+#: xen_administrating.xml:256
+#, no-c-format
+msgid ""
+"\n"
+"<prompt>tux@vm_host1 &gt; </prompt>sudo cpuid -1r &gt; vm_host1.txt\n"
+"<prompt>tux@vm_host2 &gt; </prompt>sudo cpuid -1r &gt; vm_host2.txt\n"
+"<prompt>tux@vm_host3 &gt; </prompt>sudo cpuid -1r &gt; vm_host3.txt\n"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:263
+#, no-c-format
+msgid ""
+"Copy all the output text files on a host with the <command>xen_maskcalc.py</"
+"command> script installed."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:269
+#, no-c-format
+msgid ""
+"Run the <command>xen_maskcalc.py</command> script on all output text files:"
+msgstr ""
+
+#. Tag: screen
+#: xen_administrating.xml:273
+#, no-c-format
+msgid ""
+"\n"
+"&prompt.sudo;xen_maskcalc.py vm_host1.txt vm_host2.txt vm_host3.txt\n"
+"cpuid = [\n"
+"    \"0x00000001:ecx=x00xxxxxx0xxxxxxxxx00xxxxxxxxxxx\",\n"
+"    \"0x00000007,0x00:ebx=xxxxxxxxxxxxxxxxxx00x0000x0x0x00\"\n"
+"]\n"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:282
+#, no-c-format
+msgid ""
+"Copy the output <literal>cpuid=[...]</literal> configuration snipped into "
+"the <command>xl</command> configuration of the migrated guest <filename>domU."
+"cfg</filename> or alternatively to its &libvirt;'s XML configuration."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:290
+#, no-c-format
+msgid ""
+"Start the source guest with the <emphasis>trimmed</emphasis> CPU "
+"configuration. The guest can now only use CPU features which are present on "
+"each of the hosts."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:298
+#, no-c-format
+msgid ""
+"&libvirt; also supports calculating a baseline CPU for migration. For more "
+"details, refer to <link xlink:href=\"https://documentation.suse.com/sles/15-"
+"SP2/single-html/SLES-vt-best-practices/\"/> ."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:304
+#, no-c-format
+msgid "For More Information"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:305
+#, no-c-format
+msgid ""
+"You can find more details about <systemitem>cpuid</systemitem> at <link "
+"xlink:href=\"http://etallen.com/cpuid.html\"/> ."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:309
+#, no-c-format
+msgid ""
+"You can download the latest version of the CPU mask calculator from <link "
+"xlink:href=\"https://github.com/twizted/xen_maskcalc\"/> ."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:317
 #, no-c-format
 msgid "Preparing Block Devices for Migrations"
 msgstr "移行のためのブロックデバイスの準備"
 
 #. Tag: para
-#: xen_administrating.xml:241
+#: xen_administrating.xml:318
 #, no-c-format
 msgid ""
 "The block devices needed by the &vmguest; system must be available on all "
@@ -457,7 +571,7 @@ msgstr ""
 "できます。一般的には下記のようなものがあります:"
 
 #. Tag: para
-#: xen_administrating.xml:249
+#: xen_administrating.xml:326
 #, no-c-format
 msgid ""
 "<literal>iSCSI</literal> can be set up to give access to the same block "
@@ -469,7 +583,7 @@ msgstr ""
 "する詳細は、 <xref linkend=\"cha-iscsi\"/> をお読みください。</phrase>"
 
 #. Tag: para
-#: xen_administrating.xml:256
+#: xen_administrating.xml:333
 #, no-c-format
 msgid ""
 "<literal>NFS</literal> is a widely used root file system that can easily be "
@@ -481,7 +595,7 @@ msgstr ""
 "\"cha-nfs\"/> をお読みください。"
 
 #. Tag: para
-#: xen_administrating.xml:263
+#: xen_administrating.xml:340
 #, no-c-format
 msgid ""
 "<literal>DRBD</literal> can be used if only two &vmhost; systems are "
@@ -496,10 +610,11 @@ msgstr ""
 "ことになりますので、データの保全性をさらに高めることができます。 <phrase os="
 "\"sles;sled\">詳しくは、 <link xlink:href=\"https://documentation.suse.com/"
 "sle-ha/15-SP2/\"/> で提供されている <citetitle>SUSE Linux Enterprise High "
-"Availability Extension &productnumber;</citetitle> の文書をお読みください。 </phrase>"
+"Availability Extension &productnumber;</citetitle> の文書をお読みください。 "
+"</phrase>"
 
 #. Tag: para
-#: xen_administrating.xml:273
+#: xen_administrating.xml:350
 #, no-c-format
 msgid ""
 "<literal>SCSI</literal> can also be used if the available hardware permits "
@@ -509,7 +624,7 @@ msgstr ""
 "に対して複数のシステムがアクセスすることができます。"
 
 #. Tag: para
-#: xen_administrating.xml:279
+#: xen_administrating.xml:356
 #, no-c-format
 msgid ""
 "<literal>NPIV</literal> is a special mode to use Fibre channel disks. "
@@ -525,19 +640,19 @@ msgstr ""
 "のファイバチャネル接続環境でのみ動作します。"
 
 #. Tag: title
-#: xen_administrating.xml:291
+#: xen_administrating.xml:368
 #, no-c-format
 msgid "Migrating &vmguest; Systems"
 msgstr "&vmguest; システムの移行"
 
 #. Tag: para
-#: xen_administrating.xml:292
+#: xen_administrating.xml:369
 #, no-c-format
 msgid "The actual migration of the &vmguest; system is done with the command:"
 msgstr "&vmguest; システムの実際の移行作業は、下記のコマンドで行ないます:"
 
 #. Tag: screen
-#: xen_administrating.xml:296
+#: xen_administrating.xml:373
 #, no-c-format
 msgid "&prompt.sudo;xl migrate &lt;domain_name&gt; &lt;host&gt;"
 msgstr ""
@@ -545,7 +660,7 @@ msgstr ""
 "<replaceable>&lt;ホスト名&gt;</replaceable>"
 
 #. Tag: para
-#: xen_administrating.xml:297
+#: xen_administrating.xml:374
 #, no-c-format
 msgid ""
 "The speed of the migration depends on how fast the memory print can be saved "
@@ -559,13 +674,13 @@ msgstr ""
 "とになります。"
 
 #. Tag: title
-#: xen_administrating.xml:306
+#: xen_administrating.xml:383
 #, no-c-format
 msgid "Monitoring &xen;"
 msgstr "&xen; の監視"
 
 #. Tag: para
-#: xen_administrating.xml:308
+#: xen_administrating.xml:385
 #, no-c-format
 msgid ""
 "For a regular operation of many virtual guests, having a possibility to "
@@ -578,13 +693,13 @@ msgstr ""
 "るためのさまざまなシステムツールを提供しています。"
 
 #. Tag: title
-#: xen_administrating.xml:316
+#: xen_administrating.xml:393
 #, no-c-format
 msgid "Monitoring the &vmhost;"
 msgstr "&vmhost; の監視"
 
 #. Tag: para
-#: xen_administrating.xml:317
+#: xen_administrating.xml:394
 #, no-c-format
 msgid ""
 "Basic monitoring of the &vmhost; (I/O and CPU) is available via the &vmm;. "
@@ -596,13 +711,13 @@ msgstr ""
 "読みください。"
 
 #. Tag: title
-#: xen_administrating.xml:325
+#: xen_administrating.xml:402
 #, no-c-format
 msgid "Monitor &xen; with <command>xentop</command>"
 msgstr "<command>xentop</command> を利用した &xen; の管理"
 
 #. Tag: para
-#: xen_administrating.xml:326
+#: xen_administrating.xml:403
 #, no-c-format
 msgid ""
 "The preferred terminal application to gather information about &xen; virtual "
@@ -615,7 +730,7 @@ msgstr ""
 "用してしまうと、表示が改行されて読みにくくなってしまいます。"
 
 #. Tag: para
-#: xen_administrating.xml:332
+#: xen_administrating.xml:409
 #, no-c-format
 msgid ""
 "<command>xentop</command> has several command keys that can give you more "
@@ -626,25 +741,25 @@ msgstr ""
 "意されています。主なものは下記のとおりです:"
 
 #. Tag: term
-#: xen_administrating.xml:339
+#: xen_administrating.xml:416
 #, no-c-format
 msgid "D"
 msgstr "D"
 
 #. Tag: para
-#: xen_administrating.xml:341
+#: xen_administrating.xml:418
 #, no-c-format
 msgid "Change the delay between the refreshes of the screen."
 msgstr "画面の更新間隔を指定します。"
 
 #. Tag: term
-#: xen_administrating.xml:347
+#: xen_administrating.xml:424
 #, no-c-format
 msgid "N"
 msgstr "N"
 
 #. Tag: para
-#: xen_administrating.xml:349
+#: xen_administrating.xml:426
 #, no-c-format
 msgid ""
 "Also display network statistics. Note, that only standard configurations "
@@ -656,19 +771,19 @@ msgstr ""
 "ん。"
 
 #. Tag: term
-#: xen_administrating.xml:357
+#: xen_administrating.xml:434
 #, no-c-format
 msgid "B"
 msgstr "B"
 
 #. Tag: para
-#: xen_administrating.xml:359
+#: xen_administrating.xml:436
 #, no-c-format
 msgid "Display the respective block devices and their cumulated usage count."
 msgstr "接続されているブロックデバイスと、その累積しよう回数を表示します。"
 
 #. Tag: para
-#: xen_administrating.xml:365
+#: xen_administrating.xml:442
 #, no-c-format
 msgid ""
 "For more information about <command>xentop</command> see the manual page "
@@ -678,13 +793,13 @@ msgstr ""
 "表示されるマニュアルページをお読みください。"
 
 #. Tag: title
-#: xen_administrating.xml:371
+#: xen_administrating.xml:448
 #, no-c-format
 msgid "<command>virt-top</command>"
 msgstr "<command>virt-top</command>"
 
 #. Tag: para
-#: xen_administrating.xml:372
+#: xen_administrating.xml:449
 #, no-c-format
 msgid ""
 "libvirt offers the hypervisor-agnostic tool <command>virt-top</command> , "
@@ -696,13 +811,13 @@ msgstr ""
 "<xref linkend=\"cha-libvirt-admin-monitor-virt-top\"/> をお読みください。"
 
 #. Tag: title
-#: xen_administrating.xml:382
+#: xen_administrating.xml:459
 #, no-c-format
 msgid "Additional Tools"
 msgstr "追加のツール"
 
 #. Tag: para
-#: xen_administrating.xml:383
+#: xen_administrating.xml:460
 #, no-c-format
 msgid ""
 "There are many system tools that also help monitoring or debugging a running "
@@ -718,13 +833,13 @@ msgstr ""
 "ついて説明しています:"
 
 #. Tag: term
-#: xen_administrating.xml:392
+#: xen_administrating.xml:469
 #, no-c-format
 msgid "ip"
 msgstr "ip"
 
 #. Tag: para
-#: xen_administrating.xml:394
+#: xen_administrating.xml:471
 #, no-c-format
 msgid ""
 "The command line utility <command>ip</command> may be used to monitor "
@@ -741,19 +856,19 @@ msgstr ""
 "ます:"
 
 #. Tag: screen
-#: xen_administrating.xml:401
+#: xen_administrating.xml:478
 #, no-c-format
 msgid "&prompt.user;watch ip -s link show &xenguest;.0"
 msgstr "&prompt.user;watch ip -s link show &xenguest;.0"
 
 #. Tag: term
-#: xen_administrating.xml:405
+#: xen_administrating.xml:482
 #, no-c-format
 msgid "bridge"
 msgstr "bridge"
 
 #. Tag: para
-#: xen_administrating.xml:407
+#: xen_administrating.xml:484
 #, no-c-format
 msgid ""
 "In a standard setup, all the &xen; &vmguest; systems are attached to a "
@@ -769,7 +884,7 @@ msgstr ""
 "力は下記のようになります:"
 
 #. Tag: screen
-#: xen_administrating.xml:414
+#: xen_administrating.xml:491
 #, no-c-format
 msgid ""
 "\n"
@@ -785,7 +900,7 @@ msgstr ""
 "  state forwarding priority 32 cost 100\n"
 
 #. Tag: para
-#: xen_administrating.xml:419
+#: xen_administrating.xml:496
 #, no-c-format
 msgid ""
 "This shows that there are two virtual bridges defined on the system. One is "
@@ -797,13 +912,13 @@ msgstr ""
 "ターフェイスである <literal>vnet0</literal> に接続されています。"
 
 #. Tag: term
-#: xen_administrating.xml:427
+#: xen_administrating.xml:504
 #, no-c-format
 msgid "iptables-save"
 msgstr "iptables-save"
 
 #. Tag: para
-#: xen_administrating.xml:429
+#: xen_administrating.xml:506
 #, no-c-format
 msgid ""
 "Especially when using masquerade networks, or if several Ethernet interfaces "
@@ -815,7 +930,7 @@ msgstr ""
 "ルールを確認しておく必要がある場合があります。"
 
 #. Tag: para
-#: xen_administrating.xml:434
+#: xen_administrating.xml:511
 #, no-c-format
 msgid ""
 "The command <command>iptables</command> may be used to check all the "
@@ -829,13 +944,13 @@ msgstr ""
 "save</command> もしくは <command>iptables -S</command> を実行してください。"
 
 #. Tag: title
-#: xen_administrating.xml:446
+#: xen_administrating.xml:523
 #, no-c-format
 msgid "Providing Host Information for &vmguest; Systems"
 msgstr "&vmguest; システムに対するホスト情報の提供"
 
 #. Tag: para
-#: xen_administrating.xml:448
+#: xen_administrating.xml:525
 #, no-c-format
 msgid ""
 "In a standard &xen; environment, the &vmguest; systems have only very "
@@ -851,13 +966,13 @@ msgstr ""
 "systemitem> を動作させるには、下記の手順を行ないます:"
 
 #. Tag: para
-#: xen_administrating.xml:459
+#: xen_administrating.xml:536
 #, no-c-format
 msgid "Install the package vhostmd on the &vmhost;."
 msgstr "まずは &vmhost; に vhostmd パッケージをインストールします。"
 
 #. Tag: para
-#: xen_administrating.xml:464
+#: xen_administrating.xml:541
 #, no-c-format
 msgid ""
 "To add or remove <literal>metric</literal> sections from the configuration, "
@@ -869,7 +984,7 @@ msgstr ""
 "既定値のままでもかまいません。"
 
 #. Tag: para
-#: xen_administrating.xml:472
+#: xen_administrating.xml:549
 #, no-c-format
 msgid ""
 "Check the validity of the <filename>vhostmd.conf</filename> configuration "
@@ -879,7 +994,7 @@ msgstr ""
 "式が正しいことを確認します:"
 
 #. Tag: screen
-#: xen_administrating.xml:476
+#: xen_administrating.xml:553
 #, no-c-format
 msgid ""
 "&prompt.user;cd /etc/vhostmd\n"
@@ -891,7 +1006,7 @@ msgstr ""
 "    "
 
 #. Tag: para
-#: xen_administrating.xml:481
+#: xen_administrating.xml:558
 #, no-c-format
 msgid ""
 "Start the vhostmd daemon with the command <command>sudo systemctl start "
@@ -901,21 +1016,22 @@ msgstr ""
 "デーモンを開始します。"
 
 #. Tag: para
-#: xen_administrating.xml:485
+#: xen_administrating.xml:562
 #, no-c-format
 msgid ""
 "If vhostmd should be started automatically during start-up of the system, "
 "run the command:"
-msgstr "vhostmd をシステムの起動時に開始するように設定したい場合は、下記を実行します:"
+msgstr ""
+"vhostmd をシステムの起動時に開始するように設定したい場合は、下記を実行します:"
 
 #. Tag: screen
-#: xen_administrating.xml:489
+#: xen_administrating.xml:566
 #, no-c-format
 msgid "&prompt.sudo;systemctl enable vhostmd"
 msgstr "&prompt.sudo;systemctl enable vhostmd"
 
 #. Tag: para
-#: xen_administrating.xml:492
+#: xen_administrating.xml:569
 #, no-c-format
 msgid ""
 "Attach the image file <filename>/dev/shm/vhostmd0</filename> to the "
@@ -925,19 +1041,19 @@ msgstr ""
 "filename> というイメージファイルを接続するため、下記のコマンドを実行します:"
 
 #. Tag: screen
-#: xen_administrating.xml:496
+#: xen_administrating.xml:573
 #, no-c-format
 msgid "&prompt.user;xl block-attach opensuse /dev/shm/vhostmd0,,xvdb,ro"
 msgstr "&prompt.user;xl block-attach opensuse /dev/shm/vhostmd0,,xvdb,ro"
 
 #. Tag: para
-#: xen_administrating.xml:499
+#: xen_administrating.xml:576
 #, no-c-format
 msgid "Log on the &vmguest; system."
 msgstr "&vmguest; 側のシステムにログインします。"
 
 #. Tag: para
-#: xen_administrating.xml:504
+#: xen_administrating.xml:581
 #, no-c-format
 msgid "Install the client package <systemitem>vm-dump-metrics</systemitem> ."
 msgstr ""
@@ -945,7 +1061,7 @@ msgstr ""
 "トールします。"
 
 #. Tag: para
-#: xen_administrating.xml:509
+#: xen_administrating.xml:586
 #, no-c-format
 msgid ""
 "Run the command <command>vm-dump-metrics</command> . To save the result to a "
@@ -956,7 +1072,7 @@ msgstr ""
 "systemitem> オプションを追加してください。"
 
 #. Tag: para
-#: xen_administrating.xml:516
+#: xen_administrating.xml:593
 #, no-c-format
 msgid ""
 "The result of the <systemitem>vm-dump-metrics</systemitem> is an XML output. "
@@ -968,7 +1084,7 @@ msgstr ""
 "に従って行なわれます。"
 
 #. Tag: para
-#: xen_administrating.xml:522
+#: xen_administrating.xml:599
 #, no-c-format
 msgid ""
 "For more information, see the manual pages <command>man 8 vhostmd</command> "
@@ -981,4 +1097,3 @@ msgstr ""
 "vhostmd/README</filename> (英語) ファイルをお読みください。ゲスト側では、 "
 "<command>man 1 vm-dump-metrics</command> のマニュアルページもお読みいただくこ"
 "とができます。"
-

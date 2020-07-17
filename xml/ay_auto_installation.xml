@@ -49,9 +49,38 @@
     <title>USB メモリなどからの起動</title>
     <para>テストやシステムの救出を目的とする場合、もしくはお使いのネットワークインターフェイスカードに PROM や PXE が搭載されていないような場合でも、 &ay; を使用することができます。フラッシュメモリであれば制御ファイルを含めることもできます。</para>
     <tip>
-     <title>起動可能なフラッシュメモリの作成</title>
-     <para>起動可能な USB メモリを作成するには、 &productname; の DVD 1 の ISO イメージか、 Mini CD の ISO イメージを <command>dd</command> コマンドで USB メモリに書き込みます (このとき、 USB メモリをマウントしていてはなりません。また、 USB メモリの内容は全て消去されます):</para>
-<screen>&prompt.sudo;dd if=<replaceable>ISO_イメージのパス</replaceable> of=<replaceable>USB_ストレージデバイス</replaceable> bs=4M</screen>
+     <title>
+      Copying the Installation Media Image to a Removable Flash Disk
+     </title>
+     <para>
+      Use the following command to copy the contents of the installation image
+      to a removable flash disk.
+     </para>
+     <screen>&prompt.sudo;dd if=<replaceable>IMAGE</replaceable> of=<replaceable>FLASH_DISK</replaceable> bs=4M &amp;&amp; sync</screen>
+     <para>
+      <replaceable>IMAGE</replaceable> needs to be replaced with the path to the
+      <filename>&installmedia;</filename> or <filename>&packagemedia;</filename>
+      image file. <replaceable>FLASH_DISK</replaceable> needs to be replaced
+      with the flash device. To identify the device, insert it and run:
+     </para>
+     <screen>&prompt.root;grep -Ff &lt;(hwinfo --disk --short) &lt;(hwinfo --usb --short)
+      disk:
+      /dev/sdc             General USB Flash Disk</screen>
+     <para>
+      Make sure the size of the device is sufficient for the desired image. You
+      can check the size of the device with:
+     </para>
+     <screen>&prompt.root;fdisk -l /dev/sdc | grep -e "^/dev"
+      /dev/sdc1  *     2048 31490047 31488000  15G 83 Linux</screen>
+     <para>
+      In this example, the device has a capacity of 15 GB. The command to use for
+      the <filename>&packagemedia;</filename> would be:
+     </para>
+     <screen>dd if=&packagemedia; of=/dev/sdc1 bs=4M &amp;&amp; sync</screen>
+     <para>
+      The device must not be mounted when running the <command>dd</command>
+      command. Note that all data on the partition will be erased!
+     </para>
     </tip>
    </sect2>
 
@@ -368,7 +397,7 @@
      <para>それぞれの起動方法ごとに利用可能な、制御ファイルの提供方法を示します:</para>
     <variablelist>
      <varlistentry>
-      <term>&productname; インストール DVD-ROM を使用する場合</term>
+      <term>インストールメディアのルートディレクトリ</term>
       <listitem>
        <para>&productname; の DVD-ROM (DVD #1 が必要です) を使用する場合、制御ファイルは USB メモリやネットワーク内に存在している必要があります:</para>
        <formalpara>
@@ -382,7 +411,7 @@
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>独自の DVD-ROM を使用する場合</term>
+      <term>ネットワーク経由でインストールする場合</term>
       <listitem>
        <para>この場合、制御ファイルを DVD-ROM 内に直接含めることができます。制御ファイルはルートディレクトリ内に配置し、 <filename>autoinst.xml</filename> というファイル名にしておいてください。これにより、インストール時に自動検出され、使用されるようになります。もちろん <literal>autoyast=file:///<replaceable>パス</replaceable></literal> のように指定すれば、他のパスにある制御ファイルを指定して使用することもできます。</para>
       </listitem>

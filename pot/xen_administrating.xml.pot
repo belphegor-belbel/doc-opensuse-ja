@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2020-04-15 22:21+0000\n"
+"POT-Creation-Date: 2020-07-17 05:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -233,239 +233,327 @@ msgstr ""
 #. Tag: para
 #: xen_administrating.xml:201
 #, no-c-format
-msgid "All &vmhost; systems should use a similar CPU. The frequency is not so important, but they should be using the same CPU family. To get more information about the used CPU, see <command>cat /proc/cpuinfo</command> ."
+msgid "All &vmhost; systems should use a similar CPU. The frequency is not so important, but they should be using the same CPU family. To get more information about the used CPU, use <command>cat /proc/cpuinfo</command> . Find more details about comparing host CPU features in <xref linkend=\"sec-xen-manage-migrate-cpu\"/> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:209
+#: xen_administrating.xml:210
 #, no-c-format
 msgid "All resources that are used by a specific guest system must be available on all involved &vmhost; systems&mdash;for example all used block devices must exist on both &vmhost; systems."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:216
+#: xen_administrating.xml:217
 #, no-c-format
 msgid "If the hosts included in the migration process run in different subnets, make sure that either DHCP relay is available to the guests, or for guests with static network configuration, set up the network manually."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:223
+#: xen_administrating.xml:224
 #, no-c-format
 msgid "Using special features like <literal>&pciback;</literal> may be problematic. Do not implement these when deploying for an environment that should migrate &vmguest; systems between different &vmhost; systems."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:231
+#: xen_administrating.xml:232
 #, no-c-format
 msgid "For fast migrations, a fast network is mandatory. If possible, use GB Ethernet and fast switches. Deploying VLAN might also help avoid collisions."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:240
-#, no-c-format
-msgid "Preparing Block Devices for Migrations"
-msgstr ""
-
-#. Tag: para
 #: xen_administrating.xml:241
 #, no-c-format
-msgid "The block devices needed by the &vmguest; system must be available on all involved &vmhost; systems. This is done by implementing some kind of shared storage that serves as container for the root file system of the migrated &vmguest; system. Common possibilities include:"
+msgid "Detecting CPU Features"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:249
+#: xen_administrating.xml:242
 #, no-c-format
-msgid "<literal>iSCSI</literal> can be set up to give access to the same block devices from different systems at the same time. <phrase os=\"sles\">For more information about iSCSI, see <xref linkend=\"cha-iscsi\"/>.</phrase>"
+msgid "By using the <systemitem>cpuid</systemitem> and <systemitem>xen_maskcalc.py</systemitem> tools, you can compare features of a CPU on the host from where you are migrating the source &vmguest; with the features of CPUs on the target hosts. This way you can better predict if the guest migrations will be successful."
 msgstr ""
 
 #. Tag: para
+#: xen_administrating.xml:251
+#, no-c-format
+msgid "Run the <command>cpuid -1r</command> command on each &dom0; that is supposed to run or receive the migrated &vmguest; and capture the output in text files, for example:"
+msgstr ""
+
+#. Tag: screen
 #: xen_administrating.xml:256
 #, no-c-format
-msgid "<literal>NFS</literal> is a widely used root file system that can easily be accessed from different locations. For more information, see <xref linkend=\"cha-nfs\"/> ."
+msgid "\n"
+      "<prompt>tux@vm_host1 &gt; </prompt>sudo cpuid -1r &gt; vm_host1.txt\n"
+      "<prompt>tux@vm_host2 &gt; </prompt>sudo cpuid -1r &gt; vm_host2.txt\n"
+      "<prompt>tux@vm_host3 &gt; </prompt>sudo cpuid -1r &gt; vm_host3.txt\n"
+      ""
 msgstr ""
 
 #. Tag: para
 #: xen_administrating.xml:263
 #, no-c-format
-msgid "<literal>DRBD</literal> can be used if only two &vmhost; systems are involved. This gives some extra data security, because the used data is mirrored over the network. <phrase os=\"sles;sled\">For more information, see the <citetitle>SUSE Linux Enterprise High Availability Extension &productnumber;</citetitle> documentation at <link xlink:href=\"https://documentation.suse.com/sle-ha/15-SP2/\"/></phrase> ."
+msgid "Copy all the output text files on a host with the <command>xen_maskcalc.py</command> script installed."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:273
+#: xen_administrating.xml:269
 #, no-c-format
-msgid "<literal>SCSI</literal> can also be used if the available hardware permits shared access to the same disks."
-msgstr ""
-
-#. Tag: para
-#: xen_administrating.xml:279
-#, no-c-format
-msgid "<literal>NPIV</literal> is a special mode to use Fibre channel disks. However, in this case all migration hosts must be attached to the same Fibre channel switch. For more information about NPIV, see <xref linkend=\"sec-xen-config-disk\"/> . Commonly, this works if the Fibre channel environment supports 4 Gbit or faster connections."
-msgstr ""
-
-#. Tag: title
-#: xen_administrating.xml:291
-#, no-c-format
-msgid "Migrating &vmguest; Systems"
-msgstr ""
-
-#. Tag: para
-#: xen_administrating.xml:292
-#, no-c-format
-msgid "The actual migration of the &vmguest; system is done with the command:"
+msgid "Run the <command>xen_maskcalc.py</command> script on all output text files:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:296
+#: xen_administrating.xml:273
 #, no-c-format
-msgid "&prompt.sudo;xl migrate &lt;domain_name&gt; &lt;host&gt;"
+msgid "\n"
+      "&prompt.sudo;xen_maskcalc.py vm_host1.txt vm_host2.txt vm_host3.txt\n"
+      "cpuid = [\n"
+      "    \"0x00000001:ecx=x00xxxxxx0xxxxxxxxx00xxxxxxxxxxx\",\n"
+      "    \"0x00000007,0x00:ebx=xxxxxxxxxxxxxxxxxx00x0000x0x0x00\"\n"
+      "]\n"
+      ""
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:297
+#: xen_administrating.xml:282
 #, no-c-format
-msgid "The speed of the migration depends on how fast the memory print can be saved to disk, sent to the new &vmhost; and loaded there. This means that small &vmguest; systems can be migrated faster than big systems with a lot of memory."
+msgid "Copy the output <literal>cpuid=[...]</literal> configuration snipped into the <command>xl</command> configuration of the migrated guest <filename>domU.cfg</filename> or alternatively to its &libvirt;'s XML configuration."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:290
+#, no-c-format
+msgid "Start the source guest with the <emphasis>trimmed</emphasis> CPU configuration. The guest can now only use CPU features which are present on each of the hosts."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:298
+#, no-c-format
+msgid "&libvirt; also supports calculating a baseline CPU for migration. For more details, refer to <link xlink:href=\"https://documentation.suse.com/sles/15-SP2/single-html/SLES-vt-best-practices/\"/> ."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:306
+#: xen_administrating.xml:304
 #, no-c-format
-msgid "Monitoring &xen;"
+msgid "For More Information"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:308
+#: xen_administrating.xml:305
 #, no-c-format
-msgid "For a regular operation of many virtual guests, having a possibility to check the sanity of all the different &vmguest; systems is indispensable. &xen; offers several tools besides the system tools to gather information about the system."
+msgid "You can find more details about <systemitem>cpuid</systemitem> at <link xlink:href=\"http://etallen.com/cpuid.html\"/> ."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:309
+#, no-c-format
+msgid "You can download the latest version of the CPU mask calculator from <link xlink:href=\"https://github.com/twizted/xen_maskcalc\"/> ."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:316
-#, no-c-format
-msgid "Monitoring the &vmhost;"
-msgstr ""
-
-#. Tag: para
 #: xen_administrating.xml:317
 #, no-c-format
-msgid "Basic monitoring of the &vmhost; (I/O and CPU) is available via the &vmm;. Refer to <xref linkend=\"cha-libvirt-admin-monitor-virt-manager\"/> for details."
+msgid "Preparing Block Devices for Migrations"
 msgstr ""
 
-#. Tag: title
-#: xen_administrating.xml:325
+#. Tag: para
+#: xen_administrating.xml:318
 #, no-c-format
-msgid "Monitor &xen; with <command>xentop</command>"
+msgid "The block devices needed by the &vmguest; system must be available on all involved &vmhost; systems. This is done by implementing some kind of shared storage that serves as container for the root file system of the migrated &vmguest; system. Common possibilities include:"
 msgstr ""
 
 #. Tag: para
 #: xen_administrating.xml:326
 #, no-c-format
-msgid "The preferred terminal application to gather information about &xen; virtual environment is <command>xentop</command> . Unfortunately, this tool needs a rather broad terminal, else it inserts line breaks into the display."
+msgid "<literal>iSCSI</literal> can be set up to give access to the same block devices from different systems at the same time. <phrase os=\"sles\">For more information about iSCSI, see <xref linkend=\"cha-iscsi\"/>.</phrase>"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:332
+#: xen_administrating.xml:333
 #, no-c-format
-msgid "<command>xentop</command> has several command keys that can give you more information about the system that is monitored. Some of the more important are:"
-msgstr ""
-
-#. Tag: term
-#: xen_administrating.xml:339
-#, no-c-format
-msgid "D"
+msgid "<literal>NFS</literal> is a widely used root file system that can easily be accessed from different locations. For more information, see <xref linkend=\"cha-nfs\"/> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:341
+#: xen_administrating.xml:340
 #, no-c-format
-msgid "Change the delay between the refreshes of the screen."
-msgstr ""
-
-#. Tag: term
-#: xen_administrating.xml:347
-#, no-c-format
-msgid "N"
+msgid "<literal>DRBD</literal> can be used if only two &vmhost; systems are involved. This gives some extra data security, because the used data is mirrored over the network. <phrase os=\"sles;sled\">For more information, see the <citetitle>SUSE Linux Enterprise High Availability Extension &productnumber;</citetitle> documentation at <link xlink:href=\"https://documentation.suse.com/sle-ha/15-SP2/\"/></phrase> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:349
+#: xen_administrating.xml:350
 #, no-c-format
-msgid "Also display network statistics. Note, that only standard configurations will be displayed. If you use a special configuration like a routed network, no network will be displayed."
-msgstr ""
-
-#. Tag: term
-#: xen_administrating.xml:357
-#, no-c-format
-msgid "B"
+msgid "<literal>SCSI</literal> can also be used if the available hardware permits shared access to the same disks."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:359
+#: xen_administrating.xml:356
 #, no-c-format
-msgid "Display the respective block devices and their cumulated usage count."
-msgstr ""
-
-#. Tag: para
-#: xen_administrating.xml:365
-#, no-c-format
-msgid "For more information about <command>xentop</command> see the manual page <command>man 1 xentop</command> ."
+msgid "<literal>NPIV</literal> is a special mode to use Fibre channel disks. However, in this case all migration hosts must be attached to the same Fibre channel switch. For more information about NPIV, see <xref linkend=\"sec-xen-config-disk\"/> . Commonly, this works if the Fibre channel environment supports 4 Gbit or faster connections."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:371
+#: xen_administrating.xml:368
 #, no-c-format
-msgid "<command>virt-top</command>"
+msgid "Migrating &vmguest; Systems"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:372
+#: xen_administrating.xml:369
 #, no-c-format
-msgid "libvirt offers the hypervisor-agnostic tool <command>virt-top</command> , which is recommended for monitoring &vmguest;s. See <xref linkend=\"cha-libvirt-admin-monitor-virt-top\"/> for details."
+msgid "The actual migration of the &vmguest; system is done with the command:"
+msgstr ""
+
+#. Tag: screen
+#: xen_administrating.xml:373
+#, no-c-format
+msgid "&prompt.sudo;xl migrate &lt;domain_name&gt; &lt;host&gt;"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:374
+#, no-c-format
+msgid "The speed of the migration depends on how fast the memory print can be saved to disk, sent to the new &vmhost; and loaded there. This means that small &vmguest; systems can be migrated faster than big systems with a lot of memory."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:382
-#, no-c-format
-msgid "Additional Tools"
-msgstr ""
-
-#. Tag: para
 #: xen_administrating.xml:383
 #, no-c-format
-msgid "There are many system tools that also help monitoring or debugging a running <phrase os=\"sles;sled\">&sle;</phrase> <phrase os=\"osuse\">&opensuse;</phrase> system. Many of these are covered in <xref linkend=\"cha-util\"/> . Especially useful for monitoring a virtualization environment are the following tools:"
+msgid "Monitoring &xen;"
 msgstr ""
 
-#. Tag: term
-#: xen_administrating.xml:392
+#. Tag: para
+#: xen_administrating.xml:385
 #, no-c-format
-msgid "ip"
+msgid "For a regular operation of many virtual guests, having a possibility to check the sanity of all the different &vmguest; systems is indispensable. &xen; offers several tools besides the system tools to gather information about the system."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:393
+#, no-c-format
+msgid "Monitoring the &vmhost;"
 msgstr ""
 
 #. Tag: para
 #: xen_administrating.xml:394
 #, no-c-format
+msgid "Basic monitoring of the &vmhost; (I/O and CPU) is available via the &vmm;. Refer to <xref linkend=\"cha-libvirt-admin-monitor-virt-manager\"/> for details."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:402
+#, no-c-format
+msgid "Monitor &xen; with <command>xentop</command>"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:403
+#, no-c-format
+msgid "The preferred terminal application to gather information about &xen; virtual environment is <command>xentop</command> . Unfortunately, this tool needs a rather broad terminal, else it inserts line breaks into the display."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:409
+#, no-c-format
+msgid "<command>xentop</command> has several command keys that can give you more information about the system that is monitored. Some of the more important are:"
+msgstr ""
+
+#. Tag: term
+#: xen_administrating.xml:416
+#, no-c-format
+msgid "D"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:418
+#, no-c-format
+msgid "Change the delay between the refreshes of the screen."
+msgstr ""
+
+#. Tag: term
+#: xen_administrating.xml:424
+#, no-c-format
+msgid "N"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:426
+#, no-c-format
+msgid "Also display network statistics. Note, that only standard configurations will be displayed. If you use a special configuration like a routed network, no network will be displayed."
+msgstr ""
+
+#. Tag: term
+#: xen_administrating.xml:434
+#, no-c-format
+msgid "B"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:436
+#, no-c-format
+msgid "Display the respective block devices and their cumulated usage count."
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:442
+#, no-c-format
+msgid "For more information about <command>xentop</command> see the manual page <command>man 1 xentop</command> ."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:448
+#, no-c-format
+msgid "<command>virt-top</command>"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:449
+#, no-c-format
+msgid "libvirt offers the hypervisor-agnostic tool <command>virt-top</command> , which is recommended for monitoring &vmguest;s. See <xref linkend=\"cha-libvirt-admin-monitor-virt-top\"/> for details."
+msgstr ""
+
+#. Tag: title
+#: xen_administrating.xml:459
+#, no-c-format
+msgid "Additional Tools"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:460
+#, no-c-format
+msgid "There are many system tools that also help monitoring or debugging a running <phrase os=\"sles;sled\">&sle;</phrase> <phrase os=\"osuse\">&opensuse;</phrase> system. Many of these are covered in <xref linkend=\"cha-util\"/> . Especially useful for monitoring a virtualization environment are the following tools:"
+msgstr ""
+
+#. Tag: term
+#: xen_administrating.xml:469
+#, no-c-format
+msgid "ip"
+msgstr ""
+
+#. Tag: para
+#: xen_administrating.xml:471
+#, no-c-format
 msgid "The command line utility <command>ip</command> may be used to monitor arbitrary network interfaces. This is especially useful if you have set up a network that is routed or applied a masqueraded network. To monitor a network interface with the name <literal>&xenguest;.0</literal> , run the following command:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:401
+#: xen_administrating.xml:478
 #, no-c-format
 msgid "&prompt.user;watch ip -s link show &xenguest;.0"
 msgstr ""
 
 #. Tag: term
-#: xen_administrating.xml:405
+#: xen_administrating.xml:482
 #, no-c-format
 msgid "bridge"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:407
+#: xen_administrating.xml:484
 #, no-c-format
 msgid "In a standard setup, all the &xen; &vmguest; systems are attached to a virtual network bridge. <command>bridge</command> allows you to determine the connection between the bridge and the virtual network adapter in the &vmguest; system. For example, the output of <command>bridge link</command> may look like the following:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:414
+#: xen_administrating.xml:491
 #, no-c-format
 msgid "\n"
       "2: eth0 state DOWN : &lt;NO-CARRIER, ...,UP&gt; mtu 1500 master br0\n"
@@ -475,61 +563,61 @@ msgid "\n"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:419
+#: xen_administrating.xml:496
 #, no-c-format
 msgid "This shows that there are two virtual bridges defined on the system. One is connected to the physical Ethernet device <literal>eth0</literal> , the other one is connected to a VLAN interface <literal>vnet0</literal> ."
 msgstr ""
 
 #. Tag: term
-#: xen_administrating.xml:427
+#: xen_administrating.xml:504
 #, no-c-format
 msgid "iptables-save"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:429
+#: xen_administrating.xml:506
 #, no-c-format
 msgid "Especially when using masquerade networks, or if several Ethernet interfaces are set up together with a firewall setup, it may be helpful to check the current firewall rules."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:434
+#: xen_administrating.xml:511
 #, no-c-format
 msgid "The command <command>iptables</command> may be used to check all the different firewall settings. To list all the rules of a chain, or even of the complete setup, you may use the commands <command>iptables-save</command> or <command>iptables -S</command> ."
 msgstr ""
 
 #. Tag: title
-#: xen_administrating.xml:446
+#: xen_administrating.xml:523
 #, no-c-format
 msgid "Providing Host Information for &vmguest; Systems"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:448
+#: xen_administrating.xml:525
 #, no-c-format
 msgid "In a standard &xen; environment, the &vmguest; systems have only very limited information about the &vmhost; system they are running on. If a guest should know more about the &vmhost; it runs on, <systemitem>vhostmd</systemitem> can provide more information to selected guests. To set up your system to run <systemitem>vhostmd</systemitem> , proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:459
+#: xen_administrating.xml:536
 #, no-c-format
 msgid "Install the package vhostmd on the &vmhost;."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:464
+#: xen_administrating.xml:541
 #, no-c-format
 msgid "To add or remove <literal>metric</literal> sections from the configuration, edit the file <filename>/etc/vhostmd/vhostmd.conf</filename> . However, the default works well."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:472
+#: xen_administrating.xml:549
 #, no-c-format
 msgid "Check the validity of the <filename>vhostmd.conf</filename> configuration file with the command:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:476
+#: xen_administrating.xml:553
 #, no-c-format
 msgid "&prompt.user;cd /etc/vhostmd\n"
       "&prompt.user;xmllint --postvalid --noout vhostmd.conf\n"
@@ -537,61 +625,61 @@ msgid "&prompt.user;cd /etc/vhostmd\n"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:481
+#: xen_administrating.xml:558
 #, no-c-format
 msgid "Start the vhostmd daemon with the command <command>sudo systemctl start vhostmd</command> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:485
+#: xen_administrating.xml:562
 #, no-c-format
 msgid "If vhostmd should be started automatically during start-up of the system, run the command:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:489
+#: xen_administrating.xml:566
 #, no-c-format
 msgid "&prompt.sudo;systemctl enable vhostmd"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:492
+#: xen_administrating.xml:569
 #, no-c-format
 msgid "Attach the image file <filename>/dev/shm/vhostmd0</filename> to the &vmguest; system named &xenguest; with the command:"
 msgstr ""
 
 #. Tag: screen
-#: xen_administrating.xml:496
+#: xen_administrating.xml:573
 #, no-c-format
 msgid "&prompt.user;xl block-attach opensuse /dev/shm/vhostmd0,,xvdb,ro"
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:499
+#: xen_administrating.xml:576
 #, no-c-format
 msgid "Log on the &vmguest; system."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:504
+#: xen_administrating.xml:581
 #, no-c-format
 msgid "Install the client package <systemitem>vm-dump-metrics</systemitem> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:509
+#: xen_administrating.xml:586
 #, no-c-format
 msgid "Run the command <command>vm-dump-metrics</command> . To save the result to a file, use the option <systemitem>-d &lt;filename&gt;</systemitem> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:516
+#: xen_administrating.xml:593
 #, no-c-format
 msgid "The result of the <systemitem>vm-dump-metrics</systemitem> is an XML output. The respective metric entries follow the DTD <filename>/etc/vhostmd/metric.dtd</filename> ."
 msgstr ""
 
 #. Tag: para
-#: xen_administrating.xml:522
+#: xen_administrating.xml:599
 #, no-c-format
 msgid "For more information, see the manual pages <command>man 8 vhostmd</command> and <filename>/usr/share/doc/vhostmd/README</filename> on the &vmhost; system. On the guest, see the manual page <command>man 1 vm-dump-metrics</command> ."
 msgstr ""
