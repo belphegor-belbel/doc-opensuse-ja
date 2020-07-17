@@ -105,7 +105,7 @@
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>移行に関わる全ての &vmhost; のシステムで、同じような CPU を使用する必要があります。動作周波数などは異なっていてもかまいませんが、同一のファミリの CPU を使用しておく必要があります。 CPU に関する詳細は、 <command>cat /proc/cpuinfo</command> を実行すると取得することができます。</para>
+    <para>移行に関わる全ての &vmhost; のシステムで、同じような CPU を使用する必要があります。動作周波数などは異なっていてもかまいませんが、同一のファミリの CPU を使用しておく必要があります。 CPU に関する詳細は、 <command>cat /proc/cpuinfo</command> を実行すると取得することができます。ホスト CPU の機能比較に関する詳細については、 <xref linkend="sec-xen-manage-migrate-cpu"/> をお読みください。</para>
    </listitem>
    <listitem>
     <para>特定のゲストシステムが使用している全てのリソースは、移行に関わる全ての &vmhost; から使用できなければなりません。具体的には、使用している全てのブロックデバイスは、両方の &vmhost; システム内に存在していなければなりません。</para>
@@ -122,21 +122,11 @@
   </itemizedlist>
 
   <sect2 xml:id="sec-xen-manage-migrate-cpu">
-   <title>Detecting CPU Features</title>
-   <para>
-    By using the <systemitem>cpuid</systemitem> and
-    <systemitem>xen_maskcalc.py</systemitem> tools, you can compare features of
-    a CPU on the host from where you are migrating the source &vmguest; with
-    the features of CPUs on the target hosts. This way you can better predict
-    if the guest migrations will be successful.
-   </para>
+   <title>CPU 機能の検出</title>
+   <para><systemitem>cpuid</systemitem> および <systemitem>xen_maskcalc.py</systemitem> のツールを使用することで、移行元と移行先の &vmguest; に存在する CPU の機能を比較することができます。これらのコマンドを使用することで、ゲストの移行が正しく完了するかどうかを事前によりよく予測することができるようになります。</para>
    <procedure>
     <step>
-     <para>
-      Run the <command>cpuid -1r</command> command on each &dom0; that is
-      supposed to run or receive the migrated &vmguest; and capture the output
-      in text files, for example:
-     </para>
+     <para>現在動作中の &dom0; と移行先の &vmguest; 内で <command>cpuid -1r</command> を実行して出力を比較します。たとえば下記のようになります:</para>
 <screen>
 <prompt>tux@vm_host1 &gt; </prompt>sudo cpuid -1r &gt; vm_host1.txt
 <prompt>tux@vm_host2 &gt; </prompt>sudo cpuid -1r &gt; vm_host2.txt
@@ -144,16 +134,10 @@
 </screen>
     </step>
     <step>
-     <para>
-      Copy all the output text files on a host with the
-      <command>xen_maskcalc.py</command> script installed.
-     </para>
+     <para>出力されたテキストファイルを <command>xen_maskcalc.py</command> スクリプトがインストールされたホストに集めます。</para>
     </step>
     <step>
-     <para>
-      Run the <command>xen_maskcalc.py</command> script on all output text
-      files:
-     </para>
+     <para>あとは出力された全てのテキストファイルに対して <command>xen_maskcalc.py</command> スクリプトを実行します:</para>
 <screen>
 &prompt.sudo;xen_maskcalc.py vm_host1.txt vm_host2.txt vm_host3.txt
 cpuid = [
@@ -163,36 +147,19 @@ cpuid = [
 </screen>
     </step>
     <step>
-     <para>
-      Copy the output <literal>cpuid=[...]</literal> configuration snipped into
-      the <command>xl</command> configuration of the migrated
-      guest<filename>domU.cfg</filename> or alternatively to its &libvirt;'s
-      XML configuration.
-     </para>
+     <para>あとは <literal>cpuid=[...]</literal> 内に出力された内容を、移行先のゲストの <filename>domU.cfg</filename> の <command>xl</command> 設定内に貼り付けるか、もしくは &libvirt; の XML 設定内に設定します。</para>
     </step>
     <step>
-     <para>
-      Start the source guest with the <emphasis>trimmed</emphasis> CPU
-      configuration. The guest can now only use CPU features which are present
-      on each of the hosts.
-     </para>
+     <para>あとは移行元のゲストを起動し直して、 CPU の機能を <emphasis>一部無効化</emphasis> した形で実行します。これにより、全てのホスト内に存在する CPU 機能だけを使用して動作させることができるようになります。</para>
     </step>
    </procedure>
    <tip>
-    <para>
-     &libvirt; also supports calculating a baseline CPU for migration. For more details, refer to <link xlink:href="https://documentation.suse.com/sles/15-SP2/single-html/SLES-vt-best-practices/"/>.
-    </para>
+    <para>&libvirt; では、移行に際して CPU のベースラインを計算する機能も提供しています。詳しくは <link xlink:href="https://documentation.suse.com/sles/15-SP2/single-html/SLES-vt-best-practices/"/> をお読みください。</para>
    </tip>
    <sect3 xml:id="sec-xen-manage-migrate-cpu-info">
-    <title>For More Information</title>
-    <para>
-     You can find more details about <systemitem>cpuid</systemitem> at
-     <link xlink:href="http://etallen.com/cpuid.html"/>.
-    </para>
-    <para>
-     You can download the latest version of the CPU mask calculator from
-     <link xlink:href="https://github.com/twizted/xen_maskcalc"/>.
-    </para>
+    <title>さらなる情報</title>
+    <para><systemitem>cpuid</systemitem> に関する詳細については、 <link xlink:href="http://etallen.com/cpuid.html"/> (英語) をお読みください。</para>
+    <para>CPU マスク計算プログラムの最新版をダウンロードしたい場合は、 <link xlink:href="https://github.com/twizted/xen_maskcalc"/> をご覧ください。</para>
    </sect3>
   </sect2>
 

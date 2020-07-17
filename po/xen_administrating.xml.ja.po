@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: xen_administrating.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
 "POT-Creation-Date: 2020-07-17 05:23+0000\n"
-"PO-Revision-Date: 2020-04-16 08:10+0900\n"
+"PO-Revision-Date: 2020-07-17 14:54+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
 "Language: ja\n"
@@ -378,7 +378,7 @@ msgstr ""
 
 #. Tag: para
 #: xen_administrating.xml:201
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "All &vmhost; systems should use a similar CPU. The frequency is not so "
 "important, but they should be using the same CPU family. To get more "
@@ -389,7 +389,8 @@ msgstr ""
 "移行に関わる全ての &vmhost; のシステムで、同じような CPU を使用する必要があり"
 "ます。動作周波数などは異なっていてもかまいませんが、同一のファミリの CPU を使"
 "用しておく必要があります。 CPU に関する詳細は、 <command>cat /proc/cpuinfo</"
-"command> を実行すると取得することができます。"
+"command> を実行すると取得することができます。ホスト CPU の機能比較に関する詳細に"
+"ついては、 <xref linkend=\"sec-xen-manage-migrate-cpu\"/> をお読みください。"
 
 #. Tag: para
 #: xen_administrating.xml:210
@@ -442,7 +443,7 @@ msgstr ""
 #: xen_administrating.xml:241
 #, no-c-format
 msgid "Detecting CPU Features"
-msgstr ""
+msgstr "CPU 機能の検出"
 
 #. Tag: para
 #: xen_administrating.xml:242
@@ -454,6 +455,10 @@ msgid ""
 "target hosts. This way you can better predict if the guest migrations will "
 "be successful."
 msgstr ""
+"<systemitem>cpuid</systemitem> および <systemitem>xen_maskcalc.py</systemitem> "
+"のツールを使用することで、移行元と移行先の &vmguest; に存在する CPU の機能を比較する"
+"ことができます。これらのコマンドを使用することで、ゲストの移行が正しく完了するかどうか"
+"を事前によりよく予測することができるようになります。"
 
 #. Tag: para
 #: xen_administrating.xml:251
@@ -463,6 +468,8 @@ msgid ""
 "to run or receive the migrated &vmguest; and capture the output in text "
 "files, for example:"
 msgstr ""
+"現在動作中の &dom0; と移行先の &vmguest; 内で <command>cpuid -1r</command> "
+"を実行して出力を比較します。たとえば下記のようになります:"
 
 #. Tag: screen
 #: xen_administrating.xml:256
@@ -473,6 +480,10 @@ msgid ""
 "<prompt>tux@vm_host2 &gt; </prompt>sudo cpuid -1r &gt; vm_host2.txt\n"
 "<prompt>tux@vm_host3 &gt; </prompt>sudo cpuid -1r &gt; vm_host3.txt\n"
 msgstr ""
+"\n"
+"<prompt>tux@vm_host1 &gt; </prompt>sudo cpuid -1r &gt; vm_host1.txt\n"
+"<prompt>tux@vm_host2 &gt; </prompt>sudo cpuid -1r &gt; vm_host2.txt\n"
+"<prompt>tux@vm_host3 &gt; </prompt>sudo cpuid -1r &gt; vm_host3.txt\n"
 
 #. Tag: para
 #: xen_administrating.xml:263
@@ -481,13 +492,16 @@ msgid ""
 "Copy all the output text files on a host with the <command>xen_maskcalc.py</"
 "command> script installed."
 msgstr ""
+"出力されたテキストファイルを <command>xen_maskcalc.py</command> スクリプトが"
+"インストールされたホストに集めます。"
 
 #. Tag: para
 #: xen_administrating.xml:269
 #, no-c-format
-msgid ""
-"Run the <command>xen_maskcalc.py</command> script on all output text files:"
+msgid "Run the <command>xen_maskcalc.py</command> script on all output text files:"
 msgstr ""
+"あとは出力された全てのテキストファイルに対して <command>xen_maskcalc.py</command> "
+"スクリプトを実行します:"
 
 #. Tag: screen
 #: xen_administrating.xml:273
@@ -500,6 +514,12 @@ msgid ""
 "    \"0x00000007,0x00:ebx=xxxxxxxxxxxxxxxxxx00x0000x0x0x00\"\n"
 "]\n"
 msgstr ""
+"\n"
+"&prompt.sudo;xen_maskcalc.py vm_host1.txt vm_host2.txt vm_host3.txt\n"
+"cpuid = [\n"
+"    \"0x00000001:ecx=x00xxxxxx0xxxxxxxxx00xxxxxxxxxxx\",\n"
+"    \"0x00000007,0x00:ebx=xxxxxxxxxxxxxxxxxx00x0000x0x0x00\"\n"
+"]\n"
 
 #. Tag: para
 #: xen_administrating.xml:282
@@ -509,6 +529,9 @@ msgid ""
 "the <command>xl</command> configuration of the migrated guest <filename>domU."
 "cfg</filename> or alternatively to its &libvirt;'s XML configuration."
 msgstr ""
+"あとは <literal>cpuid=[...]</literal> 内に出力された内容を、移行先のゲストの"
+" <filename>domU.cfg</filename> の <command>xl</command> 設定内に貼り付ける"
+"か、もしくは &libvirt; の XML 設定内に設定します。"
 
 #. Tag: para
 #: xen_administrating.xml:290
@@ -518,6 +541,9 @@ msgid ""
 "configuration. The guest can now only use CPU features which are present on "
 "each of the hosts."
 msgstr ""
+"あとは移行元のゲストを起動し直して、 CPU の機能を <emphasis>一部無効化</emphasis> "
+"した形で実行します。これにより、全てのホスト内に存在する CPU 機能だけを使用して"
+"動作させることができるようになります。"
 
 #. Tag: para
 #: xen_administrating.xml:298
@@ -527,12 +553,15 @@ msgid ""
 "details, refer to <link xlink:href=\"https://documentation.suse.com/sles/15-"
 "SP2/single-html/SLES-vt-best-practices/\"/> ."
 msgstr ""
+"&libvirt; では、移行に際して CPU のベースラインを計算する機能も提供しています。"
+"詳しくは <link xlink:href=\"https://documentation.suse.com/sles/15-"
+"SP2/single-html/SLES-vt-best-practices/\"/> をお読みください。"
 
 #. Tag: title
 #: xen_administrating.xml:304
 #, no-c-format
 msgid "For More Information"
-msgstr ""
+msgstr "さらなる情報"
 
 #. Tag: para
 #: xen_administrating.xml:305
@@ -541,6 +570,8 @@ msgid ""
 "You can find more details about <systemitem>cpuid</systemitem> at <link "
 "xlink:href=\"http://etallen.com/cpuid.html\"/> ."
 msgstr ""
+"<systemitem>cpuid</systemitem> に関する詳細については、 <link "
+"xlink:href=\"http://etallen.com/cpuid.html\"/> (英語) をお読みください。"
 
 #. Tag: para
 #: xen_administrating.xml:309
@@ -549,6 +580,8 @@ msgid ""
 "You can download the latest version of the CPU mask calculator from <link "
 "xlink:href=\"https://github.com/twizted/xen_maskcalc\"/> ."
 msgstr ""
+"CPU マスク計算プログラムの最新版をダウンロードしたい場合は、 <link "
+"xlink:href=\"https://github.com/twizted/xen_maskcalc\"/> をご覧ください。"
 
 #. Tag: title
 #: xen_administrating.xml:317
@@ -1021,8 +1054,7 @@ msgstr ""
 msgid ""
 "If vhostmd should be started automatically during start-up of the system, "
 "run the command:"
-msgstr ""
-"vhostmd をシステムの起動時に開始するように設定したい場合は、下記を実行します:"
+msgstr "vhostmd をシステムの起動時に開始するように設定したい場合は、下記を実行します:"
 
 #. Tag: screen
 #: xen_administrating.xml:566
@@ -1097,3 +1129,4 @@ msgstr ""
 "vhostmd/README</filename> (英語) ファイルをお読みください。ゲスト側では、 "
 "<command>man 1 vm-dump-metrics</command> のマニュアルページもお読みいただくこ"
 "とができます。"
+

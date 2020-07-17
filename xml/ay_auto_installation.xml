@@ -49,38 +49,19 @@
     <title>USB メモリなどからの起動</title>
     <para>テストやシステムの救出を目的とする場合、もしくはお使いのネットワークインターフェイスカードに PROM や PXE が搭載されていないような場合でも、 &ay; を使用することができます。フラッシュメモリであれば制御ファイルを含めることもできます。</para>
     <tip>
-     <title>
-      Copying the Installation Media Image to a Removable Flash Disk
-     </title>
-     <para>
-      Use the following command to copy the contents of the installation image
-      to a removable flash disk.
-     </para>
-     <screen>&prompt.sudo;dd if=<replaceable>IMAGE</replaceable> of=<replaceable>FLASH_DISK</replaceable> bs=4M &amp;&amp; sync</screen>
-     <para>
-      <replaceable>IMAGE</replaceable> needs to be replaced with the path to the
-      <filename>&installmedia;</filename> or <filename>&packagemedia;</filename>
-      image file. <replaceable>FLASH_DISK</replaceable> needs to be replaced
-      with the flash device. To identify the device, insert it and run:
-     </para>
+     <title>インストールメディアのイメージをリムーバブルメディアにコピーする場合について</title>
+     <para>下記のコマンドを実行することで、インストールメディアのイメージをリムーバブルメディアに書き込むことができます。</para>
+     <screen>&prompt.sudo;dd if=<replaceable>イメージ</replaceable> of=<replaceable>リムーバブルメディアのパス</replaceable> bs=4M &amp;&amp; sync</screen>
+     <para><replaceable>イメージ</replaceable> には <filename>&installmedia;</filename> もしくは <filename>&packagemedia;</filename> のイメージファイルのパスを、 <replaceable>リムーバブルメディアのパス</replaceable> にはリムーバブルメディアのパスをそれぞれ指定します。デバイス名がわからない場合は、下記のように入力して実行してください:</para>
      <screen>&prompt.root;grep -Ff &lt;(hwinfo --disk --short) &lt;(hwinfo --usb --short)
       disk:
       /dev/sdc             General USB Flash Disk</screen>
-     <para>
-      Make sure the size of the device is sufficient for the desired image. You
-      can check the size of the device with:
-     </para>
+     <para>なお、デバイスのサイズがイメージのサイズに対して十分かどうかを確認しておいてください。デバイスのサイズを確認したい場合は、下記のように入力して実行します:</para>
      <screen>&prompt.root;fdisk -l /dev/sdc | grep -e "^/dev"
       /dev/sdc1  *     2048 31490047 31488000  15G 83 Linux</screen>
-     <para>
-      In this example, the device has a capacity of 15 GB. The command to use for
-      the <filename>&packagemedia;</filename> would be:
-     </para>
+     <para>上記の例では、デバイスのサイズは 15 GB あることになります。この場合、 <filename>&packagemedia;</filename> を書き込む際のコマンドは下記のようになります:</para>
      <screen>dd if=&packagemedia; of=/dev/sdc1 bs=4M &amp;&amp; sync</screen>
-     <para>
-      The device must not be mounted when running the <command>dd</command>
-      command. Note that all data on the partition will be erased!
-     </para>
+     <para>なお、 <command>dd</command> コマンドを実行する際には、デバイスがマウントされていてはなりません。また、デバイス内の全てのデータが消去されることにも注意してください。</para>
     </tip>
    </sect2>
 
@@ -392,14 +373,14 @@
          </listitem>
      </varlistentry>        
     </variablelist>
-    <para>自動インストールでは、異なる種類のインフラストラクチャとソースメディアを使用するさまざまなシナリオが考えられます。最もシンプルな方法は &productname; のソースメディア (DVD メディア) を使用する方法ですが、この場合は自動インストールを開始するのにコマンドライン変数を入力する必要があるほか、 &yast; からアクセス可能な場所に制御ファイルを配置する必要もあります。</para>
+    <para>自動インストールでは、異なる種類のインフラストラクチャとソースメディアを使用するさまざまなシナリオが考えられます。最もシンプルな方法は &productname; のソースメディア ( <filename>&installmedia;</filename> もしくは <filename>&packagemedia;</filename> ) を使用する方法ですが、この場合は自動インストールを開始するのにコマンドライン変数を入力する必要があるほか、 &yast; からアクセス可能な場所に制御ファイルを配置する必要もあります。</para>
      <para>スクリプトという観点では、マシンに対してシリアルコンソールを使用することで、テキストモードによるインストールを行なう方法もあります。この場合、必要なパラメータを expect スクリプトなどで問い合わせることができます。</para>
      <para>それぞれの起動方法ごとに利用可能な、制御ファイルの提供方法を示します:</para>
     <variablelist>
      <varlistentry>
-      <term>インストールメディアのルートディレクトリ</term>
+      <term>&productname; のインストールメディアを使用する方法</term>
       <listitem>
-       <para>&productname; の DVD-ROM (DVD #1 が必要です) を使用する場合、制御ファイルは USB メモリやネットワーク内に存在している必要があります:</para>
+       <para>インストールメディア ( <filename>&installmedia;</filename> もしくは <filename>&packagemedia;</filename> が必要です) を使用する場合、制御ファイルは USB メモリやネットワーク内に存在している必要があります:</para>
        <formalpara>
         <title>USB メモリ</title>
         <para><literal>autoyast=usb://<replaceable>パス</replaceable></literal> オプションを指定して制御ファイルにアクセスを行なうことができます。</para>
@@ -411,13 +392,13 @@
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>ネットワーク経由でインストールする場合</term>
+      <term>独自のインストールメディアを使用する方法</term>
       <listitem>
-       <para>この場合、制御ファイルを DVD-ROM 内に直接含めることができます。制御ファイルはルートディレクトリ内に配置し、 <filename>autoinst.xml</filename> というファイル名にしておいてください。これにより、インストール時に自動検出され、使用されるようになります。もちろん <literal>autoyast=file:///<replaceable>パス</replaceable></literal> のように指定すれば、他のパスにある制御ファイルを指定して使用することもできます。</para>
+       <para>この方法では、制御ファイルをインストールメディア内に直接含めることができます。制御ファイルはルートディレクトリ内に配置し、 <filename>autoinst.xml</filename> というファイル名にしておいてください。これにより、インストール時に自動検出され、使用されるようになります。もちろん <literal>autoyast=file:///<replaceable>パス</replaceable></literal> のように指定すれば、他のパスにある制御ファイルを指定して使用することもできます。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>ネットワーク経由でインストールする場合</term>
+      <term>ネットワーク経由でインストールする方法</term>
       <listitem>
        <para>自動インストールではこのインストール方法が最も多いでしょう。複数のマシンにインストールを行なう場合、 SLP や NFS のサーバのほか、 BOOTP や DHCP などのネットワークサービスを併用することが多いためです。この場合、制御ファイルの配置にあたって最も簡単な方法は、インストールソースとして使用するディレクトリのルートに、制御ファイルを配置する方法です。ファイル名は <filename>autoinst.xml</filename> というファイル名にしてください。この場合、インストール時に自動検出され、自動インストールが行なわれるようになります。制御ファイルは下記のような場所に配置することもできます:</para>
        <formalpara>
