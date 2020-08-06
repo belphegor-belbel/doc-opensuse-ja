@@ -717,59 +717,28 @@ alice                             4     1     3   -b-       2.8 2-3</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-xen-config-scheduling">
-  <title>仮想 CD リーダ</title>
-  <para>
-   The &xen; hypervisor schedules virtual CPUs individually across physical
-   CPUs.  With modern CPUs supporting multiple threads on each core, virtual
-   CPUs can run on the same core in different threads and thus influence each
-   other.  The performance of a virtual CPU running in one thread can be
-   noticeably affected by what other virtual CPUs in other threads are doing.
-   When these virtual CPUs belong to different guest systems, these guests can
-   influence each other. The effect can vary, from variations in the guest CPU
-   time accounting to worse scenarios such as <emphasis>side channel
-    attack</emphasis>.
-  </para>
-  <para>
-   <emphasis>Scheduling granularity</emphasis> addresses this problem. You can
-   specify it at boot time by using a &xen; boot parameter:
-  </para>
-  <screen>boot = <replaceable>起動デバイス</replaceable></screen>
-  <para>
-   Replace <replaceable>GRANULARITY</replaceable> with one of:
-  </para>
+  <title>仮想 CPU のスケジューリング</title>
+  <para>&xen; ハイパーバイザでは、全ての物理 CPU にまたがる形で個別に仮想 CPU のスケジュール処理を行ないます。各コアに複数のスレッドが搭載された新しい CPU の場合、複数の仮想 CPU が同一コア内の別スレッドとして動作することがありますので、これによって仮想 CPU の処理性能に影響がある場合があります。たとえば一方のスレッド内で動作する仮想 CPU が重い処理をしている場合、もう一方のスレッド内で動作する仮想 CPU の性能が大きく落ち込んでしまうことになります。また、これらの仮想 CPU が別々のゲストシステムを動作させている場合は、ゲストシステム側にも影響があることになります。この場合の性能劣化は状況によって大きく異なり、単純にゲストシステム側に割り当てられる処理時間が削減されるだけであることもありますし、最悪の場合は <emphasis>サイドチャネル攻撃</emphasis> という結果をもたらすこともあります。</para>
+  <para>このような問題に対しては、 <emphasis>スケジューリング粒度</emphasis> の設定を行なうことをお勧めします。 &xen; の起動パラメータとして下記のような値を設定してください:</para>
+  <screen>sched-gran=<replaceable>粒度</replaceable></screen>
+  <para><replaceable>粒度</replaceable> の箇所には下記のいずれかを指定します:</para>
   <variablelist>
    <varlistentry>
     <term>cpu</term>
     <listitem>
-     <para>
-      The regular scheduling of the &xen; hypervisor. Virtual CPUs of different
-      guests can share one physical CPU core. This is the default.
-     </para>
+     <para>&xen; ハイパーバイザでの標準的なスケジュール設定です。 1 つの物理 CPU コア内で複数のゲストの仮想 CPU を動作させます。こちらが既定値になります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>core</term>
     <listitem>
-     <para>
-      Virtual CPUs of a virtual core are always scheduled together on one
-      physical core. Two or more virtual CPUs from different virtual cores will
-      never be scheduled on the same physical core.  Therefore, some physical
-      cores may have some of their CPUs left idle, even if there are virtual
-      CPUs wanting to run. The impact on performance will depend on the actual
-      workload being run inside of the guest systems. In most of the analyzed
-      cases, the observed performance degradation, especially if under
-      considerable load, was smaller than disabling HyperThreading which leaves
-      all the cores with just one thread (see the <option>smt</option> boot
-      option at <link xlink:href="https://xenbits.xen.org/docs/unstable/misc/xen-command-line.html#smt-x86"/>).
-     </para>
+     <para>1 つの物理 CPU コアに対して、常に 1 つの仮想 CPU のコア 1 つを割り当てます。同じ物理 CPU コア内で複数の仮想 CPU のコアを動作させることはありません。そのため、動作させるべき仮想 CPU が存在するような状況でも、いくつかの物理コアが待機状態に置かれることがあります。性能への影響は、ゲストシステム内で実際に動作させる処理内容によって異なります。なお、比較的負荷の高い状況下では、 1 つのコア内で 1 つの処理のみを動作させるハイパースレッディングの無効化 (詳しくは <link xlink:href="https://xenbits.xen.org/docs/unstable/misc/xen-command-line.html#smt-x86"/> にある <option>smt</option> オプションの説明をお読みください) より、性能劣化は穏やかになります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>socket</term>
     <listitem>
-     <para>
-      The granularity goes even higher to a CPU socket level.
-     </para>
+     <para>さらに粒度を高めて、 CPU ソケット単位で処理を分けるようにします。</para>
     </listitem>
    </varlistentry>
   </variablelist>
