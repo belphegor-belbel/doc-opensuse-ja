@@ -209,7 +209,7 @@ TasksMax=16284
 
  <sect1>
   <title>比例型の重み付けポリシーによる I/O の制御</title>
-  <para>本章では、 Linux カーネル内に存在する I/O コントローラを利用して、 I/O 処理の優先付けを行なうための方法について説明しています。 cgroup blkio サブシステムでは、ブロックデバイスに対する I/O 処理を制御したり監視したりすることができるほか、 cgroup の仮想ファイルシステム (擬似ファイルシステムとも呼ばれます) 内のファイルとして cgroup 向けのサブシステムパラメータを含むステートオブジェクトが提供されています。</para>
+  <para>本章では、 Linux カーネル内に存在する I/O コントローラを利用して、 I/O 処理の優先付けを行なうための方法について説明しています。 cgroup blkio サブシステムでは、ブロックデバイスに対する I/O 処理を制御したり監視したりすることができるほか、 cgroup の仮想ファイルシステム (擬似ファイルシステムとも呼ばれます) 内のファイルとして、 cgroup 向けのサブシステムパラメータを含むステートオブジェクトが提供されています。</para>
   <para>本章では、アクセスや帯域を制限するための擬似ファイルへの書き込み方法のほか、 I/O 処理の関する様々な情報を提供する擬似ファイルの読み込み方法を説明しています。また、 cgroup-v1 と cgroup-v2 の両方に対する例を示しています。</para>
   <para>まずはテスト用のディレクトリを作成し、その中にファイルを 2 つ作成して性能のテストを行ないます。ある程度のサイズのファイルを作成するため、本章では <command>yes</command> コマンドを使用します。下記の例ではテストディレクトリを作成し、その中に 537MB のテキストファイルを作成しています:</para> 
   <screen>&prompt.plain-root;mkdir /io-cgroup
@@ -217,7 +217,7 @@ TasksMax=16284
 &prompt.plain-root;yes this is a test file | head -c 537MB &gt; file1.txt
 &prompt.plain-root;yes this is a test file | head -c 537MB &gt; file2.txt
 </screen>
-  <para>例を実行するために 3 つのコマンドシェルを開いてください。 2 つのシェルは読み込み側のプロセスを動作させるもので、残りの 1 つは I/O を制御するためのものです。下記の例では行頭に reader1/reader2 (読み込み側), I/O とそれぞれラベルを示しています。</para>
+  <para>例を実行するために 3 つのコマンドシェルを開いてください。 2 つのシェルは読み込み側のプロセスを動作させるもので、残りの 1 つは I/O を制御するためのものです。下記の例では行頭に reader1/reader2 (読み込み側), io-controller (制御側) としてラベルを示しています。</para>
 
   <sect2>
    <title>cgroup-v1 での例</title>
@@ -230,7 +230,7 @@ TasksMax=16284
      <para><filename>blkio.bfq.weight</filename> (カーネルバージョン 5.0 もしくはそれ以降の blk-mq を使用していて、かつ BFQ I/O スケジューラを使用する場合にのみ利用できるファイルです)</para>
     </listitem>
    </itemizedlist>
-   <para>まずは読み込み側のシェルのうちの 1 つを利用して、 I/O 制御を行なわない場合の <filename>file2.txt</filename> の性能を調べてみます:</para>
+   <para>まずはシェルのうちの 1 つを利用して、 I/O 制御を行なわない場合の <filename>file2.txt</filename> の読み込み性能を調べてみます:</para>
 <screen> 
 &prompt.io-controller;sync; echo 3 &gt; /proc/sys/vm/drop_caches
 &prompt.io-controller;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
@@ -251,7 +251,7 @@ TasksMax=16284
 131072+0 records out
 536870912 bytes (537 MB, 512 MiB) copied, 2.61592 s, 205 MB/s
 </screen>
-   <para>上記のとおり、 I/O 性能はおおよそ半分ずつになっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成します。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行ないます:</para>
+   <para>上記のとおり、 I/O 性能はおおよそ半分になっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成します。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行ないます:</para>
 <screen>
 &prompt.io-controller;cd /sys/fs/cgroup/blkio/
 &prompt.blkio;mkdir reader1
@@ -316,7 +316,7 @@ io
 &prompt.unified;cat cgroup.subtree_control
 io
 </screen>
-<para>あとは cgroup-v1 と同じような手順を実行するだけです。ただし、ディレクトリのうちのいくつかが異なることに注意してください。まずは読み込み側のシェルのうちの 1 つを利用して、 I/O 制御を行なわない場合の <filename>file2.txt</filename> の性能を調べてみます (この例では、 SSD から読み込みを行なっています):</para>
+<para>あとは cgroup-v1 と同じような手順を実行するだけです。ただし、ディレクトリのうちのいくつかが異なることに注意してください。まずはシェルのうちの 1 つを利用して、 I/O 制御を行なわない場合の <filename>file2.txt</filename> の読み込み性能を調べてみます (この例では、 SSD から読み込みを行なっています):</para>
 <screen>
 &prompt.unified;cd -
 &prompt.io-controller;sync; echo 3 &gt; /proc/sys/vm/drop_caches
@@ -334,7 +334,7 @@ io
 5703
 [...]
 </screen>
-<para>上記のとおり、 I/O 性能はおおよそ半分ずつになっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成します。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行ないます:</para>
+<para>上記のとおり、 I/O 性能はおおよそ半分になっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成します。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行ないます:</para>
 <screen>
 &prompt.io-controller;cd -
 &prompt.unified;mkdir reader1
