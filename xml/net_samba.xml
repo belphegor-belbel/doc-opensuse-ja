@@ -43,7 +43,7 @@
    <varlistentry>
     <term>CIFS プロトコル</term>
     <listitem>
-     <para>Samba では、もう 1 つのプロトコルとして CIFS (Common Internet File System) にも対応しています。 CIFS はネットワークを介して遠隔のファイルシステムにアクセスするためのプロトコルを規定していて、共同作業のグループを作成したり、ネットワークを介して文書を共有したりすることができます。</para>
+     <para>CIFS (common Internet file system) プロトコルは SMB1 としても知られているプロトコルで、 SMB プロトコルの初代のバージョンです。 CIFS はネットワークを介して遠隔のファイルシステムにアクセスするためのプロトコルを規定していて、共同作業のグループを作成したり、ネットワークを介して文書を共有したりすることができます。ただし、セキュリティ上の理由から、新しいバージョンの Samba では既定で無効化されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -131,7 +131,7 @@
    </sect3>
    <sect3 xml:id="sec-samba-server-new-protocol">
     <title>サーバ側における最新バージョンの SMB サーバへの対応について</title>
-    <para>最新バージョンの &productname; やその他の最新 Linux ディストリビューションをお使いの場合、安全性の低い SMB1 プロトコルが既定で無効化されています。しかしながら、既存の Samba サーバの場合、 SMB1 プロトコルのみを使用するように構成されているものも存在しています。このようなサーバに接続しているクライアントに対応するには、少なくとも SMB 2.1 プロトコルに対応できるように設定する必要があります。</para>
+    <para>最新バージョンの &productname; やその他の最新 Linux ディストリビューションをお使いの場合、安全性の低い SMB1/CIFS プロトコルが既定で無効化されています。しかしながら、既存の Samba サーバの場合、 SMB1 プロトコルのみを使用するように構成されているものも存在しています。このようなサーバに接続しているクライアントに対応するには、少なくとも SMB 2.1 プロトコルに対応できるように設定する必要があります。</para>
     <para>環境によっては SMB1 プロトコルのみを使用できるものもあります。たとえば SMB1 や CIFS の Unix 拡張に依存して動作しているような場合です。これらの拡張は新しいバージョンのプロトコルには移植されていませんので、そのような環境をお持ちの場合は、環境を変更するか、もしくは <xref linkend="sec-samba-client-old-server"/> をお読みください。</para>
     <para>SMB 2.1 プロトコルに対応するよう設定するには、 <filename>/etc/samba/smb.conf</filename> ファイル内のグローバルパラメータに <literal>server max protocol = SMB2_10</literal> を設定します。設定可能な値の一覧について、詳しくは <command>man smb.conf</command> をお読みください。</para>
    </sect3>
@@ -355,8 +355,8 @@
    <para>全ての設定が完了したら、 <guimenu>OK</guimenu> を押して閉じることで設定を保存することができます。</para>
   </sect2>
   <sect2 xml:id="sec-samba-client-old-server">
-   <title>クライアント側での SMB1 共有のマウント</title>
-   <para>SMB1 は SMB ネットワークプロトコルの初代となるバージョンで、古くて安全性も保たれておらず、作成者である Microsoft 自身も廃止対象としているものです。また、このようなセキュリティ面の理由から、 &productname; での <command>mount</command> コマンドも、 SMB 2.1, SMB 3.0, SMB 3.02 の新しいプロトコルバージョンを利用して SMB 共有をマウントするようになっています。</para>
+   <title>クライアント側での SMB1/CIFS 共有のマウント</title>
+   <para>SMB1 (CIFS) は SMB ネットワークプロトコルの初代となるバージョンで、古くて安全性も保たれておらず、作成者である Microsoft 自身も廃止対象としているものです。また、このようなセキュリティ面の理由から、 &productname; での <command>mount</command> コマンドも、既定では SMB 2.1, SMB 3.0, SMB 3.02 の新しいプロトコルバージョンを利用して SMB 共有をマウントするようになっています。</para>
    <para>しかしながら、このような変更は <command>mount</command> コマンドを利用して、かつ <filename>/etc/fstab</filename> を利用した場合にのみ適用されます。下記のいずれかの形態で使用した場合は、従来通り SMB1 を利用することができます:</para>
    <itemizedlist>
     <listitem>
@@ -383,15 +383,10 @@
    </important>
    <para>現在の &productname; カーネルで SMB1 共有を有効化する必要がある場合は、 <command>mount</command> コマンドを実行する際に <option>vers=1.0</option> というオプションを追加してください:</para>
    <screen>&prompt.root;mount -t cifs //<replaceable>ホスト</replaceable>/<replaceable>共有名</replaceable> /<replaceable>マウントポイント</replaceable> –o username=<replaceable>ユーザ_ID</replaceable>,<emphasis role="bold">vers=1.0</emphasis></screen>
-   <para>
-    Alternatively, you can enable SMB1 shares globally within your
-    &productname; installation.
-    To do so, add the following to <filename>/etc/samba/smb.conf</filename>
-    under the section <literal>[global]</literal>:
-   </para>
+   <para>それ以外にも、 &productname; では SMB1 を全ての共有に対して有効化することもできます。これを行なうには、 <filename>/etc/samba/smb.conf</filename> の <literal>[global]</literal> セクション内に下記を追加します:</para>
    <!-- Screen indentation is intentional, to match typical config file
    indentation level. -->
-   <screen>        client min protocol = CORE</screen>
+   <screen>client min protocol = CORE</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-samba-anmeld-serv">
