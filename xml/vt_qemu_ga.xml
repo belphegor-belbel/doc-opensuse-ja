@@ -4,32 +4,17 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-qemu-ga">
- <title>&qemu; Guest Agent</title>
- <para>
-  The &qemu; guest agent (GA) runs inside the &vmguest; and allows the &vmhost;
-  to run commands in the guest operating system via &libvirt;. It supports
-  many functions&mdash;for example, getting details about guest file systems,
-  freezing and thawing file systems, or suspending or rebooting a guest.
- </para>
- <para>
-  &qemu; GA is included in the <package>qemu-guest-agent</package> package and
-  is installed, configured, and activated by default on &kvm; or &xen; virtual machines.
- </para>
+ <title>&qemu; ゲストエージェント</title>
+ <para>&qemu; ゲストエージェント (GA) は &vmguest; 内で動作するもので、 &vmhost; から &libvirt; を介して、ゲスト側でコマンドを実行するための仕組みです。この仕組みでは、ゲスト側のファイルシステムに関する情報やファイルシステムの一時休止／再開、ゲストの一時停止や再起動などを行なうことができます。</para>
+ <para>&qemu; GA は <package>qemu-guest-agent</package> パッケージ内に含まれています。このパッケージは、 &kvm; や &xen; の仮想マシン環境を設定していれば、既定でインストールおよび設定、有効化までが行なわれます。</para>
  <sect1 xml:id="cha-qemu-ga-libvirt-general">
-  <title>Running &qemu; GA Commands</title>
+  <title>&qemu; GA コマンドの実行</title>
 
-  <para>
-   &qemu; GA includes many native commands that do not have direct &libvirt;
-   counterparts. Refer to <xref linkend="cha-qemu-ga-moreinfo"/> to find the
-   complete list. You can run all of the &qemu; GA commands by using
-   &libvirt;'s general purpose command <command>qemu-agent-command</command>:
-  </para>
+  <para>&qemu; GA には、 &libvirt; では直接提供していない多数のコマンドが提供されています。完全な一覧については <xref linkend="cha-qemu-ga-moreinfo"/> をお読みください。また &qemu; GA のコマンドは、 &libvirt; の汎用コマンド <command>qemu-agent-command</command> を利用して実行します:</para>
 
-<screen>virsh qemu-agent-command <replaceable>DOMAIN_NAME</replaceable> '{"execute":"<replaceable>QEMU_GA_COMMAND</replaceable>"}'</screen>
+<screen>virsh qemu-agent-command <replaceable>ドメイン名</replaceable> '{"execute":"<replaceable>QEMU_GA_のコマンド</replaceable>"}'</screen>
 
-  <para>
-   For example:
-  </para>
+  <para>たとえば下記のようになります:</para>
 
 <screen>&prompt.sudo;virsh qemu-agent-command sle15sp2 '{"execute":"guest-info"}' --pretty
 {
@@ -45,129 +30,90 @@
 </screen>
  </sect1>
  <sect1 xml:id="cha-qemu-ga-commands">
-  <title>&virsh; Commands that Require &qemu; GA</title>
+  <title>&qemu; GA を必要とする &virsh; のコマンド</title>
 
-  <para>
-   Several &virsh; commands require &qemu; GA for their functionality. Here are
-   some of them:
-  </para>
+  <para>&virsh; のコマンド内にも、実行するにあたって &qemu; GA の機能を必要とするものがあります。下記にそれらのうちのいくつかを示します:</para>
 
   <variablelist>
    <varlistentry>
     <term><command>virsh guestinfo</command></term>
     <listitem>
-     <para>
-      Prints information about the guest from the guest's point of view.
-     </para>
+     <para>ゲスト側の観点で、ゲストに関する情報を表示します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh guestvcpus</command></term>
     <listitem>
-     <para>
-      Queries or changes the state of virtual CPUs from the guest's point of view.
-     </para>
+     <para>ゲスト側の観点で、仮想 CPU の状態を問い合わせたり、設定を変更したりすることができます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh set-user-password</command></term>
     <listitem>
-     <para>
-      Sets the password for a user account in the guest.
-     </para>
+     <para>ゲスト内のユーザアカウントに対して、パスワードの設定を行ないます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh domfsinfo</command></term>
     <listitem>
-     <para>
-      Shows a list of mounted file systems within the running domain.
-     </para>
+     <para>動作中のドメイン内で、マウントされているファイルシステムの一覧を表示します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh dompmsuspend</command></term>
     <listitem>
-     <para>
-      Suspends a running guest.
-     </para>
+     <para>動作中のゲストを一時停止します。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
  <sect1 xml:id="cha-qemu-ga-libvirt">
-  <title>Enhancing &libvirt; Commands</title>
+  <title>&libvirt; コマンドの拡張</title>
 
-  <para>
-   If &qemu; GA is enabled inside the guest, a number of &virsh; subcommands
-   have enhanced functionality when run in the <emphasis>agent</emphasis> mode.
-   The following list includes only some examples of them. For a complete list,
-   see the &virsh; manual page and search for the <literal>agent</literal>
-   string.
-  </para>
+  <para>ゲスト内で &qemu; GA が有効化されていれば、<emphasis>エージェント</emphasis> モードで動作させることで、様々な機能を提供する多数の &virsh; サブコマンドを実行することができるようになります。下記の一覧には、それらのうちのいくつかの例を示します。完全な一覧を読みたい場合は、 &virsh; のマニュアルページ内で <literal>agent</literal> で検索を行なってご確認ください。</para>
 
   <variablelist>
    <varlistentry>
-    <term><command>virsh shutdown --mode agent</command> and <command>virsh reboot --mode agent</command></term>
+    <term><command>virsh shutdown --mode agent</command> および <command>virsh reboot --mode agent</command></term>
     <listitem>
-     <para>
-      This method of shutting down or rebooting leaves the guest clean for its next run,
-      similar to the ACPI method.
-     </para>
+     <para>このサブコマンドを実行すると、次回以降のゲスト実行時に障害を発生させたりすることのないよう、適切なシャットダウンもしくは再起動を行なうことができます。これは ACPI でのシャットダウンや再起動と似ています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>virsh domfsfreeze</command> and <command>virsh domfsthaw</command></term>
+    <term><command>virsh domfsfreeze</command> および <command>virsh domfsthaw</command></term>
     <listitem>
-     <para>
-      Instructs the guest to make its file system quiescent: to flush all I/O
-      operations in the cache and leave volumes in a consistent state, so that
-      no checks will be needed when they are remounted.
-     </para>
+     <para>ゲストに対してファイルシステムの一時休止を指示します。これにより、キャッシュ内に残っている全ての I/O 操作を完了させ、ボリュームの一貫性が保たれた状態になります。そのため、再マウント時にファイルシステムのチェックが不要となります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh setvcpus --guest</command></term>
     <listitem>
-     <para>
-      Changes the number of CPUs assigned to a guest.
-     </para>
+     <para>ゲストに割り当てている CPU の数を変更します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh domifaddr --source agent</command></term>
     <listitem>
-     <para>
-      Queries the &qemu; GA for the guest's IP address.
-     </para>
+     <para>&qemu; GA に対して、ゲスト側の IP アドレスを問い合わせます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term><command>virsh vcpucount --guest</command></term>
     <listitem>
-     <para>
-      Prints information about the virtual CPU counts from the perspective of
-      the guest.
-     </para>
+     <para>ゲスト側の観点で、仮想 CPU の数に関する情報を表示します。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
  <sect1 xml:id="cha-qemu-ga-moreinfo">
-  <title>For More Information</title>
+  <title>さらなる情報</title>
 
   <itemizedlist>
    <listitem>
-    <para>
-     A complete list of commands supported by the &qemu; GA is at
-     <link xlink:href="https://www.qemu.org/docs/master/interop/qemu-ga-ref.html"/>.
-    </para>
+    <para>&qemu; GA で提供している全てのコマンドの一覧については、 <link xlink:href="https://www.qemu.org/docs/master/interop/qemu-ga-ref.html"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     The &virsh; manual page (<command>man 1 virsh</command>) includes
-     descriptions of the commands that support &qemu; GA interface.
-    </para>
+    <para>&virsh; のマニュアルページ ( <command>man 1 virsh</command> ) には、 &qemu; GA インターフェイスを利用することのできるコマンドの説明が示されています。</para>
    </listitem>
   </itemizedlist>
  </sect1>
