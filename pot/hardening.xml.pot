@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2020-08-17 22:39+0000\n"
+"POT-Creation-Date: 2020-09-02 22:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -20,28 +20,28 @@ msgstr ""
 msgid "fs@suse.com"
 msgstr ""
 
-#. Tag: title
-#: hardening.xml:22
-#, no-c-format
-msgid "Hardening Guide"
-msgstr ""
-
 #. Tag: productname
 #: hardening.xml:22
 #, no-c-format
 msgid "&productname;"
 msgstr ""
 
-#. Tag: productnumber
-#: hardening.xml:23
+#. Tag: title
+#: hardening.xml:22
 #, no-c-format
-msgid "&productnumber;"
+msgid "Hardening Guide"
 msgstr ""
 
 #. Tag: date
 #: hardening.xml:23
 #, no-c-format
 msgid "<?dbtimestamp format=\"B d, Y\"?>"
+msgstr ""
+
+#. Tag: productnumber
+#: hardening.xml:23
+#, no-c-format
+msgid "&productnumber;"
 msgstr ""
 
 #. Tag: para
@@ -3728,71 +3728,460 @@ msgstr ""
 #. Tag: title
 #: hardening.xml:3449
 #, no-c-format
-msgid "Preventing Accidental Denial of Service"
+msgid "Restricting &rootuser; Logins"
 msgstr ""
 
 #. Tag: para
 #: hardening.xml:3451
 #, no-c-format
+msgid "By default, the &rootuser; user is assigned a password and can log in using various methods&mdash;for example, on a local terminal, in a graphical session, or remotely via SSH. These methods should be restricted as far as possible. Shared usage of the root account should be avoided. Instead, individual administrators should use tools such as <literal>su</literal> or <literal>sudo</literal> (for more information, type <command>man 1 su</command> or <command>man 8 sudo</command> ) to obtain elevated privileges. This allows associating &rootuser; logins with particular users. This also adds another layer of security; not only the &rootuser; password, but both the &rootuser; <emphasis>and</emphasis> the password of an an administrator's regular account would need to be compromised to gain full root access. This section explains how to limit direct root logins on the different levels of the system."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3467
+#, no-c-format
+msgid "Restricting Local Text Console Logins"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3469
+#, no-c-format
+msgid "TTY devices provide text-mode system access via the console. For desktop systems these are accessed via the local keyboard or&mdash;in case of server systems&mdash;via input devices connected to a KVM switch or a remote management card (ILO, DRAC, etc). By default, Linux offers 6 different consoles, that can be switched to via the key combinations <keycombo><keycap function=\"alt\"/><keycap>F1</keycap></keycombo> to <keycombo><keycap function=\"alt\"/><keycap>F6</keycap></keycombo> , when running in text mode, or <keycombo><keycap function=\"control\"/><keycap function=\"alt\"/><keycap>F1</keycap></keycombo> to <keycombo><keycap function=\"control\"/><keycap function=\"alt\"/><keycap>F6</keycap></keycombo> when running in a graphical session. The associated terminal devices are named <literal>tty1</literal> .. <literal>tty6</literal> accordingly."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3485
+#, no-c-format
+msgid "The following steps restrict root access to the first TTY. Even this access method is only meant for emergency access to the system and should never be used for everyday system administration tasks."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3492
+#, no-c-format
+msgid "The steps shown here are tailored towards PC architectures (&x86; and &x86-64;). On architectures such as &power;, different terminal device names than <literal>tty1</literal> may be used. Be careful not to lock yourself out completely by specifying wrong terminal device names. You can determine the device name of the terminal you are currently logged into by running the <literal>tty</literal> command. Be careful not to do this in a virtual terminal, such as via SSH or in a graphical session (device names <filename>/dev/pts/<replaceable>N</replaceable></filename> ), but only from an actual login terminal reachable via <keycombo><keycap function=\"alt\"/><keycap>F<replaceable>N</replaceable></keycap></keycombo> ."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3507
+#, no-c-format
+msgid "Restricting root logins on local TTYs"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3509
+#, no-c-format
+msgid "Ensure that the PAM stack configuration file <filename>/etc/pam.d/login</filename> contains the <literal>pam_securetty</literal> module in the <literal>auth</literal> block:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3513
+#, no-c-format
+msgid "auth     requisite      pam_nologin.so\n"
+      " auth     [user_unknown=ignore success=ok ignore=ignore auth_err=die default=bad] pam_securetty.so noconsole\n"
+      " auth     include        common-auth"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3516
+#, no-c-format
+msgid "This will include the <literal>pam_securetty</literal> module during the authentication process on local consoles, which restricts &rootuser; to logging-in only on TTY devices that are listed in the file <filename>/etc/securetty</filename> ."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3523
+#, no-c-format
+msgid "Remove all entries from <filename>/etc/securetty</filename> except one. This limits the access to TTY devices for root."
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3527
+#, no-c-format
+msgid "#\n"
+      "# This file contains the device names of tty lines (one per line,\n"
+      "# without leading /dev/) on which root is allowed to login.\n"
+      "#\n"
+      "tty1"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3534
+#, no-c-format
+msgid "Check whether logins to other terminals will be rejected for &rootuser;. A login on <literal>tty2</literal> , for example, should be rejected immediately, without even querying the account password. Also make sure that you can still successfully login to <literal>tty1</literal> and thus that &rootuser; is not locked out of the system completely."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3546
+#, no-c-format
+msgid "Do not add the <literal>pam_securetty</literal> module to the <filename>/etc/pam.d/common-auth</filename> file. This would break the <command>su</command> and <command>sudo</command> commands, because these tools would then also reject &rootuser; authentications."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3555
+#, no-c-format
+msgid "These configuration changes will also cause root logins on serial consoles such as <filename>/dev/ttyS0</filename> to be denied. In case you require such use cases you need to list the respective tty devices additionally in the <filename>/etc/securetty</filename> file."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3565
+#, no-c-format
+msgid "Restricting Graphical Session Logins"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3567
+#, no-c-format
+msgid "To improve security on your server, avoid using graphical environments at all. Graphical programs are often not designed to be run as &rootuser; and are more likely to contain security issues than console programs. If you require a graphical login, use a non-&rootuser; login. Configure your system to disallow &rootuser; from logging in to graphical sessions."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3576
+#, no-c-format
+msgid "To prevent &rootuser; from logging in to graphical sessions, you can apply the same basic steps as outlined in <xref linkend=\"sec-sec-prot-restrict-root-tty\"/> . Just add the <literal>pam_securetty</literal> module to the PAM stack file belonging to the display manager&mdash;for example, <filename>/etc/pam.d/gdm</filename> for GDM. The graphical session also runs on a TTY device: by default, <literal>tty7</literal> . Therefore, if you restrict &rootuser; logins to <literal>tty1</literal> , then &rootuser; will be denied login in the graphical session."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3590
+#, no-c-format
+msgid "Restricting SSH Logins"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3591
+#, no-c-format
+msgid "By default, the &rootuser; user is also allowed to log into a machine remotely via the SSH network protocol (if the SSH port is not blocked by the firewall). To restrict this, make the following change to the OpenSSH configuration:"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3599
+#, no-c-format
+msgid "Edit <filename>/etc/ssh/sshd_config</filename> and adjust the following parameter:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3600
+#, no-c-format
+msgid "PermitRootLogin no"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3603
+#, no-c-format
+msgid "Restart the <systemitem class=\"service\">sshd</systemitem> service to make the changes effective:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3604
+#, no-c-format
+msgid "systemctl restart sshd.service"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3608
+#, no-c-format
+msgid "Using the PAM <literal>pam_securetty</literal> module is not suitable in case of OpenSSH, because not all SSH logins go through the PAM stack during authorization (for example, when using SSH public-key authentication). In addition, an attacker could differentiate between a wrong password and a successful login that was only rejected later on by policy."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3620
+#, no-c-format
+msgid "Setting an Inactivity Timeout for Interactive Shell Sessions"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3621
+#, no-c-format
+msgid "It can be a good idea to terminate an interactive shell session after a certain period of inactivity; for example, to:"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3627
+#, no-c-format
+msgid "prevent open, unguarded sessions."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3632
+#, no-c-format
+msgid "avoid waste of system resources."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3637
+#, no-c-format
+msgid "By default, there is no inactivity timeout for shells. Nothing will happen if a shell stays open and unused for days or even years. It is possible to configure most shells in a way that idle sessions terminate automatically after a certain amount of time. The following example shows how to set an inactivity timeout for a number of common types of shells."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3645
+#, no-c-format
+msgid "The inactivity timeout can be configured for login shells only or for all interactive shells. In the latter case the inactivity timeout is running individually for each shell instance. This means that timeouts will accumulate. When a sub- or child-shell is started, then a new timeout begins for the sub- or child-shell, and only afterwards will the timeout of the parent continue running."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3653
+#, no-c-format
+msgid "The following table contains configuration details for a selection of common shells shipped with SLE:"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3668
+#, no-c-format
+msgid "package"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3669
+#, no-c-format
+msgid "shell personalities"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3670
+#, no-c-format
+msgid "shell variable"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3671
+#, no-c-format
+msgid "time unit"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3672
+#, no-c-format
+msgid "readonly setting"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3673
+#, no-c-format
+msgid "config path (only login shell)"
+msgstr ""
+
+#. Tag: entry
+#: hardening.xml:3674
+#, no-c-format
+msgid "config path (all shells)"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3679
+#, no-c-format
+msgid "<literal>bash</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3680
+#, no-c-format
+msgid "<literal>bash, sh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3685
+#, no-c-format
+msgid "<filename>/etc/bash.bashrc</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3688
+#, no-c-format
+msgid "<literal>mksh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3689
+#, no-c-format
+msgid "<literal>ksh, lksh, mksh, pdksh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3694
+#, no-c-format
+msgid "<filename>/etc/ksh.kshrc.local</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3697
+#, no-c-format
+msgid "<literal>tcsh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3698
+#, no-c-format
+msgid "<literal>csh, tcsh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3699
+#, no-c-format
+msgid "<literal>autologout</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3700
+#, no-c-format
+msgid "minutes"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3701
+#, no-c-format
+msgid "<literal>set -r autologout=</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3702
+#, no-c-format
+msgid "<filename>/etc/csh.login.local</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3703
+#, no-c-format
+msgid "<filename>/etc/csh.cshrc.local</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3707
+#, no-c-format
+msgid "<literal>zsh</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3708
+#, no-c-format
+msgid "<literal>TMOUT</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3709
+#, no-c-format
+msgid "seconds"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3710
+#, no-c-format
+msgid "<literal>readonly TMOUT=</literal>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3711
+#, no-c-format
+msgid "<filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3712
+#, no-c-format
+msgid "<filename>/etc/zsh.zshrc.local</filename>"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3717
+#, no-c-format
+msgid "Every listed shell supports an internal timeout shell variable that can be set to a specific time value to cause the inactivity timeout. If you want to prevent users from overriding the timeout setting, you can mark the corresponding shell timeout variable as readonly. The corresponding variable declaration syntax is also found in the table above."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3726
+#, no-c-format
+msgid "This feature is only helpful for avoiding risks if a user is forgetful or follows unsafe practices. It does not protect against hostile users. The timeout only applies to interactive wait states of a shell. A malicious user can always find ways to circumvent the timeout and keep their session open regardless."
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3734
+#, no-c-format
+msgid "To configure the inactivity timeout, you need to add the matching timeout variable declaration to each shell's startup script. Use either the path for login shells only, or the one for all shells, as listed in the table. The following example uses paths and settings that are suitable for <command>bash</command> and <command>ksh</command> to setup a read-only login shell timeout that cannot be overridden by users. Create the file <filename>/etc/profile.d/timeout.sh</filename> with the following content:"
+msgstr ""
+
+#. Tag: screen
+#: hardening.xml:3744
+#, no-c-format
+msgid "# /etc/profile.d/timeout.sh for SUSE Linux\n"
+      "#\n"
+      "# Timeout in seconds until the bash/ksh session is terminated\n"
+      "# in case of inactivity.\n"
+      "# 24h = 86400 sec\n"
+      "readonly TMOUT=86400"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3752
+#, no-c-format
+msgid "We recommend using the <command>screen</command> tool in order to detach sessions before logging out. <command>screen</command> sessions are not terminated and can be re-attached whenever required. An active session can be locked without logging out (read about <keycombo action=\"seq\"> <keycombo action=\"press\"><keycap function=\"control\"/><keycap>a</keycap></keycombo> <keycap>x</keycap> </keycombo> / <command>lockscreen</command> in <command>man screen</command> for details)."
+msgstr ""
+
+#. Tag: title
+#: hardening.xml:3768
+#, no-c-format
+msgid "Preventing Accidental Denial of Service"
+msgstr ""
+
+#. Tag: para
+#: hardening.xml:3770
+#, no-c-format
 msgid "Linux allows you to set limits on the amount of system resources that users and groups can consume. This is also very handy if bugs in programs cause them to use up too much resources (for example memory leaks), slow down the machine, or even render the system unusable. Incorrect settings can allow programs to use too many resources which may make the server unresponsive to new connections or even local logins (for example if a program uses up all available file handles on the host). This can also be a security concern if someone is allowed to consume all system resources and therefore cause a denial of service attack – either unplanned or worse, planned. Setting resource limits for users and groups may be an effective way to protect systems, depending on the environment."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3466
+#: hardening.xml:3785
 #, no-c-format
 msgid "Example for Restricting System Resources"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3467
+#: hardening.xml:3786
 #, no-c-format
 msgid "The following example demonstrates the practical usage of setting or restricting system resource consumption for an Oracle user account. For a list of system resource settings, see <filename>/etc/security/limits.conf</filename> or <command>man limits.conf</command> ."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3474
+#: hardening.xml:3793
 #, no-c-format
 msgid "Most shells like Bash provide control over various resources (for example the maximum allowable number of open file descriptors or the maximum number of processes) that are available on a per/user basis. To examine all current limits in the shell execute:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3480
+#: hardening.xml:3799
 #, no-c-format
 msgid "&prompt.root;ulimit -a"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3481
+#: hardening.xml:3800
 #, no-c-format
 msgid "For more information on <command>ulimit</command> for the Bash shell, examine the Bash man pages."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3486
+#: hardening.xml:3805
 #, no-c-format
 msgid "Setting Limits for SSH Sessions"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3487
+#: hardening.xml:3806
 #, no-c-format
 msgid "Setting \"hard\" and \"soft\" limits might not behave as expected when using an SSH session. To see valid behavior it may be necessary to login as root and then su to the id with limits (for example, <literal>oracle</literal> in these examples). Resource limits should also work assuming the application has been started automatically during the boot process. It may be necessary to set <option>UsePrivilegeSeparation</option> in <filename>/etc/ssh/sshd_config</filename> to \"no\" and restart the SSH daemon ( <command>systemctl restart sshd</command> ) if it seems that the changes to resource limits are not working (via SSH). However this is not generally recommended – as it weakens a systems security."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3502
+#: hardening.xml:3821
 #, no-c-format
 msgid "Disabling Password Logins via <command>ssh</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3503
+#: hardening.xml:3822
 #, no-c-format
 msgid "You can add some extra security to your server by disabling password authentication for SSH. Remember that you need to have SSH keys configured, otherwise you cannot access the server. To disable password login, add the following lines to <filename>/etc/ssh/sshd_config</filename> :"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3510
+#: hardening.xml:3829
 #, no-c-format
 msgid "UseLogin no\n"
       "UsePAM no\n"
@@ -3801,87 +4190,87 @@ msgid "UseLogin no\n"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3515
+#: hardening.xml:3834
 #, no-c-format
 msgid "In this example, a change to the number of file handles or open files that the user <literal>oracle</literal> can use is made by editing <filename>/etc/security/limits.conf</filename> as &rootuser; making the following changes:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3521
+#: hardening.xml:3840
 #, no-c-format
 msgid "oracle           soft    nofile          4096\n"
       "oracle           hard    nofile          63536"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3523
+#: hardening.xml:3842
 #, no-c-format
 msgid "The soft limit in the first line defines the limit on the number of file handles (open files) that the <systemitem class=\"username\">oracle</systemitem> user will have after login. If the user sees error messages about running out of file handles, then the user can increase the number of file handles like in this example up to the hard limit (in this example 63536) by executing:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3531
+#: hardening.xml:3850
 #, no-c-format
 msgid "&prompt.root;ulimit -n 63536"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3532
+#: hardening.xml:3851
 #, no-c-format
 msgid "You can set the soft and hard limits higher if necessary."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3536
+#: hardening.xml:3855
 #, no-c-format
 msgid "It is important to be judicious with the usage of ulimits. Allowing a \"hard\" limit for <quote>nofile</quote> for a user that equals the kernel limit ( <filename>/proc/sys/fs/file-max</filename> ) is very bad! If the user consumes all the available file handles, the system cannot initiate new logins as accessing (opening) PAM modules which are required for performing a login will not be possible."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3545
+#: hardening.xml:3864
 #, no-c-format
 msgid "You also need to ensure that <literal>pam_limits</literal> is either configured globally in <filename>/etc/pam.d/common-auth</filename> , or for individual services like SSH, su, login, and telnet in:"
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3551
+#: hardening.xml:3870
 #, no-c-format
 msgid "<filename>/etc/pam.d/sshd</filename> (for SSH)"
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3552
+#: hardening.xml:3871
 #, no-c-format
 msgid "<filename>/etc/pam.d/su</filename> (for su)"
 msgstr ""
 
 #. Tag: member
-#: hardening.xml:3553
+#: hardening.xml:3872
 #, no-c-format
 msgid "<filename>/etc/pam.d/login</filename> (local logins and telnet)"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3555
+#: hardening.xml:3874
 #, no-c-format
 msgid "If you do not want to enable it for all logins, there is a specific PAM module that will read the <filename>/etc/security/limits.conf</filename> file. Entries in pam configuration directives will have entries like:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3560
+#: hardening.xml:3879
 #, no-c-format
 msgid "session     required      /lib/security/pam_limits.so\n"
       "session     required      /lib/security/pam_unix.so"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3562
+#: hardening.xml:3881
 #, no-c-format
 msgid "It is important to note that changes are not immediate and require a new login session:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3566
+#: hardening.xml:3885
 #, no-c-format
 msgid "&prompt.root;su – oracle\n"
       "&prompt.user;ulimit -n\n"
@@ -3889,13 +4278,13 @@ msgid "&prompt.root;su – oracle\n"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3569
+#: hardening.xml:3888
 #, no-c-format
 msgid "Note that these examples are specific to the Bash shell - <command>ulimit</command> options are different for other shells. The default limit for the user <literal>oracle</literal> is <literal>4096</literal> . To increase the number of file handles the user <literal>oracle</literal> can use to <literal>63536</literal> , do:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3576
+#: hardening.xml:3895
 #, no-c-format
 msgid "&prompt.root;su – oracle\n"
       "&prompt.user;ulimit -n\n"
@@ -3906,13 +4295,13 @@ msgid "&prompt.root;su – oracle\n"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3582
+#: hardening.xml:3901
 #, no-c-format
 msgid "Making this permanent requires the addition of the setting, <literal>ulimit -n 63536</literal> , (again, for Bash) to the users profile ( <filename>~/.bashrc</filename> or <filename>~/.profile</filename> file) which is the user start-up file for the Bash shell on &productname; (to verify your shell run: echo <envar>$SHELL</envar> ). To do this you could simply type (or copy/paste – if you are reading this on the system) the following commands for the Bash shell of the user <literal>oracle</literal> :"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3592
+#: hardening.xml:3911
 #, no-c-format
 msgid "&prompt.root;su - oracle\n"
       "&prompt.user;cat &gt;&gt; ~oracle/.bash_profile &lt;&lt; EOF\n"
@@ -3921,49 +4310,49 @@ msgid "&prompt.root;su - oracle\n"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3599
+#: hardening.xml:3918
 #, no-c-format
 msgid "Displaying Login Banners"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3601
+#: hardening.xml:3920
 #, no-c-format
 msgid "It is often necessary to place a banner on login screens on all servers for legal/audit policy reasons or to give security instructions to users."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3607
+#: hardening.xml:3926
 #, no-c-format
 msgid "If you want to print a login banner <emphasis>after</emphasis> a user logs in on a text based terminal for example using SSH or on a local console, you can leverage the file <filename>/etc/motd</filename> (motd = message of the day). The file exists by default on &productname;, but it is empty. Simply add content to the file that is applicable/required by the organization."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3617
+#: hardening.xml:3936
 #, no-c-format
 msgid "Banner Length"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3618
+#: hardening.xml:3937
 #, no-c-format
 msgid "Try to keep the login banner content to a single terminal page (or less), as it will scroll the screen if it does not fit, making it more difficult to read."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3625
+#: hardening.xml:3944
 #, no-c-format
 msgid "You can also have a login banner printed <emphasis>before</emphasis> a user logs in on a text based terminal. For local console logins you can edit the <filename>/etc/issue</filename> file, which will cause the banner to be displayed before the login prompt. For logins via SSH you can edit the <quote>Banner</quote> parameter in the <filename>/etc/ssh/sshd_config</filename> file, which will then appropriately display the banner text before the SSH login prompt."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3635
+#: hardening.xml:3954
 #, no-c-format
 msgid "For graphical logins via GDM, you can follow <link xlink:href=\"https://help.gnome.org/admin/system-admin-guide/stable/login-banner.html.en\"> the GNOME admin guide</link> to set up a login banner. Furthermore you can make the following changes to require a user to acknowledge the legal banner by selecting <guimenu>Yes</guimenu> or <guimenu>No</guimenu> . Edit the <filename>/etc/gdm/Xsession</filename> file and add the following lines at the <emphasis>beginning</emphasis> of the script:"
 msgstr ""
 
 #. Tag: screen
-#: hardening.xml:3645
+#: hardening.xml:3964
 #, no-c-format
 msgid "if ! /usr/bin/gdialog --yesno '\\n<replaceable>This system is classified...</replaceable>\\n' 10 10; then\n"
       "    /usr/bin/gdialog --infobox 'Aborting login'\n"
@@ -3972,175 +4361,175 @@ msgid "if ! /usr/bin/gdialog --yesno '\\n<replaceable>This system is classified.
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3650
+#: hardening.xml:3969
 #, no-c-format
 msgid "The text <replaceable>This system is classified...</replaceable> needs to be replaced with the desired banner text. It is important to note that this dialog will not prevent a login from progressing. For more information about GDM scripting, refer to the <link xlink:href=\"https://help.gnome.org/admin/gdm/stable/configuration.html.en#scripting\"> GDM Admin Manual</link> ."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3661
+#: hardening.xml:3980
 #, no-c-format
 msgid "Miscellaneous"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3666
+#: hardening.xml:3985
 #, no-c-format
 msgid "Host-Based Linux Monitoring and Intrusion Detection"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3667
+#: hardening.xml:3986
 #, no-c-format
 msgid "Before you place a host into production or even on a network, consider the use of a system integrity checker, like <command>seccheck</command> (already discussed in <xref linkend=\"sec-sec-prot-general-seccheck\"/> ), so in case of unauthorized changes, notifications will be issued. Also consider the use of an intrusion detection environment, like AIDE, the Advanced Intrusion Detection Environment."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3675
+#: hardening.xml:3994
 #, no-c-format
 msgid "AIDE is a GPL licensed and open source intrusion detection system. It could be considered a system fingerprinting mechanism. AIDE works by creating a database containing information about the files on your system. The database is created from rules laid out in the configuration file aide.conf. When AIDE is run, this database is referenced to check for changes (or created for the first time). Assuming a comparison check is being run, any changes not permitted by the configuration file are reported."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3685
+#: hardening.xml:4004
 #, no-c-format
 msgid "By leveraging AIDE&mdash;storing a copy of the host's database in a secure location&mdash;and comparing it (on a scheduled basis or as part of a forensic effort), system integrity/insurance can be a matter of heuristics and procedure. If an intruder compromises your system, the comparison effort will enable an administrator or security officer to know what has changed on the host. The initial database should be created as a final step&mdash; <emphasis>before</emphasis> a system gets deployed into production."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3695
+#: hardening.xml:4014
 #, no-c-format
 msgid "It is outside the scope of this article to cover Linux Monitoring and detailed Intrusion Detection systems (IDS) or solutions, however there is a plethora of information about configuring AIDE or other solutions and many informative articles on the Web."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3704
+#: hardening.xml:4023
 #, no-c-format
 msgid "Connect Accounting Utilities"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3705
+#: hardening.xml:4024
 #, no-c-format
 msgid "Here is a list of commands you can use to get data about user logins:"
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3709
+#: hardening.xml:4028
 #, no-c-format
 msgid "<command>who</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3710
+#: hardening.xml:4029
 #, no-c-format
 msgid "Lists currently logged in users."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3715
+#: hardening.xml:4034
 #, no-c-format
 msgid "<command>w</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3716
+#: hardening.xml:4035
 #, no-c-format
 msgid "Shows who is logged in and what they are doing."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3721
+#: hardening.xml:4040
 #, no-c-format
 msgid "<command>last</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3722
+#: hardening.xml:4041
 #, no-c-format
 msgid "Shows a list of last logged in users, including login time, logout time, login IP address, etc."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3728
+#: hardening.xml:4047
 #, no-c-format
 msgid "<command>lastb</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3729
+#: hardening.xml:4048
 #, no-c-format
 msgid "Same as <command>last</command> , except that by default it shows <filename>/var/log/btmp</filename> , which contains all the bad login attempts."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3736
+#: hardening.xml:4055
 #, no-c-format
 msgid "<command>lastlog</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3737
+#: hardening.xml:4056
 #, no-c-format
 msgid "This command reports data maintained in <filename>/var/log/lastlog</filename> , which is a record of the last time a user logged in."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3744
+#: hardening.xml:4063
 #, no-c-format
 msgid "<command>ac</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3745
+#: hardening.xml:4064
 #, no-c-format
 msgid "Available after installing the <systemitem>acct</systemitem> package. Prints the connect time in hours on a per-user basis or daily basis, etc. This command reads <filename>/var/log/wtmp</filename> ."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3752
+#: hardening.xml:4071
 #, no-c-format
 msgid "<command>dump-utmp</command>"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3753
+#: hardening.xml:4072
 #, no-c-format
 msgid "Converts raw data from /var/run/utmp or <filename>/var/log/wtmp</filename> into ASCII-parseable format."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3758
+#: hardening.xml:4077
 #, no-c-format
 msgid "Also check the <filename>/var/log/messages</filename> file, or the output of <command>journalctl</command> if no logging facility is running. See <xref linkend=\"cha-journalctl\"/> for more information on the &systemd; journal."
 msgstr ""
 
 #. Tag: title
-#: hardening.xml:3767
+#: hardening.xml:4086
 #, no-c-format
 msgid "Other"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3768
+#: hardening.xml:4087
 #, no-c-format
 msgid "Finally, the following items are relevant to the system security as well, and misconfiguration can cause many problems – and should be reviewed:"
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3774
+#: hardening.xml:4093
 #, no-c-format
 msgid "Resolver ( <filename>/etc/hosts</filename> , <filename>/var/run/netconfig/resolv.conf</filename> , <filename>/etc/nsswitch.conf</filename> )."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3779
+#: hardening.xml:4098
 #, no-c-format
 msgid "<filename>/etc/resolv.conf</filename> is a symbolic link to <filename>/run/netconfig/resolv.conf</filename> ."
 msgstr ""
 
 #. Tag: para
-#: hardening.xml:3785
+#: hardening.xml:4104
 #, no-c-format
 msgid "NTP configuration ( <filename>/etc/chrony.conf</filename> )."
 msgstr ""
