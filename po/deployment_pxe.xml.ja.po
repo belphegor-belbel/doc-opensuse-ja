@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2020-06-11 22:20+0000\n"
+"POT-Creation-Date: 2020-09-18 08:14+0000\n"
 "PO-Revision-Date: 2018-06-28 07:14+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1027,99 +1027,289 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_pxe.xml:735
+#: deployment_pxe.xml:736
 #, no-c-format
-msgid "Preparing the Target System for Wake on LAN"
+msgid "Using Wake-on-LAN for Remote Wakeups"
 msgstr ""
 
 #. Tag: para
 #: deployment_pxe.xml:737
 #, no-c-format
 msgid ""
-"Wake on LAN (WOL) requires the appropriate BIOS option to be enabled prior "
-"to the installation. Also, note down the MAC address of the target system. "
-"This data is needed to initiate Wake on LAN."
-msgstr ""
-
-#. Tag: title
-#: deployment_pxe.xml:744
-#, no-c-format
-msgid "Wake on LAN"
+"Wake-on-LAN (WOL) is an Ethernet standard for remotely waking up a computer "
+"by sending it a wakeup signal over a network. This signal is called the "
+"\"magic packet\". Install WOL on client machines to enable remote wakeups, "
+"and on every machine you want to use for sending the wakeup signal. The "
+"magic packet is broadcast over UDP port 9 to the MAC address of the network "
+"interface on the client machine."
 msgstr ""
 
 #. Tag: para
-#: deployment_pxe.xml:746
+#: deployment_pxe.xml:745
 #, no-c-format
 msgid ""
-"Wake on LAN allows a machine to be turned on by a special network packet "
-"containing the machine's MAC address. Because every machine in the world has "
-"a unique MAC identifier, you do not need to worry about accidentally turning "
-"on the wrong machine."
+"When computers are shutdown they usually are not turned all the way off, but "
+"remain in a low power mode. When the network interface supports WOL it "
+"listens for the magic packet wakeup signal when the machine is powered off. "
+"You can send the magic packet manually, or schedule wakeups in a cron job on "
+"the sending machine."
 msgstr ""
 
 #. Tag: title
 #: deployment_pxe.xml:754
 #, no-c-format
-msgid "Wake on LAN across Different Network Segments"
+msgid "Prerequisites"
 msgstr ""
 
 #. Tag: para
 #: deployment_pxe.xml:755
 #, no-c-format
-msgid ""
-"If the controlling machine is not located on the same network segment as the "
-"target of the WOL command, you have 2 options. Either configure the WOL "
-"requests to be sent as multicasts, or remotely control a machine on that "
-"network segment to act as the sender of these requests."
+msgid "WOL works with both wired and wireless Ethernet cards that support it."
 msgstr ""
 
 #. Tag: para
-#: deployment_pxe.xml:763
+#: deployment_pxe.xml:758
+#, no-c-format
+msgid "You may need to enable WOL in your system BIOS/UEFI."
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:761
 #, no-c-format
 msgid ""
-"Users of &sls; can use a &yast; module called WOL to easily configure Wake "
-"on LAN. Users of other versions of &suselinux;-based operating systems can "
-"use a command line tool."
+"Check your BIOS/UEFI settings for PXE boot, and make sure it is disabled to "
+"prevent accidental re-installations."
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:766
+#, no-c-format
+msgid "Adjust your firewall to allow traffic over UDP port 9."
 msgstr ""
 
 #. Tag: title
-#: deployment_pxe.xml:770
+#: deployment_pxe.xml:772
 #, no-c-format
-msgid "Wake on LAN with &yast;"
+msgid "Verifying Wired Ethernet Support"
 msgstr ""
 
 #. Tag: para
-#: deployment_pxe.xml:771
-#, no-c-format
-msgid "Use this procedure to configure Wake on LAN with &yast;."
-msgstr ""
-
-#. Tag: para
-#: deployment_pxe.xml:776
-#, no-c-format
-msgid "Log in as &rootuser;."
-msgstr ""
-
-#. Tag: para
-#: deployment_pxe.xml:781
+#: deployment_pxe.xml:773
 #, no-c-format
 msgid ""
-"Start <menuchoice> <guimenu>&yast;</guimenu> <guimenu>Network Services</"
-"guimenu> <guimenu>WOL</guimenu></menuchoice> ."
+"Run the following command to see if a wired Ethernet interface supports WOL:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:777
+#, no-c-format
+msgid ""
+"&prompt.sudo;ethtool eth0 | grep -i wake-on\n"
+"Supports Wake-on: pumbg\n"
+"Wake-on: g"
 msgstr ""
 
 #. Tag: para
+#: deployment_pxe.xml:780
+#, no-c-format
+msgid ""
+"The example output shows that eth0 supports WOL, indicated by the "
+"<literal>g</literal> flag on the <literal>Supports Wake-on</literal> line. "
+"<literal>Wake-on: g</literal> shows that WOL is already enabled, so this "
+"interface is ready to receive wakeup signals. If WOL is not enabled, enable "
+"it with this command:"
+msgstr ""
+
+#. Tag: screen
 #: deployment_pxe.xml:787
 #, no-c-format
-msgid ""
-"Click <guimenu>Add</guimenu> and enter the host name and MAC address of the "
-"target system."
+msgid "&prompt.sudo;ethtool -s wol g"
+msgstr ""
+
+#. Tag: title
+#: deployment_pxe.xml:791
+#, no-c-format
+msgid "Verifying Wireless Interface Support"
 msgstr ""
 
 #. Tag: para
-#: deployment_pxe.xml:793
+#: deployment_pxe.xml:792
 #, no-c-format
 msgid ""
-"To turn on this machine, select the appropriate entry and click "
-"<guimenu>Wake up</guimenu> ."
+"Wakeup-over-wifi, or WoWLAN, requires a wireless network interface that "
+"supports WoWLAN. Test it with the <command>iw</command> , command, which is "
+"provided by the <package>iw</package> package:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:797
+#, no-c-format
+msgid "&prompt.sudo;zypper in iw"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:798
+#, no-c-format
+msgid "Find your device name:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:801
+#, no-c-format
+msgid ""
+"&prompt.sudo;iw dev\n"
+"phy#0\n"
+"        Interface wlan2\n"
+"                ifindex 3\n"
+"                wdev 0x1\n"
+"                addr 9c:ef:d5:fe:01:7c\n"
+"                ssid accesspoint\n"
+"                type managed\n"
+"                channel 11 (2462 MHz), width: 20 MHz, center1: 2462 MHz\n"
+"                txpower 20.00 dBm"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:812
+#, no-c-format
+msgid ""
+"In this example, the device name to use for querying WoWLAN support is "
+"<literal>phy#0</literal> . This example shows that it is not supported:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:816
+#, no-c-format
+msgid ""
+"&prompt.sudo;iw phy#0 wowlan show\n"
+"command failed: Operation not supported (-95)"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:818
+#, no-c-format
+msgid ""
+"This example shows an interface that supports WoWLAN, but it is not enabled:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:821
+#, no-c-format
+msgid ""
+"&prompt.sudo;iw phy#0 wowlan show\n"
+"WoWLAN is disabled"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:823
+#, no-c-format
+msgid "Enable it:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:826
+#, no-c-format
+msgid ""
+"&prompt.sudo;iw phy#0 wowlan enable magic-packet\n"
+"WoWLAN is enabled:\n"
+"* wake up on magic packet"
+msgstr ""
+
+#. Tag: title
+#: deployment_pxe.xml:832
+#, no-c-format
+msgid "Installing and Testing WOL"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:833
+#, no-c-format
+msgid ""
+"To use WOL, install the <package>wol</package> package on the client and "
+"sending machines:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:837
+#, no-c-format
+msgid "&prompt.sudo;zypper in wol"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:838
+#, no-c-format
+msgid ""
+"Install <package>wol-udev-rules</package> on your client machines. This "
+"package installs a udev rule that enables WOL automatically at startup."
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:842
+#, no-c-format
+msgid "Get the MAC address of the network interface on the client machine:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:845
+#, no-c-format
+msgid ""
+"&prompt.sudo;ip addr show eth0|grep ether\n"
+"link/ether 7c:ef:a5:fe:06:7c brd ff:ff:ff:ff:ff:ff"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:847
+#, no-c-format
+msgid ""
+"In the example output, <literal>7c:ef:a5:fe:06:7c</literal> is the MAC "
+"address."
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:851
+#, no-c-format
+msgid ""
+"Shut down your client machine, and send it a wakeup signal from another "
+"computer on the same subnet:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:855
+#, no-c-format
+msgid "&prompt.user;wol <replaceable>7c:ef:a5:fe:06:7c</replaceable>"
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:856
+#, no-c-format
+msgid ""
+"When your target machine and second device are on the same network but in "
+"different subnets, specify the broadcast address for your target machine:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_pxe.xml:861
+#, no-c-format
+msgid ""
+"&prompt.user;wol -i <replaceable>192.168.0.63 7c:ef:a5:fe:06:7c</"
+"replaceable>\n"
+"   "
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:863
+#, no-c-format
+msgid ""
+"Because WOL relies on broadcast domains the sending machine must be on the "
+"same network, though it can be in a different network segment."
+msgstr ""
+
+#. Tag: para
+#: deployment_pxe.xml:867
+#, no-c-format
+msgid ""
+"It is possible to send the magic packet from a different network. One way is "
+"with port forwarding, if your router supports port forwarding to a broadcast "
+"address. A more secure method is to SSH to a host inside your network, and "
+"send the magic packet from there."
 msgstr ""
