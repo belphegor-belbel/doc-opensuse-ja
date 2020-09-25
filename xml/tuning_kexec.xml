@@ -6,12 +6,11 @@
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-kexec">
  <title>Kexec と Kdump</title>
  <info>
-      <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-        <dm:bugtracker>
-          </dm:bugtracker>
-      </dm:docmanager>
-    </info>
-    <para>&kexec; は現在動作中のカーネルから他のカーネルを高速に起動するための仕組みです。これにより、ハードウエアの初期化を行なわず、高速にシステムを再起動することができます。必要であれば、システムがクラッシュした際、もう 1 つのカーネルを起動することもできます。</para>
+  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+   <dm:bugtracker/>
+  </dm:docmanager>
+ </info>
+ <para>&kexec; は現在動作中のカーネルから他のカーネルを高速に起動するための仕組みです。これにより、ハードウエアの初期化を行なわず、高速にシステムを再起動することができます。必要であれば、システムがクラッシュした際、もう 1 つのカーネルを起動することもできます。</para>
  <sect1 xml:id="cha-tuning-kexec-intro">
   <title>概要</title>
 
@@ -41,9 +40,10 @@
 
   <para>&productnamereg; で &kexec; を使用すると、再起動を高速化したり潜在的なハードウエア問題を回避したりすることができます。 &kexec; を使用するには、 <systemitem>kexec-tools</systemitem> パッケージをインストールしてください。このパッケージには <command>kexec-bootloader</command> というスクリプトが含まれていますが、これはブートローダの設定からカーネルのコマンドラインオプションを読み出し、そのコマンドラインオプションを利用して新しいカーネルを起動することができます。</para>
 
-  <!-- On SLE 12 SP1, the -h option only outputs the options -h/help and
+<!-- On SLE 12 SP1, the -h option only outputs the options -h/help and
        -D/debug. That is not really useful. - sknorr, 2015-10-07 -->
-  <!--
+
+<!--
   <para>
    To see a list of possible options, use:
   </para>
@@ -73,28 +73,31 @@
   </itemizedlist>
 
   <para>システムがクラッシュした際、本番用のカーネルのデータを保持したまま、もう 1 つのカーネルを起動したい場合は、システムメモリ内に専用の領域を用意する必要があります。その領域は常に空けておかなければならないものであることから、この専用領域には本番用のカーネルが読み込まれることはありません。この領域は情報採取用のカーネルが使用するもので、このような仕組みによって、本番用のカーネルのメモリページを保持させることができるようになっています。</para>
+
   <para>このような領域を予約するには、本番用のカーネルの起動コマンドライン内に、 <option>crashkernel</option> というオプションを追加します。 <option>crashkernel</option> で必要な値を判断するには、 <xref linkend="sec-tuning-kexec-crashkernel"/> に書かれた手順に従ってください。</para>
+
   <para>なお、上記のパラメータは情報採取用のカーネルのパラメータではありません。情報採取用のカーネルでは &kexec; を使用しません。</para>
 
   <para>情報採取用のカーネルは専用の領域に読み込まれ、カーネルがクラッシュするのを待ちます。いったんクラッシュが発生すると、 &kdump; は情報採取用のカーネルに制御を移します。これは、クラッシュした時点で、元のカーネルは信頼できる状態ではなくなるためです。これはつまり、 &kdump; 自身も失敗する可能性があることを示しています。</para>
 
   <para>情報採取用のカーネルを読み込むには、カーネルの起動パラメータを含める必要があります。通常は初期 RAM ファイルシステムを起動時に使用します。初期 RAM ファイルシステムを指定するには、 <option>--initrd</option> <literal>=</literal> <replaceable>ファイル名</replaceable> のようなオプションを指定します。なお、 <option>--append</option> <literal>=</literal> <replaceable>コマンドライン</replaceable> のように指定すると、起動するほうのカーネルのコマンドラインを設定することができます。</para>
+
   <para>本番用のカーネルで指定していたコマンドラインを起動するカーネル側に含めておく必要があります。このような場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline)"</replaceable> のように入力して実行することで、既存のコマンドラインをそのまま受け渡すことができます。また、オプションを追加したい場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline) オプション"</replaceable> のようにして追加のオプションを指定してもかまいません。</para>
 
   <para>読み込んでおいたカーネルはいつでも解放することができます。 <option>-l</option> オプションで読み込んでおいたカーネルを解放したい場合は、 <command>kexec</command> <option>-u</option> コマンドを実行してください。また、 <option>-p</option> オプションで読み込んでおいたカーネルの場合は、 <command>kexec</command> <option>-p</option> <option>-u</option> コマンドを実行してください。</para>
  </sect1>
-
  <sect1 xml:id="sec-tuning-kexec-crashkernel">
   <title><option>crashkernel</option> 割り当てサイズの計算</title>
 
   <para>&kexec; で情報採取用のカーネルを起動する <!-- "and to use &kdump; in any way" ? --> 場合、このカーネル用のメモリ領域を割り当てておく必要があります。割り当てるべきサイズはコンピュータのハードウエア設定によって異なりますので、あらかじめ指定しておく必要があります。</para>
+
   <para>割り当てるべきサイズは、お使いのコンピュータのハードウエアアーキテクチャによっても異なります。それぞれ下記の手順をお読みのうえ、必要なサイズを判断してください。</para>
 
   <procedure>
    <title>&x86-64; でのサイズの割り当て</title>
    <step>
     <para>コンピュータに対する基礎値を得るには、端末内で下記のコマンドを入力し実行します:</para>
-    <screen>&prompt.root;<command>kdumptool</command> calibrate
+<screen>&prompt.root;<command>kdumptool</command> calibrate
 Total: 49074
 Low: 72
 High: 180
@@ -115,69 +118,69 @@ MaxHigh: 45824 </screen>
    <step>
     <para>上記の手順の <literal>High</literal> の値に、お使いのコンピュータに接続されている LUN カーネルパス (ストレージデバイスのパス数) を元にした値を足します。具体的には、メガバイト単位で下記のような計算を行ないます:</para>
 <screen>SIZE_HIGH = <replaceable>推奨値</replaceable> + (<replaceable>LUN_数</replaceable> / 2)</screen>
-     <para>上記の数式に当てはめるべき値は下記のとおりです:</para>
-     <itemizedlist>
+    <para>上記の数式に当てはめるべき値は下記のとおりです:</para>
+    <itemizedlist>
+     <listitem>
+      <formalpara>
+       <title>SIZE_HIGH</title>
+       <para><literal>High</literal> の計算結果です。</para>
+      </formalpara>
+     </listitem>
+     <listitem>
+      <formalpara>
+       <title>RECOMMENDATION</title>
+       <para><command>kdumptool calibrate</command> で表示された <literal>High</literal> の値です。</para>
+      </formalpara>
+     </listitem>
+     <listitem>
+      <formalpara>
+       <title>LUNs</title>
+       <para>お使いのコンピュータで作成する予定の LUN カーネルパス数の最大値を指定します。マルチパスデバイスについては無視されるため、数から除外してください。</para>
+      </formalpara>
+     </listitem>
+    </itemizedlist>
+   </step>
+   <step>
+    <para>お使いのデバイスに対応するドライバが DMA32 ゾーン内に多数の予約領域を作成する場合は、 <literal>Low</literal> の値も調整する必要があります。しかしながら、この値は簡単に計算できるものではありません。正しい値を得るには、試行錯誤を繰り返す必要があります。</para>
+    <para>まずは <literal>Low</literal> の値を <command>kdumptool calibrate</command> で出力された値から試してみてください。</para>
+   </step>
+   <step>
+    <para>あとは値を正しい場所に設定します。</para>
+    <variablelist>
+     <varlistentry>
+      <term>カーネルのコマンドラインを直接変更する場合:</term>
       <listitem>
-       <formalpara>
-        <title>SIZE_HIGH</title>
-        <para><literal>High</literal> の計算結果です。</para>
-       </formalpara>
-      </listitem>
-      <listitem>
-       <formalpara>
-        <title>RECOMMENDATION</title>
-        <para><command>kdumptool calibrate</command> で表示された <literal>High</literal> の値です。</para>
-       </formalpara>
-      </listitem>
-      <listitem>
-       <formalpara>
-        <title>LUNs</title>
-        <para>お使いのコンピュータで作成する予定の LUN カーネルパス数の最大値を指定します。マルチパスデバイスについては無視されるため、数から除外してください。</para>
-       </formalpara>
-      </listitem>
-     </itemizedlist>
-    </step>
-    <step>
-     <para>お使いのデバイスに対応するドライバが DMA32 ゾーン内に多数の予約領域を作成する場合は、 <literal>Low</literal> の値も調整する必要があります。しかしながら、この値は簡単に計算できるものではありません。正しい値を得るには、試行錯誤を繰り返す必要があります。</para>
-     <para>まずは <literal>Low</literal> の値を <command>kdumptool calibrate</command> で出力された値から試してみてください。</para>
-    </step>
-    <step>
-     <para>あとは値を正しい場所に設定します。</para>
-     <variablelist>
-      <varlistentry>
-       <term>カーネルのコマンドラインを直接変更する場合:</term>
-       <listitem>
-        <para>お使いのブートローダの設定で、カーネルオプションに下記を追加してください:</para>
+       <para>お使いのブートローダの設定で、カーネルオプションに下記を追加してください:</para>
 <screen>crashkernel=<replaceable>SIZE_HIGH</replaceable>,high crashkernel=<replaceable>SIZE_LOW</replaceable>,low</screen>
-        <para><replaceable>SIZE_HIGH</replaceable> と <replaceable>SIZE_LOW</replaceable> の値は、それぞれ上記の手順で算出もしくは試行錯誤した結果を入力してください。また、末尾には <literal>M</literal> (メガバイトの意味です) を付与してください。</para>
-        <para>たとえば下記のようになります:</para>
+       <para><replaceable>SIZE_HIGH</replaceable> と <replaceable>SIZE_LOW</replaceable> の値は、それぞれ上記の手順で算出もしくは試行錯誤した結果を入力してください。また、末尾には <literal>M</literal> (メガバイトの意味です) を付与してください。</para>
+       <para>たとえば下記のようになります:</para>
 <screen>crashkernel=<replaceable>36M</replaceable>,high crashkernel=<replaceable>72M</replaceable>,low</screen>
-       </listitem>
-      </varlistentry>
-      <varlistentry>
-       <term>&yast; GUI を使用している場合:</term>
-       <listitem>
-        <para><guimenu>Kdump の低メモリ</guimenu> に <literal>Low</literal> の値を入力してください。</para>
-        <para><guimenu>Kdump の高メモリ</guimenu> に <literal>High</literal> の値を入力してください。</para>
-       </listitem>
-      </varlistentry>
-      <varlistentry>
-       <term>&yast; のコマンドラインインターフェイスを使用している場合:</term>
-       <listitem>
-        <para>下記のコマンドを入力して実行してください:</para>
-        <screen>&prompt.root;yast kdump startup enable alloc_mem=<replaceable>LOW</replaceable>,<replaceable>HIGH</replaceable></screen>
-        <para>ここで、 <replaceable>LOW</replaceable> には <literal>Low</literal> の値を、 <replaceable>HIGH</replaceable> には <literal>High</literal> の値をそれぞれ入力してください。</para>
-       </listitem>
-      </varlistentry>
-     </variablelist>
-    </step>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>&yast; GUI を使用している場合:</term>
+      <listitem>
+       <para><guimenu>Kdump の低メモリ</guimenu> に <literal>Low</literal> の値を入力してください。</para>
+       <para><guimenu>Kdump の高メモリ</guimenu> に <literal>High</literal> の値を入力してください。</para>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>&yast; のコマンドラインインターフェイスを使用している場合:</term>
+      <listitem>
+       <para>下記のコマンドを入力して実行してください:</para>
+<screen>&prompt.root;yast kdump startup enable alloc_mem=<replaceable>LOW</replaceable>,<replaceable>HIGH</replaceable></screen>
+       <para>ここで、 <replaceable>LOW</replaceable> には <literal>Low</literal> の値を、 <replaceable>HIGH</replaceable> には <literal>High</literal> の値をそれぞれ入力してください。</para>
+      </listitem>
+     </varlistentry>
+    </variablelist>
+   </step>
   </procedure>
 
   <procedure os="sles">
    <title>&power; および &zseries; での割り当てサイズ</title>
    <step>
     <para>コンピュータに対する基礎値を得るには、下記のコマンドを入力して実行します:</para>
-    <screen>&prompt.root;<command>kdumptool</command> calibrate</screen>
+<screen>&prompt.root;<command>kdumptool</command> calibrate</screen>
     <para>このコマンドを実行すると、いくつかの値が表示されます。それぞれはメガバイト単位です。</para>
    </step>
    <step>
@@ -209,7 +212,7 @@ MaxHigh: 45824 </screen>
     </itemizedlist>
    </step>
    <step>
-   <para>あとは値を正しい場所に設定します。</para>
+    <para>あとは値を正しい場所に設定します。</para>
     <variablelist>
      <varlistentry>
       <term>コマンドラインを使用している場合:</term>
@@ -237,22 +240,21 @@ MaxHigh: 45824 </screen>
    <orderedlist>
     <listitem>
      <para>デバイスを無視したい場合は、 <command>cio_ignore</command> ツールを利用することで、現時点で有効化されているデバイスや使用しているデバイスを除き、それ以外の全てのデバイスを無視する設定を生成することができます。</para>
-     <screen>&prompt.sudo;cio_ignore -u -k
+<screen>&prompt.sudo;cio_ignore -u -k
 cio_ignore=all,!da5d,!f500-f502</screen>
      <para><command>cio_ignore -u -k</command> と入力して実行すると、ブラックリスト設定が即時に有効化され、既存のブラックリストを置き換えるようになります。未使用のデバイスが消えることはなく、チャネルサブシステム内で変わらず現われるようになります。ただし、新しいチャネルデバイスを追加 (z/VM 下での CP ATTACH か、 LPAR での動的な I/O 設定変更) すると、それらはブラックリストとして扱われます。この動作をしないようにするには、まず既存の設定を <command>sudo cio_ignore -l</command> を実行して保存し、 <command>cio_ignore -u -k</command> コマンドの実行後にその状態に戻すようにしてください。それ以外の方法としては、生成された設定を通常のカーネルパラメータに追加する方法もあります。</para>
     </listitem>
     <listitem>
      <para>この方法の場合は、 <filename>/etc/sysconfig/kdump</filename> 内にある <envar>KDUMP_CMDLINE_APPEND</envar> の値の中に、 <option>cio_ignore</option> パラメータを追加してください。たとえば下記のようになります:</para>
-     <screen>KDUMP_COMMANDLINE_APPEND="cio_ignore=all,!da5d,!f500-f502"</screen>
+<screen>KDUMP_COMMANDLINE_APPEND="cio_ignore=all,!da5d,!f500-f502"</screen>
     </listitem>
     <listitem>
      <para>設定を反映させるには、 <systemitem class="service">kdump</systemitem> を再起動します:</para>
-     <screen>systemctl restart kdump.service</screen>
+<screen>systemctl restart kdump.service</screen>
     </listitem>
    </orderedlist>
   </tip>
  </sect1>
-
  <sect1 xml:id="cha-tuning-kexec-basic-usage">
   <title>基本的な &kexec; の使用方法</title>
 
@@ -261,27 +263,26 @@ cio_ignore=all,!da5d,!f500-f502</screen>
   <itemizedlist>
    <listitem>
     <para>&kexec; のサービスをシステムの起動時に開始するようにするには、下記のように入力して実行します:</para>
-    <screen>&prompt.sudo;systemctl enable kexec-load.service</screen>
+<screen>&prompt.sudo;systemctl enable kexec-load.service</screen>
    </listitem>
    <listitem>
     <para>&kexec; サービスを開始するには、下記のように入力して実行します:</para>
-    <screen>&prompt.sudo;systemctl start kexec-load.service</screen>
+<screen>&prompt.sudo;systemctl start kexec-load.service</screen>
    </listitem>
   </itemizedlist>
 
   <para>お使いの &kexec; 環境が正しく動作していることを確認するには、 &kexec; を利用して新しいカーネルを起動してください。ただし、お使いのシステム内には誰もログインしていない状態で、重要なサービスを動作させていない状態であることを確認しておいてください。あとは下記のコマンドを入力して実行します:</para>
 
-  <screen>systemctl kexec</screen>
+<screen>systemctl kexec</screen>
 
   <para>これにより、あらかじめ読み込んでおいた新しいカーネルが古いカーネルを置き換えて、制御を行なうようになります。制御が始まると、通常の起動メッセージが表示されます。新しいカーネルが起動しても、ハードウエアやファームウエアのチェックは省略されます。このとき、何も警告メッセージが表示されないことを確認してください。</para>
 
   <tip>
    <title>reboot コマンドでの &kexec; の使用について</title>
    <para><command>reboot</command> コマンドで通常の再起動を行なわず、 &kexec; を使用するように設定したい場合は、下記のように入力して実行します:</para>
-   <screen>ln -s /usr/lib/systemd/system/kexec.target /etc/systemd/system/reboot.target</screen>
+<screen>ln -s /usr/lib/systemd/system/kexec.target /etc/systemd/system/reboot.target</screen>
    <para>なお、 <filename>etc/systemd/system/reboot.target</filename> ファイルを削除することで、元の再起動に戻すことができます。</para>
   </tip>
-
  </sect1>
  <sect1 xml:id="cha-tuning-kexec-config">
   <title>日々の再起動に対する &kexec; の設定方法</title>
@@ -359,6 +360,10 @@ cio_ignore=all,!da5d,!f500-f502</screen>
    <sect3 xml:id="sec-tuning-kdump-basic-manual-static-ip">
     <title>&kdump; に対する固定 IP の設定</title>
     <para>&kdump; でネットワークデバイスに対して固定 IP アドレスを設定する場合は、必要なネットワーク設定を <filename>/etc/sysconfig/kdump</filename> 内の <envar>KDUMP_COMMANDLINE_APPEND</envar> 変数に追加します。</para>
+    <important>
+     <title>&kdump; の設定ファイルの変更について</title>
+     <para><filename>/etc/sysconfig/kdump</filename> ファイルを変更した場合は、その変更点を反映させるため、必ず <command>systemctl restart kdump</command> を実行する必要があります。実行しておかないと、設定の適用は次回のシステム再起動以降となります。</para>
+    </important>
     <example>
      <title>&kdump;: 固定の IP アドレスを設定する場合の例</title>
      <para>下記のように設定しているものとします:</para>
@@ -371,7 +376,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
       </listitem>
       <listitem>
        <para><filename>/etc/sysconfig/kdump</filename> 内の &kdump; 設定は下記のようになっているものとします:</para>
-       <screen>KDUMP_CPUS=1
+<screen>KDUMP_CPUS=1
 KDUMP_IMMEDIATE_REBOOT=yes
 KDUMP_SAVEDIR=ftp://anonymous@10.50.50.140/crashdump/
 KDUMP_KEEP_OLD_DUMPS=5
@@ -385,9 +390,9 @@ KDUMP_NET_TIMEOUT=30</screen>
       </listitem>
      </itemizedlist>
      <para>このような構成の場合、 &kdump; はダンプを FTP サーバに送信しようとする際、ネットワークに到達できないことになります。この問題を解決するには、 <filename>/etc/sysconfig/kdump</filename> 内の <envar>KDUMP_COMMANDLINE_APPEND</envar> にネットワーク設定を追加します。一般的な書式は下記のとおりです:</para>
-     <screen>KDUMP_COMMANDLINE_APPEND='ip=<replaceable>クライアントの_IP</replaceable>:<replaceable>サーバの_IP</replaceable>:<replaceable>ゲートウエイの_IP</replaceable>:<replaceable>ネットマスク</replaceable>:<replaceable>クライアントのホスト名</replaceable>:<replaceable>デバイス名</replaceable>:<replaceable>プロトコル</replaceable>'</screen>
+<screen>KDUMP_COMMANDLINE_APPEND='ip=<replaceable>クライアントの_IP</replaceable>:<replaceable>サーバの_IP</replaceable>:<replaceable>ゲートウエイの_IP</replaceable>:<replaceable>ネットマスク</replaceable>:<replaceable>クライアントのホスト名</replaceable>:<replaceable>デバイス名</replaceable>:<replaceable>プロトコル</replaceable>'</screen>
      <para>上記の構成を当てはめると、下記のようになります:</para>
-     <screen>KDUMP_COMMANDLINE_APPEND='ip=10.50.50.100:10.50.50.140:10.60.48.1:255.255.240.0:dump-client:eth1:none'</screen>
+<screen>KDUMP_COMMANDLINE_APPEND='ip=10.50.50.100:10.50.50.140:10.60.48.1:255.255.240.0:dump-client:eth1:none'</screen>
     </example>
    </sect3>
   </sect2>
@@ -448,7 +453,7 @@ KDUMP_NET_TIMEOUT=30</screen>
      <para>また、 &kdump; は送信先のホストとの間で認証できなければなりません。現時点では公開鍵認証にのみ対応しています。既定では &kdump; は &rootuser; の機密鍵を使用して接続しようとしますが、通常は &kdump; 用に個別の鍵を用意しておくことが望ましい設定です。個別の鍵は <command>ssh-keygen</command> を利用して、下記のように実行することで作成することができます:</para>
      <substeps>
       <step>
-       <screen>&prompt.root;<command>ssh-keygen</command> -f <replaceable>~/.ssh/kdump_key</replaceable></screen>
+<screen>&prompt.root;<command>ssh-keygen</command> -f <replaceable>~/.ssh/kdump_key</replaceable></screen>
       </step>
       <step>
        <para>なお、パスフレーズの入力を求められた際には、何も入力せずに <keycap function="enter"/> を押してください (これでパスフレーズを使用せずに鍵を作成する意味になります) 。</para>
@@ -460,7 +465,7 @@ KDUMP_NET_TIMEOUT=30</screen>
     </step>
     <step>
      <para>次に、生成した &kdump; の SSH 鍵を送信先のホストに送信して認証できるようにします。</para>
-     <screen>&prompt.root;<command>ssh-copy-id</command> -i <replaceable>~/.ssh/kdump_key</replaceable> <replaceable>TARGET_HOST</replaceable></screen>
+<screen>&prompt.root;<command>ssh-copy-id</command> -i <replaceable>~/.ssh/kdump_key</replaceable> <replaceable>TARGET_HOST</replaceable></screen>
     </step>
     <step>
      <para><literal>KDUMP_SAVEDIR</literal> を設定します。これには 2 つの方法があります:</para>
@@ -469,14 +474,14 @@ KDUMP_NET_TIMEOUT=30</screen>
        <term>Secure File Transfer Protocol (sftp)</term>
        <listitem>
         <para>SFTP は SSH 経由でファイルを送信するための推奨される方法です。ただし、接続先のホストで sftp サブシステムが有効化されていなければなりません (<!-- NOTE: not "&slea" but "&productname" --> &productname; では既定で有効化されています) 。具体的には、下記のように指定します:</para>
-        <screen>KDUMP_SAVEDIR=sftp://<replaceable>宛先ホスト</replaceable><replaceable>/ダンプファイルの保存先パス</replaceable></screen>
+<screen>KDUMP_SAVEDIR=sftp://<replaceable>宛先ホスト</replaceable><replaceable>/ダンプファイルの保存先パス</replaceable></screen>
        </listitem>
       </varlistentry>
       <varlistentry>
        <term>Secure Shell Protocol (ssh)</term>
        <listitem>
         <para>ディストリビューションによっては、接続先のホストで SSH 経由でコマンドを実行しなければならないものもあります。 &productname; では、この方法にも対応しています。この場合、接続先のホストでの &kdump; のユーザには、ログインシェルが設定されていなければならず、 <command>mkdir</command> , <command>dd</command> , <command>mv</command> の各コマンドを実行できなければなりません。具体的には下記のように指定します:</para>
-        <screen>KDUMP_SAVEDIR=ssh://<replaceable>宛先ホスト</replaceable><replaceable>ダンプファイルの保存先パス</replaceable></screen>
+<screen>KDUMP_SAVEDIR=ssh://<replaceable>宛先ホスト</replaceable><replaceable>ダンプファイルの保存先パス</replaceable></screen>
        </listitem>
       </varlistentry>
      </variablelist>
@@ -509,6 +514,7 @@ KDUMP_NET_TIMEOUT=30</screen>
   <para>上記のような理由から、 <command>crash</command> ユーティリティが作成されました。このユーティリティはクラッシュダンプを解析するだけでなく、動作中のシステムもデバッグすることができます。また、 Linux カーネルのデバッグ専用の機能が用意され、高度なデバッグを行ないたい場合に最適な仕組みです。</para>
 
   <para>Linux カーネルをデバッグするには、まずデバッグ情報パッケージをインストールしておく必要があります。お使いのシステムにインストールされているかどうかを確認するには、下記のコマンドを入力して実行します:</para>
+
 <screen>&prompt.user;<command>zypper</command> se kernel | <command>grep</command> debug</screen>
 
   <important>
@@ -517,6 +523,7 @@ KDUMP_NET_TIMEOUT=30</screen>
   </important>
 
   <para>ダンプを生成したマシンと同じマシンで <command>crash</command> コマンドを実行し、採取したダンプを開きたい場合は、下記のようなコマンドを入力して実行します:</para>
+
 <screen><command>crash</command> <replaceable>/boot/vmlinux-2.6.32.8-0.1-default.gz</replaceable> \
 <replaceable>/var/crash/2010-04-23-11\:17/vmcore</replaceable></screen>
 
@@ -653,7 +660,11 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
 
   <important>
    <title>&kdump; の設定ファイルの変更について</title>
-   <para><filename>/etc/sysconfig/kdump</filename> ファイルを変更した場合は、その変更点を反映させるため、必ず <command>systemctl restart kdump</command> を実行する必要があります。実行しておかないと、設定の適用は次回のシステム再起動以降となります。</para>
+   <para>
+    After making changes to the <filename>/etc/sysconfig/kdump</filename>
+    file, you need to run <command>systemctl restart kdump.service</command>.
+    Otherwise, the changes will only take effect next time you reboot the
+   </para>
   </important>
  </sect1>
  <sect1 xml:id="cha-tuning-kdump-moreinfo">
@@ -685,8 +696,8 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
    <listitem>
     <para>GDB の info ページ ( <command>info gdb</command> ) に加えて、印刷可能なガイド <link xlink:href="http://sourceware.org/gdb/documentation/"/> も提供されています。</para>
    </listitem>
-   <!--taroth 2020-06-30: seems this is no longer available, commenting-->
-   <!--<listitem>
+<!--taroth 2020-06-30: seems this is no longer available, commenting-->
+<!--<listitem>
     <para>
      A white paper with a comprehensive description of the crash utility
      usage can be found at
