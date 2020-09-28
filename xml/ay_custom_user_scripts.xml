@@ -184,14 +184,8 @@ echo "Testing the init script" &gt;
     <title>スクリプトの XML パラメータ</title>
     <para>下記に示す XML 要素は、ここまでに説明してきた全ての種類のスクリプトに対して設定することができます。ただし <literal>chrooted</literal> については例外で、こちらは chroot 環境スクリプトにのみ設定することができます。</para>
     <important>
-      <title>Deprecated Elements</title>
-      <para>
-       <literal>debug</literal> is a deprecated element and can be removed in future
-       releases. To adapt, use an interpreter-specific debugging parameter in <literal>interpreter</literal>.
-       E.g. instead of "&lt;interpreter&gt;shell&lt;/interpreter&gt; use
-       &lt;interpreter&gt;/bin/sh -x&lt;/interpreter&gt; for the same result
-       as having enabled the <literal>debug</literal> flag.
-      </para>
+      <title>廃止予定の要素</title>
+      <para><literal>debug</literal> は廃止予定の要素であり、将来のリリースでは削除される予定です。新しく設定するには、 <literal>interpreter</literal> パラメータに、インタプリタごとの独自のデバッグパラメータを指定してください。たとえば "&lt;interpreter&gt;shell&lt;/interpreter&gt; の代わりに &lt;interpreter&gt;/bin/sh -x&lt;/interpreter&gt; のように指定すると、 <literal>debug</literal> フラグを指定した場合と同じ結果が得られます。</para>
     </important>
     <table>
      <title>スクリプトの XML パラメータ</title>
@@ -218,7 +212,7 @@ echo "Testing the init script" &gt;
          <para><literal>location</literal></para>
         </entry>
         <entry>
-         <para>スクリプトの取得元の場所を指定します。場所には制御ファイルと同じプロトコル (http, ftp, nfs, など) を指定することができます。</para>
+         <para>スクリプトの取得元の場所を指定します。場所には制御ファイルと同じプロトコル (http, ftp, nfs, など) を指定することができます。それ以外にも、制御ファイルの存在するディレクトリからの相対パスを URL で指定することもできます (例: <literal>relurl://script.sh</literal> 。</para>
 <screen>&lt;location
 &gt;http://10.10.0.1/myPreScript.sh&lt;/location&gt;</screen>
         </entry>
@@ -247,14 +241,8 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
          <para><literal>interpreter</literal></para>
         </entry>
         <entry>
-         <para>
-          Specify the interpreter that must be used for the script.
-          Any interpreter available in the given environment can be specified.
-          It is possible to provide a full path to the interpreter, including parameters.
-          There are also deprecated keywords interpreter "shell", "perl" and "python" that are
-          supported by <literal>debug</literal> flag.
-         </para>
-<screen>&lt;interpreter&gt;perl&lt;/interpreter&gt;</screen>
+         <para>スクリプトで使用するインタプリタを指定します。動作させる環境内で利用可能な任意のインタプリタを指定することができます。通常はフルパスでインタプリタを指定します (パラメータを付けることもできます) が、古い形式として "shell", "perl", "python" の各キーワードでインタプリタを指定することもできます (廃止予定の仕組みで、 <literal>debug</literal> フラグでサポートされるものです) 。</para>
+<screen>&lt;interpreter&gt;/bin/bash -x&lt;/interpreter&gt;</screen>
         </entry>
         <entry>
          <para>任意指定です。既定値は <literal>shell</literal> です。</para>
@@ -269,7 +257,7 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
 <screen>&lt;filename&gt;myPreScript5.sh&lt;/filename&gt;</screen>
         </entry>
         <entry>
-         <para>任意指定です。既定値はスクリプトの種類ごとに異なります (この例の場合は <filename>pre-scripts</filename> になります) 。複数のスクリプトを使用している場合は、それぞれのスクリプトに対して重複しない名前を設定しなければなりません。</para>
+         <para>任意指定です。既定値はスクリプトの種類ごとに異なります (この例の場合は pre-scripts になります) 。複数のスクリプトを使用している場合は、それぞれのスクリプトに対して重複しない名前を設定しなければなりません。また、 <literal>filename</literal> を指定しておらず、 <literal>location</literal> を指定している場合は、指定したロケーションパスのファイル名を使用します。</para>
         </entry>
        </row>
        <row>
@@ -301,13 +289,7 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
          <para><literal>debug</literal></para>
         </entry>
         <entry>
-         <para>
-          If this is <literal>true</literal>, every single line of a shell
-          script is logged. Perl scripts are run with warnings turned on.
-          This only works for the deprecated keyword <literal>interpreter</literal>.
-          For other languages, give the path to the interpreter as a parameter in the 
-          <literal>interpreter</literal> value, for example "&lt;interpreter&gt;ruby -w&lt;/interpreter&gt;".
-         </para>
+         <para>この値を <literal>true</literal> に設定すると、シェルスクリプト内の各行がログに記録されるようになります。 Perl スクリプトの場合は警告表示が有効化されます。これは廃止予定のパラメータで、他の言語の場合は <literal>interpreter</literal> パラメータにそれぞれのデバッグ用オプションを指定します (例: "&lt;interpreter&gt;ruby -w&lt;/interpreter&gt;") 。</para>
 <screen>&lt;debug config:type="boolean"&gt;true&lt;/debug&gt;</screen>
         </entry>
         <entry>
@@ -383,20 +365,18 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
   &lt;chroot-scripts config:type="list"&gt;
     &lt;script&gt;
       &lt;chrooted config:type="boolean"&gt;true&lt;/chrooted&gt;
-      &lt;filename&gt;chroot.sh&lt;/filename&gt;
+      &lt;filename&gt;chroot-post.sh&lt;/filename&gt;
       &lt;interpreter&gt;shell&lt;/interpreter&gt;
       &lt;source&gt;&lt;![CDATA[
-#!/bin/sh
 echo "Testing chroot (chrooted) scripts"
 ls
 ]]&gt;
       &lt;/source&gt;
     &lt;/script&gt;
     &lt;script&gt;
-      &lt;filename&gt;chroot.sh&lt;/filename&gt;
-        &lt;interpreter&gt;shell&lt;/interpreter&gt;
+      &lt;filename&gt;chroot-pre.sh&lt;/filename&gt;
+        &lt;interpreter&gt;/bin/bash -x&lt;/interpreter&gt;
         &lt;source&gt;&lt;![CDATA[
-#!/bin/sh
 echo "Testing chroot scripts"
 df
 cd /mnt
@@ -410,8 +390,6 @@ ls
         &lt;filename&gt;post.sh&lt;/filename&gt;
         &lt;interpreter&gt;shell&lt;/interpreter&gt;
         &lt;source&gt;&lt;![CDATA[
-#!/bin/sh
-
 echo "Running Post-install script"
 systemctl start portmap
 mount -a 192.168.1.1:/local /mnt
@@ -424,9 +402,7 @@ umount /mnt
         &lt;filename&gt;post.pl&lt;/filename&gt;
         &lt;interpreter&gt;perl&lt;/interpreter&gt;
         &lt;source&gt;&lt;![CDATA[
-#!/usr/bin/perl
 print "Running Post-install script";
-
 ]]&gt;
         &lt;/source&gt;
       &lt;/script&gt;
@@ -440,7 +416,6 @@ print "Running Post-install script";
         &lt;filename&gt;pre.sh&lt;/filename&gt;
         &lt;interpreter&gt;shell&lt;/interpreter&gt;
         &lt;source&gt;&lt;![CDATA[
-#!/bin/sh
 echo "Running pre-install script"
 ]]&gt;
         &lt;/source&gt;
@@ -463,11 +438,7 @@ echo Hi
 &lt;/profile&gt;</screen>
     </example>
     <para>インストール完了後は、スクリプトと出力されたログファイルが <filename>/var/adm/autoinstall</filename> 内に配置されます。スクリプトは <filename>scripts</filename> サブディレクトリ内、出力されたログは <filename>log</filename> サブディレクトリ内をそれぞれご覧ください。</para>
-    <para>出力されたログは、シェルスクリプトを下記のようなコマンドラインで実行した場合と同じ内容になります:</para>
-    <para>
-     If the script ends with a non-zero exit code, then a warning will
-     be shown with the content of the logs, unless the <literal>feedback</literal>
-     option was provided.
-    </para>
+    <para>出力されたログにはスクリプトを実行した際に生成された内容が書かれます。標準出力と標準エラー出力の両方が記録されます。</para>
+    <para>スクリプトが 0 以外の終了コードで終了した場合、ログ内には警告を示すメッセージが出力されます。これを出力したくない場合は、 <literal>feedback</literal> オプションを指定してください。</para>
    </sect2>
   </sect1>
