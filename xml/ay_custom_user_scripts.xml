@@ -183,6 +183,16 @@ echo "Testing the init script" &gt;
    <sect2 xml:id="scripts-syntax">
     <title>スクリプトの XML パラメータ</title>
     <para>下記に示す XML 要素は、ここまでに説明してきた全ての種類のスクリプトに対して設定することができます。ただし <literal>chrooted</literal> については例外で、こちらは chroot 環境スクリプトにのみ設定することができます。</para>
+    <important>
+      <title>Deprecated Elements</title>
+      <para>
+       <literal>debug</literal> is a deprecated element and can be removed in future
+       releases. To adapt, use an interpreter-specific debugging parameter in <literal>interpreter</literal>.
+       E.g. instead of "&lt;interpreter&gt;shell&lt;/interpreter&gt; use
+       &lt;interpreter&gt;/bin/sh -x&lt;/interpreter&gt; for the same result
+       as having enabled the <literal>debug</literal> flag.
+      </para>
+    </important>
     <table>
      <title>スクリプトの XML パラメータ</title>
      <tgroup cols="3">
@@ -237,7 +247,13 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
          <para><literal>interpreter</literal></para>
         </entry>
         <entry>
-         <para>スクリプトで使用するインタプリタを指定します。設定可能な値は <literal>shell</literal> (シェルスクリプト) もしくは <literal>perl</literal> (Perl スクリプト) のいずれかです。</para>
+         <para>
+          Specify the interpreter that must be used for the script.
+          Any interpreter available in the given environment can be specified.
+          It is possible to provide a full path to the interpreter, including parameters.
+          There are also deprecated keywords interpreter "shell", "perl" and "python" that are
+          supported by <literal>debug</literal> flag.
+         </para>
 <screen>&lt;interpreter&gt;perl&lt;/interpreter&gt;</screen>
         </entry>
         <entry>
@@ -285,7 +301,13 @@ echo "Testing the pre script" &gt; /tmp/pre-script_out.txt
          <para><literal>debug</literal></para>
         </entry>
         <entry>
-         <para><literal>true</literal> を指定すると、シェルスクリプト内の各行がログに記録されます。 Perl スクリプトの場合、 Warning が有効化されて実行されます。</para>
+         <para>
+          If this is <literal>true</literal>, every single line of a shell
+          script is logged. Perl scripts are run with warnings turned on.
+          This only works for the deprecated keyword <literal>interpreter</literal>.
+          For other languages, give the path to the interpreter as a parameter in the 
+          <literal>interpreter</literal> value, for example "&lt;interpreter&gt;ruby -w&lt;/interpreter&gt;".
+         </para>
 <screen>&lt;debug config:type="boolean"&gt;true&lt;/debug&gt;</screen>
         </entry>
         <entry>
@@ -442,6 +464,10 @@ echo Hi
     </example>
     <para>インストール完了後は、スクリプトと出力されたログファイルが <filename>/var/adm/autoinstall</filename> 内に配置されます。スクリプトは <filename>scripts</filename> サブディレクトリ内、出力されたログは <filename>log</filename> サブディレクトリ内をそれぞれご覧ください。</para>
     <para>出力されたログは、シェルスクリプトを下記のようなコマンドラインで実行した場合と同じ内容になります:</para>
-<screen>/bin/sh -x <replaceable>スクリプト名</replaceable> 2&amp;&gt;/var/adm/autoinstall/logs/<replaceable>スクリプト名</replaceable>.log</screen>
+    <para>
+     If the script ends with a non-zero exit code, then a warning will
+     be shown with the content of the logs, unless the <literal>feedback</literal>
+     option was provided.
+    </para>
    </sect2>
   </sect1>
