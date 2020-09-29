@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="cha-physical-security">
- <title>Physical Security</title>
+ <title>物理的なセキュリティ</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -12,333 +12,167 @@
   </dm:docmanager>
  </info>
 
-   <para>
-    Physical security should be one of the utmost concerns. Linux production
-    servers should be in locked data centers where only people have access
-    that have passed security checks. Depending on the environment and
-    circumstances, you can also consider boot loader passwords.
-   </para>
+   <para>物理的なセキュリティ確保は最重要な考慮事項です。 Linux の本番サーバは、セキュリティチェックを通過した人間のみがアクセスできる、鍵のかかったデータセンター内に配置されるべきです。環境や状況にもよりますが、ブートローダに対してパスワードを設定することも検討すべきです。</para>
 
-   <para>
-    Additionally, consider questions like:
-   </para>
+   <para>上記に加えて、下記を考慮する必要もあります:</para>
 
    <itemizedlist>
     <listitem>
-     <para>
-      Who has direct physical access to the host?
-     </para>
+     <para>ホストに対して直接アクセスできるのは誰か？</para>
     </listitem>
     <listitem>
-     <para>
-      Of those that do, should they?
-     </para>
+     <para>その彼らがすべきことは？</para>
     </listitem>
     <listitem>
-     <para>
-      Can the host be protected from tampering and should it be?
-     </para>
+     <para>ホストを改ざんから保護することができるか？</para>
     </listitem>
    </itemizedlist>
 
-   <para>
-    The amount of physical security needed on a particular system depends on
-    the situation, and can also vary widely by available funds.
-   </para>
+   <para>特定のシステムにおける物理的なセキュリティは、そのシステムが配置されている状況に依存して決まるほか、利用可能な予算によっても大きく異なります。</para>
 
    <sect1 xml:id="sec-sec-prot-general-physical-locks">
-    <title>System Locks</title>
-    <para>
-     Most server racks in data centers include a locking feature. Usually this
-     will be a hasp/cylinder lock on the front of the rack that allows you to
-     turn an included key to a locked or unlocked position – granting or
-     denying entry. Cage locks can help prevent someone from tampering or
-     stealing devices/media from the servers, or opening the cases and
-     directly manipulating/sabotaging the hardware. Preventing system reboots
-     or the booting from alternate devices is also important (for example
-     CD/DVDs/USB drives/etc.).
-    </para>
-    <para>
-     Some servers also have case locks. These locks can do different things
-     according to the designs of the system vendor and construction. Many
-     systems are designed to self-disable if attempts are made to open the
-     system without unlocking. Others have device covers that will not let you
-     plug in or unplug keyboards or mice. While locks are sometimes a useful
-     feature, they are usually lower quality and easily defeated by attackers
-     with ill intent.
-    </para>
+    <title>システムの施錠</title>
+    <para>データセンター内のほとんどのサーバラックには施錠の機能が備わっています。通常はラックの前面に掛け金やシリンダー錠の形式で用意され、施錠や解錠を行なうことで内部へのアクセスを許可したり禁止したりすることができます。かご形のラックであればサーバからデバイスを不正に差し替えたり抜きとったりすることを防げますし、筐体を開けたり妨害したりすることも防ぐことができます。また、システムを不正に再起動されたり、代替デバイス (例: CD/DVD/USB メモリなど) から起動できないようにすることも重要です。</para>
+    <para>サーバによってはケースロック (施錠) を備えているものもあります。これらのロックはシステムの製造元や構造によって異なるもので、ほとんどのケースロックは筐体を開けなくする目的で提供されていますが、キーボードやマウスなどを接続できないようにするものもあります。施錠は便利な仕組みではありますが、安全性という観点では低く、悪意のある人間であれば難なく突破できてしまう程度の仕組みでもあります。</para>
   </sect1>
     <sect1 xml:id="sec-sec-prot-general-bios">
-   <title>Locking Down the BIOS</title>
+   <title>BIOS のロックダウン</title>
 
    <tip>
     <title>Secure Boot</title>
-    <para>
-     This section describes only basic methods to secure the boot process. To
-     find out about more advanced boot protection using UEFI and the
-     secure boot feature, see <xref linkend="sec-uefi-secboot"/>.
-    </para>
+    <para>本章では起動処理の安全性を高めるための基本的な方式のみを説明しています。 UEFI を利用したより高度な起動保護方法や Secure Boot 機能そのものの説明については、 <xref linkend="sec-uefi-secboot"/> をお読みください。</para>
    </tip>
 
-   <para>
-    The BIOS (Basic Input/Output System) or its successor UEFI (Unified
-    Extensible Firmware Interface) is the lowest level of software/firmware
-    on PC class systems. Other hardware types (&ipseries;, &zseries;) that run
-    Linux also have low-level firmware that performs similar functions as the
-    PC BIOS. When this document references the BIOS, it usually means BIOS
-    and/or UEFI.
-    The BIOS dictates system configuration, puts the system into a well
-    defined state and provides routines for accessing low-level hardware.
-    The BIOS executes the configured Linux boot loader (like &grub;) to
-    boot the host.
-   </para>
+   <para>BIOS (Basic Input/Output System) やその後継である UEFI (Unified Extensible Firmware Interface) は PC システムで最も低い位置にあるソフトウエア／ファームウエアです。 Linux の動作する他のハードウエアタイプ (&ipseries;, &zseries;) にも、 PC BIOS と似たような機能を持つ低レベルのファームウエアがあります。この文書内で "BIOS" と記述した場合、通常は BIOS と UEFI の両方を意味します。 BIOS はシステムの設定を構成して一定の状態にするほか、低レベルなハードウエア機能も提供します。 BIOS はその後、ホストを起動するための Linux ブートローダ (例: &grub;) を開始します。</para>
 
-   <para>
-    Most BIOS implementations can be configured to prevent unauthorized users
-    from manipulating system and boot settings. This is typically done by
-    setting a BIOS admin or boot password. The admin password only needs to
-    be entered for changing the system configuration but the boot password
-    will be required during every normal boot. For most use cases it is
-    enough to set an admin password and restrict booting to the built-in
-    hard disk. This way an attacker will not be able to simply boot a Linux
-    live CD or USB thumb drive, for example. Although this does not provide a
-    high level of security (a BIOS can be reset, removed or modified –
-    assuming case access), it can be another deterrent.
-   </para>
+   <para>ほとんどの BIOS 実装には、システムの不正な操作や不正な起動設定を防止するための機能が用意されています。一般には BIOS 管理者パスワードや起動パスワードなどと呼ばれています。管理者パスワードはシステムの設定を変更する際に求められるパスワード、起動パスワードは通常の起動を行なう際に求められるパスワードです。ほとんどの場合、管理者パスワードのみを設定し、内蔵のハードディスクからのみ起動するよう設定すれば十分です、これにより、 Linux のライブ CD や USB メモリなどを挿入もしくは接続して不正に起動するのを防ぐことができます。ただし、 BIOS は高度なセキュリティを提供するものではなく、筐体を開くだけで容易に BIOS をリセットできたりパスワードを削除もしくは変更できたりしてしまうため、他の仕組みと組み合わせて使用する必要があります。</para>
 
-   <para>
-    Many BIOS firmwares have various other security related settings. Check
-    with the system vendor, the system documentation or examine the BIOS
-    during a system boot to find out more.
-   </para>
+   <para>多くの BIOS ファームウエアには、さまざまな他のセキュリティ関連の設定が用意されています。システムの製造元や提供されているマニュアル、もしくは BIOS のメニューなどを参照して、どのような設定ができるのかをご確認ください。</para>
 
    <important>
-    <title>Booting when a BIOS Boot Password Is Set</title>
-    <para>
-     If a system has been set up with a boot password, the host will not boot
-     up unattended (for example in case of a system reboot or power failure).
-     This is a trade-off.
-    </para>
+    <title>BIOS の起動パスワードを設定した場合の起動について</title>
+    <para>システムに対して起動パスワードを設定すると、そのシステムは無人では起動しなくなってしまいます (たとえばシステムの再起動や電源障害などの場合、自動では起動しなくなってしまいます。これは安全性と利便性のトレードオフとなります。</para>
    </important>
    <important>
-    <title>Losing the BIOS Admin Password</title>
-    <para>
-     Once a system is set up for the first time, the BIOS admin password will
-     not be required often. Don't forget the password or you will need to clear
-     the BIOS memory via hardware manipulation to get access again.
-    </para>
+    <title>BIOS 管理者パスワードを紛失した場合について</title>
+    <para>システムを初めて設定したような場合、 BIOS の管理者パスワードはそれほど頻繁に入力する必要はありません。そのため、パスワードを忘れてしまわないように注意してください。パスワードを忘れてしまった場合、再度アクセスできるようにするには、ハードウエア側の操作を行なって BIOS の設定を消去する必要があります。</para>
    </important>
   </sect1>
   <sect1 xml:id="sec-sec-prot-general-bootloader">
-   <title>Security via the Boot Loaders</title>
+   <title>ブートローダでのセキュリティ</title>
 
-   <para>
-    The Linux boot loader &grub;, which is used by default in &productname;,
-    can have a boot passwords set. It also provides a password feature, so
-    that only administrators can start the interactive operations (for example
-    editing menu entries and entering the command line interface). If a
-    password is specified, &grub; will disallow any interactive control until
-    you press the key <keycap>C</keycap> and <keycap>E</keycap> and enter a
-    correct password.
-   </para>
+   <para>&productname; の既定で使用される Linux のブートローダ &grub; には、起動パスワードを設定する機能が用意されています。パスワード機能を利用することで、管理者のみが対話的な操作 (例: メニュー項目の編集やコマンドラインインターフェイスでの入力など) を行なうことができるようにすることができます。またパスワードを指定した場合、 <keycap>C</keycap> および <keycap>E</keycap> を押して正しいパスワードを入力するまで、いかなる対話的な操作も禁止されるようになります。</para>
 
-   <para>
-    You can refer to the &grub; man page for examples.
-   </para>
+   <para>詳しい設定については、 &grub; のマニュアルページをお読みください。</para>
 
-   <para>
-    It is very important to keep in mind that when setting these passwords
-    they will need to be remembered! Also, enabling these passwords might
-    merely slow an intrusion, not necessarily prevent it. Again, someone could
-    boot from a removable device, and mount your root partition. If you are
-    using BIOS-level security and a boot loader, it is a good practice to
-    disable the ability to boot from removable devices in your computer's
-    BIOS, and then also password-protecting the BIOS itself.
-   </para>
+   <para>なお、パスワードを設定するにあたっては、設定したパスワードを忘れてしまわないように注意してください。また、パスワードを設定しても、侵入への時間を稼ぐことができるだけであって、完全に防げるわけではないことにも注意してください。たとえばリムーバブルデバイスから起動できる環境であれば、リムーバブルメディアを挿入してルートパーティションをマウントできてしまいます。このような場合は、 BIOS レベルのセキュリティとブートローダのセキュリティの両方を使用することで、リムーバブルメディアからの起動を禁止して、かつ BIOS と起動の両方をパスワードで保護することができるようになります。</para>
 
-   <para>
-    Also keep in mind that the boot loader configuration files will need to be
-    protected by changing their mode to <literal>600</literal> (read/write for
-    &rootuser; only), or others will be able to read your passwords or hashes!
-   </para>
+   <para>このほか、ブートローダの設定ファイルには適切なパーミッション <literal>600</literal> (&rootuser; のみが読み書きできる) を設定して保護する必要もあります。保護を行なわないと、パスワードやハッシュを読み取られてしまいます。</para>
   </sect1>
   
     <sect1 xml:id="sec-sec-prot-general-retiring">
-   <title>Retiring Linux Servers with Sensitive Data</title>
+   <title>機密データを含む Linux サーバの廃棄</title>
 
-   <para>
-<!-- As mentioned in <xref linkend="sec-setup-for-eal-operating-mount"/> -->
-    Security policies usually contain some procedures for the treatment of
-    storage media that is going to be retired or disposed of. Disk and media
-    wipe procedures are frequently prescribed as is complete destruction of
-    the media. You can find several free tools on the Internet. A search of
-    <quote>dod disk wipe utility</quote> will yield several variants. To
-    retire servers with sensitive data, it is important to ensure that data
-    cannot be recovered from the hard disks. To ensure that all traces of data
-    are removed, a wipe utility&mdash;such as
-    <command>scrub</command>&mdash;can be used. Many wipe utilities overwrite
-    the data several times. This assures that even sophisticated methods are
-    not able to retrieve any parts of the wiped data. Some tools can even be
-    operated from a bootable removable device and remove data according to the
-    U.S. Department of Defense (DoD) standards. Note that many government
-    agencies specify their own standards for data security. Some standards are
-    stronger than others, yet may require more time to implement.
-   </para>
+   <para><!-- As mentioned in <xref linkend="sec-setup-for-eal-operating-mount"/> --> セキュリティポリシーには通常、廃棄予定のストレージメディアの取り扱いに関する規定も記述されています。ディスクやメディアの消去手順は、メディアの完全破壊としてもよく知られています。インターネット上にはさまざまなツールが提供されていますので、 <quote>ディスク 消去 ユーティリティ</quote> などで検索を行なうと、それらのツールに関する説明を読むことができます。機密データを含むサーバを廃棄する場合、ディスク内に書かれていたデータを修復できないようにすることが重要です。全てのデータの痕跡を消去するには、 <command>scrub</command> などのユーティリティをお使いください。多くの消去ツールは、データ領域に上書きで何度も書き込むことによって消去を行ないます。これにより、高度な方法でデータにアクセスしようとしても、データを全く読み取れなくなります。ツールによっては単独で起動できる媒体が提供されているものや、アメリカ国防総省 (U.S. Department of Defense) 標準に準拠してデータを消去する機能を備えているものもあります。なお、それぞれの政府機関では独自に消去標準を策定しています。標準によってはそれより強力なものもありますが、強力であればあるほど時間のかかるものであることに注意してください。</para>
 
    <important>
-    <title>Wiping Wear Leveling Devices</title>
-    <para>
-     Some devices, like SSDs, use wear leveling and do not necessarily write
-     new data in the same physical locations. Such devices usually provide
-     their own erasing functionality.
-    </para>
+    <title>ウエアレベリング機能を持つデバイスでの消去について</title>
+    <para>SSD などのデバイスにはウエアレベリングと呼ばれる仕組みがあり、データの上書きを行なっても同じ場所に書き込まれるとは限らないものがあります。このようなデバイスの場合は、独自の機能を利用して消去する必要があります。</para>
    </important>
 
    <sect2 xml:id="sec-sec-prot-general-retiring-scrub">
-    <title>scrub: Disk Overwrite Utility</title>
-    <para>
-     <command>scrub</command> overwrites hard disks, files, and other devices
-     with repeating patterns intended to make recovering data from these
-     devices more difficult. It operates in three basic modes: on a character
-     or block device, on a file, or on a directory specified. For more
-     information, set the manual page <command>man 1 scrub</command>.
-    </para>
+    <title>scrub: ディスクの上書きユーティリティ</title>
+    <para><command>scrub</command> コマンドはハードディスクやファイルのほか、その他のデバイスに対しても利用可能なユーティリティで、データの復元を難しくするために繰り返しパターンを書き込むことで上書きを行ないます。このユーティリティは 3 種類のいずれかのモードで動作させることができます。モードはキャラクタ／ブロックデバイス、ファイル、指定したディレクトリのいずれかです。詳しくは <command>man 1 scrub</command> で表示されるマニュアルページをお読みください。</para>
     <variablelist>
-     <title>Supported Scrub Methods</title>
+     <title>対応する消去方式</title>
      <varlistentry>
       <term>nnsa</term>
       <listitem>
-       <para>
-        4-pass NNSA Policy Letter NAP-14.1-C (XVI-8) for sanitizing removable
-        and non-removable hard disks, which requires overwriting all locations
-        with a pseudo random pattern twice and then with a known pattern: ran-
-        dom(x2), 0x00, verify.
-       </para>
+       <para>国家核安全保障局 (NNSA) が NAP-14.1-C (XVI-8) として規定される方式で、リムーバブルメディアや非リムーバブルメディア (ハードディスク) に対応しています。全ての場所に対して擬似乱数パターンを 2 回、その後既知のパターンを書き込む 4 パス型の方式です: 乱数x2, 0x00, 書き込み検証</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>dod</term>
       <listitem>
-       <para>
-        4-pass DoD 5220.22-M section 8-306 procedure (d) for sanitizing
-        removable and non-removable rigid disks which requires overwriting all
-        addressable locations with a character, its complement, a random
-        character, then verify. Note: scrub performs the random pass first to
-        make verification easier: random, 0x00, 0xff, verify.
-       </para>
+       <para>DoD 5220.22-M section 8-306 procedure (d) として規定される方式で、リムーバブルメディアや非リムーバブルメディア (ハードディスク) に対応しています。書き込み可能な全ての範囲に対して、特定の文字、その反転パターン、ランダムな文字をそれぞれ書き込んで、最後に検証を行なう 4 パス型の方式です。注意: scrub では書き込み検証を容易に実施できるよう、乱数のパスを最初に実行します: 乱数, 0x00, 0xff, 書き込み検証</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>bsi</term>
       <listitem>
-       <para>
-        9-pass method recommended by the German Center of Security in
-        Information Technologies
-        (<link xlink:href="http://www.bsi.bund.de"/>): 0xff, 0xfe, 0xfd, 0xfb,
-        0xf7, 0xef, 0xdf, 0xbf, 0x7f.
-       </para>
+       <para>German Center of Security in Information Technologies ( <link xlink:href="http://www.bsi.bund.de"/> ) が推奨する 9 パス型の方式です: : 0xff, 0xfe, 0xfd, 0xfb, 0xf7, 0xef, 0xdf, 0xbf, 0x7f</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>gutmann</term>
       <listitem>
-       <para>
-        The canonical 35-pass sequence described in Gutmann's paper cited
-        below.
-       </para>
+       <para>Gutmann 氏の論文で示された方式で、合計 35 パスの手順を踏む方式です。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>schneier</term>
       <listitem>
-       <para>
-        7-pass method described by Bruce Schneier in "Applied Cryptography"
-        (1996): 0x00, 0xff, random(x5)
-       </para>
+       <para>Bruce Schneier 氏の "Applied Cryptography" (1996) で示された 7 パス型の方式です: 0x00, 0xff, 乱数(x5)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>pfitzner7</term>
       <listitem>
-       <para>
-        Roy Pfitzner's 7-random-pass method: random(x7).
-       </para>
+       <para>Roy Pfitzner 氏による 7 乱数パス型の方式です: random(x7)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>pfitzner33</term>
       <listitem>
-       <para>
-        Roy Pfitzner's 33-random-pass method: random(x33).
-       </para>
+       <para>Roy Pfitzner 氏による 33 乱数パス型の方式です: random(x33)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>usarmy</term>
       <listitem>
-       <para>
-        US Army AR380-19 method: 0x00, 0xff, random. (Note: identical to DoD
-        522.22-M section 8-306 procedure (e) for sanitizing magnetic core
-        memory).
-       </para>
+       <para>アメリカ陸軍の AR380-19 方式です: 0x00, 0xff, 乱数 (注意: 磁気コアメモリを消去する場合は、 DoD 522.22-M section 8-306 procedure (e) と等価になります)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>fillzero</term>
       <listitem>
-       <para>
-        1-pass pattern: 0x00.
-       </para>
+       <para>1 パス型のパターンです: 0x00</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>fillff</term>
       <listitem>
-       <para>
-        1-pass pattern: 0xff.
-       </para>
+       <para>1 パス型のパターンです: 0xff</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>random</term>
       <listitem>
-       <para>
-        1-pass pattern: random(x1).
-       </para>
+       <para>1 パス型のパターンです: 乱数(x1)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>random2</term>
       <listitem>
-       <para>
-        2-pass pattern: random(x2).
-       </para>
+       <para>2 パス型のパターンです: 乱数(x2)</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>old</term>
       <listitem>
-       <para>
-        6-pass pre-version 1.7 scrub method: 0x00, 0xff, 0xaa, 0x00, 0x55,
-        verify.
-       </para>
+       <para>バージョン 1.7 以前の scrub と同じ 6 パス型の方式です: 0x00, 0xff, 0xaa, 0x00, 0x55, 書き込み検証</para>
       </listitem>
      </varlistentry>
      <varlistentry>
       <term>fastold</term>
       <listitem>
-       <para>
-        5-pass pattern: 0x00, 0xff, 0xaa, 0x55, verify.
-       </para>
+       <para>5 パス型の方式です: 0x00, 0xff, 0xaa, 0x55, 書き込み検証</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>custom=string</term>
+      <term>custom=(文字列)</term>
       <listitem>
-       <para>
-        1-pass custom pattern. String may contain C-style numerical escapes:
-        \nnn (octal) or \xnn (hex).
-       </para>
+       <para>1 パス型の独自パターンです。 (文字列) には C 形式の数値エスケープ (\nnn (8 進数) もしくは \xnn (16 進数)) を記述することができます。</para>
       </listitem>
      </varlistentry>
     </variablelist>
@@ -346,33 +180,20 @@
   </sect1>
   
     <sect1 xml:id="sec-sec-prot-general-removable-media">
-    <title>Restricting Access to Removable Media</title>
-    <para>
-     In some environments it is required to restrict access to removable
-     media such as USB storage or optical devices. The tools coming with the
-     <systemitem>udisks2</systemitem> package help with such a
-     configuration.
-    </para>
+    <title>リムーバブルメディアへのアクセス制限</title>
+    <para>環境によっては、 USB ストレージや光学メディアなどのリムーバブルメディアへのアクセスを制限する必要があることがあります。このような場合は、 <systemitem>udisks2</systemitem> パッケージを利用することで、設定を行なうことができます。</para>
 
     <procedure>
      <step>
-      <para>
-       Create a user group whose users will be allowed to mount and eject
-       removable devices, for example <replaceable>mmedia_all</replaceable>:
-      </para>
+      <para>まずはリムーバブルメディアをマウントしたり取り出したりすることができるユーザグループを作成します。下記の例では、 <replaceable>mmedia_all</replaceable> というグループを作成しています:</para>
 <screen>&prompt.sudo;groupadd <replaceable>mmedia_all</replaceable></screen>
      </step>
      <step>
-      <para>
-       Add a specific user &exampleuser; to the new group:
-      </para>
+      <para>次に &exampleuser; を新しいグループに追加します:</para>
 <screen>&prompt.sudo;usermod -a -G <replaceable>mmedia_all</replaceable> &exampleuser;</screen>
      </step>
      <step>
-      <para>
-       Create the <filename>/etc/polkit-1/rules.d/10-mount.rules</filename>
-       file with the following content:
-      </para>
+      <para><filename>/etc/polkit-1/rules.d/10-mount.rules</filename> ファイルを作成して、下記のような内容を記述します:</para>
 <screen>
 &prompt.user;cat /etc/polkit-1/rules.d/10-mount.rules
 polkit.addRule(function(action, subject) {
@@ -390,32 +211,17 @@ polkit.addRule(function(action, subject) {
 });
 </screen>
       <important>
-       <title>Naming of the Rules File</title>
-       <para>
-        The name of a rules file must start with a digit, otherwise it
-        will be ignored.
-       </para>
-       <para>
-        Rules files are processed in alphabetical order. Functions are called
-        in the order they were added until one of the functions returns a
-        value. Therefore, to add an authorization rule that is processed before
-        other rules, put it in a file in /etc/polkit-1/rules.d with a name
-        that sorts before other rules files, for example
-        <filename>/etc/polkit-1/rules.d/10-mount.rules</filename>. Each function
-        should return a value from <literal>polkit.Result</literal>.
-       </para>
+       <title>ルールファイルの命名について</title>
+       <para>ルールファイルのファイル名は必ず数字で始まっていなければなりません。数字で始まっていないファイル名の場合、そのファイルは無視されます。</para>
+       <para>ルールファイルはアルファベット順に処理されます。関数はいずれかの関数が値を返すまで、処理された順序で実行されます。そのため、特定のルールよりも前に処理させたい認可ルールがある場合は、そのルールファイルよりも前に並ぶファイル名を設定して /etc/polkit-1/rules.d 内に配置してください。たとえば <filename>/etc/polkit-1/rules.d/10-mount.rules</filename> のようになります。また、それぞれの関数は <literal>polkit.Result</literal> の値を返す必要があります。</para>
       </important>
      </step>
      <step>
-      <para>
-       Restart <systemitem>udisks2</systemitem>:
-      </para>
+      <para><systemitem>udisks2</systemitem> を再起動します:</para>
 <screen>&prompt.root;systemctl restart udisks2</screen>
      </step>
      <step>
-      <para>
-       Restart <systemitem>polkit</systemitem>
-      </para>
+      <para><systemitem>polkit</systemitem> を再起動します</para>
 <screen>&prompt.root;systemctl restart polkit</screen>
      </step>
     </procedure>
