@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="sec-sec-prot-general-seccheck">
- <title>Automatic Security Checks with seccheck</title>
+ <title>seccheck を利用した自動的なチェック</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -12,86 +12,43 @@
   </dm:docmanager>
  </info>  
 
-   <para>
-    The <command>seccheck</command> &suse; Security Checker is a set of
-    shell scripts designed to automatically check the local security of a system
-    on a regular schedule, and emails reports to the root user, or any user
-    as configured by the administrator. 
-   </para>
-   <para>
-    If <package>seccheck</package> is not installed on your system, install it with 
-    <command>sudo zypper in seccheck</command>. These scripts are controlled by &systemd; 
-    timers, which are not enabled by default, but must be enabled by the administrator.
-   </para>
+   <para><command>seccheck</command> &suse; セキュリティチェッカーは、システム内のローカルセキュリティを自動チェックするために設定された、シェルスクリプト集です。定期的にチェックを行なうことができるほか、レポートを root ユーザのほか、管理者側で指定した任意のユーザに送信することができます。</para>
+   <para>お使いのシステム内に <package>seccheck</package> がインストールされていない場合は、 <command>sudo zypper in seccheck</command> コマンドでインストールを行なうことができます。これらのスクリプトは &systemd; タイマーで起動するようになっていて、既定では有効化されていません。そのため、管理者側で意図的に有効化する必要があります。</para>
    
     <sect1 xml:id="sec-seccheck-timers">
-     <title>Seccheck Timers</title>
-   <para>
-        There are four <command>seccheck</command> timers:
-    </para>
+     <title>seccheck タイマー</title>
+   <para><command>seccheck</command> には 4 種類のタイマーが用意されています:</para>
     <itemizedlist>
         <listitem>
-            <para>
-                /usr/lib/systemd/system/seccheck-daily.timer
-            </para>
+            <para>/usr/lib/systemd/system/seccheck-daily.timer</para>
         </listitem>
          <listitem>
-            <para>
-                /usr/lib/systemd/system/seccheck-monthly.timer
-            </para>
+            <para>/usr/lib/systemd/system/seccheck-monthly.timer</para>
         </listitem>
          <listitem>
-            <para>
-                /usr/lib/systemd/system/seccheck-weekly.timer
-            </para>
+            <para>/usr/lib/systemd/system/seccheck-weekly.timer</para>
         </listitem>
          <listitem>
-            <para>
-                /usr/lib/systemd/system/seccheck-autologout.timer
-            </para>
+            <para>/usr/lib/systemd/system/seccheck-autologout.timer</para>
         </listitem>
     </itemizedlist>
-    <para>
-       <literal>seccheck-daily.timer</literal>, 
-       <literal>seccheck-monthly.timer</literal>, and
-       <literal>seccheck-weekly.timer</literal> run multiple checks as 
-       described in <xref linkend="sec-sec-prot-general-seccheck-config"/>.
-       <literal>seccheck-autologout.timer</literal> 
-       logs out inactive users, see 
-       <xref linkend="sec-sec-prot-general-seccheck-autologout"/>.
-   </para>
-   <para> 
-      You can change the recipient of the seccheck mails from root to
-      any user in
-     <filename>/etc/sysconfig/seccheck</filename>. 
-     The following example changes
-     it to an admin user named <literal>firewall</literal>:
-    </para>
+    <para><literal>seccheck-daily.timer</literal> , <literal>seccheck-monthly.timer</literal> , <literal>seccheck-weekly.timer</literal> は、それぞれ <xref linkend="sec-sec-prot-general-seccheck-config"/> で説明している複数のチェックを動作させるものです。残りの <literal>seccheck-autologout.timer</literal> はしばらく何もしていないユーザを自動的にログアウトさせる仕組みで、こちらは <xref linkend="sec-sec-prot-general-seccheck-autologout"/> で説明しています。</para>
+   <para>seccheck が root から送信するメールの宛先については、 <filename>/etc/sysconfig/seccheck</filename> ファイルで設定します。下記の例では、 <literal>firewall</literal> という名前の管理者にメールを送信します:</para>
     <screen>SECCHK_USER="firewall"</screen> 
 </sect1>    
    <sect1 xml:id="sec-sec-prot-general-seccheck-enable">
-       <title>Enabling Seccheck Timers</title>
-   <para>
-       Manage your timers with <command>systemctl</command>, just like any other
-       systemd timer. The following example enables and starts 
-       <literal>seccheck-daily.timer</literal>:
-   </para>
+       <title>seccheck タイマーの有効化</title>
+   <para><command>systemctl</command> でのタイマー制御は、通常の systemd タイマー制御と同じです。下記の例では、 <literal>seccheck-daily.timer</literal> を有効化して開始しています:</para>
    <screen>&prompt.sudo;systemctl enable --now seccheck-daily.timer
    </screen>
-   <para>
-       List all active timers:
-   </para>
+   <para>有効化したタイマーを一覧表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;systemctl list-timers</screen>
-   <para>
-       List all enabled timers, active and inactive:
-   </para>
+   <para>有効化／無効化に関わらず全てのタイマーを一覧表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;systemctl list-timers --all</screen>
    </sect1>
    <sect1 xml:id="sec-sec-prot-general-seccheck-config">
-    <title>Daily, Weekly, and Monthly Checks</title>
-    <para>
-     <command>seccheck</command> performs the following daily checks:
-    </para>
+    <title>日次／週次／月次のチェック</title>
+    <para><command>seccheck</command> では下記のような定期チェックを行ないます:</para>
     <informaltable>
      <tgroup cols="2">
       <colspec colname="c1"/>
@@ -99,193 +56,129 @@
       <tbody>
        <row>
         <entry>
-         <para>
-          <filename>/etc/passwd</filename> check
-         </para>
+         <para><filename>/etc/passwd</filename> のチェック</para>
         </entry>
         <entry>
-         <para>
-          length/number/contents of fields, accounts with same UID accounts
-          with UID/GID of 0 or 1 beside root and bin
-         </para>
+         <para>各項目の長さ／数／内容。 UID と GID のそれぞれ 0 と 1 が root と bin になっているかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <filename>/etc/shadow</filename> check
-         </para>
+         <para><filename>/etc/shadow</filename> のチェック</para>
         </entry>
         <entry>
-         <para>
-          length/number/contents of fields, accounts with no password
-         </para>
+         <para>各項目の長さ／数／内容。パスワードの無いユーザ</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <filename>/etc/group</filename> check
-         </para>
+         <para><filename>/etc/group</filename> のチェック</para>
         </entry>
         <entry>
-         <para>
-          length/number/contents of fields
-         </para>
+         <para>各項目の長さ／数／内容</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          user root checks
-         </para>
+         <para>root ユーザのチェック</para>
         </entry>
         <entry>
-         <para>
-          secure umask and <envar>PATH</envar>
-         </para>
+         <para>umask と <envar>PATH</envar> の値</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <filename>/etc/ftpusers</filename>
-         </para>
+         <para><filename>/etc/ftpusers</filename></para>
         </entry>
         <entry>
-         <para>
-          checks if important system users are put there
-         </para>
+         <para>主なシステムユーザが書かれているかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <filename>/etc/aliases</filename>
-         </para>
+         <para><filename>/etc/aliases</filename></para>
         </entry>
         <entry>
-         <para>
-          checks for mail aliases which execute programs
-         </para>
+         <para>プログラムを実行するメール別名のチェック</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          <filename>.rhosts</filename> check
-         </para>
+         <para><filename>.rhosts</filename> のチェック</para>
         </entry>
         <entry>
-         <para>
-          checks if users' <filename>.rhosts</filename> file contain + signs
-         </para>
+         <para>ユーザの <filename>.rhosts</filename> ファイルに + 記号が書かれているかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          home directory
-         </para>
+         <para>ホームディレクトリ</para>
         </entry>
         <entry>
-         <para>
-          checks if home directories are writable or owned by someone else
-         </para>
+         <para>ホームディレクトリが誰か別のユーザによって書き込み可能であったり、所有されていたりしていないかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          dot-files check
-         </para>
+         <para>ドットファイルのチェック</para>
         </entry>
         <entry>
-         <para>
-          checks many dot-files in the home directories if they are writable
-          or owned by someone else
-         </para>
+         <para>ホームディレクトリ内に存在する多数のドットファイルに対して、誰か別のユーザによって書き込み可能であったり、所有されていたりしていないかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          mailbox check
-         </para>
+         <para>メールボックスのチェック</para>
         </entry>
         <entry>
-         <para>
-          checks if user mailboxes are owned by user and are readable
-         </para>
+         <para>メールボックスがユーザ自身によって所有されていて、読み込み可能かどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          NFS export check
-         </para>
+         <para>NFS エクスポートのチェック</para>
         </entry>
         <entry>
-         <para>
-          exports should not be exported globally
-         </para>
+         <para>エクスポートがグローバルに公開されていないかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          NFS import check
-         </para>
+         <para>NFS インポートのチェック</para>
         </entry>
         <entry>
-         <para>
-          NFS mounts should have the <option>nosuid</option> option set
-         </para>
+         <para>NFS のマウントに <option>nosuid</option> オプションが設定されているかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          promisc check
-         </para>
+         <para>promisc のチェック</para>
         </entry>
         <entry>
-         <para>
-          checks if network cards are in promiscuous mode
-         </para>
+         <para>ネットワークカードにプロミスキャスモードが設定されていないかどうか</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          list modules
-         </para>
+         <para>モジュールの一覧</para>
         </entry>
         <entry>
-         <para>
-          lists loaded modules
-         </para>
+         <para>読み込まれたモジュールの一覧表示</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          list sockets
-         </para>
+         <para>ソケットの一覧</para>
         </entry>
         <entry>
-         <para>
-          lists open ports
-         </para>
+         <para>開いているポートの一覧</para>
         </entry>
        </row>
       </tbody>
      </tgroup>
     </informaltable>
        
-    <para>
-       The following table lists the weekly checks:
-   </para>
+    <para>下記の表には、週次でのチェック項目が書かれています:</para>
    
     <informaltable>
      <tgroup cols="2">
@@ -295,75 +188,50 @@
  
        <row>
         <entry>
-         <para>
-          password check
-         </para>
+         <para>パスワードのチェック</para>
         </entry>
         <entry>
-         <para>
-          runs <command>john</command> to crack the password file, user will
-          receive an e-mail notice to change their password
-         </para>
+         <para>パスワードファイルに対して <command>john</command> プログラムを動作させるチェック (不合格であればパスワードを変更するようユーザに電子メールを送信)</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          RPM md5 check
-         </para>
+         <para>RPM MD5 のチェック</para>
         </entry>
         <entry>
-         <para>
-          checks for changed files via RPM's MD5 checksum feature
-         </para>
+         <para>RPM の MD5 チェック機能を利用したファイルの変更チェック</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          suid/sgid check
-         </para>
+         <para>suid/sgid のチェック</para>
         </entry>
         <entry>
-         <para>
-          lists all suid and sgid files
-         </para>
+         <para>suid/sgid の設定された全ファイルの一覧表示</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          exec group write
-         </para>
+         <para>グループ</para>
         </entry>
         <entry>
-         <para>
-          lists all executables which are group/world-writable
-         </para>
+         <para>グループもしくは全ユーザが書き込み可能な全実行ファイルの一覧表示</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          writable check
-         </para>
+         <para>書き込み可能かどうかのチェック</para>
         </entry>
         <entry>
-         <para>
-          lists all files which are world-writable (including executables)
-         </para>
+         <para>全ユーザが書き込み可能な全ファイルの一覧表示 (実行ファイルを含む)</para>
         </entry>
        </row>
        <row>
         <entry>
-         <para>
-          device check
-         </para>
+         <para>デバイスのチェック</para>
         </entry>
         <entry>
-         <para>
-          lists all devices
-         </para>
+         <para>全てのデバイスの一覧表示</para>
         </entry>
        </row>
       </tbody>
@@ -371,35 +239,16 @@
     </informaltable>
 
     <important>
-     <title>Auditing Passwords with <command>john</command></title>
-     <para>
-      To enable password auditing, it is necessary to first install the
-      package <package>john</package>, the John the Ripper fast password
-      cracker. The package is available on the &osbs; at
-      <link xlink:href="https://build.opensuse.org/package/show/security/john"/>.
-     </para>
+     <title><command>john</command> によるパスワードの監査</title>
+     <para>パスワードの監査を行なうには、まず <package>john</package> (John the Ripper) パッケージをインストールする必要があります。このパッケージは &osbs; 内で公開されていますので、 <link xlink:href="https://build.opensuse.org/package/show/security/john"/> にアクセスしてください。</para>
     </important>
     
-    <para>
-     The monthly check prints a complete report, and the daily and weekly checks 
-     print diffs.
-    </para>
+    <para>月次のチェックでは完全なレポートの出力のほか、日次／週次に作成されたチェック結果の差分も報告します。</para>
    </sect1>
 
    <sect1 xml:id="sec-sec-prot-general-seccheck-autologout">
-    <title>Automatic Logout</title>
-    <para>
-     The <systemitem>seccheck-autologout.timer</systemitem> timer runs every 10 minutes, 
-     checks both remote and local terminal sessions for inactivity, and terminates them if
-     an idle time is exceeded.
-    </para>
-    <para>
-     Configure your desired timeouts in
-     <filename>/etc/security/autologout.conf</filename> file. Parameters
-     include default idle and logout delay times, and the configuration for
-     limiting maximum idle times specific to users, groups, TTY devices and
-     SSH sessions. <filename>/etc/security/autologout.conf</filename> includes 
-     several configuration examples.
-    </para>
+    <title>自動ログアウト</title>
+    <para><systemitem>seccheck-autologout.timer</systemitem> タイマーは 10 分おきに動作するタイマーで、何も操作をしていないローカル／リモートの端末セッションがいれば、一定時間の待機ののちにセッションを自動終了させる処理を行ないます。</para>
+    <para>待機時間は <filename>/etc/security/autologout.conf</filename> ファイルを設定してください。ここでは既定の無操作時間のほか、ログアウト時の遅延時間や特定のユーザ／グループ／TTY デバイス／SSH セッションに対する最大無操作時間の設定を行なうことができます。詳しくは <filename>/etc/security/autologout.conf</filename> ファイル内に書かれている設定例を参照してください。</para>
    </sect1>
 </chapter>
