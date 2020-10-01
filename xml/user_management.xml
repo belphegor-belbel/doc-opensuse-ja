@@ -4,7 +4,7 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="sec-sec-user-management">
- <title>User Management</title>
+ <title>ユーザ管理</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -13,185 +13,91 @@
  </info>
  
   <sect1 xml:id="sec-sec-prot-general-accounts">
-   <title>Various Account Checks</title>
+   <title>様々なアカウントのチェック</title>
 
    <sect2 xml:id="sec-sec-prot-general-accounts-unlocked">
-    <title>Unlocked Accounts</title>
-    <para>
-     It is important that all system and vendor accounts that are not used for
-     logins are locked. To get a list of unlocked accounts on your system, you
-     can check for accounts that do <emphasis>not</emphasis> have an encrypted
-     password string starting with <literal>!</literal> or
-     <literal>*</literal> in the <filename>/etc/shadow</filename> file. If you
-     lock an account using <command>passwd</command> <option>-l</option>, it
-     will put a <literal>!!</literal> in front of the encrypted password,
-     effectively disabling the password. If you lock an account using
-     <command>usermod</command> <option>-L</option>, it will put a
-     <literal>!</literal> in front of the encrypted password. Many system and
-     shared accounts are usually locked by default by having a
-     <literal>*</literal> or <literal>!!</literal> in the password field which
-     renders the encrypted password into an invalid string. Hence, to get a
-     list of all unlocked (encryptable) accounts, run
-     (<command>egrep</command> is used to allow use of regular-expressions):
-    </para>
+    <title>ロック (施錠) されていないアカウント</title>
+    <para>ログインに使用していないシステムアカウントやベンダーのアカウントについては、ロック (施錠) を行なっておくのが重要です。 <filename>/etc/shadow</filename> ファイル内のパスワード欄が <literal>!</literal> や <literal>*</literal> で始まって <emphasis>いない</emphasis> ものが、ロックされていないアカウントになります。また <command>passwd</command> <option>-l</option> コマンドでアカウントをロックすると、同ファイルのパスワード欄の冒頭に <literal>!!</literal> が追加されますので、これによって簡単にロックを行なうことができます。また、 <command>usermod</command> <option>-L</option> でロックを行なった場合は、パスワード欄の冒頭に <literal>!</literal> が追加されます。多くのシステムや共有アカウントの場合、パスワード欄に <literal>*</literal> や <literal>!!</literal> が追加されることで、暗号化されたパスワードとしては使用できない文字列となることから、これによってログインを防止しています。このような事情から、ロックされていないアカウントを一覧表示するには、下記のようなコマンドを入力して実行します (<command>egrep</command> で正規表現を使用しています):</para>
     <screen>&prompt.root;egrep -v ':\*|:\!' /etc/shadow | awk -F: '{print $1}'</screen>
-    <para>
-     Also make sure all accounts have a <literal>x</literal> in the password
-     field in <filename>/etc/passwd</filename>. The following command lists
-     all accounts that do not have a <literal>x</literal> in the password
-     field:
-    </para>
+    <para>また、 <filename>/etc/passwd</filename> ファイルのパスワード欄に <literal>x</literal> が設定されていることも確認しておいてください。下記のコマンドは、パスワード欄に <literal>x</literal> が書かれていないアカウントの一覧を表示します:</para>
     <screen>&prompt.root;grep -v ':x:' /etc/passwd</screen>
-    <para>
-     An <literal>x</literal> in the password fields means that the password
-     has been shadowed, for example the encrypted password needs to be looked
-     up in the <filename>/etc/shadow</filename> file. If the password field in
-     <filename>/etc/passwd</filename> is empty, then the system will not look
-     up the shadow file and it will not prompt the user for a password at the
-     login prompt.
-    </para>
+    <para>パスワード欄に <literal>x</literal> が書かれているアカウントは、そのパスワードが shadow で暗号化されていることを表わします。この場合、実際のパスワードは <filename>/etc/shadow</filename> 内に暗号化されて記録されます。また、 <filename>/etc/passwd</filename> ファイルのパスワード欄が空である場合は、 shadow ファイルの参照は行なわれず、ログイン時のパスワード入力も行なわれない意味になります。</para>
    </sect2>
 
    <sect2 xml:id="sec-sec-prot-general-accounts-unused">
-    <title>Unused Accounts</title>
-    <para>
-     All system or vendor accounts that are not being used by users,
-     applications, by the system or by daemons should be removed from the
-     system. You can use the following command to find out if there are any
-     files owned by a specific account:
-    </para>
-    <screen>&prompt.root;find / -path /proc -prune -o -user <replaceable>ACCOUNT</replaceable> -ls</screen>
-    <para>
-     The <option>-prune</option> option in this example is used to skip the
-     /proc file system. If you are sure that an account can be deleted, you
-     can remove the account using the following command:
-    </para>
-    <screen>&prompt.root;userdel -r <replaceable>ACCOUNT</replaceable></screen>
-    <para>
-     Without the <option>-r</option> option <command>userdel</command> will
-     not delete the user's home directory and mail spool
-     (<filename>/var/spool/mail/<replaceable>USER</replaceable></filename>).
-     Note that many system accounts have no home directory.
-    </para>
+    <title>使用されていないアカウント</title>
+    <para>ユーザやアプリケーション、システムやデーモンが使用していないシステムアカウントやベンダーアカウントについては、システムから削除しておくべきです。下記のコマンドを使用することで、それぞれのアカウントがどのファイルを所有しているのかを調べることができます:</para>
+    <screen>&prompt.root;find / -path /proc -prune -o -user <replaceable>アカウント</replaceable> -ls</screen>
+    <para>上記では <option>-prune</option> オプションを設定していますが、これは /proc ファイルシステム以下を読み飛ばす設定です。上記を実行した結果、アカウントを削除しても問題がないと判断できれば、下記のコマンドを実行してアカウントを削除してかまいません:</para>
+    <screen>&prompt.root;userdel -r <replaceable>アカウント</replaceable></screen>
+    <para><command>userdel</command> コマンドに <option>-r</option> オプションを指定しないと、ユーザのホームディレクトリやメールスプールファイル ( <filename>/var/spool/mail/<replaceable>アカウント</replaceable></filename> ) が削除されなくなります。なお、多くのシステムアカウントに対しては、ホームディレクトリの設定はありません。</para>
    </sect2>
   </sect1>
   <sect1 xml:id="sec-sec-prot-general-pw-aging">
-   <title>Enabling Password Aging</title>
+   <title>パスワードの有効期限の設定</title>
 
-   <para>
-    Password expiration is a general best practice&mdash;but might need to
-    be excluded for some system and shared accounts (for example Oracle,
-    etc.). Expiring password on those accounts could lead to system outages if
-    the application account expires.
-   </para>
+   <para>パスワードに対して有効期限を設定することは、一般に推奨されるセキュリティ設定です。ただし、システムアカウントや共有アカウント (例: Oracle など) については、このルールから除外しておかないと、パスワードの起源が切れたタイミングで、そのアカウントを使用するアプリケーションが動作しなくなってしまうからです。</para>
 
-   <para>
-    Typically a corporate policy should be developed that dictates
-    rules/procedures regarding password changes for system and shared
-    accounts. However, normal user account passwords should expire
-    automatically. The following example shows how password expiration can be
-    set up for individual user accounts.
-   </para>
+   <para>一般に企業内のポリシーでは、システムアカウントや共有アカウントのパスワード変更に関する条項を作成しておくべきです。それ以外の一般ユーザのアカウントについては、自動的に期限が切れるように設定しておくとよいでしょう。下記の例では、ユーザアカウントごとにパスワードの有効期限を設定するための方法を示しています。</para>
 
-   <para>
-    The following files and parameters in the table can be used when a new
-    account is created with the <command>useradd</command> command. Settings
-    such as these are stored for each user account in the
-    <filename>/etc/shadow</filename> file. If using the &yast; tool
-    (<guimenu>User and Group Management</guimenu>) to add users, the settings
-    are available on a per-user basis. Here are the various
-    settings&mdash;some of which can also be system-wide (for example
-    modification of <filename>/etc/login.defs</filename> and
-    <filename>/etc/default/useradd</filename>):
-   </para>
+   <para>下記の表には、 <command>useradd</command> コマンドで新しいアカウントを作成する際に使用できる、各種のファイルとパラメータが示されています。これらの設定は、アカウントの作成時に <filename>/etc/shadow</filename> ファイル内に書き込みが行なわれます。新しいユーザを作成する際に &yast; のツール ( <guimenu>ユーザとグループの管理</guimenu> ) を使用すると、ユーザごとに設定を行なうことができます。また、設定内容によってはシステム全体に適用されるものもあります (たとえば <filename>/etc/login.defs</filename> ファイルや <filename>/etc/default/useradd</filename> ファイルの変更がそれにあたります):</para>
 
    <informaltable>
     <tgroup cols="3">
      <tbody>
       <row>
        <entry>
-        <para>
-         <filename>/etc/login.defs</filename>
-        </para>
+        <para><filename>/etc/login.defs</filename></para>
        </entry>
        <entry>
-        <para>
-         <literal>PASS_MAX_DAYS</literal>
-        </para>
+        <para><literal>PASS_MAX_DAYS</literal></para>
        </entry>
        <entry>
-        <para>
-         Maximum number of days a password is valid.
-        </para>
+        <para>パスワードの最長有効期間 (日) を指定します。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <filename>/etc/login.defs</filename>
-        </para>
+        <para><filename>/etc/login.defs</filename></para>
        </entry>
        <entry>
-        <para>
-         <literal>PASS_MIN_DAYS</literal>
-        </para>
+        <para><literal>PASS_MIN_DAYS</literal></para>
        </entry>
        <entry>
-        <para>
-         Minimum number of days before a user can change the password since
-         the last change.
-        </para>
+        <para>パスワードの最短有効期間 (日) を指定します。これより短い間隔では、パスワードの変更ができなくなります。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <filename>/etc/login.defs</filename>
-        </para>
+        <para><filename>/etc/login.defs</filename></para>
        </entry>
        <entry>
-        <para>
-         <literal>PASS_WARN_AGE</literal>
-        </para>
+        <para><literal>PASS_WARN_AGE</literal></para>
        </entry>
        <entry>
-        <para>
-         Number of days when the password change reminder starts.
-        </para>
+        <para>パスワードの変更通知を行なう日数を指定します。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <filename>/etc/default/useradd</filename>
-        </para>
+        <para><filename>/etc/default/useradd</filename></para>
        </entry>
        <entry>
-        <para>
-         <literal>INACTIVE</literal>
-        </para>
+        <para><literal>INACTIVE</literal></para>
        </entry>
        <entry>
-        <para>
-         Number of days after password expiration that account is disabled.
-        </para>
+        <para>パスワードの有効期限が切れてから、アカウントが無効化されるまでの日数を指定します。</para>
        </entry>
       </row>
       <row>
        <entry>
-        <para>
-         <filename>/etc/default/useradd</filename>
-        </para>
+        <para><filename>/etc/default/useradd</filename></para>
        </entry>
        <entry>
-        <para>
-         <literal>EXPIRE</literal>
-        </para>
+        <para><literal>EXPIRE</literal></para>
        </entry>
        <entry>
-        <para>
-         Account expiration date in the format YYYY-MM-DD.
-        </para>
+        <para>アカウントそのものの有効期限を YYYY-MM-DD の形式で指定します。</para>
        </entry>
       </row>
      </tbody>
@@ -199,60 +105,34 @@
    </informaltable>
 
    <note>
-    <para>
-     Users created prior to these modifications will not be affected.
-    </para>
+    <para>上記のファイルは、いずれもアカウントの作成時に適用されるもので、ファイルの変更前に作成されたアカウントについては効果がありません。</para>
    </note>
 
-   <para>
-    Ensure that the above parameters are changed in the
-    <filename>/etc/login.defs</filename> and
-    <filename>/etc/default/useradd</filename> files. Review of the
-    <filename>/etc/shadow</filename> file will show how these settings get
-    stored after adding a user.
-   </para>
+   <para>上記の <filename>/etc/login.defs</filename> ファイルや <filename>/etc/default/useradd</filename> ファイルを変更したことを確認したら、あとは実際にユーザを作成して、 <filename>/etc/shadow</filename> ファイルにどのような設定が行なわれるのかを確認します。</para>
 
-   <para>
-    To create a new user account, execute the following command:
-   </para>
+   <para>新しいユーザを作成するには、下記のようなコマンドを入力して実行します:</para>
 
-   <screen>&prompt.root;useradd -c "<replaceable>TEST_USER</replaceable>" -g <replaceable>USERS</replaceable> <replaceable>TEST</replaceable></screen>
+   <screen>&prompt.root;useradd -c "<replaceable>テストユーザ</replaceable>" -g <replaceable>グループ</replaceable> <replaceable>ユーザ名</replaceable></screen>
 
-   <para>
-    The <option>-g</option> option specifies the primary group for this
-    account:
-   </para>
+   <para><option>-g</option> オプションは、追加するアカウントのプライマリグループを指定するためのオプションです:</para>
 
-<screen>&prompt.root;id <replaceable>TEST</replaceable>
+<screen>&prompt.root;id <replaceable>ユーザ名</replaceable>
 uid=509(test) gid=100(users) groups=100(users)</screen>
 
-   <para>
-    The settings in <filename>/etc/login.defs</filename> and
-    <filename>/etc/default/useradd</filename> are recorded for the test user
-    in the <filename>/etc/shadow</filename> file as follows:
-   </para>
+   <para><filename>/etc/login.defs</filename> と <filename>/etc/default/useradd</filename> に設定した内容が、新しく作成した test ユーザに対してどのように反映されたのかを確認します。 <filename>/etc/shadow</filename> ファイル内を下記のようにして表示します:</para>
 
-<screen>&prompt.root;grep <replaceable>TEST</replaceable> /etc/shadow
+<screen>&prompt.root;grep <replaceable>ユーザ名</replaceable> /etc/shadow
 test:!!:12742:7:60:7:14::</screen>
 
-   <para>
-    Password aging can be modified at any time by use of the
-    <command>chage</command> command. To disable password aging for system and
-    shared accounts, you can run the following <command>chage</command>
-    command:
-   </para>
+   <para>パスワードの有効期限については、 <command>chage</command> コマンドを使用することでいつでも変更できます。システムアカウントや共有アカウントに対してパスワードの有効期限を無効化したい場合は、 <command>chage</command> コマンドで下記のように入力して実行します:</para>
 
-   <screen>&prompt.root;chage -M -1 <replaceable>SYSTEM_ACCOUNT_NAME</replaceable></screen>
+   <screen>&prompt.root;chage -M -1 <replaceable>システムアカウント名</replaceable></screen>
 
-   <para>
-    To get password expiration information:
-   </para>
+   <para>パスワードの有効期限に関する情報を表示するには、下記のように入力して実行します:</para>
 
-   <screen>&prompt.root;chage -l <replaceable>SYSTEM_ACCOUNT_NAME</replaceable></screen>
+   <screen>&prompt.root;chage -l <replaceable>システムアカウント名</replaceable></screen>
 
-   <para>
-    For example:
-   </para>
+   <para>たとえば下記のようになります:</para>
 
 <screen>&prompt.root;chage -l <replaceable>TEST</replaceable>
 Minimum: 7
@@ -265,107 +145,39 @@ Password Inactive: Mar 26, 2015
 Account Expires: Never</screen>
   </sect1>
   <sect1 xml:id="sec-sec-prot-general-pw-strength">
-   <title>Stronger Password Enforcement</title>
+   <title>複雑なパスワードの強制</title>
 
-   <para>
-    On an audited system it is important to restrict people from using simple
-    passwords that can be cracked too easily. Writing down complex passwords
-    is all right as long as they are stored securely. Some will argue that
-    strong passwords protect you against dictionary attacks and those type of
-    attacks can be defeated by locking accounts after a few failed attempts.
-    However, this is not always an option. If set up like this, locking system
-    accounts could bring down your applications and systems which would be
-    nothing short of a denial of service attack – another issue.
-   </para>
+   <para>セキュリティの実践の一環として、ユーザに対し単純なパスワードを禁止するような措置を取っておくことが重要です。パスワードが安全に保管されている限り、複雑なパスワードを設定すれば、容易には侵入できなくなるからです。また、複雑なパスワードを設定しておくことで辞書攻撃からアカウントを保護することができますし、ロックアウト (施錠) と併用すれば、さらに侵入を困難にすることができます。しかしながら、必ずしもこの方式が適切とは限りません。ロックアウトを併用すれば誰もアプリケーションやシステムに入れなくなってしまうことになりますので、サービス拒否攻撃 (DoS) としてもう 1 つの問題を引き起こしてしまいます。</para>
 
-   <para>
-    At any rate, it is important to practice effective password management
-    safety. Most companies require that passwords have at the very least a
-    number, one lowercase letter, and one uppercase letter. Policies vary, but
-    maintaining a balance between password strength/complexity and management
-    is sometimes difficult.
-   </para>
+   <para>このような事情から、まずはパスワードの管理をより現実的かつ効率的に行なうことが重要です。多くの企業ではパスワードに対して、 1 文字以上の数字と小文字、大文字を必要とするようにしています。ポリシーは企業によって異なりますが、パスワードの複雑さの強制と効率性の両立は、いくぶん難しいものになります。</para>
   </sect1>
   <xi:include href="hardening_pam_stack.xml"/>
   <sect1 xml:id="sec-sec-prot-restrict-root">
-   <title>Restricting &rootuser; Logins</title>
+   <title>&rootuser; ログインの制限</title>
 
-   <para>
-    By default, the &rootuser; user is assigned a password
-    and can log in using various methods&mdash;for example, on a local
-    terminal, in a graphical session, or remotely via SSH. These methods
-    should be restricted as far as possible. Shared usage of the root account
-    should be avoided. Instead, individual administrators should use tools such as
-    <literal>su</literal> or <literal>sudo</literal> (for more information,
-    type <command>man 1 su</command> or <command>man 8 sudo</command>) to obtain elevated
-    privileges. This allows associating &rootuser; logins with particular
-    users. This also adds another layer of security; not only the &rootuser;
-    password, but both the &rootuser; <emphasis>and</emphasis> the password of
-    an an administrator's regular account would need to be compromised to gain full root
-    access. This section explains how to limit direct root logins on the different
-    levels of the system.
-   </para>
+   <para>既定では &rootuser; にはパスワードを設定するため、さまざまな方法でログインができることになります。たとえばローカルの端末やグラフィカルなセッション、 SSH 経由でのログインなどがあります。これらはセキュリティ上の理由から、できる限り制限しておくことが望ましいものです。もちろん root アカウントを共有して使用するようなことも避けるべきです。このようなことから管理者は、 <literal>su</literal> や <literal>sudo</literal> (詳しくは <command>man 1 su</command> コマンドもしくは <command>man 8 sudo</command> コマンドで表示されるマニュアルページをお読みください) などのツールを使用して特権を得るべきです。これにより、管理者でのログインを特定のユーザに結びつけることができるようになります。この方式では &rootuser; のパスワードに加え、もう 1 つの安全性も提供します。それは root の特権を得るには &rootuser; のパスワード <emphasis>だけでなく</emphasis> 、管理者 (一般ユーザ) のパスワード認証も突破しなければならないようにできる、という点です。本章では、システムのさまざまなレベルにおいて、直接的な root ログインを制限するための方法を説明しています。</para>
    <sect2 xml:id="sec-sec-prot-restrict-root-tty">
-    <title>Restricting Local Text Console Logins</title>
+    <title>ローカルのテキストコンソールへのログイン制限</title>
 
-    <para>
-     TTY devices provide text-mode system access via the console. For desktop
-     systems these are accessed via the local keyboard or&mdash;in case of server
-     systems&mdash;via input devices connected to a KVM switch or a remote
-     management card (ILO, DRAC, etc).
-     By default, Linux offers 6 different consoles, that can be switched to
-     via the key combinations
-     <keycombo><keycap function="alt"/><keycap>F1</keycap></keycombo> to
-     <keycombo><keycap function="alt"/><keycap>F6</keycap></keycombo>, when
-     running in text mode, or
-     <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> to
-     <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F6</keycap></keycombo>
-      when running in a graphical session. The
-      associated terminal devices are named <literal>tty1</literal> .. <literal>tty6</literal> accordingly.
-    </para>
+    <para>TTY デバイスはコンソール経由でのテキストモードアクセスを提供するデバイスです。デスクトップシステムの場合は直接接続されたキーボード経由で、サーバシステムの場合は KVM スイッチやリモートマネージメントカード (ILO, DRAC など) 経由でも使用することができます。既定では、 Linux は 6 つの異なるコンソールを提供します。これらは <keycombo><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押すことで切り替えることができます。グラフィカル環境が動作している場合は、それぞれ <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押してください。それぞれの端末は <literal>tty1</literal> から <literal>tty6</literal> に対応します。</para>
 
-    <para>
-     The following steps restrict root access to the first TTY. Even this
-     access method is only meant for emergency access to the system and should
-     never be used for everyday system administration tasks.
-    </para>
+    <para>下記の手順では、最初の TTY のみを使用できるよう root アクセスを制限しています。この方式は緊急時の管理者アクセスを残しておくためのもので、通常は TTY を使用すべきではありません。</para>
 
     <note>
-     <para>
-      The steps shown here are tailored towards PC architectures (&x86; and
-      &x86-64;). On architectures such as &power;, different terminal
-      device names than <literal>tty1</literal> may be used. Be careful not to
-      lock yourself out completely by specifying wrong terminal device names.
-      You can determine the device name of the terminal you are currently
-      logged into by running the <literal>tty</literal> command. Be careful
-      not to do this in a virtual terminal, such as via SSH or in a graphical
-      session (device names <filename>/dev/pts/<replaceable>N</replaceable></filename>),
-      but only from an actual login terminal reachable via
-      <keycombo><keycap function="alt"/><keycap>F<replaceable>N</replaceable></keycap></keycombo>.
-     </para>
+     <para>また、ここで示している手順は一般的な PC アーキテクチャ (&x86; および &x86-64;) 向けの設定手順となります。 &power; 等のアーキテクチャの場合は、 <literal>tty1</literal> ではないデバイス名になります。また、端末デバイス名は誤って指定することのないように注意してください。現在使用している端末デバイス名を知りたい場合は、 <literal>tty</literal> コマンドをお使いください。また、 SSH 経由でのログインやグラフィカルなセッションを使用している場合 (表示されるデバイス名が <filename>/dev/pts/<replaceable>N</replaceable></filename> のようになります) は設定しないでください。実際のログイン端末 (<keycombo><keycap function="alt"/><keycap>F<replaceable>N</replaceable></keycap></keycombo> でアクセスできるもの) にのみ設定してください。</para>
     </note>
 
     <procedure>
-     <title>Restricting root logins on local TTYs</title>
+     <title>ローカル TTY への root ログインの制限</title>
      <step>
-      <para>
-       Ensure that the PAM stack configuration file <filename>/etc/pam.d/login</filename>
-       contains the <literal>pam_securetty</literal> module in the <literal>auth</literal> block:
-      </para>
+      <para>まずは PAM スタックの設定ファイル <filename>/etc/pam.d/login</filename> 内の <literal>auth</literal> ブロックに、 <literal>pam_securetty</literal> モジュールを設定します:</para>
       <screen>auth     requisite      pam_nologin.so
  auth     [user_unknown=ignore success=ok ignore=ignore auth_err=die default=bad] pam_securetty.so noconsole
  auth     include        common-auth</screen>
-      <para>
-        This will include the <literal>pam_securetty</literal> module during the
-        authentication process on local consoles, which restricts &rootuser; to logging-in
-        only on TTY devices that are listed in the file <filename>/etc/securetty</filename>.
-      </para>
+      <para>これにより、ローカルコンソールでの認証時に、 <literal>pam_securetty</literal> モジュールが使用されるようになります。このモジュールは &rootuser; に対し、ログイン可能な TTY デバイスを制限する機能を提供します。ログイン可能な TTY デバイスの一覧は、 <filename>/etc/securetty</filename> ファイルで設定します。</para>
      </step>
      <step>
-      <para>
-       Remove all entries from <filename>/etc/securetty</filename> except one.
-       This limits the access to TTY devices for root.
-      </para>
+      <para><filename>/etc/securetty</filename> ファイルの内容を編集して、 1 つだけ残すようにします。これにより、 root ユーザが使用できる TTY デバイスを制限できることになります。</para>
      <screen>#
 # This file contains the device names of tty lines (one per line,
 # without leading /dev/) on which root is allowed to login.
@@ -373,118 +185,52 @@ Account Expires: Never</screen>
 tty1</screen>
      </step>
      <step>
-      <para>
-       Check whether logins to other terminals will be rejected for
-       &rootuser;. A login on <literal>tty2</literal>, for example, should be
-       rejected immediately, without even querying the account password.
-       Also make sure that you can still successfully login to
-       <literal>tty1</literal> and thus that &rootuser; is not locked out of
-       the system completely.
-      </para>
+      <para>設定を行なったら、実際に &rootuser; でログインを試してみて、指定した TTY 以外からログインできなくなっていることを確認します。上記の例ではたとえば <literal>tty2</literal> などがそれにあたります。この場合、パスワードを尋ねられることなく即時に拒否されるはずですので、こちらもご確認ください。また、指定した TTY  (<literal>tty1</literal>) からログインできることも確認しておいてください。これにより、ロックアウトされているのではなく、端末の制限でログインできなくなっていることが確定できるためです。</para>
      </step>
     </procedure>
 
     <important>
-     <para>
-      Do not add the <literal>pam_securetty</literal> module to the
-      <filename>/etc/pam.d/common-auth</filename> file. This would
-      break the <command>su</command> and <command>sudo</command> commands,
-      because these tools would then also reject &rootuser; authentications.
-     </para>
+     <para><filename>/etc/pam.d/common-auth</filename> に対しては <literal>pam_securetty</literal> を設定してはなりません。設定してしまうと <command>su</command> や <command>sudo</command> のコマンドにも影響が及ぶことになり、これらのコマンドでも TTY が制限されることになるためです。</para>
     </important>
 
     <important>
-     <para>
-      These configuration changes will also cause root logins on serial
-      consoles such as <filename>/dev/ttyS0</filename> to be denied. In case you
-      require such use cases you need to list the respective tty devices
-      additionally in the <filename>/etc/securetty</filename> file.
-     </para>
+     <para>上記のように設定変更を行なうと、シリアルコンソール (例: <filename>/dev/ttyS0</filename>) からのログインも制限対象となり、ログインができなくなります。シリアルコンソールからのログインを許可したい場合は、 <filename>/etc/securetty</filename> ファイル内にシリアルのデバイス名を追加してください。</para>
     </important>
    </sect2>
 
    <sect2 xml:id="sec-sec-prot-retrict-root-graphical">
-    <title>Restricting Graphical Session Logins</title>
+    <title>グラフィカルセッションへのログインの制限</title>
 
-    <para>
-     To improve security on your server, avoid using graphical
-     environments at all. Graphical programs are often
-     not designed to be run as &rootuser; and are more likely to
-     contain security issues than console programs. If you require a graphical
-     login, use a non-&rootuser; login. Configure your system to disallow
-     &rootuser; from logging in to graphical sessions.
-    </para>
+    <para>サーバのセキュリティをより高めたい場合は、グラフィカル環境そのものの使用を避けることをお勧めします。グラフィカル環境のプログラムはいずれも &rootuser; での使用を想定しておらず、コンソールプログラムよりもセキュリティ上の問題となりうる可能性があるためです。どうしてもグラフィカルログインが必要な場合は &rootuser; 以外でログインするものとし、 &rootuser; ではグラフィカルログインができないように設定してください。</para>
 
-    <para>
-     To prevent &rootuser; from logging in to graphical sessions, you
-     can apply the same basic steps as outlined in
-     <xref linkend="sec-sec-prot-restrict-root-tty"/>.
-     Just add the <literal>pam_securetty</literal> module to the PAM
-     stack file belonging to the display manager&mdash;for example,
-     <filename>/etc/pam.d/gdm</filename> for GDM. The graphical
-     session also runs on a TTY device: by default, <literal>tty7</literal>.
-     Therefore, if you restrict &rootuser; logins to <literal>tty1</literal>,
-     then &rootuser; will be denied login in the graphical session.
-    </para>
+    <para>&rootuser; に対してグラフィカル環境へのログインを禁止したい場合も、 <xref linkend="sec-sec-prot-restrict-root-tty"/> と同じ手順を使用することができます。ディスプレイマネージャに属する PAM スタックの設定ファイル (たとえば GDM であれば <filename>/etc/pam.d/gdm</filename>) に、 <literal>pam_securetty</literal> モジュールを追加してください。また、グラフィカルなセッションは TTY デバイス (既定では <literal>tty7</literal>) で動作していますので、 &rootuser; のログインを <literal>tty1</literal> だけに制限すれば、 &rootuser; はグラフィカル環境も使用できないようになります。</para>
    </sect2>
 
    <sect2 xml:id="sec-sec-prot-restrict-root-ssh">
-    <title>Restricting SSH Logins</title>
-    <para>
-     By default, the &rootuser; user is also allowed to log
-     into a machine remotely via the SSH network protocol (if the SSH port is
-     not blocked by the firewall). To restrict this, make the following
-     change to the OpenSSH configuration:
-    </para>
+    <title>SSH ログインの制限</title>
+    <para>既定では、 &rootuser; ユーザは SSH ネットワークプロトコル経由でログインできるようになっています (SSH ポートがファイアウオールでブロックされていない限り) 。 &rootuser; でのログインを禁止したい場合は、 OpenSSH の設定を変更することで実現することができます:</para>
     <procedure>
      <step>
-      <para>Edit <filename>/etc/ssh/sshd_config</filename> and adjust the following parameter:</para>
+      <para><filename>/etc/ssh/sshd_config</filename> ファイルを編集して、下記のようなパラメータを設定します:</para>
       <screen>PermitRootLogin no</screen>
      </step>
      <step>
-      <para>Restart the <systemitem class="service">sshd</systemitem> service to make the changes effective:</para>
+      <para>あとは <systemitem class="service">sshd</systemitem> サービスを再起動して、設定を適用します:</para>
       <screen>systemctl restart sshd.service</screen>
      </step>
     </procedure>
     <note>
-     <para>
-      Using the PAM <literal>pam_securetty</literal> module is not suitable in
-      case of OpenSSH, because not all SSH logins go through the PAM
-      stack during authorization (for example, when using SSH public-key authentication).
-      In addition, an attacker could differentiate between a wrong password
-      and a successful login that was only rejected later on by policy.
-     </para>
+     <para>OpenSSH の場合、 <literal>pam_securetty</literal> モジュールでの設定は不適切です。これは SSH の仕様上の理由で、 PAM スタック経由でログインするとは限らない (たとえば SSH は公開鍵認証にも対応しており、この場合は PAM を経由しない) ためです。これに加えて SSH では、パスワードの入力が誤っている場合と、ポリシーによって制限されている場合とで応答が異なるため、悪意のある攻撃者であれば容易に識別されてしまう問題もあります。</para>
     </note>
    </sect2>
 
   </sect1>
   <sect1 xml:id="sec-sec-prot-inactivity-logout">
-   <title>Setting an Inactivity Timeout for Interactive Shell Sessions</title>
-   <para>
-    It can be a good idea to terminate an interactive shell session after a
-    certain period of inactivity. For example, to revent open, unguarded sessions
-    or to avoid waste of system resources.
-   </para>
-   <para>
-    By default, there is no inactivity timeout for shells. Nothing will
-    happen if a shell stays open and unused for days or even years. It is possible
-    to configure most shells in a way that idle sessions terminate
-    automatically after a certain amount of time. The following example
-    shows how to set an inactivity timeout for a number of
-    common types of shells.
-   </para>
-   <para>
-    The inactivity timeout can be configured for login shells only or for all
-    interactive shells. In the latter case the inactivity timeout is running
-    individually for each shell instance. This means that timeouts will
-    accumulate. When a sub- or child-shell is started, then a new timeout begins for
-    the sub- or child-shell, and only afterwards will the
-    timeout of the parent continue running.
-   </para>
-   <para>
-    The following table contains configuration details for a selection of
-    common shells shipped with &productname;:
-   </para>
+   <title>対話型シェルセッションに対する無操作タイムアウトの設定</title>
+   <para>対話型のシェルに対しては、何も操作していない場合のタイムアウト時間を設定して、一定の時間が経過すると自動的に切断するように設定するとよいでしょう。この設定を行なうことでセッションの盗用を未然に防ぐことができるほか、システムリソースの浪費を防ぐことにも繋がります。</para>
+   <para>既定ではシェルに対する無操作タイムアウトは設定されていません。シェルを開いて何も操作を行なわなくても、何日も何年も開いたままになります。ほとんどのシェルには無操作タイムアウトの設定が存在し、一定時間の経過後自動的にセッションを終了させることができます。下記では、一般的に使用されるシェルを対象に、無操作タイムアウトの設定を示しています。</para>
+   <para>無操作タイムアウトはログインシェルにのみ適用するか、全ての対話型シェルに適用するかを選択することができます。全ての対話型シェルに設定した場合、タイムアウトはそれぞれのシェルで別々に動作し、タイムアウト値は累積して処理されます。言い換えると、サブシェルや子シェルを起動した場合、そのシェルに対しては新しいタイムアウト値が設定されるため、サブシェルもしくは子シェルが時間切れになっても親のシェルはそのタイミングでは終了せず、動作し続けることになります。</para>
+   <para>下記の表には、 &productname; に同梱されている各種のシェルと、設定方法に関する一覧が記述されています:</para>
    <informaltable frame="all" rowsep="1" colsep="1">
     <tgroup cols="7">
      <colspec colname="col_1" colwidth="14.2857*"/>
@@ -496,13 +242,13 @@ tty1</screen>
      <colspec colname="col_7" colwidth="14.2858*"/>
      <thead>
       <row>
-       <entry>package</entry>
-       <entry>shell personalities</entry>
-       <entry align="center">shell variable</entry>
-       <entry align="center">time unit</entry>
-       <entry>readonly setting</entry>
-       <entry align="center">config path (only login shell)</entry>
-       <entry align="center">config path (all shells)</entry>
+       <entry>パッケージ</entry>
+       <entry>使用できるシェル</entry>
+       <entry align="center">シェル変数</entry>
+       <entry align="center">時間単位</entry>
+       <entry>読み込み専用にするための設定方法</entry>
+       <entry align="center">設定パス (ログインシェルの場合)</entry>
+       <entry align="center">設定パス (全てのシェルの場合)</entry>
       </row>
      </thead>
      <tbody>
@@ -510,25 +256,25 @@ tty1</screen>
        <entry><para><literal>bash</literal></para></entry>
        <entry><para><literal>bash, sh</literal></para></entry>
        <entry align="center"><para><literal>TMOUT</literal></para></entry>
-       <entry align="center"><para>seconds</para></entry>
+       <entry align="center"><para>秒</para></entry>
        <entry><para><literal>readonly TMOUT=</literal></para></entry>
-       <entry><para><filename>/etc/profile.local</filename>, <filename>/etc/profile.d/</filename></para></entry>
+       <entry><para><filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename></para></entry>
        <entry><para><filename>/etc/bash.bashrc</filename></para></entry>
       </row>
       <row>
        <entry><para><literal>mksh</literal></para></entry>
        <entry><para><literal>ksh, lksh, mksh, pdksh</literal></para></entry>
        <entry align="center"><para><literal>TMOUT</literal></para></entry>
-       <entry align="center"><para>seconds</para></entry>
+       <entry align="center"><para>秒</para></entry>
        <entry><para><literal>readonly TMOUT=</literal></para></entry>
-       <entry><para><filename>/etc/profile.local</filename>, <filename>/etc/profile.d/</filename></para></entry>
+       <entry><para><filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename></para></entry>
        <entry><para><filename>/etc/ksh.kshrc.local</filename></para></entry>
       </row>
       <row>
        <entry><para><literal>tcsh</literal></para></entry>
        <entry><para><literal>csh, tcsh</literal></para></entry>
        <entry align="center"><para><literal>autologout</literal></para></entry>
-       <entry align="center"><para>minutes</para></entry>
+       <entry align="center"><para>分</para></entry>
        <entry><para><literal>set -r autologout=</literal></para></entry>
        <entry><para><filename>/etc/csh.login.local</filename></para></entry>
        <entry><para><filename>/etc/csh.cshrc.local</filename></para></entry>
@@ -537,41 +283,21 @@ tty1</screen>
        <entry><para><literal>zsh</literal></para></entry>
        <entry><para><literal>zsh</literal></para></entry>
        <entry align="center"><para><literal>TMOUT</literal></para></entry>
-       <entry align="center"><para>seconds</para></entry>
+       <entry align="center"><para>秒</para></entry>
        <entry><para><literal>readonly TMOUT=</literal></para></entry>
-       <entry><para><filename>/etc/profile.local</filename>, <filename>/etc/profile.d/</filename></para></entry>
+       <entry><para><filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename></para></entry>
        <entry><para><filename>/etc/zsh.zshrc.local</filename></para></entry>
       </row>
      </tbody>
     </tgroup>
    </informaltable>
-   <para>
-    Every listed shell supports an internal timeout shell variable that can be
-    set to a specific time value to cause the inactivity timeout. If you want
-    to prevent users from overriding the timeout setting, you can mark the
-    corresponding shell timeout variable as readonly. The corresponding variable
-    declaration syntax is also found in the table above.
-   </para>
+   <para>上記のシェルはいずれも内部タイムアウト値の設定が存在し、これに値を設定することで無操作タイムアウトを実現しています。ユーザ側でタイムアウト設定を上書きさせたくない場合は、シェル変数を読み込み専用にしてください。具体的な設定方法も上記で示しています。</para>
 
    <note>
-    <para>
-     This feature is only helpful for avoiding risks if a user is forgetful or follows
-     unsafe practices. It does not protect against hostile users. The timeout
-     only applies to interactive wait states of a shell. A malicious user can always
-     find ways to circumvent the timeout and keep their session open regardless.
-    </para>
+    <para>この機能は、ユーザがセッションの存在を忘れてしまいがちな状況や、セキュリティに配慮していない使い方に対する対策として設定できる項目であり、悪意に対する対策にはならないことに注意してください。また、このタイムアウト値はシェルの待機状態に対してのみ働くもので、悪意を持ってすれば容易にタイムアウトを無効化できてしまいます。</para>
    </note>
 
-   <para>
-    To configure the inactivity timeout, you need to add the matching timeout
-    variable declaration to each shell's startup script. Use either the path for
-    login shells only, or the one for all shells, as listed in the table. The
-    following example uses paths and settings that are suitable for
-    <command>bash</command> and <command>ksh</command>
-    to setup a read-only login shell timeout that cannot be overridden by users.
-    Create the file <filename>/etc/profile.d/timeout.sh</filename> with the
-    following content:
-   </para>
+   <para>無操作タイムアウトを設定するには、それぞれのシェルの設定ファイルに対して変数を設定します。ログインシェルのみに設定する場合と、全てのシェルに対して設定する場合とでファイルが異なることにも注意してください。下記の例は <command>bash</command> と <command>ksh</command> に対して働く設定で、ユーザ側からはタイムアウト値を書き換えることができないよう、読み込み専用の設定を行なっています。下記の内容は <filename>/etc/profile.d/timeout.sh</filename> ファイルを作成して記述してください:</para>
    <screen># /etc/profile.d/timeout.sh for SUSE Linux
 #
 # Timeout in seconds until the bash/ksh session is terminated
@@ -580,165 +306,63 @@ tty1</screen>
 readonly TMOUT=86400</screen>
 
    <tip>
-    <para>
-     We recommend using the <command>screen</command> tool in order to
-     detach sessions before logging out. <command>screen</command> sessions
-     are not terminated and can be re-attached whenever required. An active
-     session can be locked without logging out (read about
-     <keycombo action="seq">
-     <keycombo action="press"><keycap function="control"/><keycap>a</keycap></keycombo>
-     <keycap>x</keycap>
-     </keycombo>
-     /
-     <command>lockscreen</command> in <command>man screen</command> for details).
-    </para>
+    <para>ログアウト後にもセッションを残しておきたい場合は、 <command>screen</command> ツールをお使いになることをお勧めします。 <command>screen</command> セッションはログアウト時にも終了させられることがなく、必要に応じて再接続できるためです。また、ログアウトせずにセッションをロック (施錠) することもできます (<command>man screen</command> で表示されるマニュアルページで、 <keycombo action="seq"> <keycombo action="press"><keycap function="control"/><keycap>a</keycap></keycombo> <keycap>x</keycap> </keycombo> (<command>lockscreen</command>) に関する説明をお読みください) 。</para>
    </tip>
 
   </sect1>
   <sect1 xml:id="sec-sec-prot-dos">
-   <title>Preventing Accidental Denial of Service</title>
+   <title>不用意なサービス拒否攻撃の防止</title>
 
-   <para>
-    Linux allows you to set limits on the amount of system resources that
-    users and groups can consume. This is also very handy if bugs in programs
-    cause them to use up too much resources (for example memory leaks), slow
-    down the machine, or even render the system unusable. Incorrect settings
-    can allow programs to use too many resources which may make the server
-    unresponsive to new connections or even local logins (for example if a
-    program uses up all available file handles on the host). This can also be
-    a security concern if someone is allowed to consume all system resources
-    and therefore cause a denial of service attack – either unplanned or
-    worse, planned. Setting resource limits for users and groups may be an
-    effective way to protect systems, depending on the environment.
-   </para>
+   <para>Linux ではユーザやグループに対して、システムリソースの制限を設定することができます。これはプログラム内にバグ (たとえばメモリリーク) があったような場合に非常に有用な仕組みで、これによってシステムの動作が遅くなったり、場合によっては全く使えなくなってしまったりするようなことを防ぐことができます。また、この制限を設定することにより、プログラムがリソースを使用しすぎてしまい (たとえばプログラムが利用可能なファイルハンドル全てを占有してしまったりなど) 、新しい接続を受け付けられなくなってしまったり、ローカルログインができなくなってしまったりする問題を防ぐこともできます。その反面、リソースの制限はサービス拒否攻撃を容易にしてしまうことにも注意してください。一般的にはユーザやグループに対してリソース制限を設定すると、その用途にもよりますが、システムの保護に役立てることができます。</para>
 
    <sect2 xml:id="sec-sec-prot-dos-restrict-ressources">
-    <title>Example for Restricting System Resources</title>
-    <para>
-     The following example demonstrates the practical usage of setting or
-     restricting system resource consumption for an Oracle user account. For a
-     list of system resource settings, see
-     <filename>/etc/security/limits.conf</filename> or <command>man
-     limits.conf</command>.
-    </para>
-    <para>
-     Most shells like Bash provide control over various resources (for example
-     the maximum allowable number of open file descriptors or the maximum
-     number of processes) that are available on a per/user basis. To examine
-     all current limits in the shell execute:
-    </para>
+    <title>システムリソースの制限例</title>
+    <para>下記の例では Oracle というユーザアカウントに対してリソース制限を設定しています。リソース制限の設定項目については、 <filename>/etc/security/limits.conf</filename> ファイルを読むか、 <command>man limits.conf</command> で表示されるマニュアルページをお読みください。</para>
+    <para>bash などのようなほとんどのシェルでは、さまざまなリソース (最大ファイルディスクリプタ数や最大プロセス数など) の制限を行なうことができます。これらはユーザ単位で設定することができます。現在のシェルでのリソース制限設定を表示するには、下記のようなコマンドを入力して実行します:</para>
     <screen>&prompt.root;ulimit -a</screen>
-    <para>
-     For more information on <command>ulimit</command> for the Bash shell,
-     examine the Bash man pages.
-    </para>
+    <para>bash シェルにおける <command>ulimit</command> の説明については、 bash のマニュアルページをお読みください。</para>
     <important>
-     <title>Setting Limits for SSH Sessions</title>
-     <para>
-      Setting "hard" and "soft" limits might not behave as expected when using
-      an SSH session. To see valid behavior it may be necessary to login as
-      root and then su to the id with limits (for example,
-      <literal>oracle</literal> in these examples). Resource limits should
-      also work assuming the application has been started automatically during
-      the boot process. It may be necessary to set
-      <option>UsePrivilegeSeparation</option> in
-      <filename>/etc/ssh/sshd_config</filename> to "no" and restart the SSH
-      daemon (<command>systemctl restart sshd</command>) if it seems that the
-      changes to resource limits are not working (via SSH). However this is
-      not generally recommended – as it weakens a systems security.
-     </para>
+     <title>SSH セッションに対する制限の設定について</title>
+     <para>SSH セッションに対しては、 "hard" や "soft" の制限が期待通りにならないことがあります。正しく動作させたい場合は、いったん root でログインしたのち、対象のユーザ (たとえば <literal>oracle</literal>) に su をして切り替えるようにしてください。またリソースの制限は、システムの起動時に開始されたアプリケーションに対しても作用させることができます。 SSH 経由でリソース制限が正しく動作していないように見える場合は、 <filename>/etc/ssh/sshd_config</filename> ファイル内の <option>UsePrivilegeSeparation</option> オプションを "no" に設定して、 SSH デーモンを再起動 ( <command>systemctl restart sshd</command> ) してください。ただし、このような設定は、別の意味でシステムのセキュリティを弱める結果になることに注意してください。</para>
     </important>
     <tip>
-     <title>Disabling Password Logins via <command>ssh</command></title>
-     <para>
-      You can add some extra security to your server by disabling password
-      authentication for SSH. Remember that you need to have SSH keys
-      configured, otherwise you cannot access the server. To disable password
-      login, add the following lines to
-      <filename>/etc/ssh/sshd_config</filename>:
-     </para>
+     <title><command>ssh</command> でのパスワードログインの禁止について</title>
+     <para>SSH 経由でのログインに際しては、パスワードでのログインそのものを禁止することで、さらに安全性を高めることができます。なお、パスワードでのログインを禁止する場合は、あらかじめ公開鍵でのログインが正しく動作することを確認した後にしてください。パスワードでのログインを禁止するには、 <filename>/etc/ssh/sshd_config</filename> ファイルに下記のような行を追加します:</para>
 <screen>UseLogin no
 UsePAM no
 PasswordAuthentication no
 PubkeyAuthentication yes</screen>
     </tip>
-    <para>
-     In this example, a change to the number of file handles or open files
-     that the user <literal>oracle</literal> can use is made by editing
-     <filename>/etc/security/limits.conf</filename> as &rootuser; making the
-     following changes:
-    </para>
+    <para>下記の例では <literal>oracle</literal> ユーザが開くことのできるファイルおよびファイルハンドルの数を変更しています。この変更は &rootuser; で <filename>/etc/security/limits.conf</filename> ファイルを編集することで行ないます:</para>
 <screen>oracle           soft    nofile          4096
 oracle           hard    nofile          63536</screen>
-    <para>
-     The soft limit in the first line defines the limit on the number of file
-     handles (open files) that the
-     <systemitem class="username">oracle</systemitem> user will have after
-     login. If the user sees error messages about running out of file handles,
-     then the user can increase the number of file handles like in this
-     example up to the hard limit (in this example 63536) by executing:
-    </para>
+    <para>上記の "soft" の行は <systemitem class="username">oracle</systemitem> ユーザがログインしてからのファイルハンドル (開いているファイル) の数の上限を設定していて、この値を超過すると警告メッセージが表示されるようになります。絶対的な上限は "hard" の行で設定し、この例では 65536 個までを利用できることになります。コマンドで設定する場合は、下記のように入力して実行します:</para>
     <screen>&prompt.root;ulimit -n 63536</screen>
-    <para>
-     You can set the soft and hard limits higher if necessary.
-    </para>
+    <para>上記の "soft", "hard" の値は必要に応じて調整してください。</para>
     <note>
-     <para>
-      It is important to be judicious with the usage of ulimits. Allowing a
-      "hard" limit for <quote>nofile</quote> for a user that equals the kernel
-      limit (<filename>/proc/sys/fs/file-max</filename>) is very bad! If the
-      user consumes all the available file handles, the system cannot initiate
-      new logins as accessing (opening) PAM modules which are required for
-      performing a login will not be possible.
-     </para>
+     <para>ulimit を設定する場合は、よく注意して設定してください。 <quote>nofile</quote> に対して "hard" の上限をカーネルの規定する最大値 ( <filename>/proc/sys/fs/file-max</filename> ) に設定してしまうと、もしもそのユーザが全てのファイルハンドルを使用してしまった場合、 PAM モジュールにアクセスする際にもファイルハンドルを使用しますので、ログインさえもできなくなってしまうことになります。</para>
     </note>
-    <para>
-     You also need to ensure that <literal>pam_limits</literal> is either
-     configured globally in <filename>/etc/pam.d/common-auth</filename>, or
-     for individual services like SSH, su, login, and telnet in:
-    </para>
+    <para>リソース制限は <literal>pam_limits</literal> を使用して設定することもできます。全てのサービスで共通で設定する場合は <filename>/etc/pam.d/common-auth</filename> ファイルを、 SSH, su, login, telnet など、サービスごとに設定する場合は下記のファイルをそれぞれ編集してください:</para>
     <simplelist>
-     <member><filename>/etc/pam.d/sshd</filename> (for SSH)</member>
-     <member><filename>/etc/pam.d/su</filename> (for su)</member>
-     <member><filename>/etc/pam.d/login</filename> (local logins and telnet)</member>
+     <member><filename>/etc/pam.d/sshd</filename> (SSH の場合)</member>
+     <member><filename>/etc/pam.d/su</filename> (su の場合)</member>
+     <member><filename>/etc/pam.d/login</filename> (ローカルログインや telnet の場合)</member>
     </simplelist>
-    <para>
-     If you do not want to enable it for all logins, there is a specific PAM
-     module that will read the <filename>/etc/security/limits.conf</filename>
-     file. Entries in pam configuration directives will have entries like:
-    </para>
+    <para>全てのログインに対して適用したくない場合は、 <filename>/etc/security/limits.conf</filename> ファイルを読み込む PAM モジュールがあります。 PAM の設定ディレクティブは下記のようになります:</para>
 <screen>session     required      /lib/security/pam_limits.so
 session     required      /lib/security/pam_unix.so</screen>
-    <para>
-     It is important to note that changes are not immediate and require a new
-     login session:
-    </para>
+    <para>なお、上記で変更を行なっても即時には反映されず、次回のログインから適用されることに注意してください:</para>
 <screen>&prompt.root;su – oracle
 &prompt.user;ulimit -n
 4096</screen>
-    <para>
-     Note that these examples are specific to the Bash shell -
-     <command>ulimit</command> options are different for other shells. The
-     default limit for the user <literal>oracle</literal> is
-     <literal>4096</literal>. To increase the number of file handles the user
-     <literal>oracle</literal> can use to <literal>63536</literal>, do:
-    </para>
+    <para>また、ここでの説明はいずれも bash シェルを使用した場合の例であり、それ以外のシェルを使用する場合は <command>ulimit</command> オプションが異なることに注意してください。たとえば <literal>oracle</literal> ユーザに対する制限が <literal>4096</literal> であった場合、これを <literal>63536</literal> まで増やすには、下記のように入力して実行します:</para>
 <screen>&prompt.root;su – oracle
 &prompt.user;ulimit -n
 4096
 &prompt.user;ulimit -n 63536
 &prompt.user;ulimit -n
 63536</screen>
-    <para>
-     Making this permanent requires the addition of the setting,
-     <literal>ulimit -n 63536</literal>, (again, for Bash) to the users
-     profile (<filename>~/.bashrc</filename> or
-     <filename>~/.profile</filename> file) which is the user start-up file for
-     the Bash shell on &productname; (to verify your shell run: echo
-     <envar>$SHELL</envar>). To do this you could simply type (or copy/paste
-     – if you are reading this on the system) the following commands for the
-     Bash shell of the user <literal>oracle</literal>:
-    </para>
+    <para><literal>ulimit -n 63536</literal> のような設定 (この例では bash) を恒久的に保存したい場合は、 &productname; が提供する bash シェル向けのスタートアップファイル ( <filename>~/.bashrc</filename> ファイルもしくは <filename>~/.profile</filename> ファイル) にそれを記述します (使用しているシェルを確認したい場合は、 echo <envar>$SHELL</envar> を実行してください) 。下記のようなコマンドを実行することで、 bash シェルのリソース制限を設定することができます (設定対象の Linux マシンでお読みの場合は、このままコピー＆ペーストしてもかまいません):</para>
 <screen>&prompt.root;su - oracle
 &prompt.user;cat &gt;&gt; ~oracle/.bash_profile &lt;&lt; EOF
 ulimit -n 63536
@@ -747,126 +371,61 @@ EOF</screen>
   </sect1>
   
   <sect1 xml:id="sec-sec-prot-banners">
-   <title>Displaying Login Banners</title>
+   <title>ログインバナーの表示</title>
 
-   <para>
-    It is often necessary to place a banner on login screens on all servers
-    for legal/audit policy reasons or to give security instructions to
-    users.
-   </para>
+   <para>ポリシーや監査の理由から、もしくはユーザに対してセキュリティ手順を示しておく理由から、ログイン時にバナーを表示させることができます。</para>
 
-   <para>
-    If you want to print a login banner <emphasis>after</emphasis> a user
-    logs in on a text based terminal for example using SSH or on a local
-    console, you can leverage the file <filename>/etc/motd</filename> (motd =
-    message of the day). The file exists by default on &productname;, but
-    it is empty. Simply add content to the file that is applicable/required
-    by the organization.
-   </para>
+   <para>SSH やローカルコンソールなどからユーザがログインした <emphasis>後</emphasis> にログインバナーを表示させたい場合は、 <filename>/etc/motd</filename> (motd = message of the day の略) ファイルにそれを記述します。このファイルは &productname; の既定で提供されていますが、特に何も書かれていません。表示したい内容をそのまま記述してください。</para>
 
    <note>
-    <title>Banner Length</title>
-    <para>
-     Try to keep the login banner content to a single terminal page (or
-     less), as it will scroll the screen if it does not fit, making it more
-     difficult to read.
-    </para>
+    <title>バナーの長さについて</title>
+    <para>バナーとして表示するメッセージは、長くても端末 1 ページ以内に収まるようにしてください。端末によってはスクロールして戻ることができない場合があるため、長すぎると読めなくなってしまうことがあるためです。</para>
    </note>
 
-   <para>
-    You can also have a login banner printed <emphasis>before</emphasis> a
-    user logs in on a text based terminal. For local console
-    logins you can edit the <filename>/etc/issue</filename> file, which will
-    cause the banner to be displayed before the login prompt. For logins via
-    SSH you can edit the <quote>Banner</quote> parameter in the
-    <filename>/etc/ssh/sshd_config</filename> file, which will then
-    appropriately display the banner text before the SSH login prompt.
-   </para>
+   <para>ログインバナーはテキストベースの端末であれば、ログイン <emphasis>前</emphasis> に表示することもできます。ローカルコンソールへのログイン前に表示したい場合は <filename>/etc/issue</filename> ファイルに内容を記述してください。これはログインプロンプトよりも前に表示されます。 SSH 経由でのログインの場合は、 <filename>/etc/ssh/sshd_config</filename> ファイルの <quote>Banner</quote> パラメータを設定してください。こちらも SSH のログインプロンプトよりも前に表示されます。</para>
 
-   <para>
-    For graphical logins via GDM, you can follow
-    <link xlink:href="https://help.gnome.org/admin/system-admin-guide/stable/login-banner.html.en">
-    the GNOME admin guide</link> to set up a login banner. Furthermore
-    you can make the following changes to require a user to acknowledge the
-    legal banner by selecting <guimenu>Yes</guimenu> or <guimenu>No</guimenu>.
-    Edit the <filename>/etc/gdm/Xsession</filename> file and add the
-    following lines at the <emphasis>beginning</emphasis> of the script:
-   </para>
+   <para>GDM 経由でのグラフィカルログインの場合は、 <link xlink:href="https://help.gnome.org/admin/system-admin-guide/stable/login-banner.html.en"> GNOME 管理者ガイド (英語)</link> にある手順でログインバナーを設定することができます。これに加えて、 <guimenu>はい</guimenu> か <guimenu>いいえ</guimenu> を選択するようなバナーを表示することもできます。これを行なうには、 <filename>/etc/gdm/Xsession</filename> ファイルを編集して、スクリプトの <emphasis>最初のほう</emphasis> に下記のような内容を記述します:</para>
 
-<screen>if ! /usr/bin/gdialog --yesno '\n<replaceable>This system is classified...</replaceable>\n' 10 10; then
+<screen>if ! /usr/bin/gdialog --yesno '
+<replaceable>This system is classified...</replaceable>
+' 10 10; then
     /usr/bin/gdialog --infobox 'Aborting login'
     exit 1;
 fi</screen>
 
-   <para>
-    The text <replaceable>This system is classified...</replaceable> needs to
-    be replaced with the desired banner text. It is important to note that
-    this dialog will not prevent a login from progressing. For more
-    information about GDM scripting, refer to the
-    <link xlink:href="https://help.gnome.org/admin/gdm/stable/configuration.html.en#scripting">
-    GDM Admin Manual</link>.
-   </para>
+   <para>上記の <replaceable>This system is classified...</replaceable> の部分に、表示したいバナーテキストを指定します。なお、このダイアログはログイン処理そのものを防ぐ仕組みではありません。 GDM のスクリプト処理について、詳しくは <link xlink:href="https://help.gnome.org/admin/gdm/stable/configuration.html.en#scripting"> GDM 管理者マニュアル (英語)</link> をお読みください。</para>
   </sect1>
      <sect1 xml:id="sec-sec-prot-misc-account-utils">
-    <title>Connection Accounting Utilities</title>
-    <para>
-     Here is a list of commands you can use to get data about user logins:
-    </para>
+    <title>各種のアカウント関連ユーティリティ</title>
+    <para>下記はユーザログインに関するデータを取得できるコマンドの一覧です:</para>
     <formalpara>
      <title><command>who</command></title>
-     <para>
-      Lists currently logged in users.
-     </para>
+     <para>現時点でログインしているユーザを一覧表示します。</para>
     </formalpara>
     <formalpara>
      <title><command>w</command></title>
-     <para>
-      Shows who is logged in and what they are doing.
-     </para>
+     <para>誰がログインしているのかと、何をしているのかを表示します。</para>
     </formalpara>
     <formalpara>
      <title><command>last</command></title>
-     <para>
-      Shows a list of last logged in users, including login time, logout time,
-      login IP address, etc.
-     </para>
+     <para>直近のユーザログインを一覧で表示します。ログイン日時のほかログアウト日時、 IP アドレスなどの情報が含まれます。</para>
     </formalpara>
     <formalpara>
      <title><command>lastb</command></title>
-     <para>
-      Same as <command>last</command>, except that by default it shows
-      <filename>/var/log/btmp</filename>, which contains all the bad login
-      attempts.
-     </para>
+     <para><command>last</command> と同じ出力を行ないますが、こちらはログインの失敗を記録する <filename>/var/log/btmp</filename> の内容を出力します。</para>
     </formalpara>
     <formalpara>
      <title><command>lastlog</command></title>
-     <para>
-      This command reports data maintained in
-      <filename>/var/log/lastlog</filename>, which is a record of the last
-      time a user logged in.
-     </para>
+     <para>このコマンドは、各ユーザの最終ログイン日時を記録する <filename>/var/log/lastlog</filename> 内のデータを出力します。</para>
     </formalpara>
     <formalpara>
      <title><command>ac</command></title>
-     <para>
-      Available after installing the <systemitem>acct</systemitem> package.
-      Prints the connect time in hours on a per-user basis or daily basis,
-      etc. This command reads <filename>/var/log/wtmp</filename>.
-     </para>
+     <para><systemitem>acct</systemitem> パッケージをインストールすると利用できるようになるコマンドです。このコマンドは、ユーザ単位もしくは日単位の接続時間を表示します。このコマンドは <filename>/var/log/wtmp</filename> を読み込んで処理します。</para>
     </formalpara>
     <formalpara>
      <title><command>dump-utmp</command></title>
-     <para>
-      Converts raw data from /var/run/utmp or
-      <filename>/var/log/wtmp</filename> into ASCII-parseable format.
-     </para>
+     <para><filename>/var/run/utmp</filename> もしくは <filename>/var/log/wtmp</filename> の内容を読み込んで、これをテキストとして処理可能な形式に変換します。</para>
     </formalpara>
-    <para>
-     Also check the <filename>/var/log/messages</filename> file, or the output
-     of <command>journalctl</command> if no logging facility is running. See
-     <xref linkend="cha-journalctl"/> for more information on the &systemd;
-     journal.
-    </para>
+    <para>そのほかにも <filename>/var/log/messages</filename> や <command>journalctl</command> コマンドの出力を確認してもかまいません。前者は何らかのログ記録 (syslog) アプリケーションが動作している場合、後者は動作していない場合に使用します。 <command>journalctl</command> で使用する &systemd; のジャーナル機能については、 <xref linkend="cha-journalctl"/> をお読みください。</para>
    </sect1>
   </chapter>
