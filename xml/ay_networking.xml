@@ -15,19 +15,52 @@
 
    <para>ネットワークの設定を行なうことで、ワークステーションをイーサネットベースの LAN に接続することができるほか、ダイヤルアップ接続を設定することもできます。より複雑な設定 (複数のネットワークカードやルーティングの設定など) も行なうことができます。</para>
 
-   <para>下記の設定を <literal>true</literal> にすると、 &yast; はインストール時に作成したネットワーク設定 (<command>linuxrc</command> で設定したもの) と &ay; の制御ファイル内に書かれている設定 (もしあれば) を合成して使用するようになります。</para>
    <note>
     <title><command>linuxrc</command> プログラムについて</title>
     <para><command>linuxrc</command> の仕組みと設定キーワードについてより詳しく知りたい場合は、 <xref linkend="appendix-linuxrc"/> をお読みください。</para>
    </note>
-   <para>&ay; での設定は、既に存在する設定ファイルよりも高い優先順位で適用されます。 &yast; は ifcfg-* ファイルに書き込みを行なう際、既存の内容を削除せずに行ないます。そのため、 DNS やルーティングのセクションを設定しない場合、 &yast; は既存の値をそのまま保持するようになります。そうでない場合、制御ファイル内の設定が適用されます。</para>
+
+   <para>
+    By default &yast; copies the network settings that were used during the
+    installation into the final, installed system. This configuration is merged with the
+    one defined in the &ay; profile. To skip copying the network configuration,
+    set the <literal>keep_install_network</literal> option to <literal>false</literal>.
+   </para>
 
 <screen>&lt;keep_install_network
 config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 
-   <para>第 2 ステージでは、追加のパッケージのインストールが設定されていると、そのインストール処理はネットワークの設定が行なわれる前に動作してしまいます。このようなパッケージのインストールでネットワークを利用できるようにするため、 <literal>keep_install_network</literal> は既定で <literal>true</literal> に設定されています。第 1 ステージで必要なパッケージを全てインストールしていて、第 2 ステージの冒頭ではネットワークが不要である場合は、 <literal>keep_install_network</literal> を <literal>false</literal> に設定することで、設定のコピーを防ぐことができます。</para>
+   <para>&ay; での設定は、既に存在する設定ファイルよりも高い優先順位で適用されます。 &yast; は ifcfg-* ファイルに書き込みを行なう際、既存の内容を削除せずに行ないます。そのため、 DNS やルーティングのセクションを設定しない場合、 &yast; は既存の値をそのまま保持するようになります。そうでない場合、制御ファイル内の設定が適用されます。</para>
 
-   <para>ネットワークの設定を適用してネットワークが正しく動作するようにするには、ネットワーク全体の設定を保存するためのグローバルリソース <literal>&lt;networking&gt;</literal> を 1 つだけ使用してください。</para>
+   <note>
+     <title>Use &ay; network settings during installation</title>
+
+    <para>
+      Since &productname; 15.3, writing the configuration based on the
+      profile happens at the end of the first stage.
+    </para>
+    <para>
+      However, if network settings are needed during the installation, you
+      can force &ay; to write and apply them before registration takes
+      place by setting the <literal>setup_before_proposal</literal> option to
+      <literal>true</literal>.
+      Asking &ay; to setup the network in the early stages is useful when
+      installation on a network is needed, but the configuration is too complex to
+      define it using linuxrc (see <xref linkend="autoinstall-singlesystem"/>)
+    </para>
+
+<screen>&lt;dhcp_hostname config:type="boolean"&gt;true&lt;/dhcp_hostname&gt;</screen>
+
+    <para>
+      If the configuration is written at the end of installation, it will
+      not be applied until the system is rebooted.
+    </para>
+   </note>
+
+   <para>
+    Network settings and service activation are defined under the <literal>profile</literal>
+    <literal>networking</literal> global resource.
+   </para>
 
    <example xml:id="ex-ay-network-config-general">
     <title>ネットワークの設定</title>
@@ -99,27 +132,7 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 </networking>]]></screen>
    </example>
 
-   <para>上述の例のとおり、 <literal>&lt;networking&gt;</literal> 内にはいくつかの項目が存在しています:</para>
-
-   <itemizedlist>
-    <listitem>
-     <para><literal>interfaces</literal> 内にはネットワークインターフェイスの設定を記述します。ここには IP アドレスのほか、起動方法などを指定することができます。</para>
-    </listitem>
-    <listitem>
-     <para><literal>dns</literal> 内には DNS 関連の設定を記述します。ここにはホスト名のほか、ネームサーバの一覧などを指定します。</para>
-    </listitem>
-    <listitem>
-     <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
-    </listitem>
-    <listitem>
-     <para><literal>s390-devices</literal> 内には s390 固有のデバイス設定を記述します。</para>
-    </listitem>
-    <listitem>
-     <para><literal>net-udev</literal> 内には、デバイス名を固定させるための udev ルールを記述します。</para>
-    </listitem>
-   </itemizedlist>
-
-   <example xml:id="ex-ay-network-config-bridge">
+   <example xml:id="ex-ay-network-config-bond">
      <title>ブリッジインターフェイスの設定</title>
 <screen>
 &lt;interfaces config:type="list"&gt;
@@ -149,6 +162,26 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
 &lt;/interfaces&gt;
 </screen>
    </example>
+
+   <para>上述の例のとおり、 <literal>&lt;networking&gt;</literal> 内にはいくつかの項目が存在しています:</para>
+
+   <itemizedlist>
+    <listitem>
+     <para><literal>interfaces</literal> 内にはネットワークインターフェイスの設定を記述します。ここには IP アドレスのほか、起動方法などを指定することができます。</para>
+    </listitem>
+    <listitem>
+     <para><literal>dns</literal> 内には DNS 関連の設定を記述します。ここにはホスト名のほか、ネームサーバの一覧などを指定します。</para>
+    </listitem>
+    <listitem>
+     <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
+    </listitem>
+    <listitem>
+     <para><literal>s390-devices</literal> 内には s390 固有のデバイス設定を記述します。</para>
+    </listitem>
+    <listitem>
+     <para><literal>net-udev</literal> 内には、デバイス名を固定させるための udev ルールを記述します。</para>
+    </listitem>
+   </itemizedlist>
 
    <tip>
     <title>IPv6 アドレスのサポートについて</title>
@@ -471,8 +504,39 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
        <!-- TODO: all wireless attributes, but not so many users configure wireless with autoyast -->
       </tbody>
      </tgroup>
-    </informaltable>
-   </sect2>
+   </informaltable>
+
+   <example xml:id="ex-ay-network-config-bridge">
+     <title>ブリッジインターフェイスの設定</title>
+<screen>
+&lt;interfaces config:type="list"&gt;
+  &lt;interface&gt;
+    &lt;device&gt;br0&lt;/device&gt;
+    &lt;bootproto&gt;static&lt;/bootproto&gt;
+    &lt;bridge&gt;yes&lt;/bridge&gt;
+    &lt;bridge_forwarddelay&gt;0&lt;/bridge_forwarddelay&gt;
+    &lt;bridge_ports&gt;eth0 eth1&lt;/bridge_ports&gt;
+    &lt;bridge_stp&gt;off&lt;/bridge_stp&gt;
+    &lt;ipaddr&gt;192.168.122.100&lt;/ipaddr&gt;
+    &lt;netmask&gt;255.255.255.0&lt;/netmask&gt;
+    &lt;network&gt;192.168.122.0&lt;/network&gt;
+    &lt;prefixlen&gt;24&lt;/prefixlen&gt;
+    &lt;startmode&gt;auto&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;device&gt;eth0&lt;/device&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;device&gt;eth1&lt;/device&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+&lt;/interfaces&gt;
+</screen>
+   </example>
+  </sect2>
 
    <sect2 xml:id="CreateProfile-Network-names">
     <title>ネットワークインターフェイス名の固定</title>
@@ -869,8 +933,8 @@ config:type="boolean"&gt;true&lt;/keep_install_network&gt;</screen>
    <sect2 xml:id="Configuration-Network-Inetd">
     <title>(X)Inetd</title>
     <para>
-     The control file has elements to specify which superserver should be
-     used (netd_service), whether it should be enabled (netd_status) and how
+     The profile has elements to specify which superserver should be used
+     (netd_service), whether it should be enabled (netd_status) and how
      the services should be configured (netd_conf).
     </para>
     <para>
