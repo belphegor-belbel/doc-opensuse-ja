@@ -27,10 +27,7 @@
  <sect1 xml:id="libvirt-host-network">
   <title>Configuring Networks</title>
 
-  <para>
-   There are two common network configurations to provide a &vmguest; with a
-   network connection:
-  </para>
+  <para>&bmguest; に対してネットワーク機能を提供するには、下記の 2 種類の方法があります:</para>
 
   <itemizedlist>
    <listitem>
@@ -47,64 +44,28 @@
   </itemizedlist>
 
   <sect2 xml:id="libvirt-networks-bridged">
-   <title>Network Bridge</title>
-   <para>
-    The network bridge configuration provides a Layer 2 switch for &vmguest;s,
-    switching Layer 2 Ethernet packets between ports on the bridge based on MAC
-    addresses associated with the ports. This gives the &vmguest; Layer 2
-    access to the &vmhost;'s network. This configuration is analogous to
-    connecting the &vmguest;'s virtual Ethernet cable into a hub that is shared
-    with the host and other &vmguest;s running on the host. The configuration
-    is often referred to as <emphasis>shared physical device</emphasis>.
-   </para>
-   <para>
-    The network bridge configuration is the default configuration of
-    &productname; when configured as a &kvm; or &xen; hypervisor. It is the
-    preferred configuration when you simply want to connect &vmguest;s to the
-    &vmhost;'s LAN.
-   </para>
+   <title>ネットワークブリッジ</title>
+   <para>ネットワークブリッジは、 &vmguest; に対してレイヤ 2 スイッチの機能を提供します。レイヤ 2 スイッチは、ポート間のパケット転送の際にレイヤ 2 イーサネットパケットを利用し、 MAC アドレスをベースにして宛先を判断します。これにより、 &vmhost; から &vmguest; に対して、レイヤ 2 アクセスのネットワークを提供することになります。これは、 &vmguest; の仮想的なイーサネットケーブルがイーサネットハブに接続され、そこからホスト自身やホスト内で動作する他の &vmguest; に接続できる形態と同じになります。この設定は、 <emphasis>共有物理デバイス</emphasis> と称することもあります。</para>
+   <para>ネットワークブリッジは、 &productname; を &kvm; または &xen; のハイパーバイザとして設定した際の既定の設定になっています。これは &vmguest; と &vmhost; の LAN を単純に接続できるため、お勧めの方法でもあります。</para>
    <sect3 xml:id="libvirt-networks-bridged-yast">
-    <title>Managing Network Bridges with &yast;</title>
-    <para>
-     This section includes procedures to add or remove network bridges with
-     &yast;.
-    </para>
+    <title>&yast; を利用したネットワークブリッジの管理</title>
+    <para>本章では、 &yast; を利用してネットワークブリッジを追加または削除する方法を説明しています。</para>
     <sect4 xml:id="libvirt-networks-bridged-yast-add">
-     <title>Adding a Network Bridge</title>
-     <para>
-      To add a network bridge on &vmhost;, follow these steps:
-     </para>
+     <title>ネットワークブリッジの追加</title>
+     <para>&vmhost; にネットワークブリッジを追加するには、下記の手順を行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Start
-        <menuchoice><guimenu>&yast;</guimenu><guimenu>System</guimenu><guimenu>Network
-        Settings</guimenu></menuchoice>.
-       </para>
+       <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を起動します。</para>
       </step>
       <step>
-       <para>
-        Activate the <guimenu>Overview</guimenu> tab and click
-        <guimenu>Add</guimenu>.
-       </para>
+       <para><guimenu>概要</guimenu> タブに移動して <guimenu>追加</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Select <guimenu>Bridge</guimenu> from the <guimenu>Device
-        Type</guimenu> list and enter the bridge device interface name in the
-        <guimenu>Configuration Name</guimenu> entry. Press the
-        <guimenu>Next</guimenu> button to proceed.
-       </para>
+       <para><guimenu>デバイスの種類</guimenu> では <guimenu>ブリッジ</guimenu> を選択し、 <guimenu>設定名</guimenu> の項目にはブリッジデバイスのインターフェイス名を入力します。あとは <guimenu>次へ</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        In the <guimenu>Address</guimenu> tab, specify networking details such
-        as DHCP/static IP address, subnet mask or host name.
-       </para>
-       <para>
-        Using <guimenu>Dynamic Address</guimenu> is only useful when also
-        assigning a device to a bridge that is connected to a DHCP server.
-       </para>
+       <para><guimenu>アドレス</guimenu> のタブでは、 DHCP 経由でアドレスを取得するか、もしくは固定で IP アドレスを設定するかを選択し、必要であれば IP アドレスやサブネットマスク、ホスト名などをそれぞれ入力します。</para>
+       <para><guimenu>可変 IP アドレス</guimenu> は、ブリッジが DHCP サーバに接続されているような場合のみ有用です。</para>
        <para>
         If you intend to create a virtual bridge that has no connection to a
         real network device, use <guimenu>Statically assigned IP
@@ -113,312 +74,150 @@
         <literal>192.168.0.0/16</literal>, <literal>172.16.0.0/12</literal>, or
         <literal>10.0.0.0/8</literal>.
        </para>
-       <para>
-        To create a bridge that should only serve as a connection between the
-        different guests without connection to the host system, set the IP
-        address to <literal>0.0.0.0</literal> and the subnet mask to
-        <literal>255.255.255.255</literal>. The network scripts handle this
-        special address as an unset IP address.
-       </para>
+       <para>ホストシステムとは接続しないゲスト間のみのネットワーク接続を作成する場合は、 IP アドレスを <literal>0.0.0.0</literal> 、サブネットマスクを <literal>255.255.255.255</literal> に設定します。これにより、 IP アドレスを設定しない特殊なネットワークを構成することができます。</para>
       </step>
       <step>
-       <para>
-        Activate the <guimenu>Bridged Devices</guimenu> tab and activate the
-        network devices you want to include in the network bridge.
-       </para>
+       <para><guimenu>ブリッジ接続デバイス</guimenu> のタブでは、ネットワークブリッジに含めたいネットワークデバイスを選択します。</para>
       </step>
       <step>
-       <para>
-        Click <guimenu>Next</guimenu> to return to the
-        <guimenu>Overview</guimenu> tab and confirm with <guimenu>OK</guimenu>.
-        The new network bridge should now be active on &vmhost;.
-       </para>
+       <para><guimenu>次へ</guimenu> を押すと <guimenu>概要</guimenu> タブに戻りますので、設定内容を確認して <guimenu>OK</guimenu> を押します。これで &vmhost; 内にネットワークブリッジが作成され、有効化されます。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-bridged-yast-rm">
-     <title>Deleting a Network Bridge</title>
-     <para>
-      To delete an existing network bridge, follow these steps:
-     </para>
+     <title>ネットワークブリッジの削除</title>
+     <para>既存のネットワークブリッジを削除するには、下記の手順を行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Start
-        <menuchoice><guimenu>&yast;</guimenu><guimenu>System</guimenu><guimenu>Network
-        Settings</guimenu></menuchoice>.
-       </para>
+       <para><menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を起動します。</para>
       </step>
       <step>
-       <para>
-        Select the bridge device you want to delete from the list in the
-        <guimenu>Overview</guimenu> tab.
-       </para>
+       <para><guimenu>概要</guimenu> タブで削除したいブリッジデバイスを選択します。</para>
       </step>
       <step>
-       <para>
-        Delete the bridge with <guimenu>Delete</guimenu> and confirm with
-        <guimenu>OK</guimenu>.
-       </para>
+       <para><guimenu>Delete</guimenu> を押してブリッジを削除し、 <guimenu>OK</guimenu> を押します。</para>
       </step>
      </procedure>
     </sect4>
    </sect3>
    <sect3 xml:id="libvirt-networks-bridged-add-brctl">
-    <title>Managing Network Bridges from the Command Line</title>
-    <para>
-     This section includes procedures to add or remove network bridges using
-     the command line.
-    </para>
+    <title>コマンドラインを利用したネットワークブリッジの管理</title>
+    <para>本章では、コマンドラインを利用してネットワークブリッジを追加もしくは削除する方法を説明しています。</para>
     <sect4 xml:id="libvirt-networks-bridged-add-brctl-add">
-     <title>Adding a Network Bridge</title>
-     <para>
-      To add a new network bridge device on &vmhost;, follow these steps:
-     </para>
+     <title>ネットワークブリッジの追加</title>
+     <para>&vmhost; 内にネットワークブリッジを追加するには、下記の手順を行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Log in as &rootuser; on the &vmhost; where you want to create a new
-        network bridge.
-       </para>
+       <para>ネットワークブリッジを作成したい &vmhost; にログインし、 &rootuser; になります。</para>
       </step>
       <step>
-       <para>
-        Choose a name for the new
-        bridge&mdash;<replaceable>virbr_test</replaceable> in our
-        example&mdash;and run
-       </para>
-<screen>&prompt.root;ip link add name <replaceable>VIRBR_TEST</replaceable> type bridge</screen>
+       <para>まずは新しいブリッジの名前を選択します。下記の例では、 <replaceable>virbr_test</replaceable> という名前で作成するものとします。</para>
+<screen>&prompt.root;ip link add name <replaceable>virbr_test</replaceable> type bridge</screen>
       </step>
       <step>
-       <para>
-        Check if the bridge was created on &vmhost;:
-       </para>
+       <para>&vmhost; でブリッジが作成されたことを確認します:</para>
 <screen>&prompt.root;bridge vlan
 [...]
 virbr_test  1 PVID Egress Untagged
 </screen>
-       <para>
-        <literal>virbr_test</literal> is present, but is not associated with
-        any physical network interface.
-       </para>
+       <para><literal>virbr_test</literal> という名前が現われていますが、この時点ではどの物理ネットワークインターフェイスにも結びつけられていません。</para>
       </step>
       <step>
-       <para>
-        Bring the network bridge up and add a network interface to the bridge:
-       </para>
+       <para>ネットワークブリッジを起動して、ブリッジにネットワークインターフェイスを追加します:</para>
 <screen>
 &prompt.root;ip link set virbr_test up
 &prompt.root;ip link set eth1 master virbr_test
 </screen>
        <important>
-        <title>Network Interface Must Be Unused</title>
-        <para>
-         You can only assign a network interface that is not yet used by
-         another network bridge.
-        </para>
+        <title>ネットワークインターフェイスを使用していてはならない件について</title>
+        <para>ここで指定できるネットワークインターフェイスは、他のネットワークブリッジで使用されているものであってはなりません。</para>
        </important>
       </step>
       <step>
-       <para>
-        Optionally, enable STP (see
-        <link xlink:href="https://en.wikipedia.org/wiki/Spanning_Tree_Protocol">Spanning
-        Tree Protocol</link>):
-       </para>
+       <para>なお、必要であれば STP (<link xlink:href="https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%83%8B%E3%83%B3%E3%82%B0%E3%83%84%E3%83%AA%E3%83%BC%E3%83%97%E3%83%AD%E3%83%88%E3%82%B3%E3%83%AB">スパニングツリープロトコル</link>) を有効化することもできます:</para>
 <screen>&prompt.root;bridge link set dev virbr_test cost 4</screen>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-bridged-add-brctl-del">
-     <title>Deleting a Network Bridge</title>
-     <para>
-      To delete an existing network bridge device on &vmhost; from the command
-      line, follow these steps:
-     </para>
+     <title>ネットワークブリッジの削除</title>
+     <para>コマンドラインを利用して &vmhost; のネットワークブリッジを削除するには、下記の手順を行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Log in as &rootuser; on the &vmhost; where you want to delete an
-        existing network bridge.
-       </para>
+       <para>ネットワークブリッジを削除したい &vmhost; にログインし、 &rootuser; になります。</para>
       </step>
       <step>
-       <para>
-        List existing network bridges to identify the name of the bridge to
-        remove:
-       </para>
+       <para>まずは既存のネットワークブリッジの一覧を表示させて、名前を確認します:</para>
 <screen>&prompt.root;bridge vlan
 [...]
 virbr_test  1 PVID Egress Untagged
 </screen>
       </step>
       <step>
-       <para>
-        Delete the bridge:
-       </para>
+       <para>ブリッジを削除します:</para>
 <screen>&prompt.root;ip link delete dev virbr_test</screen>
       </step>
      </procedure>
     </sect4>
    </sect3>
    <sect3 xml:id="sec-xen-net-vlan">
-    <title>Using VLAN Interfaces</title>
-    <para>
-     Sometimes, it is necessary to create a private connection either between
-     two &vmhost;s or between &vmguest; systems. For example, to migrate
-     &vmguest; to hosts in a different network segment, or to create a private
-     bridge that only &vmguest; systems may connect to (even when running on
-     different &vmhost; systems). An easy way to build such connections is to
-     set up VLAN networks.
-    </para>
-    <para>
-     VLAN interfaces are commonly set up on the &vmhost;. They either
-     interconnect the different &vmhost; systems, or they may be set up as a
-     physical interface to an otherwise virtual-only bridge. It is even
-     possible to create a bridge with a VLAN as a physical interface that has
-     no IP address in the &vmhost;. That way, the guest systems have no
-     possibility to access the host over this network.
-    </para>
-    <para>
-     Run the &yast; module
-     <menuchoice><guimenu>System</guimenu><guimenu>Network
-     Settings</guimenu></menuchoice>. Follow this procedure to set up the VLAN
-     device:
-    </para>
+    <title>VLAN インターフェイスの使用</title>
+    <para>状況によっては、 2 台の &vmhost; 間や &vmguest; 間で、プライベートな接続が必要となる場合があります。たとえば &vmguest; を異なるネットワークセグメント内にあるホストに移行させる必要がある場合や、特定の &vmguest; のみが接続できるプライベートブリッジが必要となる場合 (異なる &vmhost; 内にあってもかまいません) などがそれにあたります。このような状況下では、 VLAN ネットワークを作成するのが最も簡単です。</para>
+    <para>VLAN インターフェイスは一般に &vmhost; 内で設定を行ないます。この VLAN インターフェイスは異なる &vmhost; システム間の相互接続として使用できるほか、 &vmguest; のみが接続されたブリッジへの物理インターフェイスとしても設定することができます。このほか、 &vmhost; では IP アドレスを設定せずに VLAN を物理インターフェイスに接続することもできてしまいます。これにより、 &vmguest; から &vmhost; に接続できないように設定できることになります。</para>
+    <para>まずは &yast; を起動して <menuchoice><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu></menuchoice> を選択します。あとは下記の手順で VLAN インターフェイスを設定します:</para>
     <procedure>
-     <title>Setting up VLAN Interfaces with &yast;</title>
+     <title>&yast; を利用した VLAN インターフェイスの設定</title>
      <step>
-      <para>
-       Click <guimenu>Add</guimenu> to create a new network interface.
-      </para>
+      <para><guimenu>追加</guimenu> を押して新しいネットワークインターフェイスを作成します。</para>
      </step>
      <step>
-      <para>
-       In the <guimenu>Hardware Dialog</guimenu>, select <guimenu>Device
-       Type</guimenu> <guimenu>VLAN</guimenu>.
-      </para>
+      <para><guimenu>インターフェイスの追加設定</guimenu><!-- NOTE: is this exist?, changed anyway --> 内の <guimenu>デバイスの種類</guimenu> では、 <guimenu>VLAN</guimenu> を選択します。</para>
      </step>
      <step>
-      <para>
-       Change the value of <guimenu>Configuration Name</guimenu> to the ID of
-       your VLAN. Note that VLAN ID <literal>1</literal> is commonly used for
-       management purposes.
-      </para>
+      <para><guimenu>VLAN ID</guimenu><!-- NOTE: is this wrong?, changed anyway --> では VLAN の ID を指定します。なお、 VLAN ID <literal>1</literal> は通常、管理用に使用します。</para>
      </step>
      <step>
-      <para>
-       Click <guimenu>Next</guimenu>.
-      </para>
+      <para><guimenu>次へ</guimenu> を押します。</para>
      </step>
      <step>
-      <para>
-       Select the interface that the VLAN device should connect to below
-       <guimenu>Real Interface for VLAN</guimenu>. If the desired interface
-       does not appear in the list, first set up this interface without an IP
-       address.
-      </para>
+      <para><guimenu>VLAN の実インターフェイス</guimenu> では、 VLAN デバイスの接続先となるインターフェイスを選択します。一覧に必要なインターフェイスが表示されていない場合は、いったんキャンセルしてから、表示させたいインターフェイスを設定してください (このとき、 IP アドレスは指定しなくてかまいません) 。</para>
      </step>
      <step>
-      <para>
-       Select the desired method for assigning an IP address to the VLAN
-       device.
-      </para>
+      <para>さらに VLAN デバイスへの IP アドレス設定方法を選択します。</para>
      </step>
      <step>
-      <para>
-       Click <guimenu>Next</guimenu> to finish the configuration.
-      </para>
+      <para><guimenu>次へ</guimenu> を押して設定を完了してください。</para>
      </step>
     </procedure>
-    <para>
-     It is also possible to use the VLAN interface as a physical interface of a
-     bridge. This makes it possible to connect several &vmhost;-only networks
-     and allows live migration of &vmguest; systems that are connected to such
-     a network.
-    </para>
-    <para>
-     &yast; does not always allow setting no IP address. However, this may be a
-     desired feature, especially if &vmhost;-only networks should be connected.
-     In this case, use the special address <literal>0.0.0.0</literal> with
-     netmask <literal>255.255.255.255</literal>. The system scripts handle this
-     address as no IP address set.
-    </para>
+    <para>VLAN インターフェイスをブリッジの物理インターフェイスとして使用することもできます。これにより、特定の &vmhost; と &vmguest; のみを接続することができるようになりますので、そのネットワークを介して &bvmguest; を移行できるようになります。</para>
+    <para>場合によっては、 &yast; で IP アドレスの設定を無くすことができない場合があります。たとえば &vmguest; <!-- NOTE: is this wrong? changed anyway -->のみを接続するようなネットワークがそれにあたります。このような場合は、 IP アドレスに <literal>0.0.0.0</literal> を、サブネットマスクに <literal>255.255.255.255</literal> をそれぞれ指定してください。これにより IP アドレス無しでの設定ができるようになります。</para>
    </sect3>
   </sect2>
 
   <sect2 xml:id="libvirt-networks-virtual">
-   <title>Virtual Networks</title>
-   <para>
-    &libvirt;-managed virtual networks are similar to bridged networks, but
-    typically have no Layer 2 connection to the &vmhost;. Connectivity to the
-    &vmhost;'s physical network is accomplished with Layer 3 forwarding, which
-    introduces additional packet processing on the &vmhost; as compared to a
-    Layer 2 bridged network. Virtual networks also provide DHCP and DNS
-    services for &vmguest;s. For more information on &libvirt; virtual
-    networks, see the <citetitle>Network XML format</citetitle> documentation
-    at <link xlink:href="https://libvirt.org/formatnetwork.html"/>.
-   </para>
-   <para>
-    A standard &libvirt; installation on &productname; already comes with a
-    predefined virtual network named <literal>default</literal> that provides
-    DHCP and DNS services for the network, along with connectivity to the
-    &vmhost;'s physical network using the network address translation (NAT)
-    forwarding mode. Although it is predefined, the <literal>default</literal>
-    virtual network must be explicitly enabled by the administrator. For more
-    information on the forwarding modes supported by &libvirt; see the
-    <citetitle>Connectivity</citetitle> section of the <citetitle>Network XML
-    format</citetitle> documentation at
-    <link xlink:href="https://libvirt.org/formatnetwork.html#elementsConnect"/>.
-   </para>
-   <para>
-    &libvirt;-managed virtual networks can be used to satisfy a wide range of
-    use-cases but are commonly used on &vmhost;s that have a wireless
-    connection or dynamic/sporadic network connectivity such as laptops.
-    Virtual networks are also useful when the &vmhost;'s network has limited IP
-    addresses, allowing forwarding of packets between the virtual network and
-    the &vmhost;'s network. However, most server use cases are better suited
-    for the network bridge configuration, where &vmguest;s are connected to the
-    &vmhost;'s LAN.
-   </para>
+   <title>仮想ネットワーク</title>
+   <para>&libvirt; が管理する仮想ネットワークはブリッジ型のネットワークと似ていますが、一般的には &vmhost; とのレイヤ 2 接続は行ないません。 &vmhost; の物理ネットワークへの接続は、レイヤ 3 転送を利用して実現します。これは &vmhost; 側でパケット転送の機能を提供するもので、レイヤ 2 ブリッジ型ネットワークとは異なる方式になります。この種類の仮想ネットワークでは &vmguest; に対して DHCP や DNS のサービスを提供することもできます。 &libvirt; の仮想ネットワーク機能に関する詳細は、 <link xlink:href="https://libvirt.org/formatnetwork.html"/> にある <citetitle>Network XML format</citetitle> の章をお読みください。</para>
+   <para>&productname; で標準的な方法で &libvirt; のインストールを行なうと、 <literal>default</literal> という名前の仮想ネットワークが作成され、 DHCP と DNS の機能がそれぞれ提供されるようになります。また、この仮想ネットワークにはアドレス変換 (NAT) 機能が提供され、 &vmhost; の物理ネットワークに接続できるようになります。これはあらかじめ設定済みの形で提供されますが、管理者側で有効化する必要があります。 &libvirt; でサポートされている転送モードの詳細について、詳しくは <link xlink:href="https://libvirt.org/formatnetwork.html#elementsConnect"/> にある <citetitle>Network XML format</citetitle> ドキュメンテーションをお読みください。</para>
+   <para>&libvirt; が管理する仮想ネットワークは幅広い用途に対応していて、必要な機能のほとんどに対応していますが、ラップトップなどの無線接続や動的な (間欠的な) 接続の場合には不十分です。また仮想ネットワークは、仮想ネットワークと &vmhost; のネットワークとの間でパケット転送を行なうことから、 &vmhost; の接続しているネットワーク内で IP アドレス数が不足しているような環境に有用でもあります。しかしながら、サーバ用途の場合は、 &vmguest; を &vmhost; の LAN に接続するネットワークブリッジ型の構成のほうが便利ではあります。</para>
    <warning>
-    <title>Enabling Forwarding Mode</title>
-    <para>
-     Enabling forwarding mode in a &libvirt; virtual network enables forwarding
-     in the &vmhost; by setting
-     <filename>/proc/sys/net/ipv4/ip_forward</filename> and
-     <filename>/proc/sys/net/ipv6/conf/all/forwarding</filename> to 1, which
-     essentially turns the &vmhost; into a router. Restarting the &vmhost;'s
-     network may reset the values and disable forwarding. To avoid this
-     behavior, explicitly enable forwarding in the &vmhost; by editing the
-     <filename>/etc/sysctl.conf</filename> file and adding:
-    </para>
+    <title>転送モードの有効化について</title>
+    <para>&libvirt; の仮想ネットワークに対して転送モードを有効化するには、まず <filename>/proc/sys/net/ipv4/ip_forward</filename> と <filename>/proc/sys/net/ipv6/conf/all/forwarding</filename> をそれぞれ 1 に設定する必要があります。これにより、 &vmhost; をルータとして動作させることができるようになります。なお、 &vmhost; のネットワークを再起動してしまうと、これらの値はリセットされ転送機能が無効化されてしまいます。再起動後も転送モードを有効化したい場合は、 &vmhost; 内の <filename>/etc/sysctl.conf</filename> ファイルを編集して、下記の内容を追記してください:</para>
 <screen>net.ipv4.ip_forward = 1</screen>
 <screen>net.ipv6.conf.all.forwarding = 1</screen>
    </warning>
    <sect3 xml:id="libvirt-networks-virtual-vmm">
-    <title>Managing Virtual Networks with &vmm;</title>
-    <para>
-     You can define, configure, and operate virtual networks with &vmm;.
-    </para>
+    <title>&vmm; を利用した仮想ネットワークの管理</title>
+    <para>&vmm; を利用することで、仮想ネットワークの作成や設定、操作などを行なうことができます。</para>
     <sect4 xml:id="libvirt-networks-virtual-vmm-define">
-     <title>Defining Virtual Networks</title>
+     <title>仮想ネットワークの作成</title>
      <procedure>
       <step>
-       <para>
-        Start &vmm;. In the list of available connections, right-click the name
-        of the connection for which you need to configure the virtual network,
-        and then select <guimenu>Details</guimenu>.
-       </para>
+       <para>まずは &vmm; を起動します。利用可能な接続が表示されますので、設定したい仮想ネットワークの名前を選択して <guimenu>詳細</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        In the <guimenu>Connection Details</guimenu> window, click the
-        <guimenu>Virtual Networks</guimenu> tab. You can see the list of all
-        virtual networks available for the current connection. On the right,
-        there are details of the selected virtual network.
-       </para>
+       <para><guimenu>接続の詳細</guimenu> ウインドウで <guimenu>仮想ネットワーク</guimenu> タブを選択します。ここには現在の接続で利用可能な全ての仮想ネットワークが表示されるほか、右側には選択した仮想ネットワークの詳細が表示されます。</para>
        <figure>
-        <title>Connection Details</title>
+        <title>接続の詳細</title>
         <mediaobject>
          <imageobject role="fo">
           <imagedata fileref="libvirt_vmm_conndetails.png" width="45%" format="PNG"/>
@@ -430,17 +229,12 @@ virbr_test  1 PVID Egress Untagged
        </figure>
       </step>
       <step>
-       <para>
-        To add a new virtual network, click <guimenu>Add</guimenu>.
-       </para>
+       <para>新しい仮想ネットワークを追加するには、 <guimenu>追加</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Specify a name for the new virtual network and click
-        <guimenu>Forward</guimenu>.
-       </para>
+       <para>新しい仮想ネットワークの名前を指定して <guimenu>ルーティング</guimenu> を選択します。</para>
        <figure>
-        <title>Create virtual network</title>
+        <title>仮想ネットワークの作成</title>
         <mediaobject>
          <imageobject role="fo">
           <imagedata fileref="libvirt_vmm_vnet_name.png" width="45%" format="PNG"/>
@@ -452,13 +246,9 @@ virbr_test  1 PVID Egress Untagged
        </figure>
       </step>
       <step>
-       <para>
-        To specify an IPv4 network address space definition, activate the
-        relevant option and type it into the <guimenu>Network</guimenu> text
-        entry.
-       </para>
+       <para>IPv4 アドレスの範囲を指定したい場合は、対応するオプションを選択して <guimenu>ネットワーク</guimenu> 以下のテキストボックスに値を入力します。</para>
        <figure>
-        <title>Create virtual network</title>
+        <title>仮想ネットワークの作成</title>
         <mediaobject>
          <imageobject role="fo">
           <imagedata fileref="libvirt_vmm_vnet_ipv4.png" width="45%" format="PNG"/>
@@ -477,35 +267,21 @@ virbr_test  1 PVID Egress Untagged
        </para>
       </step>
       <step>
-       <para>
-        To enable static routing for the new virtual network, activate the
-        relevant option and type the network and gateway addresses.
-       </para>
+       <para>新しい仮想ネットワークに対してスタティック (固定の) ルーティングを設定したい場合は、対応するオプションを選択してネットワークとゲートウエイアドレスを入力します。</para>
       </step>
       <step>
-       <para>
-        Click <guimenu>Forward</guimenu> to proceed.
-       </para>
+       <para><guimenu>完了</guimenu> を押して進めます。</para>
       </step>
       <step>
-       <para>
-        To specify IPv6-related options&mdash;network address space, DHCPv6
-        server, or static route&mdash;activate <guimenu>Enable IPv6 network
-        address space definition</guimenu> and activate the relevant options
-        and fill in the relevant boxes.
-       </para>
+       <para>IPv6 関連のオプション (アドレス範囲や DHCPv6 サーバ、スタティック (固定の) ルーティングなど) を指定したい場合は、 <guimenu>Enable IPv6</guimenu><!-- NOTE: different? --> を選択して対応する項目に入力します。</para>
       </step>
       <step>
-       <para>
-        Click <guimenu>Forward</guimenu> to proceed.
-       </para>
+       <para><guimenu>完了</guimenu> を押して進めます。</para>
       </step>
       <step>
-       <para>
-        Select whether you want an isolated or forwarded virtual network.
-       </para>
+       <para>あとは孤立したネットワークを設定するか、転送型のネットワークを設定するかを選択します。</para>
        <figure>
-        <title>Create virtual network</title>
+        <title>仮想ネットワークの作成</title>
         <mediaobject>
          <imageobject role="fo">
           <imagedata fileref="libvirt_vmm_vnet_type.png" width="45%" format="PNG"/>
@@ -515,231 +291,138 @@ virbr_test  1 PVID Egress Untagged
          </imageobject>
         </mediaobject>
        </figure>
-       <para>
-        For forwarded networks, specify the network interface to which the
-        requests will be forwarded, and one of the forwarding modes: While
-        <guimenu>NAT</guimenu> (network address translation) remaps the virtual
-        network address space and allows sharing a single IP address,
-        <guimenu>Routed</guimenu> forwards packets from the virtual network to
-        the &vmhost;'s physical network with no translation.
-       </para>
+       <para>転送型のネットワークの場合は、パケットの転送先となるネットワークインターフェイスを指定します。このとき、下記のいずれかの転送モードを選択することができます: <guimenu>NAT</guimenu> (Network Address Translation; ネットワークアドレス変換) は仮想的なネットワークアドレス領域を特定の IP アドレスに割り当てるための方式で、 1 つの IP アドレスを複数のゲストで共有することができるようになります。 <guimenu>ルーティング</guimenu> は仮想ネットワーク側からのパケットを、そのまま &vmhost; の物理ネットワークに転送する方式です。</para>
       </step>
       <step>
-       <para>
-        If you did not specify an IPv6 network address space definition
-        earlier, you can enable IPv6 internal routing between virtual machines.
-       </para>
+       <para>IPv6 アドレス領域を指定していない場合は、ここで仮想マシン間内部の IPv6 の有効化を設定することができます。</para>
       </step>
       <step performance="optional">
-       <para>
-        Optionally, change the DNS domain name.
-       </para>
+       <para>また、必要であれば DNS ドメイン名を設定することもできます。</para>
       </step>
       <step>
-       <para>
-        Click <guimenu>Finish</guimenu> to create the new virtual network. On
-        the &vmhost;, a new virtual network bridge
-        <literal>virbr<replaceable>X</replaceable></literal> is available,
-        which corresponds to the newly created virtual network. You can check
-        with <command>bridge link</command>. &libvirt; automatically adds
-        iptables rules to allow traffic to/from guests attached to the new
-        <emphasis>virbr<replaceable>X</replaceable></emphasis> device.
-       </para>
+       <para><guimenu>完了</guimenu> を押すと新しい仮想ネットワークを作成することができます。 &vmhost; 側では新しい仮想ネットワークブリッジである <literal>virbr<replaceable>X</replaceable></literal> が作成され、これが新しい仮想ネットワークになります。これは <command>bridge link</command> コマンドで確認することができます。 &libvirt; では自動的に iptables のルールを追加して、新しく作成した <emphasis>virbr<replaceable>X</replaceable></emphasis> でのゲスト間の通信可否を設定します。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-vmm-start">
-     <title>Starting Virtual Networks</title>
-     <para>
-      To start a virtual network that is temporarily stopped, follow these
-      steps:
-     </para>
+     <title>仮想ネットワークの起動</title>
+     <para>停止済みの仮想ネットワークを起動するには、下記の手順で行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Start &vmm;. In the list of available connections, right-click the name
-        of the connection for which you need to configure the virtual network,
-        and then select <guimenu>Details</guimenu>.
-       </para>
+       <para>まずは &vmm; を起動します。利用可能な接続が表示されますので、設定したい仮想ネットワークの名前を選択して <guimenu>詳細</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        In the <guimenu>Connection Details</guimenu> window, click the
-        <guimenu>Virtual Networks</guimenu> tab. You can see the list of all
-        virtual networks available for the current connection.
-       </para>
+       <para><guimenu>接続の詳細</guimenu> ウインドウ内では <guimenu>仮想ネットワーク</guimenu> タブを選択します。ここには現在の接続で利用可能な、全ての仮想ネットワークが一覧表示されます。</para>
       </step>
       <step>
-       <para>
-        To start the virtual network, click <guimenu>Start</guimenu>.
-       </para>
+       <para>仮想ネットワークを起動するには、 <guimenu>開始</guimenu> を押します。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-vmm-stop">
-     <title>Stopping Virtual Networks</title>
-     <para>
-      To stop an active virtual network, follow these steps:
-     </para>
+     <title>仮想ネットワークの停止</title>
+     <para>起動済みの仮想ネットワークを停止するには、下記の手順で行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Start &vmm;. In the list of available connections, right-click the name
-        of the connection for which you need to configure the virtual network,
-        and then select <guimenu>Details</guimenu>.
-       </para>
+       <para>まずは &vmm; を起動します。利用可能な接続が表示されますので、設定したい仮想ネットワークの名前を選択して <guimenu>詳細</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        In the <guimenu>Connection Details</guimenu> window, click the
-        <guimenu>Virtual Networks</guimenu> tab. You can see the list of all
-        virtual networks available for the current connection.
-       </para>
+       <para><guimenu>接続の詳細</guimenu> ウインドウ内では <guimenu>仮想ネットワーク</guimenu> タブを選択します。ここには現在の接続で利用可能な、全ての仮想ネットワークが一覧表示されます。</para>
       </step>
       <step>
-       <para>
-        Select the virtual network to be stopped, then click
-        <guimenu>Stop</guimenu>.
-       </para>
+       <para>停止させたい仮想ネットワークを選択して、 <guimenu>停止</guimenu> を押します。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-vmm-delete">
-     <title>Deleting Virtual Networks</title>
-     <para>
-      To delete a virtual network from &vmhost;, follow these steps:
-     </para>
+     <title>仮想ネットワークの削除</title>
+     <para>&vmhost; から仮想ネットワークを削除するには、下記の手順で行ないます:</para>
      <procedure>
       <step>
-       <para>
-        Start &vmm;. In the list of available connections, right-click the name
-        of the connection for which you need to configure the virtual network,
-        and then select <guimenu>Details</guimenu>.
-       </para>
+       <para>まずは &vmm; を起動します。利用可能な接続が表示されますので、設定したい仮想ネットワークの名前を選択して <guimenu>詳細</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        In the <guimenu>Connection Details</guimenu> window, click the
-        <guimenu>Virtual Networks</guimenu> tab. You can see the list of all
-        virtual networks available for the current connection.
-       </para>
+       <para><guimenu>接続の詳細</guimenu> ウインドウ内では <guimenu>仮想ネットワーク</guimenu> タブを選択します。ここには現在の接続で利用可能な、全ての仮想ネットワークが一覧表示されます。</para>
       </step>
       <step>
-       <para>
-        Select the virtual network to be deleted, then click
-        <guimenu>Delete</guimenu>.
-       </para>
+       <para>削除したい仮想ネットワークを選択して <guimenu>削除</guimenu> を押します。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-vmm-nsswitch">
 <!-- fate#316628 -->
-     <title>Obtaining IP Addresses with <command>nsswitch</command> for NAT Networks (in KVM)</title>
+     <title>NAT ネットワークでの <command>nsswitch</command> を利用した IP アドレスの取得 (KVM)</title>
      <itemizedlist>
       <listitem>
-       <para>
-        On &vmhost;, install libvirt-nss, which provides NSS support for
-        libvirt:
-       </para>
+       <para>&vmhost; 側に libvirt-nss をインストールします。これは libvirt 向けに NSS サポートを提供するものです:</para>
 <screen>&prompt.sudo;zypper in libvirt-nss</screen>
       </listitem>
       <listitem>
-       <para>
-        Add <literal>libvirt</literal> to
-        <filename>/etc/nsswitch.conf</filename>:
-       </para>
+       <para><filename>/etc/nsswitch.conf</filename> に <literal>libvirt</literal> を追記します:</para>
 <screen>...
 hosts:  files libvirt mdns_minimal [NOTFOUND=return] dns
 ...</screen>
       </listitem>
       <listitem>
-       <para>
-        If NSCD is running, restart it:
-       </para>
+       <para>NSCD を起動している場合は、再起動します:</para>
 <screen>&prompt.sudo;systemctl restart nscd</screen>
       </listitem>
      </itemizedlist>
-     <para>
-      Now you can reach the guest system by name from the host.
-     </para>
-     <para>
-      The NSS module has limited functionality. It reads
-      <filename>/var/lib/libvirt/dnsmasq/*.status</filename> files to find the
-      host name and corresponding IP addresses in a JSON record describing each
-      lease provided by <command>dnsmasq</command>. Host name translation can
-      only be done on those &vmhost;s using a libvirt-managed bridged network
-      backed by <command>dnsmasq</command>.
-     </para>
-     <para>
-      For more information, see
-      <link xlink:href="http://wiki.libvirt.org/page/NSS_module"/>.
-     </para>
+     <para>これでホスト側からゲストを名前で接続できるようになります。</para>
+     <para>なお、 NSS モジュールの機能は完全ではありません。 <command>dnsmasq</command> が提供する <filename>/var/lib/libvirt/dnsmasq/*.status</filename> ファイルを読み込んで、 JSON レコード形式で記述されているホスト名と IP アドレスを検出します。ホスト名の変換は、 <command>dnsmasq</command> の動作している libvirt 管理下のブリッジ型ネットワークの &vmhost; でのみ動作します。</para>
+     <para>詳しくは <link xlink:href="http://wiki.libvirt.org/page/NSS_module"/> をお読みください。</para>
     </sect4>
    </sect3>
    <sect3 xml:id="libvirt-networks-virtual-virsh">
-    <title>Managing Virtual Networks with <command>virsh</command></title>
-    <para>
-     You can manage &libvirt;-provided virtual networks with the
-     <command>virsh</command> command line tool. To view all network related
-     <command>virsh</command> commands, run
-    </para>
+    <title><command>virsh</command> を利用した仮想ネットワークの管理</title>
+    <para>&libvirt; が提供する仮想ネットワークは、 <command>virsh</command> コマンドラインツールで管理することができます。 <command>virsh</command> で利用可能なネットワーク関連のコマンドを一覧表示するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh help network
 Networking (help keyword 'network'):
- net-autostart                  autostart a network
-        net-create                     create a network from an XML file
-        net-define                     define (but don't start) a network from an XML file
-        net-destroy                    destroy (stop) a network
-        net-dumpxml                    network information in XML
-        net-edit                       edit XML configuration for a network
-        net-event                      Network Events
-        net-info                       network information
-        net-list                       list networks
-        net-name                       convert a network UUID to network name
-        net-start                      start a (previously defined) inactive network
-        net-undefine                   undefine an inactive network
-        net-update                     update parts of an existing network's configuration
- net-uuid                       convert a network name to network UUID</screen>
-    <para>
-     To view brief help information for a specific <command>virsh</command>
-     command, run <command>virsh help
-     <replaceable>VIRSH_COMMAND</replaceable></command>:
-    </para>
+    net-autostart                  ネットワークの自動起動
+    net-create                     XML ファイルによるネットワークの作成
+    net-define                     define (but don't start) a network from an XML file
+    net-destroy                    ネットワークの強制停止
+    net-dumpxml                    XML 形式のネットワーク情報
+    net-edit                       ネットワークの XML 設定の編集
+    net-event                      Network Events
+    net-info                       ネットワーク情報
+    net-list                       ネットワークの一覧表示
+    net-name                       ネットワーク UUID からネットワーク名への変換
+    net-start                      停止状態の（定義済み）ネットワークの起動
+    net-undefine                   undefine an inactive network
+    net-update                     既存のネットワーク設定の一部分の更新
+    net-uuid                       ネットワーク名からネットワーク UUID への変換
+    net-port-list                  list network ports
+    net-port-create                create a network port from an XML file
+    net-port-dumpxml               network port information in XML
+    net-port-delete                delete the specified network port</screen>
+    <para><command>virsh</command> の特定のコマンドに対するヘルプを表示したい場合は、 <command>virsh help <replaceable>コマンド</replaceable></command> のように入力して実行してください。</para>
 <screen>&prompt.sudo;virsh help net-create
-  NAME
-    net-create - create a network from an XML file
+  名前
+    net-create - XML ファイルによるネットワークの作成
 
-  SYNOPSIS
+  形式
     net-create &lt;file&gt;
 
-  DESCRIPTION
-    Create a network.
+  詳細
+    ネットワークを作成します。
 
-  OPTIONS
-    [--file] &lt;string&gt;  file containing an XML network description</screen>
+  オプション
+    [--file] &lt;string&gt;  ネットワーク の XML 記述を含むファイル</screen>
     <sect4 xml:id="libvirt-networks-virtual-virsh-create">
-     <title>Creating a Network</title>
+     <title>ネットワークの作成</title>
 <!-- 2016-02-25 tbazant
      http://wiki.libvirt.org/page/VirtualNetworking#Creating_a_virtual_network
      http://libvirt.org/formatnetwork.html
      http://libvirt.org/sources/virshcmdref/html/sect-net-create.html
      http://libvirt.org/sources/virshcmdref/html/
      -->
-     <para>
-      To create a new <emphasis>running</emphasis> virtual network, run
-     </para>
-<screen>&prompt.sudo;virsh net-create <replaceable>VNET_DEFINITION.xml</replaceable></screen>
-     <para>
-      The <replaceable>VNET_DEFINITION.xml</replaceable> XML file includes the
-      definition of the virtual network that &libvirt; accepts.
-     </para>
-     <para>
-      To define a new virtual network without activating it, run
-     </para>
-<screen>&prompt.sudo;virsh net-define <replaceable>VNET_DEFINITION.xml</replaceable></screen>
-     <para>
-      The following examples illustrate definitions of different types of
-      virtual networks.
-     </para>
+     <para>新しい <emphasis>動作中</emphasis> の仮想ネットワークを作成するには、下記のように入力して実行します:</para>
+<screen>&prompt.sudo;virsh net-create <replaceable>定義ファイル名.xml</replaceable></screen>
+     <para>ここで、 <replaceable>定義ファイル名.xml</replaceable> には、 &libvirt; が受け入れ可能な XML 形式で記述された、仮想ネットワークの設定ファイルを指定します。</para>
+     <para>有効化せずに新しい仮想ネットワークを追加したい場合は、下記のように入力して実行します:</para>
+<screen>&prompt.sudo;virsh net-define <replaceable>定義ファイル名.xml</replaceable></screen>
+     <para>下記には、様々な種類の仮想ネットワークの設定例を示しています。</para>
      <example xml:id="ex-libvirt-net-nat">
       <title>NAT-Based Network</title>
       <para>
@@ -767,9 +450,7 @@ Networking (help keyword 'network'):
 </screen>
       <calloutlist>
        <callout arearefs="vnet-xml-name">
-        <para>
-         The name of the new virtual network.
-        </para>
+        <para>新しい仮想ネットワークの名前です。</para>
        </callout>
        <callout arearefs="vnet-xml-bridge">
         <para>
@@ -795,9 +476,7 @@ Networking (help keyword 'network'):
         </para>
        </callout>
        <callout arearefs="vnet-xml-ip">
-        <para>
-         The IP address and netmask for the network bridge.
-        </para>
+        <para>ネットワークブリッジに設定する IP アドレスとネットマスクです。</para>
        </callout>
        <callout arearefs="vnet-xml-dhcp">
         <para>
@@ -807,32 +486,13 @@ Networking (help keyword 'network'):
         </para>
        </callout>
        <callout arearefs="vnet-xml-dhcp-host">
-        <para>
-         The optional &lt;host&gt; elements specify hosts that will be given
-         names and predefined IP addresses by the built-in DHCP server. Any
-         IPv4 host element must specify the following: the MAC address of the
-         host to be assigned a given name, the IP to be assigned to that host,
-         and the name to be given to that host by the DHCP server. An IPv6 host
-         element differs slightly from that for IPv4: there is no
-         <literal>mac</literal> attribute since a MAC address has no defined
-         meaning in IPv6. Instead, the <literal>name</literal> attribute is
-         used to identify the host to be assigned the IPv6 address. For DHCPv6,
-         the <literal>name</literal> is the plain name of the client host sent
-         by the client to the server. Note that this method of assigning a
-         specific IP address can also be used instead of the
-         <literal>mac</literal> attribute for IPv4.
-        </para>
+        <para>指定は任意ですが、 &lt;host&gt; 要素を設定することで、内蔵の DHCP サーバに対して割り当てるべき IP アドレスを設定することもできます。この &lt;host&gt; 要素では、 IPv4 の場合は割当先のホストの MAC アドレスと DHCP サーバが割り当てるべき IP アドレス、そしてホスト名をそれぞれ設定します。 IPv6 の場合は IPv4 と少し異なり、 IPv6 では使用しない <literal>mac</literal> 属性が存在しない代わりに、 <literal>name</literal> 属性でホストを識別します。 DHCPv6 の場合、 <literal>name</literal> 属性は対象の純粋なホスト名である必要があります。なお、 IPv4 でも <literal>mac</literal> の代わりにホスト名を使用することができます。</para>
        </callout>
       </calloutlist>
      </example>
      <example>
-      <title>Routed Network</title>
-      <para>
-       The following configuration routes traffic from the virtual network to
-       the LAN without applying any NAT. The IP address range must be
-       preconfigured in the routing tables of the router on the &vmhost;
-       network.
-      </para>
+      <title>ルーティング型のネットワーク</title>
+      <para>下記の設定は、仮想ネットワーク内のトラフィックを LAN にそのまま (NAT を適用せずに) 転送する場合の例を示しています。 IP アドレスの範囲は、 &vmhost; 側のネットワークルータであらかじめ設定されていなければなりません。</para>
 <screen>
 &lt;network&gt;
  &lt;name&gt;vnet_routed&lt;/name&gt;
@@ -847,21 +507,13 @@ Networking (help keyword 'network'):
 </screen>
       <calloutlist>
        <callout arearefs="vnet-xml-route">
-        <para>
-         The guest traffic may only go out via the
-         <systemitem>eth1</systemitem> network device on the &vmhost;.
-        </para>
+        <para>この例では、ゲスト側のトラフィックは &vmhost; 内の <systemitem>eth1</systemitem> デバイスを介して送信されます。</para>
        </callout>
       </calloutlist>
      </example>
      <example>
-      <title>Isolated Network</title>
-      <para>
-       This configuration provides a completely isolated private network. The
-       guests can talk to each other, and to &vmhost;, but cannot reach any
-       other machines on the LAN, as the &lt;forward&gt; element is missing in
-       the XML description.
-      </para>
+      <title>孤立したネットワーク</title>
+      <para>この設定は、プライベートネットワークとして完全に孤立させる設定例となります。ゲスト同士や &vmhost; との間では通信ができるものの、 LAN 内のマシンからはは全く接続できなくなります。これは XML の設定内に &lt;forward&gt; 要素が存在していないためです。</para>
 <screen>&lt;network&gt;
  &lt;name&gt;vnet_isolated&lt;/name&gt;
  &lt;bridge name="virbr3"/&gt;
@@ -874,14 +526,8 @@ Networking (help keyword 'network'):
 </screen>
      </example>
      <example>
-      <title>Using an Existing Bridge on &vmhost;</title>
-      <para>
-       This configuration shows how to use an existing &vmhost;'s network
-       bridge <literal>br0</literal>. &vmguest;s are directly connected to the
-       physical network. Their IP addresses will all be on the subnet of the
-       physical network, and there will be no restrictions on incoming or
-       outgoing connections.
-      </para>
+      <title>&vmhost; にある既存のブリッジの使用</title>
+      <para>この設定は、 &vmhost; 内にある既存のネットワークブリッジ <literal>br0</literal> を使用する場合の例です。 &vmguest; は物理ネットワークに直接接続される形になります。 &vmguest; の IP アドレスは物理ネットワークと同じサブネットでなければなりませんが、その代わり、接続に関する制限は送受信ともになくなります。</para>
 <screen>&lt;network&gt;
         &lt;name&gt;host-bridge&lt;/name&gt;
         &lt;forward mode="bridge"/&gt;
@@ -891,101 +537,74 @@ Networking (help keyword 'network'):
      </example>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-virsh-list">
-     <title>Listing Networks</title>
-     <para>
-      To list all virtual networks available to &libvirt;, run:
-     </para>
+     <title>ネットワークの一覧表示</title>
+     <para>&libvirt; で利用可能な仮想ネットワークの一覧を表示するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-list --all
 
- Name                 State      Autostart     Persistent
+ 名前                 状態       自動起動      永続
 ----------------------------------------------------------
- crowbar              active     yes           yes
- vnet_nated           active     yes           yes
- vnet_routed          active     yes           yes
- vnet_isolated        inactive   yes           yes</screen>
+ crowbar              動作中     はい (yes)    はい (yes)
+ vnet_nated           動作中     はい (yes)    はい (yes)
+ vnet_routed          動作中     はい (yes)    はい (yes)
+ vnet_isolated        停止状態   はい (yes)    はい (yes)</screen>
 <!-- fate#316628: Tool to obtain IP address allocated (DHCP)
       for bridged network in KVM -->
-     <para>
-      To list available domains, run:
-     </para>
+     <para>利用可能なドメインの一覧を表示するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh list
- Id    Name                           State
+ Id    名前                           状態
 ----------------------------------------------------
- 1     nated_sles12sp3                running
+ 1     nated_sles12sp3                動作中
  ...</screen>
-     <para>
-      To get a list of interfaces of a running domain, run <option>domifaddr
-      <replaceable>DOMAIN</replaceable></option>, or optionally specify the
-      interface to limit the output to this interface. By default, it
-      additionally outputs their IP and MAC addresses:
-     </para>
+     <para>動作中のドメインのインターフェイス一覧を表示したい場合は、 <option>domifaddr <replaceable>ドメイン</replaceable></option> のように入力して実行します。このとき、インターフェイス名を直接指定して実行することもできます。既定では IP アドレスと MAC アドレスがそれぞれ出力されます:</para>
 <screen>&prompt.sudo;virsh domifaddr nated_sles12sp3 --interface vnet0 --source lease
- Name       MAC address          Protocol     Address
+ 名前       MAC アドレス          Protocol     Address
 -------------------------------------------------------------------------------
  vnet0      52:54:00:9e:0d:2b    ipv6         fd00:dead:beef:55::140/64
  -          -                    ipv4         192.168.100.168/24</screen>
-     <para>
-      To print brief information of all virtual interfaces associated with the
-      specified domain, run:
-     </para>
+     <para>指定したドメインに関連づけられた全ての仮想インターフェイスの概要情報を表示するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh domiflist nated_sles12sp3
 Interface  Type       Source       Model       MAC
 ---------------------------------------------------------
 vnet0      network    vnet_nated   virtio      52:54:00:9e:0d:2b</screen>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-virsh-info">
-     <title>Getting Details about a Network</title>
-     <para>
-      To get detailed information about a network, run:
-     </para>
+     <title>ネットワークの関する詳細の取得</title>
+     <para>ネットワークに関する詳細情報を取得するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-info vnet_routed
-Name:           vnet_routed
+名前:           vnet_routed
 UUID:           756b48ff-d0c6-4c0a-804c-86c4c832a498
-Active:         yes
-Persistent:     yes
-Autostart:      yes
-Bridge:         virbr5</screen>
+起動中:         はい (yes)
+永続:           はい (yes)
+自動起動:       はい (yes)
+ブリッジ:         virbr5</screen>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-virsh-start">
-     <title>Starting a Network</title>
-     <para>
-      To start an inactive network that was already defined, find its name (or
-      unique identifier, UUID) with:
-     </para>
+     <title>ネットワークの起動</title>
+     <para>設定済みではあるものの、現在起動していないネットワークを起動したい場合は、まず対象の名前 (もしくは識別子や UUID) を判断します。具体的には、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-list --inactive
- Name                 State      Autostart     Persistent
+ 名前                 状態        自動起動      永続
 ----------------------------------------------------------
- vnet_isolated        inactive   yes           yes</screen>
-     <para>
-      Then run:
-     </para>
+ vnet_isolated        停止状態    はい (yes)    はい (yes)</screen>
+     <para>あとは下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-start vnet_isolated
-Network vnet_isolated started</screen>
+ネットワーク vnet_isolated を起動しました</screen>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-virsh-stop">
-     <title>Stopping a Network</title>
-     <para>
-      To stop an active network, find its name (or unique identifier, UUID)
-      with:
-     </para>
+     <title>ネットワークの停止</title>
+     <para>動作中のネットワークを停止するには、まず対象の名前 (もしくは識別子や UUID) を判断します。具体的には、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-list --inactive
- Name                 State      Autostart     Persistent
+ 名前                 状態        自動起動      永続
 ----------------------------------------------------------
- vnet_isolated        active     yes           yes</screen>
-     <para>
-      Then run:
-     </para>
+ vnet_isolated        動作中      はい (yes)    はい (yes)</screen>
+     <para>あとは下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-destroy vnet_isolated
-Network vnet_isolated destroyed</screen>
+ネットワーク vnet_isolated は強制停止されました</screen>
     </sect4>
     <sect4 xml:id="libvirt-networks-virtual-virsh-undefine">
-     <title>Removing a Network</title>
-     <para>
-      To remove the definition of an inactive network from &vmhost;
-      permanently, run:
-     </para>
+     <title>ネットワークの削除</title>
+     <para>停止したネットワークの設定を &vmhost; から完全に停止したい場合は、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;virsh net-undefine vnet_isolated
-Network vnet_isolated has been undefined</screen>
+ネットワーク vnet_isolated の定義が削除されました</screen>
     </sect4>
    </sect3>
   </sect2>
