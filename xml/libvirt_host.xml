@@ -4,42 +4,27 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-libvirt-host">
- <title>Preparing the &vmhost;</title>
- <para>
-  Before you can install guest virtual machines, you need to prepare the
-  &vmhost; to provide the guests with the resources that they need for their
-  operation. Specifically, you need to configure:
- </para>
+ <title>&vmhost; の準備</title>
+ <para>ゲスト側の仮想マシンをインストールする前に、まずは &vmhost; 内に必要なリソースを用意して環境を整える必要があります。具体的には下記の設定を行なう必要があります:</para>
  <itemizedlist>
   <listitem>
-   <para>
-    <emphasis>Networking</emphasis> so that guests can make use of the network
-    connection provided the host.
-   </para>
+   <para><emphasis>ネットワーク</emphasis>: ホストが提供するネットワークと接続するための機能に関する設定を行ないます。</para>
   </listitem>
   <listitem>
-   <para>
-    A <emphasis>storage pool</emphasis> reachable from the host so that the
-    guests can store their disk images.
-   </para>
+   <para><emphasis>ストレージプール</emphasis>: ホストが提供するストレージをゲスト側からアクセスできるようにして、ディスクイメージ等を保存できるようにします。</para>
   </listitem>
  </itemizedlist>
  <sect1 xml:id="libvirt-host-network">
-  <title>Configuring Networks</title>
+  <title>ネットワークの設定</title>
 
   <para>&bmguest; に対してネットワーク機能を提供するには、下記の 2 種類の方法があります:</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-     A <emphasis>network bridge</emphasis>. This is the default and recommended
-     way of providing the guests with network connection.
-    </para>
+    <para><emphasis>ネットワークブリッジ</emphasis>: ゲスト側にネットワーク接続を提供する設定の既定値で、推奨される方式です。</para>
    </listitem>
    <listitem>
-    <para>
-     A <emphasis>virtual network</emphasis> with forwarding enabled.
-    </para>
+    <para><emphasis>仮想ネットワーク</emphasis>: 転送機能を利用してネットワーク接続を提供する方式です。</para>
    </listitem>
   </itemizedlist>
 
@@ -66,14 +51,7 @@
       <step>
        <para><guimenu>アドレス</guimenu> のタブでは、 DHCP 経由でアドレスを取得するか、もしくは固定で IP アドレスを設定するかを選択し、必要であれば IP アドレスやサブネットマスク、ホスト名などをそれぞれ入力します。</para>
        <para><guimenu>可変 IP アドレス</guimenu> は、ブリッジが DHCP サーバに接続されているような場合のみ有用です。</para>
-       <para>
-        If you intend to create a virtual bridge that has no connection to a
-        real network device, use <guimenu>Statically assigned IP
-        Address</guimenu>. In this case, it is a good idea to use addresses
-        from the private IP address ranges, for example,
-        <literal>192.168.0.0/16</literal>, <literal>172.16.0.0/12</literal>, or
-        <literal>10.0.0.0/8</literal>.
-       </para>
+       <para>物理的なイーサネットデバイスへの接続を持たない仮想ブリッジを作成する場合は、 <guimenu>固定 IP アドレス</guimenu> を選択します。この場合、プライベート IP アドレスの範囲から選んで使用することをお勧めします。たとえば <literal>192.168.0.0/16</literal> , <literal>172.16.0.0/12</literal> , <literal>10.0.0.0/8</literal> などの中から選択します。</para>
        <para>ホストシステムとは接続しないゲスト間のみのネットワーク接続を作成する場合は、 IP アドレスを <literal>0.0.0.0</literal> 、サブネットマスクを <literal>255.255.255.255</literal> に設定します。これにより、 IP アドレスを設定しない特殊なネットワークを構成することができます。</para>
       </step>
       <step>
@@ -260,11 +238,7 @@ virbr_test  1 PVID Egress Untagged
        </figure>
       </step>
       <step>
-       <para>
-        &libvirt; can provide your virtual network with a DHCP server. If you
-        need it, activate <guimenu>Enable DHCPv4</guimenu>, then type the start
-        and end IP addresses of a range to be made assignable.
-       </para>
+       <para>&libvirt; では DHCP サーバ機能付きの仮想ネットワークを提供することもできます。 DHCP を必要とする場合は、 <guimenu>DHCPv4 を有効化</guimenu> を選択して、割り当て可能なアドレス範囲の開始と終了を指定します。</para>
       </step>
       <step>
        <para>新しい仮想ネットワークに対してスタティック (固定の) ルーティングを設定したい場合は、対応するオプションを選択してネットワークとゲートウエイアドレスを入力します。</para>
@@ -424,12 +398,8 @@ Networking (help keyword 'network'):
 <screen>&prompt.sudo;virsh net-define <replaceable>定義ファイル名.xml</replaceable></screen>
      <para>下記には、様々な種類の仮想ネットワークの設定例を示しています。</para>
      <example xml:id="ex-libvirt-net-nat">
-      <title>NAT-Based Network</title>
-      <para>
-       The following configuration allows &vmguest;s outgoing connectivity if
-       it is available on the &vmhost;. In the absence of &vmhost; networking, it
-       allows guests to talk directly to each other.
-      </para>
+      <title>NAT ベースのネットワーク</title>
+      <para>下記の設定は &vmguest; から外部に発信する通信を許可するネットワーク設定です。ただし、 &vmhost; 側で外部に接続することのできる環境が必要です。 &vmhost; 側にそのようなネットワークが用意されていない場合、相互に通信できるだけのネットワークになります。</para>
 <screen>
 &lt;network&gt;
 &lt;name&gt;vnet_nated&lt;/name&gt;<co xml:id="vnet-xml-name"/>
@@ -453,37 +423,16 @@ Networking (help keyword 'network'):
         <para>新しい仮想ネットワークの名前です。</para>
        </callout>
        <callout arearefs="vnet-xml-bridge">
-        <para>
-         The name of the bridge device used to construct the virtual network.
-         When defining a new network with a &lt;forward&gt; mode of <literal>"nat"</literal> or
-         <literal>"route"</literal> (or an isolated network with no &lt;forward&gt; element),
-         &libvirt; will automatically generate a unique name for the bridge
-         device if none is given.
-        </para>
+        <para>仮想ネットワークを構築する際のブリッジデバイス名を指定します。 &lt;forward&gt; (転送) モードが <literal>"nat"</literal> もしくは <literal>"route"</literal> のネットワークを作成する場合 (もしくは &lt;forward&gt; 要素を指定せず、孤立したネットワークを作成する場合) で、何も名前を指定しない場合、 &libvirt; が自動的にユニークな名前を生成して使用します。</para>
        </callout>
        <callout arearefs="vnet-xml-forward">
-        <para>
-         Inclusion of the &lt;forward&gt; element indicates that the virtual
-         network will be connected to the physical LAN. The
-         <literal>mode</literal> attribute specifies the forwarding method. The
-         most common modes are <literal>"nat"</literal> (Network Address Translation, the default),
-         <literal>"route"</literal> (direct forwarding to the physical network, no address
-         translation), and <literal>"bridge"</literal> (network bridge configured outside of
-         &libvirt;). If the &lt;forward&gt; element is not specified, the
-         virtual network will be isolated from other networks. For a complete
-         list of forwarding modes, see
-         <link xlink:href="http://libvirt.org/formatnetwork.html#elementsConnect"/>.
-        </para>
+        <para>&lt;forward&gt; 要素を含めることで、仮想ネットワークを物理 LAN に接続することができるようになります。 <literal>mode</literal> (モード) 属性は転送方法を指定する属性で、最もよく使用されるものが "nat" (Network Address Translation (ネットワークアドレス変換); 既定値), "route" (アドレス変換を行なわずに直接物理ネットワークに転送), "bridge" (&libvirt; の外部で設定されるブリッジに接続) のいずれかです。 &lt;forward&gt; 要素を何も指定しないと、その仮想ネットワークは他のネットワークから隔離 (孤立) されることになります。それ以外の転送モードについて、詳しくは <link xlink:href="http://libvirt.org/formatnetwork.html#elementsConnect"/> をお読みください。</para>
        </callout>
        <callout arearefs="vnet-xml-ip">
         <para>ネットワークブリッジに設定する IP アドレスとネットマスクです。</para>
        </callout>
        <callout arearefs="vnet-xml-dhcp">
-        <para>
-         Enable DHCP server for the virtual network, offering IP addresses
-         ranging from the specified <literal>start</literal> and
-         <literal>end</literal> attributes.
-        </para>
+        <para>仮想ネットワークに対して DHCP サーバ機能を有効化し、 <literal>start</literal> 属性と <literal>end</literal> 属性で指定した範囲の IP アドレスを提供します。</para>
        </callout>
        <callout arearefs="vnet-xml-dhcp-host">
         <para>指定は任意ですが、 &lt;host&gt; 要素を設定することで、内蔵の DHCP サーバに対して割り当てるべき IP アドレスを設定することもできます。この &lt;host&gt; 要素では、 IPv4 の場合は割当先のホストの MAC アドレスと DHCP サーバが割り当てるべき IP アドレス、そしてホスト名をそれぞれ設定します。 IPv6 の場合は IPv4 と少し異なり、 IPv6 では使用しない <literal>mac</literal> 属性が存在しない代わりに、 <literal>name</literal> 属性でホストを識別します。 DHCPv6 の場合、 <literal>name</literal> 属性は対象の純粋なホスト名である必要があります。なお、 IPv4 でも <literal>mac</literal> の代わりにホスト名を使用することができます。</para>
@@ -610,77 +559,45 @@ UUID:           756b48ff-d0c6-4c0a-804c-86c4c832a498
   </sect2>
  </sect1>
  <sect1 xml:id="libvirt-host-storage">
-  <title>Configuring a Storage Pool</title>
+  <title>ストレージプールの設定</title>
 
-  <para>
-   When managing a &vmguest; on the &vmhost; itself, you can access the
-   complete file system of the &vmhost; to attach or create virtual hard disks
-   or to attach existing images to the &vmguest;. However, this is not possible
-   when managing &vmguest;s from a remote host. For this reason, &libvirt;
-   supports so called <quote>Storage Pools</quote>, which can be accessed from
-   remote machines.
-  </para>
+  <para>&vmhost; 自身から &vmguest; を管理する場合であれば、 &vmhost; のファイルシステムの任意の箇所にアクセスして仮想ハードディスクを割り当てたり作成したりすることができますし、既存のイメージを &vmguest; に割り当てたりすることができます。しかしながら、このような機能は &vmguest; をリモートから管理しようとしている場合には実現できません。このような理由から、 &libvirt; では <quote>ストレージプール</quote> と呼ばれる機能を提供して、リモートからアクセスできるようにしています。</para>
 
   <tip>
-   <title>CD/DVD ISO images</title>
-   <para>
-    To be able to access CD/DVD ISO images on the &vmhost; from remote clients, they
-    also need to be placed in a storage pool.
-   </para>
+   <title>CD/DVD ISO イメージ</title>
+   <para>リモートのクライアントから &vmhost; 内の CD/DVD イメージにアクセスできるようにするには、まずそれらのイメージをストレージプール内に配置します。</para>
   </tip>
 
-  <para>
-   &libvirt; knows two different types of storage: volumes and pools.
-  </para>
+  <para>&libvirt; では 2 種類のストレージを管理しています。それらはボリュームとプールと呼ばれます。</para>
 
   <variablelist>
    <varlistentry>
-    <term>Storage Volume</term>
+    <term>ストレージボリューム</term>
     <listitem>
-     <para>
-      A storage volume is a storage device that can be assigned to a
-      guest&mdash;a virtual disk or a CD/DVD/floppy image. Physically, it can
-      be a block device&mdash;for example, a partition or a logical
-      volume&mdash;or a file on the &vmhost;.
-     </para>
+     <para>ストレージボリュームは、ゲストに対して割り当てることのできるストレージデバイスを意味します。たとえば仮想ディスクや CD/DVD イメージのほか、フロッピィディスクイメージなども該当します。また、ストレージボリュームを物理デバイス (パーティションや論理ボリュームなど) に設定することもできますし、 &vmhost; 内のファイルとして存在させることもできます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Storage Pool</term>
+    <term>ストレージプール</term>
     <listitem>
-     <para>
-      A storage pool is a storage resource on the &vmhost; that can be used for
-      storing volumes, similar to network storage for a desktop machine.
-      Physically it can be one of the following types:
-     </para>
+     <para>ストレージプールは &vmhost; 内のストレージリソースを意味するもので、その中にストレージボリュームが存在する形になります。デスクトップマシンにおけるネットワークストレージのような存在です。物理的には下記のいずれかの形態を取ることができます:</para>
      <variablelist>
       <varlistentry>
-       <term>File System Directory (<guimenu>dir</guimenu>)</term>
+       <term>ファイルシステム内のディレクトリ ( <guimenu>dir</guimenu> )</term>
        <listitem>
-        <para>
-         A directory for hosting image files. The files can be either one of
-         the supported disk formats (raw or qcow2), or ISO images.
-        </para>
+        <para>イメージファイルを含むディレクトリの形態です。イメージファイルにはディスク形式 (raw, qcow2) のほか、 ISO イメージであってもかまいません。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Physical Disk Device (<guimenu>disk</guimenu>)</term>
+       <term>物理ディスクデバイス ( <guimenu>disk</guimenu> )</term>
        <listitem>
-        <para>
-         Use a complete physical disk as storage. A partition is created for
-         each volume that is added to the pool.
-        </para>
+        <para>物理ディスク全体をストレージプールとして使用する形態です。その中にパーティションを作成してストレージボリュームを設定し、プールへの追加を行ないます。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Pre-Formatted Block Device (<guimenu>fs</guimenu>)</term>
+       <term>フォーマット済みブロックデバイス ( <guimenu>fs</guimenu> )</term>
        <listitem>
-        <para>
-         Specify a partition to be used in the same way as a file system
-         directory pool (a directory for hosting image files). The only
-         difference to using a file system directory is that &libvirt; takes
-         care of mounting the device.
-        </para>
+        <para>ファイルシステムのディレクトリをストレージプールとして使用する場合と同様に、特定のパーティションをストレージプールとして使用する形態です。ただし、この方式の場合は、 &libvirt; 側でデバイスのマウント処理を行ないます。</para>
        </listitem>
       </varlistentry>
 <!-- <varlistentry>
@@ -692,73 +609,38 @@ UUID:           756b48ff-d0c6-4c0a-804c-86c4c832a498
       </listitem>
      </varlistentry> -->
       <varlistentry>
-       <term>iSCSI Target (iscsi)</term>
+       <term>iSCSI ターゲット (iscsi)</term>
        <listitem>
-        <para>
-         Set up a pool on an iSCSI target. You need to have been logged in to
-         the volume once before to use it with &libvirt;. Use the &yast;
-         <guimenu>iSCSI Initiator</guimenu> to detect and log in to a
-         volume<phrase os="sles">, see <xref linkend="book-storage"/> for
-         details</phrase>. Volume creation on iSCSI pools is not supported,
-         instead each existing Logical Unit Number (LUN) represents a volume.
-         Each volume/LUN also needs a valid (empty) partition table or disk
-         label before you can use it. If missing, use <command>fdisk</command>
-         to add it:
-        </para>
+        <para>iSCSI ターゲット内にストレージプールを作成する形態です。この場合は、 &libvirt; で使用するより前に、あらかじめボリュームにログインしておく必要があります。 &yast; の <guimenu>iSCSI イニシエータ</guimenu> モジュールを利用してターゲットを検出し、ログインしておいてください。 <phrase os="sles"> 詳しくは <xref linkend="book-storage"/> をお読みください。 </phrase> iSCSI ストレージプール内でのボリューム作成はサポートされていませんが、既存の論理ユニット番号 (LUN) そのものがボリュームそのものになります。それぞれのボリューム (LUN) を使用するには、あらかじめパーティションテーブルを作成しておくか、ディスクラベルを設定しておく必要があります。いずれも存在していない場合は、 <command>fdisk</command> で設定してください:</para>
 <screen>&prompt.sudo;fdisk -cu /dev/disk/by-path/ip-&wsIip;:3260-iscsi-iqn.2010-10.com.example:[...]-lun-2
-Device contains neither a valid DOS partition table, nor Sun, SGI
-or OSF disklabel
-Building a new DOS disklabel with disk identifier 0xc15cdc4e.
-Changes will remain in memory only, until you decide to write them.
-After that, of course, the previous content won't be recoverable.
+デバイスには認識可能なパーティション情報が含まれていません。
+新しい DOS ディスクラベルを作成しました。識別子は 0xdeadbeef です。
 
-Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
-
-Command (m for help): w
-The partition table has been altered!
-
-Calling ioctl() to re-read partition table.
-Syncing disks.</screen>
+コマンド (m でヘルプ): w
+パーティション情報が変更されました。
+ディスクを同期しています。</screen>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>LVM Volume Group (logical)</term>
+       <term>LVM ボリュームグループ (logical)</term>
        <listitem>
-        <para>
-         Use an LVM volume group as a pool. You may either use a predefined
-         volume group, or create a group by specifying the devices to use.
-         Storage volumes are created as partitions on the volume.
-        </para>
+        <para>LVM のボリュームグループをプールとして使用する形態です。設定済みのボリュームグループの中から選択するか、もしくは使用したいデバイスを指定してグループを作成することができます。ストレージボリュームは、その中のパーティションとして作成されます。</para>
         <warning>
-         <title>Deleting the LVM-Based Pool</title>
-         <para>
-          When the LVM-based pool is deleted in the Storage Manager, the volume
-          group is deleted as well. This results in a non-recoverable loss of
-          all data stored on the pool!
-         </para>
+         <title>LVM ベースのプールの削除</title>
+         <para>LVM ベースのプールをストレージマネージャで削除した場合、ボリュームグループについても削除が行なわれます。そのため、プール内にあるデータは完全に削除され、復元できなくなることに注意してください！</para>
         </warning>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Multipath Devices (<guimenu>mpath</guimenu>)</term>
+       <term>マルチパスデバイス ( <guimenu>mpath</guimenu> )</term>
        <listitem>
-        <para>
-         At the moment, multipathing support is limited to assigning existing
-         devices to the guests. Volume creation or configuring multipathing
-         from within &libvirt; is not supported.
-        </para>
+        <para>現時点では、マルチパスデバイスへのサポートは限定的で、ゲストに対して既存のデバイスを割り当てることだけができます。 &libvirt; 内からマルチパスデバイスのボリュームを作成する機能は提供されていません。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Network Exported Directory (<guimenu>netfs</guimenu>)</term>
+       <term>ネットワーク公開ディレクトリ ( <guimenu>netfs</guimenu> )</term>
        <listitem>
-        <para>
-         Specify a network directory to be used in the same way as a file
-         system directory pool (a directory for hosting image files). The only
-         difference to using a file system directory is that &libvirt; takes
-         care of mounting the directory. Supported protocols are NFS and
-         GlusterFS.
-        </para>
+        <para>ファイルシステムのディレクトリプール (イメージファイルをディレクトリ内に配置する) と同様に、ネットワークディレクトリを指定して、そのディレクトリ内に配置する方法です。ただし、こちらの場合は &libvirt; 側でマウント処理を行ないます。 NFS と GlusterFS の両方に対応しています。</para>
        </listitem>
       </varlistentry>
 <!-- <varlistentry>
@@ -778,17 +660,9 @@ Syncing disks.</screen>
       </listitem>
      </varlistentry> -->
       <varlistentry>
-       <term>SCSI Host Adapter (<guimenu>scsi</guimenu>)</term>
+       <term>SCSI ホストアダプタ ( <guimenu>scsi</guimenu> )</term>
        <listitem>
-        <para>
-         Use an SCSI host adapter in almost the same way as an iSCSI target. We
-         recommend to use a device name from
-         <filename>/dev/disk/by-*</filename> rather than
-         <filename>/dev/sd<replaceable>X</replaceable></filename>. The latter
-         can change (for example, when adding or removing hard disks). Volume
-         creation on iSCSI pools is not supported. Instead, each existing LUN
-         (Logical Unit Number) represents a volume.
-        </para>
+        <para>iSCSI ターゲットと同様に SCSI ホストアダプタを使用する方法です。この場合、デバイス名に <filename>/dev/sd<replaceable>X</replaceable></filename> ではなく、 <filename>/dev/disk/by-*</filename> を使用することをお勧めします。これは、 <filename>/dev/sd<replaceable>X</replaceable></filename> を使用してしまうと、ハードディスクの取り付けや取り外しなどで名前が変化してしまうことがあり得るためです。 iSCSI プール内のボリューム作成には対応していませんが、既存の LUN (論理ユニット番号;  Logical Unit Number) がそのままボリュームを表わします。</para>
        </listitem>
       </varlistentry>
      </variablelist>
@@ -797,63 +671,28 @@ Syncing disks.</screen>
   </variablelist>
 
   <warning>
-   <title>Security Considerations</title>
-   <para>
-    To avoid data loss or data corruption, do not attempt to use resources such
-    as LVM volume groups, iSCSI targets, etc., that are also used to build
-    storage pools on the &vmhost;. There is no need to connect to these
-    resources from the &vmhost; or to mount them on the
-    &vmhost;&mdash;&libvirt; takes care of this.
-   </para>
-   <para>
-    Do not mount partitions on the &vmhost; by label. Under certain
-    circumstances it is possible that a partition is labeled from within a
-    &vmguest; with a name already existing on the &vmhost;.
-   </para>
+   <title>セキュリティ面の考慮事項について</title>
+   <para>データの損失や破壊を防ぐため、 LVM ボリュームグループや iSCSI ターゲットなど、 &vmhost; のストレージプールを構成するリソースを別目的で使用してはなりません。これらに対する必要な処理は &libvirt; が行ないますので、 &vmhost; から直接接続する必要はありませんし、 &vmhost; からマウントする必要もありません。</para>
+   <para>また &vmhost; では、ラベルによるマウントも行なわないようにしてください。ラベルによるマウントを行なってしまうと、本来は &vmguest; 側で使用すべきパーティションを &vmhost; 側が検知して、マウントしてしまう危険性があるためです。</para>
   </warning>
 
   <sect2 xml:id="sec-libvirt-storage-virsh">
-   <title>Managing Storage with <command>virsh</command></title>
-   <para>
-    Managing storage from the command line is also possible by using
-    <command>virsh</command>. However, creating storage pools is currently not
-    supported by &suse;. Therefore, this section is restricted to documenting
-    functions such as starting, stopping, and deleting pools, and volume management.
-   </para>
-   <para>
-    A list of all <command>virsh</command> subcommands for managing pools and
-    volumes is available by running <command>virsh help pool</command> and
-    <command>virsh help volume</command>, respectively.
-   </para>
+   <title><command>virsh</command> を利用したストレージの管理</title>
+   <para>コマンドラインからのストレージの管理についても、 <command>virsh</command> から行なうことができます。ただし、ストレージプールの作成は現時点では &suse; のサポート対象外となっております。そのため、本章ではプールの起動／停止／削除のほか、ボリュームの管理に絞って説明しています。</para>
+   <para><command>virsh</command> で利用可能なプール／ボリューム管理関連のサブコマンド一覧を表示するには、 <command>virsh help pool</command> および <command>virsh help volume</command> を実行します。</para>
    <sect3 xml:id="sec-libvirt-storage-virsh-list-pools">
-    <title>Listing Pools and Volumes</title>
-    <para>
-     List all pools currently active by executing the following command. To
-     also list inactive pools, add the option <option>--all</option>:
-    </para>
+    <title>ブールとボリュームの一覧表示</title>
+    <para>現時点で有効化されているプールの一覧を表示するには、下記のコマンドを入力して実行します。無効化されているプールも表示したい場合は、 <option>--all</option> オプションを追加してください:</para>
 <screen>&prompt.user;virsh pool-list --details</screen>
-    <para>
-     Details about a specific pool can be obtained with the
-     <literal>pool-info</literal> subcommand:
-    </para>
-<screen>&prompt.user;virsh pool-info <replaceable>POOL</replaceable></screen>
-    <para>
-     By default, volumes can only be listed per pool. To list all volumes from a
-     pool, enter the following command.
-    </para>
-<screen>&prompt.user;virsh vol-list --details <replaceable>POOL</replaceable></screen>
-    <para>
-     At the moment <command>virsh</command> offers no tools to show whether a
-     volume is used by a guest or not. The following procedure describes a way
-     to list volumes from all pools that are currently used by a &vmguest;.
-    </para>
+    <para>特定のプールに関する詳細を表示したい場合は、 <literal>pool-info</literal> サブコマンドを使用します:</para>
+<screen>&prompt.user;virsh pool-info <replaceable>プール名</replaceable></screen>
+    <para>既定では、ボリュームはプールごとに表示されます。プール内の全てのボリュームを表示したい場合は、下記のように入力して実行します:</para>
+<screen>&prompt.user;virsh vol-list --details <replaceable>プール名</replaceable></screen>
+    <para>現時点では、 <command>virsh</command> はゲスト側で使用されているかどうかを表示する機能は提供されていません。下記の手順を行なうことで、 &vmguest; 側で使用されている全てのプール内のボリュームを表示することができます。</para>
     <procedure xml:id="pro-libvirt-storage-virsh-list-vols">
-     <title>Listing all Storage Volumes Currently Used on a &vmhost;</title>
+     <title>&vmhost; で使用されている全てのストレージボリュームの一覧表示</title>
      <step>
-      <para>
-       Create an XSLT style sheet by saving the following content to a file,
-       for example, ~/libvirt/guest_storage_list.xsl:
-      </para>
+      <para>まずは下記のような内容で XSLT スタイルシートのファイルを作成します。たとえば ~/libvirt/guest_storage_list.xsl というファイル名で保存します:</para>
 <screen>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
@@ -868,13 +707,7 @@ Syncing disks.</screen>
 &lt;/xsl:stylesheet&gt;</screen>
      </step>
      <step>
-      <para>
-       Run the following commands in a shell. It is assumed that the guest's
-       XML definitions are all stored in the default location
-       (<filename>/etc/libvirt/qemu</filename>). <command>xsltproc</command> is
-       provided by the package
-       <systemitem class="resource">libxslt</systemitem>.
-      </para>
+      <para>あとは下記のようなコマンドをシェル内で実行します。なお、ゲスト側の XML 設定は全て既定の場所 ( <filename>/etc/libvirt/qemu</filename> ) に保存されているものとします。また、 <command>xsltproc</command> は <systemitem class="resource">libxslt</systemitem> パッケージ内に含まれています。</para>
 <screen>SSHEET="$HOME/libvirt/guest_storage_list.xsl"
 cd /etc/libvirt/qemu
 for FILE in *.xml; do
@@ -885,186 +718,108 @@ done</screen>
     </procedure>
    </sect3>
    <sect3 xml:id="sec-libvirt-storage-virsh-start-pools">
-    <title>Starting, Stopping, and Deleting Pools</title>
-    <para>
-     Use the <command>virsh</command> pool subcommands to start, stop, or delete
-     a pool. Replace <replaceable>POOL</replaceable> with the pool's name or
-     its UUID in the following examples:
-    </para>
+    <title>プールの起動／停止／削除</title>
+    <para><command>virsh</command> pool サブコマンドを使用することで、プールの起動と停止、削除をそれぞれ行なうことができます。下記では、 <replaceable>プール名</replaceable> の箇所をプールの名前もしくは UUID に置き換えて実行してください:</para>
     <variablelist>
      <varlistentry>
-      <term>Stopping a Pool</term>
+      <term>プールの停止</term>
       <listitem>
-<screen>&prompt.user;virsh pool-destroy <replaceable>POOL</replaceable></screen>
+<screen>&prompt.user;virsh pool-destroy <replaceable>プール名</replaceable></screen>
        <note>
-        <title>A Pool's State Does not Affect Attached Volumes</title>
-        <para>
-         Volumes from a pool attached to &vmguest;s are always available,
-         regardless of the pool's state (<guimenu>Active</guimenu> (stopped) or
-         <guimenu>Inactive</guimenu> (started)). The state of the pool solely
-         affects the ability to attach volumes to a &vmguest; via remote
-         management.
-        </para>
+        <title>プールの状態は割り当てられているボリュームとは無関係である件について</title>
+        <para>既に &vmguest; に割り当てられているプール内のボリュームについては、そのプールの状態 ( <guimenu>動作中</guimenu> もしくは <guimenu>停止</guimenu> ) に関わらず、常にアクセスできる状態になります。プールの状態は、リモートから &vmguest; のボリュームを管理する場合にのみ有効となります。</para>
        </note>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Deleting a Pool</term>
+      <term>プールの削除</term>
       <listitem>
-<screen>&prompt.user;virsh pool-delete <replaceable>POOL</replaceable></screen>
+<screen>&prompt.user;virsh pool-delete <replaceable>プール名</replaceable></screen>
        <warning>
-        <title>Deleting Storage Pools</title>
-        <para>
-         See <xref linkend="deleting-storage-pools"/>
-        </para>
+        <title>ストレージプールの削除</title>
+        <para><xref linkend="deleting-storage-pools"/> をお読みください</para>
        </warning>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Starting a Pool</term>
+      <term>プールの起動</term>
       <listitem>
-<screen>&prompt.user;virsh pool-start <replaceable>POOL</replaceable></screen>
+<screen>&prompt.user;virsh pool-start <replaceable>プール名</replaceable></screen>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Enable Autostarting a Pool</term>
+      <term>プールの自動起動の有効化</term>
       <listitem>
-<screen>&prompt.user;virsh pool-autostart <replaceable>POOL</replaceable></screen>
-       <para>
-        Only pools that are marked to autostart will automatically be started
-        if the &vmhost; reboots.
-       </para>
+<screen>&prompt.user;virsh pool-autostart <replaceable>プール名</replaceable></screen>
+       <para>自動起動が有効化されたプールは、 &vmhost; の起動時に自動的に起動が行なわれるようになります。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term>Disable Autostarting a Pool</term>
+      <term>プールの自動起動の無効化</term>
       <listitem>
-<screen>&prompt.user;virsh pool-autostart <replaceable>POOL</replaceable> --disable</screen>
+<screen>&prompt.user;virsh pool-autostart <replaceable>プール名</replaceable> --disable</screen>
       </listitem>
      </varlistentry>
     </variablelist>
    </sect3>
    <sect3 xml:id="sec-libvirt-storage-virsh-add-volumes">
-    <title>Adding Volumes to a Storage Pool</title>
-    <para>
-     <command>virsh</command> offers two ways to add volumes to storage pools:
-     either from an XML definition with <literal>vol-create</literal> and
-     <literal>vol-create-from</literal> or via command line arguments with
-     <literal>vol-create-as</literal>. The first two methods are currently not
-     supported by &suse;, therefore this section focuses on the subcommand
-     <literal>vol-create-as</literal>.
-    </para>
-    <para>
-     To add a volume to an existing pool, enter the following command:
-    </para>
-<screen>&prompt.user;virsh vol-create-as <replaceable>POOL</replaceable><co xml:id="co-vol-create-as-pool"/><replaceable>NAME</replaceable><co xml:id="co-vol-create-as-name"/> 12G --format<co xml:id="co-vol-create-as-capacity"/><replaceable>raw|qcow2</replaceable><co xml:id="co-vol-create-as-format"/> --allocation 4G<co xml:id="co-vol-create-as-alloc"/></screen>
+    <title>ストレージプールへのボリュームの追加</title>
+    <para><command>virsh</command> ではストレージプールにボリュームを追加するにあたって、 2 種類の方法を提供しています。 <literal>vol-create</literal> および <literal>vol-create-from</literal> を利用して、 XML 設定ファイルから追加する方法と、 <literal>vol-create-as</literal> のコマンドラインにパラメータを設定して追加する方法です。前者は現時点で &suse; 側でサポート対象となっていませんので、本章では <literal>vol-create-as</literal> を説明します。</para>
+    <para>既存のプールにボリュームを追加するには、下記のようなコマンドを入力して実行します:</para>
+<screen>&prompt.user;virsh vol-create-as <replaceable>プール名</replaceable><co xml:id="co-vol-create-as-pool"/><replaceable>名前</replaceable><co xml:id="co-vol-create-as-name"/> 12G --format<co xml:id="co-vol-create-as-capacity"/><replaceable>raw|qcow2</replaceable><co xml:id="co-vol-create-as-format"/> --allocation 4G<co xml:id="co-vol-create-as-alloc"/></screen>
     <calloutlist>
      <callout arearefs="co-vol-create-as-pool">
-      <para>
-       Name of the pool to which the volume should be added
-      </para>
+      <para>ボリュームを追加したいプールの名前を指定します</para>
      </callout>
      <callout arearefs="co-vol-create-as-name">
-      <para>
-       Name of the volume
-      </para>
+      <para>ボリュームの名前を指定します</para>
      </callout>
      <callout arearefs="co-vol-create-as-capacity">
-      <para>
-       Size of the image, in this example 12 gigabytes. Use the suffixes k, M,
-       G, T for kilobyte, megabyte, gigabyte, and terabyte, respectively.
-      </para>
+      <para>イメージのサイズを指定します。この例では 12 ギガバイトを指定していますが、 k (キロバイト), M (メガバイト), G (ギガバイト), T (テラバイト) の各接尾辞を指定することができます。</para>
      </callout>
      <callout arearefs="co-vol-create-as-format">
-      <para>
-       Format of the volume. &suse; currently supports <literal>raw</literal>
-       and <literal>qcow2</literal>.
-      </para>
+      <para>ボリュームの形式を指定します。 &suse; では <literal>raw</literal> と <literal>qcow2</literal> をサポート対象としています。</para>
      </callout>
      <callout arearefs="co-vol-create-as-alloc">
-      <para>
-       Optional parameter. By default, <command>virsh</command> creates a sparse
-       image file that grows on demand. Specify the amount of space that should
-       be allocated with this parameter (4 gigabytes in this example). Use the
-       suffixes k, M, G, T for kilobyte, megabyte, gigabyte, and terabyte,
-       respectively.
-      </para>
-      <para>
-       When not specifying this parameter, a sparse image file with no
-       allocation will be generated. To create a non-sparse volume, specify the
-       whole image size with this parameter (would be <literal>12G</literal> in
-       this example).
-      </para>
+      <para>任意指定のパラメータです。既定では、 <command>virsh</command> はスパースファイルという形式でイメージファイルを作成し、必要に応じて自動的にサイズが拡張されるようになりますが、ここで指定したサイズ (この例では 4 ギガバイト) を事前に割り当てておくことができます。なお、 k (キロバイト), M (メガバイト), G (ギガバイト), T (テラバイト) の各接尾辞を指定することができます。</para>
+      <para>このパラメータを指定しない場合、事前の割り当ての無いスパースファイルを作成することになります。あらかじめ全てのサイズを割り当てておきたい (非スパースファイルを作成したい) 場合は、イメージのサイズと同じ値 (この例では <literal>12G</literal>) を指定してください。</para>
      </callout>
     </calloutlist>
     <sect4 xml:id="sec-libvirt-storage-virsh-add-volumes-clone">
-     <title>Cloning Existing Volumes</title>
-     <para>
-      Another way to add volumes to a pool is to clone an existing volume. The
-      new instance is always created in the same pool as the original.
-     </para>
-<screen>&prompt.user;virsh vol-clone <replaceable>NAME_EXISTING_VOLUME</replaceable><co xml:id="co-vol-clone-existing"/><replaceable>NAME_NEW_VOLUME</replaceable><co xml:id="co-vol-clone-new"/> --pool <replaceable>POOL</replaceable><co xml:id="co-vol-clone-pool"/></screen>
+     <title>既存のボリュームの複製</title>
+     <para>プールにボリュームを追加するもう 1 つの方法として、既存のボリュームの複製という手段があります。新しいボリュームは元のボリュームと同じプール内に作成されます。</para>
+<screen>&prompt.user;virsh vol-clone <replaceable>既存のボリューム名</replaceable><co xml:id="co-vol-clone-existing"/><replaceable>新しいボリューム名</replaceable><co xml:id="co-vol-clone-new"/> --pool <replaceable>プール</replaceable><co xml:id="co-vol-clone-pool"/></screen>
      <calloutlist>
       <callout arearefs="co-vol-clone-existing">
-       <para>
-        Name of the existing volume that should be cloned
-       </para>
+       <para>複製元となる既存のボリューム名を指定します</para>
       </callout>
       <callout arearefs="co-vol-clone-new">
-       <para>
-        Name of the new volume
-       </para>
+       <para>新しいボリューム名を指定します</para>
       </callout>
       <callout arearefs="co-vol-clone-pool">
-       <para>
-        Optional parameter. &libvirt; tries to locate the existing volume
-        automatically. If that fails, specify this parameter.
-       </para>
+       <para>任意指定のパラメータです。 &libvirt; では既存のボリュームの配置先を自動的に判断しますが、それがうまくいかない場合に、このパラメータを指定してください。</para>
       </callout>
      </calloutlist>
     </sect4>
    </sect3>
    <sect3 xml:id="sec-libvirt-storage-virsh-del-volumes">
-    <title>Deleting Volumes from a Storage Pool</title>
-    <para>
-     To permanently delete a volume from a pool, use the subcommand
-     <literal>vol-delete</literal>:
-    </para>
-<screen>&prompt.user;virsh vol-delete <replaceable>NAME</replaceable> --pool <replaceable>POOL</replaceable></screen>
-    <para>
-     <option>--pool</option> is optional. &libvirt; tries to locate the volume
-     automatically. If that fails, specify this parameter.
-    </para>
+    <title>ストレージプールからのボリュームの削除</title>
+    <para>プールからボリュームを恒久的に削除したい場合は、 <literal>vol-delete</literal> サブコマンドを使用します:</para>
+<screen>&prompt.user;virsh vol-delete <replaceable>ボリューム名</replaceable> --pool <replaceable>プール名</replaceable></screen>
+    <para><option>--pool</option> は任意指定で、通常は &libvirt; がボリュームのプールを自動的に判断しますが、それがうまくいかない場合には、このパラメータを指定してください。</para>
     <warning>
-     <title>No Checks Upon Volume Deletion</title>
-     <para>
-      A volume will be deleted in any case, regardless of whether it is
-      currently used in an active or inactive &vmguest;. There is no way to
-      recover a deleted volume.
-     </para>
-     <para>
-      Whether a volume is used by a &vmguest; can only be detected by using by
-      the method described in
-      <xref linkend="pro-libvirt-storage-virsh-list-vols"/>.
-     </para>
+     <title>ボリューム削除時のチェックにいて</title>
+     <para>ボリュームは &vmguest; 側が使用しているかどうかにかかわらず、どのような状況下であっても削除ができてしまいます。また、削除したボリュームを復元する方法はありません。</para>
+     <para>ボリュームが &vmguest; 側で使用されているかどうかを判断したい場合は、 <xref linkend="pro-libvirt-storage-virsh-list-vols"/> の手順を行なってください。</para>
     </warning>
    </sect3>
    <sect3 xml:id="libvirt-storage-virsh-attach-volumes">
-    <title>Attaching Volumes to a &vmguest;</title>
-    <para>
-     After you create a volume as described in
-     <xref linkend="sec-libvirt-storage-virsh-add-volumes"/>, you can
-     attach it to a virtual machine and use it as a hard disk:
-    </para>
-<screen>&prompt.user;virsh attach-disk <replaceable>DOMAIN</replaceable> <replaceable>SOURCE_IMAGE_FILE</replaceable> <replaceable>TARGET_DISK_DEVICE</replaceable></screen>
-    <para>
-     For example:
-    </para>
+    <title>&vmguest; へのボリュームの割り当て</title>
+    <para><xref linkend="sec-libvirt-storage-virsh-add-volumes"/> で説明している手順でボリュームを作成したら、あとは仮想マシンへの割り当てを行なってハードディスクとして使用できるようにします:</para>
+<screen>&prompt.user;virsh attach-disk <replaceable>ドメイン</replaceable> <replaceable>イメージファイル</replaceable> <replaceable>接続先ディスクデバイス</replaceable></screen>
+    <para>たとえば下記のようになります:</para>
 <screen>&prompt.user;virsh attach-disk sles12sp3 /virt/images/example_disk.qcow2 sda2</screen>
-    <para>
-     To check if the new disk is attached, inspect the result of the
-     <command>virsh dumpxml</command> command:
-    </para>
+    <para>ディスクが接続できたかどうかを確認するには、 <command>virsh dumpxml</command> コマンドの出力を確認します:</para>
 <screen>&prompt.root;virsh dumpxml sles12sp3
 [...]
 &lt;disk type='file' device='disk'&gt;
@@ -1077,78 +832,47 @@ done</screen>
 &lt;/disk&gt;
 [...]</screen>
     <sect4>
-     <title>Hotplug or Persistent Change</title>
-     <para>
-      You can attach disks to both active and inactive domains. The attachment
-      is controlled by the <option>--live</option> and
-      <option>--config</option> options:
-     </para>
+     <title>ホットプラグ (活性接続) ／恒久的な変更</title>
+     <para>ディスクの接続は、対象のドメインが動作中であっても停止済みであっても実施することができます。また、 <option>--live</option> と <option>--config</option> のオプションを使用することで、それぞれ下記のような動作を行なうことができます:</para>
      <variablelist>
       <varlistentry>
        <term><option>--live</option></term>
        <listitem>
-        <para>
-         Hotplugs the disk to an active domain. The attachment is not saved in
-         the domain configuration. Using <option>--live</option> on an inactive
-         domain is an error.
-        </para>
+        <para>動作中のドメインに対してディスクをホットプラグします。接続の情報はドメインの設定ファイル内には保存されません。また、ドメインが動作中ではない場合、 <option>--live</option> オプションを指定するとエラーになります。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
        <term><option>--config</option></term>
        <listitem>
-        <para>
-         Changes the domain configuration persistently. The attached disk is
-         then available after the next domain start.
-        </para>
+        <para>ドメインの設定ファイルを恒久的に変更します。接続されたディスクは次回のドメイン起動以降に利用できるようになります。</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>--live</option><option>--config</option></term>
+       <term><option>--live</option> <option>--config</option></term>
        <listitem>
-        <para>
-         Hotplugs the disk and adds it to the persistent domain configuration.
-        </para>
+        <para>ディスクをホットプラグで接続すると共に、ドメインの設定ファイルを恒久的に変更します。</para>
        </listitem>
       </varlistentry>
      </variablelist>
      <tip>
       <title><command>virsh attach-device</command></title>
-      <para>
-       <command>virsh attach-device</command> is the more generic form of
-       <command>virsh attach-disk</command>. You can use it to attach other
-       types of devices to a domain.
-      </para>
+      <para><command>virsh attach-device</command> コマンドは <command>virsh attach-disk</command> コマンドのより一般的な形式です。このコマンドは、ドメインに対して様々な種類のデバイスを接続することができます。</para>
      </tip>
     </sect4>
    </sect3>
    <sect3 xml:id="libvirt-storage-virsh-detach-volumes">
-    <title>Detaching Volumes from a &vmguest;</title>
-    <para>
-     To detach a disk from a domain, use <command>virsh detach-disk</command>:
-    </para>
-<screen>&prompt.root;virsh detach-disk <replaceable>DOMAIN</replaceable> <replaceable>TARGET_DISK_DEVICE</replaceable></screen>
-    <para>
-     For example:
-    </para>
+    <title>&vmguest; からのボリュームの接続解除</title>
+    <para>ドメインに対してディスクへの接続を解除したい場合は、 <command>virsh detach-disk</command> コマンドを使用します:</para>
+<screen>&prompt.root;virsh detach-disk <replaceable>ドメイン</replaceable> <replaceable>接続先のディスクデバイス</replaceable></screen>
+    <para>たとえば下記のようになります:</para>
 <screen>&prompt.root;virsh detach-disk sles12sp3 sda2</screen>
-    <para>
-     You can control the attachment with the <option>--live</option> and
-     <option>--config</option> options as described in
-     <xref linkend="libvirt-storage-virsh-attach-volumes"/>.
-    </para>
+    <para><xref linkend="libvirt-storage-virsh-attach-volumes"/> で説明しているのと同様に、こちらでも <option>--live</option> オプションや <option>--config</option> オプションで接続方式を制御することができます。</para>
    </sect3>
   </sect2>
 
   <sect2 xml:id="sec-libvirt-storage-vmm">
-   <title>Managing Storage with &vmm;</title>
-   <para>
-    The &vmm; provides a graphical interface&mdash;the Storage Manager&mdash;to
-    manage storage volumes and pools. To access it, either right-click a
-    connection and choose <guimenu>Details</guimenu>, or highlight a connection
-    and choose <menuchoice> <guimenu>Edit</guimenu> <guimenu>Connection
-    Details</guimenu> </menuchoice>. Select the <guimenu>Storage</guimenu> tab.
-   </para>
+   <title>&vmm; を利用したストレージの管理</title>
+   <para>&vmm; はグラフィカルインターフェイスを提供するソフトウエアで、この中のストレージマネージャの機能を使用することで、ボリュームやプールを管理することができます。ストレージマネージャにアクセスするには、接続を選択してマウスの右ボタンを押し、表示されたメニューから <guimenu>詳細</guimenu> を選択するか、接続を選択して <menuchoice> <guimenu>編集</guimenu> <guimenu>接続の詳細</guimenu> </menuchoice> を選択します。その後 <guimenu>ストレージ</guimenu> タブを選択してください。</para>
    <informalfigure>
     <mediaobject>
      <imageobject role="fo">
@@ -1160,23 +884,14 @@ done</screen>
     </mediaobject>
    </informalfigure>
    <sect3 xml:id="sec-libvirt-storage-vmm-addpool">
-    <title>Adding a Storage Pool</title>
-    <para>
-     To add a storage pool, proceed as follows:
-    </para>
+    <title>ストレージプールの追加</title>
+    <para>ストレージプールを追加するには、下記の手順を行ないます:</para>
     <procedure>
      <step>
-      <para>
-       Click <guimenu>Add</guimenu> in the bottom left corner. The dialog
-       <guimenu>Add a New Storage Pool</guimenu> appears.
-      </para>
+      <para>左下の <guimenu>追加</guimenu> ボタンを押します。 <guimenu>新しいストレージプールを作成</guimenu> というダイアログが表示されるはずです。</para>
      </step>
      <step>
-      <para>
-       Provide a <guimenu>Name</guimenu> for the pool (consisting of
-       alphanumeric characters and <literal>_-.</literal>) and select a
-       <guimenu>Type</guimenu>. Proceed with <guimenu>Forward</guimenu>.
-      </para>
+      <para>まずはプールに対する <guimenu>名前</guimenu> を入力します (名前には英数字と <literal>_-.</literal> の各記号を使用することができます) 。あとは <guimenu>種類</guimenu> を選択します。 <!-- NOTE: is not exist? Proceed with &lt;guimenu&gt;Forward&lt;/guimenu&gt; --></para>
       <informalfigure>
        <mediaobject>
         <imageobject role="fo">
@@ -1189,87 +904,49 @@ done</screen>
       </informalfigure>
      </step>
      <step>
-      <para>
-       Specify the required details in the following window. The data that
-       needs to be entered depends on the type of pool you are creating:
-      </para>
+      <para>あとはプールの種類に従って詳細を指定します。それぞれ下記のようになります:</para>
       <variablelist>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>dir</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>dir</guimenu> の場合:</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: Specify an existing directory.
-           </para>
+           <para><guimenu>Target Path</guimenu> : 既存のディレクトリを選択します。</para>
           </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>disk</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>disk</guimenu> の場合:</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: The directory that hosts the
-            devices. The default value <filename>/dev</filename> should usually
-            fit.
-           </para>
+           <para><guimenu>Target Path</guimenu> : デバイスの存在するディレクトリを指定します。既定値は <filename>/dev</filename> で、通常はそのままでかまいません。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Format</guimenu>: Format of the device's partition table.
-            Using <guimenu>auto</guimenu> should usually work. If not, get the
-            required format by running the command <command>parted</command>
-            <option>-l</option> on the &vmhost;.
-           </para>
+           <para><guimenu>フォーマット</guimenu> : デバイスのパーティションテーブルの形式を指定します。通常は <guimenu>auto</guimenu> のままでかまいませんが、正しく検出できない場合は、 &vmhost; 側で <command>parted</command> <option>-l</option> を実行して形式を判別し、指定してください。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: Path to the device. It is
-            recommended to use a device name from
-            <filename>/dev/disk/by-*</filename> rather than the simple
-            <filename>/dev/sd<replaceable>X</replaceable></filename>, since the
-            latter can change (for example, when adding or removing hard
-            disks). You need to specify the path that resembles the whole disk,
-            not a partition on the disk (if existing).
-           </para>
+           <para><guimenu>ソースパス</guimenu> : デバイスのパスを指定します。 <filename>/dev/sd<replaceable>X</replaceable></filename> のようなパスではなく、 <filename>/dev/disk/by-*</filename> のパスで指定することをお勧めします。これは、 <filename>/dev/sd<replaceable>X</replaceable></filename> を使用してしまうと、ハードディスクの取り付けや取り外しなどで名前が変化してしまうことがあり得るためです。また、パーティションではなくディスク全体を表わすパスを指定してください。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Build Pool</guimenu>: Activating this option formats the
-            device. Use with care&mdash;all data on the device will be lost!
-           </para>
+           <para><guimenu>プールを構築</guimenu> : デバイスをフォーマットする場合は、このオプションを選択してください。ただし、選択したデバイス無いの全てのデータが失われることになりますので、注意してください！</para>
           </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>fs</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>fs</guimenu> の場合:</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: Mount point on the &vmhost; file
-            system.
-           </para>
+           <para><guimenu>Target Path</guimenu> : &vmhost; 内のファイルシステムでマウント先となるディレクトリを指定します。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Format: </guimenu> File system format of the device. The
-            default value <literal>auto</literal> should work.
-           </para>
+           <para><guimenu>フォーマット</guimenu> : デバイスのファイルシステム形式を指定します。既定値である <literal>auto</literal> で問題なく動作するはずです。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: Path to the device file. It is
-            recommended to use a device name from
-            <filename>/dev/disk/by-*</filename> rather than
-            <filename>/dev/sd<replaceable>X</replaceable></filename>, because
-            the latter can change (for example, when adding or removing hard
-            disks).
-           </para>
+           <para><guimenu>ソースパス</guimenu> : デバイスファイルのパスを指定します。 <filename>/dev/sd<replaceable>X</replaceable></filename> のようなパスではなく、 <filename>/dev/disk/by-*</filename> のパスで指定することをお勧めします。これは、 <filename>/dev/sd<replaceable>X</replaceable></filename> を使用してしまうと、ハードディスクの取り付けや取り外しなどで名前が変化してしまうことがあり得るためです。</para>
           </listitem>
          </itemizedlist>
         </listitem>
@@ -1297,103 +974,63 @@ done</screen>
        </listitem>
       </varlistentry>-->
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>iscsi</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>iscsi</guimenu> の場合:</term>
         <listitem>
-         <para>
-          Get the necessary data by running the following command on the
-          &vmhost;:
-         </para>
+         <para>&vmhost; 側で下記のコマンドを入力して実行し、必要なデータを収集してください:</para>
 <screen>&prompt.sudo;iscsiadm --mode node</screen>
-         <para>
-          It will return a list of iSCSI volumes with the following format. The
-          elements in bold text are required:
-         </para>
-<screen><emphasis role="bold">IP_ADDRESS</emphasis>:PORT,TPGT <emphasis role="bold">TARGET_NAME_(IQN)</emphasis></screen>
+         <para>上記のように入力して実行すると、下記のような形式で iSCSI ボリュームの一覧が出力されます。下記のうち、太字の部分が必要な情報になります:</para>
+<screen><emphasis role="bold">IP_アドレス</emphasis>:PORT,TPGT <emphasis role="bold">ターゲット名_(IQN)</emphasis></screen>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: The directory containing the device
-            file. Use <literal>/dev/disk/by-path</literal> (default) or
-            <literal>/dev/disk/by-id</literal>.
-           </para>
+           <para><guimenu>Target Path</guimenu> : デバイスファイルを含むディレクトリを指定します。 <literal>/dev/disk/by-path</literal> (既定値) もしくは <literal>/dev/disk/by-id</literal> のいずれかを指定してください。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Host Name</guimenu>: Host name or IP address of the iSCSI
-            server.
-           </para>
+           <para><guimenu>ホスト名</guimenu> : iSCSI サーバのホスト名または IP アドレスを指定します。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: The iSCSI target name (IQN).
-           </para>
+           <para><guimenu>ソースパス</guimenu> : iSCSI のターゲット名 (IQN) を指定します。</para>
           </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>logical</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>logical</guimenu> の場合</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: In case you use an existing volume
-            group, specify the existing device path. When building a new LVM
-            volume group, specify a device name in the
-            <filename>/dev</filename> directory that does not already exist.
-           </para>
+           <para><guimenu>Target Path</guimenu> : 既存のボリュームグループを使用する場合は、既存のデバイスパスを指定します。新しい LVM ボリュームグループを作成する場合は、存在していない <filename>/dev</filename> ディレクトリ内のデバイス名を指定してください。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: Leave empty when using an existing
-            volume group. When creating a new one, specify its devices here.
-           </para>
+           <para><guimenu>ソースパス</guimenu> : 既存のボリュームグループを使用する場合は、何も入力しないでください。新しいボリュームグループを作成する場合は、ここにデバイス名を入力します。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Build Pool</guimenu>: Only activate when creating a new
-            volume group.
-           </para>
+           <para><guimenu>プールを構築</guimenu> : 新しいボリュームグループを作成する場合にのみ選択してください。</para>
           </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>mpath</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>mpath</guimenu> の場合:</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: Support for multipathing is
-            currently limited to making all multipath devices available.
-            Therefore, specify an arbitrary string here that will then be
-            ignored. The path is required, otherwise the XML parser will fail.
-           </para>
+           <para><guimenu>Target Path</guimenu> : マルチパス機能への対応は現在、全てのマルチパスデバイスを利用可能にする場合のみとなっています。そのため、ここで指定した任意の文字列は無視されますが、何らかの値を入力しないと XML パーサーが失敗してしまいます。</para>
           </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis><guimenu>netfs</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>netfs</guimenu> の場合:</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: Mount point on the &vmhost; file
-            system.
-           </para>
+           <para><guimenu>Target Path</guimenu> : &vmhost; 内のファイルシステムでマウント先となるディレクトリを指定します。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Host Name</guimenu>: IP address or host name of the server
-            exporting the network file system.
-           </para>
+           <para><guimenu>ホスト名</guimenu> : ネットワークファイルシステムを提供するサーバの IP アドレスまたはホスト名を指定します。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: Directory on the server that is
-            being exported.
-           </para>
+           <para><guimenu>ソースパス</guimenu> : 公開されているサーバ内のディレクトリを指定します。</para>
           </listitem>
          </itemizedlist>
         </listitem>
@@ -1416,20 +1053,14 @@ done</screen>
        </listitem>
       </varlistentry>-->
        <varlistentry>
-        <term><emphasis role="bold">Type</emphasis> <guimenu>scsi</guimenu></term>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>scsi</guimenu> の場合</term>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para>
-            <guimenu>Target Path</guimenu>: The directory containing the device
-            file. Use <literal>/dev/disk/by-path</literal> (default) or
-            <literal>/dev/disk/by-id</literal>.
-           </para>
+           <para><guimenu>Target Path</guimenu> : デバイスファイルを含むディレクトリを指定します。 <literal>/dev/disk/by-path</literal> (既定値) もしくは <literal>/dev/disk/by-id</literal> のいずれかを指定してください。</para>
           </listitem>
           <listitem>
-           <para>
-            <guimenu>Source Path</guimenu>: Name of the SCSI adapter.
-           </para>
+           <para><guimenu>ソースパス</guimenu> : SCSI アダプタの名前を指定します。</para>
           </listitem>
          </itemizedlist>
         </listitem>
@@ -1453,154 +1084,60 @@ done</screen>
       </varlistentry>-->
       </variablelist>
       <note>
-       <title>File Browsing</title>
-       <para>
-        Using the file browser by clicking <guimenu>Browse</guimenu> is not
-        possible when operating remotely.
-       </para>
+       <title>ファイル参照について</title>
+       <para><guimenu>参照</guimenu> ボタンによるファイル参照機能は、リモートから接続している場合には使用できません。</para>
       </note>
      </step>
      <step>
-      <para>
-       Click <guimenu>Finish</guimenu> to add the storage pool.
-      </para>
+      <para><guimenu>完了</guimenu> を押すとストレージプールを追加することができます。</para>
      </step>
     </procedure>
    </sect3>
    <sect3 xml:id="sec-libvirt-storage-vmm-manage">
-    <title>Managing Storage Pools</title>
-    <para>
-     &vmm;'s Storage Manager lets you create or delete volumes in a pool. You
-     may also temporarily deactivate or permanently delete existing storage
-     pools. Changing the basic configuration of a pool is currently not
-     supported by &suse;.
-    </para>
+    <title>ストレージプールの管理</title>
+    <para>&vmm; のストレージマネージャは、プール内にボリュームを作成したり削除したりすることができます。このほか、既存のストレージプールを一時的に無効化したり恒久的に削除したりすることもできます。なお、プールの基本的な設定の変更については、 &suse; でのサポート対象外となっています。</para>
     <sect4 xml:id="sec-libvirt-storage-vmm-manage-pool">
-     <title>Starting, Stopping and Deleting Pools</title>
-     <para>
-      The purpose of storage pools is to provide block devices located on the
-      &vmhost; that can be added to a &vmguest; when managing it from remote.
-      To make a pool temporarily inaccessible from remote, click
-      <guimenu>Stop</guimenu> in the bottom left corner of the Storage Manager.
-      Stopped pools are marked with <guimenu>State: Inactive</guimenu> and are
-      grayed out in the list pane. By default, a newly created pool will be
-      automatically started <guimenu>On Boot</guimenu> of the &vmhost;.
-     </para>
-     <para>
-      To start an inactive pool and make it available from remote again, click
-      <guimenu>Start</guimenu> in the bottom left corner of the Storage
-      Manager.
-     </para>
+     <title>プールの起動／停止／削除</title>
+     <para>ストレージプールは、 &vmguest; をリモートから管理する際に、 &vmhost; 内に存在するブロックデバイスを &vmguest; に追加したり削除したりする機能を提供するものです。リモートからアクセスできないように一時的に停止したい場合は、ストレージマネージャ内の左下にある <guimenu>停止</guimenu> ボタンを押してください。停止されたプールは <guimenu>状態: 停止</guimenu> となり、左側の一覧ではグレーアウト表示されます。既定では新しく作成したプールは自動的に &vmhost; 側で <guimenu>自動起動</guimenu> が設定され、自動的に起動するようになります。</para>
+     <para>停止されているプールを起動して、リモートからアクセスできるようにしたい場合は、ストレージマネージャ内の左下にある <guimenu>開始</guimenu> を押します。</para>
      <note>
-      <title>A Pool's State Does not Affect Attached Volumes</title>
-      <para>
-       Volumes from a pool attached to &vmguest;s are always available,
-       regardless of the pool's state (<guimenu>Active</guimenu> (stopped) or
-       <guimenu>Inactive</guimenu> (started)). The state of the pool solely
-       affects the ability to attach volumes to a &vmguest; via remote
-       management.
-      </para>
+      <title>プールの状態は割り当てられているボリュームとは無関係である件について</title>
+      <para>既に &vmguest; に割り当てられているプール内のボリュームについては、そのプールの状態 ( <guimenu>動作中</guimenu> もしくは <guimenu>停止</guimenu> ) に関わらず、常にアクセスできる状態になります。プールの状態は、リモートから &vmguest; のボリュームを管理する場合にのみ有効となります。</para>
      </note>
-     <para>
-      To permanently make a pool inaccessible, click <guimenu>Delete</guimenu>
-      in the bottom left corner of the Storage Manager. You may only delete
-      inactive pools. Deleting a pool does not physically erase its contents on
-      &vmhost;&mdash;it only deletes the pool configuration. However, you need
-      to be extra careful when deleting pools, especially when deleting LVM
-      volume group-based tools:
-     </para>
+     <para>プールに対して恒久的にアクセスを停止したい場合は、ストレージマネージャ内の左下にある <guimenu>削除</guimenu> ボタンを押します。ただし、削除は停止されたプールにのみ実施することができます。なお、プールを削除しても、 &vmhost; 内の内容が物理的に削除されることはなく、プールの設定のみが削除されます。ただし、 LVM ボリュームグループの場合は例外で、この場合は物理的にも削除されることに注意してください。</para>
      <warning xml:id="deleting-storage-pools">
-      <title>Deleting Storage Pools</title>
-      <para>
-       Deleting storage pools based on <emphasis>local</emphasis> file system
-       directories, local partitions or disks has no effect on the availability
-       of volumes from these pools currently attached to &vmguest;s.
-      </para>
-      <para>
-       Volumes located in pools of type iSCSI, SCSI, LVM group or Network
-       Exported Directory will become inaccessible from the &vmguest; if the
-       pool is deleted. Although the volumes themselves will not be deleted,
-       the &vmhost; will no longer have access to the resources.
-      </para>
-      <para>
-       Volumes on iSCSI/SCSI targets or Network Exported Directory will become
-       accessible again when creating an adequate new pool or when
-       mounting/accessing these resources directly from the host system.
-      </para>
-      <para>
-       When deleting an LVM group-based storage pool, the LVM group definition
-       will be erased and the LVM group will no longer exist on the host
-       system. The configuration is not recoverable and all volumes from this
-       pool are lost.
-      </para>
+      <title>ストレージプールの削除</title>
+      <para>まだ &vmguest; に割り当てられているボリュームが存在するプールの場合、 <emphasis>ローカルの</emphasis> ファイルシステムディレクトリやパーティション／ディスクをベースにしたストレージプールを削除しても、ボリュームには影響しません。</para>
+      <para>iSCSI, SCSI, LVM ボリュームグループ, ネットワーク公開ディレクトリの場合は、プールを削除すると &vmguest; からもアクセスができなくなります。ボリュームそれ自身は削除されませんが、 &vmhost; からリソースへのアクセスはできなくなります。</para>
+      <para>iSCSI/SCSI ターゲットやネットワーク公開ディレクトリの場合、新しいプールを作成し直して同じ設定を作成するか、もしくはホストシステム側から対象のリソースを直接マウントすることで、再度アクセスできるようになります。</para>
+      <para>LVM ボリュームグループベースのストレージプールの場合、 LVM のボリュームグループ設定が削除されることになりますので、ホストシステム内でも LVM ボリュームグループがアクセスできなくなります。この場合は設定の復元は不可能で、プール内のボリュームも恒久的に失われることになります。</para>
      </warning>
     </sect4>
     <sect4 xml:id="sec-libvirt-storage-vmm-manage-volume-add">
-     <title>Adding Volumes to a Storage Pool</title>
-     <para>
-      &vmm; lets you create volumes in all storage pools, except in pools of
-      types Multipath, iSCSI, or SCSI. A volume in these pools is equivalent to
-      a LUN and cannot be changed from within &libvirt;.
-     </para>
+     <title>ストレージプールへのボリュームの追加</title>
+     <para>&vmm; ではプールの種類がマルチパス, iSCSI, SCSI である場合を除いて、全てのストレージプール内にボリュームを作成することができます。これらのプール内のボリュームは LUN と等価な存在であり、 &libvirt; 側では変更ができません。</para>
      <procedure>
       <step>
-       <para>
-        A new volume can either be created using the Storage Manager or while
-        adding a new storage device to a &vmguest;. In either case, select a
-        storage pool from the left panel, then click <guimenu>Create new
-        volume</guimenu>.
-       </para>
+       <para>新しいボリュームはストレージマネージャを利用して作成することができるほか、 &vmguest; に新しいストレージデバイスを追加する際に作成することもできます。いずれの場合であっても、左側のパネルでストレージプールを選択して <guimenu>新しいボリュームの作成</guimenu> を押します。</para>
       </step>
       <step>
-       <para>
-        Specify a <guimenu>Name</guimenu> for the image and choose an image
-        format.
-       </para>
-       <para>
-        &suse; currently only supports <literal>raw</literal> or
-        <literal>qcow2</literal> images. The latter option is not available on
-        LVM group-based pools.
-       </para>
-       <para>
-        Next to <guimenu>Max Capacity</guimenu>, specify the amount maximum
-        size that the disk image is allowed to reach. Unless you are working
-        with a <literal>qcow2</literal> image, you can also set an amount for
-        <guimenu>Allocation</guimenu> that should be allocated initially. If
-        both values differ, a sparse image file will be created which grows on
-        demand.
-       </para>
-       <para>
-        For <literal>qcow2</literal> images, you can use a <guimenu>Backing
-        Store</guimenu> (also called <quote>backing file</quote>) which
-        constitutes a base image. The newly created <literal>qcow2</literal>
-        image will then only record the changes that are made to the base
-        image.
-       </para>
+       <para><guimenu>名前</guimenu> 欄にイメージの名前を入力して、イメージの形式を選択します。</para>
+       <para>&suse; では現在、 <literal>raw</literal> および <literal>qcow2</literal> のイメージのみをサポート対象としています。また、後者は LVM ボリュームグループベースのプールの場合は選択できません。</para>
+       <para>次に <guimenu>最大容量</guimenu> を指定します。ここではディスクイメージに設定する最大のサイズを指定します。 <literal>qcow2</literal> 形式を選択していない場合は、 <guimenu>割り当て</guimenu> の容量も設定することができます。 <guimenu>割り当て</guimenu> で指定した容量は初期の割り当てサイズとなり、 <guimenu>最大容量</guimenu> と異なる値を設定すると、スパース形式のファイルが作成され、必要に応じてサイズが拡張されるようになります。</para>
+       <para><literal>qcow2</literal> 形式の場合は、 <guimenu>バッキングストア</guimenu> (<quote>バッキングファイル</quote> と呼ぶ場合もあります) を使用することもできます。これはイメージのベースとなるファイルを指定するためのもので、新しく作成した <literal>qcow2</literal> イメージには、ベースからの変更点のみが記録されるようになります。</para>
       </step>
       <step>
-       <para>
-        Start the volume creation by clicking <guimenu>Finish</guimenu>.
-       </para>
+       <para>ボリュームの作成を開始するには <guimenu>完了</guimenu> を押します。</para>
       </step>
      </procedure>
     </sect4>
     <sect4 xml:id="sec-libvirt-storage-vmm-manage-volume-delete">
-     <title>Deleting Volumes From a Storage Pool</title>
-     <para>
-      Deleting a volume can only be done from the Storage Manager, by selecting
-      a volume and clicking <guimenu>Delete Volume</guimenu>. Confirm with
-      <guimenu>Yes</guimenu>.
-     </para>
+     <title>ストレージプールからのボリュームの削除</title>
+     <para>ボリュームの削除はストレージマネージャからのみ実施することができます。削除したいボリュームを選択して、 <guimenu>ボリュームの削除</guimenu> を押します。確認メッセージが表示されたら <guimenu>はい</guimenu> を押してください。</para>
      <warning>
-      <title>Volumes Can Be Deleted Even While in Use</title>
-      <para>
-       Volumes can be deleted even if they are currently used in an active or
-       inactive &vmguest;. There is no way to recover a deleted volume.
-      </para>
-      <para>
-       Whether a volume is used by a &vmguest; is indicated in the
-       <guimenu>Used By</guimenu> column in the Storage Manager.
-      </para>
+      <title>使用中であってもボリュームは削除可能である件について</title>
+      <para>ボリュームは動作中の &vmguest; から使用されている状況下でも削除することができます。削除したボリュームを復元する手段はありません。</para>
+      <para>対象のボリュームが &vmguest; から使用されているかどうかを確認したい場合は、ストレージマネージャ内の <guimenu>使用中</guimenu> 列を確認してください。</para>
      </warning>
     </sect4>
    </sect3>
