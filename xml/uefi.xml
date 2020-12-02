@@ -120,20 +120,25 @@ even pursue both in parallel. -->
 
   <sect2 xml:id="sec-uefi-secboot-mok">
    <title>MOK (マシン所有者鍵; Machine Owner Key)</title>
-<!-- <para>
-Enroll key from the OS (with a password for MOK list), using mokutils tool.
-Rebooted is required, where <systemitem>shim</systemitem> will check password: ensure physical user is present.
-This key is added to MOK list, saved into in an UEFI Boot Service Only Variable and will be used for future boots to ensure key is not modified.
-MOK list can only be modified in Secure Boot phase (before kernel is started).
-Enroll can also be done at boot time if key is available on EFI System
-Partition.
-</para>
--->
+   
    <para>ユーザ ( <quote>マシン所有者</quote> ) が起動処理のコンポーネントを入れ替えたい場合は、マシン所有者鍵 (MOKs) を使用します。これを行なうには、 <systemitem>mokutils</systemitem> と呼ばれるツールを利用して、コンポーネントへの署名と MOK の管理を行ないます。</para>
-   <para>登録の処理はマシンの再起動から始まります。 <systemitem>shim</systemitem> の読み込みの際、起動処理内での割り込み (たとえばキーの押下) を行なって、登録モードに移行します。これにより、起動パーティション内のファイルを通して、既定の SUSE の鍵を置き換えることができるようになります。ユーザ側で処理を行なうと、 <systemitem>shim</systemitem> はファイルのハッシュ値を計算し、結果を <quote>起動サービスのみの変数</quote> に書き込みます。これにより <systemitem>shim</systemitem> は、信頼の鎖に入っていないファイルの変更を検知できるようになりますので、ユーザが指定した MOK が正しいことを確認できる仕組みになっています。</para>
-   <para>これら全ての処理は起動時に行なわれ、検証済みのコードのみが実行されることになります。また、コンソールにアクセスできるユーザだけが、マシン所有者の鍵セットを利用できることにもなります。マルウェアなどの不正なコードや、リモートからの攻撃者は、たとえリモートから OS にアクセスできてしまったとしても、 OSのファイルを変更することができても <quote>起動サービスのみの変数</quote> を変更することができませんので、不正なコードを実行させることができなくなる、というわけです。</para>
-   <para>一方、 <systemitem>shim</systemitem> から読み込まれて検証されたブートローダは、カーネルを検証する目的で <systemitem>shim</systemitem> を呼び返します。これは、検証を行なうコードの重複を防ぐための仕組みです。 <systemitem>shim</systemitem> は MOK の同じリストを使用してカーネルを検証し、ブートローダがカーネルを読み込んでよいものかどうかを応答します。</para>
-   <para>この仕組みによって、独自のカーネルやブートローダをインストールできることになります。これを行なうには、新しい鍵セットをインストールして、初回の再起動の際、コンソール経由で認可を与えるだけです。 MOK は一覧であり、 1 つの鍵だけを示すものではありませんので、複数の製造元からの <systemitem>shim</systemitem> 信頼鍵を利用することができますから、ブートローダで任意のカーネルを起動できることになります。</para>
+   <para>
+   You can create a MOK enrollment request with
+   <systemitem>mokutil</systemitem>. The request is stored in a UEFI runtime
+   (RT) variable called <systemitem>MokNew</systemitem>. During the next boot,
+   the <systemitem>shim</systemitem> bootloader detects
+   <systemitem>MokNew</systemitem> and loads <systemitem>MokManager</systemitem>
+   which presents you with several options. You can use the <guimenu>Enroll key
+   from disk</guimenu> and <guimenu>Enroll hash from disk</guimenu> options to
+   add the key to the MokList. Use the <guimenu>Enroll MOK</guimenu> option
+   to copy the key from the <systemitem>MokNew</systemitem> variable.
+   </para>
+   <para>
+   Enrolling a key from disk is usually done when the shim fails to
+   load <systemitem>grub2</systemitem> and falls back to loading
+   MokManager. As <systemitem>MokNew</systemitem> does not exist yet,
+   you have the option of locating the key on the UEFI partition. 
+   </para>
   </sect2>
 
   <sect2 xml:id="sec-uefi-secboot-custom">
