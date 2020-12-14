@@ -359,22 +359,14 @@
         </row>
         <row>
          <entry>
-          <para><literal>use</literal></para>
+          <para><literal>quotas</literal></para>
          </entry>
          <entry>
-          <para>
-           Enables support for Btrfs subvolumes quotas.
-          </para>
-          <screen>&lt;diagconfig:type="boolean"&gt;true&lt;/diag&gt;</screen>
+          <para>btrfs のサブボリュームに対してクオータサポートを有効化します。</para>
+          <screen>&lt;quotas config:type="boolean"&gt;true&lt;/quotas&gt;</screen>
           </entry>
           <entry>
-           <para>
-             Optional. The default is <literal>false</literal>. Setting this
-             element to <literal>true</literal> will enable support for quotas
-             for the file system. However, you need to set the limits for each
-             subvolume. Check <xref linkend="ay-btrfs-subvolumes"/> for further
-             information.
-           </para>
+           <para>任意指定です。この要素の既定値は <literal>false</literal> で、 <literal>true</literal> に設定するとファイルシステムに対するクオータサポートを有効化します。なお、制限の設定は各サブボリューム側で行なってください。詳しくは <xref linkend="ay-btrfs-subvolumes"/> をお読みください。</para>
          </entry>
         </row>
        </tbody>
@@ -708,11 +700,7 @@
   &lt;path&gt;tmp&lt;/path&gt;
   &lt;path&gt;opt&lt;/path&gt;
   &lt;path&gt;srv&lt;/path&gt;
-  &lt;path&gt;var/crash&lt;/path&gt;
-  &lt;path&gt;var/lock&lt;/path&gt;
-  &lt;path&gt;var/run&lt;/path&gt;
-  &lt;path&gt;var/tmp&lt;/path&gt;
-  &lt;path&gt;var/spool&lt;/path&gt;
+  &lt;path&gt;var&lt;/path&gt;
   ...
 &lt;/subvolumes&gt;</screen>
          </entry>
@@ -888,31 +876,27 @@
      <para><xref linkend="ay-partition-configuration"/> で説明しているとおり、それぞれの btrfs ファイルシステムに対して、必要なサブボリュームを定義することができます。最もシンプルな形態では、下記のようになります:</para>
 
 <screen>&lt;subvolumes config:type="list"&gt;
+  &lt;path&gt;usr/local&lt;/path&gt;
   &lt;path&gt;tmp&lt;/path&gt;
   &lt;path&gt;opt&lt;/path&gt;
   &lt;path&gt;srv&lt;/path&gt;
-  &lt;path&gt;var/crash&lt;/path&gt;
-  &lt;path&gt;var/lock&lt;/path&gt;
-  &lt;path&gt;var/run&lt;/path&gt;
-  &lt;path&gt;var/tmp&lt;/path&gt;
-  &lt;path&gt;var/spool&lt;/path&gt;
+  &lt;path&gt;var&lt;/path&gt;
 &lt;/subvolumes&gt;</screen>
 
-     <para>
-      However, it is possible to specify additional settings for each
-      subvolume. For instance, we might want to set a quota or to disable the
-      copy-on-write mechanism. For that purpose, it is possible to expand any
-      of the elements of the list as shown in the example below:
-     </para>
+     <para>なお、各サブボリュームに対する追加設定を行なうこともできます。たとえばクオータの設定やコピーオンライト機構の有効化などがそれにあたります。具体的には、下記の例のような形式で設定してください:</para>
 
 <screen>&lt;subvolumes config:type="list"&gt;
-&lt;listentry&gt;tmp&lt;/listentry&gt;
-&lt;listentry&gt;opt&lt;/listentry&gt;
-&lt;listentry&gt;srv&lt;/listentry&gt;
-&lt;listentry&gt;
-  &lt;path&gt;var/lib/pgsql&lt;/path&gt;
-  &lt;copy_on_write config:type="boolean"&gt;false&lt;/copy_on_write&gt;
-&lt;/listentry&gt;
+  &lt;listentry&gt;usr/local&lt;/listentry&gt;
+  &lt;listentry&gt;
+    &lt;path&gt;tmp&lt;/path&gt;
+    &lt;referenced_limit&gt;1 GiB&lt;/referenced_limit&gt;
+  &lt;/listentry&gt;
+  &lt;listentry&gt;opt&lt;/listentry&gt;
+  &lt;listentry&gt;srv&lt;/listentry&gt;
+  &lt;listentry&gt;
+    &lt;path&gt;var/lib/pgsql&lt;/path&gt;
+    &lt;copy_on_write config:type="boolean"&gt;false&lt;/copy_on_write&gt;
+  &lt;/listentry&gt;
 &lt;/subvolumes&gt;</screen>
 
      <para>
@@ -940,28 +924,23 @@
        <tbody>
         <row>
          <entry>
-          <para><literal>gpt</literal></para>
+          <para><literal>path</literal></para>
          </entry>
          <entry>
-          <para>このパーティションのマウントオプションを指定します。</para>
-          <screen>&lt;pesize&gt;8M&lt;/pesize&gt;</screen>
+          <para>サブボリュームのマウントポイントを指定します。</para>
+          <screen>&lt;path&gt;tmp&lt;/tmp&gt;</screen>
          </entry>
          <entry>
-          <para>
-           Required. &ay; will ignore the subvolume if the
-           <literal>path</literal> is not specified.
-          </para>
+          <para>必須です。 <literal>path</literal> 要素が指定されていない場合、 &ay; はそのサブボリュームを無視するようになります。</para>
          </entry>
         </row>
         <row>
          <entry>
-          <para><literal>create</literal></para>
+          <para><literal>copy-on-write</literal></para>
          </entry>
          <entry>
-          <para>
-           Whether copy-on-write should be enabled for the subvolume.
-          </para>
-          <screen>&lt;create config:type="boolean" &gt;false&lt;/create&gt;</screen>
+          <para>このサブボリュームに対して、コピーオンライト機構を有効化するかどうかを指定します。</para>
+          <screen>&lt;copy-on-write config:type="boolean"&gt;false&lt;/copy-on-write&gt;</screen>
          </entry>
          <entry>
           <para>任意指定です。既定値は <literal>false</literal> です。</para>
@@ -969,23 +948,21 @@
         </row>
         <row>
          <entry>
-          <para><literal>ordered</literal></para>
+          <para><literal>referenced_limit</literal></para>
          </entry>
          <entry>
-          <para>
-           Set a quota for the subvolume.
-          </para>
+          <para>サブボリュームに対するクオータを指定します。</para>
           <screen>&lt;referenced_limit&gt;1 GiB&lt;/referenced_limit&gt;</screen>
          </entry>
          <entry>
-          <para>任意指定です。ルートパーティションの場合、既定値は <literal>btrfs</literal> に、データパーティションの場合、既定値は <literal>xfs</literal> になります。</para>
+          <para>任意指定です。既定値は <literal>unlimited</literal> (無制限) です。 btrfs では、 2 種類の制限 (<literal>referenced</literal> (参照サイズ) および <literal>exclusive</literal> (排他サイズ)) を設定することができますが、この要素では前者を指定します。</para>
          </entry>
         </row>
        </tbody>
       </tgroup>
      </informaltable>
 
-     <para>ディストリビューション側で既定のサブボリュームが設定されている場合 (たとえば &productname; では <filename>@</filename>) 、この既定のサブボリュームの名前がこの一覧の中に自動的に追加されます。このような動作を無効化したい場合は、下記のようにして <literal>subvolumes_prefix</literal> を設定してください。</para>
+     <para>ディストリビューション側で既定のサブボリュームが設定されている場合 (たとえば &productname; では <filename>@</filename>) 、この既定のサブボリュームの名前がこの一覧の中に自動的に追加されます。このような動作を無効化したい場合は、 <link xlink:href="CreateProfile-Partitioning-config">drive</link> セクション内で <literal>subvolumes_prefix</literal> を設定してください。</para>
 
      <screen>&lt;subvolumes_prefix&gt;&lt;![CDATA[]]&gt;&lt;/subvolumes_prefix&gt;</screen>
     </sect3>
