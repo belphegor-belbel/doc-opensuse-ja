@@ -241,9 +241,14 @@
       <listitem>
           <para>任意指定です。 <literal>drive</literal> の種類を指定します。通常の物理ハードディスクの場合、既定値は <literal>CT_DISK</literal> になります。下記のいずれかを指定してください:</para>
           <para><literal>CT_DISK</literal>: 物理的なハードディスク (既定値)</para>
-            <para><literal>CT_LVM</literal>: LVM ボリュームグループ</para>
-            <para><literal>CT_RAID</literal>: ソフトウエア RAID デバイス</para>
-            <para><literal>CT_BCACHE</literal>: ソフトウエア &bcache; デバイス</para>
+           <para><literal>CT_LVM</literal>: LVM ボリュームグループ</para>
+           <para><literal>CT_RAID</literal>: ソフトウエア RAID デバイス</para>
+           <para><literal>CT_BCACHE</literal>: ソフトウエア &bcache; デバイス</para>
+           <para><literal>CT_RAID</literal>: ソフトウエア RAID デバイス</para>
+           <para><literal>CT_LVM</literal>: LVM ボリュームグループ</para>
+           <para>
+            <literal>CT_TMPFS</literal> for <literal>tmpfs</literal> file systems.
+           </para>
           <screen>&lt;type config:type="symbol"&gt;CT_LVM&lt;/type&gt;</screen>
       </listitem>
   </varlistentry>
@@ -332,45 +337,22 @@
     &lt;/partition&gt;
   &lt;/partitions&gt;
 &lt;/drive&gt;</screen>
-     <informaltable>
-      <tgroup cols="3">
-       <colspec colwidth="1*"/>
-       <colspec colwidth="3*"/>
-       <colspec colwidth="2*"/>
-       <thead>
-        <row>
-         <entry>
-          <para>属性</para>
-         </entry>
-         <entry>
-          <para>値</para>
-         </entry>
-         <entry>
-          <para>説明</para>
-         </entry>
-        </row>
-       </thead>
-       <tbody>
-        <row>
-         <entry>
-          <para><literal>create</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションもしくは論理ボリュームを作成しなければならない場合や、既に存在しているような場合に指定します。</para>
-          <screen>&lt;create config:type="boolean" &gt;false&lt;/create&gt;</screen>
-         </entry>
-         <entry>
-          <para><literal>false</literal> に設定した場合、 &ay; に対して使用すべきデバイスを指示するため、 <literal>partition_nr</literal> , <literal>lv_name</literal>, <literal>label</literal>, <literal>uuid</literal> のいずれかを指定する必要があります。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>crypt_method</literal></para>
-         </entry>
-         <entry>
-          <para>パーティションを下記のいずれかの方式で暗号化します:</para>
-
-          <itemizedlist mark="bullet" spacing="normal">
+     <variablelist>
+         <varlistentry>
+             <term>create</term>
+             <listitem>
+                 <para><literal>false</literal> に設定した場合、 &ay; に対して使用すべきデバイスを指示するため、 <literal>partition_nr</literal> , <literal>lv_name</literal>, <literal>label</literal>, <literal>uuid</literal> のいずれかを指定する必要があります。</para>
+<screen>&lt;create config:type="boolean" &gt;false&lt;/create&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+     <variablelist>
+         <varlistentry>
+             <term>crypt_method</term>
+             <listitem>
+                 <para>パーティションを下記のいずれかの方式で暗号化します:</para>
+                     <itemizedlist mark="bullet" spacing="normal">
            <listitem>
             <para><literal>luks1</literal> : 通常の LUKS1 形式での暗号化を行ないます。</para>
            </listitem>
@@ -388,121 +370,104 @@
            </listitem>
           </itemizedlist>
           <screen>&lt;crypt_method config:type="symbol"&gt;luks1&lt;/crypt_method&gt;</screen>
-         </entry>
-         <entry>
           <para>任意指定です。暗号化方式の選択機能は &productname; <phrase os="sles;sled">15 SP2</phrase> <phrase os="osuse">15.2</phrase> もしくはそれ以降のバージョンで使用することができます。以前のバージョンと同じ動作にしたい場合は、 <literal>luks1</literal> を指定してください。</para>
           <para>暗号化パスワードを指定する必要がある場合は、 <literal>crypt_key</literal> 要素をお使いください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>crypt_fs</literal></para>
-         </entry>
-         <entry>
-          <para>パーティションを暗号化するよう指定します。ただし、この要素は廃止予定としてマークされています。代わりに <literal>crypt_method</literal> を使用してください。</para>
-          <screen>&lt;crypt_fs config:type="boolean"&gt;true&lt;/crypt_fs&gt;</screen>
-         </entry>
-         <entry>
-          <para>既定値は <literal>false</literal> です。</para>
-         </entry>
-        </row>
+             </listitem>
+         </varlistentry>
+     </variablelist>
 
-        <row>
-         <entry>
-          <para><literal>crypt_key</literal></para>
-         </entry>
-         <entry>
-          <para>暗号鍵を指定します。</para>
-          <screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>
-         </entry>
-         <entry>
-          <para><literal>crypt_method</literal> でパスワードを設定する必要のある方式 (<literal>luks1</literal> もしくは <literal>pervasive_luks2</literal>) を選択した場合に必要となります。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>mount</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションのマウントポイントを指定します。</para>
-          <screen>&lt;mount&gt;/&lt;/mount&gt;
-&lt;mount&gt;swap&lt;/mount&gt;</screen>
-         </entry>
-         <entry>
-          <para>少なくとも 1 つのルートパーティション (/) とスワップパーティションを設定する必要があります。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>fstopt</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションのマウントオプションを指定します。</para>
-          <screen>&lt;fstopt&gt;
+     <variablelist>
+         <varlistentry>
+             <term>crypt_fs</term>
+             <listitem>
+                 <para>パーティションを暗号化するよう指定します。ただし、この要素は廃止予定としてマークされています。代わりに <literal>crypt_method</literal> を使用してください。</para>
+<screen>&lt;crypt_fs config:type="boolean"&gt;true&lt;/crypt_fs&gt;</screen>
+             </listitem>
+         </varlistentry>
+     </variablelist>
+
+     <variablelist>
+         <varlistentry>
+             <term>暗号鍵を指定します。</term>
+             <listitem>
+                 <para><literal>crypt_method</literal> でパスワードを設定する必要のある方式 (<literal>luks1</literal> もしくは <literal>pervasive_luks2</literal>) を選択した場合に必要となります。</para>
+<screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>      
+     
+     <variablelist>
+         <varlistentry>
+             <term>mount</term>
+             <listitem>
+                 <para>少なくとも 1 つのルートパーティション (/) とスワップパーティションを設定する必要があります。</para>
+ <screen>&lt;mount&gt;/&lt;/mount&gt;
+&lt;mount&gt;swap&lt;/mount&gt;</screen>                
+             </listitem>
+         </varlistentry>
+     </variablelist>
+
+     <variablelist>
+         <varlistentry>
+             <term>fstopt</term>
+             <listitem>
+                 <para>指定可能なマウントオプションについて、詳しくは <command>man mount</command> をお読みください。</para>
+<screen>&lt;fstopt&gt;
   ro,noatime,user,data=ordered,acl,user_xattr
-&lt;/fstopt&gt;</screen>
-         </entry>
-         <entry>
-          <para>指定可能なマウントオプションについて、詳しくは <command>man mount</command> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>label</literal></para>
-         </entry>
-         <entry>
-          <para>パーティションのラベルを指定します。デバイスをフォーマットする場合 (特に <literal>mountby</literal> パラメータを <literal>label</literal> にする場合) に有用であるほか、既に存在するデバイスを識別するような場合にも使用します (上述の <literal>create</literal> もお読みください) 。</para>
-          <screen>&lt;label&gt;mydata&lt;/label&gt;</screen>
-         </entry>
-         <entry>
-          <para>例については <command>man e2label</command> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>uuid</literal></para>
-         </entry>
-         <entry>
-          <para>パーティションの UUID を指定します。既に存在するデバイスを識別する場合にのみ使用します (上述の <literal>create</literal> もお読みください) 。なお、新しく作成するデバイスの場合は UUID を事前に決めることができませんので、指定することもできません。</para>
-          <screen>&lt;uuid
-&gt;1b4e28ba-2fa1-11d2-883f-b9a761bde3fb&lt;/uuid&gt;</screen>
-         </entry>
-         <entry>
-          <para>詳しくは <command>man uuidgen</command> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>size</literal></para>
-         </entry>
-         <entry>
-          <para>4G, 4500M などのように、パーティションのサイズを指定します。 /boot パーティションとスワップパーティションに対しては、 <literal>auto</literal> を指定することもできます。この場合、 &ay; 側で適切なサイズを設定します。また、いずれか 1 つのパーティションに対して <literal>max</literal> を指定すると、残りの領域全てを使用することができるようになります。</para>
-          <para>サイズは割合で設定することもできます。たとえば 10% と指定すると、ハードディスク全体もしくはボリュームグループの 10% 分を使用することができます。必要に応じて auto, max, サイズ指定, 割合を組み合わせて使用することもできます。</para>
-          <screen>&lt;size&gt;10G&lt;/size&gt;</screen>
-         </entry>
-         <entry>
-          <para>&productname; 15 以降では、全ての値 (<literal>auto</literal> と <literal>max</literal> を含む) をパーティションのサイズ変更時にも使用できるようになっています。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>format</literal></para>
-         </entry>
-         <entry>
-          <para>&ay; 側でパーティションをフォーマットするかどうかを指定します。</para>
-          <screen>&lt;format config:type="boolean"&gt;false&lt;/format&gt;</screen>
-         </entry>
-         <entry>
-          <para><literal>create</literal> を <literal>true</literal> に設定した場合は、この値についても <literal>true</literal> を設定しておいたほうが良いでしょう。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>file system</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションで使用するファイルシステムを指定します:</para>
-          <itemizedlist mark="bullet" spacing="normal">
+&lt;/fstopt&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>  
+     
+       <variablelist>
+         <varlistentry>
+             <term>disklabel</term>
+             <listitem>
+                 <para>パーティションのラベルを指定します。デバイスをフォーマットする場合 (特に <literal>mountby</literal> パラメータを <literal>label</literal> にする場合) に有用であるほか、既に存在するデバイスを識別するような場合にも使用します (上述の <literal>create</literal> もお読みください) 。</para>
+<screen>&lt;label&gt;mydata&lt;/label&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist>  
+     
+       <variablelist>
+         <varlistentry>
+             <term>uuid</term>
+             <listitem>
+                 <para>パーティションの UUID を指定します。既に存在するデバイスを識別する場合にのみ使用します (上述の <literal>create</literal> もお読みください) 。なお、新しく作成するデバイスの場合は UUID を事前に決めることができませんので、指定することもできません。</para>
+<screen>&lt;uuid
+&gt;1b4e28ba-2fa1-11d2-883f-b9a761bde3fb&lt;/uuid&gt;</screen>                
+             </listitem>
+         </varlistentry>
+     </variablelist>
+
+       <variablelist>
+         <varlistentry>
+             <term>pesize</term>
+             <listitem>
+                 <para>4G, 4500M などのように、パーティションのサイズを指定します。 /boot パーティションとスワップパーティションに対しては、 <literal>auto</literal> を指定することもできます。この場合、 &ay; 側で適切なサイズを設定します。また、いずれか 1 つのパーティションに対して <literal>max</literal> を指定すると、残りの領域全てを使用することができるようになります。</para>
+                 <para>サイズは割合で設定することもできます。たとえば 10% と指定すると、ハードディスク全体もしくはボリュームグループの 10% 分を使用することができます。必要に応じて auto, max, サイズ指定, 割合を組み合わせて使用することもできます。</para>
+<screen>&lt;size&gt;10G&lt;/size&gt;</screen>                    
+                 <para>&productname; 15 以降では、全ての値 (<literal>auto</literal> と <literal>max</literal> を含む) をパーティションのサイズ変更時にも使用できるようになっています。</para>
+             </listitem>
+         </varlistentry>
+     </variablelist>  
+     
+       <variablelist>
+         <varlistentry>
+             <term>format</term>
+             <listitem>
+                 <para><literal>create</literal> を <literal>true</literal> に設定した場合は、この値についても <literal>true</literal> を設定しておいたほうが良いでしょう。</para>
+<screen>&lt;format config:type="boolean"&gt;false&lt;/format&gt;</screen>                
+             </listitem>
+         </varlistentry>
+     </variablelist>     
+     
+       <variablelist>
+         <varlistentry>
+             <term>file system</term>
+             <listitem>
+                 <para>任意指定です。ルートパーティションの場合、既定値は <literal>btrfs</literal> に、データパーティションの場合、既定値は <literal>xfs</literal> になります。</para>
+         <itemizedlist mark="bullet" spacing="normal">
            <listitem>
             <para><literal>btrfs</literal></para>
            </listitem>
@@ -523,49 +488,47 @@
            </listitem>
            <listitem>
             <para><literal>swap</literal></para>
+<screen>&lt;filesystem config:type="symbol"
+&gt;ext3&lt;/filesystem&gt;</screen>            
            </listitem>
           </itemizedlist>
-          <screen>&lt;filesystem config:type="symbol"
-&gt;ext3&lt;/filesystem&gt;</screen>
-         </entry>
-         <entry>
-          <para>任意指定です。ルートパーティションの場合、既定値は <literal>btrfs</literal> に、データパーティションの場合、既定値は <literal>xfs</literal> になります。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>mkfs_options</literal></para>
-         </entry>
-         <entry>
-          <para>mkfs コマンドを実行する際のオプション文字列を指定します。</para>
-          <screen>&lt;mkfs_options&gt;-I 128&lt;/mkfs_options&gt;</screen>
-         </entry>
-         <entry>
-          <para>任意指定です。どうしても必要な場合にのみ設定してください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>partition_nr</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションのパーティション番号を指定します。 <literal>create=false</literal> もしくは LVM を使用しようとしている場合、 <literal>partition_nr</literal> でパーティションの番号を指定することができます。なお、 &ay; に対してプライマリパーティションを強制的に作成させたい場合は、 5 未満の数値を指定してください。</para>
-          <screen>&lt;partition_nr config:type="integer"
-&gt;2&lt;/partition_nr&gt;</screen>
-         </entry>
-         <entry>
-          <para>通常は 1 から 4 までがプライマリパーティションに、 5 以上が論理パーティションになります。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>partition_id</literal></para>
-         </entry>
-         <entry>
-          <para><literal>partition_id</literal> ではパーティションの ID を設定します。 Linux パーティションでは 130 、スワップパーティションでは 131 が自動的に設定されますが、それ以外の ID を設定したい場合は、これで設定を行なってください。</para>
-          <screen>&lt;partition_id config:type="integer"
-&gt;131&lt;/partition_id&gt;</screen>
-<para>設定可能な値は下記のとおりです:</para>
+             </listitem>
+         </varlistentry>
+     </variablelist>     
+     
+       <variablelist>
+         <varlistentry>
+             <term>mkfs_options</term>
+             <listitem>
+                 <para>
+                     Optional, specify an option string for the 
+                     <command>mkfs</command>. Only use this when you know what 
+                     you are doing (see the relevant mkfs man page for the 
+                     filesystem you want to use.)
+                 </para>
+<screen>&lt;mkfs_options&gt;-I 128&lt;/mkfs_options&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist> 
+     
+       <variablelist>
+         <varlistentry>
+             <term>partitions</term>
+             <listitem>
+                 <para>このパーティションのパーティション番号を指定します。 <literal>create=false</literal> もしくは LVM を使用しようとしている場合、 <literal>partition_nr</literal> でパーティションの番号を指定することができます。なお、 &ay; に対してプライマリパーティションを強制的に作成させたい場合は、 5 未満の数値を指定してください。</para>
+<screen>&lt;partition_nr config:type="integer"
+&gt;2&lt;/partition_nr&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>     
+     
+       <variablelist>
+         <varlistentry>
+             <term>partitions</term>
+             <listitem>
+                 <para><literal>partition_id</literal> ではパーティションの ID を設定します。 Linux パーティションでは 130 、スワップパーティションでは 131 が自動的に設定されますが、それ以外の ID を設定したい場合は、これで設定を行なってください。</para>
+<screen>&lt;partition_id config:type="integer"
+&gt;131&lt;/partition_id&gt;</screen>                 
 <simplelist>
  <member>スワップ: <literal>130</literal></member>
  <member>Linux: <literal>131</literal></member>
@@ -573,215 +536,180 @@
  <member>MD RAID: <literal>253</literal></member>
  <member>EFI パーティション: <literal>259</literal></member>
 </simplelist>
-         </entry>
-         <entry>
-          <para>既定では、 Linux パーティションに対しては <literal>131</literal> が、スワップパーティションに対しては <literal>130</literal> が設定されます。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>partition_type</literal></para>
-         </entry>
-         <entry>
-          <para>パーティションテーブルに <literal>msdos</literal> 形式を使用している場合、この要素でパーティションの種類を設定することができます。値には <literal>primary</literal> (プライマリパーティション) もしくは <literal>logical</literal> (論理パーティション) のいずれかを指定します。 <literal>gpt</literal> パーティションテーブルを使用している場合、このような区別はありませんので、値を設定しても無視されます。</para>
-          <screen>&lt;partition_type&gt;primary&lt;/partition_type&gt;</screen>
-         </entry>
-         <entry>
-          <para>任意指定です。 <literal>primary</literal> (既定値) もしくは <literal>logical</literal> のいずれかを指定します。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>mountby</literal></para>
-         </entry>
-         <entry>
-          <para>パーティション番号の代わりに、 <literal>device</literal> (デバイス), <literal>label</literal> (ラベル), <literal>uuid</literal> (UUID), <literal>path</literal> (udev パス), <literal>id</literal> (udev ID) などでパーティションをマウントするよう設定することができます。</para>
-          <screen>&lt;mountby config:type="symbol"
-&gt;label&lt;/mountby&gt;</screen>
-         </entry>
-         <entry>
-          <para>上述の <literal>label</literal> と <literal>uuid</literal> の説明をお読みください。既定値は &yast; 側で規定されていますが、通常は <literal>id</literal> です。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>subvolumes</literal></para>
-         </entry>
-         <entry>
-          <para>btrfs のファイルシステムで作成するサブボリュームの一覧を指定します。これは btrfs を使用する場合にのみ意味のある項目です。詳しくは <xref linkend="ay-btrfs-subvolumes"/> をお読みください。</para>
-          <screen>&lt;subvolumes config:type="list"&gt;
+             </listitem>
+         </varlistentry>
+     </variablelist>   
+     
+        <variablelist>
+         <varlistentry>
+             <term>partitions</term>
+             <listitem>
+                 <para>パーティションテーブルに <literal>msdos</literal> 形式を使用している場合、この要素でパーティションの種類を設定することができます。値には <literal>primary</literal> (プライマリパーティション) もしくは <literal>logical</literal> (論理パーティション) のいずれかを指定します。 <literal>gpt</literal> パーティションテーブルを使用している場合、このような区別はありませんので、値を設定しても無視されます。</para>
+<screen>&lt;partition_type&gt;primary&lt;/partition_type&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>     
+     
+        <variablelist>
+         <varlistentry>
+             <term>mountby</term>
+             <listitem>
+                 <para>パーティション番号の代わりに、 <literal>device</literal> (デバイス), <literal>label</literal> (ラベル), <literal>uuid</literal> (UUID), <literal>path</literal> (udev パス), <literal>id</literal> (udev ID) などでパーティションをマウントするよう設定することができます。</para>
+                 <para>上述の <literal>label</literal> と <literal>uuid</literal> の説明をお読みください。既定値は &yast; 側で規定されていますが、通常は <literal>id</literal> です。</para>
+<screen>&lt;mountby config:type="symbol"
+&gt;label&lt;/mountby&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist>    
+     
+        <variablelist>
+         <varlistentry>
+             <term>btrfs サブボリューム</term>
+             <listitem>
+                 <para>btrfs のファイルシステムで作成するサブボリュームの一覧を指定します。これは btrfs を使用する場合にのみ意味のある項目です。詳しくは <xref linkend="ay-btrfs-subvolumes"/> をお読みください。</para>
+                 <para>パーティションの設定内に <tag>subvolumes</tag> セクションが存在しない場合、 &ay; は指定したマウントポイント内に、既定のサブボリュームセットを作成します。</para>
+<screen>&lt;subvolumes config:type="list"&gt;
   &lt;path&gt;tmp&lt;/path&gt;
   &lt;path&gt;opt&lt;/path&gt;
   &lt;path&gt;srv&lt;/path&gt;
   &lt;path&gt;var&lt;/path&gt;
   ...
-&lt;/subvolumes&gt;</screen>
-         </entry>
-         <entry>
-          <para>パーティションの設定内に <tag>subvolumes</tag> セクションが存在しない場合、 &ay; は指定したマウントポイント内に、既定のサブボリュームセットを作成します。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>create_subvolumes</literal></para>
-         </entry>
-         <entry>
-          <para>btrfs のサブボリュームを作成するかどうかを指定します。</para>
-         </entry>
-         <entry>
-          <para>既定値は <literal>true</literal> です。 <literal>false</literal> に設定した場合、サブボリュームは作成されません。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>subvolumes_prefix</literal></para>
-         </entry>
-         <entry>
-          <para>btrfs のサブボリュームに設定するプレフィクス (前置) 名を指定します。何もプレフィクスを指定したくない場合は、空の値を設定してください:</para>
-          <screen>&lt;subvolumes_prefix&gt;&lt;![CDATA[]]&gt;&lt;/subvolumes_prefix&gt;</screen>
-         </entry>
-         <entry>
-          <para>既定では <literal>@</literal> が設定されています。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>lv_name</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションがボリュームグループ内の論理ボリュームである場合、ここで論理ボリュームの名前を指定します (<literal>drive</literal> 設定内の <literal>type</literal> パラメータもお読みください) 。</para>
-          <screen>&lt;lv_name&gt;opt_lv&lt;/lv_name&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>stripes</literal></para>
-         </entry>
-         <entry>
-          <para>LVM のストライピングを設定するための整数です。どれだけの数のデバイスにデータを分散させるのかを指定します。</para>
-          <screen>&lt;stripes config:type="integer"&gt;2&lt;/stripes&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>stripesize</literal></para>
-         </entry>
-         <entry>
-          <para>各ブロックのサイズを KB 単位で指定します。</para>
-          <screen>&lt;stripesize config:type="integer"
-&gt;4&lt;/stripesize&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>lvm_group</literal></para>
-         </entry>
-         <entry>
-          <para>このパーティションが LVM のボリュームグループの一部として使用されている物理パーティションである場合は、ここでボリュームグループの名前を指定する必要があります。</para>
-<screen>&lt;lvm_group&gt;system&lt;/lvm_group&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>pool</literal></para>
-         </entry>
-         <entry>
-          <para>LVM 論理ボリュームが LVM の thin プール内に存在すべきである場合は、 <literal>pool</literal> の値を <literal>true</literal> にしなければなりません。</para>
-          <screen>&lt;pool config:type="boolean"&gt;false&lt;/pool&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>used_pool</literal></para>
-         </entry>
-         <entry>
-          <para>この thin 論理ボリュームに対して、データストアとして使用する LVM thin プールの名前を指定します。ここに何らかの値を設定すると、このボリュームは thin 論理ボリュームとして使用されるようになります。</para>
-          <screen>&lt;used_pool&gt;my_thin_pool&lt;/used_pool&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>raid_name</literal></para>
-         </entry>
-         <entry>
-          <para>この物理ボリュームが RAID の一部である場合は、ここで RAID の名前を指定します。</para>
-          <screen>&lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;</screen>
-         </entry>
-         <entry>
-          <para/>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>raid_options</literal></para>
-         </entry>
-         <entry>
-          <para>RAID オプションを指定します (説明欄もお読みください) 。</para>
-          <screen>&lt;raid_options&gt;...&lt;/raid_options&gt;</screen>
-         </entry>
-         <entry>
-          <para><literal>partition</literal> 内に RAID のオプションを設定するのは非推奨になっています。詳しくは <xref linkend="ay-partition-sw-raid"/> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>bcache_backing_for</para>
-         </entry>
-         <entry>
-          <para>このデバイスを <emphasis>&bcache; のバッキングデバイス</emphasis> として使用する場合は、ここで &bcache; のデバイス名を指定します。</para>
-          <screen>&lt;bcache_backing_for&gt;/dev/bcache0&lt;/bcache_backing_for&gt;</screen>
-         </entry>
-         <entry>
-          <para>詳しくは <xref linkend="ay-partition-bcache"/> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para>bcache_caching_for</para>
-         </entry>
-         <entry>
-          <para>このデバイスを <emphasis>&bcache; のキャッシュデバイス</emphasis> として使用する場合は、ここで &bcache; のデバイス名を指定します。</para>
-          <screen>&lt;bcache_caching_for config:type="list"&gt;
+&lt;/subvolumes&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+        <variablelist>
+         <varlistentry>
+             <term>btrfs サブボリューム</term>
+             <listitem>
+                 <para>既定値は <literal>true</literal> です。 <literal>false</literal> に設定した場合、サブボリュームは作成されません。</para>
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+        <variablelist>
+         <varlistentry>
+             <term><literal>subvolumes_prefix</literal></term>
+             <listitem>
+                 <para>btrfs のサブボリュームに設定するプレフィクス (前置) 名を指定します。何もプレフィクスを指定したくない場合は、空の値を設定してください:</para>
+<screen>&lt;subvolumes_prefix&gt;&lt;![CDATA[]]&gt;&lt;/subvolumes_prefix&gt;</screen>
+                 <para>既定では <literal>@</literal> が設定されています。</para>
+             </listitem>
+         </varlistentry>
+     </variablelist> 
+
+        <variablelist>
+         <varlistentry>
+             <term>dev_name</term>
+             <listitem>
+                 <para>このパーティションがボリュームグループ内の論理ボリュームである場合、ここで論理ボリュームの名前を指定します (<literal>drive</literal> 設定内の <literal>type</literal> パラメータもお読みください) 。</para>
+<screen>&lt;lv_name&gt;opt_lv&lt;/lv_name&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+        <variablelist>
+         <varlistentry>
+             <term>stripes</term>
+             <listitem>
+                 <para>LVM のストライピングを設定するための整数です。どれだけの数のデバイスにデータを分散させるのかを指定します。</para>
+<screen>&lt;stripes config:type="integer"&gt;2&lt;/stripes&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist>
+
+        <variablelist>
+         <varlistentry>
+             <term>pesize</term>
+             <listitem>
+                 <para>各ブロックのサイズを KB 単位で指定します。</para>
+<screen>&lt;stripesize config:type="integer"
+&gt;4&lt;/stripesize&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist>
+
+        <variablelist>
+         <varlistentry>
+             <term>lvm_group</term>
+             <listitem>
+                 <para>このパーティションが LVM のボリュームグループの一部として使用されている物理パーティションである場合は、ここでボリュームグループの名前を指定する必要があります。</para>
+<screen>&lt;lvm_group&gt;system&lt;/lvm_group&gt;</screen>                 
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+        <variablelist>
+         <varlistentry>
+             <term>pool</term>
+             <listitem>
+                 <para>LVM 論理ボリュームが LVM の thin プール内に存在すべきである場合は、 <literal>pool</literal> の値を <literal>true</literal> にしなければなりません。</para>
+<screen>&lt;pool config:type="boolean"&gt;false&lt;/pool&gt;</screen>              
+             </listitem>
+         </varlistentry>
+     </variablelist>
+     
+        <variablelist>
+         <varlistentry>
+             <term>used_pool</term>
+             <listitem>
+                 <para>この thin 論理ボリュームに対して、データストアとして使用する LVM thin プールの名前を指定します。ここに何らかの値を設定すると、このボリュームは thin 論理ボリュームとして使用されるようになります。</para>
+<screen>&lt;used_pool&gt;my_thin_pool&lt;/used_pool&gt;</screen>              
+             </listitem>
+         </varlistentry>
+     </variablelist>     
+
+        <variablelist>
+         <varlistentry>
+             <term>dev_name</term>
+             <listitem>
+                 <para>この物理ボリュームが RAID の一部である場合は、ここで RAID の名前を指定します。</para>
+<screen>&lt;raid_name&gt;/dev/md/0&lt;/raid_name&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist> 
+     
+        <variablelist>
+         <varlistentry>
+             <term>partitions</term>
+             <listitem>
+                 <para><literal>partition</literal> 内に RAID のオプションを設定するのは非推奨になっています。詳しくは <xref linkend="ay-partition-sw-raid"/> をお読みください。</para>
+             </listitem>
+         </varlistentry>
+     </variablelist>  
+     
+        <variablelist>
+         <varlistentry>
+             <term>bcache_backing_for</term>
+             <listitem>
+                 <para>このデバイスを <emphasis>&bcache; のバッキングデバイス</emphasis> として使用する場合は、ここで &bcache; のデバイス名を指定します。</para>
+<screen>&lt;bcache_backing_for&gt;/dev/bcache0&lt;/bcache_backing_for&gt;</screen>              
+             </listitem>
+         </varlistentry>
+     </variablelist>    
+     
+        <variablelist>
+         <varlistentry>
+             <term>bcache_caching_for</term>
+             <listitem>
+                 <para>このデバイスを <emphasis>&bcache; のキャッシュデバイス</emphasis> として使用する場合は、ここで &bcache; のデバイス名を指定します。</para>
+  <screen>&lt;bcache_caching_for config:type="list"&gt;
   &lt;listentry&gt;/dev/bcache0&lt;/listentry&gt;
-&lt;/bcache_caching_for&gt;</screen>
-         </entry>
-         <entry>
-          <para>詳しくは <xref linkend="ay-partition-bcache"/> をお読みください。</para>
-         </entry>
-        </row>
-        <row>
-         <entry>
-          <para><literal>resize</literal></para>
-         </entry>
-         <entry>
-          <para>既存のパーティションのサイズを変更すべきである場合、この値は <literal>true</literal> にします。この場合、 &ay; に対してデバイスの再利用 (<literal>create</literal>) を指定し、 <literal>size</literal> の値を設定する必要があります。</para>
-          <screen>&lt;resize config:type="boolean"&gt;false&lt;/resize&gt;</screen>
-         </entry>
-         <entry>
-          <para>&productname; 15 およびそれ以降では、サイズ変更は物理ディスクパーティションと LVM ボリュームの両方に対して動作するようになっています。</para>
-         </entry>
-        </row>
-       </tbody>
-      </tgroup>
-     </informaltable>
+&lt;/bcache_caching_for&gt;</screen>               
+             </listitem>
+         </varlistentry>
+     </variablelist>      
+     
+        <variablelist>
+         <varlistentry>
+             <term>pesize</term>
+             <listitem>
+                 <para>&productname; 15 およびそれ以降では、サイズ変更は物理ディスクパーティションと LVM ボリュームの両方に対して動作するようになっています。</para>
+ <screen>&lt;resize config:type="boolean"&gt;false&lt;/resize&gt;</screen>                
+             </listitem>
+         </varlistentry>
+     </variablelist>     
     </sect3>
 
     <sect3 xml:id="ay-btrfs-subvolumes">
@@ -1754,6 +1682,45 @@ as per ancorgs' comment on Github-->
         &lt;/partitioning&gt;
       </screen>
     </example>
+  </sect2>
+
+  <sect2 xml:id="ay-partition-tmpfs">
+   <title><literal>btrfs</literal></title>
+
+   <para>
+    &ay; supports the definition of <literal>tmpfs</literal> virtual file systems by
+    setting the <literal>type</literal> element to <literal>CT_TMPFS</literal>.
+    Each <literal>partition</literal> section represents a <literal>tmpfs</literal>
+    file system.
+   </para>
+
+   <example>
+    <title><literal>btrfs</literal></title>
+    <screen>
+        &lt;partitioning config:type="list"&gt;
+          &lt;drive&gt;
+            &lt;device&gt;192.168.1.1:/exports/root_fs&lt;/device&gt;
+            &lt;type config:type="symbol"&gt;CT_NFS&lt;/type&gt;
+            &lt;use&gt;all&lt;/use&gt;
+            &lt;partitions config:type="list"&gt;
+              &lt;partition&gt;
+                &lt;mount&gt;/&lt;/mount&gt;
+                &lt;fstopt&gt;nolock&lt;/fstopt&gt;
+              &lt;/partition&gt;
+            &lt;/partitions&gt;
+          &lt;/drive&gt;
+        &lt;/partitioning&gt;
+      </screen>
+   </example>
+
+   <para>
+     <literal>tmpfs</literal> devices are different from regular file systems
+     like Ext4 or Btrfs. Therefore, the only relevant elements are
+     <literal>mount</literal>, which is mandatory, and
+     <literal>fstopt</literal>. The latter is used to set file system attributes
+     like its size limit, mode, and so on. You can find additional information
+     about the known options in the <literal>tmpfs</literal> manpage.
+   </para>
   </sect2>
 
    <sect2 os="sles" xml:id="ay-partition-s390">
