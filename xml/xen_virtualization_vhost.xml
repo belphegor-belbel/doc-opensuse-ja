@@ -48,9 +48,6 @@
     <para>性能を最大限に発揮するためには、仮想マシンホストには仮想化に必要なアプリケーションのみをインストールし、動作させておくことをお勧めします。</para>
    </listitem>
    <listitem>
-    <para>&xen; のイメージを提供するために iSCSI と OCFS2 の両方を使用する場合、 &productname; での OCFS2 の既定のタイムアウト設定では、正しく動作しない場合があります。このタイムアウト設定を調整するには、 <!-- NOTE: "systemctl configure" ?? --><command>systemctl configure o2cb</command> を実行するか、システムの設定内にある <literal>O2CB_HEARTBEAT_THRESHOLD</literal> を設定してください。</para>
-   </listitem>
-   <listitem>
     <para>&xen; ホストに接続されているウオッチドッグデバイスを使用したいとお考えの場合、同時に複数台の &vmguest; から使用することは避けてください。また、一般的なソフトウエア実装ではなく、実際のハードウエア統合のドライバをお使いください。</para>
    </listitem>
   </itemizedlist>
@@ -82,18 +79,19 @@
      <para>&dom0; で <command>xl info</command> と入力して実行し、マシンで利用可能なメモリ量を表示します。 &dom0; に対する現在のメモリ割り当ては、 <command>xl list</command> で表示することができます。</para>
     </step>
     <step>
-     <para><menuchoice> <guimenu>&yast;</guimenu> <guimenu>ブートローダ</guimenu> </menuchoice> を起動します。</para>
-    </step>
-    <step>
-     <para>&xen; のセクションを選択します。</para>
-    </step>
-    <step>
      <para><!-- NOTE: Latest YaST bootloader module does not have Xen hypervisor parameter? --><guimenu>オプションのカーネルコマンドラインパラメータ</guimenu> 内にスペース区切りで <command>dom0_mem=<replaceable>メモリ量</replaceable></command> を追加します。このとき、 <replaceable>メモリ量</replaceable> には &dom0; に割り当てる最大のメモリ量を指定します。なお、末尾に <command>K</command> (キロバイト), <command>M</command> (メガバイト), <command>G</command> (ギガバイト) の単位接尾辞を指定することもできます。たとえば <command>dom0_mem=2G</command> のようになります。</para>
+<screen>GRUB_CMDLINE_XEN="dom0_mem=2G"</screen>
     </step>
     <step>
      <para>あとはコンピュータを再起動して、設定を反映させます。</para>
     </step>
    </procedure>
+   <tip>
+    <para>
+     Refer to <xref linkend="sec-grub2-etc-default-grub"/> for more details
+     about &xen;-related boot configuration options.
+    </para>
+   </tip>
    <warning>
     <title>&xen; の &dom0; メモリについて</title>
     <para>XL ツールスタックと &grub; 内での &xen; ハイパーバイザ向けの <command>dom0_mem=</command> オプションを併用している場合、 <filename>etc/xen/xl.conf</filename> 内で <emphasis>autoballoon</emphasis> を無効化する必要があります。無効化しないと、 VM の起動時に &dom0; のバルーン縮小を行なうことができず、失敗することになってしまいます。そのため &xen; 向けに <command>dom0_mem=</command> を指定した場合は、 <filename>xl.conf</filename> 内で必ず <emphasis>autoballoon=0</emphasis> を設定してください。詳しくは <link xlink:href="http://wiki.xen.org/wiki/Xen_Best_Practices#Xen_dom0_dedicated_memory_and_preventing_dom0_memory_ballooning">Xen dom0 memory</link> (英語) をお読みください。</para>

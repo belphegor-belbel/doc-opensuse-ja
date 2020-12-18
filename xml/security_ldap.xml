@@ -179,8 +179,22 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
 
  <sect1 xml:id="sec-security-ldap-server">
   <title>&ds389; のテスト／開発用インスタンスの構築</title>
+  <para>
+      You will use the <command>dscreate</command> command to create and remove
+      &ds389; instances. There are two ways to configure and create a new instance: from a custom configuration file, and from an auto-generated template file.
+      You may use the auto-generated template without changes for a test instance,
+      though for a production system you must carefully review it and make necessary
+      changes.
+  </para>
+  <para>
+      Then you will set up administration credentials, manage users and groups,
+      and configure identity services.
+  </para>
   <para>下記の手順を実施することで、いくつかのサンプル用エントリを含むテスト目的や開発目的のインスタンスを構築することができます。</para>
   <procedure>
+   <step>
+    <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
+   </step>
    <step>
     <para><!--ディレクトリサーバインスタンスの作成--> <xref linkend="sec-security-ldap-server-instance" xrefstyle="select:title"/></para>
    </step>
@@ -226,10 +240,14 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
      </listitem>
     </varlistentry>
   </variablelist>
-
-  <sect2 xml:id="sec-security-ldap-server-instance">
+ 
+    <sect2 xml:id="sec-security-ldap-server-instance">
   <title>独自の設定ファイルを利用した &ds389; インスタンスの作成</title>
-    <para><command>dscreate</command> コマンドを使用することで、新しい &ds389; インスタンスを作成することができます。インスタンスの作成にあたっては、雛型となるテンプレートファイルを利用する対話的な方法と、独自の設定ファイルを利用する方法があります。本章では、独自の設定ファイルを利用する方法を説明しています。このファイルは INF 形式でなければなりませんが、ファイル名は任意に設定することができます。</para>
+    <para>
+     You may create a new &ds389; instance from a simple custom configuration
+     file. This file must be in the INF format, and you may name it anything you
+     like.
+    </para>
     <para>既定のインスタンス名は <literal>localhost</literal> です。インスタンス名は作成後に変更することができませんので、混乱を避けるとともに、動作を良く理解できるよう、既定値ではなく独自の名前を指定しておくことをお勧めします。</para>
     <para><xref linkend="ex-ldap-389-ds-inf" xrefstyle="select:label"/> には新しい &ds389; インスタンスを作成する際の設定ファイルの例が示されています。この内容をそのまま利用してもかまいませんが、パスワードについては独自のものを設定しておいてください。</para>
    <procedure>
@@ -291,6 +309,63 @@ Not removing: if you are sure, add --do-it
   </procedure>
  </sect2>
  
+ <sect2 xml:id="sec-security-ldap-server-template">
+   <title>&yast; による &ds389; インスタンスの作成</title>
+   <para>
+       You may auto-create a template for a new &ds389; instance with the
+       <command>dscreate</command> command. This creates a template that you
+       may use without making any changes, and you may change it to suit your own
+       requirements. All of the defaults are documented in the template file,
+       and commented out. To make changes, uncomment the default and enter your
+       own value. All options are well-documented.
+   </para>
+   <para>
+       The following example prints the template to stdout:
+   </para>
+   <screen>&prompt.user;dscreate create-template</screen>
+   <para>
+       This is good for a quick review of the template, but you must create a
+       file to use in creating your new &ds389; instance. You may name this file
+       anything you want:
+   </para>
+   <screen>&prompt.sudo;dscreate -v from-file 389ds-test.inf | tee 389ds-test-output.txt</screen>
+   <para>
+       This is a snippet from the new file:
+   </para>
+   <screen># full_machine_name (str)
+# Description: Sets the fully qualified hostname (FQDN) of this system. When ins
+talling this instance with GSSAPI authentication behind a load balancer, set this parameter to the FQDN of the load balancer and, additionally, set "strict_host_checking" to "false".
+# Default value: 389server.test3.com 
+;full_machine_name = 389server.test3.com
+
+# selinux (bool)
+# Description: Enables SELinux detection and integration during the installation of this instance. If set to "True", dscreate auto-detects whether SELinux is enabled. Set this parameter only to "False" in a development environment.
+# Default value: True 
+;selinux = True</screen>
+
+   <para>
+    You see how it automatically configures the defaults from your existing
+    environment. Use this file with no changes to create a new instance:
+   </para>
+   <screen>&prompt.sudo;dscreate -v from-file 389ds-test.inf | tee 389ds-test-output.txt</screen>
+   <para>
+       This creates a new instance named <literal>localhost</literal>, and 
+       automatically starts it after creation:
+   </para>
+   <screen>&prompt.sudo;dsctl 389ds-test status
+Instance "389ds-test" is running</screen>
+   <para>
+       Cleanly remove the new instance with <command>dsctl</command>:
+    </para>
+    <screen>&prompt.sudo;dsidm localhost group create</screen>
+    <para>既定のインスタンス名は <literal>localhost</literal> です。インスタンス名は作成後に変更することができませんので、混乱を避けるとともに、動作を良く理解できるよう、既定値ではなく独自の名前を指定しておくことをお勧めします。</para>
+    <para>
+        Another useful change is to populate your new instance with sample
+        users and groups. Uncomment <literal>;sample_entries = no</literal> and
+        change <literal>no</literal> to <literal>yes</literal>.
+    </para>
+ </sect2>
+ 
  <sect2 xml:id="sec-security-ldap-server-credentials">
   <title>ローカル管理用の管理者認証情報の設定</title>
    <para>&ds389; のローカル管理を行なう目的で、 <filename>/root</filename> ディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。これにより、管理者 (root) や sudo 経由で管理権限を取得したユーザが、わざわざ &ds389; の管理者情報を入力したりすることなく管理できるようになります。 <xref linkend="ex-security-ldap-server-credentials-local" xrefstyle="select:label"/> にはサーバをローカル管理する場合の例が示されています。</para>
@@ -315,19 +390,6 @@ binddn = cn=Directory Manager
     </callout>
    </calloutlist>
   </example>
- <!-- WIP, need to address privileges more completely cschroder 23-11-2020      <para>
-        You may also copy <filename>.dsrc</filename> to your home directory, for
-        running commands that do not need root privileges, such as listing 
-        users and groups:
-      </para>
-      <screen>&prompt.user;dsidm 389ds-test user list
-demo_user
-&prompt.user;dsidm 389ds-test group list
-demo_group</screen>
-     <para>
-       If you run a command that requires elevated privileges, such as creating
-       new users, you will see an "Error: Insufficient access" message.
-  </para> -->
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-server-users">
@@ -494,278 +556,6 @@ systemctl start sssd</screen>
  </step>
  </procedure>
  </sect1> 
-
-<sect1 xml:id="sec-security-ldap-server-yast" os="sles;osuse">
- <title>&yast; での &ds389; の設定</title>
-  <para>&yast; を使用することで、 &ds389; の非常に基本的な設定を素早く行なうことができます。</para>
-  
- <sect2 xml:id="sec-security-ldap-server-yast-create">
-  <title>&yast; による &ds389; インスタンスの作成</title>
-  <procedure>
-   <step>
-   <para>&yast; を起動して、 <menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>Create New Directory Server</guimenu> </menuchoice> を選択します。それ以外にも、コマンドラインから <command>yast2 ldap-server</command> と入力して実行してもかまいません。</para>
-   <para>新しいウインドウが表示されたら、必須の項目にそれぞれ入力を行ないます。</para>
-  </step>
-  <step>
-   <para>まずは &ds389; の <guimenu>完全修飾ドメイン名</guimenu> を入力します。この名前は、ホスト側から解決可能なものでなければなりません。</para>
-  </step>
-  <step>
-   <para><guimenu>Directory server instance name</guimenu> には、 LDAP サーバインスタンスに対するローカルの名前を入力します。</para>
-   <note>
-    <title>インスタンス名</title>
-    <para>インスタンス名は作成後に変更 <emphasis>できません</emphasis> 。 LDAP サーバを 1 つだけ起動したい場合は、既定のインスタンス名である <literal>localhost</literal> をお使いください。複数の LDAP サーバを起動する場合は、それぞれのインスタンスを表わすわかりやすい名前を入力してください。</para>
-   </note>
-  </step>
-  <step>
-   <para><guimenu>ディレクトリサフィックス</guimenu> には、 LDAP ツリー内でベースとなるドメイン名を入力します。ただし、ドメイン名はコンポーネントで区切る必要があります。たとえば <literal>example.com</literal> というドメイン名であれば、 <literal>dc=example,dc=com</literal> のようになります。</para>
-  </step>
-  <step>
-   <para>必須のセキュリティオプションでは、まずディレクトリマネージャ (LDAP の root (管理者) アカウント) のパスワードを 2 度入力します。パスワードは 8 文字以上でなければなりません。</para>
-  </step>
-    <step>
-     <para>CA 証明書を利用して &ds389; を動作させたい場合は、下記のオプションをそれぞれ設定します:</para>
-     <substeps>
-      <step>
-       <para><guimenu>Server TLS certificate authority in PEM format</guimenu> の欄に、サーバ証明書に対して署名を行なった証明機関の証明書を指定します。 <remark>taroth 2020-01-22: string may be simplified in the future, see https://github.com/yast/yast-auth-server/issues/55</remark></para>
-      </step>
-      <step>
-       <para>次に <guimenu>Server TLS certificate and key in PKCS12 format with friendly name "Server-Cert"</guimenu> の欄にファイルパスを入力します。ここで指定するファイルは、 <filename>*.p12</filename> 形式であり、かつサーバの機密鍵と証明書をそれぞれ含んでいるものでなければなりません。これらは上述の PEM 形式の証明書の証明機関が署名しているものでなければなりません。また、 <guimenu>フレンドリ名</guimenu> は <literal>Server-Cert</literal> でもなければなりません。詳しくは <xref linkend="sec-security-ldap-server-ca"/> をお読みください。 <remark>taroth 2020-01-22: string may be simplified in the future, see https://github.com/yast/yast-auth-server/issues/55</remark></para>
-       <para>ここで証明機関の証明書を指定しない場合は、自己署名型の証明書が自動生成されます。インスタンスを作成したあとは、 <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable></filename> にある関連ファイルをご覧ください。</para>
-      </step>
-     </substeps>
-    </step>
-   <step>
-   <para>必要な設定を終えたら、最後に <guimenu>OK</guimenu> を押すと、インスタンスを作成することができます。</para>
-   <informalfigure>
-    <mediaobject>
-     <imageobject role="fo">
-      <imagedata fileref="yast2-ldap-server.png" width="95%" format="PNG"/>
-     </imageobject>
-     <imageobject role="html">
-      <imagedata fileref="yast2-ldap-server.png" width="90%" format="PNG"/>
-     </imageobject>
-    </mediaobject>
-   </informalfigure>
-   <para>&yast; では作成が成功したかどうかと、関連するログファイルの場所を表示します。</para>
-  </step>
- </procedure>
-
- <!--taroth 2020-01-28: disabling reference to commented section-->
- <!--
- <para>
-  After you have created the instance, you can configure LDAP users and groups
-  as shown in <xref linkend="sec-security-ldap-yast-usergr" xrefstyle="select:label"/>.
- </para>
- <para>
-  The setup with &yast; provides only a very basic configuration of the &ds389;.
-  To fine-tune more settings, see <xref linkend="sec-security-ldap-server"/>
-  or the documentation mentioned in <xref linkend="sec-security-ldap-info"/>.
- </para>
-</sect2> -->
-
-<!--taroth 2020-01-27: commenting this section for now as agreed with firstyear-->
-<!--<sect2 xml:id="sec-security-ldap-yast-usergr">
-  <title>Configuring LDAP Users and Groups in &yast;</title>
-  <procedure>
-   <step>
-    <para>
-     Access the &yast; user administration with <menuchoice>
-     <guimenu>Security and Users</guimenu><guimenu>User and Group
-     Management</guimenu></menuchoice>.
-    </para>
-   </step>
-   <step>
-    <para>
-     To view and manage LDAP users, click the <guimenu>Users</guimenu> tab.
-    </para>
-   </step>
-   <step>
-    <para>
-     Select <menuchoice><guimenu>Set Filter</guimenu>
-     <guimenu>LDAP Users</guimenu></menuchoice> and enter the password for
-     Root DN.
-     <remark>taroth 2020-01-24: argh, this does not work for me, need to check
-     with firstyear</remark>
-    </para>
-   </step>
-   <step>
-    <para>
-     Click <guimenu>Add</guimenu> to enter the user configuration. A dialog
-     with four tabs opens:
-    </para>
-    <substeps performance="required">
-     <step>
-      <para>
-       Specify the user's name, login name, and password in the
-       <guimenu>User Data</guimenu> tab.
-      </para>
-     </step>
-     <step>
-      <para>
-       Check the <guimenu>Details</guimenu> tab for the group membership,
-       login shell, and home directory of the new user. If necessary, change
-       the default to values that better suit your needs.
-<!-\- The default values
-       (as well as those of the password settings) can be defined with the
-       procedure described in
-       <xref linkend="sec-security-auth-yast-client-conf-mod"/>.-\->
-      </para>
-     </step>
-     <step>
-      <para>
-       Modify or accept the default <guimenu>Password Settings</guimenu>.
-      </para>
-     </step>
-     <step>
-      <para>
-       Enter the <guimenu>Plug-Ins</guimenu> tab, select the LDAP plug-in,
-       and click <guimenu>Launch</guimenu> to configure additional LDAP
-       attributes assigned to the new user.
-<!-\- (see
-       <xref linkend="fig-ldap-y2-adset"/>).-\->
-      </para>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>
-     Click <guimenu>OK</guimenu> to apply your settings and leave the user
-     configuration.
-    </para>
-   </step>
-  </procedure>
-
- <para>
-  You can administer groups in a similar way on the <guimenu>Groups</guimenu>
-  tab.
-</para>
-<!-\-
-  <figure id="fig-ldap-y2-adset">
-   <title>&yast;: Additional LDAP Settings</title>
-   <mediaobject>
-    <imageobject role="fo">
-     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
-    </imageobject>
-    <imageobject role="html">
-     <imagedata fileref="ldap_y2_adset.png" width="75%" format="PNG"/>
-    </imageobject>
-   </mediaobject>
-  </figure>
-  -\->
-
-  <para>
-   The initial input form of user administration offers <guimenu>LDAP
-   Options</guimenu>. This allows you to apply LDAP search filters to the
-   set of available users. Alternatively open the module for configuring
-   LDAP users and groups by selecting <guimenu>LDAP User and Group
-   Configuration</guimenu>.
-  </para>-->
- </sect2> 
-
-<sect2 xml:id="sec-security-ldap-yast-client">
-  <title>&yast; による LDAP クライアントの設定</title>
-  <para>&yast; には <guimenu>LDAP および Kerberos クライアント</guimenu> モジュールが用意されています。このモジュールでは、 LDAP や Kerberos を利用する認証を設定することができます。</para>
-  <para>Kerberos と LDAP を個別に参加させるように使用することもできます。そのような場合、たとえば &ad; への参加 (LDAP と Kerberos を組み合わせて使用します) などでは、 このモジュールは最初の選択とはならないかもしれません。詳しくは <xref linkend="sec-security-auth-yast-client"/> をお読みください。</para>
-  <para><menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>LDAP および Kerberos クライアント</guimenu> </menuchoice> を選択して、モジュールを起動します。</para>
-  <figure xml:id="fig-yast2-ldapkerberos-ldap">
-   <title><guimenu>LDAP および Kerberos クライアント</guimenu> のウインドウ</title>
-   <mediaobject>
-    <imageobject role="html">
-     <imagedata fileref="yast2_auth_client_config.png" width="65%" format="PNG"/>
-    </imageobject>
-    <imageobject role="fo">
-     <imagedata fileref="yast2_auth_client_config.png" width="65%" format="PNG"/>
-    </imageobject>
-   </mediaobject>
-  </figure>
-
-  <para>LDAP クライアントを設定するには、下記の手順を実施します:</para>
-  <procedure xml:id="pro-security-auth-ldap">
-   <step>
-    <para><guimenu>LDAP および Kerberos クライアント</guimenu> のウインドウ内で、 <guimenu>設定の変更</guimenu> を押します。</para>
-    <para>このとき、 <guimenu>ディレクトリを識別子プロバイダとして使用する (LDAP)</guimenu> を選択していることを確認してください。</para>
-    <informalfigure>
-     <mediaobject>
-      <imageobject role="html">
-       <imagedata fileref="yast2_auth_client_ldap.png" width="65%" format="PNG"/>
-      </imageobject>
-      <imageobject role="fo">
-       <imagedata fileref="yast2_auth_client_ldap.png" width="65%" format="PNG"/>
-      </imageobject>
-     </mediaobject>
-    </informalfigure>
-   </step>
-   <step>
- <para><!-- wbrown 2019-02-25: URLs or hostnames only. IP address would break TLS cn/san checking. --> <guimenu>LDAP サーバの場所</guimenu> 内に、 1 つもしくは複数の LDAP サーバ URL やホスト名を入力します。セキュリティ上の理由から、 <literal>LDAPS://</literal> URL のみを使用することをお勧めします。また、複数のアドレスを指定する場合は、スペースで区切って指定してください。</para>
-   </step>
-   <step>
-    <para>次に <guimenu>検索ベースの DN</guimenu> 内に、 LDAP の識別名 (DN) を指定します。たとえば <literal>dc=example,dc=com</literal> のように指定します。</para>
-   </step>
-   <step>
-    <para>お使いの LDAP サーバが TLS による暗号化に対応している場合は、 <guimenu>LDAP 通信の暗号化</guimenu> 以下のオプションを選択します。</para>
-    <para>サーバ側に問い合わせて、 TLS による暗号化に対応していれば暗号化を使用し、そうでない場合は使用せずに接続したい場合は、 <guimenu>StartTLS を利用して通信を暗号化する</guimenu> を選択します。</para>
-   </step>
-   <step>
-    <para>その他のオプションについては、必要に応じて設定を行ないます:</para>
-    <itemizedlist>
-     <listitem>
-      <para>必要に応じて、 <guimenu>LDAP のユーザに対して認証を許可する</guimenu> と <guimenu>自動的にホームディレクトリを作成する</guimenu> を選択します。</para>
-     </listitem>
-     <listitem>
-      <para>LDAP の項目をローカルにキャッシュしておきたい場合は、 <guimenu>より高速な応答のため LDAP の項目をキャッシュする</guimenu> を選択します。</para>
-      <warning>
-       <title>キャッシュによる潜在的なセキュリティリスクについて</title>
-       <para>お使いの認証機構によっては、このキャッシュ機能がセキュリティリスクを引き起こすことがあります。</para>
-       <variablelist>
-        <varlistentry>
-         <term>nscd</term>
-         <listitem>
-          <para>認可ルール (たとえば <literal>admin</literal> グループのメンバーのみにログインを許可するルール) が存在している場合、そのグループからユーザを削除しても、クライアント側にキャッシュが残ってしまっていると、そのキャッシュが更新されるまではログインができてしまうことになります。また、アカウントを削除された場合でも、一定時間はログインができることにもなります。</para>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-         <term>sssd</term>
-         <listitem>
-          <para>このキャッシュ機構は、グループのメンバー情報が正しいかどうかを定期的に確認します。そのため、 <literal>sssd</literal> デーモンを利用した場合のリスクは、 LDAP サーバとの通信が切断された場合にのみ発生します。</para>
-         </listitem>
-        </varlistentry>
-       </variablelist>
-      </warning>
-     </listitem>
-     <listitem>
-      <para>さらに LDAP の情報源から使用すべきデータの種類 (たとえば <guimenu>ユーザ</guimenu> ,  <guimenu>グループ</guimenu> , <guimenu>スーパーユーザコマンド</guimenu> , <guimenu>ネットワークディスクの場所</guimenu> (必要に応じて自動的にマウントすることのできる共有ドライブ)) を指定します。</para>
-     </listitem>
-     <listitem>
-      <para><guimenu>バインドユーザの DN</guimenu> および <guimenu>バインドユーザのパスワード</guimenu> に、 LDAP ディレクトリにバインドする際のユーザの識別名 (DN) とパスワードを指定します。</para>
-      <para>サーバに対して匿名でバインドしたい場合は、サーバ側でのサポートが必要になりますが、これらのテキストボックスには何も入力しないでください。</para>
-      <warning>
-       <title>暗号化を行なわない認証について</title>
-       <para>TLS や StartTLS を利用した伝送路の暗号化を使用せずに認証を行なうと、パスワードは平文のまま転送されてしまいます。</para>
-       <!--for the records:
-        sknorr, 2017-03-01: Is the YaST dialog compatible with SASL in any way?
-        wbrown 2019-02-26: SASL is too complicated for a setup like this,
-        not worth including.
-       -->
-     </warning>
-     </listitem>
-    </itemizedlist>
-    <para><guimenu>拡張オプション</guimenu> 内では、追加でバインド操作時のタイムアウトを設定することができます。</para>
-   </step>
-   <step>
-    <para>LDAP が正しく接続できるかどうかを確認したい場合は、 <guimenu>接続のテスト</guimenu> を押してください。</para>
-   </step>
-   <step>
-    <para>ダイアログを閉じるには、 <guimenu>OK</guimenu> を押します。設定の書き込みが終わるまで、しばらくお待ちください。</para>
-    <para>全ての設定が終わったら、 <guimenu>完了</guimenu> を押して閉じます。</para>
-   </step>
-  </procedure>
-  </sect2> 
-</sect1>
-
- <sect1 xml:id="sec-security-ldap-data" os="sles;osuse">
-  <title>LDAP データの手動管理</title>
-   <para><systemitem>openldap2-client</systemitem> パッケージが提供するコマンドラインツール (たとえば <command>ldapsearch</command> や <command>ldapmodify</command> など) を使用することで、 LDAP ディレクトリ内のデータを管理することができます。しかしながら、これらのツールは低レベルなツールであり、使いやすさの点では劣ります。これらの使い方に関する詳細は、それぞれのマニュアルページもしくはドキュメンテーションをお読みください。</para>
- </sect1>
 
 <sect1 xml:id="sec-security-ldap-info">
   <title>さらなる情報</title>
