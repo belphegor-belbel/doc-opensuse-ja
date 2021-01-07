@@ -255,7 +255,7 @@ instance_name = <replaceable>389ds-test</replaceable>
 
 [backend-userroot]
 sample_entries = yes <co xml:id="co-ldap-389-ds-sample-entries"/>
-suffix = <replaceable>dc=test1,dc=com</replaceable></screen>
+suffix = <replaceable>dc=test3,dc=com</replaceable></screen>
 
       <calloutlist>
        <callout arearefs="co-ldap-389-ds-config-version">
@@ -325,32 +325,19 @@ Not removing: if you are sure, add --do-it
    <para>これにより、 <literal>localhost</literal> という名前の新しいインスタンスが作成され、作成が完了すると自動的に開始されます:</para>
    <screen>&prompt.sudo;dsctl localhost status
 Instance "localhost" is running</screen>
-    <para>
-        The default values create a fully-operational instance, but there are
-        some values you might want to change.
-    </para>
+    <para>既定値のままインスタンスを作成しても問題なく動作しますが、いくつかの設定値を変更しておくことで、より本番に近い環境を作成することができます。</para>
     <para>インスタンス名は作成後に変更することができませんので、混乱を避けるとともに、動作を良く理解できるよう、既定値ではなく独自の名前を指定しておくことをお勧めします。インスタンス名を変更するには、 <literal>;instance_name = localhost</literal> の行のコメント文字 (<literal>;</literal>) を外して、 <literal>localhost</literal> を任意の名前に変更します。</para>
     <para>また、もう 1 つ変更すべき箇所として、ユーザ例とグループ例の作成機能があります。必要であれば <literal>;sample_entries = no</literal> の箇所のコメント文字を外して、 <literal>no</literal> を <literal>yes</literal> にしてください。</para>
-    <para>
-        Set your own password by uncommenting <literal>;root_password</literal>,
-        and replacing the default password with your own.
-    </para>
-    <para>
-        The template does not create a default suffix, so you should
-        configure your own on the <literal>suffix</literal> line, like 
-        this example:
-    </para>    
+    <para>このほか <literal>;root_password</literal> の行のコメント文字 (;) を外して、設定したいパスワードを入力してもかまいません。</para>
+    <para>また、テンプレート内には既定のサフィックス (LDAP での既定のドメイン名) を指定していませんので、下記のようにして <literal>suffix</literal> 行で指定を行なうことができます:</para>    
     <screen>suffix = dc=test3,dc=com</screen>
-    <para>作成したインスタンスをきれいに削除するには、 <command>dsctl</command> で下記のようなコマンドを入力して実行します:</para>
-    <screen>&prompt.sudo;dsctl localhost remove --do-it</screen>
+    <para>作成したインスタンスをきれいに削除してやり直すには、 <command>dsctl</command> で下記のようなコマンドを入力して実行します:</para>
+    <screen>&prompt.sudo;dsctl <replaceable>localhost</replaceable> remove --do-it</screen>
  </sect2>
  
  <sect2 xml:id="sec-security-ldap-server-stop-start">
-     <title>Stopping and Starting &ds389;</title>
-     <para>
-         Use &systemd; to manage your &ds389; server instance. Get the
-         status of your server:
-     </para>
+     <title>&ds389; の起動と停止</title>
+     <para>&ds389; サーバのインスタンスを管理するには、 &systemd; を使用します。まずはサービスの状態を表示するには、下記のように入力して実行します:</para>
      <screen>&prompt.user;systemctl status --no-pager --full <replaceable>dirsrv@389ds-test.service</replaceable> 
          ● dirsrv@389ds-test.service - 389 Directory Server 389ds-
          test.
@@ -365,18 +352,11 @@ Instance "localhost" is running</screen>
    CGroup: /system.slice/system-dirsrv.slice/dirsrv@389ds-test.service
    └─5119 /usr/sbin/ns-slapd -D /etc/dirsrv/slapd-389ds-test -i /run/dirsrv/
    slapd-389ds-test.pid</screen>
-   <para>
-       Start and stop your server:
-   </para>
+   <para>サービスの起動と停止を行なうには、それぞれ下記のように入力して実行します:</para>
    <screen>&prompt.sudo;systemctl start <replaceable>dirsrv@389ds-test.service</replaceable>
 &prompt.sudo;systemctl stop <replaceable>dirsrv@389ds-test.service</replaceable></screen>
-   <para>
-       See <xref linkend="cha-systemd"/> for more information on using 
-       <command>systemctl</command>.
-   </para>
-   <para>
-       The <command>dsctl</command> command also starts and stops your server:
-   </para>
+   <para><command>systemctl</command> の使用方法について、詳しくは <xref linkend="cha-systemd"/> をお読みください。</para>
+   <para>なお、 <command>dsctl</command> コマンドでもサービスの起動と停止を行なうことができます:</para>
    <screen>&prompt.sudo;dsctl <replaceable>389ds-test</replaceable> status
 &prompt.sudo;dsctl <replaceable>389ds-test</replaceable> stop
 &prompt.sudo;dsctl <replaceable>389ds-test</replaceable> restart
@@ -386,7 +366,7 @@ Instance "localhost" is running</screen>
 
  <sect2 xml:id="sec-security-ldap-server-credentials">
   <title>ローカル管理用の管理者認証情報の設定</title>
-   <para>&ds389; のローカル管理を行なう目的で、 <filename>/root</filename> ディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。これにより、管理者 (root) や sudo 経由で管理権限を取得したユーザが、わざわざ &ds389; の管理者情報を入力したりすることなく管理できるようになります。 <xref linkend="ex-security-ldap-server-credentials-local" xrefstyle="select:label"/> にはサーバをローカル管理する場合の例が示されています。</para>
+   <para>&ds389; のローカル管理を行なう目的で、 <filename>/root</filename> ディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。これにより、管理者 (root) や sudo 経由で管理権限を取得したユーザが、わざわざ &ds389; の管理者情報を入力したりすることなく管理できるようになります。 <xref linkend="ex-security-ldap-server-credentials-local" xrefstyle="select:label"/> にはサーバをローカル管理する場合の例が示されています。下記はインスタンス名が 389ds-test 、マシンのドメイン名が test3.com である場合の例です。</para>
    <para><filename>/root/.dsrc</filename> ファイルを作成したら、あとは新しいユーザを作成していきます (詳しくは <xref linkend="sec-security-ldap-server-users"/> をお読みください) 。</para>
    <example xml:id="ex-security-ldap-server-credentials-local">
     <title>ローカル管理用の <filename>.dsrc</filename>　ファイル</title>
@@ -395,7 +375,7 @@ Instance "localhost" is running</screen>
 [<replaceable>389ds-test</replaceable>] <co xml:id="co-ldap-server-dsrc-instance-name"/>
 
 uri = ldapi://<replaceable>%%2fvar%%2frun%%2fslapd-389ds-test.socket</replaceable> <co xml:id="co-ldap-server-dsrc-remote-ldapi"/>
-basedn = <replaceable>dc=test1,dc=com</replaceable>
+basedn = <replaceable>dc=test3,dc=com</replaceable>
 binddn = cn=Directory Manager
 </screen>
    <calloutlist>
@@ -411,55 +391,39 @@ binddn = cn=Directory Manager
  </sect2>
  
  <sect2 xml:id="sec-security-ldap-firewall">
-  <title>Firewall configuration</title>
-  <para>
-      The default TCP ports for &ds389; are 389 and 636. TCP 389 is for unencrypted 
-      connections, and STARTTLS. 636 is for encrypted connections over TLS.
-  </para>
-  <para>
-      &firewalld; is the default firewall manager for &sle;. The following rules
-      activate the <literal>ldap</literal> and <literal>ldaps</literal> firewall
-      services:
-  </para>
-  <screen>&prompt.sudo;firewall-cmd --add-service=ldap --zone=<replaceable>internal</replaceable>
-&prompt.sudo;firewall-cmd --add-service=ldaps --zone=<replaceable>internal</replaceable>
+  <title>ファイアウオールの設定</title>
+  <para>&ds389; の既定の TCP ポートは 389 と 636 です。 TCP:389 は暗号化を行なわない接続および STARTTLS を使用する接続向けに、 TCP:636 は TLS での暗号化を行なう接続向けに使用します。</para>
+  <para>&firewalld; は &sle; における既定のファイアウオールマネージャです。下記のコマンドを実行すると、 <literal>ldap</literal> および <literal>ldaps</literal> の各サービスを有効化することができます:</para>
+  <screen>&prompt.sudo;firewall-cmd --add-service=ldap --zone=<replaceable>ゾーン名</replaceable>
+&prompt.sudo;firewall-cmd --add-service=ldaps --zone=<replaceable>ゾーン名</replaceable>
 &prompt.sudo;firewall-cmd --runtime-to-permanent
 </screen>
-  <para>
-      Replace the zone with the appropriate zone for your server. See
-      <xref linkend="sec-security-ldap-server-ca"/> for information on securing
-          your connections with TLS, and 
-          <xref linkend="sec-security-firewall-fw"/> to learn about &firewalld;.
-  </para>
+  <para>なお、 zone 以下の値はお使いのサーバに合わせて設定してください。なお、 TLS での接続の暗号化に関する詳細は <xref linkend="sec-security-ldap-server-ca"/> を、 &firewalld; に関する詳細は <xref linkend="sec-security-firewall-fw"/> をそれぞれお読みください。</para>
 </sect2>
 
  <sect2 xml:id="sec-security-ldap-server-users">
-  <title>&yast; での LDAP ユーザとグループの設定</title>
+  <title>LDAP ユーザとグループの作成</title>
    <para>ユーザとグループは <command>dsidm</command> コマンドで作成および管理を行ないます。このコマンドは対話的に動作させることができるほか、コマンドラインでパラメータを指定して実行することもできます。</para>
-   <para>&yast; での LDAP ユーザとグループの設定</para>
+   <para>現時点で設定済みのユーザとグループの一覧を表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;dsidm <replaceable>localhost</replaceable> user list
 &prompt.sudo;dsidm <replaceable>localhost</replaceable> group list</screen>
-   <para>
-       List all information on a single user:
-   </para>
-   <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></screen>
-   <para>
-       List all information on a single group:
-   </para>
-      <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></screen>
-   <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定します。</para>
+   <para>特定のユーザに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
+   <screen>&prompt.sudo;dsidm <replaceable>localhost</replaceable> user get <replaceable>ユーザ名</replaceable></screen>
+   <para>特定のグループに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
+      <screen>&prompt.sudo;dsidm <replaceable>localhost</replaceable> group get <replaceable>グループ名</replaceable></screen>
+   <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定し、サーバインスタンスは <literal>389ds-test</literal> 、サフィックスは <literal>dc=test3,dc=com</literal> であるものとします。</para>
   <procedure xml:id="pro-security-ldap-server-users">
    <title>LDAP ユーザの作成</title>
    <step>
     <para>&exampleuserII; ユーザを作成します:</para>
-    <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid &exampleuserII; \
+    <screen>&prompt.sudo;<command>dsidm</command> 389ds-test user create --uid &exampleuserII; \
   --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1000 --gidNumber 1000 \
   --homeDirectory /home/&exampleuserII;</screen>
    </step>
    <step>
     <para>ユーザの <literal>distinguished name</literal> (DN) 名 (ディレクトリオブジェクトに対する完全修飾名、つまり唯一性の保証された名前) を参照するには、下記のように入力して実行します:</para>
-    <screen>&prompt.sudo;dsidm localhost user get &exampleuserII;
-dn: uid=&exampleuserII;,ou=people,dc=example,dc=com
+    <screen>&prompt.sudo;dsidm 389ds-test user get &exampleuserII;
+dn: uid=&exampleuserII;,ou=people,dc=test3,dc=com
 [...]</screen>
     <para>ユーザのパスワード変更などの処理を行なうには、 <literal>distinguished name</literal> (DN) を指定する必要があります。</para>
    </step>
@@ -467,56 +431,56 @@ dn: uid=&exampleuserII;,ou=people,dc=example,dc=com
     <para>&exampleuserII; のパスワードを設定もしくは変更するには、下記のように入力して実行します:</para>
     <substeps>
       <step>
-       <screen>&prompt.sudo;dsidm localhost account reset_password \
-  uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+       <screen>&prompt.sudo;dsidm 389ds-test account reset_password \
+  uid=&exampleuserII;,ou=people,dc=test3,dc=com</screen>
        <para>この場合、まずはディレクトリサーバの &rootuser; のパスワードを入力することになります (ただし、 <xref linkend="sec-security-ldap-server-credentials"/> でリモートもしくはローカルのアクセス方法を指定した場合を除きます) 。</para>
       </step>
       <step>
        <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
        <para>パスワードの設定が完了すると、下記のようなメッセージが表示されるはずです:</para>
-       <screen>reset password for uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+       <screen>reset password for uid=&exampleuserII;,ou=people,dc=test3,dc=com</screen>
       </step>
     </substeps>
    </step>
    <step>
     <para>続いて &exampleuserIII; ユーザを作成します:</para>
-    <screen>&prompt.sudo;<command>dsidm</command> localhost user create --uid \
+    <screen>&prompt.sudo;<command>dsidm</command> 389ds-test user create --uid \
   --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
   --uidNumber 1001 --gidNumber 1001 --homeDirectory /home/&exampleuserIII;
-&prompt.sudo;reset password for uid=&exampleuserII;,ou=people,dc=example,dc=com
+&prompt.sudo;reset password for uid=&exampleuserII;,ou=people,dc=test3,dc=com
   </screen>
    </step>
   </procedure>
   <procedure xml:id="pro-security-ldap-server-groups">
    <title>LDAP グループの作成とユーザの割り当て</title>
-   <para>下記の手順では <systemitem class="groupname">server_admins</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。</para>
+   <para>下記の手順では <systemitem class="groupname">group1</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。このとき、インスタンス名は <literal>389ds-test</literal> 、サフィックスは <literal>dc=test3,dc=com</literal> であるものとします。</para>
    <step>
     <para>まずはグループを作成します:</para>
-    <screen>&prompt.sudo;dsidm localhost group create</screen>
+    <screen>&prompt.sudo;dsidm 389ds-test group create</screen>
     <para>すると、グループ名を尋ねられます:</para>
     <screen>Enter value for cn :</screen>
    </step>
    <step>
-    <para>ここではグループ名を入力します (例: <literal>server_admins</literal>) 。</para>
+    <para>ここではグループ名を入力します (例: <literal>group1</literal>) 。</para>
    </step>
    <step>
     <para>&exampleuserII; ユーザをグループに追加します:</para>
-    <screen>&prompt.sudo;dsidm localhost group add_member server_admins uid=&exampleuserII;,ou=people,dc=example,dc=com
-added member: uid=&exampleuserII;,ou=people,dc=example,dc=com</screen>
+    <screen>&prompt.sudo;dsidm 389ds-test group add_member group1 uid=&exampleuserII;,ou=people,dc=test3,dc=com
+added member: uid=&exampleuserII;,ou=people,dc=test3,dc=com</screen>
    </step>
    <step>
     <para>認証が正しく動作することを確認します:</para>
    <screen>&prompt.sudo;ldapwhoami -H ldaps://localhost -D \
-  uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
+  uid=&exampleuserII;,ou=people,dc=test3,dc=com -W -x</screen>
     <para>&exampleuserII; の LDAP パスワードの入力を求められれば、認証は動作していることになります。</para>
     <para>下記のようなエラーメッセージでコマンドが失敗する場合は、おそらく自己署名証明書を使用しているものと思われます:</para>
     <screen>ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)</screen>
     <para>このような場合は、 <filename>/etc/openldap/ldap.conf</filename> ファイルを編集して、証明書のパスを追加してください。たとえば下記のようになります:</para>
     <screen>TLS_CACERT /etc/dirsrv/slapd-localhost/ca.crt</screen>
     <para>それ以外にも、 <filename>whoami</filename> コマンド内で証明書のパスを指定してもかまいません:</para>
-    <screen>&prompt.sudo;LDAPTLS_CACERT=/etc/dirsrv/slapd-localhost/ca.crt \
-  ldapwhoami -H ldaps://localhost -D \
-  uid=&exampleuserII;,ou=people,dc=example,dc=com -W -x</screen>
+    <screen>&prompt.sudo;LDAPTLS_CACERT=/etc/dirsrv/slapd-389ds-test/ca.crt \
+  ldapwhoami -H ldaps://389ds-test -D \
+  uid=&exampleuserII;,ou=people,dc=test3,dc=com -W -x</screen>
    </step>
   </procedure>
  </sect2>
