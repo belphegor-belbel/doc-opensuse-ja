@@ -325,12 +325,65 @@ Not removing: if you are sure, add --do-it
    <para>これにより、 <literal>localhost</literal> という名前の新しいインスタンスが作成され、作成が完了すると自動的に開始されます:</para>
    <screen>&prompt.sudo;dsctl localhost status
 Instance "localhost" is running</screen>
-   <para>作成したインスタンスをきれいに削除するには、 <command>dsctl</command> で下記のようなコマンドを入力して実行します:</para>
-    <screen>&prompt.sudo;dsctl localhost remove --do-it</screen>
+    <para>
+        The default values create a fully-operational instance, but there are
+        some values you might want to change.
+    </para>
     <para>インスタンス名は作成後に変更することができませんので、混乱を避けるとともに、動作を良く理解できるよう、既定値ではなく独自の名前を指定しておくことをお勧めします。インスタンス名を変更するには、 <literal>;instance_name = localhost</literal> の行のコメント文字 (<literal>;</literal>) を外して、 <literal>localhost</literal> を任意の名前に変更します。</para>
     <para>また、もう 1 つ変更すべき箇所として、ユーザ例とグループ例の作成機能があります。必要であれば <literal>;sample_entries = no</literal> の箇所のコメント文字を外して、 <literal>no</literal> を <literal>yes</literal> にしてください。</para>
+    <para>
+        Set your own password by uncommenting <literal>;root_password</literal>,
+        and replacing the default password with your own.
+    </para>
+    <para>
+        The template does not create a default suffix, so you should
+        configure your own on the <literal>suffix</literal> line, like 
+        this example:
+    </para>    
+    <screen>suffix = dc=test3,dc=com</screen>
+    <para>作成したインスタンスをきれいに削除するには、 <command>dsctl</command> で下記のようなコマンドを入力して実行します:</para>
+    <screen>&prompt.sudo;dsctl localhost remove --do-it</screen>
  </sect2>
  
+ <sect2 xml:id="sec-security-ldap-server-stop-start">
+     <title>Stopping and Starting &ds389;</title>
+     <para>
+         Use &systemd; to manage your &ds389; server instance. Get the
+         status of your server:
+     </para>
+     <screen>&prompt.user;systemctl status --no-pager --full <replaceable>dirsrv@389ds-test.service</replaceable> 
+         ● dirsrv@389ds-test.service - 389 Directory Server 389ds-
+         test.
+   Loaded: loaded (/usr/lib/systemd/system/dirsrv@.service; enabled; vendor preset:
+   disabled)
+   Active: active (running) since Mon 2020-12-28 08:20:53 PST; 43s ago
+  Process: 5114 ExecStartPre=/usr/lib/dirsrv/ds_systemd_ask_password_acl /etc/
+  dirsrv/slapd-389ds-test/dse.ldif (code=exited, status=0/SUCCESS)
+ Main PID: 5119 (ns-slapd)
+   Status: "slapd started: Ready to process requests"
+    Tasks: 24
+   CGroup: /system.slice/system-dirsrv.slice/dirsrv@389ds-test.service
+   └─5119 /usr/sbin/ns-slapd -D /etc/dirsrv/slapd-389ds-test -i /run/dirsrv/
+   slapd-389ds-test.pid</screen>
+   <para>
+       Start and stop your server:
+   </para>
+   <screen>&prompt.sudo;systemctl start <replaceable>dirsrv@389ds-test.service</replaceable>
+&prompt.sudo;systemctl stop <replaceable>dirsrv@389ds-test.service</replaceable></screen>
+   <para>
+       See <xref linkend="cha-systemd"/> for more information on using 
+       <command>systemctl</command>.
+   </para>
+   <para>
+       The <command>dsctl</command> command also starts and stops your server:
+   </para>
+   <screen>&prompt.sudo;dsctl <replaceable>389ds-test</replaceable> status
+&prompt.sudo;dsctl <replaceable>389ds-test</replaceable> stop
+&prompt.sudo;dsctl <replaceable>389ds-test</replaceable> restart
+&prompt.sudo;dsctl <replaceable>389ds-test</replaceable> start
+</screen>
+</sect2>
+
  <sect2 xml:id="sec-security-ldap-server-credentials">
   <title>ローカル管理用の管理者認証情報の設定</title>
    <para>&ds389; のローカル管理を行なう目的で、 <filename>/root</filename> ディレクトリ内に <filename>.dsrc</filename> 設定ファイルを作成することができます。これにより、管理者 (root) や sudo 経由で管理権限を取得したユーザが、わざわざ &ds389; の管理者情報を入力したりすることなく管理できるようになります。 <xref linkend="ex-security-ldap-server-credentials-local" xrefstyle="select:label"/> にはサーバをローカル管理する場合の例が示されています。</para>
@@ -356,11 +409,45 @@ binddn = cn=Directory Manager
    </calloutlist>
   </example>
  </sect2>
+ 
+ <sect2 xml:id="sec-security-ldap-firewall">
+  <title>Firewall configuration</title>
+  <para>
+      The default TCP ports for &ds389; are 389 and 636. TCP 389 is for unencrypted 
+      connections, and STARTTLS. 636 is for encrypted connections over TLS.
+  </para>
+  <para>
+      &firewalld; is the default firewall manager for &sle;. The following rules
+      activate the <literal>ldap</literal> and <literal>ldaps</literal> firewall
+      services:
+  </para>
+  <screen>&prompt.sudo;firewall-cmd --add-service=ldap --zone=<replaceable>internal</replaceable>
+&prompt.sudo;firewall-cmd --add-service=ldaps --zone=<replaceable>internal</replaceable>
+&prompt.sudo;firewall-cmd --runtime-to-permanent
+</screen>
+  <para>
+      Replace the zone with the appropriate zone for your server. See
+      <xref linkend="sec-security-ldap-server-ca"/> for information on securing
+          your connections with TLS, and 
+          <xref linkend="sec-security-firewall-fw"/> to learn about &firewalld;.
+  </para>
+</sect2>
 
  <sect2 xml:id="sec-security-ldap-server-users">
   <title>&yast; での LDAP ユーザとグループの設定</title>
    <para>ユーザとグループは <command>dsidm</command> コマンドで作成および管理を行ないます。このコマンドは対話的に動作させることができるほか、コマンドラインでパラメータを指定して実行することもできます。</para>
-  <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定します。</para>
+   <para>&yast; での LDAP ユーザとグループの設定</para>
+   <screen>&prompt.sudo;dsidm <replaceable>localhost</replaceable> user list
+&prompt.sudo;dsidm <replaceable>localhost</replaceable> group list</screen>
+   <para>
+       List all information on a single user:
+   </para>
+   <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></screen>
+   <para>
+       List all information on a single group:
+   </para>
+      <screen>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></screen>
+   <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定します。</para>
   <procedure xml:id="pro-security-ldap-server-users">
    <title>LDAP ユーザの作成</title>
    <step>
