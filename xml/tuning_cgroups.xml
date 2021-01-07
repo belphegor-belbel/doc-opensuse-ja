@@ -108,12 +108,12 @@
  </sect1>
  
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
-  <title>TasksMax を利用した fork ボムの防止</title>
+  <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
    <para>&systemd; 228 では <literal>DefaultTasksMax</literal> の制限が 512 に設定されています。これは systemd の各ユニットに対して、作成できるプロセス数の制限を行なうための仕組みで、それ以前のバージョンでは制限がありませんでした。このように設定を行なったのは、 fork によって作成される過剰なプロセスやスレッドによってシステム資源が枯渇してしまうのを防ぐ、セキュリティ改善のためのものです。</para> 
    <para>しかしながら、この既定値は全ての用途に対して適用可能なものではありません。また、 CPU やメモリの使用量に対する直接的な制限ではありませんので、 512 に設定してもシステムの安定性を保つことができるかどうかはわかりませんし、データベースシステムなどのように 512 個以上のプロセスを動作させなければならない場合もあります。 &systemd; 234 では、この値が 15% (カーネル側に設定されたプロセス数の最大値である 32768 の 15% 。詳しくは <command>cat /proc/sys/kernel/pid_max</command> をご覧ください) に設定されていますが、必要に応じて設定ファイルで変更することができます。具体的には、 <filename>/etc/systemd/system.conf</filename> ファイルを編集して設定を行なってください。なお、下記ではそれ以外の方法について説明しています。</para>
 
    <sect2 xml:id="sec-tasksmax-defaults">
-    <title>現時点での既定の TasksMax 値の検出</title>
+    <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
     <para>&productname; では、 systemd のユニットやユーザスライスに対する提供元の既定値を上書きするため、独自の設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
 <screen>
 [Manager]
@@ -127,7 +127,7 @@ TasksMax=infinity
   </sect2>
 
   <sect2 xml:id="sec-edit-taskmax-default">
-   <title>DefaultTasksMax 値の設定</title>
+   <title><literal>DefaultTasksMax</literal> 値の設定</title>
    <para>グローバルな <literal>DefaultTasksMax</literal> の値を変更したい場合は、設定を上書きするための新しい設定ファイル <filename>/etc/systemd/system.conf.d/90-system-tasksmax.conf</filename> を作成して対応してください。この設定ファイルには、下記のような内容を記述します (下記の例では、 systemd のユニットごとに最大 256 個までのタスク制限を設定します):</para>
 <screen>
 [Manager]
@@ -178,7 +178,7 @@ TasksMax=8192
   </sect2>
 
   <sect2>
-   <title>ユーザに対する既定の TasksMax 制限</title>
+   <title>ユーザに対する既定の <literal>TasksMax</literal> 制限</title>
    <para>ユーザに対する既定の制限値は十分に高く設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
 <screen>
 [Slice]
@@ -193,7 +193,7 @@ TasksMax=16284
 &prompt.user;systemctl show --property TasksMax user-1000.slice
 TasksMax=16284
 </screen>
-   <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 TasksMax の値が低すぎる場合は、<emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
+   <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
    <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
   </sect2>
  </sect1>
