@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-01-11 10:47+0000\n"
+"POT-Creation-Date: 2021-02-05 22:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -15,401 +15,293 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: klp.xml:12
+#: klp.xml:11
 #, no-c-format
 msgid "Live kernel patching with &klpa;"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:19
+#: klp.xml:18
 #, no-c-format
 msgid "This document describes the basic principles of the &klp; (&klpa;) technology, and provides usage guidelines for the &slea; Live Patching service."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:26
+#: klp.xml:25
 #, no-c-format
-msgid "&klpa; is a live patching technology for runtime patching of the Linux kernel, without stopping the kernel. This maximizes system uptime, and thus system availability, which is important for mission-critical systems. By enabling dynamic patching of the kernel, the technology also encourages users to install critical security updates without deferring them to a scheduled downtime."
+msgid "&klpa; makes it possible to apply the latest security updates to Linux kernels without rebooting. This maximizes system uptime and availability, which is especially important for mission-critical systems."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:34
+#: klp.xml:30
 #, no-c-format
-msgid "Enabling &klpa; requires no special steps other than enabling the Live Patching service, and then applying the patches as they become available. The service is part of the normal software management system, and patches are installed (or removed) with the usual package management tools. There is no need to install or manually select special kernels."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:41
-#, no-c-format
-msgid "A &klpa; patch is a kernel module, intended for replacing whole functions in the kernel. &klp; primarily offers in-kernel infrastructure for integration of the patched code with the base kernel code at runtime."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:46
-#, no-c-format
-msgid "The information provided in this document relates to the &amd64;/&intel64; and &power; architectures. &klpa; is supported on the Xen hypervisor."
+msgid "The information provided in this document relates to the &amd64;/&intel64;, &power; and &zseries; architectures. &klpa; is supported on the Xen hypervisor."
 msgstr ""
 
 #. Tag: title
-#: klp.xml:51
+#: klp.xml:36
 #, no-c-format
 msgid "Advantages of &klp;"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:53
+#: klp.xml:38
 #, no-c-format
-msgid "&klp; using &klpa; is for quick emergency response, when serious vulnerabilities or system stability issues are known and should be fixed as quickly as possible. It is not used for scheduled updates where time is not critical."
+msgid "&klpa; offers several benefits."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:60
+#: klp.xml:44
 #, no-c-format
-msgid "Typical use cases for &klp; include systems like memory databases with huge amounts of RAM, where boot-up times of 15 minutes or more are not uncommon, large simulations that need weeks or months without a restart, or infrastructure building blocks providing continuous service to many customers."
+msgid "Keeping a large numbers of servers automatically up-to-date is essential for organizations obtaining or maintaining certain compliance certifications. &klpa; can help achieve compliance, while reducing the need for costly maintenance windows."
 msgstr ""
 
 #. Tag: para
+#: klp.xml:52
+#, no-c-format
+msgid "Companies that work with service-level agreement contracts must guarantee a specific level of their system accessibility and uptime. Live patching makes it possible to patch systems without incurring downtime."
+msgstr ""
+
+#. Tag: para
+#: klp.xml:59
+#, no-c-format
+msgid "Since &klpa; is part of the standard system update mechanism, there is no need for specialized training or introduction of complicated maintenance routines."
+msgstr ""
+
+#. Tag: title
 #: klp.xml:68
 #, no-c-format
-msgid "The main advantage of &klp; is that it never requires stopping the kernel, not even for a short time period."
+msgid "&klp; overview"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:73
+#: klp.xml:70
 #, no-c-format
-msgid "A &klpa; patch is a <filename>.ko</filename> kernel module in an RPM package. It is inserted into the kernel using the <command>insmod</command> command when the package is installed or updated. &klp; replaces whole functions in the kernel, even if they are being executed. An updated &klpa; module can replace an existing patch if necessary."
+msgid "Kernel live patches are delivered as packages with modified code that are separate from the main kernel package. The live patches are cumulative, so the latest patch contains all fixes from the previous ones for the kernel package. Each kernel live package is tied to the exact kernel revision for which it is issued. The live patch package version number increases with every addition of fixes."
+msgstr ""
+
+#. Tag: title
+#: klp.xml:80
+#, no-c-format
+msgid "Live patches vs kernel updates"
 msgstr ""
 
 #. Tag: para
 #: klp.xml:81
 #, no-c-format
-msgid "&klp; is also lean&mdash;it contains only a small amount of code, because it leverages other standard Linux technologies."
-msgstr ""
-
-#. Tag: title
-#: klp.xml:87
-#, no-c-format
-msgid "Low-level function of &klp;"
+msgid "Live patches contain only critical fixes, and they do not replace regular kernel updates that require a reboot. Consider live patches as temporary measures that protect the kernel until a proper kernel update and a reboot is performed."
 msgstr ""
 
 #. Tag: para
 #: klp.xml:89
 #, no-c-format
-msgid "&klp; uses the ftrace infrastructure to perform patching. The following describes the implementation on the &amd64;/&intel64; architecture."
+msgid "The diagram below illustrates the overall relationship between live patches and kernel updates. The list of CVEs and defect reports addressed by the currently-active live patch can be viewed using the <command>klp -v patches</command> command."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:94
+#: klp.xml:107
 #, no-c-format
-msgid "To patch a kernel function, &klp; needs some space at the start of the function to insert a jump to a new function. This space is allocated during kernel compilation by GCC with function profiling turned on. In particular, a 5-byte call instruction is injected to the start of kernel functions. When such instrumented kernel is booting, profiling calls are replaced by 5-byte NOP (no operation) instructions."
+msgid "It is possible to have multiple versions of the kernel package installed along with their live patches. These packages do not conflict. You can install updated kernel packages along with live patches for the running kernel. In this case, you may be prompted to reboot the system. Users with &slea; Live Patching subscriptions are eligible for technical support as long as there are live patch updates for the running kernel (see <xref linkend=\"sec-klp-lifecycle\"/> )."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:103
+#: klp.xml:117
 #, no-c-format
-msgid "After patching starts, the first byte is replaced by the INT3 (breakpoint) instruction. This ensures atomicity of the 5-byte instruction replacement. The other four bytes are replaced by the address to the new function. Finally, the first byte is replaced by the JMP (long jump) opcode."
+msgid "With &klpa; activated, every kernel update comes with a live patch package. This live patch does not contain any fixes and serves as a seed for future live patches for the corresponding kernel. These empty seed patches are called <literal>initial patches</literal> ."
 msgstr ""
 
-#. Tag: para
-#: klp.xml:110
+#. Tag: title
+#: klp.xml:125
 #, no-c-format
-msgid "Inter-processor non-maskable interrupts (IPI NMI) are used throughout the process to flush speculative decoding queues of other CPUs in the system. This allows switching to the new function without ever stopping the kernel, not even for a very short moment. The interruptions by IPI NMIs can be measured in microseconds and are not considered service interruptions as they happen while the kernel is running in any case."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:119
-#, no-c-format
-msgid "Callers are never patched. Instead, the callee's NOPs are replaced by a JMP to the new function. JMP instructions remain forever. This takes care of function pointers, including in structures, and does not require saving any old data for the possibility of un-patching."
+msgid "&klp; scope"
 msgstr ""
 
 #. Tag: para
 #: klp.xml:126
 #, no-c-format
-msgid "However, these steps alone would not be good enough: since the functions would be replaced non-atomically, a new fixed function in one part of the kernel could still be calling an old function elsewhere or vice versa. If the semantics of the function interfaces changed in the patch, chaos would ensue."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:134
-#, no-c-format
-msgid "Thus, until all functions are replaced, &klp; uses an approach based on trampolines and similar to RCU (read-copy-update), to ensure a consistent view of the world to each user space thread, kernel thread and kernel interrupt. A per-thread flag is set on each kernel entry and exit. This way, an old function would always call another old function and a new function always a new one. Once all processes have the \"new universe\" flag set, patching is complete, trampolines can be removed and the code can operate at full speed without performance impact other than an extra-long jump for each patched function."
+msgid "The scope of &slea; Live Patching includes fixes for SUSE Common Vulnerability Scoring System (CVSS; SUSE CVSS is based on the CVSS v3.0 system) level 7+ vulnerabilities and bug fixes related to system stability or data corruption. However, it may not be technically feasible to create live patches for all fixes that fall under the specified categories. &suse; therefore reserves the right to skip fixes in situations where creating a kernel live patch is not possible for technical reasons. Currently, over 95% of qualifying fixes are released as live patches. For more information on CVSS (the base for the SUSE CVSS rating), see <link xlink:href=\"https://www.first.org/cvss/\">Common Vulnerability Scoring System SIG</link> . ."
 msgstr ""
 
 #. Tag: title
-#: klp.xml:148
+#: klp.xml:142
 #, no-c-format
-msgid "Activation of SLE live patching"
+msgid "&klp; limitations"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:149
+#: klp.xml:143
 #, no-c-format
-msgid "To activate &slea; Live Patching on your system, follow these steps:"
+msgid "&klpa; involves replacing functions and gracefully handling replacement of interdependent function sets. This is done by redirecting calls to old code to updated code in a different memory location. Changes in data structures make the situation more complicated, as the data remain in place and cannot be extended or reinterpreted. While there are techniques that allow indirect alteration of data structures, some fixes cannot be converted to live patches. In this situation, a system restart is the only way to apply the fixes."
+msgstr ""
+
+#. Tag: title
+#: klp.xml:156
+#, no-c-format
+msgid "Activating &klp; using &yast;"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:154
+#: klp.xml:158
 #, no-c-format
-msgid "Your &slsa; system must be registered. Register your system either during system installation, or after installation with the &yast; <guimenu>Product Registration</guimenu> module ( <command>yast2 registration</command> ). If your &slsa; system is already registered, but &slea; Live Patching is not yet activated, run the <command>yast2 registration</command> command and click <guimenu>Select Extensions</guimenu> ."
+msgid "To activate &klpa; on your system, you need to have active &slsa; and &slea; Live Patching subscriptions. Visit <link xlink:href=\"&sccurl;\">&scc;</link> to check the status of your subscriptions and obtain an registration code for the &slea; Live Patching subscription."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:165
+#: klp.xml:167
+#, no-c-format
+msgid "To activate &klp; on your system, follow these steps:"
+msgstr ""
+
+#. Tag: para
+#: klp.xml:173
+#, no-c-format
+msgid "Run the <command>yast2 registration</command> command and click <guimenu>Select Extensions</guimenu> ."
+msgstr ""
+
+#. Tag: para
+#: klp.xml:179
 #, no-c-format
 msgid "Select <guimenu>SUSE Linux Enterprise Live Patching 15</guimenu> in the list of available extensions and click <guimenu>Next</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:171
+#: klp.xml:185
 #, no-c-format
 msgid "Confirm the license terms and click <guimenu>Next</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:176
+#: klp.xml:190
 #, no-c-format
 msgid "Enter your &slea; Live Patching registration code and click <guimenu>Next</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:182
+#: klp.xml:196
 #, no-c-format
-msgid "Check the <guimenu>Installation Summary</guimenu> and selected <guimenu>Patterns</guimenu> . The patterns <systemitem>Live Patching</systemitem> and <systemitem>SLE Live Patching Lifecycle Data</systemitem> should be automatically selected for installation, and there may be additional packages to satisfy dependencies."
+msgid "Check the <guimenu>Installation Summary</guimenu> and selected <guimenu>Patterns</guimenu> . The patterns <systemitem>Live Patching</systemitem> and <systemitem>SLE Live Patching Lifecycle Data</systemitem> should be automatically selected for installation along with additional packages to satisfy dependencies."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:192
+#: klp.xml:205
 #, no-c-format
-msgid "Click <guimenu>Accept</guimenu> to complete the installation. This will install the base &klp; components on your system, the initial live patch, and any dependencies."
+msgid "Click <guimenu>Accept</guimenu> to complete the installation. This will install the base &klp; components on your system, the initial live patch, and the required dependencies."
 msgstr ""
 
 #. Tag: title
-#: klp.xml:202
+#: klp.xml:214
 #, no-c-format
-msgid "Installing and removing patches"
+msgid "Activating &klp; from the command line"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:203
+#: klp.xml:216
 #, no-c-format
-msgid "This section describes how to find, install, and remove &klpa; patches."
-msgstr ""
-
-#. Tag: title
-#: klp.xml:207
-#, no-c-format
-msgid "Installing a &klpa; patch"
+msgid "To activate &klp;, you need to have an active &slsa; and &slsa; Live Patching subscriptions. Visit <link xlink:href=\"&sccurl;\">&scc;</link> to check the status of your subscriptions and obtain an registration code for the &slsa; Live Patching subscription."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:211
+#: klp.xml:225
 #, no-c-format
-msgid "Before installing new patches, run the <command>klp status</command> command to query current status, which must be <literal>ready</literal> and not <literal>in_progress</literal> . You cannot apply new patches until previous patch installations are completed. Invocations of the old kernel functions are not completely eliminated until all sleeping processes wake up and get out of the way. This can take a considerable amount of time. Sleeping processes that use the old kernel functions are not considered a security issue. (See <xref linkend=\"sec-klp-exec-threads\"/> for information on managing prolonged <literal>in_progress</literal> states.)"
-msgstr ""
-
-#. Tag: para
-#: klp.xml:219
-#, no-c-format
-msgid "Use the normal package management system, <command>zypper</command> or &yast;, to view and install available patches. The following example searches for available patches, and then installs the most recent patch. It is not necessary to install all patches in order; when there are multiple patches available install the most recent."
+msgid "Run <command>sudo SUSEConnect --list-extensions</command> . Note the exact activation command for &slsa; Live Patching. Example command output (abbreviated):"
 msgstr ""
 
 #. Tag: screen
-#: klp.xml:226
+#: klp.xml:230
 #, no-c-format
-msgid "&prompt.sudo;zypper se kernel-livepatch \n"
-      "| kernel-livepatch-5_3_18-8_16-default  | Kernel live patch module  | package   \n"
-      "| kernel-livepatch-5_3_18-8_19-default  | Kernel live patch module  | package   \n"
-      "| kernel-livepatch-5_3_18-8_22-default  | Kernel live patch module  | package\n"
-      "\n"
-      "&prompt.sudo;zypper in kernel-livepatch-5_3_18-8_22-default"
-msgstr ""
-
-#. Tag: title
-#: klp.xml:237
-#, no-c-format
-msgid "Removing a &klpa; patch"
+msgid "$ SUSEConnect --list-extensions\n"
+      "...\n"
+      "SUSE Linux Enterprise Live Patching 15 SP3 x86_64\n"
+      "Activate with: SUSEConnect -p sle-module-live-patching/15.3/x86_64 -r ADDITIONAL REGCODE"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:238
+#: klp.xml:236
 #, no-c-format
-msgid "If you need to remove a &klpa; patch, use <command>zypper</command> just as you would for any other package. List your installed live patch packages by using <command>zypper</command> to search for <literal>kernel-livepatch</literal> :"
+msgid "Activate &slsa; Live Patching using the obtained command followed by <option>-r <replaceable>LIVE_PATCHING_REGISTRATION_CODE</replaceable></option> , for example:"
 msgstr ""
 
 #. Tag: screen
-#: klp.xml:244
+#: klp.xml:242
 #, no-c-format
-msgid "&prompt.sudo;zypper se kernel-livepatch \n"
-      "  | kernel-livepatch-5_3_18-8_16-default  | Kernel live patch module  | package   \n"
-      "  | kernel-livepatch-5_3_18-8_19-default  | Kernel live patch module  | package   \n"
-      "i | kernel-livepatch-5_3_18-8_22-default  | Kernel live patch module  | package\n"
-      ""
+msgid "SUSEConnect -p sle-module-live-patching/15.3/x86_64 -r <replaceable>LIVE_PATCHING_REGISTRATION_CODE</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:251
+#: klp.xml:245
 #, no-c-format
-msgid "Remove the patch using <command>zypper</command> :"
-msgstr ""
-
-#. Tag: screen
-#: klp.xml:254
-#, no-c-format
-msgid "&prompt.sudo;zypper rm kernel-livepatch-5_3_18-8_22-default"
+msgid "Install the required packages and dependencies using the command <command>zypper install -t pattern lp_sles</command>"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:257
+#: klp.xml:252
 #, no-c-format
-msgid "Wait for <systemitem>initrd</systemitem> to automatically rebuild, then reboot the machine."
+msgid "At this point, the system has already been live-patched."
+msgstr ""
+
+#. Tag: para
+#: klp.xml:256
+#, no-c-format
+msgid "Here is how the process works behind the scenes: When the package-installation system detects that there is an installed kernel that can be live-patched, and that there is a live patch for it in the software channel, the system selects the live patch for installation. The kernel then receives the live patch fixes <emphasis>as part of the package installation</emphasis> . The kernel gets live-patched even before the product installation is complete."
 msgstr ""
 
 #. Tag: title
-#: klp.xml:267
+#: klp.xml:266
 #, no-c-format
-msgid "The <command>klp</command> tool"
+msgid "Performing &klp;"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:269
+#: klp.xml:268
 #, no-c-format
-msgid "Several &klp; management tasks can be simplified with the <command>klp</command> tool. The available commands are:"
-msgstr ""
-
-#. Tag: term
-#: klp.xml:276
-#, no-c-format
-msgid "<command>klp status</command>"
+msgid "Kernel live-patches are installed as part of regular system updates. However, there are several things you should be aware of."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:278
+#: klp.xml:275
 #, no-c-format
-msgid "Displays the overall status of &klp; ( <literal>ready</literal> or <literal>in_progress</literal> )."
-msgstr ""
-
-#. Tag: term
-#: klp.xml:285
-#, no-c-format
-msgid "<command>klp patches</command>"
+msgid "The kernel is live-patched if a <package>kernel-livepatch-*</package> package has been installed for the running kernel. You can use the command <command>zypper se --details kernel-livepatch-*</command> to check what kernel live-patch packages are installed on your system."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:287
+#: klp.xml:283
 #, no-c-format
-msgid "Displays the list of loaded &klpa; patches."
-msgstr ""
-
-#. Tag: term
-#: klp.xml:293
-#, no-c-format
-msgid "<command>klp blocking</command>"
+msgid "When <package>kernel-default</package> package is installed, the update manager prompts you to reboot the system. To prevent this message from apparing, you can filter out kernel updates from the patching operation. This can be done by adding package locks with Zypper. &susemgr; also makes it possible to filter channel contents (see <link xlink:href=\"https://documentation.suse.com/external-tree/en-us/suma/4.1/suse-manager/administration/live-patching.html\">Live Patching with SUSE Manager</link> )."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:295
+#: klp.xml:294
 #, no-c-format
-msgid "Lists processes that are preventing &klp; from finishing. By default only the PIDs are listed. Specifying <option>-v</option> prints command lines if available. <option>-vv</option> displays stack traces."
+msgid "You can check patching status using the <command>klp status</command> command. To examine installed patches, run the <command>klp -v patches</command> command."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:303
+#: klp.xml:301
 #, no-c-format
-msgid "For detailed information, see <command>man klp</command> ."
+msgid "Keep in mind that while there may be multiple kernel packages installed on the system, only one of them is running at any given time. Similarly, there may be multiple live patch packages installed, but only one live patch is loaded into the kernel."
 msgstr ""
 
-#. Tag: title
+#. Tag: para
 #: klp.xml:309
 #, no-c-format
-msgid "Stuck kernel execution threads"
-msgstr ""
-
-#. Tag: para
-#: klp.xml:311
-#, no-c-format
-msgid "Kernel threads must be prepared to handle &klp;. Third-party software may not support &klp;, and may spawn kernel execution threads. These threads will block the patching process indefinitely. As an emergency measure, you may force the completion of the patching process without waiting for all execution threads to cross the safety checkpoint by writing <literal>0</literal> into <filename>/sys/kernel/livepatch/*/transition/</filename> (replacing the asterisk wildcard with your file name). Consult &suse; support before performing this procedure."
+msgid "The active live patch is included in the <literal>initrd</literal> . This means that in case of an unexpected reboot, the system comes up with the live patch fixes applied, so there is no need to perform patching again."
 msgstr ""
 
 #. Tag: title
-#: klp.xml:322
+#: klp.xml:318
 #, no-c-format
-msgid "Patch lifecycle"
+msgid "Checking expiration date of the live patch"
 msgstr ""
 
 #. Tag: para
-#: klp.xml:324
+#: klp.xml:319
 #, no-c-format
-msgid "Expiration dates of live patches can be accessed with <command>zypper lifecycle</command> . (Make sure that the package <package>lifecycle-data-sle-module-live-patching</package> is installed.)"
+msgid "Make sure that the <package>lifecycle-data-sle-module-live-patching</package> is installed, then run the <command>zypper lifecycle</command> command. You should see expiration dates for live patches in the <literal>Package end of support if different from product</literal> section of the output."
 msgstr ""
 
 #. Tag: para
-#: klp.xml:330
+#: klp.xml:326
 #, no-c-format
-msgid "When the expiration date of a patch is reached, no further live patches for this kernel version will be supplied. Plan an update of your kernel before the end of the live patch lifecycle period."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:336
-#, no-c-format
-msgid "For details about <command>zypper lifecycle</command> , see the <emphasis>Showing Life Cycle Information</emphasis> in the <emphasis>Admin Guide</emphasis> ."
-msgstr ""
-
-#. Tag: title
-#: klp.xml:344
-#, no-c-format
-msgid "Scope of &klp; technology"
-msgstr ""
-
-#. Tag: para
-#: klp.xml:346
-#, no-c-format
-msgid "&klp; is based on replacing functions. Data structure alteration can be accomplished only indirectly with &klp;. As a result, changes to kernel data structure require special care and, if the change is too large, rebooting might be required. &klp; also might not be able to handle situations where one compiler is used to compile the old kernel and another compiler is used for compiling the patch."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:355
-#, no-c-format
-msgid "Because of the way &klp; works, support for third-party modules that are spawning kernel threads is limited. <!--Sending SIGSTOP and SIGCONT signals to processes in D process state (uninterruptible sleep) does not make them to cross the kernel/user space boundary and does not have the intended effect.-->"
-msgstr ""
-
-#. Tag: title
-#: klp.xml:364
-#, no-c-format
-msgid "Scope of &slea; live patching"
-msgstr ""
-
-#. Tag: para
-#: klp.xml:366
-#, no-c-format
-msgid "Fixes for SUSE Common Vulnerability Scoring System (CVSS; SUSE CVSS is based on the CVSS v3.0 system) level 7+ vulnerabilities and bug fixes related to system stability or data corruption will be shipped in the scope of SLE Live Patching. It might not be possible to produce a live patch for all kinds of fixes fulfilling the above criteria. SUSE reserves the right to skip fixes where production of a kernel live patch is unviable because of technical reasons. For more information on CVSS, which is the base for the SUSE CVSS rating, see <link xlink:href=\"https://www.first.org/cvss/\"/> ."
-msgstr ""
-
-#. Tag: title
-#: klp.xml:378
-#, no-c-format
-msgid "Interaction with the support processes"
-msgstr ""
-
-#. Tag: para
-#: klp.xml:380
-#, no-c-format
-msgid "While resolving a technical difficulty with &suse; support, you may receive a Program Temporary Fix (PTF). PTFs may be issued for various packages including those forming the base of &slea; Live Patching."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:386
-#, no-c-format
-msgid "&klp; PTFs complying with the conditions described in the previous section can be installed as usual and &suse; will ensure that the system in question does not need to be rebooted and that future live updates are applied cleanly."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:393
-#, no-c-format
-msgid "PTFs issued for the base kernel disrupt the live patching process. First, installing the PTF kernel means a reboot as the kernel cannot be replaced as a whole at runtime. Second, another reboot is needed to replace the PTF with any regular maintenance updates for which the live patches are issued."
-msgstr ""
-
-#. Tag: para
-#: klp.xml:400
-#, no-c-format
-msgid "PTFs for other packages in &slea; Live Patching can be treated like regular PTFs with the usual guarantees."
+msgid "Every live patch receives updates for one year from the release of the underlying kernel package. The <link xlink:href=\"https://www.suse.com/products/live-patching/current-patches/\">Maintained kernels, patch updates and lifecycle</link> page allows you to check expiration dates based on the running kernel version without installing the product extension."
 msgstr ""
 
