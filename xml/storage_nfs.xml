@@ -4,20 +4,11 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-nfs">
- <title>Sharing file systems with NFS</title>
+ <title>NFS によるファイル共有</title>
  <info>
   <abstract>
-   <para>
-    The <emphasis>Network File System</emphasis> (<emphasis>NFS</emphasis>) is
-    a protocol that allows access to files on a server in a manner similar to
-    accessing local files.
-   </para>
-   <para>
-    &productname; installs NFS v4.2, which introduces support for sparse
-    files, file pre-allocation, server-side clone and copy, application data
-    block (ADB), and labeled NFS for mandatory access control (MAC) (requires
-    MAC on both client and server).
-   </para>
+   <para><emphasis>Network File System</emphasis> ( <emphasis>NFS</emphasis> ) とは、サーバ内のファイルにアクセスするためのプロトコルで、これを利用することによってローカルのファイルと同じようなやり方でアクセスすることができるようになる仕組みです。</para>
+   <para>&productname; では、スパースファイルやファイルの事前割り当て、サーバ側での複製やコピー、アロケーションデータブロック (ADB) や強制アクセス制御 (MAC) のためのラベル型 NFS (この機能を使用する場合、クライアントとサーバの両方で MAC が必要となります) 等に対応した NFS v4.2 をインストールします。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -26,183 +17,95 @@
  </info>
 
  <sect1 xml:id="sec-nfs-overview">
-  <title>Overview</title>
-  <para>
-   The <emphasis>Network File System</emphasis> (NFS) is a standardized,
-   well-proven and widely supported network protocol that allows files to
-   be shared between separate hosts.
-  </para>
-  <para>
-   The <emphasis>Network Information Service</emphasis> (NIS) can be used
-   to have a centralized user management in the network. Combining NFS
-   and NIS allows using file and directory permissions for access control
-   in the network. NFS with NIS makes a network transparent to the user.
-  </para>
-  <para>
-   In the default configuration, NFS completely trusts the network and
-   thus any machine that is connected to a trusted network. Any user
-   with administrator privileges on any computer with physical access to
-   any network the NFS server trusts can access any files that the server
-   makes available.
-  </para>
-  <para>
-   Often, this level of security is perfectly satisfactory, such
-   as when the network that is trusted is truly private, often localized
-   to a single cabinet or machine room, and no unauthorized access is
-   possible. In other cases the need to trust a whole subnet as a unit
-   is restrictive and there is a need for more fine-grained trust. To
-   meet the need in these cases, NFS supports various security levels
-   using the <emphasis>&krb;</emphasis> infrastructure. &krb; requires
-   NFSv4, which is used by default. For details, see
-   <xref linkend="cha-security-kerberos"/>.
-  </para>
+  <title>概要</title>
+  <para><emphasis>Network File System</emphasis> (NFS) はコンピュータ間でのファイル共有を行なうためのネットワークプロトコルで、標準化されているだけでなく、十分に実証された幅広いサポートが特長のプロトコルです。</para>
+  <para>ネットワーク内でのユーザ管理を共通化し、中央でとりまとめる目的で、 <emphasis>Network Information Service</emphasis> (NIS) を併用する場合があります。 NFS と NIS を併用することで、ネットワーク内でのファイルやディレクトリに対するアクセス制御を集中管理することができるようになります。また、ユーザにとっても NFS と NIS を利用することで、ネットワークの資源とローカルの資源を完全に透過的に扱うことができるようになります。</para>
+  <para>既定の設定では、 NFS はネットワーク側を完全に信用する設計になっていることから、 NFS サーバを有効化するにあたっては、信頼のできるネットワークに接続するようにしてください。具体的には、 NFS サーバが接続するネットワーク内の全てのコンピュータで管理者権限が適切に管理され、かつ物理的なアクセスに対しても保護があることをお確かめください。</para>
+  <para>また、 NFS サーバが接続するネットワークが完全にプライベートなものであり、単一のキャビネット内やマシンルーム内に存在していて、部外者による不正なアクセスができないよう、十分なセキュリティを確保してください。場合によっては、サブネット全体についても十分な制限が必要となるなど、きめ細かく信頼を獲得する必要があることもあります。このような場合の要件に適合させるため、 NFS では <emphasis>&krb;</emphasis> インフラストラクチャなどにも対応しています。 &krb; を使用するには NFSv4 が必要となりますが、既定で有効化されています。詳しくは <xref linkend="cha-security-kerberos"/> をお読みください。</para>
 
-  <para>
-   The following are terms used in the &yast; module.
-  </para>
+  <para>&yast; モジュールでは、下記の用語を使用します。</para>
 
   <variablelist>
    <varlistentry>
-    <term>Exports</term>
+    <term>エクスポート</term>
     <listitem>
-     <para>
-      A directory <emphasis>exported</emphasis> by an NFS server, which clients
-      can integrate into their systems.
-     </para>
+     <para>NFS サーバが <emphasis>公開する</emphasis> ディレクトリを意味します。これにより、クライアントは自身のシステム内に、このディレクトリ以下の内容を取り込むことができるようになります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>NFS client</term>
+    <term>NFS クライアント</term>
     <listitem>
-     <para>
-      The NFS client is a system that uses NFS services from an NFS server over
-      the Network File System protocol. The TCP/IP protocol is already
-      integrated into the Linux kernel; there is no need to install any
-      additional software.
-     </para>
+     <para>NFS クライアントは、 NFS (Network File System) プロトコルを介して、 NFS サーバが提供する NFS サービスに接続するシステムを指します。 Linux カーネルには TCP/IP プロトコルが統合されているため、クライアント側で追加のソフトウエアをインストールする必要はありません。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>NFS server</term>
+    <term>NFS サーバ</term>
     <listitem>
-     <para>
-      The NFS server provides NFS services to clients. A running server depends
-      on the following daemons: <systemitem class="daemon">nfsd</systemitem>
-      (worker), <systemitem class="daemon">idmapd</systemitem> (ID-to-name
-      mapping for NFSv4, needed for certain scenarios only), <systemitem class="daemon">statd</systemitem> (file locking), and <systemitem class="daemon">mountd</systemitem> (mount requests).
-     </para>
+     <para>NFS サーバは、クライアントに対して NFS サービスを提供するシステムを意味します。サーバ側では下記のデーモンを動作させてサービスを提供しています: <systemitem class="daemon">nfsd</systemitem> (ワーカー), <systemitem class="daemon">idmapd</systemitem> (NFSv4 向けの ID と名前のマッピングシステム、特定の用途でのみ必要となります), <systemitem class="daemon">statd</systemitem> (ファイルロック (施錠)), and <systemitem class="daemon">mountd</systemitem> (マウント要求)</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>NFSv3</term>
     <listitem>
-     <para>
-      NFSv3 is the version 3 implementation, the <quote>old</quote> stateless
-      NFS that supports client authentication.
-     </para>
+     <para>NFSv3 はバージョン 3 の実装を意味します。状態遷移機能のない、クライアント認証に対応した <quote>古い</quote> 実装です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>NFSv4</term>
     <listitem>
-     <para>
-      NFSv4 is the new version 4 implementation that supports secure user
-      authentication via &krb;. NFSv4 requires one single port only and thus
-      is better suited for environments behind a firewall than NFSv3.
-     </para>
-     <para>
-      The protocol is specified as
-      <link xlink:href="http://tools.ietf.org/html/rfc3530"/>.
-     </para>
+     <para>NFSv4 はバージョン 4 の新しい実装で、 &krb; を介して機密を保持することのできるユーザ認証機能に対応しています。また、 NFSv4 ではポートを 1 つだけしか使用しない設計になっているため、 NFSv3 よりもファイアウオール環境には適した仕組みになっています。</para>
+     <para>プロトコルは、 <link xlink:href="http://tools.ietf.org/html/rfc3530"/> で規定されています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>pNFS</term>
     <listitem>
-     <para>
-      Parallel NFS, a protocol extension of NFSv4. Any pNFS clients can
-      directly access the data on an NFS server.
-     </para>
+     <para>Parallel NFS の略で、 NFSv4 のプロトコル拡張です。 pNFS に対応したクライアントであれば、 NFS サーバ内の任意のデータに直接アクセスすることができます。</para>
     </listitem>
    </varlistentry>
   </variablelist>
   <important os="sles;osuse">
-   <title>Need for DNS</title>
-   <para>
-    In principle, all exports can be made using IP addresses only. To avoid
-    time-outs, you need a working DNS system. DNS is necessary at least for
-    logging purposes, because the <systemitem class="daemon">mountd</systemitem> daemon does reverse lookups.
-   </para>
+   <title>DNS 側の要件</title>
+   <para>原理上、全てのエクスポートは IP アドレスのみでアクセスすることができます。ただし、タイムアウトの問題を避けるために、 DNS システムをご用意ください。具体的には、 <systemitem class="daemon">mountd</systemitem> デーモンがログの記録時に逆引き参照を行ないますので、そのために必要となります。</para>
   </important>
  </sect1>
 <!-- == SLED ======================================================= -->
  <sect1 os="sled" xml:id="sec-nfs-installation-sled">
 <!-- For the moment, use different IDs -->
 
-  <title>Installing NFS server</title>
+  <title>NFS サーバのインストール</title>
 
-  <para>
-   For installing and configuring an NFS server, see the &sls; documentation.
-  </para>
+  <para>NFS サーバのインストールと設定について、詳しくは &sls; のドキュメンテーションをお読みください。</para>
  </sect1>
 <!-- == osuse and SLES ============================================ -->
  <sect1 os="sles;osuse" xml:id="sec-nfs-installation">
-  <title>Installing NFS server</title>
+  <title>NFS サーバのインストール</title>
 
-   <para>
-   The NFS server is not part of the default installation. To install the NFS
-   server using &yast;, choose <menuchoice> <guimenu>Software</guimenu>
-   <guimenu>Software Management</guimenu></menuchoice>, select
-   <guimenu>Patterns</guimenu>, and enable the <guimenu>File Server</guimenu>
-   option in the <guimenu>Server Functions</guimenu> section. Click
-   <guimenu>Accept</guimenu> to install the required packages.
-  </para>
-  <para>
-   Like NIS, NFS is a client/server system. However, a machine can be
-   both&mdash;it can supply file systems over the network (export) and mount
-   file systems from other hosts (import).
-  </para>
+   <para>NFS サーバは、既定の設定ではインストールされません。 NFS サーバをインストールするには、 &yast; を起動して <menuchoice> <guimenu>ソフトウエア</guimenu> <guimenu>ソフトウエア管理</guimenu></menuchoice> を選択し、 <guimenu>パターン</guimenu> 内にある <guimenu>サーバ機能</guimenu> の <guimenu>ファイルサーバ</guimenu> を選択してください。あとは <guimenu>了解</guimenu> を押して必要なパッケージをインストールしてください。</para>
+  <para>NIS と同様に、 NFS もクライアント／サーバ型のシステムになっています。ですが、 1 台のマシンでネットワークに対してファイルシステムを提供 (エクスポート) しながら、他のホストにあるファイルシステムをマウントする (インポート) することができます。</para>
 
   <note>
 <!-- bnc#870129 -->
-   <title>Mounting NFS volumes locally on the exporting server</title>
-   <para>
-    Mounting NFS volumes locally on the exporting server is not supported on
-    &productname;.
-   </para>
+   <title>同一のコンピュータ内での NFS マウントについて</title>
+   <para>&productname; では、 NFS で公開しているディレクトリを自分自身でマウントすることはできません。</para>
   </note>
  </sect1>
  <sect1 xml:id="sec-nfs-configuring-nfs-server" os="sles;osuse">
-  <title>Configuring NFS server</title>
+  <title>NFS サーバの設定</title>
 
-  <para>
-   Configuring an NFS server can be done either through &yast; or manually. For
-   authentication, NFS can also be combined with &krb;.
-  </para>
+  <para>NFS サーバの設定は、 &yast; もしくは手作業で実施することができます。認証については、 NFS と &krb; を組み合わせることができます。</para>
 
   <sect2 xml:id="sec-nfs-export-yast2">
-   <title>Exporting file systems with &yast;</title>
-   <para>
-    With &yast;, turn a host in your network into an NFS server&mdash;a server
-    that exports directories and files to all hosts granted access to it or to
-    all members of a group. Thus, the server can also provide applications
-    without installing the applications locally on every host.
-   </para>
-   <para>
-    To set up such a server, proceed as follows:
-   </para>
+   <title>&yast; を利用したファイルシステムの公開</title>
+   <para>&yast; を利用することで、お使いのコンピュータを NFS サーバに仕立て上げることができます。 NFS サーバでは、許可するコンピュータや特定のグループ内の全メンバーに対して、ファイルやディレクトリをエクスポートすることができます。そのため、 NFS を利用することで、それぞれのホストにインストールすることなく、特定のアプリケーションを利用できるようにすることもできます。</para>
+   <para>このようなサーバを構築するには、下記の手順で行ないます:</para>
    <procedure xml:id="pro-nfs-export-yast2-nfs">
-    <title>Setting up an NFS server</title>
+    <title>NFS サーバの設定</title>
     <step>
-     <para>
-      Start &yast; and select <menuchoice> <guimenu>Network Services</guimenu>
-      <guimenu>NFS Server</guimenu> </menuchoice>; see
-      <xref linkend="fig-inst-nfsserver1"/>. You may be prompted to install
-      additional software.
-     </para>
+     <para>&yast; を起動し、 <menuchoice> <guimenu>ネットワークサービス</guimenu> <guimenu>NFS サーバ</guimenu> </menuchoice> を選択します (<xref linkend="fig-inst-nfsserver1"/> をご覧ください) 。なお、必要に応じて、追加のソフトウエアをインストールするよう求められることがあります。</para>
 
      <figure xml:id="fig-inst-nfsserver1">
-      <title>NFS server configuration tool</title>
+      <title>NFS サーバ設定ツール</title>
       <mediaobject>
        <imageobject role="fo">
         <imagedata fileref="yast2_inst_nfsserver1.png" width="75%" format="PNG" os="sles;sled"/>
@@ -217,82 +120,38 @@
 
     </step>
     <step>
-     <para>
-      Click the <guimenu>Start</guimenu> radio button.
-     </para>
+     <para>まずは <guimenu>開始</guimenu> のラジオボタンを押します。</para>
     </step>
     <step>
-     <para>
-      If &firewalld; is active on your system, configure it separately for NFS
-      (see <xref linkend="sec-security-firewall-firewalld"/>). &yast; does not
-      yet have complete support for &firewalld;, so ignore the "Firewall not
-      configurable" message and continue.
-     </para>
+     <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を個別に実施する必要があります (詳しくは <xref linkend="sec-security-firewall-firewalld"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 "ファイアウオールを設定できません" のメッセージを無視して続行してください。</para>
     </step>
     <step>
-     <para>
-      Check whether you want to <guimenu>Enable NFSv4</guimenu>. If you
-      deactivate NFSv4, &yast; will only support NFSv3. For information about
-      enabling NFSv2, see <xref linkend="sec-nfs-export-manual-nsfv2"/>.
-     </para>
+     <para>また、必要であれば <guimenu>NFSv4 を有効にする</guimenu> をチェックしてください。 NFSv4 を無効化した場合、 &yast; は NFSv3 のみに対応するようになります。なお、 NFSv2 の有効化については、 <xref linkend="sec-nfs-export-manual-nsfv2"/> をお読みください。</para>
      <substeps performance="required">
       <step>
-       <para>
-        If NFSv4 is selected, additionally enter the appropriate NFSv4 domain
-        name. This parameter is used by the <systemitem class="daemon">idmapd</systemitem> daemon that is required for &krb;
-        setups or if clients cannot work with numeric user names. Leave it as
-        <literal>localdomain</literal> (the default) if you do not run
-        <systemitem class="daemon">idmapd</systemitem> or do not have any
-        special requirements. For more information on the <systemitem class="daemon">idmapd</systemitem> daemon see <xref linkend="var-nfs-export-manual-idmapd"/>.
-       </para>
+       <para>NFSv4 を有効化した場合は、追加で NFSv4 ドメイン名を入力します。このパラメータは <systemitem class="daemon">idmapd</systemitem> デーモンが使用するパラメータで、 &krb; の設定時やクライアントが数字のユーザ名では処理できないような場合に利用します。 <systemitem class="daemon">idmapd</systemitem> を動作させない場合や、特に要件がない場合は、 <literal>localdomain</literal> (既定値) のままでかまいません。 <systemitem class="daemon">idmapd</systemitem> について、詳しくは <xref linkend="var-nfs-export-manual-idmapd"/> をお読みください。</para>
       </step>
      </substeps>
     </step>
     <step>
-     <para>
-      Click <guimenu>Enable GSS Security</guimenu> if you need secure access to
-      the server. A prerequisite for this is to have &krb; installed on your
-      domain and to have both the server and the clients kerberized.
-      <remark>emap 2011-0824: A reference to a &krb; chapter
-      would be good.</remark>
-      Click <guimenu>Next</guimenu> to proceed with the next configuration
-      dialog.
-     </para>
+     <para>サーバに対してのアクセスをさらに保護したい場合は、 <guimenu>GSS セキュリティを有効にする</guimenu> を選択します。この仕組みを使用するには、お使いのドメイン内に &krb; がインストールされ、サーバとクライアントの両方で &krb; が設定されている必要があります。 <remark>emap 2011-0824: A reference to a Kerberos chapter would be good.</remark> 設定が終わったら <guimenu>次へ</guimenu> を押すことで、次の設定ダイアログに進むことができます。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Add Directory</guimenu> in the upper half of the dialog to
-      export your directory.
-     </para>
+     <para>お使いのディレクトリをエクスポートするには、ダイアログの上半分で <guimenu>ディレクトリの追加</guimenu> を押します。</para>
     </step>
     <step>
-     <para>
-      If you have not configured the allowed hosts already, another dialog for
-      entering the client information and options pops up automatically. Enter
-      the host wild card (usually you can leave the default settings as they
-      are).
-     </para>
+     <para>許可するホストの設定を行なっていない場合は、クライアントの情報を入力するためのポップアップが自動的に表示されます。ホストをワイルドカードで設定することができます (通常は既定の設定のままでかまいません) 。</para>
 <!--<para>The default settings allow every host in your network to
          connect. In case you want to restrict to a set of allowed
          hosts, enter the IP addresses or host names in the
          <guimenu>Host Wild Card</guimenu> textfield. See
          <citetitle>man exports</citetitle> for a detailed view of all
          possible variants.</para>-->
-     <para>
-      There are four possible types of host wild cards that can be set for each
-      host: a single host (name or IP address), netgroups, wild cards (such as
-      <literal>*</literal> indicating all machines can access the server), and
-      IP networks.
-     </para>
-     <para>
-      For more information about these options, see the
-      <literal>exports</literal> man page.
-     </para>
+     <para>ホストのワイルドカードでは、下記の 4 種類の設定を行なうことができます。 1 種類目は単一のホスト名を指すためのホスト名や IP アドレスの設定、 2 種類目はネットグループによる設定、 3 種類目はワイルドカード (たとえば <literal>*</literal> を指定すると、全てのマシンからアクセスできるようになります) 、そして 4 種類目は IP ネットワークです。</para>
+     <para>これらのオプションについて、詳しくは <literal>exports</literal> のマニュアルページをお読みください。</para>
     </step>
     <step>
-     <para>
-      Click <guimenu>Finish</guimenu> to complete the configuration.
-     </para>
+     <para>最後に <guimenu>完了</guimenu> を押すと、設定を完了することができます。</para>
     </step>
    </procedure>
   </sect2>
@@ -300,69 +159,26 @@
 <!-- ============================================================== -->
 
   <sect2 xml:id="sec-nfs-export-manual" os="sles;osuse">
-   <title>Exporting file systems manually</title>
-   <para>
-    The configuration files for the NFS export service are
-    <filename>/etc/exports</filename> and
-    <filename>/etc/sysconfig/nfs</filename>. In addition to these files,
-    <filename>/etc/idmapd.conf</filename> is needed for the NFSv4 server
-    configuration with kerberized NFS or if the clients cannot work with
-    numeric user names.
-   </para>
-   <para>
-    To start or restart the services, run the command
-    <command>systemctl restart nfsserver</command>. This also restarts the
-    RPC portmapper that is required by the NFS server.
-   </para>
-   <para>
-    To make sure the NFS server always starts at boot time, run <command>sudo
-    systemctl enable nfsserver</command>.
-   </para>
+   <title>手作業によるファイルシステムの公開</title>
+   <para>NFS のエクスポートサービスで使用される設定ファイルは、 <filename>/etc/exports</filename> と <filename>/etc/sysconfig/nfs</filename> の 2 種類です。これらのファイルに加えて、 Ketberos が有効化された NFSv4 サーバの設定や、クライアントが数字のユーザ名を扱うことができない場合は、 <filename>/etc/idmapd.conf</filename> も必要となります。</para>
+   <para>サービスを開始もしくは再起動するには、 <command>systemctl restart nfsserver</command> を実行します。これにより、 NFS サーバが必要とする RPC portmapper も再起動することができます。</para>
+   <para>NFS サーバをシステムの起動時に開始するようにするには。 <command>sudo systemctl enable nfsserver</command> を実行します。</para>
    <note>
     <title>NFSv4</title>
-    <para>
-     NFSv4 is the latest version of NFS protocol available on &productname;.
-     Configuring directories for export with NFSv4 is now the same as with
-     NFSv3.
-    </para>
-    <para>
-     On <phrase os="sles;sled">&sls; 11</phrase><phrase os="osuse">&opensuse;
-     prior to Leap</phrase>, the bind mount in
-     <filename>/etc/exports</filename> was mandatory. It is still supported,
-     but now deprecated.
-    </para>
+    <para>NFSv4 は &productname; で利用できる最新バージョンの NFS プロトコルです。現在の NFSv4 でディレクトリをエクスポートする際の設定は、 NFSv3 と同じです。</para>
+    <para><phrase os="sles;sled">&sls; 11</phrase> <phrase os="osuse">Leap 以前の &opensuse; </phrase> では <filename>/etc/exports</filename> 内での bind マウントが必須でした。現在もなお、この構成に対応してはいますが、廃止予定になっています。</para>
    </note>
    <variablelist>
     <varlistentry>
      <term><filename>/etc/exports</filename></term>
      <listitem>
-      <para>
-       The <filename>/etc/exports</filename> file contains a list of entries.
-       Each entry indicates a directory that is shared and how it is shared. A
-       typical entry in <filename>/etc/exports</filename> consists of:
-      </para>
-<screen>/<replaceable>SHARED</replaceable>/<replaceable>DIRECTORY</replaceable>   <replaceable>HOST</replaceable>(<replaceable>OPTION_LIST</replaceable>)</screen>
-      <para>
-       For example:
-      </para>
+      <para><filename>/etc/exports</filename> ファイルには、エクスポートするディレクトリの設定一覧が含まれています。各行には共有するディレクトリのほか、共有方法の指定も含まれています。 <filename>/etc/exports</filename> では、下記のような書式で各行を設定します:</para>
+<screen>/<replaceable>共有</replaceable>/<replaceable>ディレクトリ</replaceable>   <replaceable>ホスト</replaceable>(<replaceable>オプションリスト</replaceable>)</screen>
+      <para>たとえば、下記のようになります:</para>
 <screen>/export/data   192.168.1.2(rw,sync)</screen>
-      <para>
-       Here the IP address <literal>192.168.1.2</literal> is used to identify
-       the allowed client. You can also use the name of the host, a wild card
-       indicating a set of hosts (<literal>*.abc.com</literal>,
-       <literal>*</literal>, etc.), or netgroups
-       (<literal>@my-hosts</literal>).
-      </para>
-      <para>
-       For a detailed explanation of all options and their meaning, refer to
-       the man page of <filename>/etc/exports</filename> (<command>man
-       exports</command>).
-      </para>
-      <para>
-       In case you have modified <filename>/etc/exports</filename> while the
-       NFS server was running, you need to restart it for the changes to become
-       active: <command>sudo systemctl restart nfsserver</command>.
-      </para>
+      <para>この例では、クライアントの識別に際して <literal>192.168.1.2</literal> という IP アドレスを指定しています。クライアントのホスト名を指定することもできますし、ホストの集合を指定するためにワイルドカードを指定することもできる (例: <literal>*.abc.com</literal> , <literal>*</literal> , etc.) ほか、ネットグループ ( <literal>@my-hosts</literal> ) を指定することもできます。</para>
+      <para>全てのオプションとそれらの意味に関する説明について、詳しくは <filename>/etc/exports</filename> のマニュアルページ ( <command>man exports</command> ) をお読みください。</para>
+      <para>なお、 NFS サーバが動作している間に <filename>/etc/exports</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfsserver</command> を実行して、変更内容を反映させるために再起動を行なう必要があります。</para>
 <!--
      <para>
       When clients mount from this server, they just mount
@@ -377,40 +193,19 @@
     <varlistentry>
      <term><filename>/etc/sysconfig/nfs</filename></term>
      <listitem>
-      <para>
-       The <filename>/etc/sysconfig/nfs</filename> file contains a few
-       parameters that determine NFSv4 server daemon behavior. It is important
-       to set the parameter <systemitem>NFS4_SUPPORT</systemitem> to
-       <literal>yes</literal> (default). <systemitem>NFS4_SUPPORT</systemitem>
-       determines whether the NFS server supports NFSv4 exports and clients.
-      </para>
-      <para>
-       In case you have modified <filename>/etc/sysconfig/nfs</filename> while
-       the NFS server was running, you need to restart it for the changes to
-       become active: <command>sudo systemctl restart nfsserver</command>.
-      </para>
+      <para><filename>/etc/sysconfig/nfs</filename> ファイルには、 NFSv4 サーバデーモンの動作に関わるいくつかのパラメータが含まれています。特に <systemitem>NFS4_SUPPORT</systemitem> を <literal>yes</literal> (既定値) に設定しておくことが重要です。 <systemitem>NFS4_SUPPORT</systemitem> は NFS サーバが NFSv4 のエクスポートとクライアントに対応するかどうかを決定するパラメータです。</para>
+      <para>なお、 NFS サーバが動作している間に <filename>/etc/sysconfig/nfs</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfsserver</command> を実行して、変更内容を反映させるために再起動を行なう必要があります。</para>
       <tip>
-       <title>Mount options</title>
-       <para>
-        On <phrase os="sles;sled">&sls; 11</phrase><phrase os="osuse">&opensuse; prior to Leap</phrase>, the
-        <option>--bind</option> mount in <filename>/etc/exports</filename> was
-        mandatory. It is still supported, but now deprecated. Configuring
-        directories for export with NFSv4 is now the same as with NFSv3.
-       </para>
+       <title>マウントオプション</title>
+       <para><phrase os="sles;sled">&sls; 11</phrase> <phrase os="osuse">Leap 以前の &opensuse; </phrase> では、 <filename>/etc/exports</filename> 内で <option>--bind</option> マウントのオプションが必須でした。現在もなお、この構成に対応してはいますが、廃止予定になっています。また、現在の NFSv4 でディレクトリをエクスポートする際の設定は、 NFSv3 と同じです。</para>
       </tip>
       <note xml:id="sec-nfs-export-manual-nsfv2">
 <!-- bsc#919708 -->
        <title>NFSv2</title>
-       <para>
-        If NFS clients still depend on NFSv2, enable it on the server in
-        <filename>/etc/sysconfig/nfs</filename> by setting:
-       </para>
+       <para>NFS クライアント側で NFSv2 を必要としている場合は、サーバ側でも <filename>/etc/sysconfig/nfs</filename> に下記の設定を行なう必要があります:</para>
 <screen>NFSD_OPTIONS="-V2"
 MOUNTD_OPTIONS="-V2"</screen>
-       <para>
-        After restarting the service, check whether version 2 is available
-        with the command:
-       </para>
+       <para>サービスを再起動したら、下記のコマンドを実行すると、バージョン 2 に対応しているかどうかがわかります:</para>
 <screen>&prompt.user;cat /proc/fs/nfsd/versions
 +2 +3 +4 +4.1 +4.2</screen>
       </note>
@@ -419,32 +214,10 @@ MOUNTD_OPTIONS="-V2"</screen>
     <varlistentry xml:id="var-nfs-export-manual-idmapd">
      <term><filename>/etc/idmapd.conf</filename></term>
      <listitem>
-      <para>
-       The <systemitem class="daemon">idmapd</systemitem> daemon is only
-       required if &krb; authentication is used, or if clients cannot work
-       with numeric user names. Linux clients can work with numeric user names
-       since Linux kernel 2.6.39. The <systemitem class="daemon">idmapd</systemitem> daemon does the name-to-ID mapping
-       for NFSv4 requests to the server and replies to the client.
-      </para>
-      <para>
-       If required, <systemitem class="daemon">idmapd</systemitem>
-       needs to run on the NFSv4 server. Name-to-ID mapping on the client will
-       be done by <command>nfsidmap</command> provided by the package
-       <package>nfs-client</package>.
-      </para>
-      <para>
-       Make sure that there is a uniform way in which user names and IDs (UIDs)
-       are assigned to users across machines that might probably be sharing
-       file systems using NFS. This can be achieved by using NIS, LDAP, or any
-       uniform domain authentication mechanism in your domain.
-      </para>
-      <para>
-       The parameter <literal>Domain</literal> must be set the same for both,
-       client and server in the <filename>/etc/idmapd.conf</filename> file. If
-       you are not sure, leave the domain as <literal>localdomain</literal> in
-       the server and client files. A sample configuration file looks like the
-       following:
-      </para>
+      <para><systemitem class="daemon">idmapd</systemitem> デーモンは、 &krb; 認証を使用している場合や、クライアント側で数字のユーザ名を扱うことができない場合にのみ必要となるデーモンです。 Linux カーネル 2.6.39 以降では、 Linux クライアントは数字のユーザ名にも対応しています。 <systemitem class="daemon">idmapd</systemitem> デーモンは、 NFSv4 のサーバ宛のリクエストやクライアント宛の応答に対して、名前と ID とのマッピングを行ないます。</para>
+      <para>必要であれば、 <systemitem class="daemon">idmapd</systemitem> を NFSv4 サーバ内で動作させる必要があります。クライアント側での名前と ID のマッピングは、 <package>nfs-client</package> パッケージで提供されている <command>nfsidmap</command> が行ないます。</para>
+      <para>なお、ユーザ名と ID (uid) が、 NFS でファイルを共有する可能性のある全てのマシン間で正しく統一されていることをご確認ください。これは NIS や LDAP など、任意のドメイン認証の仕組みで実施することができます。</para>
+      <para>また、 <filename>/etc/idmapd.conf</filename> 内の <literal>Domain</literal> パラメータの値が、クライアントとサーバの両方で同じ値になっていることをご確認ください。よく分からない場合は、サーバとクライアントの両方で <literal>localdomain</literal> をドメインとしてお使いください。設定ファイルの例は下記のようになります:</para>
 <screen>[General]
 Verbosity = 0
 Pipefs-Directory = /var/lib/nfs/rpc_pipefs
@@ -453,18 +226,8 @@ Domain = localdomain
 [Mapping]
 Nobody-User = nobody
 Nobody-Group = nobody</screen>
-      <para>
-       To start the <systemitem class="daemon">idmapd</systemitem> daemon, run
-       <command>systemctl start nfs-idmapd</command>. In case you have modified
-       <filename>/etc/idmapd.conf</filename> while the daemon was running, you
-       need to restart it for the changes to become active: <command>systemctl
-       start nfs-idmapd</command>.
-      </para>
-      <para>
-       For more information, see the man pages of <literal>idmapd</literal> and
-       <literal>idmapd.conf</literal> (<literal>man idmapd</literal> and
-       <literal>man idmapd.conf</literal>).
-      </para>
+      <para><systemitem class="daemon">idmapd</systemitem> デーモンを開始するには、 <command>systemctl start nfs-idmapd</command> を実行します。デーモンが動作している間に <filename>/etc/idmapd.conf</filename> ファイルを変更した場合は、 <command>systemctl start nfs-idmapd</command> を実行して設定を適用してください。</para>
+      <para>詳しくは <literal>idmapd</literal> と <literal>idmapd.conf</literal> のマニュアルページをお読みください ( <literal>man idmapd</literal> および <literal>man idmapd.conf</literal> で読むことができます) 。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -473,133 +236,61 @@ Nobody-Group = nobody</screen>
 <!-- ============================================================== -->
 
   <sect2 xml:id="sec-nfs-kerberos">
-   <title>NFS with &krb;</title>
-   <para>
-    To use &krb; authentication for NFS, Generic Security Services (GSS) must be enabled.
-    Select <guimenu>Enable GSS Security</guimenu> in the initial &yast; NFS
-    Server dialog. You must have a working &krb; server to use this feature.
-    &yast; does not set up the server but only uses the provided functionality.
-    To use &krb; authentication in addition to the &yast;
-    configuration, complete at least the following steps before running the NFS
-    configuration:
-   </para>
+   <title>&krb; 併用 NFS</title>
+   <para>NFS 向けに &krb; 認証を使用するには、 Generic Security Services (GSS) を有効化しなければなりません。 &yast; の NFS サーバダイアログの冒頭で、 <guimenu>GSS セキュリティを有効にする</guimenu> にチェックを入れてください。また、この機能を利用するには、動作する &krb; サーバを用意しなければなりません。 &yast; では &krb; サーバの構築を行なうことはできませんが、この機能を利用するように設定することは可能です。なお、 &yast; の設定に加えて &krb; 認証を使用するにあたっては、 NFS の設定を完了する前に下記の手順を完了する必要があります:</para>
    <procedure>
     <step>
-     <para>
-      Make sure that both the server and the client are in the same &krb;
-      domain. They must access the same KDC (Key Distribution Center) server
-      and share their <filename>krb5.keytab</filename> file (the default
-      location on any machine is <filename>/etc/krb5.keytab</filename>). For
-      more information about &krb;, see
-      <xref linkend="cha-security-kerberos"/>.
-     </para>
+     <para>サーバとクライアントの両方が、同じ &krb; ドメインに属するようにしてください。同じ KDC (鍵配布センター) サーバにアクセスしなければならないほか、 <filename>krb5.keytab</filename> ファイルを共有しなければなりません (既定では <filename>/etc/krb5.keytab</filename> 内に配置されます) 。 &krb; について、詳しくは <xref linkend="cha-security-kerberos"/> をお読みください。</para>
     </step>
     <step>
-     <para>
-      Start the gssd service on the client with <command>systemctl start
-      rpc-gssd.service</command>.
-     </para>
+     <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
     </step>
     <step os="sles;osuse">
-     <para>
-      Start the svcgssd service on the server with <command>systemctl start
-      rpc-svcgssd.service</command>.
-     </para>
+     <para>サーバ側で <command>systemctl start rpc-svcgssd.service</command> を実行して、 svcgssd サービスを開始します。</para>
     </step>
    </procedure>
-   <para>
-    &krb; authentication also requires the <systemitem class="daemon">idmapd</systemitem> daemon to run on the server. For more
-    information refer to <xref linkend="var-nfs-export-manual-idmapd"/>.
-   </para>
-   <para>
-    For more information about configuring kerberized NFS, refer to the links
-    in <xref linkend="sec-nfs-info" xrefstyle="SectTitleOnPage"/>.
-   </para>
+   <para>&krb; 認証を使用するには、サーバ側で <systemitem class="daemon">idmapd</systemitem> デーモンを動作させる必要もあります。詳しくは <xref linkend="var-nfs-export-manual-idmapd"/> をお読みください。</para>
+   <para>&krb; が有効化された NFS について、さらに詳しくは <xref linkend="sec-nfs-info" xrefstyle="SectTitleOnPage"/> にあるリンク先をお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-nfs-configuring-nfs-clients">
-  <title>Configuring clients</title>
+  <title>クライアントの設定</title>
 
-  <para>
-   To configure your host as an NFS client, you do not need to install
-   additional software. All needed packages are installed by default.
-  </para>
+  <para>お使いのホストを NFS クライアントとして設定する場合は、追加のソフトウエアをインストールする必要はありません。必要な全てのパッケージが既定でインストールされるためです。</para>
 
   <sect2 xml:id="sec-nfs-import-yast2">
-   <title>Importing file systems with &yast;</title>
-   <para>
-    Authorized users can mount NFS directories from an NFS server into the
-    local file tree using the &yast; NFS client module. Proceed as follows:
-   </para>
+   <title>&yast; を利用したファイルシステムの取り込み</title>
+   <para>認可済みのユーザであれば、 &yast; の NFS クライアントモジュールを利用することで、 NFS サーバ内でエクスポートされたディレクトリをマウントし、ローカルのファイルツリーに組み込むことができます。具体的には、下記の手順で実施します:</para>
    <procedure xml:id="pro-nfs-import-yast2">
-    <title>Importing NFS directories</title>
+    <title>NFS ディレクトリのインポート</title>
     <step>
-     <para>
-      Start the &yast; NFS client module.
-     </para>
+     <para>まずは &yast; の NFS クライアントモジュールを起動します。</para>
     </step>
 <!-- Start: <guimenu>NFS Shares</guimenu> -->
     <step>
-     <para>
-      Click <guimenu>Add</guimenu> in the <guimenu>NFS Shares</guimenu> tab.
-      Enter the host name of the NFS server, the directory to import, and the
-      mount point at which to mount this directory locally.
-     </para>
+     <para><guimenu>NFS 共有</guimenu> タブ内にある <guimenu>追加</guimenu> を押します。 NFS サーバのホスト名と取り込むディレクトリ、そしてローカル側のマウント先ディレクトリをそれぞれ指定します。</para>
     </step>
 <!-- End: NFS Shares -->
 <!-- Start: <guimenu>NFS Settings</guimenu> -->
     <step>
-     <para>
-      When using NFSv4, select <guimenu>Enable NFSv4</guimenu> in the
-      <guimenu>NFS Settings</guimenu> tab. Additionally, the <guimenu>NFSv4
-      Domain Name</guimenu> must contain the same value as used by the NFSv4
-      server. The default domain is <literal>localdomain</literal>.
-     </para>
+     <para>NFSv4 を使用している場合は、 <guimenu>NFS 設定</guimenu> タブ内にある <guimenu>NFSv4 を有効にする</guimenu> を選択します。これに加えて、 <guimenu>NFSv4 ドメイン名</guimenu> に、 NFSv4 サーバと同じ値を設定しなければなりません。既定のドメイン名は <literal>localdomain</literal> です。</para>
     </step>
     <step>
-     <para>
-      To use &krb; authentication for NFS, GSS security must be enabled.
-      Select <guimenu>Enable GSS Security</guimenu>.
-     </para>
+     <para>NFS 向けに &krb; 認証を使用するには、 GSS セキュリティを有効化しなければなりません。この場合は、 <guimenu>GSS セキュリティを有効にする</guimenu> を選択します。</para>
     </step>
     <step>
-     <para>
-      Enable <guimenu>Open Port in Firewall</guimenu> in the <guimenu>NFS
-      Settings</guimenu> tab if you use a Firewall and want to allow access to
-      the service from remote computers. The firewall status is displayed next
-      to the check box.
-     </para>
+     <para>ファイアウオールをお使いの場合は、 <guimenu>NFS 設定</guimenu> タブ内にある <guimenu>ファイアウオールでポートを開く</guimenu> を選択して、リモートのコンピュータからのサービスへのアクセスを許可します。チェックボックスの下には、ファイアウオールの状態が表示されます。</para>
     </step>
 <!-- End: NFS Settings -->
     <step>
-     <para>
-      Click <guimenu>OK</guimenu> to save your changes.
-     </para>
+     <para>最後に <guimenu>OK</guimenu> を押すと、設定を保存することができます。</para>
     </step>
    </procedure>
-   <para>
-    The configuration is written to <filename>/etc/fstab</filename> and the
-    specified file systems are mounted. When you start the &yast; configuration
-    client at a later time, it also reads the existing configuration from this
-    file.
-   </para>
+   <para>設定した内容は <filename>/etc/fstab</filename> 内に書き込まれ、マウント処理が行なわれます。後から &yast; の設定を起動した場合は、このファイル内にある既存の設定が読み込まれます。</para>
    <tip>
-    <title>NFS as a root file system</title>
-    <para>
-     On (diskless) systems, where the root partition is mounted via network as
-     an NFS share, you need to be careful when configuring the network device
-     with which the NFS share is accessible.
-    </para>
-    <para>
-     When shutting down or rebooting the system, the default processing order
-     is to turn off network connections, then unmount the root partition. With
-     NFS root, this order causes problems as the root partition cannot be
-     cleanly unmounted as the network connection to the NFS share is already
-     not activated. To prevent the system from deactivating the relevant
-     network device, open the network device configuration tab as described in
-     <xref linkend="sec-network-yast-change-start"/> and choose <guimenu>On
-     NFSroot</guimenu> in the <guimenu>Device Activation</guimenu> pane.
-    </para>
+    <title>ルートファイルシステムとしての NFS について</title>
+    <para>ディスクレス (自分自身にはディスクが接続されていない) システムでは一般に、 NFS の共有をネットワーク経由でマウントしてルートファイルシステムにすることがありますが、この場合は NFS 共有にアクセスするネットワークデバイスの設定に注意する必要があります。</para>
+    <para>システムをシャットダウンしたり再起動したりする場合、既定の処理順序では、ネットワークの接続を切ってからルートパーティションのマウントを解除します。ルートファイルシステムに NFS を使用している場合は、ルートファイルシステムのマウントを解除しようとしても、その時点では既にネットワークが切断されているため、正しく終了することができなくなってしまいます。この問題を解決するには、 <xref linkend="sec-network-yast-change-start"/> で説明している手順でネットワークデバイスの設定タブを開いて、  <guimenu>デバイスの有効化</guimenu> の値を <guimenu>NFSroot</guimenu> に設定してください。</para>
    </tip>
 <!--
    <figure id="fig-yast2-nfs-client">
@@ -619,280 +310,121 @@ Nobody-Group = nobody</screen>
   </sect2>
 
   <sect2 xml:id="sec-nfs-import">
-   <title>Importing file systems manually</title>
+   <title>手作業によるファイルシステムの取り込み</title>
 
 <!-- mention nfs.service according to bnc#884690 -->
-   <para>
-    The prerequisite for importing file systems manually from an NFS server is
-    a running RPC port mapper. The <option>nfs</option> service takes care to
-    start it properly; thus, start it by entering <command>systemctl start
-    nfs</command> as <systemitem class="username">root</systemitem>. Then
-    remote file systems can be mounted in the file system like local partitions
-    using <command>mount</command>:
-   </para>
-<screen>&prompt.sudo;mount <replaceable>HOST</replaceable>:<replaceable>REMOTE-PATH</replaceable><replaceable>LOCAL-PATH</replaceable></screen>
-   <para>
-    To import user directories from the <systemitem>&nfsname;</systemitem>
-    machine, for example, use:
-   </para>
+   <para>NFS サーバを動作させる場合、ファイルシステムを手動で取り込む際にあらかじめ設定しておくべきことは、 RPC portmapper の有効化です。 <option>nfs</option> サービスを開始すれば、 RPC portmapper についても適切に起動が行なわれますので、 <systemitem class="username">root</systemitem> で <command>systemctl start nfs</command> を実行してください。あとは <command>mount</command> コマンドを利用して、ローカルのファイルシステムをマウントする場合と同様の手順を実施するだけです:</para>
+<screen>&prompt.sudo;mount <replaceable>ホスト名</replaceable>:<replaceable>リモートのパス</replaceable> <replaceable>ローカルのパス</replaceable></screen>
+   <para>たとえば <systemitem>&nfsname;</systemitem> というマシンのホームディレクトリをマウントしたい場合は、下記のように実行します:</para>
 <screen>&prompt.sudo;mount &nfsname;:/home /home</screen>
    <sect3 xml:id="sec-nfs-automount">
-    <title>Using the automount service</title>
-    <para>
-     The autofs daemon can be used to mount remote file systems automatically.
-     Add the following entry to the <filename>/etc/auto.master</filename> file:
-    </para>
+    <title>automount サービスの使用</title>
+    <para>aufofs デーモンは、リモートのファイルシステムを自動的にマウントする際に使用するデーモンです。下記の内容を <filename>/etc/auto.master</filename> ファイル内に追加してください:</para>
 <screen>/nfsmounts /etc/auto.nfs</screen>
-    <para>
-     Now the <filename>/nfsmounts</filename> directory acts as the root for all
-     the NFS mounts on the client if the <filename>auto.nfs</filename> file is
-     filled appropriately. The name <filename>auto.nfs</filename> is chosen for
-     the sake of convenience&mdash;you can choose any name. In
-     <filename>auto.nfs</filename> add entries for all the NFS mounts as
-     follows:
-    </para>
+    <para>上記のように設定すると、 <filename>/nfsmounts</filename> ディレクトリが NFS マウントのルートディレクトリとして設定され、 <filename>auto.nfs</filename> の内容に応じて自動的にマウントされるようになります。 <filename>auto.nfs</filename> はそのファイル名でなければならないわけではありません。要件に応じて自由に変更してかまいません。また、 <filename>auto.nfs</filename> には、下記のようにして全ての NFS マウントの項目を記述することができます:</para>
 <screen>localdata -fstype=nfs server1:/data
 nfs4mount -fstype=nfs4 server2:/</screen>
-    <para>
-     Activate the settings with <command>systemctl start autofs</command> as
-     &rootuser;. In this example, <filename>/nfsmounts/localdata</filename>,
-     the <filename>/data</filename> directory of
-     <systemitem>server1</systemitem>, is mounted with NFS and
-     <filename>/nfsmounts/nfs4mount</filename> from
-     <systemitem>server2</systemitem> is mounted with NFSv4.
-    </para>
-    <para>
-     If the <filename>/etc/auto.master</filename> file is edited while the
-     service autofs is running, the automounter must be restarted for the
-     changes to take effect with <command>systemctl restart autofs</command>.
-    </para>
+    <para>&rootuser; で <command>systemctl start autofs</command> と実行すると、設定を反映させることができます。この例では、 <filename>/nfsmounts/localdata</filename> ディレクトリが <systemitem>server1</systemitem> の <filename>/data</filename> ディレクトリを、 <filename>/nfsmounts/nfs4mount</filename> が <systemitem>server2</systemitem> のルートディレクトリをそれぞれマウントするように設定しています。</para>
+    <para>autofs の動作中に <filename>/etc/auto.master</filename> を変更した場合は、変更内容を反映させるために automounter の再起動を行なわなければなりません。 <command>systemctl restart autofs</command> を実行して再起動してください。</para>
    </sect3>
    <sect3 xml:id="sec-nfs-fstab">
-    <title>Manually editing <filename>/etc/fstab</filename></title>
-    <para>
-     A typical NFSv3 mount entry in <filename>/etc/fstab</filename> looks like
-     this:
-    </para>
+    <title><filename>/etc/fstab</filename> の手作業による編集</title>
+    <para>NFSv3 の場合、 <filename>/etc/fstab</filename> ファイル内では下記のように設定します:</para>
 <screen>&nfsname;:/data /local/path nfs rw,noauto 0 0</screen>
-    <para>
-     For NFSv4 mounts, use <literal>nfs4</literal> instead of
-     <literal>nfs</literal> in the third column:
-    </para>
+    <para>NFSv4 でマウントする場合は、 3 列目の <literal>nfs</literal> を <literal>nfs4</literal> として設定します:</para>
 <screen>&nfsname;:/data /local/pathv4 nfs4 rw,noauto 0 0</screen>
-    <para>
-     The <literal>noauto</literal> option prevents the file system from being
-     mounted automatically at start-up. If you want to mount the respective
-     file system manually, it is possible to shorten the mount command
-     specifying the mount point only:
-    </para>
+    <para><literal>noauto</literal> オプションを指定することで、システムの起動時には自動的にマウントされないようにしています。このように設定している状況で、手作業でファイルシステムをマウントするには、下記のようにマウントポイントを指定するだけでかまいません:</para>
 <screen>&prompt.sudo;mount /local/path</screen>
     <note>
-     <title>Mounting at start-up</title>
-     <para>
-      If you do not enter the <literal>noauto</literal> option, the init
-      scripts of the system will handle the mount of those file systems at
-      start-up.
-     </para>
+     <title>起動時点でのマウントについて</title>
+     <para><literal>noauto</literal> オプションを指定しない場合、システムの起動時に動作する初期化スクリプトが、自動的にマウント処理を行ないます。</para>
     </note>
    </sect3>
   </sect2>
 
   <sect2 xml:id="sec-nfs-pnfs">
    <title>Parallel NFS (pNFS)</title>
-   <para>
-    NFS is one of the oldest protocols, developed in the '80s. As such, NFS is
-    usually sufficient if you want to share small files. However, when you want
-    to transfer big files or many clients want to access data, an
-    NFS server becomes a bottleneck and has a significant impact on the system
-    performance. This is because of files quickly getting bigger, whereas the
-    relative speed of your Ethernet has not fully kept up.
-   </para>
-   <para>
-    When you request a file from a regular NFS server, the server
-    looks up the file metadata, collects all the data and transfers it over the
-    network to your client. However, the performance bottleneck becomes
-    apparent no matter how small or big the files are:
-   </para>
+   <para>NFS は 1980 年代に開発された、最も古いプロトコルのうちの 1 つです。そのため、 NFS は小さなファイルを共有するには十分なプロトコルですが、巨大なファイルや多数のクライアントを扱うような環境では、 NFS がボトルネックとなって、システムの性能に顕著な悪影響を及ぼしてしまいます。これは昔に比べてファイルが容易に巨大化しやすい環境になったためで、イーサネットの速度がそれに追随できていないことによるものです。</para>
+   <para>通常の NFS サーバに対してクライアントがファイルを要求すると、サーバはファイルのメタデータを読み込んだあと、全てのデータを収集してネットワーク経由でファイルを転送します。しかしながら、小さなファイルであっても大きなファイルであっても、性能のボトルネックが発生します:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      With small files most of the time is spent collecting the metadata.
-     </para>
+     <para>小さなファイルの場合、かかる時間の多くはメタデータの収集に費やされています。</para>
     </listitem>
     <listitem>
-     <para>
-      With big files most of the time is spent on transferring the data from
-      server to client.
-     </para>
+     <para>大きなファイルの場合、サーバからクライアントにファイルを転送する際に時間を費やしています。</para>
     </listitem>
    </itemizedlist>
-   <para>
-    pNFS, or parallel NFS, overcomes this limitation as it separates the file
-    system metadata from the location of the data. As such, pNFS requires two
-    types of servers:
-   </para>
+   <para>pNFS (parallel NFS) では、このような制限を、ファイルシステムのメタデータとデータの位置をそれぞれ分離することで克服しています:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-     <para>
-      A <emphasis>metadata</emphasis> or <emphasis>control server</emphasis>
-      that handles all the non-data traffic
-     </para>
+     <para>非データトラフィックを処理する <emphasis>メタデータ</emphasis> もしくは <emphasis>コントロールサーバ</emphasis></para>
     </listitem>
     <listitem>
-     <para>
-      One or more <emphasis>storage server(s)</emphasis> that hold(s) the data
-     </para>
+     <para>データを保持する 1 つもしくは複数の <emphasis>ストレージサーバ</emphasis></para>
     </listitem>
    </itemizedlist>
-   <para>
-    The metadata and the storage servers form a single, logical NFS server.
-    When a client wants to read or write, the metadata server tells the NFSv4
-    client which storage server to use to access the file chunks. The client
-    can access the data directly on the server.
-   </para>
-   <para>
-    &productname; supports pNFS on the client side only.
-   </para>
+   <para>メタデータとストレージサーバは単一の論理 NFS サーバを構成します。クライアントがファイルに対して読み込みまたは書き込みの要求を行なうと、メタデータサーバが NFSv4 クライアントに対して、ファイルチャンクにアクセスする際に使用するストレージサーバを指定します。クライアントはサーバ内のデータに直接アクセスすることができます。</para>
+   <para>&productname; では、 pNFS のクライアント側のみに対応しています。</para>
    <sect3 xml:id="sec-nfs-pnfs-yast">
-    <title>Configuring pNFS client with &yast;</title>
-    <para>
-     Proceed as described in <xref linkend="pro-nfs-import-yast2"/>, but click
-     the <guimenu>pNFS (v4.2)</guimenu> check box and optionally <guimenu>NFSv4
-     share</guimenu>. &yast; will do all the necessary steps and will write all
-     the required options in the file <filename>/etc/exports</filename>.
-    </para>
+    <title>&yast; による pNFS クライアントの設定</title>
+    <para>基本的には <xref linkend="pro-nfs-import-yast2"/> に示されている手順に従って作業を行ないますが、 <guimenu>pNFS (v4.2)</guimenu> のチェックボックスにチェックを入れることと、必要であれば <guimenu>NFSv4 共有</guimenu> を選択する点が異なります。 &yast; でこれを行なった場合、必要な手順全てを実施し、必要なオプション類を <filename>/etc/exports</filename> に書き込みます。</para>
    </sect3>
    <sect3 xml:id="sec-nfs-pnfs-manual">
-    <title>Configuring pNFS client manually</title>
-    <para>
-     Refer to <xref linkend="sec-nfs-import"/> to start. Most of the
-     configuration is done by the NFSv4 server. For pNFS, the only difference
-     is to add the <option>minorversion</option> option and the metadata server
-     <replaceable>MDS_SERVER</replaceable> to your <command>mount</command>
-     command:
-    </para>
-<screen>&prompt.sudo;mount -t nfs4 -o minorversion=1 <replaceable>MDS_SERVER</replaceable> <replaceable>MOUNTPOINT</replaceable></screen>
-    <para>
-     To help with debugging, change the value in the <filename>/proc</filename>
-     file system:
-    </para>
+    <title>手作業による pNFS クライアントの設定</title>
+    <para>起動については <xref linkend="sec-nfs-import"/> をお読みください。ほとんどの設定は NFSv4 サーバ側で行ないます。 pNFS の場合、 <command>mount</command> に指定する <option>minorversion</option> オプションと、メタデータサーバを指定する <replaceable>MDS_サーバ</replaceable> が異なります。</para>
+<screen>&prompt.sudo;mount -t nfs4 -o minorversion=1 <replaceable>MDS_サーバ</replaceable> <replaceable>マウントポイント</replaceable></screen>
+    <para>デバッグ機能を有効にするには、下記の <filename>/proc</filename> ファイルシステム内の値を変更してください:</para>
 <screen>&prompt.sudo;echo 32767 &gt; /proc/sys/sunrpc/nfsd_debug
 &prompt.sudo;echo 32767 &gt; /proc/sys/sunrpc/nfs_debug</screen>
    </sect3>
   </sect2>
  </sect1>
  <sect1 xml:id="nfs4-acls" os="sles;osuse">
-  <title>Managing Access Control Lists over NFSv4</title>
-  <para>
-   There is no single standard for Access Control Lists (ACLs) in Linux beyond
-   the simple read, write, and execute (<literal>rwx</literal>) flags for user,
-   group, and others (<literal>ugo</literal>). One option for finer control is
-   the <citetitle>Draft POSIX ACLs</citetitle>, which were never formally
-   standardized by POSIX. Another is the NFSv4 ACLs, which were designed to be
-   part of the NFSv4 network file system with the goal of making something that
-   provided reasonable compatibility between POSIX systems on Linux and WIN32
-   systems on Microsoft Windows.
-  </para>
-  <para>
-   NFSv4 ACLs are not sufficient to correctly implement Draft POSIX ACLs so no
-   attempt has been made to map ACL accesses on an NFSv4 client (such as using
-   <command>setfacl</command>).
-  </para>
-  <para>
-   When using NFSv4, Draft POSIX ACLs cannot be used even in emulation and NFSv4
-   ACLs need to be used directly; that means while <command>setfacl</command>
-   can work on NFSv3, it cannot work on NFSv4. To allow NFSv4 ACLs to be used on
-   an NFSv4 file system, SUSE Linux Enterprise Server provides the
-   <filename>nfs4-acl-tools</filename> package, which contains the following:
-  </para>
+  <title>NFSv4 を介したアクセス制御リスト (ACL) の管理</title>
+  <para>Linux では、ユーザやグループ、その他 ( <literal>ugo</literal> ) に対して、それぞれ読み込みと書き込み、実行 ( <literal>rwx</literal> ) のフラグを設定するパーミッション機能が標準化されているものの、それより細かい制御を行なうアクセス制御リスト (ACL) にについては、統一された標準が存在していないのが現状です。その標準の候補として存在するのが <citetitle>ドラフト POSIX ACL</citetitle> と NFSv4 ACL です。 NFSv4 ACL は NFSv4 ネットワークファイルシステムの一部として存在するもので、 Linux (POSIX) システムと Microsoft Windows (WIN32) システムとの妥当な互換性を提供しようとするものです。</para>
+  <para>NFSv4 ACL はドラフト POSIX ACL を正確に実装するには不十分な存在であるため、 NFSv4 クライアントからのアクセスで ACL にマップするような機能は提供されていません (たとえば <command>setfacl</command> など) 。</para>
+  <para>NFSv4 を使用する場合、ドラフト POSIX ACL は擬似的にであっても使用することはできず、 NFSv4 ACL を直接使用する必要があります。つまり、 <command>setfacl</command> は NFSv3 に対しては動作するものの、 NFSv4 に対しては動作しないことになります。 NFSv4 ファイルシステムで NFSv4 ACL を使用するには、 SUSE Linux Enterprise Server では <filename>nfs4-acl-tools</filename> というパッケージを提供しています。このパッケージには、下記のようなものが含まれています:</para>
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     <command>nfs4-getfacl</command>
-    </para>
+    <para><command>nfs4-getfacl</command></para>
    </listitem>
    <listitem>
-    <para>
-     <command>nfs4-setfacl</command>
-    </para>
+    <para><command>nfs4-setfacl</command></para>
    </listitem>
    <listitem>
-    <para>
-     <command>nfs4-editacl</command>
-    </para>
+    <para><command>nfs4-editacl</command></para>
    </listitem>
   </itemizedlist>
-  <para>
-   These operate in a generally similar way to <command>getfacl</command> and
-   <command>setfacl</command> for examining and modifying NFSv4 ACLs. These
-   commands are effective only if the file system on the NFS server provides
-   full support for NFSv4 ACLs. Any limitation imposed by the server will affect
-   programs running on the client in that some particular combinations of Access
-   Control Entries (ACEs) might not be possible.
-  </para>
-  <para>
-   It is not supported to mount NFS volumes locally on the exporting NFS server.
-  </para>
-  <bridgehead>Additional Information</bridgehead>
-  <para>
-   For information, see <citetitle>Introduction to NFSv4 ACLs</citetitle> at
-   <link xlink:href="http://wiki.linux-nfs.org/wiki/index.php/ACLs#Introduction_to_NFSv4_ACLs"/>.
-  </para>
+  <para>これらのコマンドは <command>getfacl</command> や <command>setfacl</command> に似た動作をするもので、いずれも NFSv4 ACL を調査したり修正したりする際に使用することができます。なお、これらのコマンドは NFSv4 ACL を完全サポートした NFS サーバのファイルシステムに対してのみ動作します。サーバ側で何らかの制限がある場合、これらのプログラムでアクセス制御項目 (ACE) を操作できない場合があります。</para>
+  <para>また、 NFS の共有を公開しているサーバで直接 NFS ボリュームをマウントすることもできません。</para>
+  <bridgehead>追加の情報</bridgehead>
+  <para>詳しくは <link xlink:href="http://wiki.linux-nfs.org/wiki/index.php/ACLs#Introduction_to_NFSv4_ACLs"/> (英語) にある <citetitle>Introduction to NFSv4 ACLs</citetitle> (NFSv4 ACL の紹介) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-nfs-info">
-  <title>For more information</title>
-  <para>
-   In addition to the man pages of <command>exports</command>,
-   <command>nfs</command>, and <command>mount</command>, information about
-   configuring an NFS server and client is available in
-   <filename>/usr/share/doc/packages/nfsidmap/README</filename>. For further
-   documentation online refer to the following Web sites:
-  </para>
+  <title>さらなる情報</title>
+  <para><command>exports</command> , <command>nfs</command> , <command>mount</command> の各マニュアルページに加え、 NFS サーバと NFS クライアントを設定するための情報が <filename>/usr/share/doc/packages/nfsidmap/README</filename> に用意されています。また、下記の Web サイトには、さらなるオンライン文書が用意されています:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para>
-     For general information about network security, refer to
-     <xref linkend="cha-security-firewall"/>.
-    </para>
+    <para>ネットワークセキュリティに関する一般的な情報については、 <xref linkend="cha-security-firewall"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     Refer to <xref linkend="sec-autofs-nfs"/> if you need to automatically
-     mount NFS exports.
-    </para>
+    <para>NFS 共有を自動的にマウントする必要がある場合は、 <xref linkend="sec-autofs-nfs"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     For more details about configuring NFS by using &ay;, refer to
-     <xref linkend="ay-nfs"/>.
-    </para>
+    <para>&ay; を利用して NFS を設定する方法については、 <xref linkend="ay-nfs"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     For instructions about securing NFS exports with &krb;, refer to
-     <xref linkend="sec-security-kerberos-nfs"/>.
-    </para>
+    <para>&krb; で NFS 共有の機密性を向上したい場合は、 <xref linkend="sec-security-kerberos-nfs"/> をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     Find the detailed technical documentation online at
-     <link xlink:href="http://nfs.sourceforge.net/">SourceForge</link>.
-    </para>
+    <para>詳細な技術文書をお読みになりたい場合は、 <link xlink:href="http://nfs.sourceforge.net/">SourceForge</link> (英語) をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     For instructions for setting up kerberized NFS, refer to
-     <link xlink:href="http://www.citi.umich.edu/projects/nfsv4/linux/krb5-setup.html">NFS
-     Version 4 Open Source Reference Implementation</link>.
-    </para>
+    <para>&krb; が有効化された NFS を設定する方法について、詳しくは <link xlink:href="http://www.citi.umich.edu/projects/nfsv4/linux/krb5-setup.html">NFS Version 4 Open Source Reference Implementation</link> (英語) をお読みください。</para>
    </listitem>
    <listitem>
-    <para>
-     If you have questions on NFSv4, refer to the
-     <link xlink:href="http://www.citi.umich.edu/projects/nfsv4/linux/faq/">Linux
-     NFSv4 FAQ</link>.
-    </para>
+    <para>NFSv4 について何か質問がある場合は、 <link xlink:href="http://www.citi.umich.edu/projects/nfsv4/linux/faq/">Linux NFSv4 FAQ</link> (英語) をお読みになることをお勧めします。</para>
    </listitem>
   </itemizedlist>
  </sect1>
