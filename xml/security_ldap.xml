@@ -295,6 +295,12 @@ Not removing: if you are sure, add --do-it
     <para>このコマンドを実行することで、部分的にインストールが完了していたり、壊れてしまったりしたインスタンスを削除することもできます。インスタンスの作成も削除も、必要に応じて何度でも実行することができます。</para>
    </step>
   </procedure>
+  <para>
+    If you forget the name of your instance, use <command>dsctl</command> to 
+    list all instances:
+  </para>
+  <screen>&prompt.user;/usr/sbin/dsctl -l
+slapd-ldap1</screen>    
  </sect2>
  
  <sect2 xml:id="sec-security-ldap-server-template">
@@ -408,6 +414,8 @@ binddn = cn=Directory Manager
    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get <replaceable>ユーザ名</replaceable></screen>
    <para>特定のグループに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
       <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group get <replaceable>グループ名</replaceable></screen>
+   <para>現時点で設定済みのユーザとグループの一覧を表示するには、下記のように入力して実行します:</para>
+   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group create</screen>
    <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定し、サーバインスタンスは <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
   <procedure xml:id="pro-security-ldap-server-users">
    <title>LDAP ユーザの作成</title>
@@ -430,7 +438,6 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
       <step>
        <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
   uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
-       <para>この場合、まずはディレクトリサーバの &rootuser; のパスワードを入力することになります (ただし、 <xref linkend="sec-security-ldap-server-credentials"/> でリモートもしくはローカルのアクセス方法を指定した場合を除きます) 。</para>
       </step>
       <step>
        <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
@@ -447,7 +454,15 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
 &prompt.sudo;reset password for uid=&exampleuserIII;,ou=people,dc=ldap1,dc=com
   </screen>
    </step>
+      <step>
+    <para>認証が正しく動作することを確認します:</para>
+   <screen>&prompt.user;ldapwhoami -D uid=wilber,ou=people,dc=ldap1,dc=com -W
+Enter LDAP Password: 
+dn: uid=wilber,ou=people,dc=ldap1,dc=com    
+     </screen>
+   </step>
   </procedure>
+  
   <procedure xml:id="pro-security-ldap-server-groups">
    <title>LDAP グループの作成とユーザの割り当て</title>
    <para>下記の手順では <systemitem class="groupname">group1</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。このとき、インスタンス名は <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
@@ -464,22 +479,6 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
     <para>&exampleuserII; ユーザをグループに追加します:</para>
     <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <systemitem class="groupname">group1</systemitem> uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
 added member: uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable></screen>
-   </step>
-   <step>
-    <para>認証が正しく動作することを確認します:</para>
-   <screen>&prompt.sudo;ldapwhoami -H ldaps://localhost -D \
-     uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable> -W -x</screen>
-    <para>&exampleuserII; の LDAP パスワードの入力を求められれば、認証は動作していることになります。</para>
-    <para>下記のようなエラーメッセージでコマンドが失敗する場合は、おそらく自己署名証明書を使用しているものと思われます:</para>
-    <screen>ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)</screen>
-    <para>このような場合は、 <filename>/etc/openldap/ldap.conf</filename> ファイルを編集して、証明書のパスとベース DN 、そして自分自身を表わす URI を追加してください。たとえば下記のようになります:</para>
-    <screen>BASE    <replaceable>dc=ldap1,dc=com</replaceable>
-URI     ldap://localhost
-TLS_CACERT /etc/dirsrv/<replaceable>slapd-ldap1/ca.crt</replaceable></screen>
-    <para>それ以外にも、 <filename>whoami</filename> コマンド内で証明書のパスを指定してもかまいません:</para>
-    <screen>&prompt.sudo;LDAPTLS_CACERT=/etc/dirsrv/<replaceable>slapd-ldap1</replaceable>/ca.crt \
-  ldapwhoami -H ldaps://localhost -D \
-  uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable> -W -x</screen>
    </step>
   </procedure>
  </sect2>
