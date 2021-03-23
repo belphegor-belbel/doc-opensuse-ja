@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="CreateProfile-firewall">
-  <title>ファイアウオール設定</title>
+ <title>ファイアウオール設定</title>
 
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -20,233 +20,227 @@
   <para>&susefirewall; ベースのプロファイルの使用は、多くのオプションが &firewalld; で使用できなくなっていることから、部分的なサポートにとどまっています。そのため、移行できなかった設定によって、ネットワークセキュリティに影響がある場合があります。</para>
  </important>
 
-   <sect2 xml:id="CreateProfile-firewall-general">
-    <title>一般的なファイアウオール設定</title>
+ <sect2 xml:id="CreateProfile-firewall-general">
+  <title>一般的なファイアウオール設定</title>
+  <para>&firewalld; では、一般的な設定は少数のプロパティでのみ提供されていて、ほとんどの設定はゾーン内で行なうようになっています。</para>
+  <informaltable>
+   <tgroup cols="3">
+    <thead>
+     <row>
+      <entry>
+       <para>属性</para>
+      </entry>
+      <entry>
+       <para>値</para>
+      </entry>
+      <entry>
+       <para>説明</para>
+      </entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>
+       <para><literal>start_firewall</literal></para>
+      </entry>
+      <entry>
+       <para>ブール値</para>
+      </entry>
+      <entry>
+       <para>設定を適用したあと、 &firewalld; をすぐに起動するかどうかを指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>enable_firewall</literal></para>
+      </entry>
+      <entry>
+       <para>ブール値</para>
+      </entry>
+      <entry>
+       <para>&firewalld; をシステムの起動時に開始するかどうかを指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>default_zone</literal></para>
+      </entry>
+      <entry>
+       <para>ゾーン名</para>
+      </entry>
+      <entry>
+       <para>特にゾーンを割り当てない場合に使用する既定のゾーンを指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>log_denied_packets</literal></para>
+      </entry>
+      <entry>
+       <para>ログに記録すべきパケットの種類</para>
+      </entry>
+      <entry>
+       <para>ドロップしたパケットのうち、ログに記録すべきものを選択します。値: <literal>off</literal> (無し), <literal>unicast</literal> (ユニキャスト), <literal>multicast</literal> (マルチキャスト), <literal>broadcast</literal> (ブロードキャスト), <literal>all</literal> (全て)</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>name</literal></para>
+      </entry>
+      <entry>
+       <para>ゾーンの識別子</para>
+      </entry>
+      <entry>
+       <para>ゾーンを識別するために使用するものです。ゾーンが既知のものではない場合、新しいゾーンを作成します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>short</literal></para>
+      </entry>
+      <entry>
+       <para>ゾーンに対する短い説明</para>
+      </entry>
+      <entry>
+       <para>ゾーンの目的を大まかにまとめたものです。既に存在するゾーンの場合は無視されます。何も指定しない場合、名前をそのまま説明に適用します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>description</literal></para>
+      </entry>
+      <entry>
+       <para>ゾーンの説明</para>
+      </entry>
+      <entry>
+       <para>ゾーンの目的を詳しく説明したものです。既に存在するゾーンの場合は無視されます。何も指定しない場合、名前をそのまま説明に適用します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>target</literal></para>
+      </entry>
+      <entry>
+       <para>既定のアクション</para>
+      </entry>
+      <entry>
+       <para>どのルールにも該当しない場合に取るべきアクションを指定します。設定可能な値は <literal>ACCEPT</literal> , <literal>%%REJECT%%</literal> , <literal>DROP</literal> , <literal>default</literal> のいずれかです。何も指定しない場合は <literal>default</literal> が指定されたものとみなされます。値の意味についての詳細は、 <link xlink:href="https://firewalld.org/documentation/zone/options.html"/> をお読みください。</para>
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </sect2>
 
-    <para>&firewalld; では、一般的な設定は少数のプロパティでのみ提供されていて、ほとんどの設定はゾーン内で行なうようになっています。</para>
+ <sect2 xml:id="CreateProfile-firewall-zones">
+  <title>ファイアウオールのゾーン設定</title>
+  <para>&firewalld; の設定はゾーンの仕組みをベースにしています。ゾーンとは接続やインターフェイス、接続元アドレスに適用する信頼レベルを意味するもので、各ゾーンの動作はいくつかの方法で制御することができるものの、全てのプロパティを設定できるというわけではありません。</para>
+  <informaltable>
+   <tgroup cols="3">
+    <thead>
+     <row>
+      <entry>
+       <para>属性</para>
+      </entry>
+      <entry>
+       <para>値</para>
+      </entry>
+      <entry>
+       <para>説明</para>
+      </entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>
+       <para><literal>interfaces</literal></para>
+      </entry>
+      <entry>
+       <para>インターフェイス名のリスト</para>
+      </entry>
+      <entry>
+       <para>このゾーンに割り当てるインターフェイスの一覧を指定します。インターフェイスもしくはソースのみをゾーン内に設定することができます。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>services</literal></para>
+      </entry>
+      <entry>
+       <para>サービスの一覧</para>
+      </entry>
+      <entry>
+       <para>このゾーンで許可するサービスの一覧を指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>ports</literal></para>
+      </entry>
+      <entry>
+       <para>ポートの一覧</para>
+      </entry>
+      <entry>
+       <para>このゾーンで開くポート、もしくはポート範囲の一覧を指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>protocols</literal></para>
+      </entry>
+      <entry>
+       <para>プロトコルの一覧</para>
+      </entry>
+      <entry>
+       <para>このゾーンで開く、もしくはアクセスできるようにするプロトコルの一覧を指定します。</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para><literal>masquerade</literal></para>
+      </entry>
+      <entry>
+       <para>マスカレード処理の可否</para>
+      </entry>
+      <entry>
+       <para>このゾーンに対してネットワークアドレス変換 (<emphasis>(NAT)</emphasis>) を有効化するかどうかを指定します。</para>
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </informaltable>
+ </sect2>
 
-    <informaltable>
-     <tgroup cols="3">
-      <thead>
-       <row>
-        <entry>
-         <para>属性</para>
-        </entry>
-        <entry>
-         <para>値</para>
-        </entry>
-        <entry>
-         <para>説明</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para><literal>start_firewall</literal></para>
-        </entry>
-        <entry>
-         <para>ブール値</para>
-        </entry>
-        <entry>
-         <para>設定を適用したあと、 &firewalld; をすぐに起動するかどうかを指定します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>enable_firewall</literal></para>
-        </entry>
-        <entry>
-         <para>ブール値</para>
-        </entry>
-        <entry>
-         <para>&firewalld; をシステムの起動時に開始するかどうかを指定します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>default_zone</literal></para>
-        </entry>
-        <entry>
-         <para>ゾーン名</para>
-        </entry>
-        <entry>
-         <para>特にゾーンを割り当てない場合に使用する既定のゾーンを指定します。</para>
-        </entry>
-      </row>
-      <row>
-        <entry>
-         <para><literal>log_denied_packets</literal></para>
-        </entry>
-        <entry>
-         <para>ログに記録すべきパケットの種類</para>
-        </entry>
-        <entry>
-         <para>ドロップしたパケットのうち、ログに記録すべきものを選択します。値: <literal>off</literal> (無し), <literal>unicast</literal> (ユニキャスト), <literal>multicast</literal> (マルチキャスト), <literal>broadcast</literal> (ブロードキャスト), <literal>all</literal> (全て)</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>name</literal></para>
-        </entry>
-        <entry>
-         <para>ゾーンの識別子</para>
-        </entry>
-        <entry>
-         <para>ゾーンを識別するために使用するものです。ゾーンが既知のものではない場合、新しいゾーンを作成します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>short</literal></para>
-        </entry>
-        <entry>
-         <para>ゾーンに対する短い説明</para>
-        </entry>
-        <entry>
-         <para>ゾーンの目的を大まかにまとめたものです。既に存在するゾーンの場合は無視されます。何も指定しない場合、名前をそのまま説明に適用します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>description</literal></para>
-        </entry>
-        <entry>
-         <para>ゾーンの説明</para>
-        </entry>
-        <entry>
-         <para>ゾーンの目的を詳しく説明したものです。既に存在するゾーンの場合は無視されます。何も指定しない場合、名前をそのまま説明に適用します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>target</literal></para>
-        </entry>
-        <entry>
-         <para>既定のアクション</para>
-        </entry>
-        <entry>
-         <para>どのルールにも該当しない場合に取るべきアクションを指定します。設定可能な値は <literal>ACCEPT</literal> , <literal>%%REJECT%%</literal> , <literal>DROP</literal> , <literal>default</literal> のいずれかです。何も指定しない場合は <literal>default</literal> が指定されたものとみなされます。値の意味についての詳細は、 <link xlink:href="https://firewalld.org/documentation/zone/options.html"/> をお読みください。</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-   </sect2>
+<!-- SLE 15 SP3 and up only -->
 
-   <sect2 xml:id="CreateProfile-firewall-zones">
-    <title>ファイアウオールのゾーン設定</title>
+ <sect2 xml:id="CreateProfile-firewall-stage">
+  <title>プロファイル内にある &firewalld; 設定が適用されるステージ</title>
+  <para>&productname;&nbsp;15&nbsp;SP3 およびそれ以降のバージョンでは、 &firewalld; のプロファイルは、通常はインストールの第 1 ステージの終了時に適用されるようになっています (インストールのステージについては <xref linkend="overviewandconcept"/> をお読みください) 。ただし、場合によっては第 2 ステージで適用される場合もあります。下記に &firewalld; のプロファイルが適用されるステージの条件を示します:</para>
+  <itemizedlist>
+   <listitem>
+    <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていない場合、ファイアウオールは第 1 ステージで設定されます。</para>
+   </listitem>
+   <listitem>
+    <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていて第 2 ステージが必要ない場合、ファイアウオールは第 1 ステージで設定されます。</para>
+   </listitem>
+   <listitem>
+    <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていて第 2 ステージが必要な場合、ファイアウオールは第 2 ステージで設定されます。</para>
+   </listitem>
+   <listitem>
+    <para>&ay; で &firewalld; セクションが設定されていない場合は、ファイアウオールは既定の製品の提案に従って第 1 ステージで設定されます。</para>
+   </listitem>
+   <listitem>
+    <para>&ay; で &firewalld; セクションが設定されていてもいなくても、ネットワークアクセスが必要なカスタムスクリプトが存在する場合は、プロファイルや製品の提案に従って第 1 ステージ内でファイアウオールが設定されます。ただし、スクリプトが必要とするネットワークへのアクセスを設定するため、ファイアウオールの設定を調整しなければなりません。</para>
+   </listitem>
+  </itemizedlist>
+ </sect2>
 
-    <para>&firewalld; の設定はゾーンの仕組みをベースにしています。ゾーンとは接続やインターフェイス、接続元アドレスに適用する信頼レベルを意味するもので、各ゾーンの動作はいくつかの方法で制御することができるものの、全てのプロパティを設定できるというわけではありません。</para>
-
-    <informaltable>
-     <tgroup cols="3">
-      <thead>
-       <row>
-        <entry>
-         <para>属性</para>
-        </entry>
-        <entry>
-         <para>値</para>
-        </entry>
-        <entry>
-         <para>説明</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para><literal>interfaces</literal></para>
-        </entry>
-        <entry>
-         <para>インターフェイス名のリスト</para>
-        </entry>
-        <entry>
-         <para>このゾーンに割り当てるインターフェイスの一覧を指定します。インターフェイスもしくはソースのみをゾーン内に設定することができます。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>services</literal></para>
-        </entry>
-        <entry>
-         <para>サービスの一覧</para>
-        </entry>
-        <entry>
-         <para>このゾーンで許可するサービスの一覧を指定します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>ports</literal></para>
-        </entry>
-        <entry>
-         <para>ポートの一覧</para>
-        </entry>
-        <entry>
-          <para>このゾーンで開くポート、もしくはポート範囲の一覧を指定します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>protocols</literal></para>
-        </entry>
-        <entry>
-         <para>プロトコルの一覧</para>
-        </entry>
-        <entry>
-         <para>このゾーンで開く、もしくはアクセスできるようにするプロトコルの一覧を指定します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>masquerade</literal></para>
-        </entry>
-        <entry>
-         <para>マスカレード処理の可否</para>
-        </entry>
-        <entry>
-         <para>このゾーンに対してネットワークアドレス変換 (<emphasis>(NAT)</emphasis>) を有効化するかどうかを指定します。</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-   </sect2>
-
-   <!-- SLE 15 SP3 and up only -->
-   <sect2 xml:id="CreateProfile-firewall-stage">
-      <title>プロファイル内にある &firewalld; 設定が適用されるステージ</title>
-
-      <para>&productname;&nbsp;15&nbsp;SP3 およびそれ以降のバージョンでは、 &firewalld; のプロファイルは、通常はインストールの第 1 ステージの終了時に適用されるようになっています (インストールのステージについては <xref linkend="overviewandconcept"/> をお読みください) 。ただし、場合によっては第 2 ステージで適用される場合もあります。下記に &firewalld; のプロファイルが適用されるステージの条件を示します:</para>
-      <itemizedlist>
-          <listitem>
-              <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていない場合、ファイアウオールは第 1 ステージで設定されます。</para>
-          </listitem>
-          <listitem>
-              <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていて第 2 ステージが必要ない場合、ファイアウオールは第 1 ステージで設定されます。</para>
-          </listitem>
-          <listitem>
-              <para>&ay; で &firewalld; セクションが設定されている場合で、かつ &slea; を SSH や VNC 経由でインストールしていて第 2 ステージが必要な場合、ファイアウオールは第 2 ステージで設定されます。</para>
-          </listitem>
-          <listitem>
-              <para>&ay; で &firewalld; セクションが設定されていない場合は、ファイアウオールは既定の製品の提案に従って第 1 ステージで設定されます。</para>
-          </listitem>
-          <listitem>
-              <para>&ay; で &firewalld; セクションが設定されていてもいなくても、ネットワークアクセスが必要なカスタムスクリプトが存在する場合は、プロファイルや製品の提案に従って第 1 ステージ内でファイアウオールが設定されます。ただし、スクリプトが必要とするネットワークへのアクセスを設定するため、ファイアウオールの設定を調整しなければなりません。</para>
-          </listitem>
-      </itemizedlist>
-   </sect2>
-
-   <sect2 xml:id="CreateProfile-firewall-example">
-    <title>完全な例</title>
-
-    <para><literal>firewall</literal> セクションの例です。ここには一般的なプロパティのほか、ゾーン固有のプロパティも書かれています。</para>
-
-    <example>
-     <title>firewall セクションの例</title>
-     <screen>&lt;firewall&gt;
+ <sect2 xml:id="CreateProfile-firewall-example">
+  <title>完全な例</title>
+  <para><literal>firewall</literal> セクションの例です。ここには一般的なプロパティのほか、ゾーン固有のプロパティも書かれています。</para>
+  <example>
+   <title>firewall セクションの例</title>
+<screen>&lt;firewall&gt;
   &lt;enable_firewall config:type="true"&gt;true&lt;/enable_firewall&gt;
   &lt;log_denied_packets&gt;all&lt;/log_denied_packets&gt;
   &lt;default_zone&gt;external&lt;/default_zone&gt;
@@ -279,6 +273,6 @@
     &lt;/zone&gt;
   &lt;/zones&gt;
 &lt;/firewall&gt;</screen>
-    </example>
-   </sect2>
+  </example>
+ </sect2>
 </sect1>
