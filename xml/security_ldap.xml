@@ -412,24 +412,17 @@ binddn = cn=Directory Manager
    <para>特定のグループに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
       <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group get <replaceable>グループ名</replaceable></screen>
    <para>グループのメンバー一覧を表示するには、下記のように入力して実行します:</para>
-   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group get <replaceable>グループ名</replaceable></screen>
+   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group members <replaceable>グループ名</replaceable></screen>
    <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定し、サーバインスタンスは <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
   <procedure xml:id="pro-security-ldap-server-users">
    <title>LDAP ユーザの作成</title>
-   <para>
-     LDAP users are your users that already exist. They should have Linux 
-     system accounts, with Linux logins and home directories. Adding them to
-     your LDAP server provides central user management for your network. You 
-     need to enter accurate user data, which you can obtain by accessing 
-     the computers that hold their accounts, and running the 
-     <command>id</command> command, like this example for &exampleuserIIfull;:
-   </para>
-   <screen>&prompt.sudo;id &exampleuserII;
-    uid=1000(&exampleuserII;) gid=100(users) groups=100(users)</screen>   
+   <para>LDAP ユーザは一般的なユーザアカウントを表わすもので、ログイン時に使用できるものであるほか、ホームディレクトリも設定することができます。 LDAP サーバにユーザを追加することで、ネットワーク内のユーザアカウントを統一的に管理できるようになります。なお、ユーザを作成するにあたっては、誤った情報を設定しないように注意してください。誤った情報を設定してしまうと、その情報をもとにログインできるようになってしまうためです。設定されている情報を確認したい場合は、 <command>id</command> コマンドで確認してください。下記の例では &exampleuserIIfull; というユーザに対する情報を確認しています:</para>
+   <screen>&prompt.user;id &exampleuserIII;
+uid=1001(wilber) gid=100(users) groups=100(users)</screen>   
    <step>
-    <para>&exampleuserII; ユーザを作成します:</para>
+    <para>&exampleuserII; という LDAP ユーザを作成したい場合は、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserII; \
-  --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1000 --gidNumber 1000 \
+  --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1001 --gidNumber 100 \
   --homeDirectory /home/&exampleuserII;</screen>
    </step>
    <step>
@@ -440,7 +433,7 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
     <para>ユーザのパスワード変更などの処理を行なうには、 <literal>distinguished name</literal> (DN) を指定する必要があります。</para>
    </step>
    <step>
-    <para>&exampleuserII; ユーザを作成します:</para>
+    <para>&exampleuserII; ユーザに対するパスワードを作成するには、下記のように入力して実行します:</para>
     <substeps>
       <step>
        <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
@@ -450,9 +443,7 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
        <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
        <para>パスワードの設定が完了すると、下記のようなメッセージが表示されるはずです:</para>
        <screen>reset password for uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
-       <para>
-         Use the same command to change an existing password.
-       </para>
+       <para>設定済みのパスワードを変更したい場合も、同じコマンドで行なうことができます。</para>
       </step>
     </substeps>
    </step>
@@ -460,7 +451,7 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
     <para>続いて &exampleuserIII; ユーザを作成します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserIII;\
   --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
-  --uidNumber 1001 --gidNumber 1001 --homeDirectory /home/&exampleuserIII;
+  --uidNumber 1001 --gidNumber 100 --homeDirectory /home/&exampleuserIII;
   
 &prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
   uid=&exampleuserIII;,ou=people,dc=ldap1,dc=com</screen>
@@ -476,16 +467,16 @@ dn: uid=wilber,ou=people,dc=ldap1,dc=com
   
   <procedure xml:id="pro-security-ldap-server-groups">
    <title>LDAP グループの作成とユーザの割り当て</title>
-   <para>下記の手順では <systemitem class="groupname">group1</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。このとき、インスタンス名は <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
+   <para>下記の手順では <systemitem class="groupname">server_admins</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。このとき、インスタンス名は <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
    <step>
     <para>まずはグループを作成します:</para>
     <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group create</screen>
-    <para>すると、グループ名を尋ねられます:</para>
-    <screen>suffix = <replaceable>dc=ldap1,dc=com</replaceable></screen>
+    <para>すると、グループ名の入力を求められます。下記のように入力します:</para>
+    <screen>Enter value for cn : <replaceable>server_admins</replaceable></screen>
    </step>
    <step>
     <para>&exampleuserII; ユーザをグループに追加します:</para>
-    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <systemitem class="groupname">group1</systemitem> uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
+    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <replaceable>server_admins</replaceable> uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
 added member: uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable></screen>
    </step>
   </procedure>
@@ -528,7 +519,7 @@ systemctl start sssd</screen>
     <para>SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href="https://www.port389.org/docs/389ds/howto/howto-sssd.html"/> にある <citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS (&suse;)</citetitle> の手順に従って作業を行なってください。</para>
    </step>
    <step>
-    <para>全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro-security-ldap-server-groups" xrefstyle="select:label"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
+    <para><!-- NOTE: inappropriate?: Your user must have their own SSH key pair, and SSH access to your SSSD server. -->全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro-security-ldap-server-groups" xrefstyle="select:label"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
    </step>
   </procedure>
  </sect2>
