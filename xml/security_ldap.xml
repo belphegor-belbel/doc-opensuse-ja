@@ -200,10 +200,10 @@ objectclass (2.16.840.1.113730.3.2.333 NAME 'nsPerson' <co xml:id="co-ldap-schem
     <para><!--SSSD の設定--> <xref linkend="sec-security-ldap-server-sssd" xrefstyle="select:title"/></para>
    </step>
    <step>
-     <para><!--SSSD の設定--> <xref linkend="sec-security-ldap-server-sssd" xrefstyle="select:title"/></para>
+     <para><!-- モジュールの管理 --> <xref linkend="sec-security-ldap-modules" xrefstyle="select:title"/></para>
    </step>
     <step>
-     <para><!--ローカルアクセス用の管理者の設定--> <xref linkend="sec-security-ldap-server-credentials" xrefstyle="select:title"/></para>
+     <para><!--TLS 接続のための CA 証明書の使用 --> <xref linkend="sec-security-ldap-server-ca" xrefstyle="select:title"/></para>
     </step>
   </procedure>
   <para><remark>taroth 2019-06-19: some topics like 'configuring other applications' and 'backup and restore' to be added later on</remark></para>
@@ -497,7 +497,7 @@ added member: uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replac
    <step>
     <para>SSSD の設定ファイルを作成して、 <xref linkend="pro-security-ldap-server-groups" xrefstyle="select:label"/> で作成しておいた <systemitem class="groupname">server_admins</systemitem> グループのメンバーのみがログインできるように設定します:</para>
     <tip>
-     <para>なお、 <literal>memberOf</literal> プラグインを有効化しておく必要があります。これにより、クライアントはログインと認可を行なうことができるようになります。</para>
+     <para>なお、 <literal>memberOf</literal> プラグインを有効化しておく必要があります。これにより、クライアントはログインと認可を行なうことができるようになります (詳しくは <xref linkend="sec-security-ldap-modules"/> をお読みください) 。</para>
     </tip>
     <screen>&prompt.sudo;dsidm localhost client_config sssd.conf server_admins</screen>
    </step>
@@ -526,11 +526,8 @@ systemctl start sssd</screen>
 </sect1>
 
 <sect1 xml:id="sec-security-ldap-modules">
-  <title>Managing Modules</title>
-  <para>
-    Use the following command to list all available modules, enabled and 
-    disabled:
-  </para>
+  <title>モジュールの管理</title>
+  <para>下記のようにコマンドを入力して実行することで、有効化されているモジュールと無効化されているモジュールの全てを表示することができます:</para>
   <screen>&prompt.sudo;dsconf -D "cn=Directory Manager" ldap//:<replaceable>ldapserver1</replaceable> plugin list
     Enter password for cn=Directory Manager on ldap://<replaceable>ldapserver1</replaceable>: 
 7-bit check
@@ -539,18 +536,9 @@ Account Usability Plugin
 ACL Plugin
 ACL preoperation
 [...]</screen>
-  <para>
-    For example, this is how to enable the MemberOf plugin referenced in 
-    <xref linkend="sec-security-ldap-server-sssd"/>:
-  </para>
-  <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group create</screen>
-  <para>
-    Note that the plugin names are case-sensitive, and are different from how 
-    they appear when you list them. After enabling a plugin, it is necessary 
-    to restart the server. To avoid having to restart the server, set the  
-    <literal>nsslapd-dynamic-plugins</literal> parameter to 
-    <literal>on</literal>:
-   </para>
+  <para>たとえば <xref linkend="sec-security-ldap-server-sssd"/> で言及している memberOf プラグインを有効化するには、下記のように入力して実行します:</para>
+  <screen>&prompt.sudo;dsconf -D "cn=Directory Manager" ldap://<replaceable>ldapserver1</replaceable> plugin memberof enable</screen>
+  <para>なお、一覧表示した場合とは異なり、プラグイン名は大文字と小文字を区別して扱うことに注意してください。また、プラグインを有効化したあとは、サービスを再起動する必要があります。サービスの再起動を行ないたくない場合は、 <literal>nsslapd-dynamic-plugins</literal> パラメータを <literal>on</literal> にしてください:</para>
     <screen>&prompt.sudo;dsconf -D "cn=Directory Manager" ldap://<replaceable>ldapserver1</replaceable> config replace nsslapd-dynamic-plugins=on
   Enter password for cn=Directory Manager on ldap://<replaceable>ldapserver1</replaceable>: 
 Successfully replaced "nsslapd-dynamic-plugins"</screen>
