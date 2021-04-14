@@ -5,57 +5,37 @@
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-sapconf">
   
- <title>Tuning &sle; for &sap;</title>
+ <title>&sap; 向けの &sle; のチューニング</title>
 
- <para>
-  This chapter presents information about preparing and tuning &productname;
-  to work optimally with &sap; applications with &sapconf;. &sapconf; is for 
-  &sle; systems that install &sap; applications. Customers who have
-  &sles4sap; should use &saptune;.
- </para>
+ <para>本章では、 &productname; で &sap; を最適に動作させるための準備やチューニングを、 &sapconf; で実施する方法について説明しています。 &sapconf; は &sle; システム向けの仕組みで、 &sap; アプリケーションをインストールすることができるものです。 &sles4sap; をお使いの場合は &saptune; をお使いください。</para>
 
  <note>
-   <title>The <command>sapconf</command> Command Has Been Removed</title>
-   <para>
-    In &sls; and &productname; 11 and 12, the <command>sapconf</command> command
-    was included in the package with the same name.
-  </para>
-  <para>
-    For &sls; and &productname; 15 this has been changed:
-    the command <command>sapconf</command> have been removed from the
-    <package>sapconf</package> package. The package contains a &systemd; service
-    only. There is no &sapconf; command line tool anymore, no &sapconf;/&tuned; profiles,
-    and no &tuned;.
-   </para>
+   <title><command>sapconf</command> コマンドの削除について</title>
+   <para>&sls; と &productname; 11 および &productname; 12 では、 <command>sapconf</command> コマンドは、同じ名前のパッケージで提供されています。</para>
+  <para>&sls; および &productname; 15 ではこれが変更され、 <command>sapconf</command> コマンドは <package>sapconf</package> パッケージからは削除されています。その代わり、このパッケージには &systemd; サービスのみが含まれるようになっています。これらのバージョンでは &sapconf; コマンドラインツールのほか、 &sapconf;/&tuned; のプロファイルや &tuned; も提供されなくなっています。</para>
   </note>
   
  <sect1 xml:id="sec-sapconf-4">
-  <title>Tuning &slea; Systems with &sapconf; 4</title>
-  <para>
-   The package <systemitem>sapconf</systemitem> is available in &sls; and &s4s;.
-   This package contains the
-   <systemitem>tuned</systemitem> profile <literal>sapconf</literal>.
-   This single tuning profile sets recommended parameters for the following
-   types of &sap; applications: &netweaver;, &hana; and &hana;-based applications.
-  </para>
+  <title>&sapconf; 4 での &slea; システムのチューニング</title>
+  <para><systemitem>sapconf</systemitem> パッケージは &sls; および &s4s; 向けにそれぞれ提供されています。このパッケージには <systemitem>tuned</systemitem> のプロファイルである <literal>sapconf</literal> プロファイルが含まれています。この 1 つのチューニングプロファイルセットを使用することで、 &netweaver; や &hana; 、そして &hana; ベースのアプリケーションなど、様々なアプリケーションに対する推奨パラメータを設定することができます。</para>
 
   <variablelist xml:id="vl-tune-sapconf4-overview">
-   <title>Overview of &sapconf;4 in &slsreg;&nbsp;12</title>
+   <title>&slsreg;&nbsp;12 での &sapconf;4 の概要</title>
    <varlistentry>
-    <term>&sapconf;4 (&tuned; based)</term>
+    <term>&sapconf;4 (&tuned; ベース)</term>
     <listitem>
      <itemizedlist>
       <listitem>
-       <para><systemitem>sap-netweaver</systemitem> (&tuned; profile)</para>
+       <para><systemitem>sap-netweaver</systemitem> (&tuned; プロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sap-hana</systemitem> (&tuned; profile)</para>
+       <para><systemitem>sap-hana</systemitem> (&tuned; プロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sap-bobj</systemitem> (&tuned; profile)</para>
+       <para><systemitem>sap-bobj</systemitem> (&tuned; プロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sap-ase</systemitem> (&tuned; profile)</para>
+       <para><systemitem>sap-ase</systemitem> (&tuned; プロファイル)</para>
       </listitem>
      </itemizedlist>
     </listitem>
@@ -63,392 +43,194 @@
   </variablelist>
 
   <variablelist>
-   <title>Overview of &sapconf;4 in &slsreg;&nbsp;15</title>
+   <title>&slsreg;&nbsp;15 での &sapconf;4 の概要</title>
    <varlistentry>
-    <term>&sapconf;4 (&tuned; based)</term>
+    <term>&sapconf;4 (&tuned; ベース)</term>
     <listitem>
-     <para>&sapconf; (&tuned; profile)</para>
+     <para>&sapconf; (&tuned; プロファイル)</para>
     </listitem>
    </varlistentry>
   </variablelist>
-  <para>
-   Note that if you previously made changes to the system tuning, those
-   changes may be overwritten by the &sapconf; profile.
-  </para>
-  <para>
-   &sapconf; consists of two primary parts:
-  </para>
+  <para>なお、システムチューニングで何らかの変更を行なっている場合、 &sapconf; プロファイルの適用によってこれらの変更が上書きされることがありますのでご注意ください。</para>
+  <para>&sapconf; は下記の 2 種類のパーツから構成されています:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     A &systemd; service that ensures &tuned; and related services are
-     running and the <literal>sapconf</literal> profile is applied.
-    </para>
+    <para>&tuned; や関連サービスを起動し、 <literal>sapconf</literal> プロファイルを適用するための &systemd; サービス。</para>
    </listitem>
    <listitem>
-    <para>
-     The &tuned; profile <literal>sapconf</literal> that applies
-     configured &sapconf; tuning parameters using a script and configuration
-     files.
-    </para>
+    <para>スクリプトと設定ファイルを利用して、 &sapconf; の設定済みチューニングパラメータを適用することのできる、 &tuned; プロファイル <literal>sapconf</literal> 。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   To use &sapconf;, make sure
-   that the packages <package>tuned</package> and
-   <package>sapconf</package> are installed on your system.
-  </para>
+  <para>&sapconf; を使用するには、お使いのシステム内に <package>tuned</package> および <package>sapconf</package> の各パッケージをインストールしておく必要があります。</para>
 
   <note>
-   <title>Unified Profiles in &sls; and &productname; &productnumber;</title>
-   <para>
-    In &sls; and &productname; 15 and above, only a single &tuned; profile,
-    <literal>sapconf</literal>, is shipped. It is equivalent to the profiles
-    <literal>sap-hana</literal>/<literal>sap-netweaver</literal> shipped in
-    earlier versions of &productname;.
-   </para>
+   <title>&sls; と &productname; &productnumber; での統合プロファイルについて</title>
+   <para>&sls; および &productname; 15 およびそれ以降のバージョンでは、単一の &tuned; プロファイルとして <literal>sapconf</literal> プロファイルのみが含まれています。このプロファイルは従来のバージョンの &productname; で <literal>sap-hana</literal> / <literal>sap-netweaver</literal> として提供されていたプロファイルと等価なものです。</para>
   </note>
   <sect2 xml:id="sec-sapconf-4-enable">
-   <title>Enabling and Disabling &sapconf; and Viewing Its Status</title>
-   <para>
-    After the installation of &sapconf;, &tuned; is enabled and the
-    <literal>sapconf</literal> profile is activated. However, if
-    another &tuned; profile is already enabled, &sapconf; will not enable its
-    own &tuned; profile.
-   </para>
-   <para>
-    To make sure &sapconf; applies all tuning parameters,
-    reboot the machine after installation.
-   </para>
-   <para>
-    You can inspect or change the status of &sapconf; as described in the
-    following:
-   </para>
+   <title>&sapconf; の有効化と無効化、およびその状態の確認</title>
+   <para>&sapconf; をインストールすると、 &tuned; が有効化され、 <literal>sapconf</literal> プロファイルが適用されます。しかしながら、その他の &tuned; プロファイルが既に有効化されている場合、 &sapconf; は自分自身の &tuned; プロファイルを有効化しないようになっています。</para>
+   <para>&sapconf; に設定されている全てのチューニングパラメータを適用するようにしたい場合は、インストール後にマシンを再起動してください。</para>
+   <para>&sapconf; の状態を調べたい場合は、下記のようにして行ないます:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      To see the status of the service
-      <systemitem class="daemon">sapconf</systemitem>:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスの状態を確認するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl status sapconf</command></screen>
-     <para>
-      The service should be displayed as <emphasis>active (exited)</emphasis>,
-      as it is only responsible for starting &tuned; and will exit afterward.
-     </para>
+     <para>なお、サービスは &tuned; の起動を確認したあと終了する仕組みであることから、動作完了後は <emphasis>active (exited)</emphasis> の状態になります。</para>
     </listitem>
     <listitem>
-     <para>
-      To start the service
-      <systemitem class="daemon">sapconf</systemitem> and with it the service
-      &tuned;:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスと &tuned; サービスを起動するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl start sapconf</command></screen>
     </listitem>
     <listitem>
-     <para>
-      Should <systemitem class="daemon">sapconf</systemitem> be disabled,
-      enable and start it with:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスが無効化されている場合は、下記のように入力して実行することで、有効化と起動を行なうことができます:</para>
      <screen>&prompt.root;<command>systemctl enable --now sapconf</command></screen>
     </listitem>
     <listitem>
-     <para>
-      To stop the service
-      <systemitem class="daemon">sapconf</systemitem> and with it the service
-      &tuned;:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスと &tuned; サービスを停止するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl stop sapconf</command></screen>
-     <para>
-      This will terminate &tuned; as well, therefore the vast majority of
-      optimizations will be disabled immediately. The only exceptions from that
-      are options that require a system reboot to enable/disable.
-     </para>
+     <para>これを停止することで &tuned; についても停止が行なわれます。そのため、ほとんどの最適化パラメータも即時に無効化されることになります。ただし、有効化や無効化にあたってシステムの再起動が必要なパラメータについては例外となります。</para>
     </listitem>
     <listitem>
-     <para>
-      To disable <systemitem class="daemon">sapconf</systemitem>, use:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスを無効化するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl disable sapconf</command></screen>
-     <para>
-      If you have not specifically enabled any of the services that &sapconf;
-      depends on yourself, this will also disable most tuning parameters and
-      all services used by &sapconf;.
-     </para>
+     <para>&sapconf; が依存するサービスを別途有効化していない場合は、この無効化によってほとんどのチューニングパラメータと &sapconf; で使用しているサービスがそれぞれ無効化されます。</para>
     </listitem>
    </itemizedlist>
-   <para>
-    Similarly, you can inspect and change the status of the underlying service
-    &tuned;:
-   </para>
+   <para>同様に、 &tuned; サービスの状態を確認したり変更したりしたい場合は、下記のように入力して実行します:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      To see the status of the service &tuned;:
-     </para>
+     <para>&tuned; サービスの状態を確認するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl status tuned</command></screen>
     </listitem>
     <listitem>
-     <para>
-      To see which &tuned; profile is currently in use:
-     </para>
+     <para>現在使用されている &tuned; のプロファイルを表示したい場合は、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>tuned-adm active</command></screen>
-     <para>
-      If this command does not return the name of the currently active profile
-      as <literal>sapconf</literal>, enable that profile:
-     </para>
+     <para>もしもこのコマンドの出力結果 (現在有効化されているプロファイル) が <literal>sapconf</literal> ではない場合、下記のように入力して実行することで、有効化することができます:</para>
      <screen>&prompt.root;<command>tuned-adm profile sapconf</command></screen>
     </listitem>
    </itemizedlist>
    <tip>
-    <title>Additional Services that &sapconf; Relies On</title>
-    <para>
-     In addition to the &sapconf; service itself and the &tuned; service,
-     &sapconf; also relies on the following two services:
-    </para>
+    <title>&sapconf; が依存する追加サービスについて</title>
+    <para>&sapconf; サービス自身と &tuned; サービスに加えて、 &sapconf; では下記の 2 種類のサービスに依存しています:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       <systemitem class="daemon">sysstat</systemitem> which collects data on
-       system activity.
-      </para>
+      <para><systemitem class="daemon">sysstat</systemitem>: システムの動作に関する情報収集を行ないます。</para>
      </listitem>
      <listitem>
-      <para>
-       <systemitem class="daemon">uuidd</systemitem> which generates time-based
-       UUIDs that are guaranteed to be unique even in settings where many
-       processor cores are involved. This is necessary for &sap; applications.
-      </para>
+      <para><systemitem class="daemon">uuidd</systemitem>: 時刻ベースの UUID (唯一性の保証された ID) 生成サービスです。多数のプロセッサコアが搭載されているシステムでも、唯一性が保証されます。これは &sap; アプリケーションで必要となるものです。</para>
      </listitem>
     </itemizedlist>
    </tip>
   </sect2>
   <sect2 xml:id="sec-sapconf-4-configure">
-   <title>Configuring &sapconf;4</title>
-   <para>
-    In general, the default configuration of &sapconf; already uses the
-    parameter values recommended by &sap;. However, if you have special
-    needs, you can configure the tool to better suit those.
-   </para>
-   <para>
-    The configuration of &sapconf; is split into two parts that can be configured
-    in different ways:
-   </para>
+   <title>&sapconf;4 の設定</title>
+   <para>一般的には、 &sapconf; は既定の設定のままで &sap; の推奨する値になるようになっています。ですが、特別な要件がある場合は、ツールを利用して必要な値を設定する必要があります。</para>
+   <para>&sapconf; の設定は、それぞれ異なる方法で実施する 2 種類の設定から構成されています:</para>
    <variablelist>
     <varlistentry>
-     <term><filename>/usr/lib/tuned/<replaceable>PROFILE</replaceable>/tuned.conf</filename></term>
+     <term><filename>/usr/lib/tuned/<replaceable>プロファイル名</replaceable>/tuned.conf</filename></term>
      <listitem>
-      <para>
-       Any file that adheres to this pattern
-       can be edited like in <xref linkend="pro-sapconf-4-configure"/>.
-       To configure parameters from this file, copy it to the custom profile
-       directory of &tuned; under <filename>/etc/tuned</filename> first and
-       then change values in it. If you change the file in place instead, you
-       will lose the changes you make on the next update of the
-       <package>sapconf</package> package.
-      </para>
-      <para>
-       The following procedure shows an example how to adapt the file
-        <filename>/usr/lib/tuned/sapconf/tuned.conf</filename>.
-       However, as written before, this is possible with any profile.
-       Configure the file as described in the following procedure:
-      </para>
+      <para>このパターンに準拠する全てのファイルは <xref linkend="pro-sapconf-4-configure"/> のようなやり方で編集することができます。このファイルからのパラメータを設定するには、まず <filename>/etc/tuned</filename> 内にある &tuned; のカスタムプロファイルディレクトリ内にコピーしてから値を変更してください。このファイルを直接編集してしまうと、次回の <package>sapconf</package> パッケージの更新の際、変更点が失われてしまいます。</para>
+      <para>下記の手順では、 <filename>/usr/lib/tuned/sapconf/tuned.conf</filename> ファイルの編集方法について説明しています。しかしながら上述のとおり、この編集はどのプロファイルに対しても実施することができます。それぞれ下記に示す手順でファイルを設定してください:</para>
       <procedure xml:id="pro-sapconf-4-configure">
-       <title>Configuring &sapconf;4 Profiles</title>
+       <title>&sapconf;4 プロファイルの設定</title>
        <step>
-        <para>
-         Create a new custom &tuned; profile directory and copy the file
-         <filename>tuned.conf</filename>:
-        </para>
+        <para>まずは &tuned; のカスタムプロファイルディレクトリ内に、既存の <filename>tuned.conf</filename> をコピーします:</para>
 <screen>&prompt.root;mkdir /etc/tuned/sapconf
 &prompt.root;cp /usr/lib/tuned/sapconf/tuned.conf /etc/tuned/sapconf/</screen>
        </step>
        <step>
-        <para>
-         Within the newly copied <filename>tuned.conf</filename>, fix the
-         reference to <filename>script.sh</filename> to use an absolute path
-         that points to the script from the original profile:
-        </para>
+        <para>次にコピーした <filename>tuned.conf</filename> ファイル内に書かれている <filename>script.sh</filename> ファイルへの参照を、絶対パスに置き換えます。これにより、元のプロファイル内にあるスクリプトをそのまま参照するようになります:</para>
         <screen>script = /usr/lib/tuned/sapconf/script.sh</screen>
-        <para>
-         Do not instead copy <filename>script.sh</filename>, as that
-         provokes update compatibility issues for &sapconf;.
-        </para>
+        <para>なお、 <filename>script.sh</filename> をコピーすることは避けてください。これを行なってしまうと、 &sapconf; の互換性問題を引き起こしてしまいます。</para>
        </step>
        <step>
-        <para>
-         Edit the parameters in
-         <filename>/etc/tuned/sapconf/tuned.conf</filename>.
-        </para>
+        <para>あとは <filename>/etc/tuned/sapconf/tuned.conf</filename> ファイル内のパラメータを編集します。</para>
        </step>
       </procedure>
-      <para>
-       After each update to &sapconf;, make sure to compare the contents of
-       the original and the custom <filename>tuned.conf</filename>.
-      </para>
-      <para>
-       Log messages related to this file are written to
-       <filename>/var/log/tuned/tuned.log</filename>.
-      </para>
+      <para>なお、 &sapconf; の更新が行なわれた場合は、元のファイルと編集した <filename>tuned.conf</filename> の内容を比較して、問題がないかどうかを確認してください。</para>
+      <para>このファイルに関するログメッセージは、 <filename>/var/log/tuned/tuned.log</filename> ファイルに記録されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><filename>/etc/sysconfig/sapconf</filename></term>
      <listitem>
-      <para>
-       This file contains most parameters of &sapconf;. The parameters from
-       this file are applied using the aforementioned script
-       <filename>/usr/lib/tuned/sapconf/script.sh</filename>.
-      </para>
-      <para>
-       This file can be edited directly. All parameters in this file are
-       explained by means of comments and references to &sap; Notes which can
-       be viewed at <link xlink:href="https://launchpad.support.sap.com/"/>.
-      </para>
-      <para>
-       When &sapconf; is updated, all customized parameters from this file will
-       be preserved as much as possible. However, sometimes parameters cannot
-       be transferred cleanly to the new configuration file. Therefore, after
-       updating it is advisable to check the difference between the previous
-       custom configuration which during the update is moved to
-       <filename>/etc/sysconfig/sapconf.rpmsave</filename>
-       and the new version at <filename>/etc/sysconfig/sapconf</filename>.
-      </para>
-      <para>
-       Log messages related to this file are written to
-       <filename>/var/log/sapconf.log</filename>.
-      </para>
+      <para>このファイルには &sapconf; のほとんどのパラメータが含まれています。このファイルに記されているパラメータは、上述の <filename>/usr/lib/tuned/sapconf/script.sh</filename> スクリプトで適用されます。</para>
+      <para>このファイルは直接編集してかまいません。このファイル内のパラメータにはそれぞれコメントとして説明が書かれているほか、 <link xlink:href="https://launchpad.support.sap.com/"/> でも &sap; Notes として参照することができます。</para>
+      <para>&sapconf; パッケージを更新した場合は、このファイル内に書かれている全てのカスタマイズ済みパラメータをできる限り維持するように勤めます。ただし、全てのパラメータがそのまま移行できるわけではありません。そのため、パッケージを更新した場合は、従来の設定ファイルのバックアップである <filename>/etc/sysconfig/sapconf.rpmsave</filename> ファイルと、移行済みのファイルである <filename>/etc/sysconfig/sapconf</filename> の内容をそれぞれ比較して、必要なカスタマイズが失われていないかどうかを確認してください。</para>
+      <para>このファイルに関するログメッセージは、 <filename>/var/log/sapconf.log</filename> ファイルに記録されます。</para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>
-    When editing either of these files, you will find that some values are
-    commented by means of a <literal>#</literal> character at the beginning of
-    the line. This means that while the parameter is relevant for tuning, there
-    is no suitable default for it.
-   </para>
-   <para>
-    Conversely, you can add <literal>#</literal> characters to the beginning of
-    the line to comment specific parameters. However, you should avoid this
-    practice, as it can lead to &sapconf; not properly applying the profile.
-   </para>
-   <para>
-    To apply edited configuration, restart &sapconf;:
-   </para>
+   <para>これらのファイルのいずれかを編集すると、行頭に <literal>#</literal> と書かれたコメントとして値が書かれているものがあります。これらはチューニングに必要なパラメータではあるものの、既定値の存在していないパラメータであることを示しています。</para>
+   <para>逆に、パラメータの行頭に <literal>#</literal> を入れてコメントアウトすることもできます。ですが、通常はコメントアウトすべきではありません。コメントアウトしてしまうと &sapconf; がプロファイルを正しく適用できなくなってしまうことがあるためです。</para>
+   <para>編集した設定を適用するには、 &sapconf; を再起動します:</para>
    <screen>&prompt.root;<command>systemctl restart sapconf</command></screen>
-   <para>
-    Confirming that a certain parameter value was applied correctly works
-    differently for different parameters. Hence, the following serves as an
-    example only:
-   </para>
+   <para>パラメータの変更は、パラメータの種類によってさまざまな効果をもたらします。そのため、下記の手順は例示としてのみお読みください:</para>
    <example xml:id="ex-sapconf-change-parameter">
-    <title>Checking Parameters</title>
-    <para>
-     To confirm that the setting for <literal>TCP_SLOW_START</literal> was
-     applied, do the following:
-    </para>
+    <title>パラメータの確認</title>
+    <para><literal>TCP_SLOW_START</literal> の設定が適用されていることを確認するには、下記の手順を実施します:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       View the log file of &sapconf; to see whether it applied the value.
-       Within <filename>/var/log/sapconf.log</filename>, check for a line
-       containing this text:
-      </para>
+      <para>&sapconf; のログファイルを表示させて、値が適用されていることを確認します。具体的には <filename>/var/log/sapconf.log</filename> というファイル内に、下記のような内容が記録されていることを確認します:</para>
       <screen>Change net.ipv4.tcp_slow_start_after_idle from 1 to 0</screen>
-      <para>
-       Alternatively, the parameter may have already been set correctly
-       before &sapconf; was started. In this case, &sapconf; will not change
-       its value:
-      </para>
+      <para>場合によっては、 &sapconf; の起動よりも前に値が設定済みである場合もあります。このような場合は、 &sapconf; は下記のようなメッセージを記録します:</para>
       <screen>Leaving net.ipv4.tcp_slow_start_after_idle unchanged at 1</screen>
      </listitem>
      <listitem>
-      <para>
-       The underlying option behind <literal>TCP_SLOW_START</literal> can be
-       manually configured at
-       <filename>/proc/sys/net.ipv4.tcp_slow_start_after_idle</filename>.
-       To check its actual current value, use:
-      </para>
+      <para><literal>TCP_SLOW_START</literal> オプションは、 <filename>/proc/sys/net.ipv4.tcp_slow_start_after_idle</filename> というファイルでも設定することができます。このファイルを利用することで、実際の設定値を表示させることができます:</para>
       <screen>&prompt.root;<command>sysctl net.ipv4.tcp_slow_start_after_idle</command></screen>
      </listitem>
     </itemizedlist>
    </example>
   </sect2>
   <sect2 xml:id="sec-sapconf-4-remove">
-   <title>Removing &sapconf;</title>
-   <para>
-    To remove &sapconf; from a system, uninstall its package with:
-   </para>
+   <title>&sapconf; の削除</title>
+   <para>&sapconf; をシステムから削除したい場合は、下記のように入力して実行し、パッケージを削除します:</para>
    <screen>&prompt.root;<command>zypper rm sapconf</command></screen>
-   <para>
-    Note that when doing this, dependencies of &sapconf; will remain installed.
-    However, the services <systemitem class="daemon">sysstat</systemitem> and
-    <systemitem class="daemon">tuned</systemitem> will
-    go into a disabled state. If either is still relevant to you, make sure to
-    enable it again.
-   </para>
-   <para>
-    Certain parameters and files are not removed when &sapconf; is uninstalled.
-    For more information, see the man page <command>man 7
-    sapconf</command>, section <citetitle>PACKAGE REQUIREMENTS</citetitle>.
-   </para>
+   <para>上記を実行しても、 &sapconf; が依存するパッケージ類は削除されません。しかしながら、 <systemitem class="daemon">sysstat</systemitem> と <systemitem class="daemon">tuned</systemitem> のパッケージは無効化されますので、必要であれば再度有効化してください。</para>
+   <para>また &sapconf; をアンインストールしても、特定のパラメータやファイルは削除されません。詳しくは <command>man 7 sapconf</command> で表示されるマニュアルページ内の <citetitle>PACKAGE REQUIREMENTS</citetitle> の章をお読みください。</para>
   </sect2>
   <sect2 xml:id="sec-sapconf-4-more">
-   <title>For More Information</title>
-   <para>
-    The following man pages provide additional information about &sapconf;:
-   </para>
+   <title>さらなる情報</title>
+   <para>下記のマニュアルページには、 &sapconf; に関するさまざまな追加情報が書かれています (いずれも英語で書かれています):</para>
    <itemizedlist>
     <listitem>
-     <para>
-      High-level overview of tuning parameters used by &sapconf;:
-      <command>man 7 tuned-profiles-sapconf</command>
-     </para>
+     <para>&sapconf; で使用されるチューニングパラメータの概要について知りたい場合は、 <command>man 7 tuned-profiles-sapconf</command> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      Detailed description of all tuning parameters set by &sapconf;:
-      <command>man 5 sapconf</command>
-     </para>
+     <para>&sapconf; で設定可能な全てのチューニングパラメータに関する説明: <command>man 5 sapconf</command></para>
     </listitem>
     <listitem>
-     <para>
-      Information about configuring and customizing the &sapconf; profile:
-      <command>man 7 sapconf</command>
-     </para>
+     <para>&sapconf; プロファイルの設定やカスタマイズに関する情報: <command>man 7 sapconf</command></para>
     </listitem>
    </itemizedlist>
-   <para>
-    Also see the blog series detailing the updated version of &sapconf; at
-    <link xlink:href="https://www.suse.com/c/a-new-sapconf-is-available/"/>.
-   </para>
+   <para>更新版の &sapconf; の詳細に関するブログ投稿: <link xlink:href="https://www.suse.com/c/a-new-sapconf-is-available/"/></para>
   </sect2>
  </sect1>
 
  <sect1 xml:id="sec-sapconf-5">
-  <title>Tuning &slea; Systems with &sapconf; 5</title>
-  <para>
-   The package <systemitem>sapconf</systemitem> is available in &sls; and &s4s;.
-   It sets recommended parameters for the following types of &sap; applications:
-   &netweaver;, &hana; and &hana;-based applications.
-  </para>
+  <title>&sapconf; 5 での &slea; のチューニング</title>
+  <para><systemitem>sapconf</systemitem> パッケージは &sls; と &s4s; で利用することができます。このパッケージは、それぞれ &netweaver;, &hana;, &hana; ベースの &sap; アプリケーションに対する推奨パラメータを設定します。</para>
 
   <variablelist>
-   <title>Overview of &sapconf;5 in &slsreg;&nbsp;12</title>
+   <title>&slsreg;&nbsp;12 での &sapconf;5 の概要</title>
    <varlistentry>
-    <term>&sapconf;5 (without &tuned;)</term>
+    <term>&sapconf;5 (&tuned; 無し)</term>
     <listitem>
      <itemizedlist>
       <listitem>
-       <para><systemitem>sapconf-netweaver</systemitem> (&sapconf; profile as a replacement for &tuned; profile)</para>
+       <para><systemitem>sapconf-netweaver</systemitem> (&tuned; プロファイルの代替となる &sapconf; のプロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sapconf-hana</systemitem> (&sapconf; profile as a replacement for &tuned; profile)</para>
+       <para><systemitem>sapconf-hana</systemitem> (&tuned; プロファイルの代替となる &sapconf; のプロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sapconf-bobj</systemitem> (&sapconf; profile as a replacement for &tuned; profile)</para>
+       <para><systemitem>sapconf-bobj</systemitem> (&tuned; プロファイルの代替となる &sapconf; のプロファイル)</para>
       </listitem>
       <listitem>
-       <para><systemitem>sapconf-ase</systemitem> (&sapconf; profile as a replacement for &tuned; profile)</para>
+       <para><systemitem>sapconf-ase</systemitem> (&tuned; プロファイルの代替となる &sapconf; のプロファイル)</para>
       </listitem>
      </itemizedlist>
     </listitem>
@@ -456,246 +238,120 @@
   </variablelist>
 
   <variablelist>
-   <title>Overview of &sapconf;5 in &slsreg;&nbsp;15</title>
+   <title>&slsreg;&nbsp;15 での &sapconf;5 の概要</title>
    <varlistentry>
-    <term>&sapconf;5 (without &tuned;)</term>
+    <term>&sapconf;5 (&tuned; 無し)</term>
     <listitem>
-     <para>no profiles anymore</para>
+     <para>プロファイルはありません</para>
     </listitem>
    </varlistentry>
   </variablelist>
 
-  <para>
-   Note that if you previously made changes to the system tuning, those
-   changes may be overwritten by &sapconf;.
-  </para>
-  <para>
-   &sapconf;&nbsp;5 ships a &systemd; service which applies the tuning and ensures that
-   related services are running.
-  </para>
-  <para>
-   To use &sapconf;, make sure
-   that the package <package>sapconf</package> is installed on your system.
-  </para>
+  <para>なお、システムチューニングで何らかの変更を行なっている場合、 &sapconf; の使用によってこれらの変更が上書きされることがありますのでご注意ください。</para>
+  <para>&sapconf;&nbsp;5 には &systemd; のサービスが含まれていて、このサービスがチューニングの実施と関連するサービスの起動を行ないます。</para>
+  <para>&sapconf; を使用するには、お使いのシステムに <package>sapconf</package> パッケージをインストールしてください。</para>
 
   <note>
-   <title>No Profiles in &sls; and &productname; &productnumber;</title>
-   <para>
-    In &sls; and &productname; 15, &sapconf; no longer supports profiles.
-   </para>
+   <title>&sls; と &productname; &productnumber; でのプロファイルについて</title>
+   <para>&sls; や &productname; 15 では、 &sapconf; はプロファイルに対応しなくなっています。</para>
   </note>
 
   <sect2 xml:id="sec-sapconf-5-enable">
-   <title>Enabling and Disabling &sapconf; and Viewing Its Status</title>
-   <para>
-    After the installation of &sapconf;, the &sapconf; service is enabled.
-   </para>
-   <para>
-    You can inspect or change the status of &sapconf; as described in the
-    following:
-   </para>
+   <title>&sapconf; の有効化と無効化、およびその状態の確認</title>
+   <para>&sapconf; をインストールしたあとは、 &sapconf; サービスを有効化します。</para>
+   <para>&sapconf; の状態を調べたい場合は、下記のようにして行ないます:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      To see the status of the service
-      <systemitem class="daemon">sapconf</systemitem>:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスの状態を確認するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl status sapconf</command></screen>
-     <para>
-      The service should be displayed as <emphasis>active (exited)</emphasis>.
-     </para>
+     <para>上記のサービスは <emphasis>active (exited)</emphasis> という状態になるべきものです。</para>
     </listitem>
     <listitem>
-     <para>
-      To start the service
-      <systemitem class="daemon">sapconf</systemitem>:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスを起動するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl start sapconf</command></screen>
     </listitem>
     <listitem>
-     <para>
-      Should <systemitem class="daemon">sapconf</systemitem> be disabled,
-      enable and start it with:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスが無効化されている場合は、下記のように入力して実行することで、有効化と起動を行なうことができます:</para>
      <screen>&prompt.root;<command>systemctl enable --now sapconf</command></screen>
     </listitem>
     <listitem>
-     <para>
-      To stop the service
-      <systemitem class="daemon">sapconf</systemitem>:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスを停止するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl stop sapconf</command></screen>
-     <para>
-      This command will disable the vast majority of optimizations immediately. The only 
-      exceptions from this rule are options that require a system reboot to enable/disable.
-     </para>
+     <para>このコマンドを実行すると、最適化の設定のほとんどを即時に無効化します。ただし、有効化や無効化にあたってシステムの再起動が必要なパラメータについては例外となります。</para>
     </listitem>
     <listitem>
-     <para>
-      To disable <systemitem class="daemon">sapconf</systemitem>, use:
-     </para>
+     <para><systemitem class="daemon">sapconf</systemitem> サービスを無効化するには、下記のように入力して実行します:</para>
      <screen>&prompt.root;<command>systemctl disable sapconf</command></screen>
-     <para>
-      If you have not specifically enabled any of the services that &sapconf;
-      depends on yourself, this will also disable most tuning parameters and
-      all services used by &sapconf;.
-     </para>
+     <para>&sapconf; が依存するサービスを別途有効化していない場合は、この無効化によってほとんどのチューニングパラメータと &sapconf; で使用しているサービスがそれぞれ無効化されます。</para>
     </listitem>
    </itemizedlist>
 
    <tip>
-    <title>Additional Services that &sapconf; Relies On</title>
-    <para>
-     In addition to the &sapconf; service it also relies on the following two services:
-    </para>
+    <title>&sapconf; が依存する追加サービスについて</title>
+    <para>&sapconf; サービスそれ自身に加え、下記の 2 つのサービスも必要となります:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       <systemitem class="daemon">sysstat</systemitem> which collects data on
-       system activity.
-      </para>
+      <para><systemitem class="daemon">sysstat</systemitem>: システムの動作に関する情報収集を行ないます。</para>
      </listitem>
      <listitem>
-      <para>
-       <systemitem class="daemon">uuidd</systemitem> which generates time-based
-       UUIDs that are guaranteed to be unique even in settings where many
-       processor cores are involved. This is necessary for &sap; applications.
-      </para>
+      <para><systemitem class="daemon">uuidd</systemitem>: 時刻ベースの UUID (唯一性の保証された ID) 生成サービスです。多数のプロセッサコアが搭載されているシステムでも、唯一性が保証されます。これは &sap; アプリケーションで必要となるものです。</para>
      </listitem>
     </itemizedlist>
    </tip>
   </sect2>
   <sect2 xml:id="sec-sapconf-5-configure">
-   <title>Configuring &sapconf;5</title>
-   <para>
-    In general, the default configuration of &sapconf; already uses the
-    parameter values recommended by &sap;. However, if you have special
-    needs, you can configure the tool to better suit those.
-   </para>
-   <para>
-    All parameters of &sapconf; can be found in the file
-    <filename>/etc/sysconfig/sapconf</filename>.
-    The file can be edited directly. All parameters in this file are
-    explained by means of comments and references to &sap; Notes which can
-    be viewed at <link xlink:href="https://launchpad.support.sap.com/"/>.
-   </para>
-   <para>
-    When &sapconf; is updated, all customized parameters from this file will
-    be preserved as much as possible. However, sometimes parameters cannot
-    be transferred cleanly to the new configuration file. Therefore, after
-    updating it is advisable to check the difference between the previous
-    custom configuration which during the update is moved to
-    <filename>/etc/sysconfig/sapconf.rpmsave</filename>
-    and the new version at <filename>/etc/sysconfig/sapconf</filename>.
-   </para>
-   <para>
-    Log messages related to this file are written to
-    <filename>/var/log/sapconf.log</filename>.
-   </para>
-   <para>
-    When editing either of these files, you will find that some values are
-    commented by means of a <literal>#</literal> character at the beginning of
-    the line. This means that while the parameter is relevant for tuning, there
-    is no suitable default for it.
-   </para>
-   <para>
-    Conversely, you can add <literal>#</literal> characters to the beginning of
-    the line to comment specific parameters. However, you should avoid this
-    practice, as it can lead to &sapconf; not properly applying the profile.
-   </para>
-   <para>
-    To apply edited configuration, restart &sapconf;:
-   </para>
+   <title>&sapconf;5 の設定</title>
+   <para>一般的には、 &sapconf; は既定の設定のままで &sap; の推奨する値になるようになっています。ですが、特別な要件がある場合は、ツールを利用して必要な値を設定する必要があります。</para>
+   <para>&sapconf; の全てのパラメータは <filename>/etc/sysconfig/sapconf</filename> 内に示されています。このファイルは直接編集してかまいません。また、このファイル内の全てのパラメータには、コメントの形式で説明が書かれているほか、  <link xlink:href="https://launchpad.support.sap.com/"/> でも &sap; Notes として参照することができます。</para>
+   <para>&sapconf; パッケージを更新した場合は、このファイル内に書かれている全てのカスタマイズ済みパラメータをできる限り維持するように勤めます。ただし、全てのパラメータがそのまま移行できるわけではありません。そのため、パッケージを更新した場合は、従来の設定ファイルのバックアップである <filename>/etc/sysconfig/sapconf.rpmsave</filename> ファイルと、移行済みのファイルである <filename>/etc/sysconfig/sapconf</filename> の内容をそれぞれ比較して、必要なカスタマイズが失われていないかどうかを確認してください。</para>
+   <para>このファイルに関するログメッセージは、 <filename>/var/log/sapconf.log</filename> ファイルに記録されます。</para>
+   <para>これらのファイルのいずれかを編集すると、行頭に <literal>#</literal> と書かれたコメントとして値が書かれているものがあります。これらはチューニングに必要なパラメータではあるものの、既定値の存在していないパラメータであることを示しています。</para>
+   <para>逆に、パラメータの行頭に <literal>#</literal> を入れてコメントアウトすることもできます。ですが、通常はコメントアウトすべきではありません。コメントアウトしてしまうと &sapconf; がプロファイルを正しく適用できなくなってしまうことがあるためです。</para>
+   <para>編集した設定を適用するには、 &sapconf; を再起動します:</para>
    <screen>&prompt.root;<command>systemctl restart sapconf</command></screen>
-   <para>
-    Confirming that a certain parameter value was applied correctly works
-    differently for different parameters. Hence, the following serves as an
-    example only:
-   </para>
+   <para>パラメータの変更は、パラメータの種類によってさまざまな効果をもたらします。そのため、下記の手順は例示としてのみお読みください:</para>
    <example xml:id="ex-sapconf-change-parameter-5">
-    <title>Checking Parameters</title>
-    <para>
-     To confirm that the setting for <literal>TCP_SLOW_START</literal> was
-     applied, do the following:
-    </para>
+    <title>パラメータの確認</title>
+    <para><literal>TCP_SLOW_START</literal> の設定が適用されていることを確認するには、下記の手順を実施します:</para>
     <itemizedlist>
      <listitem>
-      <para>
-       View the log file of &sapconf; to see whether it applied the value.
-       Within <filename>/var/log/sapconf.log</filename>, check for a line
-       containing this text:
-      </para>
+      <para>&sapconf; のログファイルを表示させて、値が適用されていることを確認します。具体的には <filename>/var/log/sapconf.log</filename> というファイル内に、下記のような内容が記録されていることを確認します:</para>
       <screen>Change net.ipv4.tcp_slow_start_after_idle from 1 to 0</screen>
-      <para>
-       Alternatively, the parameter may have already been set correctly
-       before &sapconf; was started. In this case, &sapconf; will not change
-       its value:
-      </para>
+      <para>場合によっては、 &sapconf; の起動よりも前に値が設定済みである場合もあります。このような場合は、 &sapconf; は下記のようなメッセージを記録します:</para>
       <screen>Leaving net.ipv4.tcp_slow_start_after_idle unchanged at 1</screen>
      </listitem>
      <listitem>
-      <para>
-       The underlying option behind <literal>TCP_SLOW_START</literal> can be
-       manually configured at
-       <filename>/proc/sys/net.ipv4.tcp_slow_start_after_idle</filename>.
-       To check its actual current value, use:
-      </para>
+      <para><literal>TCP_SLOW_START</literal> オプションは、 <filename>/proc/sys/net.ipv4.tcp_slow_start_after_idle</filename> というファイルでも設定することができます。このファイルを利用することで、実際の設定値を表示させることができます:</para>
       <screen>&prompt.root;<command>sysctl net.ipv4.tcp_slow_start_after_idle</command></screen>
      </listitem>
     </itemizedlist>
    </example>
   </sect2>
   <sect2 xml:id="sec-sapconf-5-remove">
-   <title>Removing &sapconf;</title>
-   <para>
-    To remove &sapconf; from a system, uninstall its package with:
-   </para>
+   <title>&sapconf; の削除</title>
+   <para>&sapconf; をシステムから削除したい場合は、下記のように入力して実行し、パッケージを削除します:</para>
    <screen>&prompt.root;<command>zypper rm sapconf</command></screen>
-   <para>
-    Note that when doing this, dependencies of &sapconf; will remain installed.
-    However, the service <systemitem class="daemon">sysstat</systemitem> will
-    go into a disabled state. If it is still relevant to you, make sure to
-    enable it again.
-   </para>
+   <para>上記を実行しても、 &sapconf; が依存するパッケージ類は削除されません。しかしながら、 <systemitem class="daemon">sysstat</systemitem> のパッケージは無効化されますので、必要であれば再度有効化してください。</para>
   </sect2>
   <sect2 xml:id="sec-sapconf-5-more">
-   <title>For More Information</title>
-   <para>
-    The following man pages provide additional information about &sapconf;:
-   </para>
+   <title>さらなる情報</title>
+   <para>下記のマニュアルページには、 &sapconf; に関するさまざまな追加情報が書かれています (いずれも英語で書かれています):</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Detailed description of all tuning parameters set by &sapconf;:
-      <command>man 5 sapconf</command>
-     </para>
+     <para>&sapconf; で設定可能な全てのチューニングパラメータに関する説明: <command>man 5 sapconf</command></para>
     </listitem>
     <listitem>
-     <para>
-      Information about configuring and customizing the &sapconf; profile:
-      <command>man 7 sapconf</command>
-     </para>
+     <para>&sapconf; プロファイルの設定やカスタマイズに関する情報: <command>man 7 sapconf</command></para>
     </listitem>
    </itemizedlist>
-   <para>
-    Also see the blog series detailing the updated version of &sapconf; at
-    <link xlink:href="https://www.suse.com/c/a-new-sapconf-is-available/"/>.
-   </para>
+   <para>更新版の &sapconf; の詳細に関するブログ投稿: <link xlink:href="https://www.suse.com/c/a-new-sapconf-is-available/"/></para>
   </sect2>
   <sect2 xml:id="sec-sapconf-5-tuned">
-   <title>Using <command>tuned</command> Together with  &sapconf;</title>
-   <para>
-    With version 5 &sapconf; does not rely on &tuned; anymore. This means both tools
-    can be used independently.
-    &sapconf; will print a warning in it's log if <command>tuned</command> service
-    is started.
-   </para>
+   <title>&sapconf; と <command>tuned</command> の併用</title>
+   <para>&sapconf; のバージョン 5 では、 &tuned; に依存せずに動作するようになっています。これにより、それぞれのツールを独立して使用することができることになります。なお、 <command>tuned</command> サービスが起動されている場合、 &sapconf; は警告メッセージを出力します。</para>
    <note>
-    <title>Important: Using <command>tuned</command> and &sapconf; together</title>
-    <para>
-     If you are going to use <command>tuned</command> and &sapconf; simultaneously,
-     be very careful, that both tools do not configure the same system parameters.
-    </para>
+    <title>重要: <command>tuned</command> と &sapconf; の併用について</title>
+    <para><command>tuned</command> と &sapconf; を併用する場合は、よく注意してお使いください。それぞれ別々の観点でチューニングを行なうことがあるためです。</para>
    </note> 
   </sect2>
  </sect1>
