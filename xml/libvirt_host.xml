@@ -210,21 +210,7 @@ virbr_test  1 PVID Egress Untagged
        <para>新しい仮想ネットワークを追加するには、 <guimenu>追加</guimenu> を押します。</para>
       </step>
       <step>
-       <para>新しい仮想ネットワークの名前を指定して <guimenu>ルーティング</guimenu> を選択します。</para>
-       <figure>
-        <title>仮想ネットワークの作成</title>
-        <mediaobject>
-         <imageobject role="fo">
-          <imagedata fileref="libvirt_vmm_vnet_name.png" width="45%" format="PNG"/>
-         </imageobject>
-         <imageobject role="html">
-          <imagedata fileref="libvirt_vmm_vnet_name.png" width="45%" format="PNG"/>
-         </imageobject>
-        </mediaobject>
-       </figure>
-      </step>
-      <step>
-       <para>IPv4 アドレスの範囲を指定したい場合は、対応するオプションを選択して <guimenu>ネットワーク</guimenu> 以下のテキストボックスに値を入力します。</para>
+       <para>新しい仮想ネットワークの名前です。</para>
        <figure>
         <title>仮想ネットワークの作成</title>
         <mediaobject>
@@ -238,40 +224,26 @@ virbr_test  1 PVID Egress Untagged
        </figure>
       </step>
       <step>
-       <para>&libvirt; では DHCP サーバ機能付きの仮想ネットワークを提供することもできます。 DHCP を必要とする場合は、 <guimenu>DHCPv4 を有効化</guimenu> を選択して、割り当て可能なアドレス範囲の開始と終了を指定します。</para>
-      </step>
-      <step>
-       <para>新しい仮想ネットワークに対してスタティック (固定の) ルーティングを設定したい場合は、対応するオプションを選択してネットワークとゲートウエイアドレスを入力します。</para>
-      </step>
-      <step>
-       <para><guimenu>完了</guimenu> を押して進めます。</para>
-      </step>
-      <step>
-       <para>IPv6 関連のオプション (アドレス範囲や DHCPv6 サーバ、スタティック (固定の) ルーティングなど) を指定したい場合は、 <guimenu>Enable IPv6</guimenu><!-- NOTE: different? --> を選択して対応する項目に入力します。</para>
-      </step>
-      <step>
-       <para><guimenu>完了</guimenu> を押して進めます。</para>
-      </step>
-      <step>
-       <para>あとは孤立したネットワークを設定するか、転送型のネットワークを設定するかを選択します。</para>
-       <figure>
-        <title>仮想ネットワークの作成</title>
-        <mediaobject>
-         <imageobject role="fo">
-          <imagedata fileref="libvirt_vmm_vnet_type.png" width="45%" format="PNG"/>
-         </imageobject>
-         <imageobject role="html">
-          <imagedata fileref="libvirt_vmm_vnet_type.png" width="45%" format="PNG"/>
-         </imageobject>
-        </mediaobject>
-       </figure>
        <para>転送型のネットワークの場合は、パケットの転送先となるネットワークインターフェイスを指定します。このとき、下記のいずれかの転送モードを選択することができます: <guimenu>NAT</guimenu> (Network Address Translation; ネットワークアドレス変換) は仮想的なネットワークアドレス領域を特定の IP アドレスに割り当てるための方式で、 1 つの IP アドレスを複数のゲストで共有することができるようになります。 <guimenu>ルーティング</guimenu> は仮想ネットワーク側からのパケットを、そのまま &vmhost; の物理ネットワークに転送する方式です。</para>
       </step>
       <step>
-       <para>IPv6 アドレス領域を指定していない場合は、ここで仮想マシン間内部の IPv6 の有効化を設定することができます。</para>
+       <para>
+        If you need IPv4 networking, activate <guimenu>Enable IPv4</guimenu> and specify the IPv4 network address.
+        If you need a DHCP server, activate <guimenu>Enable DHCPv4</guimenu> and specify the assignable IP address range.
+       </para>
       </step>
-      <step performance="optional">
-       <para>また、必要であれば DNS ドメイン名を設定することもできます。</para>
+      <step>
+       <para>
+        If you need IPv6 networking, activate <guimenu>Enable IPv6</guimenu> and specify the IPv6 network address.
+        If you need a DHCP server, activate <guimenu>Enable DHCPv6</guimenu> and specify the assignable IP address range.
+       </para>
+      </step>
+      <step>
+       <para>
+        If you want to specify a different domain name than the name of the virtual network,
+        select <guimenu>Custom</guimenu> under <guimenu>DNS domain name</guimenu>
+        and enter it here.
+       </para>
       </step>
       <step>
        <para><guimenu>完了</guimenu> を押すと新しい仮想ネットワークを作成することができます。 &vmhost; 側では新しい仮想ネットワークブリッジである <literal>virbr<replaceable>X</replaceable></literal> が作成され、これが新しい仮想ネットワークになります。これは <command>bridge link</command> コマンドで確認することができます。 &libvirt; では自動的に iptables のルールを追加して、新しく作成した <emphasis>virbr<replaceable>X</replaceable></emphasis> でのゲスト間の通信可否を設定します。</para>
@@ -920,16 +892,10 @@ done</screen>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para><guimenu>Target Path</guimenu> : デバイスの存在するディレクトリを指定します。既定値は <filename>/dev</filename> で、通常はそのままでかまいません。</para>
-          </listitem>
-          <listitem>
            <para><guimenu>フォーマット</guimenu> : デバイスのパーティションテーブルの形式を指定します。通常は <guimenu>auto</guimenu> のままでかまいませんが、正しく検出できない場合は、 &vmhost; 側で <command>parted</command> <option>-l</option> を実行して形式を判別し、指定してください。</para>
           </listitem>
           <listitem>
            <para><guimenu>ソースパス</guimenu> : デバイスのパスを指定します。 <filename>/dev/sd<replaceable>X</replaceable></filename> のようなパスではなく、 <filename>/dev/disk/by-*</filename> のパスで指定することをお勧めします。これは、 <filename>/dev/sd<replaceable>X</replaceable></filename> を使用してしまうと、ハードディスクの取り付けや取り外しなどで名前が変化してしまうことがあり得るためです。また、パーティションではなくディスク全体を表わすパスを指定してください。</para>
-          </listitem>
-          <listitem>
-           <para><guimenu>プールを構築</guimenu> : デバイスをフォーマットする場合は、このオプションを選択してください。ただし、選択したデバイス無いの全てのデータが失われることになりますので、注意してください！</para>
           </listitem>
          </itemizedlist>
         </listitem>
@@ -950,28 +916,6 @@ done</screen>
          </itemizedlist>
         </listitem>
        </varlistentry>
-<!-- <varlistentry>
-       <term><emphasis role="bold">Type</emphasis> <guimenu>gluster</guimenu></term>
-       <listitem>
-        <itemizedlist>
-         <listitem>
-          <para>
-           <guimenu>Host Name</guimenu>: ...
-          </para>
-         </listitem>
-         <listitem>
-          <para>
-           <guimenu>Source Name</guimenu>: ...
-          </para>
-         </listitem>
-         <listitem>
-          <para>
-           <guimenu>Source Path</guimenu>: ...
-          </para>
-         </listitem>
-        </itemizedlist>
-       </listitem>
-      </varlistentry>-->
        <varlistentry>
         <term><emphasis role="bold">種類</emphasis> = <guimenu>iscsi</guimenu> の場合:</term>
         <listitem>
@@ -989,6 +933,9 @@ done</screen>
           <listitem>
            <para><guimenu>ソースパス</guimenu> : iSCSI のターゲット名 (IQN) を指定します。</para>
           </listitem>
+          <listitem>
+           <para><guimenu>ソースパス</guimenu> : iSCSI のターゲット名 (IQN) を指定します。</para>
+          </listitem>
          </itemizedlist>
         </listitem>
        </varlistentry>
@@ -997,13 +944,7 @@ done</screen>
         <listitem>
          <itemizedlist mark="bullet" spacing="normal">
           <listitem>
-           <para><guimenu>Target Path</guimenu> : 既存のボリュームグループを使用する場合は、既存のデバイスパスを指定します。新しい LVM ボリュームグループを作成する場合は、存在していない <filename>/dev</filename> ディレクトリ内のデバイス名を指定してください。</para>
-          </listitem>
-          <listitem>
-           <para><guimenu>ソースパス</guimenu> : 既存のボリュームグループを使用する場合は、何も入力しないでください。新しいボリュームグループを作成する場合は、ここにデバイス名を入力します。</para>
-          </listitem>
-          <listitem>
-           <para><guimenu>プールを構築</guimenu> : 新しいボリュームグループを作成する場合にのみ選択してください。</para>
+           <para><guimenu>Target Path</guimenu> : 既存のディレクトリを選択します。</para>
           </listitem>
          </itemizedlist>
         </listitem>
@@ -1034,23 +975,19 @@ done</screen>
          </itemizedlist>
         </listitem>
        </varlistentry>
-<!-- <varlistentry>
-       <term><emphasis role="bold">Type</emphasis> <guimenu>rbd</guimenu></term>
-       <listitem>
-        <itemizedlist>
-         <listitem>
-          <para>
-           <guimenu>Host Name</guimenu>: ...
-          </para>
-         </listitem>
-         <listitem>
-          <para>
-           <guimenu>Source Name</guimenu>: ...
-          </para>
-         </listitem>
-        </itemizedlist>
-       </listitem>
-      </varlistentry>-->
+       <varlistentry>
+        <term><emphasis role="bold">種類</emphasis> = <guimenu>dir</guimenu> の場合:</term>
+        <listitem>
+         <itemizedlist>
+          <listitem>
+           <para><guimenu>ホスト名</guimenu> : ネットワークファイルシステムを提供するサーバの IP アドレスまたはホスト名を指定します。</para>
+          </listitem>
+          <listitem>
+           <para><guimenu>ソースパス</guimenu> : SCSI アダプタの名前を指定します。</para>
+          </listitem>
+         </itemizedlist>
+        </listitem>
+       </varlistentry>
        <varlistentry>
         <term><emphasis role="bold">種類</emphasis> = <guimenu>scsi</guimenu> の場合</term>
         <listitem>
@@ -1064,23 +1001,12 @@ done</screen>
          </itemizedlist>
         </listitem>
        </varlistentry>
-<!-- <varlistentry>
-       <term><emphasis role="bold">Type</emphasis> <guimenu>rbd</guimenu></term>
-       <listitem>
-        <itemizedlist>
+        <varlistentry>
+         <term><emphasis role="bold">種類</emphasis> = <guimenu>fs</guimenu> の場合:</term>
          <listitem>
-          <para>
-           <guimenu>Host Name</guimenu>: ...
-          </para>
+          <para><guimenu>ソースパス</guimenu> : SCSI アダプタの名前を指定します。</para>
          </listitem>
-         <listitem>
-          <para>
-           <guimenu>Source Name</guimenu>: ...
-          </para>
-         </listitem>
-        </itemizedlist>
-       </listitem>
-      </varlistentry>-->
+        </varlistentry>
       </variablelist>
       <note>
        <title>ファイル参照について</title>
