@@ -784,7 +784,7 @@ Startup finished in 2666ms (kernel) + 21961ms (userspace) = 24628ms</screen>
    </sect3>
    <sect3 xml:id="sec-boot-systemd-debug-complete">
     <title>起動処理の詳細な確認</title>
-    <para>上述のコマンドを使用することで、起動されたサービスとそれらにかかった時間を知ることができます。より詳しい状況を知りたい場合は、起動プロンプトのパラメータで、 &systemd; に対して完全な起動処理のログを出力させるようにすることができます:</para>
+    <para>上述のコマンドを実行することで、起動されたサービスとそれらにかかった時間を一覧表示することができます。より詳しい状況を知りたい場合は、起動プロンプトのパラメータに下記を追加することで、 &systemd; に対して完全な起動処理のログを出力させることができます:</para>
 <screen>systemd.log_level=debug systemd.log_target=kmsg</screen>
     <para>上記のパラメータ指定により、 &systemd; はカーネルのリングバッファにログメッセージを出力するようになります。リングバッファを表示するには、 <command>dmesg</command> を使用します:</para>
 <screen>&prompt.user;dmesg -T | less</screen>
@@ -927,8 +927,8 @@ UMask=007</screen>
   </sect2>
   
   <sect2 xml:id="sec-boot-systemd-custom-drop-in">
-   <title><quote>ドロップ・イン</quote> ファイルの作成</title>
-   <para>設定ファイルに対して数行程度を追加もしくは編集したい場合は、 <quote>ドロップ・イン</quote> ファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、ユニットファイル全体を上書きしたりすることなく、拡張できる仕組みを提供します。</para>
+   <title>ドロップ・インファイルの作成</title>
+   <para>設定ファイルの一部分だけを変更したい場合は、ドロップ・インファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。</para>
    <para>たとえば <filename>/usr/lib/systemd/system/<replaceable>FOOBAR.SERVICE</replaceable></filename> というファイル名の <replaceable>FOOBAR</replaceable> サービスのうち、 1 つの値だけを変更したい場合は、下記のようにして行ないます:</para>
    <procedure>
     <step>
@@ -936,33 +936,19 @@ UMask=007</screen>
      <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行なう旨を宣言します。</para>
     </step>
     <step>
-     <para>上記のディレクトリ内に <filename><replaceable>WHATEVERMODIFICATION</replaceable>.conf</filename> というファイルを作成します。</para>
+     <para>上記のディレクトリ内に <filename><replaceable>your_modification</replaceable>.conf</filename> というファイルを作成します。</para>
      <para>上記のファイルに、変更したい値の行を記述します。</para>
     </step>
     <step>
-     <para>
-      Save your changes to the file.
-     </para>
+     <para>あとはファイルを保存して終了するだけです。</para>
     </step>
    </procedure>
   
    <!--  bsc#1182491 --> 
    
    <note>
-    <title>Avoiding name conflicts</title>
-    <para>
-    To avoid name conflicts between your drop-in files and files shipped by
-    &suse;, it is recommended to prefix all drop-in filenames with a two-digit
-    number and a dash, for example <filename>80-override.conf
-    </filename>.
-    The range <literal>0-49</literal> is reserved for &suse; drop-in filenames.
-    <literal>50</literal> is reserved for drop-in files created with
-    <command>systemctl set-property</command>. Use a two-digit number above
-    this range, to ensure that none of the drop-in files shipped by &suse; will
-    override your drop-in files.
-    You can use <command>systemctl cat $UNIT</command> to list and verify which
-     files are taken into account of the unit's configuration.
-    </para>
+    <title>名前の衝突回避について</title>
+    <para>&suse; が提供するドロップ・インファイルと独自に作成したドロップ・インファイルとの間で名前の衝突が起こらないようにするため、ドロップ・インファイルのファイル名には 2 桁の数値とハイフンを入れておくことをお勧めします。たとえば <filename>80-override.conf </filename> のようになります。ここで、 <literal>0-49</literal> は &suse; 側で予約されているものとして扱うほか、 <literal>50</literal> は <command>systemctl set-property</command> コマンドで作成するドロップ・インファイルで使用するため、これらの値よりも大きい値を指定するようにしてください。これにより、 &suse; が提供するドロップ・インファイルの内容を自由に上書きできるようになります。上書き後の設定を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行して確認してください。</para>
    </note>
   </sect2>
    
