@@ -4,94 +4,53 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-users">
-  <title>Creating LDAP users and groups</title>
-   <para>
-    Users and groups are created and managed with the <command>dsidm</command>
-    command. It runs interactively, or you can run it on the command line, and
-    enter all options in a single command. 
-   </para>
-   <para>
-     List your existing users and groups:
-   </para>
+  <title>LDAP ユーザとグループの作成</title>
+   <para>ユーザとグループは <command>dsidm</command> コマンドで作成および管理を行ないます。このコマンドは対話的に動作させることができるほか、コマンドラインでパラメータを指定して実行することもできます。</para>
+   <para>現時点で設定済みのユーザとグループの一覧を表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user list
 &prompt.sudo;dsidm <replaceable>ldap1</replaceable> group list</screen>
-   <para>
-       List all information on a single user:
-   </para>
-   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get <replaceable>username</replaceable></screen>
-   <para>
-       List all information on a single group:
-   </para>
-      <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group get <replaceable>groupname</replaceable></screen>
-   <para>
-     List members of a group:
-   </para>
-   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group members <replaceable>demo_group</replaceable></screen>
-   <para>
-   In the following example we add two users, &exampleuserII; and &exampleuserIII;,
-   by specifying their data via command-line arguments. The example server 
-   instance is named <replaceable>ldap1</replaceable>, and the instance's suffix is 
-   <replaceable>dc=ldap1,dc=com</replaceable>.
-   </para>
+   <para>特定のユーザに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
+   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get <replaceable>ユーザ名</replaceable></screen>
+   <para>特定のグループに対する全ての情報を表示させるには、下記のように入力して実行します:</para>
+      <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group get <replaceable>グループ名</replaceable></screen>
+   <para>グループのメンバー一覧を表示するには、下記のように入力して実行します:</para>
+   <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group members <replaceable>グループ名</replaceable></screen>
+   <para>下記の例では 2 人のユーザ &exampleuserII; と &exampleuserIII; を作成します。このとき、必要なデータはコマンドラインパラメータで指定し、サーバインスタンスは <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
   <procedure xml:id="pro-security-ldap-server-users">
-   <title>Creating LDAP users</title>
-   <para>
-     LDAP users are your users that already exist. They should have Linux 
-     system accounts, with Linux logins and home directories. Adding them to
-     your LDAP server provides central user management for your network. You 
-     need to enter accurate user data, which you can obtain by accessing 
-     the computers that hold their accounts, and running the 
-     <command>id</command> command, like this example for &exampleuserIIfull;:
-   </para>
+   <title>LDAP ユーザの作成</title>
+   <para>LDAP ユーザは一般的なユーザアカウントを表わすもので、ログイン時に使用できるものであるほか、ホームディレクトリも設定することができます。 LDAP サーバにユーザを追加することで、ネットワーク内のユーザアカウントを統一的に管理できるようになります。なお、ユーザを作成するにあたっては、誤った情報を設定しないように注意してください。誤った情報を設定してしまうと、その情報をもとにログインできるようになってしまうためです。設定されている情報を確認したい場合は、 <command>id</command> コマンドで確認してください。下記の例では &exampleuserIIfull; というユーザに対する情報を確認しています:</para>
    <screen>&prompt.user;id &exampleuserIII;
 uid=1001(wilber) gid=100(users) groups=100(users)</screen>   
    <step>
-    <para>
-    Create the LDAP user &exampleuserII;:
-    </para>
+    <para>&exampleuserII; という LDAP ユーザを作成したい場合は、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserII; \
   --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1001 --gidNumber 100 \
   --homeDirectory /home/&exampleuserII;</screen>
    </step>
    <step>
-    <para>
-     Verify by looking up your new user's 
-     <literal>distinguished name</literal> (fully qualified
-     name to the directory object, which is guaranteed unique):
-    </para>
+    <para>ユーザの <literal>distinguished name</literal> (DN) 名 (ディレクトリオブジェクトに対する完全修飾名、つまり唯一性の保証された名前) を参照するには、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get &exampleuserII;
 dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
 [...]</screen>
-    <para>
-     You need the distinguished name for actions such as changing the 
-     password for a user.
-    </para>
+    <para>ユーザのパスワード変更などの処理を行なうには、 <literal>distinguished name</literal> (DN) を指定する必要があります。</para>
    </step>
    <step>
-    <para>
-     Create a password for new user &exampleuserII;:
-    </para>
+    <para>&exampleuserII; ユーザに対するパスワードを作成するには、下記のように入力して実行します:</para>
     <substeps>
       <step>
        <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
   uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
       </step>
       <step>
-       <para>
-        Enter the new password for &exampleuserII; twice.
-       </para>
-       <para>
-        If the action was successful, you get the following message:
-       </para>
+       <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
+       <para>パスワードの設定が完了すると、下記のようなメッセージが表示されるはずです:</para>
        <screen>reset password for uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
-       <para>
-         Use the same command to change an existing password.
-       </para>
+       <para>設定済みのパスワードを変更したい場合も、同じコマンドで行なうことができます。</para>
       </step>
     </substeps>
    </step>
    <step>
-    <para>Create the user &exampleuserIII;:</para>
+    <para>続いて &exampleuserIII; ユーザを作成します:</para>
     <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserIII;\
   --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
   --uidNumber 1001 --gidNumber 100 --homeDirectory /home/&exampleuserIII;
@@ -100,9 +59,7 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
   uid=&exampleuserIII;,ou=people,dc=ldap1,dc=com</screen>
    </step>
       <step>
-    <para>
-     Verify that the user's password works:
-    </para>
+    <para>認証が正しく動作することを確認します:</para>
    <screen>&prompt.user;ldapwhoami -D uid=wilber,ou=people,dc=ldap1,dc=com -W
 Enter LDAP Password: 
 dn: uid=wilber,ou=people,dc=ldap1,dc=com    
@@ -111,28 +68,16 @@ dn: uid=wilber,ou=people,dc=ldap1,dc=com
   </procedure>
   
   <procedure xml:id="pro-security-ldap-server-groups">
-   <title>Creating LDAP groups and assigning users to them</title>
-   <para>
-    In the following examples, we create a group, 
-    <replaceable>server_admins</replaceable>, and assign the user 
-    &exampleuserII; to this group. The example server instance is named 
-    <literal>ldap1</literal>, and the instance's suffix is 
-    <literal>dc=ldap1,dc=com</literal>.
-    </para>
+   <title>LDAP グループの作成とユーザの割り当て</title>
+   <para>下記の手順では <systemitem class="groupname">server_admins</systemitem> という名前のグループを作成し、そのグループに &exampleuserII; ユーザを所属させます。このとき、インスタンス名は <literal>ldap1</literal> 、サフィックスは <literal>dc=ldap1,dc=com</literal> であるものとします。</para>
    <step>
-    <para>
-     Create the group:
-    </para>
+    <para>まずはグループを作成します:</para>
     <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group create</screen>
-    <para>
-     You will be prompted for a group name. Enter your chosen group name:
-    </para>
+    <para>すると、グループ名の入力を求められます。下記のように入力します:</para>
     <screen>Enter value for cn : <replaceable>server_admins</replaceable></screen>
    </step>
    <step>
-    <para>
-     Add the user &exampleuserII; to the group:
-    </para>
+    <para>&exampleuserII; ユーザをグループに追加します:</para>
     <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <replaceable>server_admins</replaceable> uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
 added member: uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable></screen>
    </step>
