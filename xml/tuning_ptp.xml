@@ -15,13 +15,13 @@
  <sect1 xml:id="tuning-ptp-intro">
   <title>PTP の紹介</title>
 
-  <para>PTP での時刻同期は、マスター／スレーブ型の階層構造を取ります。スレーブは対応するマスターに問い合わせを行ない、同期を実施します。階層構造は、それぞれのスレーブが <emphasis>best master clock</emphasis> (BMC) (<quote>最適なマスタークロック</quote> の意味) アルゴリズムを利用して更新されます。また、 1 つのポートしか持たないクロック (時刻同期を行なうマシン) は、マスターもしくはスレーブのいずれかにしか、なることができません。このようなクロックを <emphasis>ordinary clock</emphasis> (OC) (通常クロック) と呼びます。逆に、複数のポートを持つクロックは、一方をマスターに、他方をスレーブに設定することができます。このようなクロックを <emphasis>boundary clock</emphasis> (BC) (境界クロック) と呼びます。また、最上位のマスタークロックのことを、 <emphasis>grandmaster clock</emphasis> (最上位クロック) と呼びます。 Global Positioning System (GPS) を利用したクロックなどがそれにあたります。このような仕組みにより、異種混合型ネットワークでも高い精度の時刻同期を行なうことができます。</para>
+  <para>PTP での時刻同期は、マスター／スレーブ型の階層構造を取ります。スレーブは対応するマスターに問い合わせを行い、同期を実施します。階層構造は、それぞれのスレーブが <emphasis>best master clock</emphasis> (BMC) (<quote>最適なマスタークロック</quote> の意味) アルゴリズムを利用して更新されます。また、 1 つのポートしか持たないクロック (時刻同期を行うマシン) は、マスターもしくはスレーブのいずれかにしか、なることができません。このようなクロックを <emphasis>ordinary clock</emphasis> (OC) (通常クロック) と呼びます。逆に、複数のポートを持つクロックは、一方をマスターに、他方をスレーブに設定することができます。このようなクロックを <emphasis>boundary clock</emphasis> (BC) (境界クロック) と呼びます。また、最上位のマスタークロックのことを、 <emphasis>grandmaster clock</emphasis> (最上位クロック) と呼びます。 Global Positioning System (GPS) を利用したクロックなどがそれにあたります。このような仕組みにより、異種混合型ネットワークでも高い精度の時刻同期を行うことができます。</para>
 
-  <para>なお、 PTP ではハードウエア側の対応が含まれていることが大きな特長です。さまざまなネットワークスイッチやネットワークインターフェイスコントローラ (NIC) に、そのような仕組みが用意されています。ネットワーク内に PTP 非対応のハードウエアが存在していてもかまいませんが、全ての PTP クロックでハードウエア対応が行なわれていると、最大限の正確性を実現することができます。</para>
+  <para>なお、 PTP ではハードウエア側の対応が含まれていることが大きな特長です。さまざまなネットワークスイッチやネットワークインターフェイスコントローラ (NIC) に、そのような仕組みが用意されています。ネットワーク内に PTP 非対応のハードウエアが存在していてもかまいませんが、全ての PTP クロックでハードウエア対応が行われていると、最大限の正確性を実現することができます。</para>
 
   <sect2 xml:id="tuning-ptp-linuxptp">
    <title>PTP の Linux 実装</title>
-   <para>&productname; では、 PTP の実装は <systemitem>linuxptp</systemitem> パッケージに含まれています。 <command>zypper install linuxptp</command> と入力して実行し、インストールを行なってください。このパッケージには、時刻同期用の <command>ptp4l</command> と <command>phc2sys</command> というプログラムが用意されています。 <command>ptp4l</command> は boundary clock の機能と ordinary clock の両方の機能を提供しています。ハードウエア側にタイムスタンプ機能が用意されていれば、 <command>ptp4l</command> は PTP のハードウエアクロックをマスタークロックに同期します。ソフトウエア側でのタイムスタンプ機能を利用する場合は、システムクロックをマスタークロックに同期します。 <command>phc2sys</command> はハードウエアタイムスタンプの際にのみ使用するもので、システムクロックをネットワークインターフェイス (NIC) に搭載されたハードウエアクロックに同期させるために使用します。</para>
+   <para>&productname; では、 PTP の実装は <systemitem>linuxptp</systemitem> パッケージに含まれています。 <command>zypper install linuxptp</command> と入力して実行し、インストールを行ってください。このパッケージには、時刻同期用の <command>ptp4l</command> と <command>phc2sys</command> というプログラムが用意されています。 <command>ptp4l</command> は boundary clock の機能と ordinary clock の両方の機能を提供しています。ハードウエア側にタイムスタンプ機能が用意されていれば、 <command>ptp4l</command> は PTP のハードウエアクロックをマスタークロックに同期します。ソフトウエア側でのタイムスタンプ機能を利用する場合は、システムクロックをマスタークロックに同期します。 <command>phc2sys</command> はハードウエアタイムスタンプの際にのみ使用するもので、システムクロックをネットワークインターフェイス (NIC) に搭載されたハードウエアクロックに同期させるために使用します。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="tuning-ptp-using">
@@ -76,7 +76,7 @@ master offset  -6975 s2 freq -30575 path delay   10286
 port 1: UNCALIBRATED to SLAVE on MASTER_CLOCK_SELECTED
 master offset  -4284 s2 freq -30135 path delay    9892</screen>
    <para><literal>master offset</literal> 以下には、マスターとの時刻差 (ナノ秒単位) が表示されます。</para>
-   <para><literal>s0</literal> , <literal>s1</literal> , <literal>s2</literal> の各表示は、クロックサーボの状態を表わしています。それぞれ <literal>s0</literal> はロック解除状態を、 <literal>s1</literal> はクロックステップを、 <literal>s2</literal> はロック済み状態を表わしています。サーボがロック済みの状態 ( <literal>s2</literal> ) にある場合、 <option>pi_offset_const</option> オプションが負の値に設定されていると、クロックをステップさせる (大きく変更する) ことは行なわず、徐々に調整するようになります (詳しくは <command>man 8 ptp4l</command> をお読みください) 。</para>
+   <para><literal>s0</literal> , <literal>s1</literal> , <literal>s2</literal> の各表示は、クロックサーボの状態を表わしています。それぞれ <literal>s0</literal> はロック解除状態を、 <literal>s1</literal> はクロックステップを、 <literal>s2</literal> はロック済み状態を表わしています。サーボがロック済みの状態 ( <literal>s2</literal> ) にある場合、 <option>pi_offset_const</option> オプションが負の値に設定されていると、クロックをステップさせる (大きく変更する) ことは行わず、徐々に調整するようになります (詳しくは <command>man 8 ptp4l</command> をお読みください) 。</para>
    <para><literal>freq</literal> で示されている値は、クロックの周波数調整値 (単位は ppb で、 10 億あたりの値) を表わしています。</para>
    <para><literal>path delay</literal> には、マスターから送信された同期メッセージの見積もり遅延時間 (単位はナノ秒) を表わしています。</para>
    <para>Port 0 はローカルの PTP 管理向けに Unix ドメインソケットを使用する意味です。 Port 1 は <systemitem>eth0</systemitem> インターフェイスの意味です。</para>
@@ -85,7 +85,7 @@ master offset  -4284 s2 freq -30135 path delay    9892</screen>
 <screen>&prompt.sudo;ptp4l -m -S -i eth3</screen>
    <para><command>ptp4l</command> をサービスとして動作させる場合は、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;systemctl start ptp4l</screen>
-   <para>この場合、 <command>ptp4l</command> のオプションは <filename>/etc/sysconfig/ptp4l</filename> ファイルから読み込みが行なわれます。既定では、このファイルには <command>ptp4l</command> が <filename>/etc/ptp4l.conf</filename> から設定を読み込むように指定しています。 <command>ptp4l</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 ptp4l</command> をお読みください。</para>
+   <para>この場合、 <command>ptp4l</command> のオプションは <filename>/etc/sysconfig/ptp4l</filename> ファイルから読み込みが行われます。既定では、このファイルには <command>ptp4l</command> が <filename>/etc/ptp4l.conf</filename> から設定を読み込むように指定しています。 <command>ptp4l</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 ptp4l</command> をお読みください。</para>
    <para><command>ptp4l</command> サービスを恒久的に有効化したい場合は、下記のとおり入力して実行します:</para>
 <screen>&prompt.sudo;systemctl enable ptp4l</screen>
    <para>無効化したい場合は、下記のとおり入力して実行します:</para>
@@ -101,7 +101,7 @@ master offset  -4284 s2 freq -30135 path delay    9892</screen>
 verbose               1
 time_stamping         software
 [eth0]</screen>
-   <para>上記のように設定を行なうと、コマンドラインでは下記のような意味になります:</para>
+   <para>上記のように設定を行うと、コマンドラインでは下記のような意味になります:</para>
 <screen>&prompt.sudo;ptp4l -i eth0 -m -S</screen>
    <para><command>ptp4l</command> で利用可能な設定オプションの一覧については、 <command>man 8 ptp4l</command> をお読みください。</para>
   </sect2>
@@ -114,7 +114,7 @@ time_stamping         software
      <term>P2P</term>
      <listitem>
       <para>この方式を使用するには、 <option>-P</option> オプションを指定します。</para>
-      <para>この方法は、ネットワーク環境の変更に素早く反応できる方式であるほか、遅延の測定をより正確に行なうことができます。この方法は、それぞれのポートが他のポートと PTP メッセージを交換する場合にのみ使用します。 P2P は通信パス内の全てのハードウエア側で対応している必要があります。</para>
+      <para>この方法は、ネットワーク環境の変更に素早く反応できる方式であるほか、遅延の測定をより正確に行うことができます。この方法は、それぞれのポートが他のポートと PTP メッセージを交換する場合にのみ使用します。 P2P は通信パス内の全てのハードウエア側で対応している必要があります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -126,7 +126,7 @@ time_stamping         software
     <varlistentry>
      <term>自動方式選択</term>
      <listitem>
-      <para>この方式を使用するには、 <option>-A</option> オプションを指定します。自動方式選択では、まず <command>ptp4l</command> が E2E モードで動作し、その後 peer delay (対向遅延) 要求が届くと、 P2P モードに切り替える動作を行ないます。</para>
+      <para>この方式を使用するには、 <option>-A</option> オプションを指定します。自動方式選択では、まず <command>ptp4l</command> が E2E モードで動作し、その後 peer delay (対向遅延) 要求が届くと、 P2P モードに切り替える動作を行います。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -190,7 +190,7 @@ sending: GET TIME_STATUS_NP
  <sect1 xml:id="tuning-ptp-phc2sys">
   <title><command>phc2sys</command> による時刻同期</title>
 
-  <para><command>phc2sys</command> を使用することで、システムクロックをネットワークカードに搭載された PTP ハードウエアクロック (PHC) に同期させることができます。この場合、システムクロックは <emphasis>スレーブ</emphasis> 、ネットワークカード側は <emphasis>マスター</emphasis> として動作することになります。 PHC それ自身は <command>ptp4l</command> (詳しくは <xref linkend="tuning-ptp-using"/> をお読みください) で同期を行ないます。なお、 <option>-s</option> を指定することで、デバイスやネットワークインターフェイスでマスタークロックを指定することができます。また <option>-w</option> を指定すると、 <command>ptp4l</command> が同期状態になるまで待機させることができます。</para>
+  <para><command>phc2sys</command> を使用することで、システムクロックをネットワークカードに搭載された PTP ハードウエアクロック (PHC) に同期させることができます。この場合、システムクロックは <emphasis>スレーブ</emphasis> 、ネットワークカード側は <emphasis>マスター</emphasis> として動作することになります。 PHC それ自身は <command>ptp4l</command> (詳しくは <xref linkend="tuning-ptp-using"/> をお読みください) で同期を行います。なお、 <option>-s</option> を指定することで、デバイスやネットワークインターフェイスでマスタークロックを指定することができます。また <option>-w</option> を指定すると、 <command>ptp4l</command> が同期状態になるまで待機させることができます。</para>
 
 <screen>&prompt.sudo;phc2sys -s eth0 -w</screen>
 
@@ -202,7 +202,7 @@ sending: GET TIME_STATUS_NP
 
 <screen>&prompt.sudo;systemctl start phc2sys</screen>
 
-  <para>この場合、 <command>phc2sys</command> のオプションは <filename>/etc/sysconfig/phc2sys</filename> ファイルから読み込みが行なわれます。 <command>phc2sys</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 phc2sys</command> をお読みください。</para>
+  <para>この場合、 <command>phc2sys</command> のオプションは <filename>/etc/sysconfig/phc2sys</filename> ファイルから読み込みが行われます。 <command>phc2sys</command> のオプションや設定ファイルの構造について、詳しくは <command>man 8 phc2sys</command> をお読みください。</para>
 
   <para><command>phc2sys</command> サービスを恒久的に有効化したい場合は、下記のとおり入力して実行します:</para>
 
@@ -285,7 +285,7 @@ phc2sys[646.630]: phc offset       194 s2 freq  -36999 delay   2749</screen>
  <sect1 xml:id="tuning-ptp-ntp">
   <title>PTP と NTP</title>
 
-  <para>NTP と PTP の時刻同期ツールは同居させることができます。また、双方向の時刻同期を行なうこともできます。</para>
+  <para>NTP と PTP の時刻同期ツールは同居させることができます。また、双方向の時刻同期を行うこともできます。</para>
 
   <sect2 xml:id="tuning-ptp-ntp2ptp">
    <title>NTP から PTP への同期</title>
@@ -302,7 +302,7 @@ priority1 127
   <sect2 xml:id="tuning-ptp-ptp2ntp">
    <title>PTP-NTP ブリッジの設定</title>
    <para>非常に精度の高い PTP 最上位クロックがネットワーク内に存在しているものの、 PTP に対応するスイッチやルータが存在していない場合、コンピュータを PTP スレーブに設定するとともに、 stratum-1 の NTP サーバとして設定することができます。このようなコンピュータには複数のネットワークインターフェイスが必要となるほか、最上位のクロックとネットワーク的に非常に近い場所に存在しているか、直結している必要があります。これにより、ネットワーク内でも非常に精度の高い同期を実現することができます。</para>
-   <para><command>ptp4l</command> と <command>phc2sys</command> のプログラムを設定して、 1 つのネットワークインターフェイスで PTP によるシステムクロックの同期を行なうようにします。あとは &chronyd; を設定して、その他のインターフェイス経由でシステム時刻を提供するようにします:</para>
+   <para><command>ptp4l</command> と <command>phc2sys</command> のプログラムを設定して、 1 つのネットワークインターフェイスで PTP によるシステムクロックの同期を行うようにします。あとは &chronyd; を設定して、その他のインターフェイス経由でシステム時刻を提供するようにします:</para>
 <screen>bindaddress 192.0.131.47
 hwtimestamp eth1
 local stratum 1</screen>

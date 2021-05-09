@@ -7,7 +7,7 @@
  <title>squid: キャッシュ機能付きプロキシサーバ</title>
  <info>
   <abstract>
-   <para>squid は Linux プラットフォームや Unix プラットフォームで幅広く使用されている、キャッシュ機能付きプロキシサーバです。 Web や FTP サーバなどのインターネット側のオブジェクトに対して、元のサーバよりも端末側に近いマシンが代行してアクセスを行ない、それらを保管しておくことができます。また、このようなプロキシを複数階層の構成にして、応答時間の削減やネットワーク負荷の軽減などを行なうこともできます。このようにして複数階層の構成にしても、エンドユーザからその構造が見えることはなく、透過的に動作させることができます。</para>
+   <para>squid は Linux プラットフォームや Unix プラットフォームで幅広く使用されている、キャッシュ機能付きプロキシサーバです。 Web や FTP サーバなどのインターネット側のオブジェクトに対して、元のサーバよりも端末側に近いマシンが代行してアクセスを行い、それらを保管しておくことができます。また、このようなプロキシを複数階層の構成にして、応答時間の削減やネットワーク負荷の軽減などを行うこともできます。このようにして複数階層の構成にしても、エンドユーザからその構造が見えることはなく、透過的に動作させることができます。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -38,15 +38,15 @@
 
   <sect2 xml:id="sec-squid-security">
    <title>squid とセキュリティ</title>
-   <para>squid とファイアウオールを併用することで、外部の攻撃から内部ネットワークを保護することができるようになります。ファイアウオールでは、 squid を除いて全てのクライアントからの外部サービスアクセスを拒否するように設定することで、全ての Web 接続をプロキシ経由で行なわせることができます。これにより、 squid で Web アクセスの全てを制御できるようになります。</para>
-   <para>ファイアウオールの設定内に DMZ の構成が含まれる場合、プロキシは DMZ 内で動作させるべきです。 <xref linkend="sec-squid-proxyconfigtrans"/> では、 <emphasis>透過型</emphasis> プロキシを実装するための手順を説明しています。この透過型プロキシの構成により、クライアント側ではプロキシに関する設定を行なう必要がなくなりますので、設定をより簡単に済ませることができます。</para>
+   <para>squid とファイアウオールを併用することで、外部の攻撃から内部ネットワークを保護することができるようになります。ファイアウオールでは、 squid を除いて全てのクライアントからの外部サービスアクセスを拒否するように設定することで、全ての Web 接続をプロキシ経由で行わせることができます。これにより、 squid で Web アクセスの全てを制御できるようになります。</para>
+   <para>ファイアウオールの設定内に DMZ の構成が含まれる場合、プロキシは DMZ 内で動作させるべきです。 <xref linkend="sec-squid-proxyconfigtrans"/> では、 <emphasis>透過型</emphasis> プロキシを実装するための手順を説明しています。この透過型プロキシの構成により、クライアント側ではプロキシに関する設定を行う必要がなくなりますので、設定をより簡単に済ませることができます。</para>
   </sect2>
 
   <sect2 xml:id="sec-squid-morecaches">
    <title>複数のキャッシュ</title>
    <para>複数の squid インスタンスを動作させて、お互いにオブジェクトを交換できるように設定することもできます。これによりシステム全体の負荷を軽減し、ローカルネットワーク内でオブジェクトの取得を完了させる機会を増やすことができます。また、キャッシュには階層構造を設定することもできます。これにより、オブジェクトへの要求を兄弟関係にあるキャッシュに転送したり、親キャッシュに転送したりすることができるようになります。これにより、ローカルネットワーク内の他のキャッシュからオブジェクトを提供するか、直接情報源から取得するかを効率的に選択することができるようになります。</para>
    <para>キャッシュの階層構造を構築するにあたっては、適切なトポロジ選択が非常に重要です。なぜなら、ネットワーク内のトラフィック量を減らすことが、プロキシキャッシュの目的の 1 つであるからです。非常に巨大なネットワークの場合、それぞれのサブネット内にそれぞれプロキシサーバを設置して、それらは親プロキシサーバに接続して、親プロキシサーバからインターネットに直接アクセスするような構成が良いでしょう。</para>
-   <para>ここで行なわれる通信は、 UDP プロトコル上で動作する ICP (Internet Cache Protocol) で行なわれます。キャッシュ間のデータ転送は、 TCP をベースにした HTTP (HyperText Transmission Protocol) で行なわれます。</para>
+   <para>ここで行われる通信は、 UDP プロトコル上で動作する ICP (Internet Cache Protocol) で行われます。キャッシュ間のデータ転送は、 TCP をベースにした HTTP (HyperText Transmission Protocol) で行われます。</para>
    <para>特定のオブジェクトを要求するにあたって、最も適切なサーバを選択する目的で、キャッシュは全ての兄弟関係のプロキシに対して、 ICP リクエストを送信します。 ICP リクエストを受け取ったプロキシは、 ICP レスポンスとしてそれらの要求に応答します。オブジェクトが見つかった場合は <literal>HIT</literal> を、見つからなかった場合は <literal>MISS</literal> を使用して応答します。</para>
    <para>複数の <literal>HIT</literal> 応答が届いた場合、プロキシサーバは最も高速に応答したサーバや、最も近いサーバなどの判断基準で、特定のサーバを選択します。逆に、必要な応答が届かなかった場合、要求はそのまま親キャッシュに送信されます。 <remark>Is timestamp a factor? - sknorr, 2016-06-24</remark></para>
    <note>
@@ -57,9 +57,9 @@
 
   <sect2 xml:id="sec-squid-latching">
    <title>インターネットオブジェクトのキャッシュ</title>
-   <para>動的に生成されるページや TLS/SSL で暗号化されたコンテンツなど、ネットワーク内にある多くのオブジェクトは静的なものではありません。これらのオブジェクトは、アクセスが行なわれるたびに変化するものであることから、キャッシュが行なわれません。 <remark>Squid can now decrypt TLS traffic with plugins. Not sure whether that is then stored or not. Also, not sure how/whether to get this information in here. - sknorr, 2016-06-24 </remark></para>
+   <para>動的に生成されるページや TLS/SSL で暗号化されたコンテンツなど、ネットワーク内にある多くのオブジェクトは静的なものではありません。これらのオブジェクトは、アクセスが行われるたびに変化するものであることから、キャッシュが行われません。 <remark>Squid can now decrypt TLS traffic with plugins. Not sure whether that is then stored or not. Also, not sure how/whether to get this information in here. - sknorr, 2016-06-24 </remark></para>
    <para>また、キャッシュ内にオブジェクトを保持する期間を判断する目的で、オブジェクトには状態が割り当てられます。 Web やプロキシサーバでは、 <quote>最終更新日時</quote> や <quote>期限切れ日時</quote> などの仕組みを用意することで、これらのオブジェクトに対して状態を付与できるようになっています。なお、オブジェクトに含まれるその他のヘッダ情報については、そのままキャッシュ内に保持されます。</para>
-   <para>キャッシュ内のオブジェクトは、ディスク領域の不足などを理由として置き換えられるのが一般的です。この処理を行なうにあたっては、 LRU (Least <remark>not last?</remark> Recently Used) などのアルゴリズムを使用します。これにより、最も長い時間使われていないオブジェクトは、キャッシュから消滅することを意味します。</para>
+   <para>キャッシュ内のオブジェクトは、ディスク領域の不足などを理由として置き換えられるのが一般的です。この処理を行うにあたっては、 LRU (Least <remark>not last?</remark> Recently Used) などのアルゴリズムを使用します。これにより、最も長い時間使われていないオブジェクトは、キャッシュから消滅することを意味します。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-squid-sysneeds">
@@ -114,9 +114,9 @@
  <sect1 xml:id="sec-squid-start">
   <title>squid の基本的な使い方</title>
 
-  <para>インストールを行なっていない場合は、まず <package>squid</package> パッケージをインストールします。なお、 &productnamereg; の既定の状態では、 <systemitem>squid</systemitem> はインストールされません。</para>
+  <para>インストールを行っていない場合は、まず <package>squid</package> パッケージをインストールします。なお、 &productnamereg; の既定の状態では、 <systemitem>squid</systemitem> はインストールされません。</para>
 
-  <para>squid は &productname; 側であらかじめ設定済みです。インストールを行なったあとであれば、すぐに開始することができます。なお、開始の処理を円滑に進めるため、少なくとも 1 つ以上のネームサーバを設定し、インターネットに接続可能になるようネットワークを設定しておいてください。動的な DNS 設定でダイヤルアップ接続を行なっている場合、問題が発生する場合があります。この場合は、少なくとも 1 つ以上のネームサーバを固定で設定しておいてください。 squid では、 <filename>/var/run/netconfig/resolv.conf</filename> 内に DNS サーバの設定が存在しないと、開始することができません。</para>
+  <para>squid は &productname; 側であらかじめ設定済みです。インストールを行ったあとであれば、すぐに開始することができます。なお、開始の処理を円滑に進めるため、少なくとも 1 つ以上のネームサーバを設定し、インターネットに接続可能になるようネットワークを設定しておいてください。動的な DNS 設定でダイヤルアップ接続を行っている場合、問題が発生する場合があります。この場合は、少なくとも 1 つ以上のネームサーバを固定で設定しておいてください。 squid では、 <filename>/var/run/netconfig/resolv.conf</filename> 内に DNS サーバの設定が存在しないと、開始することができません。</para>
 
   <sect2 xml:id="sec-squid-start-commands">
    <title>squid の開始</title>
@@ -143,8 +143,8 @@
    <para>ローカルシステム内で squid の機能をテストするには、下記のいずれかの方法を使用します:</para>
    <itemizedlist>
     <listitem>
-     <para>テストを行なうには、 <command>squidclient</command> と呼ばれるコマンドラインツールをお使いください。これは Web リクエストを送信して出力を表示することのできるツールで、 <command>wget</command> や <command>curl</command> に似た仕組みです。</para>
-     <para>ただし、これらのツールとは異なり、 <command>squidclient</command> では squid の既定のプロキシ設定 (<literal>localhost:3128</literal>) に対して接続を行ないます。 squid 側の設定でポートを変更している場合は、 <command>squidclient</command> のコマンドラインオプションを指定して、プロキシを指定する必要があります。詳しくは <command>squidclient --help</command> をお読みください。</para>
+     <para>テストを行うには、 <command>squidclient</command> と呼ばれるコマンドラインツールをお使いください。これは Web リクエストを送信して出力を表示することのできるツールで、 <command>wget</command> や <command>curl</command> に似た仕組みです。</para>
+     <para>ただし、これらのツールとは異なり、 <command>squidclient</command> では squid の既定のプロキシ設定 (<literal>localhost:3128</literal>) に対して接続を行います。 squid 側の設定でポートを変更している場合は、 <command>squidclient</command> のコマンドラインオプションを指定して、プロキシを指定する必要があります。詳しくは <command>squidclient --help</command> をお読みください。</para>
      <example xml:id="ex-squidclient-request">
       <title><command>squidclient</command> によるリクエスト送信</title>
 <screen>&prompt.user;<command>squidclient http://www.example.org</command>
@@ -196,8 +196,8 @@ Connection: close
      <para>次にブラウザを利用して確認します: プロキシサーバに <option>localhost</option> を、プロキシサーバのポートに <option>3128</option> を指定してブラウザを設定します。この状態から何らかの Web ページを開いて、ブラウザの <emphasis>インスペクタ</emphasis> や <emphasis>開発者ツール</emphasis> 内にある <guimenu>ネットワーク</guimenu> パネルから、応答ヘッダを確認してください。 <xref linkend="ex-squidclient-request"/> と同様のヘッダが存在しているはずです。</para>
     </listitem>
    </itemizedlist>
-   <para>ローカルシステムや他のシステムから squid 経由でインターネットにアクセスできるようにするには、設定ファイル <filename>/etc/squid/squid.conf</filename> 内にある <option>http_access deny all</option> を <option>http_access allow all</option> に変更してください。ただし、この設定を実施すると、 squid は誰からもアクセスできるようになってしまうことに注意してください。アクセスできるユーザを制限したい場合は、 ACL (Access Control List; アクセス制御リスト) を設定して行ないます。また、設定ファイルを変更した場合は、 squid を再読み込みさせるか、再起動しなければなりません。 ACL について、詳しくは <xref linkend="sec-squid-acl"/> をお読みください。</para>
-   <para>squid が正しく開始できているにもかかわらず、しばらくして squid が停止してしまうような場合は、ネームサーバの設定が正しく行なわれていないか、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルがそもそも存在していないことが考えられます。 squid では、開始時の問題を <filename>/var/log/squid/cache.log</filename> ファイル内に記録します。</para>
+   <para>ローカルシステムや他のシステムから squid 経由でインターネットにアクセスできるようにするには、設定ファイル <filename>/etc/squid/squid.conf</filename> 内にある <option>http_access deny all</option> を <option>http_access allow all</option> に変更してください。ただし、この設定を実施すると、 squid は誰からもアクセスできるようになってしまうことに注意してください。アクセスできるユーザを制限したい場合は、 ACL (Access Control List; アクセス制御リスト) を設定して行います。また、設定ファイルを変更した場合は、 squid を再読み込みさせるか、再起動しなければなりません。 ACL について、詳しくは <xref linkend="sec-squid-acl"/> をお読みください。</para>
+   <para>squid が正しく開始できているにもかかわらず、しばらくして squid が停止してしまうような場合は、ネームサーバの設定が正しく行われていないか、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルがそもそも存在していないことが考えられます。 squid では、開始時の問題を <filename>/var/log/squid/cache.log</filename> ファイル内に記録します。</para>
   </sect2>
 
   <sect2 xml:id="sec-squid-stop">
@@ -226,21 +226,21 @@ Connection: close
      <para>squid モジュールを起動して <guimenu>squid を停止する</guimenu> ボタンを押します。</para>
     </listitem>
    </itemizedlist>
-   <para>squid は、その停止時にクライアントとの接続を切断し、データをディスクに書き込む処理を行なうため、最大で 30 秒程度の時間がかかります (<filename>/etc/squid/squid.conf</filename> 内の <option>shutdown_lifetime</option> オプションで設定することができます) 。</para>
+   <para>squid は、その停止時にクライアントとの接続を切断し、データをディスクに書き込む処理を行うため、最大で 30 秒程度の時間がかかります (<filename>/etc/squid/squid.conf</filename> 内の <option>shutdown_lifetime</option> オプションで設定することができます) 。</para>
    <warning>
     <title>squid の停止について</title>
-    <para>squid を停止させる際は、 <command>kill</command> や <command>killall</command> コマンドで停止させてはなりません。これを行なってしまうと、キャッシュデータを壊してしまう可能性があります。この場合、 squid を再度開始できるようにするには、キャッシュデータを削除しなければならなくなります。</para>
+    <para>squid を停止させる際は、 <command>kill</command> や <command>killall</command> コマンドで停止させてはなりません。これを行ってしまうと、キャッシュデータを壊してしまう可能性があります。この場合、 squid を再度開始できるようにするには、キャッシュデータを削除しなければならなくなります。</para>
    </warning>
   </sect2>
 
   <sect2 xml:id="sec-squid-remove">
    <title>squid の削除</title>
-   <para>システムから squid を削除しても、キャッシュの構造やログファイルについては削除が行なわれません。これらを削除するには、 <filename>/var/cache/squid</filename> ディレクトリを手作業で削除してください。</para>
+   <para>システムから squid を削除しても、キャッシュの構造やログファイルについては削除が行われません。これらを削除するには、 <filename>/var/cache/squid</filename> ディレクトリを手作業で削除してください。</para>
   </sect2>
 
   <sect2 xml:id="sec-squid-start-local-dns">
    <title>ローカル DNS サーバ</title>
-   <para>たとえ自分自身でドメインを所有していなくても、ローカルで DNS サーバを構築しておくことには意味があります。ローカルの DNS サーバは、キャッシュ専用のネームサーバとして動作させることで、特別な設定を行なわなくてもルートネームサーバへの DNS 要求ができるようになります (詳しくは <xref linkend="sec-dns-bind"/> をお読みください) 。このようなローカルの DNS サーバは、インターネットの接続にあたって動的に DNS サーバの設定を取得しているのか、静的に取得しているのかによって、やるべき作業が異なります。</para>
+   <para>たとえ自分自身でドメインを所有していなくても、ローカルで DNS サーバを構築しておくことには意味があります。ローカルの DNS サーバは、キャッシュ専用のネームサーバとして動作させることで、特別な設定を行わなくてもルートネームサーバへの DNS 要求ができるようになります (詳しくは <xref linkend="sec-dns-bind"/> をお読みください) 。このようなローカルの DNS サーバは、インターネットの接続にあたって動的に DNS サーバの設定を取得しているのか、静的に取得しているのかによって、やるべき作業が異なります。</para>
    <variablelist>
     <varlistentry xml:id="vle-squid-dynamicdns">
      <term>動的に DNS 設定を取得している場合</term>
@@ -252,9 +252,9 @@ Connection: close
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>静的に DNS 設定を行なっている場合</term>
+     <term>静的に DNS 設定を行っている場合</term>
      <listitem>
-      <para>静的な DNS 設定の場合、接続を行なっても自動的に DNS の設定が更新されることはありません。そのため、 sysconfig 変数についても、特に変更を行なう必要はありません。しかしながら、 <xref linkend="vle-squid-dynamicdns"/> で説明しているとおり、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルでローカルの DNS サーバを指定しておかなければなりません。これに加えて、 <filename>/etc/named.conf</filename> ファイル内の <systemitem>forwarders</systemitem> 以下に、 IP アドレスでプロバイダのネームサーバを指定してください。</para>
+      <para>静的な DNS 設定の場合、接続を行っても自動的に DNS の設定が更新されることはありません。そのため、 sysconfig 変数についても、特に変更を行う必要はありません。しかしながら、 <xref linkend="vle-squid-dynamicdns"/> で説明しているとおり、 <filename>/var/run/netconfig/resolv.conf</filename> ファイルでローカルの DNS サーバを指定しておかなければなりません。これに加えて、 <filename>/etc/named.conf</filename> ファイル内の <systemitem>forwarders</systemitem> 以下に、 IP アドレスでプロバイダのネームサーバを指定してください。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -273,7 +273,7 @@ Connection: close
    <varlistentry>
     <term><guimenu>起動</guimenu></term>
     <listitem>
-     <para>squid の起動方法や、どのインターフェイスに対してファイアウオールのポートを開くかなどの設定を行ないます。</para>
+     <para>squid の起動方法や、どのインターフェイスに対してファイアウオールのポートを開くかなどの設定を行います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -291,7 +291,7 @@ Connection: close
    <varlistentry>
     <term><guimenu>キャッシュ設定</guimenu></term>
     <listitem>
-     <para>最大オブジェクトサイズや最小オブジェクトサイズなど、キャッシュメモリに関する設定を行ないます。</para>
+     <para>最大オブジェクトサイズや最小オブジェクトサイズなど、キャッシュメモリに関する設定を行います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -303,7 +303,7 @@ Connection: close
    <varlistentry>
     <term><guimenu>アクセス制御</guimenu></term>
     <listitem>
-     <para>ACL グループを介した squid サーバへのアクセス制御を行ないます。</para>
+     <para>ACL グループを介した squid サーバへのアクセス制御を行います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -315,7 +315,7 @@ Connection: close
    <varlistentry>
     <term><guimenu>その他</guimenu></term>
     <listitem>
-     <para>言語や管理者のメールアドレスの設定を行ないます。</para>
+     <para>言語や管理者のメールアドレスの設定を行います。</para>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -323,7 +323,7 @@ Connection: close
  <sect1 xml:id="sec-squid-configfile">
   <title>squid の設定ファイル</title>
 
-  <para>squid プロキシサーバにおける全ての設定は、 <filename>/etc/squid/squid.conf</filename> ファイルで行ないます。 squid を初めて起動した場合は、このファイルを修正する必要はありませんが、初期状態では外部からのアクセスが全て拒否されるようになっています。そのため、プロキシは <systemitem class="domainname">localhost</systemitem> 専用のものとなります。また、既定のポートは <option>3128</option> です。あらかじめ用意されている <filename>/etc/squid/squid.conf</filename> には、オプションに関する様々な説明や設定例が示されています。</para>
+  <para>squid プロキシサーバにおける全ての設定は、 <filename>/etc/squid/squid.conf</filename> ファイルで行います。 squid を初めて起動した場合は、このファイルを修正する必要はありませんが、初期状態では外部からのアクセスが全て拒否されるようになっています。そのため、プロキシは <systemitem class="domainname">localhost</systemitem> 専用のものとなります。また、既定のポートは <option>3128</option> です。あらかじめ用意されている <filename>/etc/squid/squid.conf</filename> には、オプションに関する様々な説明や設定例が示されています。</para>
 
   <para>多くの項目はコメントアウトされているため、行頭に <literal>#</literal> がつけられていて、その後ろに実際の設定が書かれています。記述されている値は、通常は既定値が書かれているものであるため、コメントアウトを外しても squid の動作は変わりません。また、可能であればコメントアウトされた行は変更せず、その下に行を挿入して必要な設定と値を記述してください。これにより、何らかの設定を間違ってしまっていても、すぐに元に戻すことができるためです。</para>
 
@@ -346,7 +346,7 @@ Connection: close
     <varlistentry>
      <term><literal>cache_peer <replaceable>ホスト名</replaceable> <replaceable>種類</replaceable> <replaceable>プロキシポート</replaceable> <replaceable>ICP_ポート</replaceable></literal></term>
      <listitem>
-      <para>このオプションは、相互に通信を行なうキャッシュネットワークを作成するためのオプションです。 <literal>cache_peer</literal> で指定する相手は、この squid と同じくネットワークキャッシュを提供するコンピュータで、相互に関係性を持たせるためのものです。関係性の種類は <replaceable>種類</replaceable> で指定します。ここには <literal>parent</literal> (親) もしくは <literal>sibling</literal> (兄弟) のいずれかを指定します。</para>
+      <para>このオプションは、相互に通信を行うキャッシュネットワークを作成するためのオプションです。 <literal>cache_peer</literal> で指定する相手は、この squid と同じくネットワークキャッシュを提供するコンピュータで、相互に関係性を持たせるためのものです。関係性の種類は <replaceable>種類</replaceable> で指定します。ここには <literal>parent</literal> (親) もしくは <literal>sibling</literal> (兄弟) のいずれかを指定します。</para>
       <para><replaceable>ホスト名</replaceable> には対向のプロキシをホスト名または IP アドレスで指定します。 <replaceable>プロキシポート</replaceable> には一般的なブラウザからアクセスする際のポート (通常は <option>8080</option>) を設定します。また、 <replaceable>ICP_ポート</replaceable> には <option>7</option> を指定するか、もしくは ICP ポートが分からない場合や、この相手に対しては使用しない場合、 <option>0</option> を指定します。</para>
       <para>また、 squid をプロキシではなく Web ブラウザのように動作させたい場合は、 ICP プロトコルの使用を禁止してください。この場合は、 <option>default</option> および <option>no-query</option> のオプションを追加してください。</para>
      </listitem>
@@ -387,7 +387,7 @@ Connection: close
     <varlistentry>
      <term><option>client_netmask <replaceable>ネットマスク</replaceable></option></term>
      <listitem>
-      <para>このオプションは、ログファイル内でサブネットマスクを適用することによって、クライアントの IP アドレスをマスクする処理を行ないます。たとえば IP アドレスの末尾を <literal>0</literal> に設定したい場合は、 <systemitem class="netmask">255.255.255.0</systemitem> を指定します。</para>
+      <para>このオプションは、ログファイル内でサブネットマスクを適用することによって、クライアントの IP アドレスをマスクする処理を行います。たとえば IP アドレスの末尾を <literal>0</literal> に設定したい場合は、 <systemitem class="netmask">255.255.255.0</systemitem> を指定します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -473,7 +473,7 @@ acl lunch time MTWHF 12:00-15:00 <co xml:id="co-squid-school-time"/>
 </screen>
     <calloutlist>
      <callout arearefs="co-squid-school-surfer">
-      <para>この ACL は <literal>mysurfers</literal> という名前で、 <literal>.example.com</literal> というドメインからの全ての利用者を意味しています (ドメインの確認は、 IP アドレスから逆引きして行ないます) 。</para>
+      <para>この ACL は <literal>mysurfers</literal> という名前で、 <literal>.example.com</literal> というドメインからの全ての利用者を意味しています (ドメインの確認は、 IP アドレスから逆引きして行います) 。</para>
      </callout>
      <callout arearefs="co-squid-school-teacher">
       <para>この ACL は <literal>teachers</literal> という名前で、 <literal>192.168.1.</literal> で始まる IP アドレスを持つ全てのコンピュータを意味しています。</para>
@@ -527,7 +527,7 @@ http_access deny all
     <varlistentry>
      <term><option>ident_lookup_access allow <replaceable>ACL_名</replaceable></option></term>
      <listitem>
-      <para>このオプションを指定すると、 <literal>src</literal> の種類の ACL で定義される全てのクライアントに対して、ユーザの識別情報を取得するために ident 要求を実行します。全てのクライアントに対して処理を行ないたい場合は、 <replaceable>ACL_名</replaceable> にあらかじめ設定されている ACL 名である <literal>all</literal> を指定してください。</para>
+      <para>このオプションを指定すると、 <literal>src</literal> の種類の ACL で定義される全てのクライアントに対して、ユーザの識別情報を取得するために ident 要求を実行します。全てのクライアントに対して処理を行いたい場合は、 <replaceable>ACL_名</replaceable> にあらかじめ設定されている ACL 名である <literal>all</literal> を指定してください。</para>
       <para><option>ident_lookup_access</option> で指定した全てのクライアントでは、 ident デーモンを動作させなければならなくなります。 Linux の場合、 ident デーモンとして <systemitem class="daemon">pidentd</systemitem> (<package>pidentd</package> パッケージ) を使用することができます。他のオペレーティングシステムの場合でも、通常はフリーソフトウエアが用意されています。また、 ident 要求に対して正常に応答したクライアントだけにアクセスを許可したい場合は、下記のような ACL を設定します:</para>
 <screen>
 acl identhosts ident REQUIRED
@@ -545,9 +545,9 @@ http_access deny all
  <sect1 xml:id="sec-squid-proxyconfigtrans">
   <title>透過型プロキシの設定</title>
 
-  <para>透過型プロキシの場合は、プロキシサーバが Web ブラウザの要求を仲介して処理を行ないます。そのため、 Web ブラウザはプロキシの存在に気付くことがありませんし、名前のとおりユーザに対しても透明な存在になります。</para>
+  <para>透過型プロキシの場合は、プロキシサーバが Web ブラウザの要求を仲介して処理を行います。そのため、 Web ブラウザはプロキシの存在に気付くことがありませんし、名前のとおりユーザに対しても透明な存在になります。</para>
 
-  <para>プロキシサーバは一般に、プロキシ内のキャッシュに存在するかどうかに関わらず、 Web ブラウザ側でプロキシサーバのアドレスとポート番号を指定してアクセスを行ないます。ですが、透過型プロキシと呼ばれる方式を設定することもできます。たとえば下記のような理由が考えられます:</para>
+  <para>プロキシサーバは一般に、プロキシ内のキャッシュに存在するかどうかに関わらず、 Web ブラウザ側でプロキシサーバのアドレスとポート番号を指定してアクセスを行います。ですが、透過型プロキシと呼ばれる方式を設定することもできます。たとえば下記のような理由が考えられます:</para>
 
   <itemizedlist>
    <listitem>
@@ -649,7 +649,7 @@ cachemgr_passwd disable all
     <para>アクションの一覧については、 <systemitem class="resource">cachemgr.cgi</systemitem> にログインしてご確認ください。また、設定ファイル内でのキーワードについては、それぞれのアクションページ内の <literal>&amp;operation=</literal> 内に書かれています。なお、アクションで <literal>all</literal> を指定すると、全てのアクションを意味することになります。</para>
    </step>
    <step>
-    <para>squid と apache の設定を変更した場合は、それぞれ再読み込みを行ないます:</para>
+    <para>squid と apache の設定を変更した場合は、それぞれ再読み込みを行います:</para>
 <screen>&prompt.sudo;<command>systemctl reload squid</command></screen>
    </step>
    <step>
@@ -661,7 +661,7 @@ cachemgr_passwd disable all
  <sect1 xml:id="sec-squid-calamaris">
   <title>calamaris によるキャッシュレポートの生成</title>
 
-  <para>calamaris は ASCII や HTML の形式に対応した、キャッシュ動作のレポート生成を行なう Perl スクリプトです。 squid のアクセスログファイルを読み込んで処理する仕組みです。 calamaris の Web ページは <link xlink:href="http://cord.de/calamaris-english"/> にあります。なお、このツールは &productname; の既定ではインストールが行なわれません。 <systemitem>calamaris</systemitem> パッケージをインストールしてお使いください。</para>
+  <para>calamaris は ASCII や HTML の形式に対応した、キャッシュ動作のレポート生成を行う Perl スクリプトです。 squid のアクセスログファイルを読み込んで処理する仕組みです。 calamaris の Web ページは <link xlink:href="http://cord.de/calamaris-english"/> にあります。なお、このツールは &productname; の既定ではインストールが行われません。 <systemitem>calamaris</systemitem> パッケージをインストールしてお使いください。</para>
 
   <para>まずは <systemitem class="username">root</systemitem> でログインして、下記のように入力します:</para>
 

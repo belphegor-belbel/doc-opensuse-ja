@@ -32,13 +32,13 @@
 
   <sect2 xml:id="sec-tuning-taskscheduler-intro-priority">
    <title>プロセスの優先順位</title>
-   <para>スケジューラは各プロセスに割り当てられた優先順位を元にして判断を行ないます。プロセスの現在の優先順位を計算するにあたって、タスクスケジューラは複雑なアルゴリズムを使用します。その結果、各プロセスにはプロセッサの能力に応じた値が設定されます。</para>
+   <para>スケジューラは各プロセスに割り当てられた優先順位を元にして判断を行います。プロセスの現在の優先順位を計算するにあたって、タスクスケジューラは複雑なアルゴリズムを使用します。その結果、各プロセスにはプロセッサの能力に応じた値が設定されます。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-tuning-taskscheduler-policy-class">
   <title>プロセスの分類</title>
 
-  <para>プロセスは通常、目的や振る舞いに応じた分類付けが行なわれます。明確な区切りがあるとは限りませんが、一般的には 2 種類の分類が行なわれます。これらの基準はそれぞれ個別に判断されるべきもので、お互いに排他関係にあるわけではありません。</para>
+  <para>プロセスは通常、目的や振る舞いに応じた分類付けが行われます。明確な区切りがあるとは限りませんが、一般的には 2 種類の分類が行われます。これらの基準はそれぞれ個別に判断されるべきもので、お互いに排他関係にあるわけではありません。</para>
 
   <para>1 つの考え方として、 <emphasis>I/O バウンド</emphasis> と <emphasis>プロセッサバウンド</emphasis> に分類するやり方があります。</para>
 
@@ -116,7 +116,7 @@
  <sect1 xml:id="sec-tuning-taskscheduler-cfs">
   <title>完全公平型スケジューラ (Completely Fair Scheduler)</title>
 
-  <para>Linux カーネルバージョン 2.6.23 およびそれ以降では、プロセスの実行を制御するスケジューリングに対して新しいアプローチが追加され、完全公平型スケジューラ (Completely Fair Scheduler (CFS)) が既定の Linux カーネルのスケジューラとして設定されるようになりました。それ以降重要な変更や改善が行なわれていますが、本章での説明は &productname; のカーネルバージョン 2.6.32 およびそれ以降 (バージョン 3.x を含む) に対応しています。スケジューラ環境は複数のパーツから構成されていますが、主として 3 種類の機能が追加されています:</para>
+  <para>Linux カーネルバージョン 2.6.23 およびそれ以降では、プロセスの実行を制御するスケジューリングに対して新しいアプローチが追加され、完全公平型スケジューラ (Completely Fair Scheduler (CFS)) が既定の Linux カーネルのスケジューラとして設定されるようになりました。それ以降重要な変更や改善が行われていますが、本章での説明は &productname; のカーネルバージョン 2.6.32 およびそれ以降 (バージョン 3.x を含む) に対応しています。スケジューラ環境は複数のパーツから構成されていますが、主として 3 種類の機能が追加されています:</para>
 
   <variablelist>
    <varlistentry>
@@ -143,14 +143,14 @@
 
   <sect2 xml:id="sec-tuning-taskscheduler-cfs-howitworks">
    <title>CFS の仕組み</title>
-   <para>CFS は実行可能なそれぞれのタスクに対して、公平な割り振りを行なおうとします。タスクスケジューリングで最も公平なやり方として、 CFS は <emphasis>赤黒木</emphasis> の考え方を採用しています。赤黒木は平衡二分探索木の一種で、項目の挿入や削除を合理的な方法で提供し、平衡性を保ったままにすることができます。詳しい説明については、 <link xlink:href="https://ja.wikipedia.org/wiki/%E8%B5%A4%E9%BB%92%E6%9C%A8">赤黒木</link> の Wiki ページをお読みください。</para>
+   <para>CFS は実行可能なそれぞれのタスクに対して、公平な割り振りを行おうとします。タスクスケジューリングで最も公平なやり方として、 CFS は <emphasis>赤黒木</emphasis> の考え方を採用しています。赤黒木は平衡二分探索木の一種で、項目の挿入や削除を合理的な方法で提供し、平衡性を保ったままにすることができます。詳しい説明については、 <link xlink:href="https://ja.wikipedia.org/wiki/%E8%B5%A4%E9%BB%92%E6%9C%A8">赤黒木</link> の Wiki ページをお読みください。</para>
    <para>CFS がタスクをスケジュールする際、 <quote>仮想ランタイム</quote> もしくは <quote>vruntime</quote> と呼ばれる値を足していきます。実行する次のタスクを選択する際には、それまでに足された最小の vruntime のタスクを使用します。タスクが <emphasis>実行キュー</emphasis> (次に実行すべきプロセスの予定時刻表) 内に挿入された場合、赤黒木は平衡を保つように動作するため、最小の vruntime 値を持つタスクが赤黒木内では最初の項目となるように動きます。</para>
-   <para>タスクに対して足される vruntime の量は、その優先順位に対応して決められます。高い優先順位のタスクは、低い優先順位のタスクよりも遅い頻度で vruntime が足される仕組みであるため、より高い優先順位のタスクほど、より頻繁に処理が行なわれることになります。</para>
+   <para>タスクに対して足される vruntime の量は、その優先順位に対応して決められます。高い優先順位のタスクは、低い優先順位のタスクよりも遅い頻度で vruntime が足される仕組みであるため、より高い優先順位のタスクほど、より頻繁に処理が行われることになります。</para>
   </sect2>
 
   <sect2 xml:id="sec-tuning-taskscheduler-cfs-grouping">
    <title>プロセスのグループ化</title>
-   <para>Linux カーネルバージョン 2.6.24 では、 CFS が個別のタスクよりもグループに対して公平となるよう調整されました。実行可能なタスクはエンティティ (タスクの集合) としてグループ化され、 CFS では個別のタスクではなく、エンティティに対して公平になるように動作するようになっています。なおスケジューラ側では、エンティティ内の個別タスクに対しても、公平になるように処理を行ないます。</para>
+   <para>Linux カーネルバージョン 2.6.24 では、 CFS が個別のタスクよりもグループに対して公平となるよう調整されました。実行可能なタスクはエンティティ (タスクの集合) としてグループ化され、 CFS では個別のタスクではなく、エンティティに対して公平になるように動作するようになっています。なおスケジューラ側では、エンティティ内の個別タスクに対しても、公平になるように処理を行います。</para>
    <para>カーネルスケジューラは、コントロールグループを利用して実行可能なタスクをグループ化しています。詳しくは <xref linkend="cha-tuning-cgroups"/> をお読みください。</para>
   </sect2>
 
@@ -170,7 +170,7 @@
     <varlistentry>
      <term>遅延 (レイテンシ)</term>
      <listitem>
-      <para>プロセスに対して実行するようにスケジュールされてから、実際にその実行が行なわれるまでの遅延時間を意味します。</para>
+      <para>プロセスに対して実行するようにスケジュールされてから、実際にその実行が行われるまでの遅延時間を意味します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -222,7 +222,7 @@
 
   <sect2 xml:id="sec-tuning-taskscheduler-cfs-chrt">
    <title><command>chrt</command> によるプロセスのリアルタイム属性の変更</title>
-   <para><command>chrt</command> コマンドは、実行中のプロセスに対するリアルタイムスケジューリング属性を設定したり取得したりすることができるほか、指定した属性で指定したコマンドを実行することもできます。プロセスのスケジューリングポリシーのほか、優先順位の取得や設定も行なうことができます。</para>
+   <para><command>chrt</command> コマンドは、実行中のプロセスに対するリアルタイムスケジューリング属性を設定したり取得したりすることができるほか、指定した属性で指定したコマンドを実行することもできます。プロセスのスケジューリングポリシーのほか、優先順位の取得や設定も行うことができます。</para>
    <para>下記の例では、 PID が 16244 のプロセスを対象にしています。</para>
    <para>既存のタスクからリアルタイム属性を <emphasis>取得</emphasis> するには、下記のように入力して実行します:</para>
 <screen>&prompt.root;chrt -p 16244
@@ -292,7 +292,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
     <varlistentry>
      <term><systemitem>sched_child_runs_first</systemitem></term>
      <listitem>
-      <para>新しく fork された子プロセスは、親プロセスの実行が再開されるよりも早く実行が行なわれます。このパラメータを <literal>1</literal> にすると、子プロセスが fork 後すぐに処理を始めるような場合に有用となります。たとえば <command>make</command> <option>-j<replaceable>&lt;CPU_数&gt;</replaceable></option> のようなコマンドは、 sched_child_runs_first が <literal>0</literal> であるような場合より、高速に動作するようになります。既定値は <literal>0</literal> です。</para>
+      <para>新しく fork された子プロセスは、親プロセスの実行が再開されるよりも早く実行が行われます。このパラメータを <literal>1</literal> にすると、子プロセスが fork 後すぐに処理を始めるような場合に有用となります。たとえば <command>make</command> <option>-j<replaceable>&lt;CPU_数&gt;</replaceable></option> のようなコマンドは、 sched_child_runs_first が <literal>0</literal> であるような場合より、高速に動作するようになります。既定値は <literal>0</literal> です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -304,14 +304,14 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
     <varlistentry>
      <term><systemitem>sched_migration_cost_ns</systemitem></term>
      <listitem>
-      <para>直近の実行が行なわれたのち、特定のタスクがマイグレーションの決定に際して <quote>キャッシュホット</quote> であると判断する時間量を設定します。 <quote>ホット</quote> なタスクほど、他の CPU にマイグレーション (移行) することが少なくなりますので、この値を増やすことでタスクマイグレーションを少なくすることができます。既定値は <literal>500000</literal> [ナノ秒] です。</para>
+      <para>直近の実行が行われたのち、特定のタスクがマイグレーションの決定に際して <quote>キャッシュホット</quote> であると判断する時間量を設定します。 <quote>ホット</quote> なタスクほど、他の CPU にマイグレーション (移行) することが少なくなりますので、この値を増やすことでタスクマイグレーションを少なくすることができます。既定値は <literal>500000</literal> [ナノ秒] です。</para>
       <para>実行可能なプロセスが存在しているにもかかわらず、 CPU のアイドル時間が予想よりも長い場合は、この値を小さくすることをお勧めします。逆に、 CPU 間やノード間でのタスクのマイグレーションが過剰である場合、大きくすることをお勧めします。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
      <term><systemitem>sched_latency_ns</systemitem></term>
      <listitem>
-      <para>CPU バウンドのタスクに対して、ターゲットとするプリエンプション遅延を指定します。この値を増やすと、 CPU バウンドのタスクのタイムスライスが長くなります。タスクのタイムスライスは、スケジューリングの間隔と重み付けの設定から、下記のように公平な共有が行なわれます:</para>
+      <para>CPU バウンドのタスクに対して、ターゲットとするプリエンプション遅延を指定します。この値を増やすと、 CPU バウンドのタスクのタイムスライスが長くなります。タスクのタイムスライスは、スケジューリングの間隔と重み付けの設定から、下記のように公平な共有が行われます:</para>
       <para><replaceable>タイムスライス</replaceable> = <replaceable>スケジュール間隔</replaceable> * (<replaceable>タスクの重み</replaceable> / <replaceable>実行キュー内にあるタスクの重みの合計</replaceable>)</para>
       <para>タスクの重みはタスクの nice レベルとスケジューリングポリシーによって決まります。 SCHED_OTHER の場合、最小のタスクの重みは 15 で、これは nice 値 19 に対応します。最大のタスクの重みは 88761 で、これは nice 値 -20 に対応します。</para>
       <para>タイムスライスは負荷が増えるほど小さくなります。実行可能なタスクの数が <systemitem>sched_latency_ns</systemitem> / <systemitem>sched_min_granularity_ns</systemitem>  を越えると、タイムスライスは <replaceable>実行可能なタスクの数</replaceable> * <systemitem>sched_min_granularity_ns</systemitem> になります。それより前に、タイムスライスは <systemitem>sched_latency_ns</systemitem> に等しくなります。</para>
@@ -349,7 +349,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
     <varlistentry>
      <term><systemitem>sched_rt_runtime_us</systemitem></term>
      <listitem>
-      <para>sched_rt_period_us の間にリアルタイムタスクに割り当てられる時間単位です。 -1 を設定すると、リアルタイムタスクの帯域強制を行なわなくなります。既定では、リアルタイムタスクは 95 [%CPU/sec] を消費するため、 5 [%CPU/sec] もしくは 0.05s が SCHED_OTHER のタスクに残されることになります。既定値は <literal>950000</literal> [マイクロ秒] です。</para>
+      <para>sched_rt_period_us の間にリアルタイムタスクに割り当てられる時間単位です。 -1 を設定すると、リアルタイムタスクの帯域強制を行わなくなります。既定では、リアルタイムタスクは 95 [%CPU/sec] を消費するため、 5 [%CPU/sec] もしくは 0.05s が SCHED_OTHER のタスクに残されることになります。既定値は <literal>950000</literal> [マイクロ秒] です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>

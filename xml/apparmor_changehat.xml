@@ -14,7 +14,7 @@
     <para>&aareg; のプロファイルは本来、個別のプログラムやプロセスに対するセキュリティポリシーを表わすものです。つまり、実行可能なプログラムに対してプロファイルを割り当てることになります。ところが、プログラムの一部では他の部分とは異なるアクセス許可が必要となることもあります。このような場合は、 <quote>チェンジハット</quote> の機能を利用して、メインのプログラムに対して適用されているものとは異なるセキュリティコンテキストを適用するように設定します。このような <quote>異なるセキュリティコンテキスト</quote> のことを、 <emphasis>ハット</emphasis> や <emphasis>サブプロファイル</emphasis> などと呼び、 <!-- NOTE: additional description begins --> これを変更する行為を <emphasis>チェンジハット</emphasis> と呼びます。<!-- NOTE: additional description ends --> </para>
  <para>チェンジハット機能は、 &aa; のプロファイルの中からプログラムに対して <emphasis>ハット</emphasis> を変更する機能を提供します。これにより、プロセスごとの制限よりもずっと精密なセキュリティを設定することができます。また、この機能はそれぞれのアプリケーションが <quote>チェンジハット対応</quote> として作られている必要があります。これはアプリケーションの実行時、特定のタイミングで &aa; のモジュールに要求を送信して、ドメインを切り替える処理のことを指します。チェンジハット対応のアプリケーションの例としては、 Apache Web サーバなどがあります。</para>
  <para>1 つのプロファイルに対しては、任意の数のサブプロファイルを作成することができますが、 2 段階までしか対応していないことに注意する必要があります。つまり、サブプロファイルから更に子となるプロファイルを作成することはできません。また、サブプロファイルは個別のプロファイルとして作成する必要があります。サブプロファイルの名前は、元々のプロファイルの名前の末尾に <literal>^</literal> を付け、その後ろにサブプロファイルそのものの名前を指定します。</para>
- <para>サブプロファイルは親のプロファイル内に含まれていてもかまいませんし、個別のファイルとして存在していてもかまいません。特に多数のハットを必要とするようなサイトであれば、後者のほうがお勧めです。これにより、ハット単位でポリシーキャッシュ機能が働くため、サブプロファイル側の変更を行なった場合に処理を減らすことができるためです。逆にすべてのハットが親のプロファイル内に含まれている場合、親プロファイル全体を再コンパイルしなければならなくなります。</para>
+ <para>サブプロファイルは親のプロファイル内に含まれていてもかまいませんし、個別のファイルとして存在していてもかまいません。特に多数のハットを必要とするようなサイトであれば、後者のほうがお勧めです。これにより、ハット単位でポリシーキャッシュ機能が働くため、サブプロファイル側の変更を行った場合に処理を減らすことができるためです。逆にすべてのハットが親のプロファイル内に含まれている場合、親プロファイル全体を再コンパイルしなければならなくなります。</para>
  <para>ハットとして使用する予定の外部サブプロファイルがある場合、そのサブプロファイルの冒頭には <literal>hat</literal> もしくは <literal>^</literal> 文字で始まらなければなりません。</para>
  <para>下記の 2 つのサブプロファイルは、いずれもハットとして使用 <emphasis>できない</emphasis> ものです:</para>
 <screen>/foo//bar { }</screen>
@@ -55,7 +55,7 @@
 <screen>&prompt.user;a2enmod apparmor &amp;&amp; sudo systemctl reload apache2</screen>
   </note>
 
-  <para>Apache は純粋なテキスト形式の設定ファイルにディレクティブを配置することで、設定を行なうことができます。メインとなる設定ファイルは <filename>/etc/apache2/httpd.conf</filename> です。 Apache を独自にコンパイルして使用している場合は、コンパイル時の設定にあわせてファイルを選択してください。ディレクティブは Apache の動作を変更するためのもので、設定ファイル内の任意の場所に配置することができます。メインの設定ファイルを変更したあとは、 <command>sudo systemctl reload apache2</command> を実行することで、変更点を反映させることができます。</para>
+  <para>Apache は純粋なテキスト形式の設定ファイルにディレクティブを配置することで、設定を行うことができます。メインとなる設定ファイルは <filename>/etc/apache2/httpd.conf</filename> です。 Apache を独自にコンパイルして使用している場合は、コンパイル時の設定にあわせてファイルを選択してください。ディレクティブは Apache の動作を変更するためのもので、設定ファイル内の任意の場所に配置することができます。メインの設定ファイルを変更したあとは、 <command>sudo systemctl reload apache2</command> を実行することで、変更点を反映させることができます。</para>
 
   <sect2 xml:id="sec-apparmor-hat-config-vhost">
    <title>仮想ホストのディレクティブ</title>
@@ -73,7 +73,7 @@
   AAHatName MY_HAT_NAME
 &lt;/Location&gt;
 </screen>
-   <para>上記のように設定することで、 <filename>/foo/</filename> で始まる URI ( <filename>/foo/</filename> , <filename>/foo/bar</filename> , <filename>/foo/cgi/path/blah_blah/blah</filename> など) にアクセスが行なわれた際、 <literal>MY_HAT_NAME</literal> というハットを使用するようになります。</para>
+   <para>上記のように設定することで、 <filename>/foo/</filename> で始まる URI ( <filename>/foo/</filename> , <filename>/foo/bar</filename> , <filename>/foo/cgi/path/blah_blah/blah</filename> など) にアクセスが行われた際、 <literal>MY_HAT_NAME</literal> というハットを使用するようになります。</para>
    <para>Directory ディレクティブも上記と同様ですが、こちらのディレクティブはファイルシステム内のディレクトリを指定する点が異なることに注意してください:</para>
 <screen>&lt;Directory "/srv/www/www.example.org/docs"&gt;
   # 末尾にスラッシュが無いことに注意
@@ -84,7 +84,7 @@
  <sect1 xml:id="sec-apparmor-hat-apache-managing">
   <title>チェンジハット対応のアプリケーションの管理</title>
 
-  <para>前の章では <literal>mod_apparmor</literal> に関する情報と、特定の Web アプリケーションのセキュリティを向上させる方法について学んできました。この章では、 Web アプリケーションに対してハットを作成するための現実的な例と、 &aa; のチェンジハット機能の使用方法について説明しています。なお、本章では &aa; のコマンドラインツールを利用して説明を行なっていますが、これは &yast; の &aa; モジュールではすべての機能を提供しているわけではないためのものです。</para>
+  <para>前の章では <literal>mod_apparmor</literal> に関する情報と、特定の Web アプリケーションのセキュリティを向上させる方法について学んできました。この章では、 Web アプリケーションに対してハットを作成するための現実的な例と、 &aa; のチェンジハット機能の使用方法について説明しています。なお、本章では &aa; のコマンドラインツールを利用して説明を行っていますが、これは &yast; の &aa; モジュールではすべての機能を提供しているわけではないためのものです。</para>
 
   <sect2>
    <title>&aa; のコマンドラインツールによる方法</title>
@@ -93,12 +93,12 @@
 <screen>zypper in apache2 apache2-mod_apparmor apache2-mod_php5 php5 php5-mysql
 </screen>
 
-  <para>Adminer を動作させるための Web 環境の構築は、下記のようにして行ないます:</para>
+  <para>Adminer を動作させるための Web 環境の構築は、下記のようにして行います:</para>
 
   <procedure>
    <title>Web サーバ環境の設定</title>
    <step>
-    <para>まずは Apache 向けの <literal>apparmor</literal> と <literal>php5</literal> のモジュールを有効化します。有効化を行なうには、下記のように実行します:</para>
+    <para>まずは Apache 向けの <literal>apparmor</literal> と <literal>php5</literal> のモジュールを有効化します。有効化を行うには、下記のように実行します:</para>
 <screen>&prompt.user;a2enmod apparmor php5</screen>
     <para>あとは Apache を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart apache2</screen>
@@ -116,7 +116,7 @@
     <para><link xlink:href="http://www.adminer.org"/> から Adminer をダウンロードして、 <filename>/srv/www/htdocs/adminer/</filename> にコピーしたあと、ファイル名を <filename>adminer.php</filename> に変更します。スクリプトのフルパスは <filename>/srv/www/htdocs/adminer/adminer.php</filename> であることになります。</para>
    </step>
    <step>
-    <para>Web ブラウザを起動して URI 欄に <literal>http://localhost/adminer/adminer.php</literal> と入力し、 Adminer の動作確認を行ないます。 Adminer をリモートのサーバにインストールしている場合は、 <literal>localhost</literal> の部分をサーバのホスト名に置き換えてください。</para>
+    <para>Web ブラウザを起動して URI 欄に <literal>http://localhost/adminer/adminer.php</literal> と入力し、 Adminer の動作確認を行います。 Adminer をリモートのサーバにインストールしている場合は、 <literal>localhost</literal> の部分をサーバのホスト名に置き換えてください。</para>
     <figure>
      <title>Adminer のログインページ</title>
      <mediaobject>
@@ -129,13 +129,13 @@
      </mediaobject>
     </figure>
     <tip>
-     <para>Adminer のログインページの表示時に何らかの問題が発生した場合は、まず <filename>/var/log/apache2/error.log</filename> にある Apache のエラーログファイルをご覧になることをお勧めします。 Web ページにアクセスできない理由として考えられる理由としては、既に Apache が &aa; の制御下にあり、適用されているプロファイルが Adminer を動作させるには厳しすぎることも考えられます。この場合は、 <command>aa-status</command> を実行して確認を行ない、必要であれば下記を実行し、 Apache を一時的に不平モードに設定してください:</para>
+     <para>Adminer のログインページの表示時に何らかの問題が発生した場合は、まず <filename>/var/log/apache2/error.log</filename> にある Apache のエラーログファイルをご覧になることをお勧めします。 Web ページにアクセスできない理由として考えられる理由としては、既に Apache が &aa; の制御下にあり、適用されているプロファイルが Adminer を動作させるには厳しすぎることも考えられます。この場合は、 <command>aa-status</command> を実行して確認を行い、必要であれば下記を実行し、 Apache を一時的に不平モードに設定してください:</para>
 <screen>&prompt.root;sudo aa-complain usr.sbin.httpd2-prefork</screen>
     </tip>
    </step>
   </procedure>
 
-  <para>Adminer を動作させるための Web 環境が整ったら、次に Apache の <literal>mod_apparmor</literal> を設定します。これにより、 &aa; が Adminer に対するアクセスを検知して、固有の <quote>ハット</quote> に対する変更を行なうことができるようになります。</para>
+  <para>Adminer を動作させるための Web 環境が整ったら、次に Apache の <literal>mod_apparmor</literal> を設定します。これにより、 &aa; が Adminer に対するアクセスを検知して、固有の <quote>ハット</quote> に対する変更を行うことができるようになります。</para>
 
   <procedure>
    <title><literal>mod_apparmor</literal> の設定</title>
@@ -148,7 +148,7 @@
 <screen>&lt;Directory /srv/www/htdocs/adminer&gt;
   AAHatName adminer
 &lt;/Directory&gt;</screen>
-    <para>上記の設定を追加することで、 Apache に対して <filename>/adminer</filename> のディレクトリ (およびそれ以下のサブディレクトリやファイル) 宛のアクセスがあった際、 &aa; 側でチェンジハットを行なうことを指示します。このディレクトリ内には、既に <filename>adminer.php</filename> があるはずです。</para>
+    <para>上記の設定を追加することで、 Apache に対して <filename>/adminer</filename> のディレクトリ (およびそれ以下のサブディレクトリやファイル) 宛のアクセスがあった際、 &aa; 側でチェンジハットを行うことを指示します。このディレクトリ内には、既に <filename>adminer.php</filename> があるはずです。</para>
    </step>
    <step>
     <para>ファイルを保存して、テキストエディタを終了します。あとは下記のように実行して Apache を再起動します:</para>
@@ -219,7 +219,7 @@ apparmor module is loaded.
    </step>
   </procedure>
 
-  <para>あとは <systemitem>adminer</systemitem> ハットに対して、必要なアクセス権限を見つけ出していく作業になります。この時点では <systemitem>adminer</systemitem> ハットは不平モードに設定されているため、ログ内にポリシーへの違反が記録されているものの、実際の拒否は発動されていません。そのため、 Web ブラウザから <filename>adminer.php</filename> の機能を一通り試して、必要な権限を収集していってください。収集が終わったら、 <command>aa-logprof</command> を実行することで、ハットのプロファイルの作成支援を行ないます。</para>
+  <para>あとは <systemitem>adminer</systemitem> ハットに対して、必要なアクセス権限を見つけ出していく作業になります。この時点では <systemitem>adminer</systemitem> ハットは不平モードに設定されているため、ログ内にポリシーへの違反が記録されているものの、実際の拒否は発動されていません。そのため、 Web ブラウザから <filename>adminer.php</filename> の機能を一通り試して、必要な権限を収集していってください。収集が終わったら、 <command>aa-logprof</command> を実行することで、ハットのプロファイルの作成支援を行います。</para>
 
   <procedure>
    <title><systemitem>adminer</systemitem> ハット向けのルールの生成</title>
@@ -230,7 +230,7 @@ apparmor module is loaded.
     <para>まずは使用するデータベースエンジン (ここでは &mysql;) を選択し、既存のデータベースにユーザ名とパスワードを入力してログインします。なお、データベース名については、ログイン後に指定することもできますので、指定する必要はありません。あとは Adminer の機能を一通り試してください。新しいデータベースを作成したり、新しいテーブルを作成したり、ユーザ権限を設定したりなどです。</para>
    </step>
    <step>
-    <para>ひととおり Adminer のユーザインターフェイスをテストしたら、コンソールに戻って収集したログの調査を行ないます。</para>
+    <para>ひととおり Adminer のユーザインターフェイスをテストしたら、コンソールに戻って収集したログの調査を行います。</para>
     <screen>&prompt.sudo;aa-logprof
 Reading log entries from /var/log/audit/audit.log.
 Updating AppArmor profiles in /etc/apparmor.d.
@@ -257,7 +257,7 @@ Severity: 3
     </tip>
    </step>
    <step>
-    <para>最後に、下記のとおり保存を行なうかどうかを尋ねられます。</para>
+    <para>最後に、下記のとおり保存を行うかどうかを尋ねられます。</para>
 <screen>The following local profiles were changed. Would you like to save them?
  [1 - /usr/sbin/httpd2-prefork]
 
@@ -292,7 +292,7 @@ apparmor module is loaded.
   </sect2>
   <sect2 xml:id="sec-apparmor-hat-apache-managing-add">
    <title>&yast; によるハットと項目の追加方法</title>
-   <para><guimenu><!-- NOTE: not "Edit Profile" --> 既存のプロファイルを管理</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-edit"/> を参照) を使用するか、もしくは <guimenu>手作業でプロファイルを追加</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-add"/> を参照) を使用することで、 &aa; のプロファイル内にハット (サブプロファイル) を追加することができます。 <guimenu>&aa; プロファイルダイアログ</guimenu> ウインドウ内でチェンジハットのサブプロファイルを追加するには、下記のようにして行ないます。</para>
+   <para><guimenu><!-- NOTE: not "Edit Profile" --> 既存のプロファイルを管理</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-edit"/> を参照) を使用するか、もしくは <guimenu>手作業でプロファイルを追加</guimenu> (手順に関する詳細は <xref xrefstyle="SectTitleOnPage" linkend="sec-apparmor-yast-add"/> を参照) を使用することで、 &aa; のプロファイル内にハット (サブプロファイル) を追加することができます。 <guimenu>&aa; プロファイルダイアログ</guimenu> ウインドウ内でチェンジハットのサブプロファイルを追加するには、下記のようにして行います。</para>
    <informalfigure>
     <mediaobject>
      <textobject role="description"><phrase>&aa; プロファイルダイアログ</phrase></textobject>

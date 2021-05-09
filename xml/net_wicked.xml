@@ -26,7 +26,7 @@
   <para><command>wicked</command> と呼ばれるツールとライブラリが、ネットワーク設定に対する新しいフレームワークを提供しています。</para>
   <para>以前のネットワークインターフェイス管理では、異なるレイヤのネットワーク管理を寄せ集めて単一のスクリプトにするか、あっても 2 つの異なるスクリプトに仕立て上げるものでした。これらのスクリプトは、きちんと定義されていない方法で互いに作用するものであり、これによって予期しない問題を発生させたり、不明瞭な制約や慣習などをもたらしたりする結果になってしまっていました。また、様々なシナリオに対応するための様々なレイヤの特殊な修正により、さらにメンテナンスを複雑化させてしまっていました。アドレス設定プロトコルは dhcpcd のような実装を介して使用されていましたが、こちらも他のインフラストラクチャとの対話性は低いままでした。また、わけのわからないインターフェイス名の命名方式によって、インターフェイス名の永続性を達成するのに udev の支援を多く必要としてしまっていました。</para>
   <para>wicked は、様々な方法でこれらの問題を切り分けるために作られています。いずれの箇所も奇抜なものではないものの、様々なプロジェクトからのアイディアをまとめて、全体的によりよいソリューションとなるよう期待が込められています。</para>
-  <para>1 つ目のアプローチは、クライアント／サーバモデルの採用です。これにより、 wicked はフレームワーク全体と十分に統合された仕組みの中で、アドレス設定などの標準化された仕組みを定義することができるようになっています。たとえば特定のアドレス設定を行なう場合、管理者は DHCP や IPv4 Zeroconf などを使用するよう設定する場合がありますが、この場合もサーバからアドレスの貸与情報を取得して、それを wicked のサーバプロセスに渡すことで、 wicked 側がそのアドレスと経路の設定を行なうようになっています。</para>
+  <para>1 つ目のアプローチは、クライアント／サーバモデルの採用です。これにより、 wicked はフレームワーク全体と十分に統合された仕組みの中で、アドレス設定などの標準化された仕組みを定義することができるようになっています。たとえば特定のアドレス設定を行う場合、管理者は DHCP や IPv4 Zeroconf などを使用するよう設定する場合がありますが、この場合もサーバからアドレスの貸与情報を取得して、それを wicked のサーバプロセスに渡すことで、 wicked 側がそのアドレスと経路の設定を行うようになっています。</para>
   <para>問題を切り分けるためのもう 1 つのアプローチとしては、レイヤ構造をきちんと守っているということが挙げられます。どのような種類のネットワークインターフェイスであっても、ネットワークインターフェイスのデバイスレイヤ (VLAN, ブリッジ, ボンディング, 準仮想化デバイスなど) を設定する DBus サービスを定義することができるようになっています。アドレスの設定などの一般的な機能については、それぞれを特別に実装することなくデバイス固有のサービス上に搭載することのできる、接続サービスを用いて実装されています。</para>
   <para>wicked フレームワークは、これら 2 つの要素を様々な DBus サービスを利用して実装しています。使用する DBus サービスはネットワークの種類によって異なりますが、ここには wicked 内での現在のオブジェクト構造について、大まかな概要を示しています。</para>
   <para>それぞれのネットワークインターフェイスは <systemitem>/org/opensuse/Network/Interfaces</systemitem> の子オブジェクトとして表わされます。子オブジェクトの名前は ifindex の値から設定されます。たとえばループバックインターフェイスの場合、通常は ifindex が 1 になりますので、 <systemitem>/org/opensuse/Network/Interfaces/1</systemitem> になります。最初に登録されたイーサネットインターフェイスは、 <systemitem>/org/opensuse/Network/Interfaces/2</systemitem> になります。</para>
@@ -183,20 +183,20 @@ ip route show</screen>
   </sect3>
   <sect3 xml:id="sec-network-manconf-using-nanny">
    <title>Nanny</title>
-   <para>nanny はイベントおよびポリシー駆動型のデーモンで、ホットプラグ型のデバイスなどの非同期かつ不用意なシナリオに対応するための仕組みです。そのため、 nanny デーモンは開始や再起動の遅延のほか、一時的に取り外されたデバイスにも対応することができます。また、 nanny はデバイスとリンク状態の変更を監視しているほか、現在のポリシーセットで設定されている新しいデバイスを統合することができます。 Nanny では指定されたタイムアウト制約によって <command>ifup</command> が既に終了してしまったような場合でも、継続して設定を行なうことができます。</para>
+   <para>nanny はイベントおよびポリシー駆動型のデーモンで、ホットプラグ型のデバイスなどの非同期かつ不用意なシナリオに対応するための仕組みです。そのため、 nanny デーモンは開始や再起動の遅延のほか、一時的に取り外されたデバイスにも対応することができます。また、 nanny はデバイスとリンク状態の変更を監視しているほか、現在のポリシーセットで設定されている新しいデバイスを統合することができます。 Nanny では指定されたタイムアウト制約によって <command>ifup</command> が既に終了してしまったような場合でも、継続して設定を行うことができます。</para>
    <para>既定では、 nanny デーモンはシステム内で有効化されています。具体的には、<filename>/etc/wicked/common.xml</filename> 設定ファイル内の下記で有効化されています:</para>
 <screen>&lt;config&gt;
   ...
   &lt;use-nanny&gt;true&lt;/use-nanny&gt;
 &lt;/config&gt;</screen>
-   <para>この設定により、 ifup と ifreload は nanny デーモンに対して効率的な設定ポリシーを適用することになります。その後、 nanny は <systemitem class="daemon">wickedd</systemitem> をも設定しますので、ホットプラグにも対応することになります。また、 nanny は裏でイベントや変更 (新しいデバイスの接続やキャリア状態の変更など) を待機する処理も行ないます。</para>
+   <para>この設定により、 ifup と ifreload は nanny デーモンに対して効率的な設定ポリシーを適用することになります。その後、 nanny は <systemitem class="daemon">wickedd</systemitem> をも設定しますので、ホットプラグにも対応することになります。また、 nanny は裏でイベントや変更 (新しいデバイスの接続やキャリア状態の変更など) を待機する処理も行います。</para>
   </sect3>
 <!-- ============================================================== -->
   <sect3 xml:id="sec-network-manconf-multiple">
    <title>複数のインターフェイスの開始</title>
-   <para>ボンディングやブリッジでは、複数のデバイスを 1 つにまとめて設定を行ない (ifcfg-bondX) ますので、それらを一括で起動する必要があります。 wicked では、ボンディングやブリッジなどの上位側のインターフェイス名を起動するだけで、その中にあるインターフェイスを一括で起動することができます:</para>
+   <para>ボンディングやブリッジでは、複数のデバイスを 1 つにまとめて設定を行い (ifcfg-bondX) ますので、それらを一括で起動する必要があります。 wicked では、ボンディングやブリッジなどの上位側のインターフェイス名を起動するだけで、その中にあるインターフェイスを一括で起動することができます:</para>
 <screen>wicked ifup br0</screen>
-   <para>このコマンドを実行すると、ブリッジを設定して起動するまでの処理を、特に依存関係の順序 (ポートなど) を指定することなく、自動で行なうことができます。</para>
+   <para>このコマンドを実行すると、ブリッジを設定して起動するまでの処理を、特に依存関係の順序 (ポートなど) を指定することなく、自動で行うことができます。</para>
    <para>複数のインターフェイスを 1 つのコマンドで起動するには、下記のように実行します:</para>
 <screen>wicked ifup bond0 br0 br1 br2</screen>
    <para>全てのインターフェイスを一括で起動するには、下記のように実行します:</para>
@@ -205,27 +205,27 @@ ip route show</screen>
 <!-- ============================================================== -->
   <sect3 xml:id="sec-network-manconf-tunnel">
    <title>wicked によるトンネルの使用</title>
-   <para>wicked でトンネルを使用する必要がある場合は、 <envar>TUNNEL_DEVICE</envar> で設定を行なって対応することができます。必要であれば、デバイス名を指定してトンネルとデバイスを紐づけることもできます。トンネルされたパケットは、このデバイスを介して配信されることになります。</para>
+   <para>wicked でトンネルを使用する必要がある場合は、 <envar>TUNNEL_DEVICE</envar> で設定を行って対応することができます。必要であれば、デバイス名を指定してトンネルとデバイスを紐づけることもできます。トンネルされたパケットは、このデバイスを介して配信されることになります。</para>
    <para>詳しくは <command>man 5 ifcfg-tunnel</command> をお読みください。</para>
   </sect3>
 <!-- ============================================================== -->
   <sect3 xml:id="sec-network-manconf-incremental">
    <title>差分変更の処理</title>
-   <para><command>wicked</command> では、インターフェイスを再設定するにあたって、インターフェイスをいったん停止する必要はありません (カーネル側で求められている場合を除きます) 。たとえばネットワークインターフェイスに IP アドレスを追加したり、経路設定を行なったりする場合でも、インターフェイスの設定に IP アドレスを追加したあと、もう一度 <quote>ifup</quote> 操作を行なうだけで済むようになっています。サーバ側では変更すべき設定のみを抽出して適用する処理を行ないます。これは MTU や MAC アドレスなどのリンクレベルのオプションだけでなく、アドレスや経路、アドレスの設定モード (固定のアドレス設定から DHCP への変更など) のネットワークレベルの設定に対しても、このような動作をするようになっています。</para>
-   <para>ブリッジやボンディングなど、複数の実デバイスから構成される仮想デバイスの設定に対しては、注意する必要があります。たとえばボンディングデバイスの場合、デバイスの起動中には特定の設定を行なうことができません。設定しようとすると、エラーが発生することがあります。</para>
-   <para>しかしながら、ボンディングやブリッジなどの実デバイスの追加や削除、ボンディングにおけるプライマリインターフェイスの選択などは、行なうことが可能です。</para>
+   <para><command>wicked</command> では、インターフェイスを再設定するにあたって、インターフェイスをいったん停止する必要はありません (カーネル側で求められている場合を除きます) 。たとえばネットワークインターフェイスに IP アドレスを追加したり、経路設定を行ったりする場合でも、インターフェイスの設定に IP アドレスを追加したあと、もう一度 <quote>ifup</quote> 操作を行うだけで済むようになっています。サーバ側では変更すべき設定のみを抽出して適用する処理を行います。これは MTU や MAC アドレスなどのリンクレベルのオプションだけでなく、アドレスや経路、アドレスの設定モード (固定のアドレス設定から DHCP への変更など) のネットワークレベルの設定に対しても、このような動作をするようになっています。</para>
+   <para>ブリッジやボンディングなど、複数の実デバイスから構成される仮想デバイスの設定に対しては、注意する必要があります。たとえばボンディングデバイスの場合、デバイスの起動中には特定の設定を行うことができません。設定しようとすると、エラーが発生することがあります。</para>
+   <para>しかしながら、ボンディングやブリッジなどの実デバイスの追加や削除、ボンディングにおけるプライマリインターフェイスの選択などは、行うことが可能です。</para>
   </sect3>
 <!-- ============================================================== -->
   <sect3 xml:id="sec-network-manconf-address-config">
    <title>wicked 拡張: アドレス設定</title>
-   <para><command>wicked</command> はシェルスクリプトによって拡張を行なうことができます。これらの拡張は、 <filename>config.xml</filename> ファイル内に定義されています。</para>
+   <para><command>wicked</command> はシェルスクリプトによって拡張を行うことができます。これらの拡張は、 <filename>config.xml</filename> ファイル内に定義されています。</para>
    <para>現時点では、いくつかの拡張クラスに対応しています:</para>
    <itemizedlist>
     <listitem>
      <para>リンク設定: これらは、クライアント側から提供されたリンクレイヤの設定にあわせてデバイスを設定し起動する機能、およびデバイスを停止するためのスクリプトです。</para>
     </listitem>
     <listitem>
-     <para>アドレス設定: これらは、デバイスのアドレス設定を行なうためのスクリプトです。通常はアドレスの設定や DHCP の設定などは <command>wicked</command> 自身が管理しますが、拡張として実装もされています。</para>
+     <para>アドレス設定: これらは、デバイスのアドレス設定を行うためのスクリプトです。通常はアドレスの設定や DHCP の設定などは <command>wicked</command> 自身が管理しますが、拡張として実装もされています。</para>
     </listitem>
     <listitem>
      <para>ファイアウオール拡張: これらのスクリプトは、ファイアウオールのルールを適用します。</para>
@@ -242,7 +242,7 @@ ip route show</screen>
  &lt;putenv name="WICKED_INTERFACE_NAME" value="$property:name"/&gt;
  &lt;putenv name="WICKED_INTERFACE_INDEX" value="$property:index"/&gt;
 &lt;/dbus-service&gt;</screen>
-   <para>拡張は <tag class="starttag">dbus-service</tag> タグに割り当てられ、このインターフェイスのアクションを実行する際のコマンドを定義しています。また、アクションに対して渡される環境変数の定義を行なうこともできます。</para>
+   <para>拡張は <tag class="starttag">dbus-service</tag> タグに割り当てられ、このインターフェイスのアクションを実行する際のコマンドを定義しています。また、アクションに対して渡される環境変数の定義を行うこともできます。</para>
   </sect3>
 <!-- ============================================================== -->
   <sect3 xml:id="sec-network-manconf-configuration-files">
@@ -254,7 +254,7 @@ ip route show</screen>
  &lt;action name="install" command="/etc/wicked/extensions/resolver install"/&gt;
  &lt;action name="remove" command="/etc/wicked/extensions/resolver remove"/&gt;
 &lt;/system-updater&gt;</screen>
-   <para><systemitem>wickedd</systemitem> に対して更新が届くと、貸与情報を処理して、 <command>resolver</command> スクリプトの対応するコマンド ( <literal>backup</literal> , <literal>install</literal> など) を実行します。ここから <command>/sbin/netconfig</command> を呼び出して DNS の設定を変更するか、手作業で <filename>/run/netconfig/resolv.conf</filename> を変更している場合は、このファイルを直接変更する処理を行ないます。</para>
+   <para><systemitem>wickedd</systemitem> に対して更新が届くと、貸与情報を処理して、 <command>resolver</command> スクリプトの対応するコマンド ( <literal>backup</literal> , <literal>install</literal> など) を実行します。ここから <command>/sbin/netconfig</command> を呼び出して DNS の設定を変更するか、手作業で <filename>/run/netconfig/resolv.conf</filename> を変更している場合は、このファイルを直接変更する処理を行います。</para>
   </sect3>
  </sect2>
 
@@ -262,7 +262,7 @@ ip route show</screen>
 
  <sect2 xml:id="sec-network-manconf-testing">
   <title>設定のテスト</title>
-  <para>設定ファイル内に独自の設定を行なう前に、事前にテストを行なっておくことをお勧めします。テスト設定を行なうには <command>ip</command> コマンドを、接続をテストするには <command>ping</command> コマンドを使用します。</para>
+  <para>設定ファイル内に独自の設定を行う前に、事前にテストを行っておくことをお勧めします。テスト設定を行うには <command>ip</command> コマンドを、接続をテストするには <command>ping</command> コマンドを使用します。</para>
   <para><command>ip</command> コマンドは、設定ファイルに設定を保存することなく、ネットワークの設定を直接変更します。そのため、変更した設定はシステムを再起動すると元に戻ってしまいます。</para>
   <note>
    <title><command>ifconfig</command> と <command>route</command> の廃止予定について</title>
@@ -334,17 +334,17 @@ ip route show</screen>
     <para>デバイスを無効化するには、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;ip link set <replaceable>デバイス名</replaceable> down</screen>
     <para>ただし、このコマンドはネットワークインターフェイスをソフトウエアレベルで無効化するだけです。</para>
-    <para>イーサネットケーブルが取り外された場合や、スイッチの電源が切れた場合のように、リンクを失った場合の処理を行なわせたい場合は、下記のように入力して実行します:</para>
+    <para>イーサネットケーブルが取り外された場合や、スイッチの電源が切れた場合のように、リンクを失った場合の処理を行わせたい場合は、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;ip link set <replaceable>デバイス名</replaceable> carrier off</screen>
-    <para>なお、 <command>ip link set <replaceable>デバイス名</replaceable> down</command> は <replaceable>デバイス名</replaceable> を経由する全ての経路 (ルーティング) 情報を削除しますが、 <command>ip link set <replaceable>デバイス名</replaceable> carrier off</command> ではそのようなことは行ないません。また <command>carrier off</command> コマンドは、対応するネットワークデバイスのドライバ側での対応が必要となります。</para>
+    <para>なお、 <command>ip link set <replaceable>デバイス名</replaceable> down</command> は <replaceable>デバイス名</replaceable> を経由する全ての経路 (ルーティング) 情報を削除しますが、 <command>ip link set <replaceable>デバイス名</replaceable> carrier off</command> ではそのようなことは行いません。また <command>carrier off</command> コマンドは、対応するネットワークデバイスのドライバ側での対応が必要となります。</para>
     <para>デバイスに対する物理的な接続を復帰させるには、下記のように入力して実行します:</para>
     <screen>&prompt.sudo;ip link set <replaceable>デバイス名</replaceable> carrier on</screen>
    </tip>
-   <para>デバイスを有効化したあとは、様々な設定作業を行なうことができます。 IP アドレスを設定するには、下記のように入力して実行します:</para>
+   <para>デバイスを有効化したあとは、様々な設定作業を行うことができます。 IP アドレスを設定するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;ip addr add <replaceable>IP_アドレス</replaceable> + dev <replaceable>デバイス名</replaceable></screen>
    <para>たとえば標準ブロードキャストオプション (オプション <option>brd</option>) を指定して、インターフェイス eth0 に 192.168.12.154/30 というアドレスを設定するには、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;ip addr add 192.168.12.154/30 brd + dev eth0</screen>
-   <para>ネットワーク接続を正しく動作させるには、通常はデフォルトゲートウエイの設定も行なわなくてはなりません。お使いのシステムにデフォルトゲートウエイを設定するには、下記のようなコマンドを入力して実行します:</para>
+   <para>ネットワーク接続を正しく動作させるには、通常はデフォルトゲートウエイの設定も行わなくてはなりません。お使いのシステムにデフォルトゲートウエイを設定するには、下記のようなコマンドを入力して実行します:</para>
 <screen>&prompt.sudo;ip route add default via <replaceable>デフォルトゲートウエイの_IP_アドレス</replaceable></screen>
    <para>全てのデバイスを一覧表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;ip link ls</screen>
@@ -365,7 +365,7 @@ ip route show</screen>
   <sect3 xml:id="sec-network-manconf-testingping">
    <title>ping による通信テスト</title>
    <para><command>ping</command> コマンドは、 TCP/IP の接続が動作しているかどうかをテストすることができる標準的なツールです。このツールは ICMP プロトコルを利用して、 ECHO_REQUEST データグラムと呼ばれる小さなデータパケットを宛先のホストに送信し、相手側からの即時の応答を待ちます。応答があると、 <command>ping</command> はその旨を示すメッセージを表示します。これにより、ネットワークが正しく動作していることを確認することができます。</para>
-   <para><command>ping</command> は 2 台のコンピュータ間での接続機能テストを行なうだけではありません。基本的な接続品質に関する情報も提供します。 <xref linkend="ex-basicnet-manconf-ping"/> には <command>ping</command> の出力例を示していますが、出力の末尾から 2 行目には、送信したパケット数と損失数、および <command>ping</command> の実行にかかった時間が表示されます。</para>
+   <para><command>ping</command> は 2 台のコンピュータ間での接続機能テストを行うだけではありません。基本的な接続品質に関する情報も提供します。 <xref linkend="ex-basicnet-manconf-ping"/> には <command>ping</command> の出力例を示していますが、出力の末尾から 2 行目には、送信したパケット数と損失数、および <command>ping</command> の実行にかかった時間が表示されます。</para>
    <para>また、宛先の指定には IP アドレスだけでなくホスト名を指定することもできます。たとえば<command>ping</command> &nbsp; <option>&exampledomain;</option> や <command>ping</command> &nbsp; <option>&wwwip;</option> のように実行することができます。また、このプログラムは <keycombo><keycap function="control"/><keycap>C</keycap></keycombo> を押すまでパケットを送り続けます。</para>
    <para>接続ができるかどうかだけを調べたい場合は、 <option>-c</option> オプションでパケットの送信回数を制限してください。たとえば 3 回パケットを送信したい場合は、<command>ping</command> &nbsp; <option>-c 3 &exampledomain;</option> のように入力して実行します。</para>
    <example xml:id="ex-basicnet-manconf-ping">
@@ -380,7 +380,7 @@ PING &exampledomain; (&wwwip;) 56(84) bytes of data.
 rtt min/avg/max/mdev = 183.417/185.447/188.259/2.052 ms</screen>
    </example>
    <para>既定の送信間隔は 1 秒に設定されています。この間隔を変更したい場合は、 <option>-i</option> オプションを指定してください。たとえば送信間隔を 10 秒にしたい場合は、 <command>ping</command> &nbsp; <option>-i 10 &exampledomain;</option> のように入力して実行します。</para>
-   <para>なお、システムに複数のネットワークデバイスが存在する場合は、インターフェイスを指定して送信したほうが便利である場合があります。これを行なうには、 <option>-I</option> とデバイス名を指定してください。たとえば <command>ping</command> &nbsp; <option>-I wlan1 &exampledomain;</option> のように入力して実行します。</para>
+   <para>なお、システムに複数のネットワークデバイスが存在する場合は、インターフェイスを指定して送信したほうが便利である場合があります。これを行うには、 <option>-I</option> とデバイス名を指定してください。たとえば <command>ping</command> &nbsp; <option>-I wlan1 &exampledomain;</option> のように入力して実行します。</para>
    <para><command>ping</command> の使用方法について、詳しくは <command>ping</command> &nbsp; <option>-h</option> で表示されるヘルプ、もしくは <systemitem>ping (8)</systemitem> のマニュアルページをお読みください。</para>
    <tip>
     <title>IPv6 アドレスへの ping</title>

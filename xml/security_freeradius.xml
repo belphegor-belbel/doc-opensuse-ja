@@ -11,13 +11,13 @@
           </dm:bugtracker>
       </dm:docmanager>
     </info>
-    <para>RADIUS (Remote Authentication Dial-In User Service; リモート認証ダイヤルインユーザサービス) プロトコルは、ネットワークへの接続を管理するための標準的なサービスです。認証／認可／アカウンティングの各機能 (AAA と略します) のプロトコルを提供し、インターネットサービスプロバイダや携帯電話網のキャリアのような大規模ビジネスで使用されているだけでなく、小規模なネットワークでも一般的に用いられています。このプロトコルはユーザやデバイスを認証し、特定のネットワークサービスに対する認可を与え、課金や監査のための使用状況の監視を行ないます。もちろん AAA 全ての機能を使用する必要はなく、必要な機能だけを選ぶことができます。たとえばクライアントの認証機能だけを使用して使用状況の監視は行なわないような場合にも対応できますし、逆に使用状況の監視だけを使用しておいて、認可機能は別のサービスを使用するようなこともできます。</para>
+    <para>RADIUS (Remote Authentication Dial-In User Service; リモート認証ダイヤルインユーザサービス) プロトコルは、ネットワークへの接続を管理するための標準的なサービスです。認証／認可／アカウンティングの各機能 (AAA と略します) のプロトコルを提供し、インターネットサービスプロバイダや携帯電話網のキャリアのような大規模ビジネスで使用されているだけでなく、小規模なネットワークでも一般的に用いられています。このプロトコルはユーザやデバイスを認証し、特定のネットワークサービスに対する認可を与え、課金や監査のための使用状況の監視を行います。もちろん AAA 全ての機能を使用する必要はなく、必要な機能だけを選ぶことができます。たとえばクライアントの認証機能だけを使用して使用状況の監視は行わないような場合にも対応できますし、逆に使用状況の監視だけを使用しておいて、認可機能は別のサービスを使用するようなこともできます。</para>
     <para>このプロトコルは非常に効率的に動作しますので、最近のハードウエアであれば数千ものリクエストを処理できます。もちろんネットワークプロトコルの種類にも依存しませんので、ダイヤルアップ以外の環境でもそのまま使用することができます。</para>
     <para>RADIUS は分散型のアーキテクチャで動作していて、ネットワークに接続するためのアクセスサーバ (NAS) とは別に用意するのが一般的です。ユーザのアクセスデータは中央の RADIUS サーバ内に保管され、多数の NAS に対して提供されます。逆に NAS は、イーサネットスイッチや無線 LAN のアクセスポイントなど、ネットワークへの物理的なアクセス機能を提供します。</para>
-    <para>FreeRADIUS はオープンソースで開発されている RADIUS 実装で、最も広く使用されている RADIUS サーバでもあります。本章では FreeRADIUS サーバのインストールとテストの方法について説明しています。なお、 RADIUS はさまざまな用途に対応できることから、初期設定を行なったあとは公式のドキュメンテーション (詳しくは <link xlink:href="https://freeradius.org/documentation/"/>) をお読みになって、残りの必要な設定を行なってください。</para>
+    <para>FreeRADIUS はオープンソースで開発されている RADIUS 実装で、最も広く使用されている RADIUS サーバでもあります。本章では FreeRADIUS サーバのインストールとテストの方法について説明しています。なお、 RADIUS はさまざまな用途に対応できることから、初期設定を行ったあとは公式のドキュメンテーション (詳しくは <link xlink:href="https://freeradius.org/documentation/"/>) をお読みになって、残りの必要な設定を行ってください。</para>
   <sect1 xml:id="sec-test-radiusd">
     <title>&sle; でのインストールとテスト</title>
-    <para>下記の手順では単純なテスト用のシステムを構築します。サーバが正しく動作していることを確認したら、必要な残りの設定を行なって本番環境を構築してください。なお、用途によっては手順を巻き戻す必要があるかもしれません。</para>
+    <para>下記の手順では単純なテスト用のシステムを構築します。サーバが正しく動作していることを確認したら、必要な残りの設定を行って本番環境を構築してください。なお、用途によっては手順を巻き戻す必要があるかもしれません。</para>
     <para>まずは <systemitem class="resource">freeradius-server</systemitem> と <systemitem class="resource">freeradius-server-utils</systemitem> のパッケージをインストールします。インストールが終わったら、 <filename>/etc/raddb/certs</filename> ディレクトリ内に移動して <filename>bootstrap</filename> を実行し、テスト用の証明書を作成してください:</para>
     <screen>&prompt.root;zypper in freeradius-server
 &prompt.root;cd /etc/raddb/certs
@@ -37,11 +37,11 @@ Ready to process requests
 
     <para>"Listening" と "Ready to process requests" と書かれた行が表示されたら、サーバが問題なく起動したことになります。これらが表示されない場合は、出力された内容をよくお読みのうえ、何が問題なのかを調べてください。なお、出力された内容を調べる場合は、 <command>tee</command> コマンドでテキストファイルに出力しておくと便利です:</para>
     <screen>&prompt.user;radiusd -X | tee radiusd.text</screen>
-    <para>次にテスト用のクライアントとユーザを用意して、認証のテストを行ないます。クライアントは通常、無線 LAN のアクセスポイントやスイッチなど、 RADIUS サーバのクライアントとして動作するものを使用します。サーバ側では、クライアントは <filename>/etc/raddb/client.conf</filename> ファイルに、ユーザは <filename>/etc/raddb/mods-config/files/authorize</filename> にそれぞれ設定します。</para>
+    <para>次にテスト用のクライアントとユーザを用意して、認証のテストを行います。クライアントは通常、無線 LAN のアクセスポイントやスイッチなど、 RADIUS サーバのクライアントとして動作するものを使用します。サーバ側では、クライアントは <filename>/etc/raddb/client.conf</filename> ファイルに、ユーザは <filename>/etc/raddb/mods-config/files/authorize</filename> にそれぞれ設定します。</para>
     <para><filename>/etc/raddb/mods-config/files/authorize</filename> ファイルを開いて、下記のような行を入力します:</para>
         <screen>bob   Cleartext-Password := "hello"
 Reply-Message := "Hello, %{User-Name}" </screen>
-    <para>テスト用のクライアントである <filename>/etc/raddb/client.conf</filename> は <filename>/etc/raddb/client.conf</filename> 内に既に設定されていて、 <literal>testing123</literal> というシークレット値が設定されています。これを利用して認証のテストを行ないます。一般ユーザで端末をもう 1 つ開いてから <command>radtest</command> コマンドを実行して、 bob でのログインを試してみます:</para>
+    <para>テスト用のクライアントである <filename>/etc/raddb/client.conf</filename> は <filename>/etc/raddb/client.conf</filename> 内に既に設定されていて、 <literal>testing123</literal> というシークレット値が設定されています。これを利用して認証のテストを行います。一般ユーザで端末をもう 1 つ開いてから <command>radtest</command> コマンドを実行して、 bob でのログインを試してみます:</para>
     <screen>&prompt.user;radtest bob hello 127.0.0.1 0 testing123
 Sent Access-Request Id 241 from 0.0.0.0:35234 to 127.0.0.1:1812 length 73
         User-Name = "bob"
@@ -63,7 +63,7 @@ Received Access-Accept Id 241 from 127.0.0.1:1812 to 0.0.0.0:0 length 20
 Waking up in 4.9 seconds.
 (3) Cleaning up request packet ID 241 with timestamp +889
 </screen>
-    <para>次にネットワーク内にある異なるコンピュータからログインテストを行ないます。サーバ側の <filename>clients.conf</filename> は下記のようなクライアント設定が含まれていますので、こちらのコメント文字 (#) を外して必要な修正を行ないます:</para>
+    <para>次にネットワーク内にある異なるコンピュータからログインテストを行います。サーバ側の <filename>clients.conf</filename> は下記のようなクライアント設定が含まれていますので、こちらのコメント文字 (#) を外して必要な修正を行います:</para>
     <screen>client private-network-1 }
   ipaddr          = 192.0.2.0/24
   secret          = testing123-1
@@ -74,7 +74,7 @@ Waking up in 4.9 seconds.
     <screen>&prompt.user;radtest bob hello &wsIip; 0 testing123-1
         </screen>
 
-    <para>ログインが失敗するような場合は、まず全ての出力をよく読んで原因を調査してください。設定ファイルにはいくつかのテスト用のユーザやクライアントが書かれていますので、こちらを試してみてもかまいません。また、設定ファイル内にはコメントでさまざまな情報が書かれています (ただし英語です) ので、ここからさまざまなことを学べます。テストに問題がなく、本番で使用するための設定を始めたい場合は、まず <filename>/etc/raddb/certs</filename> ディレクトリ内にあるテスト用の証明書を全て削除して、実際に使用するものに置き換えてください。また、テスト用のユーザやクライアントの設定もコメントアウト (#) してください。なお、テスト用に動作させた <command>radiusd</command> を停止するには、 <keycombo><keycap>Ctrl</keycap><keycap>c</keycap></keycombo> を押してください。本番環境では <command>systemctl</command> の <literal>radiusd.service</literal> で管理を行ないます。</para>
+    <para>ログインが失敗するような場合は、まず全ての出力をよく読んで原因を調査してください。設定ファイルにはいくつかのテスト用のユーザやクライアントが書かれていますので、こちらを試してみてもかまいません。また、設定ファイル内にはコメントでさまざまな情報が書かれています (ただし英語です) ので、ここからさまざまなことを学べます。テストに問題がなく、本番で使用するための設定を始めたい場合は、まず <filename>/etc/raddb/certs</filename> ディレクトリ内にあるテスト用の証明書を全て削除して、実際に使用するものに置き換えてください。また、テスト用のユーザやクライアントの設定もコメントアウト (#) してください。なお、テスト用に動作させた <command>radiusd</command> を停止するには、 <keycombo><keycap>Ctrl</keycap><keycap>c</keycap></keycombo> を押してください。本番環境では <command>systemctl</command> の <literal>radiusd.service</literal> で管理を行います。</para>
     <para>お使いのネットワーク内で FreeRADIUS を適用するための方法について、詳しくは <link xlink:href="https://freeradius.org/documentation/"/> や <link xlink:href="https://networkradius.com/freeradius-documentation/"/> (いずれも英語) をお読みください。こちらにはさまざまな情報や手順などが示されています。</para>
   </sect1>
 </chapter>

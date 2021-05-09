@@ -12,7 +12,7 @@
  </info>
  <para>アプリケーションに対する &aa; のプロファイル作成は非常にわかりやすく、直感的な仕組みになっています。 &aa; にはプロファイル作成を支援するツールが添付されているため、プログラミングの知識もスクリプトの処理も必要とはなりません。管理者に対して求められる作業は、セキュリティを強化する目的で、各アプリケーションに対して最も厳格なアクセス制御とプログラム実行のポリシーを設定することだけです。</para>
  <para>アプリケーションに対するプロファイルの更新や修正は、ソフトウエアの設定を変更したり、必要な機能範囲の変化が起こった場合のみです。 &aa; には、プロファイルの更新や修正に対応した、直感的なツールが用意されています。</para>
- <para>プロファイルを作成したいプログラムを選択したあとは、実際に &aa; のプロファイルを作成するだけです。プロファイルの作成を行なうにあたっては、コンポーネントやその文法の理解を深める必要があります。 &aa; には、シンプルで再利用性の高いプロファイルを作成するための、さまざまな機能が用意されています:</para>
+ <para>プロファイルを作成したいプログラムを選択したあとは、実際に &aa; のプロファイルを作成するだけです。プロファイルの作成を行うにあたっては、コンポーネントやその文法の理解を深める必要があります。 &aa; には、シンプルで再利用性の高いプロファイルを作成するための、さまざまな機能が用意されています:</para>
  <variablelist>
   <varlistentry>
    <term>ファイル取り込み</term>
@@ -35,7 +35,7 @@
   <varlistentry>
    <term>ケーパビリティ項目</term>
    <listitem>
-    <para>ケーパビリティ項目とは、 POSIX.1e (<link xlink:href="http://ja.wikipedia.org/wiki/POSIX"/>) として定められている Linux ケーパビリティ向けのプロファイル項目で、制限されたプロセスが権限の必要なシステムコールを行なう際、より細かい制御を行なうことのできる仕組みを指します。</para>
+    <para>ケーパビリティ項目とは、 POSIX.1e (<link xlink:href="http://ja.wikipedia.org/wiki/POSIX"/>) として定められている Linux ケーパビリティ向けのプロファイル項目で、制限されたプロセスが権限の必要なシステムコールを行う際、より細かい制御を行うことのできる仕組みを指します。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
@@ -220,11 +220,11 @@
 
   <sect2 xml:id="sec-apparmor-profiles-types-change">
    <title>ルール変更</title>
-   <para>&aa; では、 <literal>change_hat</literal> および <literal>change_profile</literal> と呼ばれるルールを利用して、制御ドメインの遷移を行なうことができます。 <literal>change_hat</literal> がプロファイル内で定義したハットに遷移するのに対して、 <literal>change_profile</literal> は他のプロファイルを参照する処理を行ないます。 <literal>change_profile</literal> では、下記のように <literal>change_profile</literal> キーワードを明記します:</para>
+   <para>&aa; では、 <literal>change_hat</literal> および <literal>change_profile</literal> と呼ばれるルールを利用して、制御ドメインの遷移を行うことができます。 <literal>change_hat</literal> がプロファイル内で定義したハットに遷移するのに対して、 <literal>change_profile</literal> は他のプロファイルを参照する処理を行います。 <literal>change_profile</literal> では、下記のように <literal>change_profile</literal> キーワードを明記します:</para>
 <screen>change_profile -&gt; /usr/bin/foobar,</screen>
-   <para><literal>change_hat</literal> と <literal>change_profile</literal> のいずれも、個別のアプリケーションを起動することなく、アプリケーション内でのプロファイル遷移を実現します。 <literal>change_profile</literal> は一般に、読み込まれたプロファイル間で一方向の遷移を行ないます。それに対して、 <literal>change_hat</literal> は戻ってくることを前提とした遷移となり、後から正しい機密鍵を指定することで、親プロファイルに戻ってくることができます。</para>
+   <para><literal>change_hat</literal> と <literal>change_profile</literal> のいずれも、個別のアプリケーションを起動することなく、アプリケーション内でのプロファイル遷移を実現します。 <literal>change_profile</literal> は一般に、読み込まれたプロファイル間で一方向の遷移を行います。それに対して、 <literal>change_hat</literal> は戻ってくることを前提とした遷移となり、後から正しい機密鍵を指定することで、親プロファイルに戻ってくることができます。</para>
    <para><literal>change_profile</literal> は、アプリケーションが特定の設定フェーズを経由して起動し、後から権限レベルを落とすような仕組みである場合に、最適な仕組みです。起動フェーズ内でマッピングしたり開いたりしたリソースについては、プロファイルが変更されてもアクセスが許可され続けますが、新しいプロファイルでは新しいリソースを開く処理が制限されたり、リソースによっては切り替え前よりも制限を厳しくしたりするような動作に適切な仕組みです。特に、ケーパビリティやファイルのリソースについては制限ができる (ただしメモリマップされていなければ) ものの、メモリについては以前と同じく利用できるようになります。</para>
-   <para><literal>change_hat</literal> はアプリケーションが仮想マシンやインタプリタを動作させるような場合に最適な仕組みで、それらの仮想マシンやインタプリタがアプリケーションのリソースへのアクセスを提供しないような場合に適切です (たとえば Apache の <literal>mod_php</literal> などがそれにあたります) 。なお <literal>change_hat</literal> は、元のプロファイルに戻るための機密鍵をアプリケーションのメモリ内に保存しますので、権限を縮小したフェーズではメモリに直接悪性できる権限を持つべきではありません。また、ハットではファイルハンドルへのアクセスを制限することはできますが、閉じることはできませんので、ファイルアクセスが正しく分離されていることも重要となります。もしもアプリケーションがバッファリングを行なっていて、バッファを利用したファイルアクセスの機能を提供している場合、これらのファイルへのアクセスはカーネルからは検出することができず、新しいプロファイルでも制限がされないことがありうることにも注意してください。</para>
+   <para><literal>change_hat</literal> はアプリケーションが仮想マシンやインタプリタを動作させるような場合に最適な仕組みで、それらの仮想マシンやインタプリタがアプリケーションのリソースへのアクセスを提供しないような場合に適切です (たとえば Apache の <literal>mod_php</literal> などがそれにあたります) 。なお <literal>change_hat</literal> は、元のプロファイルに戻るための機密鍵をアプリケーションのメモリ内に保存しますので、権限を縮小したフェーズではメモリに直接悪性できる権限を持つべきではありません。また、ハットではファイルハンドルへのアクセスを制限することはできますが、閉じることはできませんので、ファイルアクセスが正しく分離されていることも重要となります。もしもアプリケーションがバッファリングを行っていて、バッファを利用したファイルアクセスの機能を提供している場合、これらのファイルへのアクセスはカーネルからは検出することができず、新しいプロファイルでも制限がされないことがありうることにも注意してください。</para>
    <warning>
     <title>ドメイン遷移の安全性について</title>
     <para><literal>change_hat</literal> や <literal>change_profile</literal> によるドメイン遷移は、プロセスのメモリマッピングに影響を与えることができませんし、既に開いているリソースを閉じることもしませんので、 exec によるドメイン遷移よりはずっと安全性が低いことに注意してください。</para>
@@ -315,7 +315,7 @@ capability,                          # 全てのケーパビリティ
  <sect1 xml:id="sec-apparmor-profiles-nac">
   <title>ネットワークアクセス制御</title>
 
-  <para>&aa; では、アドレスの種類とファミリをベースにして、ネットワークアクセスの制限を行なうことができます。下記にネットワークアクセス制御ルールの書式を示します:</para>
+  <para>&aa; では、アドレスの種類とファミリをベースにして、ネットワークアクセスの制限を行うことができます。下記にネットワークアクセス制御ルールの書式を示します:</para>
 
 <screen>network [[&lt;ドメイン&gt;<co xml:id="co-apparmor-profiles-nac-dom"/>][&lt;種類<co xml:id="co-apparmor-profiles-nac-type"/>&gt;][&lt;プロトコル<co xml:id="co-apparmor-profiles-nac-proto"/>&gt;]]</screen>
 
@@ -646,7 +646,7 @@ alias /home/ -&gt; /mnt/home/</screen>
 
   <sect2 xml:id="sec-apparmor-profiles-perm-a">
    <title>追記モード (a)</title>
-   <para>指定したリソースに対して、プログラムからファイルの末尾への書き込みを許可します。 <literal>w</literal> モードとは異なり、追記モードではファイル内容の上書きが許可されないほか、ファイル名の変更や削除なども行なうことができなくなります。追記の許可は通常、アプリケーション側からログファイルへの書き込みを行なうような場合に指定すべきもので、これにより既に記録されているログコンテンツの上書きを禁止することができます。追記の許可は書き込みモードのサブセットとして規定されているため、 <literal>w</literal> と <literal>a</literal> のフラグの両方を指定することはできませんし、相互に排他関係にあるフラグとなります。</para>
+   <para>指定したリソースに対して、プログラムからファイルの末尾への書き込みを許可します。 <literal>w</literal> モードとは異なり、追記モードではファイル内容の上書きが許可されないほか、ファイル名の変更や削除なども行うことができなくなります。追記の許可は通常、アプリケーション側からログファイルへの書き込みを行うような場合に指定すべきもので、これにより既に記録されているログコンテンツの上書きを禁止することができます。追記の許可は書き込みモードのサブセットとして規定されているため、 <literal>w</literal> と <literal>a</literal> のフラグの両方を指定することはできませんし、相互に排他関係にあるフラグとなります。</para>
   </sect2>
 
   <sect2 xml:id="sec-apparmor-profiles-perm-k">
@@ -700,9 +700,9 @@ allow file rw /path, # 明示的に 'allow' キーワードを指定した例
 
   <sect2 xml:id="sec-apparmor-profiles-perm-owner">
    <title>所有者条件ルール</title>
-   <para>ファイルルールでは、ファイルの所有者であった場合の特例を設定することができます (fsuid がファイルの uid と一致している必要があります) 。所有者である場合のルールを設定するには、ルールの前に <literal>owner</literal> キーワードを指定します。所有者条件ルールでも、通常のファイルルールと同様に設定を行なうことができます。</para>
+   <para>ファイルルールでは、ファイルの所有者であった場合の特例を設定することができます (fsuid がファイルの uid と一致している必要があります) 。所有者である場合のルールを設定するには、ルールの前に <literal>owner</literal> キーワードを指定します。所有者条件ルールでも、通常のファイルルールと同様に設定を行うことができます。</para>
 <screen>owner /home/*/** rw</screen>
-   <para>所有者条件ルールとリンクルールの両方を使用した場合、テストはターゲットのファイルに対して行なわれ、リンクができるようになるためには、ユーザがファイルを所有していなければならなくなります。</para>
+   <para>所有者条件ルールとリンクルールの両方を使用した場合、テストはターゲットのファイルに対して行われ、リンクができるようになるためには、ユーザがファイルを所有していなければならなくなります。</para>
    <note>
     <title>通常のファイルルールの優先順位について</title>
     <para>所有者条件ルールは通常のファイルルールに対するサブセットとして扱われます。通常のファイルルールと所有者条件ルールが重複した場合、それらは一括で扱われます。たとえば下記のようなルールが存在したものとします:</para>
@@ -719,7 +719,7 @@ other /foo r,</screen>
 
   <sect2 xml:id="sec-apparmor-profiles-perm-deny">
    <title>拒否ルール</title>
-   <para>拒否ルールは既知のオブジェクトに対して明示的な禁止を設定するための仕組みです。プロファイル生成ツールでは、拒否ルールによる既知の拒否については問い合わせを行ないません。また、監査ログにもこの拒否は記録されなくなりますので、ログファイル内に不要な出力を行なわないようにすることができます。なお、拒否ルールで拒否された内容も監査ログに出力したい場合は、拒否ルールの指定の前に <literal>audit</literal> を指定してください。</para>
+   <para>拒否ルールは既知のオブジェクトに対して明示的な禁止を設定するための仕組みです。プロファイル生成ツールでは、拒否ルールによる既知の拒否については問い合わせを行いません。また、監査ログにもこの拒否は記録されなくなりますので、ログファイル内に不要な出力を行わないようにすることができます。なお、拒否ルールで拒否された内容も監査ログに出力したい場合は、拒否ルールの指定の前に <literal>audit</literal> を指定してください。</para>
    <para>拒否ルールと許可ルールを混在させることもできます。この場合、幅広く許可ルールを設定しておいて、特定のファイルにのみ明示的な拒否を設定することができるようになります。拒否ルールは所有者条件ルールと組み合わせることもできます。この場合、ユーザが所有するファイルへのアクセスを拒否することができます。下記の例では、ユーザのディレクトリ内にある全てに対して許可を与えるものの、 <filename>.ssh/</filename> 以下のファイルについては書き込みを禁止しています:</para>
 <screen>deny /home/*/.ssh/** w,
 owner /home/*/** rw,</screen>
@@ -757,7 +757,7 @@ owner /home/*/** rw,</screen>
 &prompt.root;<command>mount -o atime /dev/foo /mnt</command></screen>
   <para>ただし、下記にはマッチしません:</para>
   <screen>&prompt.root;<command>mount -o ro,atime /dev/foo /mnt</command></screen>
-  <para>複数の指定を行なった場合、それらは個別に扱われます。</para>
+  <para>複数の指定を行った場合、それらは個別に扱われます。</para>
 <screen>mount options=ro,
 mount options=atime,</screen>
   <para>上記は下記とは異なります:</para>
@@ -800,7 +800,7 @@ pivot_root oldroot=/mnt/root/old/ /mnt/root/ -&gt; /mnt/root/sbin/init,</screen>
  <sect1 xml:id="sec-apparmor-profiles-ptrace">
   <title>PTrace ルール</title>
   <para>&aa; では ptrace のシステムコールを制限することもできます。 ptrace ルールは蓄積型のルールで、 ptrace に対する許可は全ての ptrace ルールの和集合となります。ルール内でアクセスリストを指定していない場合は、暗黙に許可が発行されるようになります。</para>
-  <para> <literal>trace</literal> および <literal>tracedby</literal> の許可では ptrace(2) の制御を、 <literal>read</literal> および <literal>readby</literal> の許可では proc(5) ファイルシステムへのアクセスや kcmp(2), futexes (get_robust_list(2)), パフォーマンストレースイベントの制御を、それぞれ行なうことができます。</para>
+  <para> <literal>trace</literal> および <literal>tracedby</literal> の許可では ptrace(2) の制御を、 <literal>read</literal> および <literal>readby</literal> の許可では proc(5) ファイルシステムへのアクセスや kcmp(2), futexes (get_robust_list(2)), パフォーマンストレースイベントの制御を、それぞれ行うことができます。</para>
   <para>ptrace が許可されるようにするには、 ptrace する側とされる側の両方のプロセスに対して、必要な許可を設定する必要があります。つまり、 ptrace する側のプロセスには <literal>trace</literal> の許可が、 ptrace される側のプロセスには <literal>tracedby</literal> の許可が必要となります。</para>
   <para>&aa; における PTrace ルールの例:</para>
 <screen># 全ての ptrace アクセスを許可する
@@ -923,7 +923,7 @@ signal set=(rtmin+0 rtmin+32),</screen>
 
   <sect2 xml:id="sec-apparmor-profiles-exec-clean">
    <title>安全ではない実行モード</title>
-   <para>実行モードのうち、小文字版 (具体的には <literal>px</literal> , <literal>cx</literal> , <literal>ux</literal> がそれに該当します) は、非常に限られた条件下でのみお使いください。これらの実行モードでは <envar>LD_PRELOAD</envar> などの環境変数の洗浄処理を行ないませんので、呼び出す側のドメインは呼び出された側のリソースに対して、影響を与えすぎてしまうことがあります。これらのモードは、<envar>LD_PRELOAD</envar> などの変数を使用しなければならないため、子プロファイル側でどうしても制限を取り外さなければならない場合に <emphasis>のみ</emphasis> 使用すべきです。これらのモードを指定したプロファイルでは、セキュリティが弱くなることに注意してください。また、ご自身の責任のもとお使いください。</para>
+   <para>実行モードのうち、小文字版 (具体的には <literal>px</literal> , <literal>cx</literal> , <literal>ux</literal> がそれに該当します) は、非常に限られた条件下でのみお使いください。これらの実行モードでは <envar>LD_PRELOAD</envar> などの環境変数の洗浄処理を行いませんので、呼び出す側のドメインは呼び出された側のリソースに対して、影響を与えすぎてしまうことがあります。これらのモードは、<envar>LD_PRELOAD</envar> などの変数を使用しなければならないため、子プロファイル側でどうしても制限を取り外さなければならない場合に <emphasis>のみ</emphasis> 使用すべきです。これらのモードを指定したプロファイルでは、セキュリティが弱くなることに注意してください。また、ご自身の責任のもとお使いください。</para>
    <remark>jsegitz 2014-07-15: if the child absolutely needs to use the environment of the calling process. (running unconfined isn't the important part here,
    you can you px and not run unconfined)</remark>
   </sect2>
@@ -931,7 +931,7 @@ signal set=(rtmin+0 rtmin+32),</screen>
   <sect2 xml:id="sec-apparmor-profiles-exec-ix">
    <title>継承実行モード (ix)</title>
    <para><literal>ix</literal> は指定されたプログラムを <command>execve(2)</command> で実行する際、 &aa; ドメイン遷移を防止する仕組みです。その代わり、現在のプロファイルを継承して実行するようになります。</para>
-   <para>このモードは、制限を受けているプログラムが他の制限付きのプログラムを呼び出していて、そのプログラム側で追加の許可を設定して欲しくない場合や、現在持っている許可を失いたくない場合に指定します。なお、 <literal>ix</literal> の実行モードでは権限を変更しないため、環境変数の洗浄を行なう版はありません。</para>
+   <para>このモードは、制限を受けているプログラムが他の制限付きのプログラムを呼び出していて、そのプログラム側で追加の許可を設定して欲しくない場合や、現在持っている許可を失いたくない場合に指定します。なお、 <literal>ix</literal> の実行モードでは権限を変更しないため、環境変数の洗浄を行う版はありません。</para>
    <para><literal>cx</literal> , <literal>ux</literal> , <literal>px</literal> とは非互換です。また、 <literal>m</literal> の許可を内包します。</para>
   </sect2>
 
@@ -1078,9 +1078,9 @@ unsafe Px /example_rule,</screen>
 
   <para>設定された値は子プロセスに対しても引き継がれ、新しいプロファイルに遷移した場合であっても、アプリケーションの制限がなくなった場合でも、制限が残ります。そのため、アプリケーションが新しいプロファイルに遷移した場合、遷移先のプロファイルではアプリケーションの rlimits をさらに減らすことしかできなくなります。</para>
 
-  <para>&aa; の rlimit ルールでは、アプリケーションのハードリミットの仲介処理も行なっています。アプリケーション側では、プロファイル内で指定された値よりもハードリミットを増やすことはできませんが、新しいプロファイル内で制限を増やすように設定しておいて、そのプロファイルに遷移するように設定することは自由に行なうことができます。</para>
+  <para>&aa; の rlimit ルールでは、アプリケーションのハードリミットの仲介処理も行っています。アプリケーション側では、プロファイル内で指定された値よりもハードリミットを増やすことはできませんが、新しいプロファイル内で制限を増やすように設定しておいて、そのプロファイルに遷移するように設定することは自由に行うことができます。</para>
 
-  <para>&aa; での rlimit の制御においてソフトリミットは、ハードリミットと同じか、より小さい値に設定されているようにするだけで、それ以外の制御は行ないません。</para>
+  <para>&aa; での rlimit の制御においてソフトリミットは、ハードリミットと同じか、より小さい値に設定されているようにするだけで、それ以外の制御は行いません。</para>
 
   <para>&aa; のハードリミットルールは下記のような書式で指定します:</para>
 

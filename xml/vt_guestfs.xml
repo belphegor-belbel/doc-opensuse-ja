@@ -7,7 +7,7 @@
  <title>libguestfs</title>
  <info>
       <abstract>
-        <para><xref linkend="gloss-vt-vm"/> にはディスクイメージと対応する定義ファイルが存在しています。通常のハイパーバイザを経由せずにゲスト側のコンポーネントにアクセスしたり、それらを変更したりすることもできますが、このような作業は本質的に危険なものであり、データの一貫性を破壊してしまうリスクをはらんでいます。 libguestfs は C 言語で書かれたライブラリで、 <xref linkend="gloss-vt-vm"/> のディスクイメージに対して安全な方法で、アクセスしたり変更したりするための仕組みを提供します。このライブラリを使用することで、ハイパーバイザを使用することなく、かつ手作業による編集のリスクを伴うことなく、作業を行なうことができます。</para>
+        <para><xref linkend="gloss-vt-vm"/> にはディスクイメージと対応する定義ファイルが存在しています。通常のハイパーバイザを経由せずにゲスト側のコンポーネントにアクセスしたり、それらを変更したりすることもできますが、このような作業は本質的に危険なものであり、データの一貫性を破壊してしまうリスクをはらんでいます。 libguestfs は C 言語で書かれたライブラリで、 <xref linkend="gloss-vt-vm"/> のディスクイメージに対して安全な方法で、アクセスしたり変更したりするための仕組みを提供します。このライブラリを使用することで、ハイパーバイザを使用することなく、かつ手作業による編集のリスクを伴うことなく、作業を行うことができます。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -24,7 +24,7 @@
 
   <sect2 xml:id="sec-guestfs-intro-risk">
    <title>&vmguest; のディスク編集によるリスク</title>
-   <para>ディスクイメージファイルと定義ファイルは、いずれも Linux 環境では単純なファイルとして存在しているものです。そのため、さまざまなツールを利用してアクセスしたり、編集や書き込みを行なったりすることができます。正しく使用している限りにおいては、これらのツールを利用することでゲスト側を管理することができるようになります。しかしながら、これらのツールを正しく使用していても、リスク無しにディスクイメージを編集することはできません。ゲスト側のディスクイメージを編集する場合、下記のようなリスクが発生します:</para>
+   <para>ディスクイメージファイルと定義ファイルは、いずれも Linux 環境では単純なファイルとして存在しているものです。そのため、さまざまなツールを利用してアクセスしたり、編集や書き込みを行ったりすることができます。正しく使用している限りにおいては、これらのツールを利用することでゲスト側を管理することができるようになります。しかしながら、これらのツールを正しく使用していても、リスク無しにディスクイメージを編集することはできません。ゲスト側のディスクイメージを編集する場合、下記のようなリスクが発生します:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
      <para><emphasis>データの破壊</emphasis> : ホストマシンとクラスタ内の別ノードで同時にアクセスしてしまうと、仮想化による保護レイヤを迂回してしまうことになるため、データが失われたり破壊されたりしてしまいます。</para>
@@ -33,15 +33,15 @@
      <para><emphasis>セキュリティ</emphasis> : ループバックデバイスを利用したディスクイメージのマウントは、 root 権限が必要な作業です。ただし、イメージのマウントが成功してしまうと、他のユーザからディスクの内容にアクセスできてしまう場合があります。</para>
     </listitem>
     <listitem>
-     <para><emphasis>管理上の作業ミス</emphasis> : 仮想化レイヤの迂回には仮想化のコンポーネントやツールに対する高度な理解が必要となります。イメージを仮想化コンポーネントから切り離して編集を行ない、編集完了後に仮想化コンポーネントに戻す作業は、時として作業ミスを引き起こしやすくなっています。</para>
+     <para><emphasis>管理上の作業ミス</emphasis> : 仮想化レイヤの迂回には仮想化のコンポーネントやツールに対する高度な理解が必要となります。イメージを仮想化コンポーネントから切り離して編集を行い、編集完了後に仮想化コンポーネントに戻す作業は、時として作業ミスを引き起こしやすくなっています。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="sec-guestfs-intro-design">
    <title>libguestfs の設計</title>
-   <para>libguestfs は C 言語で記述されたライブラリで、仮想マシン (&vmguest;) のディスクイメージを安全に作成したり、アクセスや修正を行なったりする機能を提供するように設計されています。また libguestfs には、 <link xlink:href="https://libguestfs.org/guestfs-perl.3.html">Perl</link> , <link xlink:href="https://libguestfs.org/guestfs-python.3.html">Python</link> , PHP (64 ビットマシン向けのみ), <link xlink:href="https://libguestfs.org/guestfs-ruby.3.html"> Ruby</link> の言語バインディングも用意されています。 libguestfs は root 権限を使用せずに &vmguest; のディスクイメージにアクセスする機能を提供しているほか、不正なディスクイメージへのアクセスを防ぐための多階層の防御を提供しています。</para>
-   <para>libguestfs は &vmguest; のディスクイメージとその内容にアクセスしたり、それらを修正したりするための多数のツールを提供しています。これらのツールには、ゲスト内のファイルを表示したり編集したりするツールのほか、スクリプトを利用して &vmguest; の変更を行なったり、ディスクの使用率に関する統計情報の監視やゲストの作成、 V2V もしくは P2V の移行を行なう機能、バックアップの実施や &vmguest; の複製、ディスクのフォーマットやサイズ変更などの機能が含まれています。</para>
+   <para>libguestfs は C 言語で記述されたライブラリで、仮想マシン (&vmguest;) のディスクイメージを安全に作成したり、アクセスや修正を行ったりする機能を提供するように設計されています。また libguestfs には、 <link xlink:href="https://libguestfs.org/guestfs-perl.3.html">Perl</link> , <link xlink:href="https://libguestfs.org/guestfs-python.3.html">Python</link> , PHP (64 ビットマシン向けのみ), <link xlink:href="https://libguestfs.org/guestfs-ruby.3.html"> Ruby</link> の言語バインディングも用意されています。 libguestfs は root 権限を使用せずに &vmguest; のディスクイメージにアクセスする機能を提供しているほか、不正なディスクイメージへのアクセスを防ぐための多階層の防御を提供しています。</para>
+   <para>libguestfs は &vmguest; のディスクイメージとその内容にアクセスしたり、それらを修正したりするための多数のツールを提供しています。これらのツールには、ゲスト内のファイルを表示したり編集したりするツールのほか、スクリプトを利用して &vmguest; の変更を行ったり、ディスクの使用率に関する統計情報の監視やゲストの作成、 V2V もしくは P2V の移行を行う機能、バックアップの実施や &vmguest; の複製、ディスクのフォーマットやサイズ変更などの機能が含まれています。</para>
    <warning>
     <title>注意事項について</title>
     <para>動作中の仮想マシンが使用しているディスクイメージに対しては、 libguestfs ツールを使用してはなりません。動作中の状態のままディスクイメージにアクセスしてしまうと、 &vmguest; のディスクを破壊する結果になります。 libguestfs ツールからアクセスしようとすると、対象の仮想マシンが動作中であればエラーを表示しようとしますが、完全な仕組みではないことに注意してください。</para>
@@ -114,7 +114,7 @@
 
   <sect2 xml:id="sec-guestfs-tools-virt-rescue">
    <title><command>virt-rescue</command></title>
-   <para><command>virt-rescue</command> はレスキュー CD と同様の機能を提供する仕組みですが、仮想マシン向けに動作し、 CD を使用せずに作業を行なうことができます。 <command>virt-rescue</command> はユーザに対してレスキューシェルを提供し、仮想マシンやディスクイメージ内に存在する問題を調査し、修正する機能を提供します。</para>
+   <para><command>virt-rescue</command> はレスキュー CD と同様の機能を提供する仕組みですが、仮想マシン向けに動作し、 CD を使用せずに作業を行うことができます。 <command>virt-rescue</command> はユーザに対してレスキューシェルを提供し、仮想マシンやディスクイメージ内に存在する問題を調査し、修正する機能を提供します。</para>
 <screen>&prompt.user;virt-rescue -a sles.qcow2
 Welcome to virt-rescue, the libguestfs rescue shell.
 
@@ -228,7 +228,7 @@ d 0700        482 /var/log/YaST2
    </sect3>
    <sect3 xml:id="sec-guestfs-tools-others-cat">
     <title><command>virt-cat</command></title>
-    <para><command>virt-cat</command> はファイルの内容を出力するためのコマンドラインツールで、仮想マシンの名前やディスクイメージを指定して処理を行ないます。複数のファイル名を指定した場合は、それぞれが繋げられた状態で出力されます。また、ファイル名はフルパスでなければなりません (つまり、 '/' で始まるルートディレクトリからのパスを指定する必要があります) 。</para>
+    <para><command>virt-cat</command> はファイルの内容を出力するためのコマンドラインツールで、仮想マシンの名前やディスクイメージを指定して処理を行います。複数のファイル名を指定した場合は、それぞれが繋げられた状態で出力されます。また、ファイル名はフルパスでなければなりません (つまり、 '/' で始まるルートディレクトリからのパスを指定する必要があります) 。</para>
 <screen>&prompt.user;virt-cat -a sles.qcow2 /etc/fstab
 devpts /dev/pts devpts mode=0620,gid=5 0 0
 proc   /proc    proc   defaults        0 0</screen>
@@ -326,7 +326,7 @@ tmpfs   /run              tmpfs   noauto          0 0
 
    <para>ただし、物理マシンから &kvm; 仮想マシンへの変換は、 &productname; ではサポート対象外となっており、技術プレビューとしての提供にとどまっています。</para>
 
-   <para>物理マシンの変換に際しては、まず物理マシンに関する情報収集を行ない、それを変換サーバに送信する必要があります。この作業は、対象のマシン内で <command>virt-p2v</command> と <command>kiwi</command> を実行することで行なうことができます。</para>
+   <para>物理マシンの変換に際しては、まず物理マシンに関する情報収集を行い、それを変換サーバに送信する必要があります。この作業は、対象のマシン内で <command>virt-p2v</command> と <command>kiwi</command> を実行することで行うことができます。</para>
 
    <procedure xml:id="pro-guestfs-p2v-kiwi">
     <title>virt-p2v の使用</title>
@@ -375,13 +375,13 @@ tmpfs   /run              tmpfs   noauto          0 0
     </step>
 
     <step>
-     <para>ISO イメージを DVD もしくは USB メモリに書き込みます。このメディアから起動を行なうことで、変換対象のマシンを起動することができます。</para>
+     <para>ISO イメージを DVD もしくは USB メモリに書き込みます。このメディアから起動を行うことで、変換対象のマシンを起動することができます。</para>
     </step>
 
     <step>
      <para>システムを起動すると、 <emphasis>変換サーバ</emphasis> の接続詳細を尋ねられます。このサーバは、 <systemitem class="resource">virt-v2v</systemitem> パッケージがインストールされたマシンを意味します。</para>
 
-     <para>DHCP クライアントよりも複雑なネットワーク設定を行なっている場合は、 <guimenu>ネットワークの設定</guimenu> ボタンを押して、 &yast; のネットワーク設定ダイアログを開いてください。</para>
+     <para>DHCP クライアントよりも複雑なネットワーク設定を行っている場合は、 <guimenu>ネットワークの設定</guimenu> ボタンを押して、 &yast; のネットワーク設定ダイアログを開いてください。</para>
 
      <para><guimenu>接続のテスト</guimenu> ボタンを押して、ウイザードの次の手順に進みます。</para>
     </step>
@@ -390,7 +390,7 @@ tmpfs   /run              tmpfs   noauto          0 0
      <para>変換対象のディスクとネットワークインターフェイスを選択したあと、 CPU の割り当て数やメモリ、仮想マシン名などの仮想マシン向けのデータを設定します。</para>
 
      <note>
-      <para>何も指定しない場合、作成されたディスクイメージ形式は既定で <emphasis>raw</emphasis> になります。これは <guimenu>出力形式</guimenu> の項目内で形式を指定することで、変更を行なうことができます。</para>
+      <para>何も指定しない場合、作成されたディスクイメージ形式は既定で <emphasis>raw</emphasis> になります。これは <guimenu>出力形式</guimenu> の項目内で形式を指定することで、変更を行うことができます。</para>
      </note>
 
      <para>仮想マシンの生成方法には 2 種類の仕組みがあります。それぞれ <emphasis>ローカル</emphasis> および <emphasis>libvirt</emphasis> 出力と呼ばれます。前者の場合、仮想マシンのディスクイメージと設定の出力先を <guimenu>出力ストレージ</guimenu> の項目に指定します。これらは <command>virsh</command> を利用することで、 libvirt の管理する仮想マシンにすることができます。後者の場合は <guimenu>出力ストレージ</guimenu> 内に定義されたプール内にディスクイメージを配置して、新しく libvirt の管理する仮想マシンを作成します。</para>
