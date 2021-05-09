@@ -1,1 +1,762 @@
-Error: insufficient parameter.
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sect1 [
+<!ENTITY % entities SYSTEM "entity-decl.ent">
+%entities;
+]>
+<sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="CreateProfile-Network">
+  <title>ネットワークの設定</title>
+
+ <info>
+  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+   <dm:bugtracker/>
+   <dm:translation>yes</dm:translation>
+  </dm:docmanager>
+ </info>
+
+   <sect2 xml:id="CreateProfile-Network-Workflow">
+    <title>設定の概要</title>
+
+    <para>ネットワークの設定は主に、ワークステーションをイーサネットベースの LAN に接続する際に使用します。ダイヤルアップ接続を設定することもできます。 &ay; では通常、 &ay; のプロファイルをネットワーク経由で取得することから、 &ay; を動作させるよりも前に設定する必要がある場合もあります。このような場合は、 <command>linuxrc</command> で設定を行います。</para>
+
+    <note>
+     <title><command>linuxrc</command> プログラムについて</title>
+     <para><command>linuxrc</command> の仕組みと設定キーワードについてより詳しく知りたい場合は、 <xref linkend="appendix-linuxrc"/> をお読みください。</para>
+    </note>
+
+    <para>既定の &yast; の動作では、インストール時に使用したネットワーク設定をそのまま最終的な (インストール後の) 設定値として適用します。この設定値は、 &ay; プロファイル内に書かれたものと組み合わせた形になります。</para>
+
+    <para>&ay; での設定は、既に存在する設定ファイルよりも高い優先順位で適用されます。 &yast; は <filename>ifcfg-*</filename> ファイルに書き込みを行う際、既存の内容を削除せずに行います。そのため、 DNS やルーティングのセクションを設定しない場合、 &yast; は既存の値をそのまま保持するようになります。それ以外の場合は、プロファイル内の設定が適用されます。</para>
+
+    <note>
+     <title>インストール時に &ay; のネットワーク設定を使用する場合について</title>
+
+     <para>&productname; 15.3 およびそれ以降では、プロファイルを元にした設定への書き込みは、第 1 ステージの終了時に行われます。</para>
+     <para>ただし、インストール時にネットワークの設定が必要となる場合は、 &ay; に対して <literal>setup_before_proposal</literal> オプションを <literal>true</literal> に設定して、登録を行う前に設定を書き込んで適用させることができます。ネットワーク経由でのインストールが必要な場合は、 &ay; に対して早いうちに設定を求めることができますが、 linuxrc を使用することから、設定はだいぶ複雑なものになります (詳しくは <xref linkend="autoinstall-singlesystem"/> をお読みください) 。</para>
+
+<screen>&lt;setup_before_proposal config:type="boolean"&gt;true&lt;/setup_before_proposal&gt;</screen>
+
+     <para>設定をインストールの最後に書き込んだ場合、システムを再起動したあとに反映されるようになります。</para>
+    </note>
+
+    <para>また、ネットワークの設定やサービスの有効化については、 <literal>profile</literal> <literal>networking</literal> のグローバルリソース内で設定します。</para>
+   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-Resource">
+    <title>ネットワークリソース</title>
+
+    <example xml:id="ex-ay-network-config-general">
+     <title>ネットワークの設定</title>
+<screen>&lt;networking&gt;
+  &lt;dns&gt;
+    &lt;dhcp_hostname config:type="boolean"&gt;true&lt;/dhcp_hostname&gt;
+    &lt;hostname&gt;linux-bqua&lt;/hostname&gt;
+    &lt;nameservers config:type="list"&gt;
+      &lt;nameserver&gt;&dnsip;&lt;/nameserver&gt;
+      &lt;nameserver&gt;&dnsip117;&lt;/nameserver&gt;
+      &lt;nameserver&gt;&dnsip118;&lt;/nameserver&gt;
+    &lt;/nameservers&gt;
+    &lt;resolv_conf_policy&gt;auto&lt;/resolv_conf_policy&gt;
+    &lt;searchlist config:type="list"&gt;
+      &lt;search&gt;&exampledomain;&lt;/search&gt;
+      &lt;search&gt;&exampledomain1;&lt;/search&gt;
+    &lt;/searchlist&gt;
+  &lt;/dns&gt;
+  &lt;interfaces config:type="list"&gt;
+    &lt;interface&gt;
+      &lt;bootproto&gt;dhcp&lt;/bootproto&gt;
+      &lt;name&gt;eth0&lt;/name&gt;
+      &lt;startmode&gt;auto&lt;/startmode&gt;
+    &lt;/interface&gt;
+  &lt;/interfaces&gt;
+  &lt;ipv6 config:type="boolean"&gt;true&lt;/ipv6&gt;
+  &lt;keep_install_network config:type="boolean"&gt;false&lt;/keep_install_network&gt;
+  #false means use Wicked, true means use NetworkManager
+  &lt;managed config:type="boolean"&gt;false&lt;/managed&gt;
+  &lt;net-udev config:type="list"&gt;
+    &lt;rule&gt;
+      &lt;name&gt;eth0&lt;/name&gt;
+      &lt;rule&gt;ATTR{address}&lt;/rule&gt;
+      &lt;value&gt;&wsImac;&lt;/value&gt;
+    &lt;/rule&gt;
+  &lt;/net-udev&gt;
+  &lt;s390-devices config:type="list"&gt;
+    &lt;listentry&gt;
+      &lt;chanids&gt;0.0.0800:0.0.0801:0.0.0802&lt;/chanids&gt;
+      &lt;type&gt;qeth&lt;/type&gt;
+    &lt;/listentry&gt;
+  &lt;/s390-devices&gt;
+  &lt;routing&gt;
+    &lt;ipv4_forward config:type="boolean"&gt;false&lt;/ipv4_forward&gt;
+    &lt;ipv6_forward config:type="boolean"&gt;false&lt;/ipv6_forward&gt;
+    &lt;routes config:type="list"&gt;
+      &lt;route&gt;
+        &lt;destination&gt;&routerintipII;/24&lt;/destination&gt;
+        &lt;name&gt;eth0&lt;/name&gt;
+        &lt;extrapara&gt;foo&lt;/extrapara&gt;
+        &lt;gateway&gt;-&lt;/gateway&gt;
+      &lt;/route&gt;
+      &lt;route&gt;
+        &lt;destination&gt;default&lt;/destination&gt;
+        &lt;name&gt;eth0&lt;/name&gt;
+        &lt;gateway&gt;&routerintipI;&lt;/gateway&gt;
+      &lt;/route&gt;
+      &lt;route&gt;
+        &lt;destination&gt;default&lt;/destination&gt;
+        &lt;name&gt;lo&lt;/name&gt;
+        &lt;gateway&gt;&gateip;&lt;/gateway&gt;
+      &lt;/route&gt;
+    &lt;/routes&gt;
+  &lt;/routing&gt;
+&lt;/networking&gt;</screen>
+    </example>
+
+    <para>上述の例のとおり、 <literal>&lt;networking&gt;</literal> 内にはいくつかのサブセクションが存在しています:</para>
+
+    <itemizedlist>
+     <listitem>
+      <para><literal>interfaces</literal> 内にはネットワークインターフェイスの設定を記述します。ここには IP アドレスのほか、起動方法などを指定することができます。</para>
+     </listitem>
+     <listitem>
+      <para><literal>dns</literal> 内には DNS 関連の設定を記述します。ここにはホスト名のほか、ネームサーバの一覧などを指定します。</para>
+     </listitem>
+     <listitem>
+      <para><literal>routing</literal> 内にはルーティング (経路制御) ルールを記述します。</para>
+     </listitem>
+     <listitem>
+      <para><literal>s390-devices</literal> 内には z システム固有のデバイス設定を記述します。</para>
+     </listitem>
+     <listitem>
+      <para><literal>net-udev</literal> 内には、デバイス名を固定させるための udev ルールを記述します。</para>
+     </listitem>
+    </itemizedlist>
+
+    <para>これに加えて、ネットワーク設定の適用方法に関する要素がいくつか提供されています:</para>
+
+    <variablelist>
+     <varlistentry>
+      <term>keep_install_network</term>
+      <listitem>
+       <para><xref linkend="CreateProfile-Network-Workflow"/> で説明しているとおり、既定では &ay; は動作中のシステムに設定されている項目とプロファイル内に設定されている項目を合成して設定を生成します。プロファイル側の設定のみを使用させたい場合は、この要素を <literal>false</literal> にしてください。 <literal>true</literal> が既定値です。</para>
+<screen>&lt;keep_install_network config:type="boolean"&gt;false&lt;keep_install_network&gt;</screen>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>managed</term>
+      <listitem>
+       <para>Wicked ではなく NetworkManager を使用するかどうかを設定します。</para>
+<screen>&lt;managed config:type="boolean"&gt;true&gt;managed&lt;</screen>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>start_immediately</term>
+      <listitem>
+       <para>&ay; に対して、設定の書き込み直後にネットワークを再起動を強制させるかどうかを指定します。</para>
+<screen>&lt;start_immediately config:type="boolean"&gt;true&lt;start_immediately&gt;</screen>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>setup_before_proposal</term>
+      <listitem>
+       <para>インストール時に、プロファイル内で指定されたネットワーク設定を使用するかどうかを指定します。使用しない場合、 &ay; は <command>linuxrc</command> で指定された設定に従って動作します。</para>
+<screen>&lt;setup_before_proposal config:type="boolean"&gt;true&lt;setup_before_proposal&gt;</screen>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>strict_IP_check_timeout</term>
+      <listitem>
+       <para>ネットワークを設定したあと、 &ay; は設定した IP アドレスが重複していないかどうかを確認します。重複が確認された場合、ここで指定された秒数だけ警告メッセージが表示されます。 <literal>0</literal> を指定すると、インストールが停止します。</para>
+<screen>&lt;strict_IP_check_timeout config:type="integer"&gt;5&lt;strict_IP_check_timeout&gt;</screen>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>virt_bridge_proposal</term>
+       <listitem>
+        <para>&ay; では、インストール時に仮想化パッケージ (Xen, QEMU, KVM) が選択されていると、ブリッジの設定を行います。この動作を変更したい場合は、この要素を <literal>false</literal> にしてください。</para>
+<screen>&lt;virt_bridge_proposal config:type="boolean"&gt;false&gt;virt_bridge_proposal&gt;</screen>
+       </listitem>
+      </varlistentry>
+     </variablelist>
+
+    <tip>
+     <title>IPv6 アドレスのサポートについて</title>
+     <para>&ay; では IPv6 アドレスにも完全対応しています。 IPv6 アドレスのサポートを無効化したい場合は、 &lt;ipv6 config:type="boolean"&gt;false&lt;/ipv6&gt; を設定してください。</para>
+    </tip>
+   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-Interfaces">
+    <title>インターフェイス</title>
+    <para><literal>interfaces</literal> セクションにはネットワークインターフェイス関連の設定を記述します。ここにはインターフェイスの起動方法や IP アドレス、サブネットマスクなどを記述します。それぞれ下記の要素は、 <literal>&lt;interfaces&gt;...&lt;/interfaces&gt;</literal> タグ内に記述しなければなりません。</para>
+
+  <variablelist>
+  <varlistentry>
+    <term><literal>bootproto</literal></term>
+    <listitem>
+      <para>インターフェイスが使用する起動プロトコルを指定します。設定可能な値は下記のとおりです:</para>
+      <itemizedlist>
+        <listitem>
+          <para>固定のアドレスを設定したい場合は、 <literal>static</literal> を指定します。 <literal>ipaddr</literal> 要素を利用して IP アドレスを割り当てたい場合は、これを指定してください。</para>
+        </listitem>
+        <listitem>
+          <para>DHCP を利用して IP アドレスを割り当てたい場合は、 <literal>dhcp4</literal> (IPv4), <literal>dhcp6</literal> (IPv6), <literal>dhcp</literal> (IPv4 もしくは IPv6) のいずれかを指定します。</para>
+        </listitem>
+        <listitem>
+          <para>IPv4 の設定を <emphasis>Zeroconf</emphasis> から取得し、 IPv6 の設定を DHCP から取得したい場合は、 <literal>dhcp+autoip</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>IPv4 の設定を <emphasis>Zeroconf</emphasis> から取得したい場合は、 <literal>autoip</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>iBFT プロトコルを利用して IP アドレスを取得したい場合は、 <literal>ibft</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>アドレスの設定を行いたくない場合は <literal>none</literal> を指定します。ブリッジやボンディングを使用する場合の指定です。</para>
+        </listitem>
+      </itemizedlist>
+      <para>必須です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>broadcast</literal></term>
+    <listitem>
+      <para>ブロードキャスト IP アドレスを指定します。</para>
+      <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>device</literal></term>
+    <listitem>
+      <para>デバイス名を指定します。</para>
+      <para>廃止予定です。代わりに <literal>name</literal> を使用してください。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>name</literal></term>
+    <listitem>
+      <para>デバイス名 (例: <literal>eth0</literal>) を指定します。</para>
+      <para>必須です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>lladdr</literal></term>
+    <listitem>
+      <para>リンクレイヤアドレス (MAC アドレス) を指定します。</para>
+      <para>任意指定です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>ipaddr</literal></term>
+    <listitem>
+      <para>インターフェイスに割り当てる IP アドレスを指定します。</para>
+      <para>起動プロトコルで <literal>static</literal> を指定する必要があります。また、 <literal>192.168.1.1/24</literal> のように、ネットワークプレフィクスを指定することもできます。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>remote_ipaddr</literal></term>
+    <listitem>
+      <para>Point-to-Point 接続で使用する対向の IP アドレスを指定します。</para>
+      <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>netmask</literal></term>
+    <listitem>
+      <para>ネットマスクを指定します (例: <literal>255.255.255.0</literal>) 。</para>
+      <para>廃止予定です。代わりに <literal>prefixlen</literal> を使用して指定するか、 <literal>ipaddr</literal> 要素でネットワークプレフィクスを指定してください。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>network</literal></term>
+    <listitem>
+      <para>ネットワーク IP アドレスを指定します。</para>
+      <para>廃止予定です。 <literal>ipaddr</literal> と <literal>prefixlen</literal> 要素を使用してください。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>prefixlen</literal></term>
+    <listitem>
+      <para>ネットワークプレフィクスを指定します (例: <literal>24</literal>)。</para>
+      <para>起動プロトコルで <literal>static</literal> を指定する必要があります。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>startmode</literal></term>
+    <listitem>
+      <para>インターフェイスの起動タイミングを指定します。設定可能な値は下記のとおりです:</para>
+      <itemizedlist>
+        <listitem>
+          <para>USB 接続のネットワークカードなど、デバイスの接続時に起動を行いたい場合は、 <literal>hotplug</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>システムの起動時に起動を行いたい場合は <literal>auto</literal> を指定します。 <literal>onboot</literal> でも同じ意味になりますが、こちらは廃止予定となっています。</para>
+        </listitem>
+        <listitem>
+          <para><literal>ifplugd</literal> デーモンで管理したい場合は、 <literal>ifplugd</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>デバイスを手作業で起動したい場合は、 <literal>manual</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para><literal>/</literal> が NFS ボリューム内に存在する場合など、ルートファイルシステムをマウントする際に特定のネットワークデバイスが必要な場合は、 <literal>nfsroot</literal> を指定します。</para>
+        </listitem>
+        <listitem>
+          <para>デバイスを起動したくない場合は、 <literal>off</literal> を指定します。</para>
+        </listitem>
+      </itemizedlist>
+      <para/>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>ifplugd_priority</literal></term>
+    <listitem>
+      <para><literal>ifplugd</literal> での優先順位を指定します。この優先順位の高い順にデバイスの有効化を行います。</para>
+      <para>起動タイミングの指定で <literal>ifplugd</literal> を指定する必要があります。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>usercontrol</literal></term>
+    <listitem>
+      <para>このパラメータは現在使用していません。</para>
+      <para>廃止予定です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bonding_slaveX</literal></term>
+    <listitem>
+      <para>ボンディングデバイスの名前を指定します。</para>
+      <para>ボンディングデバイスを設定する際には必ず指定します。なお、 <literal>X</literal> の部分には 0 から始まる数値 (例: <literal>bonding_slave0</literal>) を指定します。それぞれのスレーブには別々の番号を指定する必要があります。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bonding_module_opts</literal></term>
+    <listitem>
+      <para>ボンディングデバイスに対するオプションを指定します。</para>
+      <para><literal>bond</literal> デバイスの場合にのみ指定することができます。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>mtu</literal></term>
+    <listitem>
+      <para>インターフェイスに対して設定する最大伝送単位 (MTU) を指定します。</para>
+      <para>任意指定です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>ethtool_options</literal></term>
+    <listitem>
+      <para>デバイスの有効化時に使用する ethtool 向けのオプションを指定します。</para>
+      <para>任意指定です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>zone</literal></term>
+    <listitem>
+      <para>インターフェイスの割り当て先となるファイアウオールのゾーン名を指定します。</para>
+      <para>任意指定です。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>vlan_id</literal></term>
+    <listitem>
+      <para>この VLAN の識別 ID を指定します。</para>
+      <para><literal>vlan</literal> デバイスの場合にのみ指定することができます。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>etherdevice</literal></term>
+    <listitem>
+      <para>VLAN の接続先デバイスを指定します。</para>
+      <para><literal>vlan</literal> デバイスの場合にのみ必ず指定します。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bridge</literal></term>
+    <listitem>
+      <para>インターフェイスがブリッジである場合、 <literal>yes</literal> を指定します。</para>
+      <para>廃止予定です。この設定は他の属性から自動的に判断するようになっています。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bridge_ports</literal></term>
+    <listitem>
+      <para>ブリッジで使用するネットワークデバイスをスペース区切りで指定します (例: <literal>eth0 eth1</literal>) 。</para>
+      <para><literal>bridge</literal> デバイスの場合にのみ必ず指定します。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bridge_stp</literal></term>
+    <listitem>
+      <para>スパニングツリープロトコル (STP) を有効化するかどうかを指定します。 <literal>on</literal> を指定すると有効に、 <literal>off</literal> を指定すると無効になります。</para>
+      <para><literal>bridge</literal> デバイスの場合にのみ指定することができます。</para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term><literal>bridge_forward_delay</literal></term>
+    <listitem>
+      <para>ブリッジに対する転送遅延 (例: <literal>15</literal>) を指定します。</para>
+      <para><literal>bridge</literal> デバイスの場合にのみ指定することができます。設定可能な値は <literal>4</literal> から <literal>30</literal> までのいずれかです。</para>
+    </listitem>
+  </varlistentry>
+  <!-- TODO: all wireless attributes, but not so many users configure wireless with autoyast -->
+</variablelist>
+
+
+    <example xml:id="ex-ay-network-config-bond">
+     <title>ボンディングインターフェイスの設定</title>
+<screen>
+&lt;networking&gt;
+  &lt;setup_before_proposal config:type="boolean"&gt;false&lt;/setup_before_proposal&gt;
+  &lt;keep_install_network config:type="boolean"&gt;false&lt;/keep_install_network&gt;
+  &lt;interfaces config:type="list"&gt;
+    &lt;interface&gt;
+      &lt;bonding_master&gt;yes&lt;/bonding_master&gt;
+      &lt;bonding_module_opts&gt;mode=active-backup miimon=100&lt;/bonding_module_opts&gt;
+      &lt;bonding_slave0&gt;eth1&lt;/bonding_slave0&gt;
+      &lt;bonding_slave0&gt;eth2&lt;/bonding_slave0&gt;
+      &lt;bondoption&gt;mode=balance-rr miimon=100&lt;/bondoption&gt;
+      &lt;bootproto&gt;static&lt;/bootproto&gt;
+      &lt;name&gt;bond0&lt;/name&gt;
+      &lt;ipaddr&gt;&subnetI;.61&lt;/ipaddr&gt;
+      &lt;prefixlen&gt;24&lt;/prefixlen&gt;
+      &lt;startmode&gt;auto&lt;/startmode&gt;
+    &lt;/interface&gt;
+    &lt;interface&gt;
+      &lt;bootproto&gt;none&lt;/bootproto&gt;
+      &lt;name&gt;eth1&lt;/name&gt;
+      &lt;startmode&gt;auto&lt;/startmode&gt;
+    &lt;/interface&gt;
+    &lt;interface&gt;
+      &lt;bootproto&gt;none&lt;/bootproto&gt;
+      &lt;name&gt;eth2&lt;/name&gt;
+      &lt;startmode&gt;auto&lt;/startmode&gt;
+    &lt;/interface&gt;
+  &lt;/interfaces&gt;
+  &lt;net-udev config:type="list"&gt;
+    &lt;rule&gt;
+      &lt;name&gt;eth1&lt;/name&gt;
+      &lt;rule&gt;ATTR{address}&lt;/rule&gt;
+      &lt;value&gt;dc:e4:cc:27:94:c7&lt;/value&gt;
+    &lt;/rule&gt;
+    &lt;rule&gt;
+      &lt;name&gt;eth2&lt;/name&gt;
+      &lt;rule&gt;ATTR{address}&lt;/rule&gt;
+      &lt;value&gt;dc:e4:cc:27:94:c8&lt;/value&gt;
+    &lt;/rule&gt;
+  &lt;/net-udev&gt;
+&lt;/networking&gt;
+</screen>
+    </example>
+
+   <example xml:id="ex-ay-network-config-bridge">
+     <title>ブリッジインターフェイスの設定</title>
+<screen>
+&lt;interfaces config:type="list"&gt;
+  &lt;interface&gt;
+    &lt;name&gt;br0&lt;/name&gt;
+    &lt;bootproto&gt;static&lt;/bootproto&gt;
+    &lt;bridge&gt;yes&lt;/bridge&gt;
+    &lt;bridge_forwarddelay&gt;0&lt;/bridge_forwarddelay&gt;
+    &lt;bridge_ports&gt;eth0 eth1&lt;/bridge_ports&gt;
+    &lt;bridge_stp&gt;off&lt;/bridge_stp&gt;
+    &lt;ipaddr&gt;&subnetI;.100&lt;/ipaddr&gt;
+    &lt;prefixlen&gt;24&lt;/prefixlen&gt;
+    &lt;startmode&gt;auto&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;name&gt;eth0&lt;/name&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;name&gt;eth1&lt;/name&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+&lt;/interfaces&gt;
+</screen>
+   </example>
+  </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-names">
+    <title>ネットワークインターフェイス名の固定</title>
+    <para><literal>net-udev</literal> 要素では、インターフェイス名を固定させるために使用する udev のルールを指定します。</para>
+
+    <variablelist>
+     <varlistentry>
+      <term>name</term>
+      <listitem>
+       <para>ネットワークインターフェイス名 (例: <literal>eth3</literal>) を設定します (必須)。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>rule</term>
+      <listitem>
+       <para>MAC アドレスベースのルールを作成するには <literal>ATTR{address}</literal> を、バス ID ベースのルールを作成するには <literal>KERNELS</literal> を指定します (必須)。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>value</term>
+      <listitem>
+       <para>MAC アドレスベースのルールの場合は <literal>f0:de:f1:6b:da:69</literal> のように、バス ID ベースのルールの場合は <literal>0000:00:1c.1</literal> もしくは <literal>0.0.0700</literal> のように指定します (必須)。</para>
+      </listitem>
+     </varlistentry>
+     
+    </variablelist>
+    <tip>
+     <title>デバイス名の衝突時の処理について</title>
+     <para>不完全な <emphasis>udev</emphasis> ルールセットを作成してしまった場合、既存のデバイス名と指定したルールのデバイス名が衝突する場合があります。たとえばネットワークインターフェイスの名前を <literal>eth0</literal> に変更する場合、カーネル側で自動生成されたデバイス名と衝突することがあります。 &ay; ではこのような場合でも、デバイス名をできる限り適切に処理しようとし、必要に応じて衝突したデバイスの名前を修正します。</para>
+    </tip>
+
+    <example>
+     <title>MAC アドレスを使用したデバイス名の設定例</title>
+<screen>&lt;net-udev config:type="list"&gt;
+  &lt;rule&gt;
+  &lt;name&gt;eth1&lt;/name&gt;
+  &lt;rule&gt;ATTR{address}&lt;/rule&gt;
+  &lt;value&gt;52:54:00:68:54:fb&lt;/value&gt;
+  &lt;/rule&gt;
+&lt;/net-udev&gt;</screen>
+    </example>
+   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-DNS">
+    <title>ドメインネームシステム (DNS)</title>
+    <para><literal>dns</literal> セクションでは、ホスト名やネームサーバなど、ネームサービスに関連する設定を行うことができます。</para>
+    
+    <variablelist>
+     <varlistentry>
+      <term>hostname</term>
+      <listitem>
+       <para>ホスト名を指定します。ここにはドメイン名を含めないでください (例: <literal>foo.bar</literal> ではなく <literal>foo</literal> とだけ指定します) 。</para>
+        <para>ここでホスト名を指定しない場合で、 DHCP サーバからもホスト名を取得できない場合 (<literal>dhcp_hostname</literal> についてもお読みください) は、 &ay; がランダムな名前を生成します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>nameservers</term>
+      <listitem>
+       <para>ネームサーバの一覧を指定します。たとえば下記のように指定します:</para>
+<screen>&lt;nameservers config:type="list"&gt;
+  &lt;nameserver&gt;&dnsip;&lt;/nameserver&gt;
+  &lt;nameserver&gt;&dnsip117;&lt;/nameserver&gt;
+&lt;/nameservers&gt;</screen>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>searchlist</term>
+      <listitem>
+       <para>ホスト名の参照時に使用する検索リストを指定します。</para>
+<screen>&lt;searchlist config:type="list"&gt;
+  &lt;search&gt;&exampledomain;&lt;/search&gt;
+&lt;/searchlist&gt;</screen>
+       <para>任意指定です。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>dhcp_hostname</term>
+      <listitem>
+       <para>ホスト名を DHCP 経由で取得するかどうかを指定します。</para>
+<screen>&lt;dhcp_hostname config:type="boolean"&gt;true&lt;/dhcp_hostname&gt;</screen>
+      </listitem>
+     </varlistentry>
+     
+    </variablelist>
+   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-Routing">
+    <title>ルーティング</title>
+    <para><literal>routing</literal> テーブルには経路情報の一覧を設定することができるほか、 IPv4 や IPv6 での中継機能を有効化するかどうかを指定することができます。</para>
+   
+    <variablelist>
+     <varlistentry>
+      <term>ipv4_forward</term>
+      <listitem>
+       <para>任意指定: IPv4 での IP 中継機能を有効化するかどうかを指定します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>ipv6_forward</term>
+      <listitem>
+       <para>任意指定: IPv6 での IP 中継機能を有効化するかどうかを指定します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>routes</term>
+      <listitem>
+       <para>任意指定: 経路の一覧を記述します。</para>
+      </listitem>
+     </varlistentry>
+     
+     
+    </variablelist>
+
+    <para>経路情報の設定方法を下記の表に示します。</para>
+    
+    <variablelist>
+     <varlistentry>
+      <term>destination</term>
+      <listitem>
+       <para>必須: 経路の宛先を指定します。 <literal>192.168.122.0/24</literal> のように、プレフィクス付きのアドレスを指定することができます。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>device</term>
+      <listitem>
+       <para>必須: その経路に行き着くためのインターフェイスを指定します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>gateway</term>
+      <listitem>
+       <para>任意指定: ゲートウエイの IP アドレスを指定します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>netmask</term>
+      <listitem>
+       <para>(廃止予定) 経路の宛先のネットマスクを指定します。</para>
+       <para><literal>destination</literal> でネットワークプレフィクスを指定するようにしてください。</para>
+      </listitem>
+     </varlistentry>
+     
+    </variablelist>
+   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-s390">
+    <title>s390 オプション</title>
+    <para>下記の要素は &lt; <literal>s390-devices</literal> &gt;... &lt;/ <literal>s390-devices</literal> &gt; タグ内に記述しなければなりません。</para>
+ 
+    <variablelist>
+     <varlistentry>
+      <term>type</term>
+      <listitem>
+       <para><literal>qeth</literal> , <literal>ctc</literal> , <literal>iucv</literal> のいずれかを指定します。</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>chanids</term>
+      <listitem>
+       <para>コロン (推奨) もしくはスペース区切りでのチャンネル ID</para>
+<screen>&lt;chanids&gt;0.0.0700:0.0.0701:0.0.0702&lt;/chanids&gt;</screen>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>layer2</term>
+      <listitem>
+<screen>&lt;layer2 config:type="boolean"&gt;true&lt;/layer2&gt;</screen>
+        <para>ブール値。既定は false</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>portname</term>
+      <listitem>
+       <para>QETH ポート名 (<phrase os="sles;sled">SLE 12 SP2</phrase> <phrase os="osuse">openSUSE 42.2</phrase> 以降では廃止予定となっています)</para>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>protocol</term>
+      <listitem>
+       <para>任意指定: CTC / LCS プロトコル (文字列として、小さな値)</para>
+<screen>&lt;protocol&gt;1&lt;/protocol&gt;</screen>
+      </listitem>
+     </varlistentry>
+     
+     <varlistentry>
+      <term>router</term>
+      <listitem>
+       <para>IUCV ルータ／ユーザ</para>
+      </listitem>
+     </varlistentry>
+     
+    </variablelist>
+    <para>上述のオプションに加えて、 &ay; では設定ファイルの他のセクション内に &zseries; 固有のオプションを設定することもできます。特に論理リンクアドレス (LLADDR (イーサネットの場合 MAC アドレス)) を設定することもできます。設定を行うには、デバイスの定義内に <literal>LLADDR</literal> オプションを設定してください。</para>
+    <tip>
+     <title>VLAN 向けの LLADDR について</title>
+     <para>VLAN デバイスの場合、接続されている物理デバイスの LLADDR をそのまま継承します。 VLAN デバイスに対して別のアドレスを設定するには、物理デバイス側に LLADDR のオプションを設定してください。</para>
+    </tip>
+   </sect2>
+
+   <sect2 xml:id="Configuration-Network-Proxy">
+    <title>プロキシ</title>
+    <para>インターネットプロキシ (キャッシュ) の設定を行うことができます。</para>
+    <para>HTTP, HTTPS, FTP に対応するプロキシサーバの設定は、それぞれ <literal>http_proxy</literal> , <literal>https_proxy</literal> , <literal>ftp_proxy</literal> で行います。プロキシを使用せず、直接アクセスすべきアドレスやホスト／ドメイン名がある場合は、それらを <literal>no_proxy</literal> (スペース区切り) に設定します。また、プロキシサーバに対して認証が必要である場合は、 <literal>proxy_user</literal> と <literal>proxy_password</literal> をそれぞれ設定してください。</para>
+    <example>
+     <title>ネットワーク設定: プロキシ</title>
+<screen>&lt;proxy&gt;
+  &lt;enabled config:type="boolean"&gt;true&lt;/enabled&gt;
+  &lt;ftp_proxy&gt;http://192.168.1.240:3128&lt;/ftp_proxy&gt;
+  &lt;http_proxy&gt;http://192.168.1.240:3128&lt;/http_proxy&gt;
+  &lt;no_proxy&gt;www.&exampledomain; .&exampledomain2; localhost&lt;/no_proxy&gt;
+  &lt;proxy_password&gt;testpw&lt;/proxy_password&gt;
+  &lt;proxy_user&gt;testuser&lt;/proxy_user&gt;
+&lt;/proxy&gt;</screen>
+    </example>
+   </sect2>
+   <!-- 2017-10-20 tbazant: xinetd is gone (https://fate.suse.com/323373)
+   <sect2 xml:id="Configuration-Network-Inetd">
+    <title>(X)Inetd</title>
+    <para>
+     The profile has elements to specify which superserver should be used
+     (netd_service), whether it should be enabled (netd_status) and how
+     the services should be configured (netd_conf).
+    </para>
+    <para>
+     A service description element needs two parts: key and non-key. When
+     writing the configuration, services are matched using the key fields;
+     to the matching service, non-key fields are applied. If no service
+     matches, it is created. If more services match, a warning is reported.
+     The key fields are <emphasis>script, service, protocol and
+     server.</emphasis>
+    </para>
+    <para>
+     <emphasis>service</emphasis> and <emphasis>protocol</emphasis> are
+     matched literally. <emphasis>script</emphasis> is the base name of the
+     configuration file: usually a file in<filename>
+     /etc/xinetd.d</filename>, for example "echo-udp", or "inetd.conf". For
+     compatibility with 8.2, <emphasis>server</emphasis> is matched more
+     loosely: if it is <filename>/usr/sbin/tcpd</filename>, the real server
+     name is taken from <emphasis>server_args</emphasis>. After that, the
+     basename of the first whitespace-separated word is taken and these
+     values are compared.
+    </para>
+
+    <example>
+     <title>Inetd example</title>
+<screen>&lt;profile&gt;
+  &lt;inetd&gt;
+    &lt;netd_service config:type="symbol"&gt;xinetd&lt;/netd_service&gt;
+    &lt;netd_status config:type="integer"&gt;0&lt;/netd_status&gt;
+    &lt;netd_conf config:type="list"&gt;
+      &lt;conf&gt;
+        &lt;script&gt;imap&lt;/script&gt;
+        &lt;service&gt;pop3&lt;/service&gt;
+        &lt;enabled config:type="boolean"&gt;true&lt;/enabled&gt;
+      &lt;/conf&gt;
+      &lt;conf&gt;
+        &lt;server&gt;in.ftpd&lt;/server&gt;
+        &lt;server_args&gt;-A&lt;/server_args&gt;
+        &lt;enabled config:type="boolean"&gt;true&lt;/enabled&gt;
+      &lt;/conf&gt;
+      &lt;conf&gt;
+        &lt;service&gt;daytime&lt;/service&gt;
+        &lt;protocol&gt;tcp&lt;/protocol&gt;
+      &lt;/conf&gt;
+      &lt;conf&gt;...&lt;/conf&gt;
+    &lt;/netd_conf&gt;
+  &lt;/inetd&gt;
+&lt;/profile&gt;</screen>
+    </example>
+   </sect2> -->
+  </sect1>
