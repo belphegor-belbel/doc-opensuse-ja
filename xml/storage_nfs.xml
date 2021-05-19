@@ -317,13 +317,14 @@ Nobody-Group = nobody</screen>
 <screen>&prompt.sudo;mount <replaceable>ホスト名</replaceable>:<replaceable>リモートのパス</replaceable> <replaceable>ローカルのパス</replaceable></screen>
    <para>たとえば <systemitem>&nfsname;</systemitem> というマシンのホームディレクトリをマウントしたい場合は、下記のように実行します:</para>
 <screen>&prompt.sudo;mount &nfsname;:/home /home</screen>
-<para>NFS クライアントがサーバに対して確立する TCP 接続数を設定するには、 <command>mount</command> コマンドの <literal>nconnect</literal> オプションを使用します。設定値は 1 から 16 までの範囲で、オプションを指定しない場合の既定値は 1 です。</para>
-<para>なお、 <literal>nconnect</literal> の設定は、特定の NFS サーバに対する初めてのマウント処理にのみ適用されます。また、同じクライアント内で同一の NFS サーバに複数のマウントを行うと、既存の接続は共有され、新しい接続は行われません。そのため、 <literal>nconnect</literal> の設定を変更したい場合は、あらかじめ特定の NFS サーバに対するマウントを <emphasis role="bold">すべて</emphasis> 解除しておく必要があります。これで <literal>nconnect</literal> の新しい設定値を適用できるようになります。</para>
-<para>現在使用中の <literal>nconnect</literal> の設定値を確認したい場合は、 <command>mount</command> コマンドの出力を参照するか、もしくは <filename>/proc/mounts</filename> ファイルをお読みください。マウントオプションに何も値が書かれていない場合は、マウント時にオプションを指定しておらず、既定値である <emphasis>1</emphasis> が使用されていることになります。</para>
-<note>
-<title><literal>nconnect</literal> で指定されているものとは異なる可能性がある件について</title>
-<para>初回のマウント後にも接続を開いたり閉じたりすることがあるため、実際の接続数は <literal>nconnect</literal> の設定値とは異なる場合があります。</para>
-</note>
+   <para>NFS クライアントがサーバに対して確立する TCP 接続数を設定するには、 <command>mount</command> コマンドの <literal>nconnect</literal> オプションを使用します。設定値は 1 から 16 までの範囲で、オプションを指定しない場合の既定値は 1 です。</para>
+   <para>なお、 <literal>nconnect</literal> の設定は、特定の NFS サーバに対する初めてのマウント処理にのみ適用されます。また、同じクライアント内で同一の NFS サーバに複数のマウントを行うと、既存の接続は共有され、新しい接続は行われません。そのため、 <literal>nconnect</literal> の設定を変更したい場合は、あらかじめ特定の NFS サーバに対するマウントを <emphasis role="bold">すべて</emphasis> 解除しておく必要があります。これで <literal>nconnect</literal> の新しい設定値を適用できるようになります。</para>
+   <para>現在使用中の <literal>nconnect</literal> の設定値を確認したい場合は、 <command>mount</command> コマンドの出力を参照するか、もしくは <filename>/proc/mounts</filename> ファイルをお読みください。マウントオプションに何も値が書かれていない場合は、マウント時にオプションを指定しておらず、既定値である <emphasis>1</emphasis> が使用されていることになります。</para>
+   <note>
+    <title><literal>nconnect</literal> で指定されているものとは異なる可能性がある件について</title>
+    <para>初回のマウント後にも接続を開いたり閉じたりすることがあるため、実際の接続数は <literal>nconnect</literal> の設定値とは異なる場合があります。</para>
+   </note>
+   
    <sect3 xml:id="sec-nfs-automount">
     <title>automount サービスの使用</title>
     <para>aufofs デーモンは、リモートのファイルシステムを自動的にマウントする際に使用するデーモンです。下記の内容を <filename>/etc/auto.master</filename> ファイル内に追加してください:</para>
@@ -435,121 +436,137 @@ nfs4mount -fstype=nfs4 server2:/</screen>
    </listitem>
   </itemizedlist>
  </sect1>
+ 
  <sect1 xml:id="sec-nfs-troubleshooting">
- <title>NFS のトラブルシューティングにおける情報収集</title>
- <sect2 xml:id="sec-nfs-common-troubleshooting">
- <title>一般的なトラブルシューティング</title>
- <para>NFS で発生する問題は、表示されるエラーメッセージのほか、 <filename>/var/log/messages</filename> に記録されるログメッセージを読むことで原因を探り当てることができる場合があります。ですが、表示されるメッセージや <filename>/var/log/messages</filename> 内のログメッセージだけでは不十分で、原因を探り当てられないことも多くあります。このような場合、問題を再現させてネットワークのパケットを採取することで、原因に辿り着きやすくすることができます。</para>
+  <title>NFS のトラブルシューティングにおける情報収集</title>
+   <sect2 xml:id="sec-nfs-common-troubleshooting">
+    <title>一般的なトラブルシューティング</title>
+     <para>NFS で発生する問題は、表示されるエラーメッセージのほか、 <filename>/var/log/messages</filename> に記録されるログメッセージを読むことで原因を探り当てることができる場合があります。ですが、表示されるメッセージや <filename>/var/log/messages</filename> 内のログメッセージだけでは不十分で、原因を探り当てられないことも多くあります。このような場合、問題を再現させてネットワークのパケットを採取することで、原因に辿り着きやすくすることができます。</para>
  
- <para>まずは問題点を明確にしてください。様々な方法でシステムのテストを実施して問題を再現させ、どこで問題が発生しているのかを明確にしましょう。あとは問題を切り分けていって、最も簡単な再現手順を作り上げてから、下記に示す再現手順を実施してください。</para>
+     <para>まずは問題点を明確にしてください。様々な方法でシステムのテストを実施して問題を再現させ、どこで問題が発生しているのかを明確にしましょう。あとは問題を切り分けていって、最も簡単な再現手順を作り上げてから、下記に示す再現手順を実施してください。</para>
  
- <procedure>
- <title>問題の再現</title>
- <step>
- <para>まずはネットワークパケットの採取を行います。 Linux では <command>tcpdump</command> コマンド (パッケージ名 <literal>tcpdump</literal>) を使用することができます。 <command>tcpdump</command> コマンドは、たとえば下記のようにして実行します:</para>
- <screen>tcpdump -s0 -i <replaceable>eth0</replaceable> -w <replaceable>/tmp/nfs-demo.cap</replaceable> host <replaceable>x.x.x.x</replaceable></screen>
- <para>それぞれのオプションの意味は下記のとおりです:</para>
- <itemizedlist>
- <listitem>
- <para><literal>s0</literal> - ネットワークパケットの採取時、長いパケットを省略せずに採取します。</para>
- </listitem>
- <listitem>
- <para><literal>eth0</literal> - こちらは実際のローカルインターフェイス名に置き換えてください。ここに <literal>any</literal> を指定すると全てのインターフェイスで送受信されるパケットを採取できますが、不要なデータが多数含まれることになりますので、分析の際の邪魔になってしまうため、あまりお勧めしません。</para>
- </listitem>
- <listitem>
- <para><literal>w</literal> - 採取したパケットの保存先ファイル名を指定します。</para>
- </listitem>
- <listitem>
- <para><literal>x.x.x.x</literal> - NFS 接続の対向側 IP アドレスを指定します。たとえば NFS のクライアント側でパケットを採取する場合、ここに指定するのは NFS サーバとなります。</para>
- </listitem>
- </itemizedlist>
- <note>
- <para>場合によっては、 NFS クライアントもしくは NFS サーバのいずれかでパケットを採取すれば原因が判明することもありますが、ネットワークの通信状況が原因のうちの 1 つと疑われる場合は、クライアントとサーバの両方で採取することをお勧めします。</para>
- </note>
- <para>起動した <command>tcpdump</command> コマンドは動作させたままの状態で、次の手順に進んでください。</para>
+     <procedure>
+      <title>問題の再現</title>
+       <step>
+        <para>まずはネットワークパケットの採取を行います。 Linux では <command>tcpdump</command> コマンド (パッケージ名 <literal>tcpdump</literal>) を使用することができます。 <command>tcpdump</command> コマンドは、たとえば下記のようにして実行します:</para>
+        <para>
+         An example of <command>tcpdump</command> syntax follows:
+        </para>
+<screen>tcpdump -s0 -i <replaceable>eth0</replaceable> -w <replaceable>/tmp/nfs-demo.cap</replaceable> host <replaceable>x.x.x.x</replaceable></screen>
+        <para>それぞれのオプションの意味は下記のとおりです:</para>
+        <variablelist>
+         <varlistentry>
+          <term>s0</term>
+          <listitem>
+           <para><literal>s0</literal> - ネットワークパケットの採取時、長いパケットを省略せずに採取します。</para> 
+          </listitem>
+         </varlistentry>
+         <varlistentry>
+          <term>eth0</term>
+          <listitem>
+           <para><literal>eth0</literal> - こちらは実際のローカルインターフェイス名に置き換えてください。ここに <literal>any</literal> を指定すると全てのインターフェイスで送受信されるパケットを採取できますが、不要なデータが多数含まれることになりますので、分析の際の邪魔になってしまうため、あまりお勧めしません。</para>
+          </listitem>
+         </varlistentry>
+         <varlistentry>
+          <term>w</term>
+         <listitem>
+          <para><literal>w</literal> - 採取したパケットの保存先ファイル名を指定します。</para>
+         </listitem>
+         </varlistentry>
+         <varlistentry>
+          <term>x.x.x.x</term>
+          <listitem>
+           <para><literal>x.x.x.x</literal> - NFS 接続の対向側 IP アドレスを指定します。たとえば NFS のクライアント側でパケットを採取する場合、ここに指定するのは NFS サーバとなります。</para>
+          </listitem>
+         </varlistentry>
+        </variablelist>
+       <note>
+        <para>場合によっては、 NFS クライアントもしくは NFS サーバのいずれかでパケットを採取すれば原因が判明することもありますが、ネットワークの通信状況が原因のうちの 1 つと疑われる場合は、クライアントとサーバの両方で採取することをお勧めします。</para>
+       </note>
+       <para>起動した <command>tcpdump</command> コマンドは動作させたままの状態で、次の手順に進んでください。</para>
+      </step>
+      <step>
+       <para>(必要であれば) 直面している問題が <command>nfs mount</command> の実行時に発生しているものである場合は、 <command>nfs mount</command> コマンドに対して冗長出力を指定するオプション ( <literal>-vvv</literal> ) を追加して試してみてもかまいません。</para>
   </step>
   <step>
-  <para>(必要であれば) 直面している問題が <command>nfs mount</command> の実行時に発生しているものである場合は、 <command>nfs mount</command> コマンドに対して冗長出力を指定するオプション ( <literal>-vvv</literal> ) を追加して試してみてもかまいません。</para>
-  </step>
-  <step>
-  <para>(必要であれば) 問題の再現時に strace を取得する方法もあります。再現時に strace を実行すると、どこでどのシステムコールを使用したのかを正確に記録することができます。この情報は <literal>tcpdump</literal> 内のイベント情報とともに使用します。</para>
-  <para>たとえば NFS マウント内で <emphasis>mycommand --param</emphasis> を実行すると問題が発生する場合、 <command>strace</command> は下記のように入力して実行します:</para>
-  <screen>
+   <para>(必要であれば) 問題の再現時に strace を取得する方法もあります。再現時に strace を実行すると、どこでどのシステムコールを使用したのかを正確に記録することができます。この情報は <literal>tcpdump</literal> 内のイベント情報とともに使用します。</para>
+   <para>たとえば NFS マウント内で <emphasis>mycommand --param</emphasis> を実行すると問題が発生する場合、 <command>strace</command> は下記のように入力して実行します:</para>
+<screen>
   strace -ttf -s128 -o/tmp/nfs-strace.out mycommand --param
   </screen>
-  <para>再現時に strace を採取しない場合は、問題を再現させた時刻を覚えておいて、 <filename>/var/log/messages</filename> 内のログのうち、その時刻の前後に存在するログを確認してもかまいません。</para>
+   <para>再現時に strace を採取しない場合は、問題を再現させた時刻を覚えておいて、 <filename>/var/log/messages</filename> 内のログのうち、その時刻の前後に存在するログを確認してもかまいません。</para>
   </step>
   <step>
-  <para>問題を再現させることができたら、 <command>tcpdump</command> を動作させている端末内で <keycombo><keycap>CTRL</keycap><keycap>c</keycap></keycombo> を押して、 <command>tcpdump</command> を停止してください。なお、 <command>strace</command> はコマンドの終了後に終了するのが一般的ですが、停止しない場合は同様の手順で停止してください。</para>
-  
+   <para>問題を再現させることができたら、 <command>tcpdump</command> を動作させている端末内で <keycombo><keycap>CTRL</keycap><keycap>c</keycap></keycombo> を押して、 <command>tcpdump</command> を停止してください。なお、 <command>strace</command> はコマンドの終了後に終了するのが一般的ですが、停止しない場合は同様の手順で停止してください。</para>
   </step>
   <step>
-  <para>採取したパケットや <command>strace</command> のデータは、知識と経験のある管理者であれば分析することができます。上記の手順を実施した場合、それぞれ <filename>/tmp/nfs-demo.cap</filename> と <filename>/tmp/nfs-strace.out</filename> というファイルに保存されています。</para>
+   <para>採取したパケットや <command>strace</command> のデータは、知識と経験のある管理者であれば分析することができます。上記の手順を実施した場合、それぞれ <filename>/tmp/nfs-demo.cap</filename> と <filename>/tmp/nfs-strace.out</filename> というファイルに保存されています。</para>
   </step>  
- </procedure>
+  </procedure>
  </sect2>
  
  <sect2 xml:id="sec-advance-debugging">
- <title>高度な NFS デバッグ</title>
- <important>
- <title>熟練者向けの高度なデバッグ</title>
- <para>本章で説明している内容は、 NFS のコードへの理解がある高度な NFS 管理者向けの説明です。そのため、まずは <xref linkend="sec-nfs-common-troubleshooting"/> で示している説明に従って、問題点を絞り込むところから始めるようにしてください。その後、必要であれば、より詳しく状況を調べるために本章に示すデバッグ手順を実施してください。</para>
- </important>
- <para>NFS 関連の情報を収集するにあたっては、様々な分野のデバッグ用コードが存在しています。しかしながら、デバッグメッセージは非常に分かりにくいものであるほか、出力量も非常に大きいため、性能への影響もあり得ます。場合によっては、デバッグ機能によって問題の再現を妨害してしまうこともあります。ほとんどの場合においてデバッグ機能は不要であり、 NFS のコードを熟知した人間にのみ有用であることに注意してください。</para>
+  <title>高度な NFS デバッグ</title>
+   <important>
+    <title>熟練者向けの高度なデバッグ</title>
+    <para>本章で説明している内容は、 NFS のコードへの理解がある高度な NFS 管理者向けの説明です。そのため、まずは <xref linkend="sec-nfs-common-troubleshooting"/> で示している説明に従って、問題点を絞り込むところから始めるようにしてください。その後、必要であれば、より詳しく状況を調べるために本章に示すデバッグ手順を実施してください。</para>
+   </important>
+   <para>NFS 関連の情報を収集するにあたっては、様々な分野のデバッグ用コードが存在しています。しかしながら、デバッグメッセージは非常に分かりにくいものであるほか、出力量も非常に大きいため、性能への影響もあり得ます。場合によっては、デバッグ機能によって問題の再現を妨害してしまうこともあります。ほとんどの場合においてデバッグ機能は不要であり、 NFS のコードを熟知した人間にのみ有用であることに注意してください。</para>
  
- <sect3 xml:id="sec-rpcdebug">
- <title><command>rpcdebug</command> によるデバッグの有効化</title>
- <para><command>rpcdebug</command> は NFS クライアントと NFS サーバの両方でそれぞれデバッグフラグを設定することができます。ご利用の &slea; で <command>rpcdebug</command> が利用できない場合は、 NFS クライアントであれば <literal>nfs-client</literal> パッケージを、 NFS サーバであれば <literal>nfs-kernel-server</literal> パッケージをそれぞれインストールしてください。</para>
- <para>デバッグフラグを設定するには、下記のように入力して実行します:</para>
- <screen>rpcdebug -m <replaceable>モジュール名</replaceable> -s flags</screen>
- <para>デバッグフラグの設定を解除するには、下記のように入力して実行します:</para>
- <screen>rpcdebug -m <replaceable>モジュール名</replaceable> -c flags</screen>
- <para>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</para>
- <variablelist>
- <varlistentry>
- <term>nfsd</term>
- <listitem>
- <para>NFS サーバコードのデバッグ向け</para>
- </listitem>
- </varlistentry>
- <varlistentry>
- <term>nfs</term>
- <listitem>
- <para>NFS クライアントコードのデバッグ向け</para>
- </listitem>
- </varlistentry><varlistentry>
- <term>nlm</term>
- <listitem>
- <para>NFS ロック (施錠) マネージャのデバッグ向け。 NFS クライアントと NFS サーバのいずれかで指定します。また、 NFS v2/v3 でのみ使用されます。</para>
- </listitem>
- </varlistentry><varlistentry>
- <term>rpc</term>
- <listitem>
- <para>Remote Procedure Call (リモートプロシージャコール) 向けデバッグ向け。 NFS クライアントと NFS サーバのいずれかで指定します。</para>
- </listitem>
- </varlistentry> 
- </variablelist>
- <para><command>rpcdebug</command> コマンドの詳しい使い方については、下記のマニュアルページをお読みください:</para>
- <screen>man 8 rpcdebug</screen>
+   <sect3 xml:id="sec-rpcdebug">
+    <title><command>rpcdebug</command> によるデバッグの有効化</title>
+    <para><command>rpcdebug</command> は NFS クライアントと NFS サーバの両方でそれぞれデバッグフラグを設定することができます。ご利用の &slea; で <command>rpcdebug</command> が利用できない場合は、 NFS クライアントであれば <literal>nfs-client</literal> パッケージを、 NFS サーバであれば <literal>nfs-kernel-server</literal> パッケージをそれぞれインストールしてください。</para>
+    <para>デバッグフラグを設定するには、下記のように入力して実行します:</para>
+<screen>rpcdebug -m <replaceable>モジュール名</replaceable> -s flags</screen>
+    <para>デバッグフラグの設定を解除するには、下記のように入力して実行します:</para>
+<screen>rpcdebug -m <replaceable>モジュール名</replaceable> -c flags</screen>
+    <para>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</para>
+    <variablelist>
+     <varlistentry>
+      <term>nfsd</term>
+      <listitem>
+      <para>NFS サーバコードのデバッグ向け</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>nfs</term>
+      <listitem>
+      <para>NFS クライアントコードのデバッグ向け</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>nlm</term>
+      <listitem>
+       <para>NFS ロック (施錠) マネージャのデバッグ向け。 NFS クライアントと NFS サーバのいずれかで指定します。また、 NFS v2/v3 でのみ使用されます。</para>
+      </listitem>
+     </varlistentry>
+     <varlistentry>
+      <term>rpc</term>
+      <listitem>
+      <para>Remote Procedure Call (リモートプロシージャコール) 向けデバッグ向け。 NFS クライアントと NFS サーバのいずれかで指定します。</para>
+     </listitem>
+    </varlistentry> 
+   </variablelist>
+   <para><command>rpcdebug</command> コマンドの詳しい使い方については、下記のマニュアルページをお読みください:</para>
+<screen>man 8 rpcdebug</screen>
   </sect3>
  
  <sect3 xml:id="sec-other-nfs-debug">
- <title>NFS が依存する各種サービスに対するデバッグの有効化</title>
- <para>NFS の動作は他の関連サービスに依存して変化します。これにはたとえば NFS マウントデーモン (<command>rpc.mountd</command>) などがあります。関連サービスに対して設定するオプションは、 <filename>/etc/sysconfig/nfs</filename> で指定します。</para>
- <para>たとえば <filename>/etc/sysconfig/nfs</filename> には下記のようなパラメータがあります:</para>
- <screen>MOUNTD_OPTIONS=""</screen>
- <para>デバッグモードを有効化するには、 <literal>-d</literal> オプションに続いて下記のいずれかの値を指定します: <literal>all</literal> , <literal>auth</literal> , <literal>call</literal> , <literal>general</literal> , <literal>parse</literal></para>
- <para>たとえば <command>rpc.mountd</command> の全てのデバッグ機能を有効化するには、下記のように指定します:</para>
- <screen>MOUNTD_OPTIONS="-d all"</screen>
- <para>指定可能なオプションについて知りたい場合は、下記のマニュアルページをお読みください:</para>
- <screen>man 8 rpc.mountd</screen>
- <para>また、 <filename>/etc/sysconfig/nfs</filename> を変更した場合は、サービスを再起動する必要があります:</para>
- <screen>
+  <title>NFS が依存する各種サービスに対するデバッグの有効化</title>
+  <para>NFS の動作は他の関連サービスに依存して変化します。これにはたとえば NFS マウントデーモン (<command>rpc.mountd</command>) などがあります。関連サービスに対して設定するオプションは、 <filename>/etc/sysconfig/nfs</filename> で指定します。</para>
+  <para>たとえば <filename>/etc/sysconfig/nfs</filename> には下記のようなパラメータがあります:</para>
+<screen>MOUNTD_OPTIONS=""</screen>
+  <para>デバッグモードを有効化するには、 <literal>-d</literal> オプションに続いて下記のいずれかの値を指定します: <literal>all</literal> , <literal>auth</literal> , <literal>call</literal> , <literal>general</literal> , <literal>parse</literal></para>
+  <para>たとえば <command>rpc.mountd</command> の全てのデバッグ機能を有効化するには、下記のように指定します:</para>
+<screen>MOUNTD_OPTIONS="-d all"</screen>
+  <para>指定可能なオプションについて知りたい場合は、下記のマニュアルページをお読みください:</para>
+<screen>man 8 rpc.mountd</screen>
+  <para>また、 <filename>/etc/sysconfig/nfs</filename> を変更した場合は、サービスを再起動する必要があります:</para>
+<screen>
 systemctl restart nfsserver  # NFS サーバ関連の変更の場合
 systemctl restart nfs  # NFS クライアント関連の変更の場合
  </screen>
- </sect3>
- </sect2>
- 
+   </sect3>
+  </sect2>
  </sect1>
 </chapter>
