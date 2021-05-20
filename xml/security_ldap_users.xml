@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-users">
-  <title>LDAP ユーザとグループの作成</title>
+  <title>LDAP でのユーザとグループの管理</title>
    <para>ユーザとグループは <command>dsidm</command> コマンドで作成および管理を行います。このコマンドは対話的に動作させることができるほか、コマンドラインでパラメータを指定して実行することもできます。</para>
    <para>現時点で設定済みのユーザとグループの一覧を表示するには、下記のように入力して実行します:</para>
    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user list
@@ -19,18 +19,18 @@
   <procedure xml:id="pro-security-ldap-server-users">
    <title>LDAP ユーザの作成</title>
    <para>LDAP ユーザは一般的なユーザアカウントを表わすもので、ログイン時に使用できるものであるほか、ホームディレクトリも設定することができます。 LDAP サーバにユーザを追加することで、ネットワーク内のユーザアカウントを統一的に管理できるようになります。なお、ユーザを作成するにあたっては、誤った情報を設定しないように注意してください。誤った情報を設定してしまうと、その情報をもとにログインできるようになってしまうためです。設定されている情報を確認したい場合は、 <command>id</command> コマンドで確認してください。下記の例では &exampleuserIIfull; というユーザに対する情報を確認しています:</para>
-   <screen>&prompt.user;id &exampleuserIII;
-uid=1001(wilber) gid=100(users) groups=100(users)</screen>   
+   <screen>&prompt.user;id &exampleuserIII_plain;
+uid=1001(wilber) gid=101(users) groups=101(users)</screen>   
    <step>
     <para>&exampleuserII; という LDAP ユーザを作成したい場合は、下記のように入力して実行します:</para>
-    <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserII; \
-  --cn &exampleuserII; --displayName '&exampleuserIIfull;' --uidNumber 1001 --gidNumber 100 \
-  --homeDirectory /home/&exampleuserII;</screen>
+    <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserII_plain; \
+  --cn &exampleuserII_plain; --displayName '&exampleuserIIfull;' --uidNumber 1001 --gidNumber 101 \
+  --homeDirectory /home/&exampleuserII_plain;</screen>
    </step>
    <step>
     <para>ユーザの <literal>distinguished name</literal> (DN) 名 (ディレクトリオブジェクトに対する完全修飾名、つまり唯一性の保証された名前) を参照するには、下記のように入力して実行します:</para>
-    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get &exampleuserII;
-dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
+    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> user get &exampleuserII_plain;
+dn: uid=&exampleuserII_plain;,ou=people,dc=ldap1,dc=com
 [...]</screen>
     <para>ユーザのパスワード変更などの処理を行うには、 <literal>distinguished name</literal> (DN) を指定する必要があります。</para>
    </step>
@@ -39,35 +39,35 @@ dn: uid=&exampleuserII;,ou=people,dc=ldap1,dc=com
     <substeps>
       <step>
        <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
-  uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
+  uid=&exampleuserII_plain;,ou=people,dc=ldap1,dc=com</screen>
       </step>
       <step>
        <para>あとは &exampleuserII; に設定するパスワードを 2 回入力します。</para>
        <para>パスワードの設定が完了すると、下記のようなメッセージが表示されるはずです:</para>
-       <screen>reset password for uid=&exampleuserII;,ou=people,dc=ldap1,dc=com</screen>
+       <screen>reset password for uid=&exampleuserII_plain;,ou=people,dc=ldap1,dc=com</screen>
        <para>設定済みのパスワードを変更したい場合も、同じコマンドで行うことができます。</para>
       </step>
     </substeps>
    </step>
    <step>
     <para>続いて &exampleuserIII; ユーザを作成します:</para>
-    <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserIII;\
-  --cn &exampleuserIII; --displayName '&exampleuserIIIfull;' \
-  --uidNumber 1001 --gidNumber 100 --homeDirectory /home/&exampleuserIII;
+    <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user create --uid &exampleuserIII_plain;\
+  --cn &exampleuserIII_plain; --displayName '&exampleuserIIIfull;' \
+  --uidNumber 1002 --gidNumber 102 --homeDirectory /home/&exampleuserIII;
   
 &prompt.sudo;dsidm <replaceable>ldap1</replaceable> account reset_password \
   uid=&exampleuserIII;,ou=people,dc=ldap1,dc=com</screen>
    </step>
       <step>
     <para>認証が正しく動作することを確認します:</para>
-   <screen>&prompt.user;ldapwhoami -D uid=wilber,ou=people,dc=ldap1,dc=com -W
+   <screen>&prompt.user;ldapwhoami -D uid=geeko,ou=people,dc=ldap1,dc=com -W
 Enter LDAP Password: 
-dn: uid=wilber,ou=people,dc=ldap1,dc=com    
+dn: uid=geeko,ou=people,dc=ldap1,dc=com    
      </screen>
    </step>
   </procedure>
 
-   <para>続いて &exampleuserIII; ユーザを作成します:</para>
+   <para>最後に &exampleuserII; ユーザを削除します:</para>
    <screen>&prompt.sudo;<command>dsidm</command> <replaceable>ldap1</replaceable> user delete 
    Enter dn to delete : <replaceable>uid=wilber,ou=people,dc=ldap1,dc=com</replaceable>
    Deleting nsUserAccount uid=wilber,ou=people,dc=ldap1,dc=com :
@@ -85,8 +85,8 @@ dn: uid=wilber,ou=people,dc=ldap1,dc=com
    </step>
    <step>
     <para>&exampleuserII; ユーザをグループに追加します:</para>
-    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <replaceable>server_admins</replaceable> uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
-added member: uid=&exampleuserII;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable></screen>
+    <screen>&prompt.sudo;dsidm <replaceable>ldap1</replaceable> group add_member <replaceable>server_admins</replaceable> uid=&exampleuserII_plain;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable>
+added member: uid=&exampleuserII_plain;,ou=people,<replaceable>dc=ldap1,dc=com</replaceable></screen>
    </step>
   </procedure>
  </sect1>
