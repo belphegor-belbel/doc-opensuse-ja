@@ -1285,92 +1285,56 @@ Apr 04 16:52:26 g144 start_apache2[3088]: httpd2-prefork: Syntax error on line
   </sect2>
  </sect1>
  <sect1 xml:id="sec-boot-systemd-timer-units">
-  <title>&systemd; ターゲット</title>
+  <title>&systemd; タイマーユニット</title>
 
-  <para>
-   Similar to cron, &systemd; timer units provide a mechanism for scheduling jobs on Linux.
-   Although &systemd; timer units serve the same purpose as cron, they offer several advantages.
-  </para>
+  <para>&systemd; のタイマーユニットは cron と同等の機能を提供するもので、 Linux でジョブのスケジュールを行うことができる仕組みです。 &systemd; のタイマーユニットは cron と同じ目的で提供されるものですが、いくつかの追加機能があります。</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-     Jobs scheduled using a timer unit can depend on other &systemd; services.
-    </para>
+    <para>別の &systemd; サービスに依存する形でジョブをスケジュールすることができます。</para>
    </listitem>
    <listitem>
-    <para>
-     Timer units are treated as regular &systemd; services, so can be managed with <command>systemctl</command>.
-    </para>
+    <para>タイマーユニットの取り扱いが &systemd; のサービスと同じであるため、 <command>systemctl</command> を利用して管理することができます。</para>
    </listitem>
    <listitem>
-    <para>
-     Timers can be realtime and monotonic.
-    </para>
+    <para>タイマーはリアルタイムタイマーと単調タイマーのいずれか、もしくは両方を指定することができます。</para>
    </listitem>
    <listitem>
-    <para>
-     Time units are logged to the &systemd; journal, which makes it easier to monitor and troubleshoot them.
-    </para>
+    <para>タイマーユニットは &systemd; のジャーナル内に記録されるため、監視やトラブルシューティングが容易です。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   &systemd; timer units are identified by the <literal>.timer</literal> file name extension.
-  </para>
+  <para>&systemd; のタイマーユニットのファイル名は、拡張子が <literal>.timer</literal> になっているため、簡単に識別することができます。</para>
 
   <sect2 xml:id="sec-boot-systemd-timer-types">
-   <title>&systemd; ターゲット</title>
-   <para>
-    Timer units can use monotonic and realtime timers.
-   </para>
+   <title>&systemd; タイマーの種類</title>
+   <para>タイマーユニットでは、間隔の指定だけでなく、具体的な日時を指定することもできます。</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Similar to cronjobs, realtime timers are triggered on calendar events.
-      Realtime timers are defined using the option <option>OnCalendar</option>.
-     </para>
+     <para>cron のジョブと同様に、リアルタイムタイマーは特定の日時に到達することで実行するタイマーです。リアルタイムタイマーは、 <option>OnCalendar</option> と呼ばれるオプションで指定します。</para>
     </listitem>
     <listitem>
-     <para>
-      Monotonic timers are triggered at a specified time elapsed from a certain starting point.
-      The latter could be a system boot or system unit activation event.
-      There are several options for defining monotonic timers including <option>OnBootSec</option>, <option>OnUnitActiveSec</option>, and <option>OnTypeSec</option>.
-      Monotonic timers are not persistent, and they are reset after each reboot.
-     </para>
+     <para>単調タイマーは、起動してからの経過時間を元に実行します。起動はシステムの起動のほか、ユニットの有効化が基準となります。単調タイマーの場合には複数のオプションが提供されていて、それぞれ <option>OnBootSec</option> , <option>OnUnitActiveSec</option> , <option>OnTypeSec</option> を使用します。単調タイマーはシステムの再起動が発生するとリセットされ、間隔が維持されなくなります。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="sec-boot-systemd-timer-service-units">
-   <title>主な &systemd; ターゲットユニット</title>
-   <para>
-    Every timer unit must have a corresponding &systemd; unit file it controls.
-    In other words, a <filename>.timer</filename> file activates and manages the corresponding <filename>.service</filename> file.
-    When used with a timer, the <filename>.service</filename> file does not require an <literal>[Install]</literal> section, as the service is managed by the timer.
-   </para>
+   <title>&systemd; とサービスユニット</title>
+   <para>&systemd; のタイマーユニットにはそれぞれ対応するユニットファイルが存在しています。言い換えると、 <filename>.timer</filename> ファイルは、対応する <filename>.service</filename> ファイルを有効化し、管理する役割を担っていることになります。タイマーとしてユニットファイルを使用する場合は、 <filename>.service</filename> ファイル内に <literal>[Install]</literal> セクションを指定する必要はありません。これは、タイマー側で管理するためです。</para>
   </sect2>
 
   <sect2 xml:id="sec-boot-systemd-timer-example">
-   <title>Practical example</title>
-   <para>
-    To understand the basics of &systemd; timer units, we set up a timer that triggers the <filename>foo.sh</filename> shell script.
-   </para>
-   <para>
-    First step is to create a &systemd; service unit that controls the shell script.
-    To do this, open a new text file for editing and add the following service unit definition:
-   </para>
+   <title>具体的な例</title>
+   <para>&systemd; のタイマーユニットの基本を理解するため、例として <filename>foo.sh</filename> というシェルスクリプトをタイマーユニットで起動する場合を想定してみます。</para>
+   <para>最初に &systemd; のサービスユニットファイルを作成します。このファイルがシェルスクリプトの制御を行うことになります。テキストエディタを起動して、下記のような内容でサービスユニットファイルの設定を作成してください:</para>
 <screen>[Unit]
 Description="Foo shell script"
 
 [Service]
 ExecStart=/usr/local/bin/foo.sh</screen>
-   <para>
-    Save the file under the name <filename>foo.service</filename> in the directory <filename>/etc/systemd/system/</filename>.
-   </para>
-   <para>
-    Next, open a new text file for editing and add the following timer definition:
-   </para>
+   <para>このファイルを、 <filename>/etc/systemd/system/</filename> ディレクトリ内の <filename>foo.service</filename> という名前で保存します。</para>
+   <para>次にタイマーユニットを作成します。テキストエディタで下記のような内容を記述します:</para>
 <screen>[Unit]
 Description="Run foo shell script"
 
@@ -1381,62 +1345,29 @@ Unit=foo.service
 
 [Install]
 WantedBy=multi-user.target</screen>
-   <para>
-    The <literal>[Timer]</literal> section in the example above specifies what service to trigger (<literal>foo.service</literal>) and when to trigger it.
-    In this case, the option <option>OnBootSec</option> specifies a monotonic timer that triggers the service five minutes after the system boot, while the option <option>OnUnitActiveSec</option> triggers the service 24 hours after the service has been activated (that is, the timer will trigger the service once a day).
-    Finally the option <option>WantedBy</option> specifies that the timer should start when the system has reached the multi-user target.
-   </para>
-   <para>
-    Instead of a monotonic timer, you can specify a realtime one using the option <option>OnCalendar</option>.
-    The following realtime timer definition triggers the related service unit once a week, starting on Monday at 12:00.
-   </para>
+   <para>上記の例では、 <literal>[Timer]</literal> セクションで対応するサービスユニットファイルを指定 ( <literal>foo.service</literal> ) し、起動間隔を指定しています。この例では <option>OnBootSec</option> を指定していますので、まずはシステムの起動後を基準として 5 分間隔でシェルスクリプトを起動することになります。また、 <option>OnUnitActiveSec</option> の指定も存在することから、ユニットの有効化から 24 時間が経過するタイミングでも起動することになります (つまり 1 日 1 回) 。また、 <option>WantedBy</option> の指定では、システムがマルチユーザターゲットに到達している場合にタイマーを開始すべきである旨を示しています。</para>
+   <para>単調タイマーの代わりに、 <option>OnCalendar</option> でリアルタイムタイマーを指定することもできます。たとえば下記のように指定すると、月曜日の 12:00 を開始時点として、週 1 回の間隔で対応するサービスを起動することができます。</para>
 <screen>[Timer]
 OnCalendar=weekly
 Persistent=true</screen>
-   <para>
-    The option <option>Persistent=true</option> indicates that the service will be triggered immediately after the timer activation if the timer missed the last start time (for example, due to the system being powered off).
-   </para>
-   <para>
-    The option <option>OnCalendar</option> can also be used to define specific dates times for triggering a service using the following format: <literal>DayOfWeek Year-Month-Day Hour:Minute:Second</literal>.
-    The example below triggers a service at 5am every day:
-   </para>
+   <para>ここでは <option>Persistent=true</option> を指定していますが、これはシステムが直前の起動時間を判断できない場合 (たとえばシステムの電源を落とした場合) に、タイマーを即時に起動することを示しています。</para>
+   <para>このほか、 <option>OnCalendar</option> では <literal>曜日 年-月-日 時:分:秒</literal> のような書式で指定することで、特定の日時に起動を行うこともできます。たとえば下記のように指定すると、毎日 AM5:00 にサービスを起動することになります:</para>
 <screen>OnCalendar=*-*-* 5:00:00</screen>
-   <para>
-    You can use an asterisk to specify any value, and commas to list possible values.
-    Use two values separated by .. to indicate a contiguous range.
-    The following example triggers a service at 6pm on Friday of every month:
-   </para>
+   <para>cron と同様にアスタリスク記号で任意の数値を、カンマ区切りで複数の数値を指定することもできます。また、 2 つの値の間に .. を入れることで、連続した値を指定することもできます。たとえば下記の例は、毎月最初の金曜日の PM6:00 に起動する意味になります:</para>
 <screen>OnCalendar=Fri *-*-1..7 18:00:00</screen>
-   <para>
-    To trigger a service at different times, you can specify several <option>OnCalendar</option> entries:
-   </para>
+   <para>複数の日時を指定したい場合は、 <option>OnCalendar</option> の項目を複数に分割してください:</para>
 <screen>OnCalendar=Mon..Fri 10:00
 OnCalendar=Sat,Sun 22:00</screen>
-   <para>
-    In the example above, a service is triggered at 10am on week days and at 10pm on weekends.
-   </para>
-   <para>
-    When you are done editing the timer unit file, save it under the name <filename>foo.timer</filename> in the <filename>/etc/systemd/system/</filename> directory.
-    To check the correctness of the created unit files, run the following command:
-   </para>
+   <para>上記の例では、月曜日から金曜日までの AM10:00 と、週末の PM10:00 にそれぞれ起動する意味になります。</para>
+   <para>タイマーユニットファイルを作成したら、 <filename>/etc/systemd/system/</filename> ディレクトリ内に <filename>foo.timer</filename> というファイル名で保存してください。ユニットファイルが正しく設定できているかどうかを確認するには、下記のようなコマンドを実行します:</para>
 <screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
-   <para>
-    If the command returns no output, the files have passed the verification successfully.
-   </para>
-   <para>
-    To start the timer, use the command <command>sudo systemctl start foo.timer</command>.
-    To enable the timer on boot, run the command <command>sudo systemctl enable foo.timer</command>.
-   </para>
+   <para>上記のコマンドを実行しても何も出力されなければ、問題なくユニットファイルが設定できていることを示しています。</para>
+   <para>タイマーを開始するには <command>sudo systemctl start foo.timer</command> を、システムの起動時にタイマーを有効化するには <command>sudo systemctl enable foo.timer</command> をそれぞれ実行してください。</para>
   </sect2>
 
   <sect2 xml:id="sec-boot-systemd-timer-manage">
-   <title>Managing &systemd; timers</title>
-   <para>
-    Since timers are treated as regular &systemd; units, you can manage them using <command>systemctl</command>.
-    You can start a timer with <command>systemctl start</command>, enable a timer with <command>systemctl enable</command>, and so on.
-    In addition to that, you can list all active timers using the command <command>systemctl list-timers</command>.
-    To list all timers, including inactive ones, run the command <command>systemctl list-timers --all</command>.
-   </para>
+   <title>&systemd; タイマーの管理</title>
+   <para>タイマーは &systemd; のユニットとして扱われるため、管理も <command>systemctl</command> コマンドで行います。タイマーを起動するには <command>systemctl start</command> を、タイマーを有効化するには <command>systemctl enable</command> をそれぞれ実行してください。これに加えて、 <command>systemctl list-timers</command> を実行すると、現在有効なタイマーの一覧を表示することができます。有効になっていないタイマーも含めたい場合は、 <command>systemctl list-timers --all</command> を実行してください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-boot-systemd-info">
