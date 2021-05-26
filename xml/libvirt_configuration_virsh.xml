@@ -342,13 +342,15 @@ CPU Affinity:   yy
 <screen>&prompt.sudo;<command>virsh start sles15</command></screen>
    </step>
   </procedure>
+
   <important>
-    <title>&slsa;11 SP4 の &kvm; ゲストについて</title>
-    <para>新しい &qemu; マシンタイプ (pc-i440fx-2.0 もしくはそれ以降) を設定した &slsa;11 SP4 &kvm; ゲストの場合、ゲスト内では既定で <systemitem class="resource">acpiphp</systemitem> モジュールが読み込まれません。このモジュールはディスクやネットワークデバイスのホットプラグ (活性接続) を行うために読み込んでおかなければならないモジュールですので、必要であれば <command>modprobe acpiphp</command> コマンドを実行して読み込んでください。なお、 <filename>/etc/modprobe.conf.local</filename> ファイル内に <literal>install acpiphp /bin/true</literal> の行を追加すると、システムの起動時に自動読み込みを行うことができます。</para>
+   <title>&slsa;11 SP4 の &kvm; ゲストについて</title>
+   <para>新しい &qemu; マシンタイプ (pc-i440fx-2.0 もしくはそれ以降) を設定した &slsa;11 SP4 &kvm; ゲストの場合、ゲスト内では既定で <systemitem class="resource">acpiphp</systemitem> モジュールが読み込まれません。このモジュールはディスクやネットワークデバイスのホットプラグ (活性接続) を行うために読み込んでおかなければならないモジュールですので、必要であれば <command>modprobe acpiphp</command> コマンドを実行して読み込んでください。なお、 <filename>/etc/modprobe.conf.local</filename> ファイル内に <literal>install acpiphp /bin/true</literal> の行を追加すると、システムの起動時に自動読み込みを行うことができます。</para>
   </important>
+
   <important>
-    <title>&qemu; Q35 マシンタイプを使用する &kvm; ゲストについて</title>
-    <para>&qemu; Q35 マシンタイプを使用する &kvm; マシンの場合、 1 つの <literal>pcie-root</literal> コントローラと 7 つの <literal>pcie-root-port</literal> コントローラからなる PCI トポロジを構成します。 <literal>pcie-root</literal> コントローラはホットプラグ (活性接続) には対応しませんが、 <literal>pcie-root-port</literal> コントローラはそれぞれ 1 つの PCIe デバイスのホットプラグに対応します。 PCI コントローラ自身はホットプラグに対応していませんので、 7 つ以上の PCIe デバイスのホットプラグが必要となる場合、あらかじめ <literal>pcie-root-port</literal> コントローラを追加しておくようにしてください。また <literal>pcie-to-pci-bridge</literal> コントローラを追加することで、古い PCI デバイスのホットプラグを実現することもできます。 &qemu; のマシンタイプ別の PCI トポロジの詳細について、詳しくは <link xlink:href="https://libvirt.org/pci-hotplug.html"/> (英語) をお読みください。</para>
+   <title>&qemu; Q35 マシンタイプを使用する &kvm; ゲストについて</title>
+   <para>&qemu; Q35 マシンタイプを使用する &kvm; マシンの場合、 1 つの <literal>pcie-root</literal> コントローラと 7 つの <literal>pcie-root-port</literal> コントローラからなる PCI トポロジを構成します。 <literal>pcie-root</literal> コントローラはホットプラグ (活性接続) には対応しませんが、 <literal>pcie-root-port</literal> コントローラはそれぞれ 1 つの PCIe デバイスのホットプラグに対応します。 PCI コントローラ自身はホットプラグに対応していませんので、 7 つ以上の PCIe デバイスのホットプラグが必要となる場合、あらかじめ <literal>pcie-root-port</literal> コントローラを追加しておくようにしてください。また <literal>pcie-to-pci-bridge</literal> コントローラを追加することで、古い PCI デバイスのホットプラグを実現することもできます。 &qemu; のマシンタイプ別の PCI トポロジの詳細について、詳しくは <link xlink:href="https://libvirt.org/pci-hotplug.html"/> (英語) をお読みください。</para>
   </important>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-usb-virsh">
@@ -701,9 +703,13 @@ pci_0000_04_11_5</screen>
  </sect1>
  <sect1 xml:id="libvirt-config-listing-host-devs">
   <title>接続されているデバイスの一覧表示</title>
+
   <para>&virsh; には &vmguest; に接続されている全ての &vmhost; のデバイスを一覧表示する機能はありませんが、指定した &vmguest; に接続されているデバイスを一覧表示することはできます。具体的には下記のようなコマンドを入力して実行します:</para>
+
 <screen>virsh dumpxml <replaceable>VM_ゲスト名</replaceable> | xpath -e /domain/devices/hostdev</screen>
+
   <para>たとえば下記のようになります:</para>
+
 <screen>
 &prompt.sudo;virsh dumpxml sles12 | -e xpath /domain/devices/hostdev
 Found 2 nodes:
@@ -724,6 +730,7 @@ Found 2 nodes:
   &lt;address type="pci" domain="0x0000" bus="0x00" slot="0x0b" function="0x0" /&gt;
 &lt;/hostdev&gt;
 </screen>
+
   <tip xml:id="libvirt-config-listing-host-devs-sriov">
    <title><literal>&lt;interface type='hostdev'&gt;</literal> で接続されている SR-IOV デバイスの一覧表示について</title>
    <para><literal>&lt;interface type='hostdev'&gt;</literal> を利用して &vmhost; のデバイスに接続している SR-IOV デバイスの場合は、上記とは異なる XPath クエリを指定する必要があります:</para>
