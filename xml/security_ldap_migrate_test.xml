@@ -105,140 +105,109 @@ You should now review your instance configuration and data:
    </itemizedlist>    
   </sect2>     
  <sect2 xml:id="sec-security-ldap-migrate-plan">
-  <title>Planning your migration</title>
-  <para>
-   As OpenLDAP is a "box of parts" and highly customisable, it is not possible
-   to prescribe a one size fits all migration. It is necessary to assess your
-   current environment and configuration with OpenLDAP and other integrations.
-   This includes, and is not limited to:
-  </para>
+  <title>移行の計画</title>
+  <para>OpenLDAP は "様々な部品から構成されるソフトウエアパッケージ" であり、様々なカスタマイズを実施できることから、画一的な手順で移行ができるものではありません。まずは OpenLAP の環境と設定、そして使用範囲をよく調査してください。調査の対象としては、下記のようなものがあります (下記だけであるとも限りません):</para>
   <itemizedlist>
    <listitem>
-    <para>
-     Replication topology.
-    </para>
+    <para>レプリケーションのトポロジ。</para>
    </listitem>
    <listitem>
-    <para>
-     High availability and load balancer configurations.
-    </para>
+    <para>高可用性と負荷分散の設定。</para>
    </listitem>
    <listitem>
-    <para>
-     External data flows (IGA, HR, AD, etc.).
-    </para>
+    <para>外部のデータフロー (データ管理, 人事管理, Active Directory など) 。</para>
    </listitem>
    <listitem>
-    <para>
-     Configured overlays (plugins in &ds389;).
-    </para>
+    <para>設定済みのオーバーレイ (&ds389; のプラグイン) 。</para>
    </listitem>
    <listitem>
-    <para>
-     Client configuration and expected server features.
-    </para>
+    <para>クライアント側の設定とサーバ側に求められる機能。</para>
    </listitem>
    <listitem>
-    <para>
-     Customized schema.
-    </para>
+    <para>スキーマのカスタマイズ内容。</para>
    </listitem>
    <listitem>
-    <para>
-     TLS configuration.
-    </para>
+    <para>TLS の設定。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   Plan what your &ds389; deployment will look like in the end. This includes
-   the same list, except replace overlays with plugins. Once you have assessed
-   your current environment, and planned what your &ds389; environment will
-   look like, you can then form a migration plan. It is recommended you build
-   the &ds389; environment in parallel to your OpenLDAP environment to allow
-   you to switch between them.
-  </para>
-  <para>
-   Migrating from OpenLDAP to &ds389; is a one-way migration. There are enough
-   differences between the two that they cannot interoperate, and there is not
-   a migration path from &ds389; to OpenLDAP. The following table highlights
-   the major similarities and differences.
-  </para>
+  <para>最終的に &ds389; をどのように配置するのかについても、よく計画しておく必要があります。これはオーバーレイをプラグインで置き換えること以外の、サーバの配置やインストールに関する内容です。現在の環境をよく調査し、 &ds389; の配置計画を立てたら、あとは移行プランの策定になります。 OpenLDAP の環境と並行して &ds389; の環境を動作させて、お互いに切り替えることができるようにしても良いでしょう。</para>
+  <para>OpenLDAP から &ds389; への移行は一方通行です。相互運用の意味でもこれらの間には十分な差異がありますし、逆方向 (&ds389; から OpenLDAP へ) の移行は提供されていませんので、よく注意しておく必要があります。下記には、様々な類似性と差異の一覧を示しています。</para>
   <informaltable>
    <tgroup cols="4">
     <thead>
      <row>
-      <entry>Feature</entry>
+      <entry>機能</entry>
       <entry>OpenLDAP</entry>
       <entry>&ds389;</entry>
-      <entry>Compatible</entry>
+      <entry>互換性</entry>
      </row>
     </thead>
     <tbody>
      <row>
-      <entry>Two-way replication</entry>
+      <entry>双方向レプリケーション</entry>
       <entry>SyncREPL</entry>
-      <entry>389-specific system</entry>
-      <entry>No</entry>
+      <entry>389 固有のシステム</entry>
+      <entry>いいえ</entry>
      </row>
      <row>
       <entry>MemberOf</entry>
-      <entry>Overlay</entry>
-      <entry>Plugin</entry>
-      <entry>Yes, simple configs only</entry>
+      <entry>オーバーレイ</entry>
+      <entry>プラグイン</entry>
+      <entry>はい (シンプルな設定にのみ対応)</entry>
      </row>
      <row>
-      <entry>External Auth</entry>
-      <entry>Proxy</entry>
+      <entry>外部認証</entry>
+      <entry>プロキシ</entry>
       <entry>-</entry>
-      <entry>No</entry>
+      <entry>いいえ</entry>
      </row>
      <row>
-      <entry>Active Directory Synchronisation</entry>
+      <entry>Active Directory との同期</entry>
       <entry>-</entry>
-      <entry>Winsync Plugin</entry>
-      <entry>No</entry>
+      <entry>Winsync プラグイン</entry>
+      <entry>いいえ</entry>
      </row>
      <row>
-      <entry>Inbuilt Schema</entry>
-      <entry>OLDAP Schemas</entry>
-      <entry>389 Schemas</entry>
-      <entry>Yes, supported by migration tool</entry>
+      <entry>内蔵スキーマ</entry>
+      <entry>OLDAP スキーマ</entry>
+      <entry>389 スキーマ</entry>
+      <entry>はい (移行ツールで対応)</entry>
      </row>
      <row>
-      <entry>Custom Schema</entry>
-      <entry>OLDAP Schemas</entry>
-      <entry>389 Schemas</entry>
-      <entry>Yes, supported by migration tool</entry>
+      <entry>独自スキーマ</entry>
+      <entry>OLDAP スキーマ</entry>
+      <entry>389 スキーマ</entry>
+      <entry>はい (移行ツールで対応)</entry>
      </row>
      <row>
-      <entry>Database Import</entry>
+      <entry>データベースの取り込み</entry>
       <entry>LDIF</entry>
       <entry>LDIF</entry>
-      <entry>Yes, supported by migration tool</entry>
+      <entry>はい (移行ツールで対応)</entry>
      </row>
      <row>
-      <entry>Password hashes</entry>
-      <entry>Varies</entry>
-      <entry>Varies</entry>
-      <entry>Yes, all formats supported excluding Argon2</entry>
+      <entry>パスワードのハッシュ化</entry>
+      <entry>各種</entry>
+      <entry>各種</entry>
+      <entry>はい (Argon2 を除く全ての形式に対応)</entry>
      </row>
      <row>
-      <entry>OpenLDAP to &ds389; replication</entry>
+      <entry>OpenLDAP と &ds389; のレプリケーション</entry>
       <entry>-</entry>
       <entry>-</entry>
-      <entry>No mechanism to replicate to 389 is possible</entry>
+      <entry>いいえ (389 との同期は不可能)</entry>
      </row>
      <row>
-      <entry>Time-based one-time password(TOTP)</entry>
-      <entry>TOTP overlay</entry>
+      <entry>時間ベースのワンタイムパスワード (TOTP)</entry>
+      <entry>TOTP オーバーレイ</entry>
       <entry>-</entry>
-      <entry>No, may be supported in the future</entry>
+      <entry>いいえ (将来的にサポートされるかも)</entry>
      </row>
      <row>
       <entry>EntryUUID</entry>
-      <entry>Part of OpenLDAP</entry>
-      <entry>Plugin</entry>
-      <entry>Yes</entry>
+      <entry>OpenLDAP の一部として提供</entry>
+      <entry>プラグイン</entry>
+      <entry>はい</entry>
      </row>
     </tbody>
    </tgroup>
