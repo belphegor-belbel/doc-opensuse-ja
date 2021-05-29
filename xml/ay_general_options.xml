@@ -51,6 +51,8 @@
   &lt;/wait&gt;
  &lt;/general&gt;
 &lt;profile&gt;</screen>
+
+
   <calloutlist>
    <callout arearefs="co-ay-general-ask">
     <para><!-- インストール時のユーザへの値の確認 --> <xref linkend="CreateProfile-Ask" xrefstyle="HeadingOnPage"/></para>
@@ -76,7 +78,7 @@
    <callout arearefs="co-ay-general-storage">
     <para><!-- ストレージセクション --> <xref linkend="CreateProfile-Partitioning" xrefstyle="HeadingOnPage"/></para>
    </callout>
-   <callout arearefs="co-ay-general-wait">
+   <callout os="sles;sled;osuse" arearefs="co-ay-general-wait">
     <para><!-- 待機セクション --> <xref linkend="CreateProfile-General-wait" xrefstyle="HeadingOnPage"/></para>
    </callout>
   </calloutlist>
@@ -87,7 +89,7 @@
    <para>モードセクションでは、ユーザに対する問い合わせや再起動に関する &ay; の動作を設定します。 <tag class="element">mode</tag> セクション内では下記の要素を設定することができます:</para>
 
    <variablelist>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term><tag class="element">activate_systemd_default_target</tag></term>
      <listitem>
       <para>この項目を <literal>false</literal> に設定すると、既定の <systemitem class="daemon">systemd</systemitem> のターゲットが <command>systemctl isolate</command> で有効化されなくなります。この値の指定は任意で、既定値は <literal>true</literal> です。</para>
@@ -127,7 +129,7 @@
 </general>]]></screen>
      </listitem>
     </varlistentry>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term><tag class="element">final_halt</tag></term>
      <listitem>
       <para>この値を <literal>true</literal> に設定すると、必要なパッケージのインストールと <phrase os="sles;sled;osuse"> 第 2 ステージでの </phrase> 設定が終わったあとに、マシンがシャットダウンするようになります。 <literal>final_halt</literal> を設定した場合は、 <literal>final_reboot</literal> オプションを <literal>true</literal> に設定する必要はありません。</para>
@@ -139,7 +141,7 @@
 </general>]]></screen>
      </listitem>
     </varlistentry>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term><tag class="element">final_reboot</tag></term>
      <listitem>
       <para>この値を <literal>true</literal> に設定すると、必要なパッケージのインストールと <phrase os="sles;sled;osuse"> 第 2 ステージでの </phrase> 設定が終わったあとに、マシンが再起動するようになります。 <literal>final_reboot</literal> を設定した場合は、 <literal>final_halt</literal> オプションを <literal>true</literal> に設定する必要はありません。</para>
@@ -151,7 +153,7 @@
 </general>]]></screen>
      </listitem>
     </varlistentry>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term><tag class="element">final_restart_services</tag></term>
      <listitem>
       <para>この項目を <literal>false</literal> に設定すると、インストールの最後 (全てのパッケージをインストールし、 <phrase os="sles;sled;osuse">第 2 ステージの末尾での</phrase> 設定が終わったあと) にサービス類が再起動 <emphasis>されなく</emphasis> なります。この値の設定は任意で、既定値は <literal>true</literal> です。</para>
@@ -193,7 +195,7 @@
 </general>]]></screen>
      </listitem>
     </varlistentry>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term><tag class="element">max_systemd_wait</tag></term>
      <listitem>
       <para><systemitem class="daemon">systemd</systemitem> が既定のターゲットの準備を整える際、 &ay; が最大で待機する時間を秒単位で指定します。この値の設定は任意で、通常は設定不要です。既定値は <literal>30</literal> (秒) です。</para>
@@ -416,7 +418,7 @@
    </variablelist>
   </sect2>
 
-  <sect2 xml:id="CreateProfile-General-wait">
+  <sect2 os="sles;sled;osuse" xml:id="CreateProfile-General-wait">
    <title>待機セクション</title>
 
    <para>インストールの第 2 ステージでは、ネットワークの設定などのさまざまなモジュールを動作させて、システムの設定を行います。 <tag class="element">wait</tag> セクションでは、特定のモジュールの動作前後で実行すべきスクリプトを指定することができます。また、各モジュールの前後でシステムを待機させる時間幅 ( <quote>スリープ</quote> ) を設定することもできます。</para>
@@ -492,7 +494,82 @@
    <example xml:id="ex-general-common">
     <title>一般オプション</title>
     <para>下記の例では、 general セクション内で最もよく使用されるオプションを示しています。なお、 pre および post の各モジュールセクションには、ダミーのスクリプトを埋め込んでいます。</para>
-<screen><![CDATA[<?xml version="1.0"?>
+<screen os="sles;sled;osuse"><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns"
+ xmlns:config="http://www.suse.com/1.0/configns">
+ <general>
+  <! -- Use cio_ignore on &zseries; only -->
+  <cio_ignore config:type="boolean">false</cio_ignore>
+  <mode>
+   <halt config:type="boolean">false</halt>
+   <forceboot config:type="boolean">false</forceboot>
+   <final_reboot config:type="boolean">false</final_reboot>
+   <final_halt config:type="boolean">false</final_halt>
+   <confirm_base_product_license config:type="boolean">
+    false
+   </confirm_base_product_license>
+   <confirm config:type="boolean">true</confirm>
+   <second_stage config:type="boolean">true</second_stage>
+  </mode>
+  <proposals config:type="list">
+   <proposal>partitions_proposal</proposal>
+  </proposals>
+  <self_update config:type="boolean">true</self_update>
+  <self_update_url>http://example.com/updates/$arch</self_update_url>
+  <signature-handling>
+   <accept_unsigned_file config:type="boolean">
+    true
+   </accept_unsigned_file>
+   <accept_file_without_checksum config:type="boolean">
+    true
+   </accept_file_without_checksum>
+   <accept_verification_failed config:type="boolean">
+    true
+   </accept_verification_failed>
+   <accept_unknown_gpg_key config:type="boolean">
+    true
+   </accept_unknown_gpg_key>
+   <import_gpg_key config:type="boolean">true</import_gpg_key>
+   <accept_non_trusted_gpg_key config:type="boolean">
+   true
+   </accept_non_trusted_gpg_key>
+  </signature-handling>
+  <wait>
+   <pre-modules config:type="list">
+    <module>
+     <name>networking</name>
+     <sleep>
+      <time config:type="integer">10</time>
+      <feedback config:type="boolean">true</feedback>
+     </sleep>
+     <script>
+     <source>&gt;![CDATA[
+echo "Sleeping 10 seconds"
+      ]]&gt;</source>
+     <debug config:type="boolean">false</debug>
+     </script>
+    </module>
+   </pre-modules>
+   <post-modules config:type="list">
+    <module>
+     <name>networking</name>
+     <sleep>
+      <time config:type="integer">10</time>
+      <feedback config:type="boolean">true</feedback>
+     </sleep>
+     <script>
+      <source>&gt;![CDATA[
+echo "Sleeping 10 seconds"
+      ]]&gt;</source>
+      <debug config:type="boolean">false</debug>
+     </script>
+    </module>
+   </post-modules>
+  </wait>
+ </general>
+</profile>]]></screen>
+<screen os="slemicro"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE profile>
 <profile xmlns="http://www.suse.com/1.0/yast2ns"
  xmlns:config="http://www.suse.com/1.0/configns">
