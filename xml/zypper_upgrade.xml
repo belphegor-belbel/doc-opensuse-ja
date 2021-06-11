@@ -3,6 +3,8 @@
 <!ENTITY % entities SYSTEM "entity-decl.ent">
 %entities;
 ]>
+<!-- Only include this file in openSUSE documentation. For SLE, there are
+better supported methods. -->
 <sect2 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-update-zypper">
  <title>zypper を利用したディストリビューションのアップグレード</title>
  <info>
@@ -34,62 +36,119 @@
   <procedure>
    <step>
     <para>オンライン更新を実行して、ソフトウエア管理スタックが最新の状態になっていることをご確認ください。詳しくは <xref linkend="cha-onlineupdate-you"/> をお読みください。</para>
+<screen>&prompt.user;zypper lr -u</screen>
    </step>
    <step>
     <para>更新に利用したいリポジトリを設定します。このリポジトリの設定は、間違えることなく正しく設定することが重要です。リポジトリは &yast; (詳しくは <xref linkend="sec-yast-software-instsource"/> をお読みください) のほか、 <command>zypper</command> でも設定することができます (詳しくは <xref linkend="sec-zypper"/> をお読みください) 。なお、下記の手順内で説明しているリポジトリの名前は、ご利用の環境で自由にカスタマイズできるものですので、実際のものとは異なる場合があります。</para>
     <para>現在設定されているリポジトリを一覧表示するには、下記のコマンドを実行します:</para>
 <screen>&prompt.user;zypper lr -u</screen>
-    <substeps performance="required">
+   </step>
+   <step>
+    <para>
+     In the result of the previous command, check the last column
+     (<guimenu>URL</guimenu>). All repository links should contain
+     <literal>15.3</literal> or <literal>openSUSE_Leap_15.3</literal> as a
+     version number. If this is not the case, proceed as follows:
+    </para>
+    <substeps>
      <step>
-      <para><phrase os="sles;sled">11-SP2 から 11-SP3</phrase> <phrase os="osuse">openSUSE_Leap_15.1 から openSUSE_Leap_15.2</phrase> などのように、システムに設定されているリポジトリのバージョン番号を新しくします。新しいリポジトリは、下記のようにすることで追加できます:</para>
-<screen os="sles;sled">
-server=<replaceable>http://download.example.org</replaceable>
-&prompt.sudo;zypper ar $server/distribution/11-SP3/repo/oss/ <replaceable>SLE-11-SP3</replaceable>
-&prompt.sudo;zypper ar $server/update/11-SP3/ <replaceable>SLE-11-SP3-Update</replaceable>
-      </screen>
-<screen os="osuse">
-server=<replaceable>http://download.example.org</replaceable>
-&prompt.sudo;zypper ar $server/distribution/leap/15.2/repo/oss/ <replaceable>Leap-15.2-OSS</replaceable>
-&prompt.sudo;zypper ar $server/update/leap/15.2/oss/ <replaceable>Leap-15.2-Update</replaceable>
-      </screen>
-      <para>あとは古いリポジトリを削除します:</para>
-<screen os="sles;sled">
-zypper rr <replaceable>SLE-11-SP2</replaceable>
-zypper rr <replaceable>SLE-11-Update</replaceable>
-      </screen>
-<screen os="osuse">
-zypper rr <replaceable>Leap-15.1-OSS</replaceable>
-zypper rr <replaceable>Leap-15.1-Update</replaceable>
-      </screen>
-      <para>また、必要であれば上記の手順を繰り返して、お使いの全てのパッケージが正しくアップグレードされるよう、不要なリポジトリも削除します。</para>
-     </step>
-     <step>
-      <para>後述の <command>zypper dup</command> は既定のリポジトリでのみ正しく動作することを保証している仕組みであることから、サードパーティ製のリポジトリや &obs; のリポジトリを無効化する必要があります。下記のようなコマンドを実行して、不要なリポジトリを無効化してください (<replaceable>リポジトリの別名</replaceable> を無効化したいリポジトリの名前で置き換えます):</para>
+      <para>
+       Decide whether this repository is still needed. If not, delete it using
+       the following command:
+      </para>
 <screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリの別名</replaceable></screen>
-      <para>無効化する代わりに、これらのリポジトリの優先順位を下げてもかまいません。</para>
-      <note>
-       <title>未解決の依存関係の処理</title>
-       <para>後述の <command>zypper dup</command> コマンドを実行すると、未解決のままになっている依存関係が存在する場合、関連するパッケージは全て削除されます。なお、依存関係に問題がなければ、リポジトリを無効化してもパッケージが削除されることはありません。</para>
-      </note>
-      <para><command>zypper dup</command> を実行すると、インストール済みの全てのパッケージを、利用可能なリポジトリ内にあるものと入れ替えて、新しくします。このとき、バージョン番号やアーキテクチャに関する考慮は行われません。なお、パッケージのベンダ (製造元) については、 <option>--no-allow-vendor-change</option> を指定することで、変更されないようにすることができます。また、リポジトリ内に存在しないパッケージについては、孤立したパッケージであるものと見なされます。孤立したパッケージは、依存関係を満たすことができない場合は削除され、依存関係を満たすことができる場合はそのまま保持されます (インストールされたままになります) 。</para>
+      <para>
+       Repeat this for all repositories you no longer need.
+      </para>
      </step>
      <step>
-      <para>完了したら、下記のコマンドを実行してリポジトリの一覧を確認します:</para>
-<screen>&prompt.user;zypper lr -d</screen>
+      <para>
+       In case you still need a repository, continue as follows.
+      </para>
+      <para>
+       For third-party repositories that do not include a version number, check
+       with the provider of the repository whether &productname;
+       &productnumber; is supported. If so, keep the repository. If not,
+       remove it as described above.
+      </para>
+      <para>
+       All remaining repositories you want to keep need to be updated to the
+       new version. For this you need to remove the old version and add the
+       new one. This procedure is done in the following with an example
+       repository that has the following data:
+      </para>
+      <simplelist>
+       <member>Name: <literal>M17N:fonts</literal></member>
+       <member>URI: <literal>https://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Leap_15.2/</literal></member>
+      </simplelist>
+      <substeps>
+       <step>
+        <para>あとは古いリポジトリを削除します:</para>
+<screen>&prompt.user;zypper lr -u</screen>
+       </step>
+       <step>
+        <para>あとは古いリポジトリを削除します:</para>
+<screen>&prompt.sudo;zypper ar -f \
+https://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Leap_15.3/ \
+"M17N:fonts"</screen>
+       </step>
+       <step>
+        <para>
+         Repeat this step for every repository that needs to be lifted to the
+         new version.
+        </para>
+        <para>
+         If adding a new repository fails, check in your browser whether the
+         URL is correct. If not, a new version of the repository may not
+         exist yet. Deactivate the repository and try again later. Packages
+         from deactivated repositories will not be removed if all dependencies
+         are still fulfilled.
+        </para>
+<screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリの別名</replaceable></screen>
+       </step>
+      </substeps>
      </step>
     </substeps>
    </step>
    <step>
-    <para>続いて <command>zypper ref</command> を実行して、メタデータとリポジトリのコンテンツ情報を更新します。</para>
+    <para>完了したら、下記のコマンドを実行してリポジトリの一覧を確認します:</para>
+<screen>&prompt.user;zypper lr -u</screen>
+    <para>
+     All repositories should now point to a <literal>15.3</literal>
+     version (except for third-party repositories without versioning that
+     support new releases). Repositories still pointing to an old version
+     should at least be disabled (the column <guimenu>Enabled</guimenu>
+     needs to show <literal>No</literal>).
+    </para>
    </step>
    <step>
-    <para>まずは <command>zypper patch --updatestack-only</command> を実行して、 zypper とパッケージ管理システム自身を更新します。</para>
+    <para>
+     Update the repository metadata by running:
+    </para>
+<screen>&prompt.user;zypper lr -u</screen>
    </step>
    <step>
-    <para>あとは残りのパッケージを <command>zypper dup</command> で更新して、ディストリビューション全体をアップグレードします。なお、 &productname; とその他のパッケージについて、ライセンス確認メッセージが表示されます。</para>
+    <para>
+     Start the distribution upgrade that will lift your system to
+     the new version:
+    </para>
+    <screen>&prompt.user;zypper lr -u</screen>
+    <para>
+     Depending on the software selection you may need to approve one or more
+     licenses. Check the output of the command. If everything is OK, approve
+     with <guimenu>y</guimenu>.
+    </para>
+    <note>
+     <title>未解決の依存関係の処理</title>
+     <para>後述の <command>zypper dup</command> コマンドを実行すると、未解決のままになっている依存関係が存在する場合、関連するパッケージは全て削除されます。なお、依存関係に問題がなければ、リポジトリを無効化してもパッケージが削除されることはありません。</para>
+     <para><command>zypper dup</command> を実行すると、インストール済みの全てのパッケージを、利用可能なリポジトリ内にあるものと入れ替えて、新しくします。このとき、バージョン番号やアーキテクチャに関する考慮は行われません。なお、パッケージのベンダ (製造元) については、 <option>--no-allow-vendor-change</option> を指定することで、変更されないようにすることができます。また、リポジトリ内に存在しないパッケージについては、孤立したパッケージであるものと見なされます。孤立したパッケージは、依存関係を満たすことができない場合は削除され、依存関係を満たすことができる場合はそのまま保持されます (インストールされたままになります) 。</para>
+    </note>
    </step>
    <step>
-    <para>最後に <command>shutdown -r now</command> コマンドでシステムを再起動します。</para>
+    <para>
+     Finally, restart your machine to boot into the new &productname; version:
+    </para>
+<screen>&prompt.sudo;shutdown -r now</screen>
    </step>
   </procedure>
  </sect3>
