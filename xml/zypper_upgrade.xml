@@ -35,56 +35,34 @@ better supported methods. -->
   <para><command>zypper</command> プログラムでは、長いコマンド名と短いコマンド名の両方に対応しています。たとえば <command>zypper install</command> は <command>zypper in</command> と短くすることができます。下記の文章では、短いほうのコマンドで記述しています。</para>
   <procedure>
    <step>
-    <para>オンライン更新を実行して、ソフトウエア管理スタックが最新の状態になっていることをご確認ください。詳しくは <xref linkend="cha-onlineupdate-you"/> をお読みください。</para>
-<screen>&prompt.user;zypper lr -u</screen>
+    <para>オンライン更新を実行して、ソフトウエア管理スタックが最新の状態になっていることを確認します:</para>
+<screen>&prompt.sudo;zypper patch</screen>
    </step>
    <step>
     <para>更新に利用したいリポジトリを設定します。このリポジトリの設定は、間違えることなく正しく設定することが重要です。リポジトリは &yast; (詳しくは <xref linkend="sec-yast-software-instsource"/> をお読みください) のほか、 <command>zypper</command> でも設定することができます (詳しくは <xref linkend="sec-zypper"/> をお読みください) 。なお、下記の手順内で説明しているリポジトリの名前は、ご利用の環境で自由にカスタマイズできるものですので、実際のものとは異なる場合があります。</para>
     <para>現在設定されているリポジトリを一覧表示するには、下記のコマンドを実行します:</para>
-<screen>&prompt.user;zypper lr -u</screen>
+<screen>&prompt.user;zypper --releasever=15.3 lr -u</screen>
    </step>
    <step>
-    <para>
-     In the result of the previous command, check the last column
-     (<guimenu>URL</guimenu>). All repository links should contain
-     <literal>15.3</literal> or <literal>openSUSE_Leap_15.3</literal> as a
-     version number. If this is not the case, proceed as follows:
-    </para>
+    <para>上記のコマンドの出力結果のうち、右端の列 ( <guimenu>URL</guimenu> ) をお読みください。この中のバージョン番号が、 <literal>15.3</literal> や <literal>openSUSE_Leap_15.3</literal> のような形式になっているはずです。そうなっていない場合は、下記の手順を実施してください:</para>
     <substeps>
      <step>
-      <para>
-       Decide whether this repository is still needed. If not, delete it using
-       the following command:
-      </para>
-<screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリの別名</replaceable></screen>
-      <para>
-       Repeat this for all repositories you no longer need.
-      </para>
+      <para>まずは対象のリポジトリが今も必要かどうかを判断します。不要な場合は下記のコマンドで削除してください:</para>
+<screen>&prompt.sudo;zypper rr <replaceable>リポジトリ名</replaceable></screen>
+      <para>ほかにも不要なリポジトリがあれば、それらも削除してください。</para>
      </step>
      <step>
-      <para>
-       In case you still need a repository, continue as follows.
-      </para>
-      <para>
-       For third-party repositories that do not include a version number, check
-       with the provider of the repository whether &productname;
-       &productnumber; is supported. If so, keep the repository. If not,
-       remove it as described above.
-      </para>
-      <para>
-       All remaining repositories you want to keep need to be updated to the
-       new version. For this you need to remove the old version and add the
-       new one. This procedure is done in the following with an example
-       repository that has the following data:
-      </para>
+      <para>今も費用名リポジトリである場合は、下記の手順を実施します。</para>
+      <para>サードパーティ製のリポジトリで、バージョン番号を含まないものの場合は、まずリポジトリが &productname; &productnumber; に対応しているかどうかを確認してください。この情報はリポジトリの提供元が公開しているはずです。対応している場合は何もする必要はありません。対応していない場合は、上述の手順でリポジトリを削除してください。</para>
+      <para>また、提供元によっては別の名前のリポジトリとして新しいバージョン向けのパッケージを公開している場合があります。この場合は古いリポジトリを削除したあと、新しいリポジトリを追加してください。この作業はたとえば下記のようになります:</para>
       <simplelist>
-       <member>Name: <literal>M17N:fonts</literal></member>
+       <member>名前: <literal>M17N:fonts</literal></member>
        <member>URI: <literal>https://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Leap_15.2/</literal></member>
       </simplelist>
       <substeps>
        <step>
-        <para>あとは古いリポジトリを削除します:</para>
-<screen>&prompt.user;zypper lr -u</screen>
+        <para>まずは古いリポジトリを削除します:</para>
+<screen>&prompt.sudo;zypper rr "M17N:fonts"</screen>
        </step>
        <step>
         <para>あとは古いリポジトリを削除します:</para>
@@ -93,51 +71,27 @@ https://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Leap_15.3/ \
 "M17N:fonts"</screen>
        </step>
        <step>
-        <para>
-         Repeat this step for every repository that needs to be lifted to the
-         new version.
-        </para>
-        <para>
-         If adding a new repository fails, check in your browser whether the
-         URL is correct. If not, a new version of the repository may not
-         exist yet. Deactivate the repository and try again later. Packages
-         from deactivated repositories will not be removed if all dependencies
-         are still fulfilled.
-        </para>
-<screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリの別名</replaceable></screen>
+        <para>ほかにも切り替える必要があるリポジトリがあれば、上記を繰り返し実行してください。</para>
+        <para>新しいリポジトリの追加に失敗した場合は、まず Web ブラウザを利用して URL を開いて、その URL が正しいことを確認してください。また、まだ新しいバージョンに対応していないリポジトリであった場合は、今の時点ではいったん無効化しておき、対応するようになってから有効化することもできます。この場合は、下記のようにして無効化しておいてください。</para>
+<screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリ名</replaceable></screen>
        </step>
       </substeps>
      </step>
     </substeps>
    </step>
    <step>
-    <para>完了したら、下記のコマンドを実行してリポジトリの一覧を確認します:</para>
-<screen>&prompt.user;zypper lr -u</screen>
-    <para>
-     All repositories should now point to a <literal>15.3</literal>
-     version (except for third-party repositories without versioning that
-     support new releases). Repositories still pointing to an old version
-     should at least be disabled (the column <guimenu>Enabled</guimenu>
-     needs to show <literal>No</literal>).
-    </para>
+    <para>完了したら、下記のコマンドを実行してリポジトリの一覧を再確認します:</para>
+<screen>&prompt.sudo;zypper --releasever=15.3 lr -u</screen>
+    <para>上記を実行すると、サードパーティ製のリポジトリでバージョン番号を含まないものと、無効化されているもの (<guimenu>Enabled</guimenu> が <literal>いいえ (n)</literal> になっているもの) を除いて、全てのリポジトリが <literal>15.3</literal> を指し示すようになっているはずです。</para>
    </step>
    <step>
-    <para>
-     Update the repository metadata by running:
-    </para>
-<screen>&prompt.user;zypper lr -u</screen>
+    <para>あとはリポジトリのメタデータを更新します:</para>
+<screen>&prompt.sudo;zypper --releasever=15.3 ref</screen>
    </step>
    <step>
-    <para>
-     Start the distribution upgrade that will lift your system to
-     the new version:
-    </para>
-    <screen>&prompt.user;zypper lr -u</screen>
-    <para>
-     Depending on the software selection you may need to approve one or more
-     licenses. Check the output of the command. If everything is OK, approve
-     with <guimenu>y</guimenu>.
-    </para>
+    <para>後は全てのパッケージを新しいバージョンに更新するため、ディストリビューションアップグレードを実施します:</para>
+    <screen>&prompt.sudo;zypper --releasever=15.3 dup</screen>
+    <para>選択したソフトウエアによっては、 1 つまたは複数のライセンスに合意する必要がある場合があります。また、コマンドの出力結果はよくご確認ください。全てが問題ないことをかくにんしたら、 <guimenu>y</guimenu> で処理を進めてください。</para>
     <note>
      <title>未解決の依存関係の処理</title>
      <para>後述の <command>zypper dup</command> コマンドを実行すると、未解決のままになっている依存関係が存在する場合、関連するパッケージは全て削除されます。なお、依存関係に問題がなければ、リポジトリを無効化してもパッケージが削除されることはありません。</para>
@@ -145,9 +99,7 @@ https://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Leap_15.3/ \
     </note>
    </step>
    <step>
-    <para>
-     Finally, restart your machine to boot into the new &productname; version:
-    </para>
+    <para>最後にお使いのコンピュータを再起動して、新しいバージョンを起動しなおします:</para>
 <screen>&prompt.sudo;shutdown -r now</screen>
    </step>
   </procedure>

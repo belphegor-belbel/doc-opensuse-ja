@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-06-10 10:54+0000\n"
+"POT-Creation-Date: 2021-06-14 08:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -805,12 +805,6 @@ msgstr ""
 #: libvirt_configuration_virsh.xml:680
 #, no-c-format
 msgid "<xref linkend=\"vt-io-sriov\"/> is an industry specification that was created by the Peripheral Component Interconnect Special Interest Group (PCI-SIG) consortium. It introduces physical functions (PF) and virtual functions (VF). PFs are full <xref linkend=\"gloss-vt-acronym-pcie\"/> functions used to manage and configure the device. PFs also can move data. VFs lack the configuration and management part—they only can move data and a reduced set of configuration functions. As VFs do not have all <xref linkend=\"gloss-vt-acronym-pcie\"/> functions, the host operating system or the <xref linkend=\"gloss-vt-hypervisor\"/> must support <xref linkend=\"vt-io-sriov\"/> to be able to access and initialize VFs. The theoretical maximum for VFs is 256 per device (consequently the maximum for a dual-port Ethernet card would be 512). In practice this maximum is much lower, since each VF consumes resources."
-msgstr ""
-
-#. Tag: title
-#: libvirt_configuration_virsh.xml:697
-#, no-c-format
-msgid "Requirements"
 msgstr ""
 
 #. Tag: para
@@ -2075,5 +2069,318 @@ msgstr ""
 #: libvirt_configuration_virsh.xml:1738
 #, no-c-format
 msgid "After the graphical subsystem (Xorg) loads in the &vmguest;, select <menuchoice><guimenu>View</guimenu><guimenu>Displays</guimenu><guimenu>Display 2</guimenu></menuchoice> to open a new window with the second monitor's output."
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1748
+#, no-c-format
+msgid "Crypto adapter pass-through to &kvm; guests on &zseries;"
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1751
+#, no-c-format
+msgid "Introduction"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1752
+#, no-c-format
+msgid "&zseries; machines include cryptographic hardware with useful functions such as random number generation, digital signature generation, or encryption. &kvm; allows dedicating these crypto adapters to guests as pass-through devices. The means that the hypervisor cannot observe communications between the guest and the device."
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1762
+#, no-c-format
+msgid "What is covered"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1763
+#, no-c-format
+msgid "You will learn how to dedicate a crypto adapter and domains on a &zseries; host to a &kvm; guest. The procedure includes the following basic steps:"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1769
+#, no-c-format
+msgid "Mask the crypto adapter and domains from the default driver on the host."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1774
+#, no-c-format
+msgid "Load the <literal>vfio-ap</literal> driver."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1779
+#, no-c-format
+msgid "Assign the crypto adapter and domains to the <literal>vfio-ap</literal> driver."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1785
+#, no-c-format
+msgid "Configure the guest to use the crypto adapter."
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1793
+#, no-c-format
+msgid "Requirements"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1796
+#, no-c-format
+msgid "You need to have the &qemu; / &libvirt; virtualization environment correctly installed and functional."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1802
+#, no-c-format
+msgid "The <literal>vfio_ap</literal> and <literal>vfio_mdev</literal> modules for the running kernel need to be available on the host operating system."
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1811
+#, no-c-format
+msgid "Dedicate a crypto adapter to a &kvm; host"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1814
+#, no-c-format
+msgid "Verify that the <literal>vfio_ap</literal> and <literal>vfio_mdev</literal> kernel modules are loaded on the host:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1818
+#, no-c-format
+msgid "&prompt.user;lsmod | grep vfio_"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1819
+#, no-c-format
+msgid "If any of them is not listed, load it manually, for example:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1822
+#, no-c-format
+msgid "&prompt.sudo;modprobe vfio_mdev"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1825
+#, no-c-format
+msgid "Create a new MDEV device on the host and verify that it was added:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1828
+#, no-c-format
+msgid "\n"
+      "uuid=$(uuidgen)\n"
+      "$ echo ${uuid} | sudo tee /sys/devices/vfio_ap/matrix/mdev_supported_types/vfio_ap-passthrough/create\n"
+      "dmesg | tail\n"
+      "[...]\n"
+      "[272197.818811] iommu: Adding device 24f952b3-03d1-4df2-9967-0d5f7d63d5f2 to group 0\n"
+      "[272197.818815] vfio_mdev 24f952b3-03d1-4df2-9967-0d5f7d63d5f2: MDEV: group_id = 0\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1838
+#, no-c-format
+msgid "Identify the device on the host's logical partition that you intend to dedicate to a &kvm; guest:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1842
+#, no-c-format
+msgid "&prompt.user;ls -l /sys/bus/ap/devices/\n"
+      "[...]\n"
+      "lrwxrwxrwx 1 root root 0 Nov 23 03:29 00.0016 -&gt; ../../../devices/ap/card00/00.0016/\n"
+      "lrwxrwxrwx 1 root root 0 Nov 23 03:29 card00 -&gt; ../../../devices/ap/card00/\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1847
+#, no-c-format
+msgid "In this example, it is card <literal>0</literal> queue <literal>16</literal> . To match the Hardware Management Console (HMC) configuration, you need to convert from <literal>16</literal> hexadecimal to <literal>22</literal> decimal."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1855
+#, no-c-format
+msgid "Mask the adapter from the <literal>zcrypt</literal> use:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1858
+#, no-c-format
+msgid "\n"
+      "&prompt.user;lszcrypt\n"
+      "CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT\n"
+      "-------------------------------------------------\n"
+      "00 CEX5C CCA-Coproc online 5\n"
+      "00.0016 CEX5C CCA-Coproc online 5\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1865
+#, no-c-format
+msgid "Mask the adapter:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1868
+#, no-c-format
+msgid "\n"
+      "&prompt.user;cat /sys/bus/ap/apmask\n"
+      "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
+      "echo -0x0 | sudo tee /sys/bus/ap/apmask\n"
+      "0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1874
+#, no-c-format
+msgid "Mask the domain:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1877
+#, no-c-format
+msgid "\n"
+      "&prompt.user;cat /sys/bus/ap/aqmask\n"
+      "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
+      "echo -0x0 | sudo tee /sys/bus/ap/aqmask\n"
+      "0xfffffdffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1885
+#, no-c-format
+msgid "Assign adapter 0 and domain 16 (22 decimal) to <literal>vfio-ap</literal> :"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1889
+#, no-c-format
+msgid "\n"
+      "&prompt.sudo;echo +0x0 &gt; /sys/devices/vfio_ap/matrix/${uuid}/assign_adapter\n"
+      "&prompt.user;echo +0x16 | sudo tee /sys/devices/vfio_ap/matrix/${uuid}/assign_domain\n"
+      "&prompt.user;echo +0x16 | sudo tee /sys/devices/vfio_ap/matrix/${uuid}/assign_control_domain\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1896
+#, no-c-format
+msgid "Verify the matrix that you have configured:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1899
+#, no-c-format
+msgid "\n"
+      "&prompt.user;cat /sys/devices/vfio_ap/matrix/${uuid}/matrix\n"
+      "00.0016\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1905
+#, no-c-format
+msgid "Either create a new VM (refer to <xref linkend=\"cha-kvm-inst\"/> ) and wait until it is initialized, or use an existing VM. In both cases, make sure the VM is shut down."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1912
+#, no-c-format
+msgid "Change its configuration to use the MDEV device:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1915
+#, no-c-format
+msgid "\n"
+      "&prompt.sudo;virsh edit <replaceable>VM_NAME</replaceable>\n"
+      "[...]\n"
+      "&lt;hostdev mode='subsystem' type='mdev' model='vfio-ap'&gt;\n"
+      " &lt;source&gt;\n"
+      "  &lt;address uuid='24f952b3-03d1-4df2-9967-0d5f7d63d5f2'/&gt;\n"
+      " &lt;/source&gt;\n"
+      "&lt;/hostdev&gt;\n"
+      "[...]\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1927
+#, no-c-format
+msgid "Restart the VM:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1930
+#, no-c-format
+msgid "&prompt.sudo;virsh reboot <replaceable>VM_NAME</replaceable>"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1933
+#, no-c-format
+msgid "Log in to the guest and verify that the adapter is present:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_configuration_virsh.xml:1936
+#, no-c-format
+msgid "\n"
+      "&prompt.user;lszcrypt\n"
+      "CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT\n"
+      "-------------------------------------------------\n"
+      "00 CEX5C CCA-Coproc online 1\n"
+      "00.0016 CEX5C CCA-Coproc online 1\n"
+      ""
+msgstr ""
+
+#. Tag: title
+#: libvirt_configuration_virsh.xml:1948
+#, no-c-format
+msgid "Further reading"
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1951
+#, no-c-format
+msgid "The installation of virtualization components is detailed in <xref linkend=\"cha-vt-installation\"/> ."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1957
+#, no-c-format
+msgid "The <literal>vfio_ap</literal> architecture is detailed in <link xlink:href=\"https://www.kernel.org/doc/Documentation/s390/vfio-ap.txt\"/> ."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1963
+#, no-c-format
+msgid "A general outline together with a detailed procedure is described in <link xlink:href=\"https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1787405\"/> ."
+msgstr ""
+
+#. Tag: para
+#: libvirt_configuration_virsh.xml:1969
+#, no-c-format
+msgid "The architecture of VFIO Mediated devices (MDEVs) is detailed in <link xlink:href=\"https://www.kernel.org/doc/html/latest/driver-api/vfio-mediated-device.html\"/> ."
 msgstr ""
 
