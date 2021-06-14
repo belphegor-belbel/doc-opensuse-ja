@@ -1036,44 +1036,28 @@ domid=3: nr_frames=3, max_nr_frames=40
   </procedure>
  </sect1>
  <sect1 xml:id="virsh-kvm-zseries-crypto">
-  <title>Crypto adapter pass-through to &kvm; guests on &zseries;</title>
+  <title>&zseries; における &kvm; ゲストへの暗号化アダプタのパススルー</title>
 
   <sect2 xml:id="virsh-kvm-zseries-crypto-intro">
-   <title>Introduction</title>
-   <para>
-    &zseries; machines include cryptographic hardware with useful functions
-    such as random number generation, digital signature generation, or
-    encryption. &kvm; allows dedicating these crypto adapters to guests as
-    pass-through devices. The means that the hypervisor cannot observe
-    communications between the guest and the device.
-   </para>
+   <title>概要</title>
+   <para>&zseries; には、乱数生成やデジタル署名の検証、暗号化などの便利な機能を提供する暗号化ハードウエアが含まれています。 &kvm; では、これらの暗号化ハードウエアをゲストに占有させることで、パススルーデバイスとして使用することができます。このパススルー機能を設定した場合、ゲストとデバイスとの間の通信をハイパーバイザから監視することはできなくなります。</para>
   </sect2>
 
   <sect2 xml:id="virsh-kvm-zseries-crypto-cover">
-   <title>What is covered</title>
-   <para>
-    You will learn how to dedicate a crypto adapter and domains on a &zseries;
-    host to a &kvm; guest. The procedure includes the following basic steps:
-   </para>
+   <title>カバーされる範囲</title>
+   <para>ここでは、 &zseries; ハードウエアで &kvm; ゲストに対する暗号化アダプタの占有方法を説明しています。手順は下記のような流れになっています:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Mask the crypto adapter and domains from the default driver on the host.
-     </para>
+     <para>まずはホスト側で暗号化アダプタとドメインを既定のドライバからマスクします。</para>
     </listitem>
     <listitem>
-     <para>
-      Load the <literal>vfio-ap</literal> driver.
-     </para>
+     <para><literal>vfio-ap</literal> ドライバを読み込みます。</para>
     </listitem>
     <listitem>
-     <para>
-      Assign the crypto adapter and domains to the <literal>vfio-ap</literal>
-      driver.
-     </para>
+     <para><literal>vfio-ap</literal> ドライバに対して、暗号化アダプタとドメインを割り当てます。</para>
     </listitem>
     <listitem>
-     <para>プールから VF を使用するための &vmguest; 側の設定</para>
+     <para>あとは暗号化アダプタを使用するようゲスト側を設定します。</para>
     </listitem>
    </itemizedlist>
   </sect2>
@@ -1082,38 +1066,25 @@ domid=3: nr_frames=3, max_nr_frames=40
    <title>要件</title>
    <itemizedlist>
     <listitem>
-     <para>
-      You need to have the &qemu; / &libvirt; virtualization environment
-      correctly installed and functional.
-     </para>
+     <para>&qemu; / &libvirt; の仮想化環境を正しくインストールしておき、問題なく動作できるようにしておく必要があります。</para>
     </listitem>
     <listitem>
-     <para>
-      The <literal>vfio_ap</literal> and <literal>vfio_mdev</literal> modules
-      for the running kernel need to be available on the host operating system.
-     </para>
+     <para>ホスト側のオペレーティングシステムで、 <literal>vfio_ap</literal> と <literal>vfio_mdev</literal> の各モジュールを用意しておきます。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="virsh-kvm-zseries-crypto-proc">
-   <title>Dedicate a crypto adapter to a &kvm; host</title>
+   <title>&kvm; ホスト側での暗号化ドライバの占有設定</title>
    <procedure>
     <step>
-     <para>
-      Verify that the <literal>vfio_ap</literal> and
-      <literal>vfio_mdev</literal> kernel modules are loaded on the host:
-     </para>
+     <para>まずはホスト側で <literal>vfio_ap</literal> と <literal>vfio_mdev</literal> のカーネルモジュールが読み込まれていることを確認します:</para>
 <screen>&prompt.user;lsmod | grep vfio_</screen>
-     <para>
-      If any of them is not listed, load it manually, for example:
-     </para>
+     <para>どちらか 1 つでも読み込まれていない場合は、下記のようにして手作業で読み込みを行います:</para>
 <screen>&prompt.sudo;modprobe vfio_mdev</screen>
     </step>
     <step>
-     <para>
-      Create a new MDEV device on the host and verify that it was added:
-     </para>
+     <para>ホスト内で新しい MDEV デバイスを作成し、それが追加されていることを確認します:</para>
 <screen>
 uuid=$(uuidgen)
 $ echo ${uuid} | sudo tee /sys/devices/vfio_ap/matrix/mdev_supported_types/vfio_ap-passthrough/create
@@ -1124,23 +1095,16 @@ dmesg | tail
 </screen>
     </step>
     <step>
-     <para>&vmguest; に対して割り当てを行う前に、 &vmhost; 側からの切り離しを行います:</para>
+     <para>次に &kvm; ゲストに占有させるホスト側の論理パーティション内のデバイスを識別します:</para>
 <screen>&prompt.user;ls -l /sys/bus/ap/devices/
 [...]
 lrwxrwxrwx 1 root root 0 Nov 23 03:29 00.0016 -&gt; ../../../devices/ap/card00/00.0016/
 lrwxrwxrwx 1 root root 0 Nov 23 03:29 card00 -&gt; ../../../devices/ap/card00/
 </screen>
-     <para>
-      In this example, it is card <literal>0</literal> queue
-      <literal>16</literal>. To match the Hardware Management Console (HMC)
-      configuration, you need to convert from <literal>16</literal> hexadecimal
-      to <literal>22</literal> decimal.
-     </para>
+     <para>上記の例では、カードとキューがそれぞれ <literal>0</literal> と <literal>16</literal> になっていることがわかります。 Hardware Management Console (HMC) の設定とあわせるため、 16 進数表記 <literal>16</literal> を 10 進数表記 <literal>22</literal> に変換してください。</para>
     </step>
     <step>
-     <para>
-      Mask the adapter from the <literal>zcrypt</literal> use:
-     </para>
+     <para>対称のアダプタを <literal>zcrypt</literal> から使用されないようにマスクします:</para>
 <screen>
 &prompt.user;lszcrypt
 CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT
@@ -1148,18 +1112,14 @@ CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT
 00 CEX5C CCA-Coproc online 5
 00.0016 CEX5C CCA-Coproc online 5
 </screen>
-     <para>
-      Mask the adapter:
-     </para>
+     <para>アダプタをマスクします:</para>
 <screen>
 &prompt.user;cat /sys/bus/ap/apmask
 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 echo -0x0 | sudo tee /sys/bus/ap/apmask
 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 </screen>
-     <para>
-      Mask the domain:
-     </para>
+     <para>ドメインをマスクします:</para>
 <screen>
 &prompt.user;cat /sys/bus/ap/aqmask
 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1168,10 +1128,7 @@ echo -0x0 | sudo tee /sys/bus/ap/aqmask
 </screen>
     </step>
     <step>
-     <para>
-      Assign adapter 0 and domain 16 (22 decimal) to
-      <literal>vfio-ap</literal>:
-     </para>
+     <para>アダプタ 0, ドメイン 16 (10 進数で 22) を <literal>vfio-ap</literal> に割り当てます:</para>
 <screen>
 &prompt.sudo;echo +0x0 &gt; /sys/devices/vfio_ap/matrix/${uuid}/assign_adapter
 &prompt.user;echo +0x16 | sudo tee /sys/devices/vfio_ap/matrix/${uuid}/assign_domain
@@ -1179,25 +1136,17 @@ echo -0x0 | sudo tee /sys/bus/ap/aqmask
 </screen>
     </step>
     <step>
-     <para>
-      Verify the matrix that you have configured:
-     </para>
+     <para>設定した matrix を確認します:</para>
 <screen>
 &prompt.user;cat /sys/devices/vfio_ap/matrix/${uuid}/matrix
 00.0016
 </screen>
     </step>
     <step>
-     <para>
-      Either create a new VM (refer to <xref linkend="cha-kvm-inst"/>) and wait
-      until it is initialized, or use an existing VM. In both cases, make sure
-      the VM is shut down.
-     </para>
+     <para>あとは新しい VM を作成 (詳しくは <xref linkend="cha-kvm-inst"/> をお読みください) して準備が完了するまで待つか、既存の VM に設定を行います。いずれの場合にしても、 VM はシャットダウンしておく必要があります。</para>
     </step>
     <step>
-     <para>
-      Change its configuration to use the MDEV device:
-     </para>
+     <para>MDEV デバイスを使用するよう設定を変更します:</para>
 <screen>
 &prompt.sudo;virsh edit <replaceable>VM_NAME</replaceable>
 [...]
@@ -1211,13 +1160,10 @@ echo -0x0 | sudo tee /sys/bus/ap/aqmask
     </step>
     <step>
      <para>あとは仮想マシンを再起動します:</para>
-<screen>&prompt.sudo;<command>virsh edit <replaceable>VM_名</replaceable></command>
-    </screen>
+<screen>&prompt.sudo;virsh reboot <replaceable>VM_名</replaceable></screen>
     </step>
     <step>
-     <para>
-      Log in to the guest and verify that the adapter is present:
-     </para>
+     <para>ゲストにログインして、アダプタが存在していることを確認します:</para>
 <screen>
 &prompt.user;lszcrypt
 CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT
@@ -1230,31 +1176,19 @@ CARD.DOMAIN TYPE MODE STATUS REQUEST_CNT
   </sect2>
 
   <sect2 xml:id="virsh-kvm-zseries-crypto-moreinfo">
-   <title>Further reading</title>
+   <title>さらに詳しい情報</title>
    <itemizedlist>
     <listitem>
-     <para>
-      The installation of virtualization components is detailed in
-      <xref linkend="cha-vt-installation"/>.
-     </para>
+     <para>仮想化コンポーネントのインストールについては <xref linkend="cha-vt-installation"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      The <literal>vfio_ap</literal> architecture is detailed in
-      <link xlink:href="https://www.kernel.org/doc/Documentation/s390/vfio-ap.txt"/>.
-     </para>
+     <para><literal>vfio_ap</literal> の構造については <link xlink:href="https://www.kernel.org/doc/Documentation/s390/vfio-ap.txt"/> (英語) をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      A general outline together with a detailed procedure is described in
-      <link xlink:href="https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1787405"/>.
-     </para>
+     <para>概要および詳細な手順については、 <link xlink:href="https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1787405"/> (英語) をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      The architecture of VFIO Mediated devices (MDEVs) is detailed in
-      <link xlink:href="https://www.kernel.org/doc/html/latest/driver-api/vfio-mediated-device.html"/>.
-     </para>
+     <para>VFIO 仲介型デバイス (VFIO Mediated devices (MDEVs)) の構造については <link xlink:href="https://www.kernel.org/doc/html/latest/driver-api/vfio-mediated-device.html"/> をお読みください。</para>
     </listitem>
    </itemizedlist>
   </sect2>
