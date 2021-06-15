@@ -14,7 +14,7 @@
     <para>カーネルプローブは Linux カーネルのデバッグや性能に関する情報を収集するためのツール集です。開発者やシステム管理者は、これらを利用してカーネルのデバッグを行ったり、システムにおける性能のボトルネックを発見したりすることができます。また、収集したデータをシステムの性能改善のために使用することもできます。</para>
  <para>カーネルプローブは任意のカーネルルーチン内に設定し、カーネル処理内の特定の箇所 (ブレークポイント) に到達した後に、指定したハンドラを実行することができるようになります。カーネルプローブの主な利点としては、カーネルの再構築が不要であることと、プローブの変更後にシステムの再起動が不要になっている点です。</para>
  <para>カーネルプローブを使用するには、まずは必要なカーネルモジュールを作成する必要があります。このモジュール内には <emphasis>初期化</emphasis> と <emphasis>終了</emphasis> の各関数を用意する必要があります。初期化の関数 (たとえば <systemitem>register_kprobe()</systemitem>) では 1 つ以上のプローブを設定し、終了の関数ではそれらの登録を解除します。登録処理ではカーネル内の <emphasis>どこ</emphasis> にプローブを挿入するかと、そのプローブに到達した際に <emphasis>どのようなハンドラ</emphasis> を実行するのかを定義します。複数のプローブを一括で登録もしくは登録解除するには、対応する <literal>register_&lt;<replaceable>プローブの種類</replaceable>&gt;probes()</literal> や <literal>unregister_&lt;<replaceable>プローブの種類</replaceable>&gt;probes()</literal> を使用する必要があります。</para>
- <para>デバッグや状態を表わすメッセージは一般に、 <systemitem>printk</systemitem> カーネルルーチンを利用して行います。 <systemitem>printk</systemitem> はユーザスペースでの <systemitem>printf</systemitem> と等価なカーネルルーチンです。 <systemitem>printk</systemitem> に関する詳細については、 <link xlink:href="http://www.win.tue.nl/~aeb/linux/lk/lk-2.html#ss2.8">Logging kernel messages</link> (英語) をお読みください。通常、このカーネルルーチンで出力されたメッセージは、 &systemd; ジャーナルで読むことができます (詳しくは <xref linkend="cha-journalctl"/> をお読みください) 。なお、ログファイルに関する詳細については、 <xref linkend="cha-tuning-logfiles"/> をお読みください。</para>
+ <para>デバッグや状態を表わすメッセージは一般に、 <systemitem>printk</systemitem> カーネルルーチンを利用して行います。 <systemitem>printk</systemitem> はユーザスペースでの <systemitem>printf</systemitem> と等価なカーネルルーチンです。 <systemitem>printk</systemitem> に関する詳細については、 <link xlink:href="https://www.win.tue.nl/~aeb/linux/lk/lk-2.html#ss2.8">Logging kernel messages</link> (英語) をお読みください。通常、このカーネルルーチンで出力されたメッセージは、 &systemd; ジャーナルで読むことができます (詳しくは <xref linkend="cha-journalctl"/> をお読みください) 。なお、ログファイルに関する詳細については、 <xref linkend="cha-tuning-logfiles"/> をお読みください。</para>
  <sect1 xml:id="cha-tuning-kprobes-supparch">
   <title>対応するアーキテクチャ</title>
 
@@ -53,19 +53,19 @@
 
   <sect2 xml:id="cha-tuning-kprobes-types-kprobe">
    <title>&kprobes;</title>
-   <para>&kprobes; は Linux カーネル内の任意のインストラクション (命令) に接続することができる仕組みです。 &kprobes; を登録すると、対象のインストラクションの最初のバイト位置にブレークポイントが設定されます。プロセッサがそのブレークポイントに到達すると、プロセッサレジスタを保存して、処理を &kprobes; に渡します。その後 <emphasis>pre-handler</emphasis> (事前ハンドラ) を実行し、対象のインストラクションをステップ実行したのち、最後に <emphasis>post-handler</emphasis> <!-- mdejmek: I think you mean "an instruction is stopped" here, right?--> <!-- toba: no, 'stepped' is correct: instruction by instruction is run and inspected => stepped (step by step) --> (事後ハンドラ) を実行します。あとはプローブポイント後の位置に制御が移り、元の動作に戻ることになります。</para>
+   <para>&kprobes; は Linux カーネル内の任意のインストラクション (命令) に接続することができる仕組みです。 &kprobes; を登録すると、対象のインストラクションの最初のバイト位置にブレークポイントが設定されます。プロセッサがそのブレークポイントに到達すると、プロセッサレジスタを保存して、処理を &kprobes; に渡します。その後 <emphasis>pre-handler</emphasis> (事前ハンドラ) を実行し、対象のインストラクションをステップ実行したのち、最後に <emphasis>post-handler</emphasis>  (事後ハンドラ) を実行します。あとはプローブポイント後の位置に制御が移り、元の動作に戻ることになります。</para>
   </sect2>
 
   <sect2 xml:id="cha-tuning-kprobes-types-jprobe">
    <title>Jprobes</title>
    <para>Jprobes は &kprobes; の仕組みを利用して実装されているものです。関数の開始位置に挿入され、プローブ対象の関数のパラメータに対して、直接アクセスできるようになります。ハンドラルーチンにはプローブ対象の関数と全く同じパラメータリストを指定しなければならず、かつ返り値も同じ型でなければなりません。これを終了するには、 <systemitem>jprobe_return()</systemitem> 関数を呼び出します。</para>
-   <para>JProbes が設定された関数を到達すると、プロセッサレジスタを保存したあと、インストラクションポインタは JProbes のハンドラルーチンに転送されます。その後、制御は <!-- mdejmek: what does control mean here? Is it the name of a function?--> <!-- toba: the control over the code execution --> ハンドラ内に移り、プローブ対象の関数と同じレジスタ状態になります。最後に、ハンドラは <systemitem>jprobe_return()</systemitem> を呼び出し、制御が元の関数に戻るようになります。</para>
+   <para>JProbes が設定された関数を到達すると、プロセッサレジスタを保存したあと、インストラクションポインタは JProbes のハンドラルーチンに転送されます。その後、制御は ハンドラ内に移り、プローブ対象の関数と同じレジスタ状態になります。最後に、ハンドラは <systemitem>jprobe_return()</systemitem> を呼び出し、制御が元の関数に戻るようになります。</para>
    <para>一般的には、 1 つの関数に対して複数のプローブを設定することができますが、 Jprobes については 1 つの関数に対して 1 つのインスタンスのみに制限されます。</para>
   </sect2>
 
   <sect2 xml:id="cha-tuning-kprobes-types-kretprobe">
    <title>Return Probe</title>
-   <para>Return Probe も &kprobes; を介して実装されています。 <systemitem>register_kretprobe()</systemitem> を呼び出すと、 &kprobes; はプローブ対象の関数の開始位置に設定されます。 <!--mdejmek: sounds weird to me; maybe: ...a kprobe is attached to the entry of the probed function?--> <!--toba: you are probably right, i've fixed it --> プローブ位置に到達すると、カーネルはプローブ対象の関数の返りアドレスを保存して、ユーザが指定した返りハンドラを呼び出します。あとは制御が元の関数に戻ります。</para>
+   <para>Return Probe も &kprobes; を介して実装されています。 <systemitem>register_kretprobe()</systemitem> を呼び出すと、 &kprobes; はプローブ対象の関数の開始位置に設定されます。 プローブ位置に到達すると、カーネルはプローブ対象の関数の返りアドレスを保存して、ユーザが指定した返りハンドラを呼び出します。あとは制御が元の関数に戻ります。</para>
    <para><systemitem>register_kretprobe()</systemitem> を呼び出す場合は、 <systemitem>maxactive</systemitem> パラメータを指定する必要があります。これはこの関数を同時にいくつまでプローブするのかを指定するパラメータで、値が小さすぎるとプローブが失敗します。</para>
   </sect2>
  </sect1>
