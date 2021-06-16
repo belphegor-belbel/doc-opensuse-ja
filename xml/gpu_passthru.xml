@@ -4,97 +4,67 @@
 %entities;
 ]>
 <appendix xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="app-gpu-passthru">
- <title>Configuring &gpuback; for &nvidia; cards</title>
+ <title>&nvidia; カードに対する &gpuback; の設定</title>
  <sect1 xml:id="gpu-passthru-intro">
-  <title>Introduction</title>
+  <title>概要</title>
 
-  <para>
-   This article describes how to assign an &nvidia; GPU graphics card on the
-   host machine to a virtualized guest.
-  </para>
+  <para>本章では、ホストマシンに搭載された &nvidia; GPU グラフィックカードを仮想化ゲストで使用するための手順を説明しています。</para>
  </sect1>
  <sect1 xml:id="gpu-passthru-prerequisites">
-  <title>Prerequisites</title>
+  <title>事前要件</title>
 
   <itemizedlist>
    <listitem>
-    <para>
-     GPU pass-through is supported on the &x86-64; architecture only.
-    </para>
+    <para>GPU パススルーは &x86-64; アーキテクチャでのみサポートされています。</para>
    </listitem>
    <listitem>
-    <para>
-     The host operating system needs to be SLES 12 SP3 or newer.
-    </para>
+    <para>ホスト側のオペレーティングシステムは、 SLES 12 SP3 もしくはそれ以降のバージョンである必要があります。</para>
    </listitem>
    <listitem>
-    <para>
-     This article deals with a set of instructions based on V100/T1000 &nvidia;
-     cards, and is meant for GPU computation purposes only.
-    </para>
+    <para>本章で説明している内容は、 V100/T1000 &nvidia; ベースのカードを使用することを前提にしています。つまり、 GPU を計算処理の目的でのみ使用する想定です。</para>
    </listitem>
    <listitem>
-    <para>
-     Verify that you are using an &nvidia; Tesla product&mdash;Maxwell, Pascal,
-     or Volta.
-    </para>
+    <para>お使いの製品が &nvidia; Tesla 製品であることを確認しておいてください。具体的にはMaxwell, Pascal, Volta の各アーキテクチャである必要があります。</para>
    </listitem>
    <listitem>
-    <para>
-     To be able to manage the host system, you need an additional display card
-     on the host that you can use when configuring the &gpuback;, or a
-     functional SSH environment.
-    </para>
+    <para>本章内の設定を実施すると、対象の GPU はホスト側からは使用できなくなります。そのため、表示用の別のグラフィックカードを接続しておくか、もしくは SSH でリモートアクセスできることをあらかじめ確認しておいてください。</para>
    </listitem>
   </itemizedlist>
  </sect1>
  <sect1 xml:id="gpu-passthru-host">
-  <title>Configuring the host</title>
+  <title>ホスト側の設定</title>
 
   <sect2 xml:id="gpu-passthru-verify-host">
-   <title>Verify the host environment</title>
+   <title>ホスト側の環境確認</title>
    <procedure>
     <step>
-     <para>
-      Verify that the host operating system is SLES 12 SP3 or newer:
-     </para>
+     <para>まずはお使いのオペレーティングシステムが SLES 12 SP3 もしくはそれ以降であることを確認します:</para>
 <screen>
 &prompt.user;cat /etc/issue
 Welcome to SUSE Linux Enterprise Server 15  (x86_64) - Kernel \r (\l).
 </screen>
     </step>
     <step>
-     <para>
-      Verify that the host supports <xref linkend="gloss-vt-acronym-vtd"/>
-      technology and that it is already enabled in the firmware settings:
-     </para>
+     <para>また、お使いのホストが <xref linkend="gloss-vt-acronym-vtd"/> に対応していて、かつファームウエア側の設定で有効化されていることを確認します:</para>
 <screen>
 &prompt.user;dmesg | grep -e "Directed I/O"
 [   12.819760] DMAR: Intel(R) Virtualization Technology for Directed I/O
 </screen>
-     <para>
-      If VT-d is not enabled in the firmware, enable it and reboot the host.
-     </para>
+     <para>ファームウエア側の設定で VT-d が有効化されていない場合は、ホストを再起動して有効化してください。</para>
     </step>
     <step>
-     <para>
-      Verify that the host has an extra GPU or VGA card:
-     </para>
+     <para>また、表示用の追加 GPU もしくは VGA カードが搭載されていることを確認します:</para>
 <screen>
 &prompt.user;lspci | grep -i "vga"
 07:00.0 VGA compatible controller: Matrox Electronics Systems Ltd. \
   MGA G200e [Pilot] ServerEngines (SEP1) (rev 05)
 </screen>
-     <para>
-      With a Tesla V100 card:
-     </para>
+     <para>Tesla V100 カードを使用する場合は、下記のようにしてカードが認識されていることを確認します:</para>
 <screen>
 &prompt.user;lspci | grep -i nvidia
 03:00.0 3D controller: NVIDIA Corporation GV100 [Tesla V100 PCIe] (rev a1)
 </screen>
-     <para>
-      With a T1000 Mobile (available on Dell 5540):
-     </para>
+     <para>T1000 Mobile カードを使用する場合 (たとえば Dell 5540 など) は、下記のようにしてカードが認識されていることを確認します:</para>
 <screen>
 &prompt.user;lspci | grep -i nvidia
 01:00.0 3D controller: NVIDIA Corporation TU117GLM [Quadro T1000 Mobile] (rev a1)
@@ -104,117 +74,71 @@ Welcome to SUSE Linux Enterprise Server 15  (x86_64) - Kernel \r (\l).
   </sect2>
 
   <sect2 xml:id="gpu-passthru-enable-iommu">
-   <title>Enable <xref linkend="gloss-vt-acronym-iommu"/></title>
-   <para>
-    <xref linkend="gloss-vt-acronym-iommu"/> is disabled by default. You need
-    to enable it at boot time in the <filename>/etc/default/grub</filename>
-    configuration file.
-   </para>
+   <title><xref linkend="gloss-vt-acronym-iommu"/> の有効化</title>
+   <para>既定では <xref linkend="gloss-vt-acronym-iommu"/> は無効化されています。有効化するには、 <filename>/etc/default/grub</filename> ファイルを編集して、起動時に有効化しておく必要があります。</para>
    <procedure>
     <step>
-     <para>
-      For Intel-based hosts:
-     </para>
+     <para>Intel プロセッサの場合は下記の内容を追加します:</para>
 <screen>GRUB_CMDLINE_LINUX="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"</screen>
-     <para>
-      For AMD-based hosts:
-     </para>
+     <para>AMD プロセッサの場合は下記の内容を追加します:</para>
 <screen>GRUB_CMDLINE_LINUX="iommu=pt amd_iommu=on rd.driver.pre=vfio-pci"</screen>
     </step>
     <step>
-     <para>
-      When you save the modified <filename>/etc/default/grub</filename> file,
-      re-generate the main &grub; configuration file
-      <filename>/boot/grub2/grub.cfg</filename>:
-     </para>
+     <para><filename>/etc/default/grub</filename> ファイルを編集して保存したら、あとはメインの &grub; 設定ファイルである <filename>/boot/grub2/grub.cfg</filename> ファイルを再生成します:</para>
 <screen>&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg</screen>
     </step>
     <step>
-     <para>
-      Reboot the host and verify that <xref linkend="gloss-vt-acronym-iommu"/>
-      is enabled:
-     </para>
+     <para>ホストを再起動して、 <xref linkend="gloss-vt-acronym-iommu"/> が有効化されていることを確認します:</para>
 <screen>&prompt.user;dmesg |  grep -e DMAR -e IOMMU</screen>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-blacklist-nouveau">
-   <title>Blacklist the Nouveau driver</title>
-   <para>
-    Because we want to assign the &nvidia; card to a VM guest, we need to avoid
-    use of the card by the host OS's built-in driver for &nvidia; GPUs. The open
-    source &nvidia; driver is called <literal>nouveau</literal>. Edit the file 
-    <filename>/etc/modprobe.d/50-blacklist.conf</filename> and append the
-    following line to its end:
-   </para>
+   <title>Nouveau ドライバのブラックリスト設定</title>
+   <para>&nvidia; カードを VM ゲストに割り当てるには、ホスト側の &nvidia; GPU ドライバで対象のカードを使用されないようにする必要があります。オープンソース版の &nvidia; ドライバは <literal>nouveau</literal> という名称であるため、 <filename>/etc/modprobe.d/50-blacklist.conf</filename> ファイルを編集して下記のような内容を追記します:</para>
 <screen>blacklist nouveau</screen>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-configure-vfio">
-   <title>Configure <xref linkend="gloss-vt-acronym-vfio"/> and isolate the GPU used for pass-through</title>
+   <title><xref linkend="gloss-vt-acronym-vfio"/> の設定とパススルーのための GPU 分離</title>
    <procedure>
     <step>
-     <para>
-      Find the card vendor and model IDs. Utilize the bus number identified in
-      <xref linkend="gpu-passthru-verify-host"/>, for example
-      <literal>03:00.0</literal>:
-     </para>
+     <para>あとはパススルー設定を行うカードの製造元と型番 ID を調べます。この場合、 <xref linkend="gpu-passthru-verify-host"/> で調べたバス番号を指定して表示させます。たとえば <literal>03:00.0</literal> の場合、下記のようになります:</para>
 <screen>
 &prompt.user;lspci -nn | grep 03:00.0
 03:00.0 3D controller [0302]: NVIDIA Corporation GV100 [Tesla V100 PCIe] [10de:1db4] (rev a1)
 </screen>
     </step>
     <step>
-     <para>
-      Create the file <filename>vfio.conf</filename> in the
-      <filename>/etc/modprobe.d/</filename> directory with the following
-      content:
-     </para>
+     <para>あとは <filename>/etc/modprobe.d/</filename> ディレクトリ内に <filename>vfio.conf</filename> ファイルを作成して、下記のような内容を記述します:</para>
 <screen>options vfio-pci ids=10de:1db4</screen>
      <note>
-      <para>
-       Verify that your card does not need an extra <option>ids=</option>
-       parameter. For some cards, you must specify the audio device too,
-       so that device's ID must also be added to the list, otherwise you
-       will not be able to use the card.
-      </para>
+      <para>また、お使いのカード側で追加の <option>ids=</option> を指定する必要があるかどうかを確認してください。これは、カードによってはオーディオデバイスも合わせて指定しなければカードを使用できなくなってしまうものがあるためです。</para>
      </note>
     </step>
    </procedure>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-load-vfio">
-   <title>Load the <xref linkend="gloss-vt-acronym-vfio"/> driver</title>
-   <para>
-    There are three ways you can load the
-    <xref linkend="gloss-vt-acronym-vfio"/> driver.
-   </para>
+   <title><xref linkend="gloss-vt-acronym-vfio"/> ドライバの読み込み</title>
+   <para><xref linkend="gloss-vt-acronym-vfio"/> ドライバの読み込みにあたっては、下記の 3 種類の方法が用意されています。</para>
    <sect3 xml:id="gpu-passthru-load-vfio-initrd">
-    <title>Including the driver in the initrd file</title>
+    <title>initrd ファイル内へのドライバの組み込み</title>
     <procedure>
      <step>
-      <para>
-       Create the file
-       <filename>/etc/dracut.conf.d/gpu-passthrough.conf</filename> and add the
-       following content:
-      </para>
+      <para><filename>/etc/dracut.conf.d/gpu-passthrough.conf</filename> ファイルを作成して、下記のような内容を記述します:</para>
 <screen>add_drivers+="vfio vfio_iommu_type1 vfio_pci vfio_virqfd"</screen>
      </step>
      <step>
-      <para>
-       Re-generate the initrd file:
-      </para>
+      <para>あとは initrd ファイルを再作成します:</para>
 <screen>&prompt.sudo;dracut --force /boot/initrd $(uname -r)</screen>
      </step>
     </procedure>
    </sect3>
    <sect3 xml:id="gpu-passthru-load-vfio-modules">
-    <title>Adding the driver to the list of auto-loaded modules</title>
-    <para>
-     Create the file <filename>/etc/modules-load.d/vfio-pci.conf</filename> and
-     add the following content:
-    </para>
+    <title>ドライバの自動読み込み設定</title>
+    <para><filename>/etc/modules-load.d/vfio-pci.conf</filename> ファイルを作成して、下記のような内容を記述します:</para>
 <screen>
 pci_stub
 vfio
@@ -225,52 +149,32 @@ kvm_intel
 </screen>
    </sect3>
    <sect3 xml:id="gpu-passthru-load-vfio-manual">
-    <title>Loading the driver manually</title>
-    <para>
-     To load the driver manually at run-time, execute the following command:
-    </para>
+    <title>ドライバの手動読み込み</title>
+    <para>システム稼働中にドライバを手作業で読み込みたい場合は、下記のようなコマンドを実行します:</para>
 <screen>&prompt.sudo;modprobe vfio-pci</screen>
    </sect3>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-disable-msr">
-   <title>Disable MSR for &mswin; guests</title>
-   <para>
-    For &mswin; guests, we recommend disabling MSR (model-specific register) to
-    avoid the guest crashing. Create the file
-    <filename>/etc/modprobe.d/kvm.conf</filename> and add the following
-    content:
-   </para>
+   <title>&mswin; ゲストに対する MSR の無効化</title>
+   <para>&mswin; ゲストを使用する場合、ゲスト側のクラッシュを防ぐため、 MSR (model-specific register) の無効化をお勧めします。無効化を行うには、 <filename>/etc/modprobe.d/kvm.conf</filename> ファイルを作成して、下記のような内容を記述します:</para>
 <screen>options kvm ignore_msrs=1</screen>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-ovmf">
-   <title>Install and enable UEFI firmware</title>
-   <para>
-    For proper &gpuback; functionality, the host needs to boot using UEFI
-    firmware (that is, not using a legacy-style BIOS boot sequence).
-   </para>
+   <title>UEFI ファームウエアのインストールと有効化</title>
+   <para>&gpuback; を正しく動作させるためには、ホスト側を UEFI ファームウエアで起動する必要があります (つまり、従来の BIOS 起動手順を使用しないようにする必要があります) 。</para>
    <procedure>
     <step>
-     <para>
-      Install the <package>qemu-ovmf</package> package which includes UEFI
-      firmware images:
-     </para>
+     <para>UEFI ファームウエアイメージを含む <package>qemu-ovmf</package> パッケージをインストールします:</para>
 <screen>&prompt.sudo;zypper install qemu-ovmf</screen>
     </step>
     <step>
-     <para>
-      Get the list of OVMF <literal>bin</literal> and <literal>vars</literal>
-      files by filtering the results of the following command:
-     </para>
+     <para>下記のようなコマンドを実行して、 OVMF の <literal>bin</literal> と <literal>vars</literal> の一覧を取得します:</para>
 <screen>&prompt.user;rpm -ql qemu-ovmf</screen>
     </step>
     <step>
-     <para>
-      Enable OVMF in the &libvirt; &qemu; configuration in the file
-      <filename>/etc/libvirt/qemu.conf</filename> by using the list obtained
-      from the previous step. It should look similar to the following:
-     </para>
+     <para>以前の手順で得た一覧を元に、 <filename>/etc/libvirt/qemu.conf</filename> ファイル内にある &libvirt; &qemu; 設定で OVMF の有効化を行います。たとえば下記のようになります:</para>
 <screen>
 nvram = [
 "/usr/share/qemu/ovmf-x86_64-4m.bin:/usr/share/qemu/ovmf-x86_64-4m-vars.bin",
@@ -293,163 +197,95 @@ nvram = [
   </sect2>
 
   <sect2 xml:id="gpu-passthru-reboot">
-   <title>Reboot the host machine</title>
-   <para>
-    For most of the changes in the above steps to take effect, you need to
-    reboot the host machine:
-   </para>
+   <title>ホストマシンの再起動</title>
+   <para>これまでの設定変更を有効化するため、ここでホスト側のマシンを再起動してください:</para>
 <screen>&prompt.sudo;shutdown -r now</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="gpu-passthru-guest">
-  <title>Configuring the guest</title>
+  <title>ゲスト側の設定</title>
 
-  <para>
-   This section describes how to configure the guest virtual machine so that it
-   can use the host's &nvidia; GPU. Use &vmm; or
-   <command>virt-install</command> to install the guest VM. Find more details
-   in <xref linkend="cha-kvm-inst"/>.
-  </para>
+  <para>本章では、ゲスト側の仮想マシンでホスト側の &nvidia; GPU を使用するための設定方法を説明しています。ゲスト側の仮想マシンをインストールするには、 &vmm; もしくは <command>virt-install</command> をお使いください。詳しくは <xref linkend="cha-kvm-inst"/> をお読みください。</para>
 
   <sect2 xml:id="gpu-passthru-guest-general">
-   <title>Requirements for the guest configuration</title>
-   <para>
-    During the guest VM installation, select <guimenu>Customize configuration
-    before install</guimenu> and configure the following devices:
-   </para>
+   <title>ゲスト側の設定を行うための要件</title>
+   <para>ゲスト側の仮想マシンのインストールの際、 <guimenu>インストールの前に設定をカスタマイズする</guimenu> を選択して、下記のとおりデバイスの設定を行ってください:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      Use Q35 chipset if possible.
-     </para>
+     <para>可能であれば Q35 チップセットをお使いください。</para>
     </listitem>
     <listitem>
-     <para>
-      Install the guest VM using UEFI firmware.
-     </para>
+     <para>UEFI ファームウエアを利用してゲスト VM をインストールしてください。</para>
     </listitem>
     <listitem>
-     <para>
-      Add the following emulated devices:
-     </para>
-     <para>
-      Graphic: Spice or VNC
-     </para>
-     <para>
-      Device: qxl, VGA, or Virtio
-     </para>
-     <para>
-      Find more information in <xref linkend="sec-libvirt-config-video"/>.
-     </para>
+     <para>下記の擬似デバイスを追加しておいてください:</para>
+     <para>グラフィック: Spice もしくは VNC</para>
+     <para>デバイス: qxl, VGA, Virtio のいずれか</para>
+     <para>詳しくは <xref linkend="sec-libvirt-config-video"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      Add the host PCI device (<literal>03:00.0</literal> in our example) to
-      the guest. Find more information in
-      <xref linkend="sec-libvirt-config-pci"/>.
-     </para>
+     <para>ゲスト側にホスト側の PCI デバイス (ここまでの例では <literal>03:00.0</literal> になっています) を追加します。詳しくは <xref linkend="sec-libvirt-config-pci"/> をお読みください。</para>
     </listitem>
     <listitem>
-     <para>
-      For best performance, we recommend using virtio drivers for the network
-      card and storage.
-     </para>
+     <para>最適な性能を引き出すため、ネットワークカードとストレージに対して virtio ドライバを使用しておくことをお勧めします。</para>
     </listitem>
    </itemizedlist>
   </sect2>
 
   <sect2 xml:id="gpu-passthru-guest-driver">
-   <title>Install the graphic card driver</title>
+   <title>グラフィックカードドライバのインストール</title>
    <sect3 xml:id="gpu-passthru-guest-driver-linux-rpm">
-    <title>Linux guest</title>
+    <title>Linux ゲストの場合</title>
     <procedure>
-     <title>RPM-based distributions</title>
+     <title>RPM ベースのディストリビューションの場合</title>
      <step>
-      <para>
-       Download the driver RPM package from
-       <link xlink:href="http://www.nvidia.com/download/driverResults.aspx/131159/en-us"/>.
-      </para>
+      <para><link xlink:href="http://www.nvidia.com/download/driverResults.aspx/131159/en-us"/> から RPM パッケージをダウンロードします。</para>
      </step>
      <step>
-      <para>
-       Install the downloaded RPM package:
-      </para>
+      <para>ダウンロードした RPM パッケージをインストールします:</para>
 <screen>&prompt.sudo;rpm -i nvidia-diag-driver-local-repo-sles123-390.30-1.0-1.x86_64.rpm</screen>
      </step>
      <step>
-      <para>
-       Refresh repositories and install <package>cuda-drivers</package>. This
-       step will be different for non-&suse; distributions:
-      </para>
+      <para>リポジトリを更新して <package>cuda-drivers</package> パッケージをインストールします。下記のコマンドは &suse; ディストリビューション向けですので、それ以外のものをお使いの場合はそれぞれに合わせて実施してください:</para>
 <screen>&prompt.sudo;zypper refresh &amp;&amp; zypper install cuda-drivers</screen>
      </step>
      <step>
-      <para>
-       Reboot the guest VM:
-      </para>
+      <para>ゲスト VM を再起動します:</para>
 <screen>&prompt.sudo;shutdown -r now</screen>
      </step>
     </procedure>
     <procedure>
-     <title>Generic installer</title>
+     <title>一般的なインストーラを使用する場合</title>
      <step>
-      <para>
-       Because the installer needs to compile the &nvidia; driver modules,
-       install the <package>gcc-c++</package> and <package>kernel-devel</package>
-       packages.
-      </para>
+      <para>一般的なインストーラを使用する場合、 &nvidia; ドライバモジュールをコンパイルする必要があることから、 <package>gcc-c++</package> と <package>kernel-devel</package> の各パッケージをインストールしておいてください。</para>
      </step>
      <step>
-      <para>
-       Disable Secure Boot on the guest, because &nvidia;'s driver modules are
-       unsigned. On &suse; distributions, you can use the &yast; &grub; module
-       to disable Secure Boot. Find more information in
-       <xref linkend="sec-uefi-secboot-sle"/>.
-      </para>
+      <para>また、 &nvidia; が提供するドライバには署名が付与されていないことから、ゲスト側で Secure Boot を使用している場合は、無効化してください。 &yast; &grub; モジュールを使用することで、 Secure Boot を無効化することができます。詳しくは <xref linkend="sec-uefi-secboot-sle"/> をお読みください。</para>
      </step>
      <step>
-      <para>
-       Download the driver installation script from
-       <link xlink:href="https://www.nvidia.com/Download/index.aspx?lang=en-us"/>,
-       make it executable, and run it to complete the driver
-       installation:
-      </para>
+      <para>あとは <link xlink:href="https://www.nvidia.com/Download/index.aspx?lang=en-us"/> からドライバのインストールスクリプトをダウンロードし、それを実行可能な状態にしてから実行してください。これでドライバのインストールが完了します:</para>
 <screen>
 &prompt.user;chmod +x NVIDIA-Linux-x86_64-460.73.01.run
 &prompt.sudo;./NVIDIA-Linux-x86_64-460.73.01.run
 </screen>
      </step>
      <step>
-      <para>
-       Download CUDA drivers from
-       <link xlink:href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;target_distro=SLES&amp;target_version=15&amp;target_type=rpmlocal"/>
-       and install following the on-screen instructions.
-      </para>
+      <para>あとは CUDA ドライバを <link xlink:href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;target_distro=SLES&amp;target_version=15&amp;target_type=rpmlocal"/> からダウンロードして実行し、画面上に表示された手順に従ってインストールしてください。</para>
      </step>
     </procedure>
     <note>
-     <title>Display issues</title>
-     <para>
-      After you have installed the &nvidia; drivers, the &vmm; display will
-      lose its connection to the guest OS. To access the guest VM, you
-      must either login via <command>ssh</command>, change to the
-      console interface, or install a dedicated VNC server in the guest.
-      To avoid a flickering screen, stop and disable the display manager:
-     </para>
+     <title>表示の問題について</title>
+     <para>&nvidia; ドライバをインストールすると、 &vmm; はゲスト OS との接続を失います。ゲスト VM にアクセスするには、 <command>ssh</command> 経由でログインするか、もしくはシリアルコンソールか専用の VNC サーバ経由でログインする必要があります。また、画面の乱れを防ぐため、ディスプレイマネージャを停止して無効化しておく必要があります:</para>
 <screen>&prompt.sudo;systemctl stop display-manager &amp;&amp; systemctl disable display-manager</screen>
     </note>
     <procedure>
-     <title>Testing the Linux driver installation</title>
+     <title>Linux ドライバの動作テスト</title>
      <step>
-      <para>
-       Change the directory to the CUDA sample templates:
-      </para>
+      <para>CUDA のサンプルテンプレートのあるディレクトリに移動します:</para>
 <screen>&prompt.user;cd /usr/local/cuda-9.1/samples/0_Simple/simpleTemplates</screen>
      </step>
      <step>
-      <para>
-       Compile and run the <literal>simpleTemplates</literal> file:
-      </para>
+      <para>あとは <literal>simpleTemplates</literal> ファイルをコンパイルして実行します:</para>
 <screen>
 &prompt.user;make &amp;&amp; ./simpleTemplates
 runTest&lt;float,32&gt;
@@ -468,33 +304,19 @@ Compare OK
     </procedure>
    </sect3>
    <sect3 xml:id="gpu-passthru-guest-driver-windows">
-    <title>&mswin; guest</title>
+    <title>&mswin; ゲストの場合</title>
     <important>
-     <para>
-      Before you install the &nvidia; drivers, you need to hide the hypervisor
-      from the drivers by using the <literal>&lt;hidden state='on'/&gt;</literal>
-      directive in the guest's &libvirt; definition.
-     </para>
+     <para>&nvidia; ドライバをインストールする前に、まずはゲスト側の &libvirt; 設定内に <literal>&lt;hidden state='on'/&gt;</literal> を追加して、ドライバからハイパーバイザを隠蔽する必要があります。</para>
     </important>
     <procedure>
      <step>
-      <para>
-       Download and install the &nvidia; driver from
-       <link xlink:href="https://www.nvidia.com/Download/index.aspx"/>.
-      </para>
+      <para>あとは <link xlink:href="https://www.nvidia.com/Download/index.aspx"/> から &nvidia; ドライバをダウンロードして、インストールします。</para>
      </step>
      <step>
-      <para>
-       Download and install the CUDA toolkit from
-       <link xlink:href="https://developer.nvidia.com/cuda-downloads?target_os=Windows&amp;target_arch=x86_64"/>.
-      </para>
+      <para>また、 <link xlink:href="https://developer.nvidia.com/cuda-downloads?target_os=Windows&amp;target_arch=x86_64"/> から CUDA ツールキットをダウンロードしてインストールします。</para>
      </step>
      <step>
-      <para>
-       Find some &nvidia; demo samples in the directory <filename>Program
-       Files\Nvidia GPU Computing
-       Toolkit\CUDA\v10.2\extras\demo_suite</filename> on the guest.
-      </para>
+      <para>インストールが完了すると、 &nvidia; のデモサンプルがゲスト内の <filename>Program Files\Nvidia GPU Computing Toolkit\CUDA\v10.2\extras\demo_suite</filename> ディレクトリに用意されます。</para>
      </step>
     </procedure>
    </sect3>
