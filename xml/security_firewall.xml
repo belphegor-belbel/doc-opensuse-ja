@@ -129,7 +129,7 @@
   <para>&firewalld; はシステム内にある <command>iptables</command> のルールを管理し、 D-Bus インターフェイス経由で操作することのできるデーモンです。対応するコマンドラインユーティリティ <command>firewall-cmd</command> と、グラフィカルユーザインターフェイス <command>firewall-config</command> がそれぞれ用意されています。 &firewalld; は裏で動作する仕組みであることから、たとえば仮想マシンのネットワーク設定を行うなど、 iptables のルールに対してアプリケーション側から変更要求を送信することができるようになっています。</para>
   <para>&firewalld; ではセキュリティゾーンと呼ばれる仕組みを提供しています。既定の設定では、 <literal>internal</literal> (内部) や <literal>public</literal> (公共) などのゾーンが用意されています。それ以外のゾーンが必要な場合でも、管理者側で自由に設定することができます。各ゾーンにはそれぞれ対応する iptables のルールを設定することができます。また、ネットワークインターフェイスはいずれか 1 つのゾーンに属するように設定するほか、発信元のアドレスをベースにして接続ごとにゾーンを割り当てることもできます。</para>
 
-  <para>それぞれのゾーンは信頼レベルを表わしていて、たとえば <literal>public</literal> はインターネットや無線ホットスポットに対して設定すべきゾーンで、最も信頼レベルの低いネットワークを表わしています。逆に <literal>internal</literal> は、家庭内のネットワークや企業内のネットワークなど、最も信頼できるネットワークを表わしています。このように信頼レベルを分けることで、接続されるネットワークごとに異なるルールを適用できるようにしています。</para>
+  <para>それぞれのゾーンは信頼レベルを表していて、たとえば <literal>public</literal> はインターネットや無線ホットスポットに対して設定すべきゾーンで、最も信頼レベルの低いネットワークを表しています。逆に <literal>internal</literal> は、家庭内のネットワークや企業内のネットワークなど、最も信頼できるネットワークを表しています。このように信頼レベルを分けることで、接続されるネットワークごとに異なるルールを適用できるようにしています。</para>
 
   <para>&firewalld; の既定で設定されているゾーンとその意味について、詳しくは <link xlink:href="http://www.firewalld.org/documentation/zone/predefined-zones.html"/>  (英語) にあるマニュアルをお読みください。</para>
 
@@ -140,7 +140,7 @@
 
   <para>&firewalld; のパケットフィルタリングでは、接続の開始側については基本的に許可される設定になっています。接続の開始側とは、手元のコンピュータから相手のコンピュータに対して、接続を始める種類の接続を意味しています。逆に、接続を受け入れる側の場合は、ゾーンの設定で明示的に許可を指定しない限り、アクセスが拒否されるようになっています。そのため、何らかのサービスの接続を受け入れるインターフェイスに対しては、適切なゾーンを指定しておいて、ゾーン内で必要なサービスの許可を設定してください。</para>
 
-  <para>&firewalld; では、もう 1 つ重要な考え方があります。それは <emphasis>一時的な</emphasis> 設定と <emphasis>恒久的な</emphasis> 設定です。一時的な設定とは現在動作中のルールそのものを表わしていて、恒久的な設定とは次回の &firewalld; の再起動で適用される、保存済みのルールを表わしています。これにより、次に &firewalld; を再起動するまでの間、一時的に適用するルールを設定することができますので、実験的にルールを追加してみて、うまくいかなければ元に戻すと言ったことが容易に実現できるようになっています。なお、設定を変更する際には、どちらの設定を編集しているのかをよくお確かめください。こちらについての詳細は、 <xref linkend="sec-security-firewall-firewalld-configurations"/> で説明しています。</para>
+  <para>&firewalld; では、もう 1 つ重要な考え方があります。それは <emphasis>一時的な</emphasis> 設定と <emphasis>恒久的な</emphasis> 設定です。一時的な設定とは現在動作中のルールそのものを表していて、恒久的な設定とは次回の &firewalld; の再起動で適用される、保存済みのルールを表しています。これにより、次に &firewalld; を再起動するまでの間、一時的に適用するルールを設定することができますので、実験的にルールを追加してみて、うまくいかなければ元に戻すと言ったことが容易に実現できるようになっています。なお、設定を変更する際には、どちらの設定を編集しているのかをよくお確かめください。こちらについての詳細は、 <xref linkend="sec-security-firewall-firewalld-configurations"/> で説明しています。</para>
 
   <para>&firewalld; をグラフィカルユーザインターフェイス <command>firewall-config</command> で操作したい場合は、 <link xlink:href="http://www.firewalld.org/documentation/utilities/firewall-config.html">ドキュメンテーション</link> をお読みになることをお勧めします。以下の章では、コマンドライン経由で利用する <command>firewall-cmd</command> で &firewalld; の制御を行っています。</para>
 
@@ -378,7 +378,7 @@ dhcp
 
     <para>設定を反映させるには、対応するサービスをそれぞれ再起動する必要があります。なお、 <command>rpcinfo -p</command> と入力して実行することで、割り当てられた rpcbind のポートを表示することもできます。正しく設定がされていれば、ここに固定のポートが表示されるはずです。</para>
 
-    <para>ユーザスペース内で動作しているネットワーク向けのポート設定とは別に、 Linux カーネルが NFS に対して直接使用するポートも存在しています。これらのポートのうちの 1 つは <literal>nfs_callback_tcpport</literal> と呼ばれます。このポートは、バージョン 4.1 以前の NFS プロトコルでのみ必要となります。ここで使用するポートは、 sysctl の <literal>fs.nfs.nfs_callback_tcpport</literal> で設定することができます。この sysctl ノードは、 NFS マウントが有効な場合にのみ動的に現われます。そのため、この設定はカーネルモジュールのパラメータとして設定しておくことが最適です。これは <xref linkend="ex-security-firewall-nfscallback"/> で示している設定で実現することができます。</para>
+    <para>ユーザスペース内で動作しているネットワーク向けのポート設定とは別に、 Linux カーネルが NFS に対して直接使用するポートも存在しています。これらのポートのうちの 1 つは <literal>nfs_callback_tcpport</literal> と呼ばれます。このポートは、バージョン 4.1 以前の NFS プロトコルでのみ必要となります。ここで使用するポートは、 sysctl の <literal>fs.nfs.nfs_callback_tcpport</literal> で設定することができます。この sysctl ノードは、 NFS マウントが有効な場合にのみ動的に現れます。そのため、この設定はカーネルモジュールのパラメータとして設定しておくことが最適です。これは <xref linkend="ex-security-firewall-nfscallback"/> で示している設定で実現することができます。</para>
 
     <example xml:id="ex-security-firewall-nfscallback">
      <title><filename>/etc/modprobe.d/60-nfs.conf</filename> 内での <literal>nfs</literal> カーネルモジュールに対するコールバックポートの設定</title>
