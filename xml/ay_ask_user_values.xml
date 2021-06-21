@@ -67,7 +67,7 @@
   <varlistentry><term><literal>file</literal></term>
 <listitem><para>質問に対してユーザが入力した内容をファイルに保存することもできます。このようにすることで、スクリプトから読み込んで使用できるようになります。なお、 <literal>stage=initial</literal> を設定した場合で、第 2 ステージで回答を使用したい場合は、 <literal>chrooted=false</literal> を指定した chroot 環境スクリプトで、回答が書かれたファイルをコピーする必要があります。たとえば <command>cp /tmp/my_answer /mnt/tmp/</command> のように実行します。これは、第 1 ステージでは <filename>/tmp</filename> が RAM ディスク内に存在するため、再起動を行うと消えてしまうためです。このような仕組みから、 <filename>/mnt/</filename> 以下にマウントされたインストール先のシステムにコピーを行うことで、この問題を解決することができます。</para><screen>&lt;file&gt;/tmp/answer_hostname&lt;/file&gt;</screen><para>この情報の設定は任意ですが、 <literal>path</literal> もしくは <literal>file</literal> のいずれかを指定すべきです。</para></listitem>
 </varlistentry>
-  <varlistentry><term>stage</term>
+<varlistentry><term><literal>type</literal></term>
 <listitem><para os="sles;sled;osuse">質問を表示するインストール時のステージを指定します。ここでは <literal>cont</literal> もしくは <literal>initial</literal> のいずれかを指定することができます。 <literal>initial</literal> はインストールの冒頭で表示する意味となり、インストール前スクリプトの直後に表示されます。対する <literal>cont</literal> はシステムを初めて再起動した後に表示されます。なお、ディスク内の制御ファイルに対して回答を書き込みたい場合は、 <literal>initial</literal> を指定してください。また、 <literal>initial</literal> でパスワードを入力した場合、パスワードは暗号化されずに保存されることにも注意してください。また、 <literal>cont</literal> を指定した場合、ファイルシステム関連の質問を表示しても意味がないことにも注意してください。これは、その時点では既にパーティションの設定が完了しているため、制御ファイルを書き換えても効果が無いためです。</para><screen>&lt;stage&gt;cont&lt;/stage&gt;</screen><para>任意指定です。既定値は <literal>initial</literal> です。</para>
         <para os="slemicro"><literal>Stage</literal> は質問を表示するインストールステージを指定します。ただし、 &slem; は単一のステージでインストールされますので、こちらの値は <literal>initial</literal> にしてください。それ以外の値は適用できません。質問のポップアップはインストール前スクリプトの実行後、インストールが完了する前に表示されます。</para></listitem>
 </varlistentry>
@@ -126,7 +126,10 @@
    <sect2 xml:id="CreateProfile-Ask-default-value">
     <title>既定値スクリプト</title>
     <para>質問に対する既定値を設定するために、スクリプトを動作させることができます。この機能は、何らかの理由で既定値を <emphasis>計算</emphasis> しなければならないような場合に有用で、 <literal>timeout</literal> オプションと併用して使用します。</para>
-    <para>下記のような XML 構造内に、必要な要素を追加していきます:</para>
+    <para>
+     The scripts are defined placing the elements described in <xref linkend="scripts-syntax"/>
+     within the following XML structure:
+    </para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -136,15 +139,8 @@
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
-<variablelist>
-  <title>既定値スクリプト: XML 表記</title>
-  <varlistentry><term><literal>source</literal></term>
-<listitem><para>スクリプトのソースコードを指定します。 <command>echo</command> コマンドで STDOUT (標準出力) に出力することで、ダイアログに対する既定値を設定することができます。なお、スクリプトの終了コードが 0 以外であった場合、通常の既定値が設定されます。なお、 <literal>\n</literal> を省略するために <command>echo -n</command> を使用する必要がある点と、出力する値が適切なものでなければならない点、そしてブール値の場合は <quote>okay</quote> 等を使用すべきではない点にそれぞれ注意してください。</para><screen>&lt;source&gt;...&lt;/source&gt;</screen><para>この値は必須です。何も指定しない場合、何も実行されなくなります。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>interpreter</literal></term>
-<listitem><para>使用するインタプリタを指定します。</para><screen>&lt;interpreter&gt;perl&lt;/interpreter&gt;</screen><para>既定値は <literal>shell</literal> (シェルスクリプト) です。値に対して <filename>/bin/myinterpreter</filename> のように指定することもできます。</para></listitem>
-</varlistentry>
-</variablelist>
+
+    <para>スクリプトのソースコードを指定します。 <command>echo</command> コマンドで STDOUT (標準出力) に出力することで、ダイアログに対する既定値を設定することができます。なお、スクリプトの終了コードが 0 以外であった場合、通常の既定値が設定されます。なお、 <literal>\n</literal> を省略するために <command>echo -n</command> を使用する必要がある点と、出力する値が適切なものでなければならない点、そしてブール値の場合は <quote>okay</quote> 等を使用すべきではない点にそれぞれ注意してください。</para>
    </sect2>
 
    <sect2 xml:id="CreateProfile-Ask-script">
@@ -160,13 +156,15 @@
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
+
+
+    <para>In addition to the elements listed in <xref linkend="scripts-syntax"/>,
+     scripts in <literal>&lt;ask&gt;</literal> elements supports these options:
+    </para>
 <variablelist>
   <title>スクリプト: XML 表記</title>
   <varlistentry><term><literal>file name</literal></term>
 <listitem><para>スクリプトのファイル名を指定します。</para><screen>&lt;filename&gt;my_ask_script.sh&lt;/filename&gt;</screen><para>既定値は ask_script.sh です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>source</literal></term>
-<listitem><para>スクリプトのソースコードを指定します。 <literal>rerun_on_error</literal> を有効化した場合、入力した値が適切かどうかをチェックする動作になります。この場合、 <filename>/tmp/next_dialog</filename> ファイルを作成してダイアログ ID を書き込むことで、 &ay; が次に表示するダイアログを指定することができます。値に -1 を書き込むと、問い合わせの流れを終了する意味になります。このファイルが作成されない場合、 &ay; はダイアログを通常通りに表示していきます (11.0 およびそれ以降のみ) 。</para><screen>&lt;source&gt;...&lt;/source&gt;</screen><para>この値は必須です。何も指定しない場合、何も実行されなくなります。</para></listitem>
 </varlistentry>
   <varlistentry><term><literal>environment</literal></term>
 <listitem><para>スクリプトに対して、環境変数の形で問い合わせの回答を設定するかをブール値で指定します。設定される環境変数は <envar>VAL</envar> になります。</para><screen>&lt;environment config:type="boolean"&gt;true&lt;/environment&gt;</screen><para>任意指定です。既定値は <literal>false</literal> です。</para></listitem>
@@ -174,13 +172,22 @@
   <varlistentry><term><literal>feedback</literal></term>
 <listitem><para>スクリプトの実行時にフィードバックを表示するかどうかを指定します。 STDOUT に何らかの値を出力すると、スクリプトの実行終了後にポップアップメッセージが表示されるようになります。</para><screen>&lt;feedback config:type="boolean"&gt;true&lt;/feedback&gt;</screen><para>任意指定です。既定値は <literal>false</literal> です。</para></listitem>
 </varlistentry>
-  <varlistentry><term><literal>debug</literal></term>
-<listitem><para>スクリプトの実行をデバッグするかどうかを指定します。</para><screen>&lt;debug config:type="boolean"&gt;true&lt;/debug&gt;</screen><para>任意指定で、既定値は <literal>true</literal> です。この値を設定する場合は、 <literal>feedback</literal> についても有効化する必要があります。</para></listitem>
-</varlistentry>
   <varlistentry><term><literal>rerun_on_error</literal></term>
-<listitem><para>スクリプトの実行結果が 0 (ゼロ) になるまでダイアログを繰り返し表示するかどうかを指定します。これにより、回答内容をチェックできるようになります。エラーメッセージを表示したい場合は、 <literal>feedback</literal> オプションを指定してください。</para><screen>&lt;rerun_on_error config:type="boolean"&gt;true&lt;/rerun_on_error&gt;</screen><para>任意指定で、既定値は <literal>false</literal> です。このオプションを設定する場合は、 <literal>feedback</literal> オプションも設定すべきです。</para></listitem>
+<listitem><para>
+          Keep the dialog open until the script has an exit code of 0 (zero). You can use this
+          feature to validate the user's input: the script should print some meaningful error
+          message and return a code different from zero. Bear in mind that you should also set
+          the <literal>feedback</literal> option to <literal>true</literal> so the user can read
+          the error message from the script. Optional, default is <literal>false</literal>.
+         </para></listitem>
 </varlistentry>
 </variablelist>
+
+    <para>
+     Your script can create a file <filename>/tmp/next_dialog</filename> containing
+     the id of the following dialog to display. A value of -1 terminates the sequence.
+    </para>
+
     <para>下記に <literal>ask</literal> 機能の使用例を示します。</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
