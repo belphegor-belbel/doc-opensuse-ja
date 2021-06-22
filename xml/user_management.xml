@@ -17,7 +17,7 @@
 
    <sect2 xml:id="sec-sec-prot-general-accounts-unlocked">
     <title>ロック (施錠) されていないアカウント</title>
-    <para>ログインに使用していないシステムアカウントやベンダーのアカウントについては、ロック (施錠) を行っておくのが重要です。 <filename>/etc/shadow</filename> ファイル内のパスワード欄が <literal>!</literal> や <literal>*</literal> で始まって <emphasis>いない</emphasis> ものが、ロックされていないアカウントになります。また <command>passwd</command> <option>-l</option> コマンドでアカウントをロックすると、同ファイルのパスワード欄の冒頭に <literal>!!</literal> が追加されますので、これによって簡単にロックを行うことができます。また、 <command>usermod</command> <option>-L</option> でロックを行った場合は、パスワード欄の冒頭に <literal>!</literal> が追加されます。多くのシステムや共有アカウントの場合、パスワード欄に <literal>*</literal> や <literal>!!</literal> が追加されることで、暗号化されたパスワードとしては使用できない文字列となることから、これによってログインを防止しています。このような事情から、ロックされていないアカウントを一覧表示するには、下記のようなコマンドを入力して実行します (<command>egrep</command> で正規表現を使用しています):</para>
+    <para>ログインに使用していないシステムアカウントやベンダーのアカウントについては、ロック (施錠) を行っておくのが重要です。 <filename>/etc/shadow</filename> ファイル内のパスワード欄が <literal>!</literal> や <literal>*</literal> で始まって <emphasis>いない</emphasis> ものが、ロックされていないアカウントになります。また <command>passwd</command> <option>-l</option> コマンドでアカウントをロックすると、同ファイルのパスワード欄の冒頭に <literal>!!</literal> が追加されますので、これによって簡単にロックを行うことができます。また、 <command>usermod</command> <option>-L</option> でロックを行った場合は、パスワード欄の冒頭に <literal>!</literal> が追加されます。多くのシステムや共有アカウントの場合、パスワード欄に <literal>*</literal> や <literal>!!</literal> が追加されることで、暗号化されたパスワードとしては使用できない文字列となることから、これによってログインを防止しています。このような事情から、ロックされていないアカウントを一覧表示するには、下記のようなコマンドを入力して実行します:</para>
     <screen>&prompt.root;egrep -v ':\*|:\!' /etc/shadow | awk -F: '{print $1}'</screen>
     <para>また、 <filename>/etc/passwd</filename> ファイルのパスワード欄に <literal>x</literal> が設定されていることも確認しておいてください。下記のコマンドは、パスワード欄に <literal>x</literal> が書かれていないアカウントの一覧を表示します:</para>
     <screen>&prompt.root;grep -v ':x:' /etc/passwd</screen>
@@ -36,7 +36,7 @@
   <sect1 xml:id="sec-sec-prot-general-pw-aging">
    <title>パスワードの有効期限の設定</title>
 
-   <para>パスワードに対して有効期限を設定することは、一般に推奨されるセキュリティ設定です。ただし、システムアカウントや共有アカウント (例: Oracle など) については、このルールから除外しておかないと、パスワードの期限が切れたタイミングで、そのアカウントを使用するアプリケーションが動作しなくなってしまうからです。</para>
+   <para>パスワードに対して有効期限を設定することは、一般に推奨されるセキュリティ設定ですが、システムアカウントや共有アカウント (例: Oracle) については、このルールから除外しておく必要があります。これは、パスワードの期限が切れたタイミングで、そのアカウントを使用するアプリケーションが動作しなくなってしまうからです。</para>
 
    <para>一般に企業内のポリシーでは、システムアカウントや共有アカウントのパスワード変更に関する条項を作成しておくべきです。それ以外の一般ユーザのアカウントについては、自動的に期限が切れるように設定しておくとよいでしょう。下記の例では、ユーザアカウントごとにパスワードの有効期限を設定するための方法を示しています。</para>
 
@@ -75,7 +75,7 @@
         <para><literal>PASS_WARN_AGE</literal></para>
        </entry>
        <entry>
-        <para>パスワードの変更通知を行う日数を指定します。</para>
+        <para>前回のパスワード変更から、次のパスワード変更通知までの日数を指定します。</para>
        </entry>
       </row>
       <row>
@@ -159,7 +159,7 @@ Account Expires: Never</screen>
    <sect2 xml:id="sec-sec-prot-restrict-root-tty">
     <title>ローカルのテキストコンソールへのログイン制限</title>
 
-    <para>TTY デバイスはコンソール経由でのテキストモードアクセスを提供するデバイスです。デスクトップシステムの場合は直接接続されたキーボード経由で、サーバシステムの場合は KVM スイッチやリモートマネージメントカード (ILO, DRAC など) 経由でも使用することができます。既定では、 Linux は 6 つの異なるコンソールを提供します。これらは <keycombo><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押すことで切り替えることができます。グラフィカル環境が動作している場合は、それぞれ <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押してください。それぞれの端末は <literal>tty1</literal> から <literal>tty6</literal> に対応します。</para>
+    <para>TTY デバイスはコンソール経由でのテキストモードアクセスを提供するデバイスです。デスクトップシステムの場合は直接接続されたキーボード経由で、サーバシステムの場合は KVM スイッチやリモートマネージメントカード (例: ILO, DRAC) 経由でも使用することができます。既定では、 Linux は 6 つの異なるコンソールを提供します。これらは <keycombo><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押すことで切り替えることができます。グラフィカル環境が動作している場合は、それぞれ <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> から <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F6</keycap></keycombo> までを押してください。それぞれの端末は <literal>tty1</literal> から <literal>tty6</literal> に対応します。</para>
 
     <para>下記の手順では、最初の TTY のみを使用できるよう root アクセスを制限しています。この方式は緊急時の管理者アクセスを残しておくためのもので、通常は TTY を使用すべきではありません。</para>
 
@@ -257,7 +257,7 @@ tty1</screen>
        <entry><para><literal>bash, sh</literal></para></entry>
        <entry align="center"><para><literal>TMOUT</literal></para></entry>
        <entry align="center"><para>秒</para></entry>
-       <entry><para><literal>readonly TMOUT=</literal></para></entry>
+       <entry><para><literal>read-only TMOUT=</literal></para></entry>
        <entry><para><filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename></para></entry>
        <entry><para><filename>/etc/bash.bashrc</filename></para></entry>
       </row>
@@ -266,7 +266,7 @@ tty1</screen>
        <entry><para><literal>ksh, lksh, mksh, pdksh</literal></para></entry>
        <entry align="center"><para><literal>TMOUT</literal></para></entry>
        <entry align="center"><para>秒</para></entry>
-       <entry><para><literal>readonly TMOUT=</literal></para></entry>
+       <entry><para><literal>read-only TMOUT=</literal></para></entry>
        <entry><para><filename>/etc/profile.local</filename> , <filename>/etc/profile.d/</filename></para></entry>
        <entry><para><filename>/etc/ksh.kshrc.local</filename></para></entry>
       </row>
@@ -323,7 +323,7 @@ readonly TMOUT=86400</screen>
     <para>bash シェルにおける <command>ulimit</command> の説明については、 bash のマニュアルページをお読みください。</para>
     <important>
      <title>SSH セッションに対する制限の設定について</title>
-     <para>SSH セッションに対しては、 "hard" や "soft" の制限が期待通りにならないことがあります。正しく動作させたい場合は、いったん root でログインしたのち、対象のユーザ (たとえば <literal>oracle</literal>) に su をして切り替えるようにしてください。またリソースの制限は、システムの起動時に開始されたアプリケーションに対しても作用させることができます。 SSH 経由でリソース制限が正しく動作していないように見える場合は、 <filename>/etc/ssh/sshd_config</filename> ファイル内の <option>UsePrivilegeSeparation</option> オプションを "no" に設定して、 SSH デーモンを再起動 ( <command>systemctl restart sshd</command> ) してください。ただし、このような設定は、別の意味でシステムのセキュリティを弱める結果になることに注意してください。</para>
+     <para>SSH セッションに対しては、 <quote>hard</quote> や <quote>soft</quote> の制限が期待通りにならないことがあります。正しく動作させたい場合は、いったん root でログインしたのち、対象のユーザ (たとえば <literal>Oracle</literal>) に <command>su</command> をして切り替えるようにしてください。またリソースの制限は、システムの起動時に開始されたアプリケーションに対しても作用させることができます。 SSH 経由でリソース制限が正しく動作していないように見える場合は、 <filename>/etc/ssh/sshd_config</filename> ファイル内の <option>UsePrivilegeSeparation</option> オプションを <literal>no</literal> に設定して、 SSH デーモンを再起動 ( <command>systemctl restart sshd</command> ) してください。ただし、このような設定は、別の意味でシステムのセキュリティを弱める結果になることに注意してください。</para>
     </important>
     <tip>
      <title><command>ssh</command> でのパスワードログインの禁止について</title>
@@ -340,7 +340,7 @@ oracle           hard    nofile          63536</screen>
     <screen>&prompt.root;ulimit -n 63536</screen>
     <para>上記の "soft", "hard" の値は必要に応じて調整してください。</para>
     <note>
-     <para>ulimit を設定する場合は、よく注意して設定してください。 <quote>nofile</quote> に対して "hard" の上限をカーネルの規定する最大値 ( <filename>/proc/sys/fs/file-max</filename> ) に設定してしまうと、もしもそのユーザが全てのファイルハンドルを使用してしまった場合、 PAM モジュールにアクセスする際にもファイルハンドルを使用しますので、ログインさえもできなくなってしまうことになります。</para>
+     <para>ulimit を設定する場合は、よく注意して設定してください。 <quote>nofile</quote> に対して <quote>hard</quote> の上限をカーネルの規定する最大値 ( <filename>/proc/sys/fs/file-max</filename> ) に設定してしまうと、もしもそのユーザが全てのファイルハンドルを使用してしまった場合、 PAM モジュールにアクセスする際にもファイルハンドルを使用しますので、ログインさえもできなくなってしまうことになります。</para>
     </note>
     <para>リソース制限は <literal>pam_limits</literal> を使用して設定することもできます。全てのサービスで共通で設定する場合は <filename>/etc/pam.d/common-auth</filename> ファイルを、 SSH, su, login, telnet など、サービスごとに設定する場合は下記のファイルをそれぞれ編集してください:</para>
     <simplelist>
@@ -362,7 +362,7 @@ session     required      /lib/security/pam_unix.so</screen>
 &prompt.user;ulimit -n 63536
 &prompt.user;ulimit -n
 63536</screen>
-    <para><command>ulimit -n 63536</command> のような設定 (この例では bash) を恒久的に保存したい場合は、 &productname; が提供する bash シェル向けのスタートアップファイル ( <filename>~/.bashrc</filename> ファイルもしくは <filename>~/.profile</filename> ファイル) にそれを記述します (使用しているシェルを確認したい場合は、 <command>echo $SHELL</command> を実行してください) 。下記のようなコマンドを実行することで、 bash シェルのリソース制限を設定することができます (設定対象の Linux マシンでお読みの場合は、このままコピー＆ペーストしてもかまいません):</para>
+    <para><command>ulimit -n 63536</command> のような設定 (この例では bash) を恒久的に保存したい場合は、 &productname; が提供する bash シェル向けのスタートアップファイル ( <filename>~/.bashrc</filename> ファイルもしくは <filename>~/.profile</filename> ファイル) にそれを記述します (使用しているシェルを確認したい場合は、 <command>echo $SHELL</command> を実行してください) 。下記のようなコマンドを実行することで、 <literal>oracle</literal> ユーザに対する bash シェルのリソース制限を設定することができます:</para>
 <screen>&prompt.root;su - oracle
 &prompt.user;cat &gt;&gt; ~oracle/.bash_profile &lt;&lt; EOF
 ulimit -n 63536
