@@ -4,16 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-security-fips">
- <title>Enabling FIPS 140-2</title>
+ <title>FIPS 140-2 の有効化</title>
  <info>
   <abstract>
-   <para>
-     The Federal Information Processing Standard 140-2 (FIPS 140-2) is 
-     a security standard for cryptographic modules. Modules are certified
-     by the National Institute of Standards and Technology (NIST, see
-     <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/>). See  
-     <link xlink:href="https://www.suse.com/support/security/certifications/"/> for a list of certified modules.
-     </para>
+   <para>Federal Information Processing Standard 140-2 (FIPS 140-2) は暗号化モジュールに対するセキュリティ標準で、 NIST (National Institute of Standards and Technology) によるモジュール認証が行われる仕組みです (詳しくは <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/> をお読みください) 。認証済みのモジュール一覧を参照したい場合は、 <link xlink:href="https://www.suse.com/support/security/certifications/"/> をご覧ください。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -22,58 +16,24 @@
  </info>
  
 <sect1 xml:id="sec-fips-enable">
-  <title>Enabling FIPS</title>
-<para>
-  Enabling FIPS takes a few steps. First, read the
-  <filename>/usr/share/doc/packages/openssh-common/FIPS.SUSE</filename> and
-  <filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename>   
-  files, from the <package>openssh-common</package> package. These contain 
-  important information about FIPS on &sle;.
-  </para>
-  <para>
-    Check if FIPS is already enabled:
-  </para>
+  <title>FIPS の有効化</title>
+<para>FIPS の有効化を行うには、いくつかの作業が必要となります。まずは <package>openssh-common</package> パッケージに含まれる <filename>/usr/share/doc/packages/openssh-common/FIPS.SUSE</filename> と <filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename> のファイルをお読みください (いずれも英語) 。これらのファイルには、 &sle; における FIPS のうち、重要な情報が書かれています。</para>
+  <para>FIPS が既に有効化されているかどうかを確認するには、下記のように実行します:</para>
 <screen>&prompt.sudo;sysctl -a | grep fips
 crypto.fips_enabled = 0</screen>
-  <para>
-  <literal>crypto.fips_enabled = 0</literal> indicates that it is not enabled. A return value of 1 means that it is enabled.
-  </para>  
-  <para>
-    To enable FIPS, install the <package>fips</package> pattern:
-  </para>
+  <para><literal>crypto.fips_enabled = 0</literal> が出力された場合、 FIPS は有効化されていません。有効化されていれば 1 になるはずです。</para>  
+  <para>FIPS を有効化するには、 <package>fips</package> パターンをインストールします:</para>
   <screen>&prompt.sudo;zypper in -t pattern fips</screen>
-  <para>
-    Then edit <filename>/etc/default/grub</filename>. If 
-    <filename>/boot</filename> is not on a separate partition, add
-    <literal>fips=1</literal> to 
-    <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal>, like the following
-    example:
-  </para>
+  <para>その後 <filename>/etc/default/grub</filename> ファイルを編集します。 <filename>/boot</filename> が個別のパーティションに存在していない場合であれば、 <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal> に <literal>fips=1</literal> を追加します・たとえば下記のようになります:</para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1"</screen>
-  <para>
-    If <filename>/boot</filename> is on a separate partition, specify which 
-    partition, like the following example, substituting the name of your boot
-    partition:
-  </para>
+  <para><filename>/boot</filename> が個別のパーティションとして存在する場合は、下記のようにしてそのパーティションを指定します。下記の例のうち、デバイス名をお使いの環境に合わせて指定してください:</para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1 boot=/dev/<replaceable>sda1"</replaceable></screen>
-  <para>
-    Save your changes, and rebuild your GRUB configuration and initramfs 
-    image:
-  </para>
+  <para>あとは変更を保存して GRUB の設定と initramfs イメージを再構築します:</para>
   <screen>&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg
 &prompt.sudo;mkinitrd</screen>
-  <para>
-  Reboot, then verify your changes. The following example shows that
-  FIPS is enabled:
-  </para>
+  <para>あとはシステムを再起動するだけです。再起動後に再度確認を行うと、下記のように FIPS が有効化されているはずです:</para>
 <screen>&prompt.sudo;sysctl -a | grep fips
 crypto.fips_enabled = 1</screen>
-  <para>
-  After enabling FIPS it is possible that your system will not boot. If this  
-  happens, reboot to bring up the GRUB menu. Press <keycap>E</keycap> to edit 
-  your boot entry, and delete <literal>fips=1</literal> from the
-  <literal>linux</literal> line. Save your changes and boot. This is 
-  a temporary change, so you can find the error and correct it.  
-  </para>
+  <para>FIPS を有効化すると、システムがうまく起動しなくなってしまうことがあります。このような場合は、再起動時に GRUB メニューが表示された際、 <keycap>E</keycap> を押して編集モードに移行し、 <literal>linux</literal> の行内にある <literal>fips=1</literal> を削除して起動してください。ただし、この変更は一度限りの一時的なものであるため、起動後に原因を調査して修正してください。</para>
  </sect1>
 </chapter>
