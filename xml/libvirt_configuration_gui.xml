@@ -110,28 +110,32 @@
     </mediaobject>
    </figure>
    <para><guimenu>CPU 数</guimenu> のセクション内では、 CPU の割当数に関連するいくつかのパラメータを設定することができます。</para>
-   <variablelist>
-    <varlistentry>
-     <term><guimenu>論理ホスト CPU 数</guimenu></term>
-     <listitem>
-      <para>&vmhost; にインストールされている実際の CPU 数です。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><guimenu>現在の割り当て</guimenu></term>
-     <listitem>
-      <para>現在割り当てられている CPU 数です。最大で <guimenu>最大割り当て</guimenu> の数まで、 CPU をホットプラグで接続して増やすことができます。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><guimenu>最大割り当て</guimenu></term>
-     <listitem>
-      <para>現在のセッションで割り当てることのできる CPU 数の最大値です。この値を変更した場合、設定の反映は次回の &vmguest; の再起動以降となります。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
    <para><guimenu>設定</guimenu> セクションでは、 CPU のモデルやトポロジを設定することができます。</para>
    <para><guimenu>ホスト CPU の設定をコピーする</guimenu> を選択すると、 &vmguest; に対してホストの CPU モデルをそのまま使用するようになります。これを選択しない場合は、その下にあるドロップダウンボックスでモデルを選択することができます。</para>
+   <para>
+    The host CPU model generally provides a good trade-off between CPU features
+    and ability to migrate the &vmguest;. &libvirt; does not model every aspect
+    of each CPU, so the &vmguest; CPU will not match the &vmhost; CPU exactly.
+    But the ABI provided to the &vmguest; is reproducible and during migration
+    the complete CPU model definition is transferred to the destination &vmhost;,
+    ensuring the migrated &vmguest; will see the exact same CPU model on the
+    destination.
+   </para>
+   <para>
+    The <literal>host-passthrough</literal> model provides the &vmguest; with a CPU that is exactly
+    the same as the &vmhost; CPU. This can be useful when the &vmguest; workload
+    requires CPU features not available in &libvirt;'s simplified <literal>host-model</literal> CPU.
+    The host-passthrough model is also required in some cases, for example, when running
+    &vmguest;s with more than 4TB of memory. The <literal>host-passthrough</literal> model comes
+    with the disadvantage of reduced migration capability. A &vmguest; with
+    <literal>host-passthrough</literal> model CPU can only be migrated to a &vmhost; with identical
+    hardware.
+   </para>
+   <para>
+    For more information on &libvirt;'s CPU model and topology options, see
+    the <citetitle>CPU model and topology</citetitle> documentation
+    at <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/>.
+   </para>
    <para><guimenu>CPU トポロジーの手動設定</guimenu> を選択すると、 CPU のソケット数やコア数、スレッド数をそれぞれ独自に設定することができるようになります。</para>
   </sect2>
 
@@ -169,6 +173,13 @@
      </listitem>
     </varlistentry>
    </variablelist>
+   <important>
+    <title>Large memory &vmguest;s</title>
+    <para>
+      &vmguests; with memory requirements of 4TB or more currently need to
+      use the <literal>host-passthrough</literal> CPU model.
+    </para>
+   </important>
   </sect2>
 
   <sect2>
