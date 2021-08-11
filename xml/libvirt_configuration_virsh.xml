@@ -123,18 +123,12 @@ Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
   <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsFeatures"/> (英語) にある libvirt の <citetitle>Domain XML format</citetitle> 内の <citetitle>Hypervisor features</citetitle> の章をお読みください。</para>
  </sect1>
  <sect1 xml:id="libvirt-cpu-virsh">
-  <title>CPU 割り当ての設定</title>
+  <title>CPU の設定</title>
 
-  <para>
-   Many aspects of the virtual CPUs presented to &vmguest;s are configurable
-   with &virsh;. The number of current and maximum CPUs allocated to a &vmguest;
-   can be changed, as well as the model of the CPU and its feature set. The
-   following subsections describe how to change the common CPU settings of a
-   &vmguest;.
-  </para>
+  <para>&virsh; を利用することで、 &vmguest; に対して提供される様々な仮想 CPU の設定を変更することができます。 &vmguest; に割り当てる CPU 数の現在値や最大値のほか、 CPU のモデルや機能セットなども設定することができます。下記の章では、 &vmguest; で一般的な CPU 設定を変更する方法を説明しています。</para>
 
   <sect2 xml:id="sec-libvirt-cpu-num-virsh">
-   <title>CPU の割当数を変更して保存します:</title>
+   <title>CPU 数の設定</title>
    <para>&vmguest; の CPU の割当数は、 <filename>/etc/libvirt/qemu/</filename> にある XML 設定ファイル内の <tag class="attribute">vcpu</tag> タグ内に書かれています:</para>
 <screen>&lt;vcpu placement='static'&gt;1&lt;/vcpu&gt;</screen>
 
@@ -175,47 +169,33 @@ CPU:            N/A
 State:          N/A
 CPU time        N/A
 CPU Affinity:   yy
-      </screen>
+</screen>
     </step>
    </procedure>
-   <para>
-    You can also change the number of CPUs while the &vmguest; is running.
-    CPUs can be hotplugged until the maximum number configured at &vmguest;
-    start is reached. Likewise they can be hot-unplugged until the lower
-    limit of 1 is reached. The following example demonstrates changing the
-    active CPU count from 2 to pre-defined maximum of 4.
-   </para>
+   <para>&vmguest; が動作中の場合であっても、 CPU 数を変更することができます。ただし、 &vmguest; の起動時に設定した最大数までしかホットプラグ (活性接続) することができませんし、逆に減らす場合の最小数は 1 であることにも注意してください。下記の例では、現在の CPU 数である 2 を、あらかじめ設定しておいた最大値 4 に変更する手順を説明しています。</para>
    <procedure>
     <step>
-     <para>
-      Check the current live vcpu count:
-     </para>
-<screen>&prompt.sudo;<command>/sbin/lsmod | egrep "^igb "</command>
-igb                   185649  0</screen>
+     <para>まずは現時点での CPU 数を確認します:</para>
+<screen>&prompt.sudo;<command>virsh vcpucount sles15 | grep live</command>
+maximum      live           4
+current      live           2
+</screen>
     </step>
     <step>
-     <para>
-      Change the current, or active, number of CPUs to 4:
-     </para>
-<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+     <para>CPU 数の現在値 (使用可能な CPU 数) を 4 に変更します:</para>
+<screen>&prompt.sudo;<command>virsh setvcpus sles15 --count 4 --live</command></screen>
     </step>
     <step>
-     <para>
-      Check that the current live vcpu count is now 4:
-     </para>
-<screen>&prompt.sudo;<command>/sbin/lsmod | egrep "^igb "</command>
-igb                   185649  0</screen>
+     <para>最後に vcpu 数が 4 になっていることを確認します:</para>
+<screen>&prompt.sudo;<command>virsh vcpucount sles15 | grep live</command>
+maximum      live           4
+current      live           4
+</screen>
     </step>
    </procedure>
    <important>
-     <title>Exceeding 255 CPUs</title>
-     <para>
-      With &kvm; it is possible to define a &vmguest; with more than 255
-      CPUs, however additional configuration is necessary to start and
-      run the &vmguest;. The <literal>ioapic</literal> feature needs to be tuned and an IOMMU
-      device needs to be added to the &vmguest;. Below is an example
-      configuration for 288 CPUs.
-     </para>
+     <title>255 個以上の CPU を設定する場合について</title>
+     <para>&kvm; を利用する場合、 255 個以上の CPU を &vmguest; に設定することができます。ただし、 &vmguest; の起動時に追加の設定を行っておく必要があります。具体的には <literal>ioapic</literal> の機能を調整し、 IOMMU デバイスを &vmguest; に追加する必要があります。下記は 288 個の CPU を設定した場合の例です。</para>
 <screen>
 &lt;domain&gt;
  &lt;vcpu placement='static'&gt;288&lt;/vcpu&gt;
@@ -232,51 +212,20 @@ igb                   185649  0</screen>
    </important>
   </sect2>
   <sect2 xml:id="sec-libvirt-cpu-model-virsh">
-   <title>CPU 割り当ての設定</title>
-   <para>
-    The CPU model exposed to a &vmguest; can often influence the workload
-    running within it. The default CPU model is derived from a CPU mode
-    known as <literal>host-model</literal>.
-   </para>
+   <title>CPU モデルの設定</title>
+   <para>&vmguest; に対して提示される CPU モデルの設定は、その中で動作する処理に影響します。既定の CPU モデルは <literal>host-model</literal> という設定値で、ホスト側の CPU モデルをそのまま &vmguest; に提示する設定になります。</para>
 <screen>&lt;cpu mode='host-model'/&gt;</screen>
-   <para>
-    When starting a &vmguest; with CPU mode <literal>host-model</literal>, &libvirt; will
-    copy its model of the host CPU into the &vmguest; definition. The host
-    CPU model and features copied to the &vmguest; definition can be
-    observed in the output of the <command>virsh capabilities</command>.
-   </para>
-   <para>
-    Another interesting CPU mode is <literal>host-passthrough</literal>.
-   </para>
+   <para>CPU モデルとして <literal>host-model</literal> を指定して &vmguest; を起動すると、 &libvirt; はホストの CPU モデルをそのままコピーして &vmguest; 側に対して提供するようになります。 &vmguest; 側の定義にコピーされた CPU モデルと機能については、 <command>virsh capabilities</command> コマンドの出力で確認することができます。</para>
+   <para>それ以外にも、 <literal>host-passthrough</literal> という値を設定することもできます。</para>
 <screen>&lt;cpu mode='host-passthrough'/&gt;</screen>
-   <para>
-    When starting a &vmguest; with CPU mode <literal>host-passthrough</literal>, it is presented
-    with a CPU that is exactly the same as the &vmhost; CPU. This can be
-    useful when the &vmguest; workload requires CPU features not available in
-    &libvirt;'s simplified <literal>host-model</literal> CPU. The <literal>host-passthrough</literal> CPU mode is
-    also required in some cases, for example, when running &vmguest;s with more than
-    4TB of memory. The <literal>host-passthrough</literal> CPU mode comes with the disadvantage of
-    reduced migration flexibility. A &vmguest; with <literal>host-passthrough</literal> CPU mode
-    can only be migrated to a &vmhost; with identical hardware.
-   </para>
-   <para>
-    When using the <literal>host-passthrough</literal> CPU mode, it is still possible to
-    disable undesirable features. The following configuration will present
-    the &vmguest; with a CPU that is exactly the same as the host CPU but
-    with the <literal>vmx</literal> feature disabled.
-   </para>
+   <para>CPU モデルに <literal>host-passthrough</literal> を指定して &vmguest; を起動すると、 &vmhost; の CPU はホスト側の CPU と全く同一になります。これは &libvirt; の提供する単純化された <literal>host-model</literal> CPU では提供されていない機能を必要とする &vmguest; を動作させる際には便利な設定です。このほか、 &vmguest; を 4TB 以上のメモリで動作させるような場合にも、 <literal>host-passthrough</literal> モデルを設定する必要があります。ただし、この <literal>host-passthrough</literal> モデルの場合は、移行時の問題が発生する可能性があります。 <literal>host-passthrough</literal> モデルを使用している場合は、全く同一のハードウエア構成の &vmhost; 間でのみ移行が可能となります。</para>
+   <para>このほか、 <literal>host-passthrough</literal> の CPU モデルを指定した場合で、特定の不要な機能のみを無効化したいような場合は、下記のように設定することもできます。下記の例では、ホスト側の CPU と全く同一のモデルでありながら、 <literal>vmx</literal> 機能のみを無効化しています。</para>
 <screen>
 &lt;cpu mode='host-passthrough'&gt;
   &lt;feature policy='disable' name='vmx'/&gt;
   &lt;/cpu&gt;
 </screen>
-   <para>
-    The <literal>custom</literal> CPU mode is another common mode used to define a normalized
-    CPU that can be migrated throughout dissimilar hosts in a cluster. For
-    example in a cluster with hosts containing Nehalem, IvyBridge, and
-    SandyBridge CPUs, the &vmguest; can be configured with a <literal>custom</literal> CPU
-    mode that contains a Nehalem CPU model.
-   </para>
+   <para>また、 <literal>custom</literal> CPU モデルを指定することで、 CPU モデルを標準化し、クラスタ内にある異なる CPU 構成のホスト間の移行を可能にすることができます。たとえばクラスタ内に Nehalem, IvyBridge, SandyBridge の各 CPU モデルが混在しているような場合、 &vmguest; で <literal>custom</literal> CPU モデルを指定することで、 &vmguest; の CPU モデルを Nehalem に統一することができます。</para>
 <screen>
 &lt;cpu mode='custom' match='exact'&gt;
   &lt;model fallback='allow'&gt;Nehalem&lt;/model&gt;
@@ -300,11 +249,7 @@ igb                   185649  0</screen>
   &lt;feature policy='require' name='invtsc'/&gt;
   &lt;/cpu&gt;
 </screen>
-   <para>
-    For more information on &libvirt;'s CPU model and topology options, see
-    the <citetitle>CPU model and topology</citetitle> documentation
-    at <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/>.
-   </para>
+   <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-boot-menu-virsh">
