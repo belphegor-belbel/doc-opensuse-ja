@@ -9,38 +9,39 @@
   <procedure>
    <step>
      <para>まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</systemitem> の各パッケージをインストールします:</para>
-    <screen>&prompt.sudo;zypper in sssd sssd-ldap</screen>
+    <screen>&prompt.sudo;<command>zypper in sssd sssd-ldap</command></screen>
    </step>
    <step>
     <para><systemitem class="daemon">sssd</systemitem> と衝突してしまうことから、 <systemitem class="daemon">nscd</systemitem> デーモンを無効化して停止します:</para>
-    <screen>&prompt.sudo;systemctl disable nscd &amp;&amp; systemctl stop nscd</screen>
+    <screen>&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop nscd</command></screen>
    </step>
    <step>
-    <para>SSSD の設定ファイルを作成して、 <xref linkend="pro-security-ldap-server-groups" xrefstyle="select:label"/> で作成しておいた <systemitem class="groupname">server_admins</systemitem> グループのメンバーのみがログインできるように設定します:</para>
+    <para>SSSD の設定ファイルを作成して、 <xref linkend="pro-security-ldap-server-groups"/> で作成しておいた <systemitem class="groupname">server_admins</systemitem> グループのメンバーのみがログインできるように設定します:</para>
     <tip>
      <para>なお、 <literal>memberOf</literal> プラグインを有効化しておく必要があります。これにより、クライアントはログインと認可を行うことができるようになります (詳しくは <xref linkend="sec-security-ldap-modules"/> をお読みください) 。</para>
     </tip>
-    <screen>&prompt.sudo;dsidm localhost client_config sssd.conf server_admins</screen>
+    <screen>&prompt.sudo;<command>dsidm localhost client_config sssd.conf server_admins</command></screen>
    </step>
    <step>
     <para>出力内容を確認して、内容を <filename>/etc/sssd/sssd.conf</filename> に貼り付けます。必要であれば、ここから設定ファイルを調整してもかまいません。</para>
    </step>
    <step>
     <para>お使いのクライアントで証明書を設定するには、 LDAP サーバからクライアントに対して、 <filename>ca.crt</filename> をコピーします:</para>
-<screen>&prompt.sudo;mkdir -p /etc/openldap/certs
-cp [...]&gt;/ca.crt /etc/openldap/certs/
-/usr/bin/c_rehash /etc/openldap/certs</screen>
+<screen>&prompt.sudo;<command>mkdir -p /etc/openldap/certs</command>
+
+&prompt.sudo;<command>cp <replaceable>/PATH/TO/</replaceable>ca.crt /etc/openldap/certs/</command>
+
+&prompt.sudo;<command>c_rehash /etc/openldap/certs</command></screen>
    </step>
    <step>
     <para>SSSD を有効化して開始します:</para>
-    <screen>&prompt.sudo;systemctl enable sssd
-systemctl start sssd</screen>
+    <screen>&prompt.sudo;<command>systemctl enable --now sssd</command></screen>
    </step>
    <step>
     <para>SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href="https://www.port389.org/docs/389ds/howto/howto-sssd.html"/> にある <citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS (&suse;)</citetitle> の手順に従って作業を行ってください。</para>
    </step>
    <step>
-    <para><!-- NOTE: inappropriate?: Your user must have their own SSH key pair, and SSH access to your SSSD server. -->全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro-security-ldap-server-groups" xrefstyle="select:label"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
+    <para><!-- NOTE: inappropriate?: Your user must have their own SSH key pair, and SSH access to your SSSD server. -->全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro-security-ldap-server-groups"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
    </step>
   </procedure>
 </sect1>

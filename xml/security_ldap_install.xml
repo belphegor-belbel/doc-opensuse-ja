@@ -5,9 +5,9 @@
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-install">
   <title>&ds389; のインストール</title>
-   <para>下記のコマンドでインストールすることができます:</para>
+   <para>下記のコマンドで &ds389; をインストールすることができます:</para>
     <screen>&prompt.sudo;zypper install 389-ds</screen>
-    <para>上記を実行すると、 <package>389-ds</package> と <package>lib389</package> のパッケージをインストールします。インストールを行った後は、 <phrase os="sles;osuse"><xref linkend="sec-security-ldap-server" xrefstyle="select:label"/> に示されている内容に従って、 </phrase> サーバの設定を行ってください。</para>
+    <para>上記を実行すると、 <package>389-ds</package> と <package>lib389</package> のパッケージをインストールします。インストールを行った後は、 <phrase os="sles;osuse"><xref linkend="sec-security-ldap-server"/> に示されている内容に従って、 </phrase> サーバの設定を行ってください。</para>
 
  <sect2 xml:id="sec-security-ldap-server">
   <title>&ds389; のインスタンスの構築</title>
@@ -77,7 +77,7 @@
      <example xml:id="ex-ldap-389-ds-inf">
       <title>&ds389; を構築するための最小限のインスタンス設定ファイル</title>
       <screen># <replaceable>ldap1.inf</replaceable>
-        
+
 [general]
 config_version = 2 <co xml:id="co-ldap-389-ds-config-version"/>
 
@@ -115,7 +115,7 @@ suffix = <replaceable>dc=ldap1,dc=com</replaceable></screen>
     <para><command>dscreate</command> コマンドの実行が失敗した場合には、メッセージ内にその理由が示されますので、その原因を解決してからいったんインスタンスを削除 (詳しくは <xref linkend="sec-security-ldap-server-remove"/> をお読みください) してから、インスタンスを作成し直してください。</para>
    </step>
    <step>
-    <para>インスタンスの作成が成功すると、 " <literal>Completed installation for ldap1</literal> " というメッセージが出力されます。あとは作成したインスタンスの状態を確認します:</para>
+    <para>インスタンスの作成が成功すると、 " <literal>Completed installation for <replaceable>インスタンス名</replaceable></literal> " というメッセージが出力されます。あとは作成したインスタンスの状態を確認します:</para>
     <screen>&prompt.sudo;dsctl <replaceable>ldap1</replaceable> status
 Instance "ldap1" is running</screen>
    </step>
@@ -130,7 +130,7 @@ Not removing: if you are sure, add --do-it
   </procedure>
   <para>インスタンス名を忘れてしまった場合は、 <command>dsctl</command> コマンドを実行して全てのインスタンスを表示させてください:</para>
   <screen>&prompt.user;/usr/sbin/dsctl -l
-slapd-ldap1</screen>
+slapd-<replaceable>ldap1</replaceable></screen>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-server-template">
@@ -142,18 +142,18 @@ slapd-ldap1</screen>
    <screen>&prompt.user;dscreate create-template <replaceable>ldap1-template.txt</replaceable></screen>
    <para>下記は出力されたテンプレートの抜粋です:</para>
    <screen># full_machine_name (str)
-# Description: Sets the fully qualified hostname (FQDN) of this system. When 
-# installing this instance with GSSAPI authentication behind a load balancer, set 
-# this parameter to the FQDN of the load balancer and, additionally, set 
+# Description: Sets the fully qualified hostname (FQDN) of this system. When
+# installing this instance with GSSAPI authentication behind a load balancer, set
+# this parameter to the FQDN of the load balancer and, additionally, set
 # "strict_host_checking" to "false".
 # Default value: ldapserver1.test.net
 ;full_machine_name = ldapserver1.test.net
 
 # selinux (bool)
-# Description: Enables SELinux detection and integration during the installation 
-# of this instance. If set to "True", dscreate auto-detects whether SELinux is 
+# Description: Enables SELinux detection and integration during the installation
+# of this instance. If set to "True", dscreate auto-detects whether SELinux is
 # enabled. Set this parameter only to "False" in a development environment.
-# Default value: True 
+# Default value: True
 ;selinux = True</screen>
 
    <para>既存の環境からの既定値を自動的に設定している様子がわかるかと思います。あとはこのファイルを何も変更せずそのまま利用して、新しいインスタンスを作成してみます:</para>
@@ -174,7 +174,7 @@ Instance "localhost" is running</screen>
  <sect2 xml:id="sec-security-ldap-server-stop-start">
      <title>&ds389; の起動と停止</title>
      <para>&ds389; のインスタンスを管理するには、 &systemd; を使用します。まずはサービスの状態を表示するには、下記のように入力して実行します:</para>
-     <screen>&prompt.user;systemctl status --no-pager --full <replaceable>dirsrv@ldap1.service</replaceable>       
+     <screen>&prompt.user;systemctl status --no-pager --full <replaceable>dirsrv@ldap1.service</replaceable>
    ● dirsrv@ldap1.service - 389 Directory Server ldap1.
      Loaded: loaded (/usr/lib/systemd/system/dirsrv@.service; enabled; vendor preset: disabled)
      Active: active (running) since Thu 2021-03-11 08:55:28 PST; 2h 7min ago
@@ -205,7 +205,7 @@ Instance "localhost" is running</screen>
    <example xml:id="ex-security-ldap-server-credentials-local">
     <title>ローカル管理用の <filename>.dsrc</filename>　ファイル</title>
 <screen># ldap1 インスタンスを管理するための /root/.dsrc ファイルの例
-         
+
 [<replaceable>ldap1</replaceable>] <co xml:id="co-ldap-server-dsrc-instance-name"/>
 
 uri = ldapi://<replaceable>%%2fvar%%2frun%%2fslapd-ldap1.socket</replaceable> <co xml:id="co-ldap-server-dsrc-remote-ldapi"/>

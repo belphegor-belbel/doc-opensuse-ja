@@ -6,7 +6,7 @@
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-migrate">
 
   <title>OpenLDAP から &ds389; への移行</title>
-   <para>OpenLDAP は &sle;&nbsp; 15.3 にて廃止予定となりサポート対象からも外され、 &ds389; に置き換えられています。 &suse; ではこの移行作業を支援するため、 <package>&ds389;</package> パッケージ内に <command>openldap_to_ds</command> というユーティリティを提供しています。</para>
+   <para>OpenLDAP は <phrase os="sles;sled">&sle; 15&nbsp;SP3 にてサポート対象から外され、</phrase> 廃止予定となり、 &ds389; に置き換えられています。 &suse; ではこの移行作業を支援するため、 <package>389-ds</package> パッケージ内に <command>openldap_to_ds</command> というユーティリティを提供しています。</para>
    <para><command>openldap_to_ds</command> は移行作業をできる限り自動的に実施できるよう設計されています。ですが、それぞれの LDAP 環境は異なるものであることから、全ての環境に適合するツールを作成するのは不可能です。そのため、いくつかの作業については手作業で実施することになるほか、本番環境の移行にあたって、あらかじめ移行手順のテストを行う必要もあります。</para>
 
   <sect2 xml:id="sec-security-ldap-migrate-test">
@@ -28,7 +28,8 @@
    <screen>&prompt.sudo;slaptest -f /etc/openldap/slapd.conf -F /root/slapd.d
      </screen>
      <para>上記を実行すると、下記のようなファイルが作成されるはずです:</para>
-     <screen>&prompt.sudo;ls  slapd.d/*
+     <screen>&prompt.sudo;<command>ls slapd.d/*</command>
+
 slapd.d/cn=config.ldif
 
 slapd.d/cn=config:
@@ -106,28 +107,28 @@ You should now review your instance configuration and data:
   </sect2>
  <sect2 xml:id="sec-security-ldap-migrate-plan">
   <title>移行の計画</title>
-  <para>OpenLDAP は "様々な部品から構成されるソフトウエアパッケージ" であり、様々なカスタマイズを実施できることから、画一的な手順で移行ができるものではありません。まずは OpenLDAP の環境と設定、そして使用範囲をよく調査してください。調査の対象としては、下記のようなものがあります (下記だけであるとも限りません):</para>
+  <para>OpenLDAP は <quote>様々な部品から構成されるソフトウエアパッケージ</quote> であり、様々なカスタマイズを実施できることから、 <quote>画一的な手順</quote> で移行ができるものではありません。まずは OpenLDAP の環境と設定、そして使用範囲をよく調査してください。調査の対象としては、下記のようなものがあります (下記だけであるとも限りません):</para>
   <itemizedlist>
    <listitem>
-    <para>レプリケーションのトポロジ。</para>
+    <para>レプリケーションのトポロジ</para>
    </listitem>
    <listitem>
-    <para>高可用性と負荷分散の設定。</para>
+    <para>高可用性と負荷分散の設定</para>
    </listitem>
    <listitem>
-    <para>外部のデータフロー (データ管理, 人事管理, Active Directory など) 。</para>
+    <para>外部のデータフロー (データ管理, 人事管理, Active Directory など)</para>
    </listitem>
    <listitem>
-    <para>設定済みのオーバーレイ (&ds389; のプラグイン) 。</para>
+    <para>設定済みのオーバーレイ (&ds389; のプラグイン)</para>
    </listitem>
    <listitem>
-    <para>クライアント側の設定とサーバ側に求められる機能。</para>
+    <para>クライアント側の設定とサーバ側に求められる機能</para>
    </listitem>
    <listitem>
-    <para>スキーマのカスタマイズ内容。</para>
+    <para>スキーマのカスタマイズ内容</para>
    </listitem>
    <listitem>
-    <para>TLS の設定。</para>
+    <para>TLS の設定</para>
    </listitem>
   </itemizedlist>
   <para>最終的に &ds389; をどのように配置するのかについても、よく計画しておく必要があります。これはオーバーレイをプラグインで置き換えること以外の、サーバの配置やインストールに関する内容です。現在の環境をよく調査し、 &ds389; の配置計画を立てたら、あとは移行プランの策定になります。 OpenLDAP の環境と並行して &ds389; の環境を動作させて、お互いに切り替えることができるようにしても良いでしょう。</para>
@@ -146,7 +147,7 @@ You should now review your instance configuration and data:
      <row>
       <entry>双方向レプリケーション</entry>
       <entry>SyncREPL</entry>
-      <entry>389 固有のシステム</entry>
+      <entry>&ds389a; 固有のシステム</entry>
       <entry>いいえ</entry>
      </row>
      <row>
@@ -192,16 +193,16 @@ You should now review your instance configuration and data:
       <entry>はい (Argon2 を除く全ての形式に対応)</entry>
      </row>
      <row>
-      <entry>OpenLDAP と &ds389; のレプリケーション</entry>
+      <entry>OpenLDAP と &ds389a; のレプリケーション</entry>
       <entry>-</entry>
       <entry>-</entry>
-      <entry>いいえ (389 との同期は不可能)</entry>
+      <entry>いいえ (&ds389a; との同期は不可能)</entry>
      </row>
      <row>
       <entry>時間ベースのワンタイムパスワード (TOTP)</entry>
       <entry>TOTP オーバーレイ</entry>
       <entry>-</entry>
-      <entry>No, currently not supported</entry>
+      <entry>いいえ (現時点でサポートされていません)</entry>
      </row>
      <row>
       <entry>entryUUID</entry>
