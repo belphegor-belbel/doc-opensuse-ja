@@ -330,22 +330,8 @@ current      live           4
  <sect1 xml:id="sec-libvirt-config-memory-virsh">
   <title>メモリ割り当ての設定</title>
 
-  <para>
-   The amount of memory allocated for the &vmguest; can also be configured with
-   &virsh;. It is stored in the <tag>memory</tag> element and defines the
-   maximum allocation of memory for the &vmguest; at boot time. The optional
-   <tag>currentMemory</tag> element defines the actual memory allocated to
-   the &vmguest;. <tag>currentMemory</tag> can be less than <tag>memory</tag>,
-   allowing for increasing (or <emphasis>ballooning</emphasis>) the memory while the &vmguest; is
-   running. If <tag>currentMemory</tag> is omitted, it defaults to the same
-   value as the <tag>memory</tag> element.
-  </para>
-  <para>
-   You can adjust memory settings by editing the &vmguest; configuration,
-   but be aware that changes do not take place until the next boot. The
-   following steps demonstrate changing a &vmguest; to boot with 4G of
-   memory, but allow later expansion to 8G:
-  </para>
+  <para>&vmguest; に対するメモリ割当量の設定変更は、 &virsh; でも行うことができます。メモリ割当量は <tag>memory</tag> 要素内に書かれていて、この中に &vmguest; の起動時の最大メモリ割当量を設定します。また <tag>currentMemory</tag> という任意指定の要素を指定することで、 &vmguest; に割り当てる実際のメモリ量を指定することもできます。なお、 <tag>currentMemory</tag> の値を <tag>memory</tag> よりも少なくしておくことで、 &vmguest; の動作中にメモリ量を増やす (<emphasis>バルーン</emphasis> と呼びます) ことができます。また、 <tag>currentMemory</tag> の指定を省略すると、 <tag>memory</tag> と同じ値を指定したものと見なされます。</para>
+  <para>なお、 &vmguest; の設定を編集することで、メモリ設定を変更することができますが、変更した内容は次回の起動時まで反映されないことに注意してください。下記の手順では、 &vmguest; に対して起動時に 4GB のメモリを割り当て、あとから 8GB まで増やす場合の例を示しています:</para>
 
   <procedure>
    <step>
@@ -353,16 +339,13 @@ current      live           4
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
    </step>
    <step>
-    <para><tag>memory</tag> タグを検索して、メモリの割当量を変更します:</para>
+    <para><tag>memory</tag> タグを検索して、メモリの割当量を 8G に変更します:</para>
 <screen>...
-&lt;memory unit='KiB'&gt;524288&lt;/memory&gt;
+&lt;memory unit='KiB'&gt;8388608&lt;/memory&gt;
 ...</screen>
    </step>
    <step>
-    <para>
-     If the <tag>currentMemory</tag> element does not exist, add it below
-     the <tag>memory</tag> element, or change its value to 4G:
-    </para>
+    <para><tag>currentMemory</tag> 要素が存在していない場合は <tag>memory</tag> 要素内に <tag>currentMemory</tag> 要素を追加します。既に存在している場合は、値のみを変更します:</para>
 <screen>
 [...]
 &lt;memory unit='KiB'&gt;8388608&lt;/memory&gt;
@@ -370,32 +353,22 @@ current      live           4
 [...]</screen>
    </step>
   </procedure>
-  <para>
-   Changing the memory allocation while the &vmguest; is running can be done
-   with the <command>setmem</command> subcommand. The following example shows increasing the
-   memory allocation to 8G:
-  </para>
+  <para>&vmguest; の動作中にメモリ割当量を変更したい場合は、 <command>setmem</command> サブコマンドを使用します。下記の手順では、メモリの割り当てを 8GB まで増やしています:</para>
 
    <procedure>
    <step>
-    <para>
-     Check &vmguest; existing memory settings:
-    </para>
+    <para>現時点での &vmguest; のメモリ設定を表示します:</para>
 <screen>&prompt.sudo;<command>virsh dominfo sles15 | grep memory</command>
 Max memory:     8388608 KiB
 Used memory:    4194608 KiB
 </screen>
    </step>
    <step>
-    <para>
-     Change the used memory to 8G:
-    </para>
-<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+    <para>8GB までメモリ量を増やします:</para>
+<screen>&prompt.sudo;<command>virsh setmem sles15 8388608</command></screen>
    </step>
    <step>
-    <para>
-     Check the updated memory settings:
-    </para>
+    <para>変更が反映されたことを確認します:</para>
 <screen>&prompt.sudo;<command>virsh dominfo sles15 | grep memory</command>
 Max memory:     8388608 KiB
 Used memory:    8388608 KiB
@@ -403,11 +376,8 @@ Used memory:    8388608 KiB
    </step>
   </procedure>
   <important>
-   <title>&vmguest; を起動し直します:</title>
-   <para>
-    &vmguest;s with memory requirements of 4TB or more must currently
-    use the <literal>host-passthrough</literal> CPU model.
-   </para>
+   <title>巨大なメモリを使用する &vmguest; の場合について</title>
+   <para>4TB 以上のメモリを必要とする &vmguest; を動作させる場合、現時点では <literal>host-passthrough</literal> CPU モデルを使用する必要があります。</para>
   </important>
  </sect1>
  <sect1 xml:id="sec-libvirt-config-pci-virsh">
