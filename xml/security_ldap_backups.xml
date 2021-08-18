@@ -4,17 +4,15 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-backup">
- <title>LDAP サーバのバックアップと復元</title>
+ <title>&ds389; でのバックアップと復元</title>
 
  <para>&ds389; ではオフラインとオンラインの両方のバックアップ形態に対応しています。 <command>dsctl</command> コマンドではオフラインによるデータベースバックアップを、 <command>dsconf</command> コマンドではオンラインによるデータベースバックアップを、それぞれ採取することができます。また、 LDAP サーバの設定ディレクトリをバックアップしておくことで、重大な障害が発生してサーバが復旧不可能になってしまったような場合に対応することもできます。</para>
- <para>
-   The following commands use the example <replaceable>LDAP1</replaceable> instance name.
- </para>
+ <para>下記では、インスタンス名を <replaceable>LDAP1</replaceable> としてコマンドを示しています。</para>
 
  <sect2 xml:id="sec-security-ldap-backup-config">
   <title>LDAP サーバ設定のバックアップ</title>
-  <para>LDAP のサーバ設定は <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable></filename> のディレクトリ内に存在しています。このディレクトリ内には証明書や鍵のほか、 <filename>dse.ldif</filename> ファイルが含まれています。これらは <command>tar</command> コマンドを利用して圧縮しながらバックアップすることができます:</para>
-<screen>&prompt.sudo;<command>tar caf config_slapd-<replaceable>インスタンス名</replaceable>_$(date +%Y-%m-%d_%H-%M-%S).tar.gz /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</command></screen>
+  <para>LDAP のサーバ設定は <filename>/etc/dirsrv/slapd-<replaceable>LDAP1</replaceable></filename> のディレクトリ内に存在しています。このディレクトリ内には証明書や鍵のほか、 <filename>dse.ldif</filename> ファイルが含まれています。これらは <command>tar</command> コマンドを利用して圧縮しながらバックアップすることができます:</para>
+<screen>&prompt.sudo;<command>tar caf config_slapd-<replaceable>LDAP1</replaceable>_$(date +%Y-%m-%d_%H-%M-%S).tar.gz /etc/dirsrv/slapd-<replaceable>LDAP1</replaceable>/</command></screen>
   <note role="compact">
    <para>なお、上記のような <command>tar</command> コマンドを実行すると、 <literal>tar: メンバ名から先頭の `/' を取り除きます</literal> のようなメッセージが表示されますが、無視してかまいません。</para>
   </note>
@@ -22,15 +20,15 @@
   <procedure>
    <step performance="optional">
     <para>まずは既存の設定を上書きしてしまわないよう、既存の設定を移動します:</para>
-<screen>&prompt.sudo;<command>old /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</command></screen>
+<screen>&prompt.sudo;<command>old /etc/dirsrv/slapd-<replaceable>LDAP1</replaceable>/</command></screen>
    </step>
    <step>
     <para>採取したバックアップから展開します:</para>
-<screen>&prompt.sudo;<command>tar -xvzf config_slapd-<replaceable>インスタンス名</replaceable>_<replaceable>日時</replaceable>.tar.gz</command></screen>
+<screen>&prompt.sudo;<command>tar -xvzf config_slapd-<replaceable>LDAP1_日時</replaceable>.tar.gz</command></screen>
    </step>
    <step>
-    <para>展開したディレクトリとファイルを <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable></filename> にコピーします:</para>
-<screen>&prompt.sudo;<command>cp -r <replaceable>etc/dirsrv/slapd-インスタンス名</replaceable> /etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable></command></screen>
+    <para>展開したディレクトリとファイルを <filename>/etc/dirsrv/slapd-<replaceable>LDAP1</replaceable></filename> にコピーします:</para>
+<screen>&prompt.sudo;<command>cp -r etc/dirsrv/slapd-<replaceable>LDAP1</replaceable> /etc/dirsrv/slapd-<replaceable>LDAP1</replaceable></command></screen>
    </step>
   </procedure>
  </sect2>
@@ -38,36 +36,33 @@
  <sect2 xml:id="sec-security-ldap-offline-backup">
   <title>LDAP データベースに対するオフラインバックアップの採取と復元</title>
   <para><command>dsctl</command> コマンドを利用することで、オフラインバックアップを採取することができます。まずはサーバを停止します:</para>
-<screen>&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> stop</command>
-Instance "<replaceable>インスタンス名</replaceable>" has been stopped</screen>
-  <para>上記の例のとおりに実行すると、 <filename>/var/lib/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/bak/<replaceable>インスタンス名</replaceable>-<replaceable>日時</replaceable></filename> のようなディレクトリ内にバックアップが作成されます。</para>
-<screen>&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> db2bak</command>
+<screen>&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> stop</command>
+Instance "<replaceable>LDAP1</replaceable>" has been stopped</screen>
+  <para>上記の例のとおりに実行すると、 <replaceable>/var/lib/dirsrv/slapd-LDAP1/bak/LDAP1/-2021_07_26_13_03_17</replaceable> のようなディレクトリ内にバックアップが作成されます。</para>
+<screen>&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> db2bak</command>
 db2bak successful</screen>
   <para>バックアップから復元したい場合は、下記のようにしてバックアップを含むディレクトリを指定します:</para>
-  <screen>&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> bak2db <replaceable>/var/lib/dirsrv/slapd-インスタンス名/bak/インスタンス名-日時/</replaceable></command>
+  <screen>&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> bak2db <replaceable>/var/lib/dirsrv/slapd-LDAP1/bak/LDAP1-2021_07_26_13_03_17/</replaceable></command>
 bak2db successful</screen>
   <para>あとはサーバを起動します:</para>
-<screen>&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> start</command>
-Instance "<replaceable>インスタンス名</replaceable>" has been started</screen>
+<screen>&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> start</command>
+Instance "<replaceable>LDAP1</replaceable>" has been started</screen>
   <para>なお、 LDIF 形式でのバックアップを採取することもできます:</para>
-<screen>&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> db2ldif --replication userRoot</command>
-ldiffile: <replaceable>/var/lib/dirsrv/slapd-インスタンス名/ldif/インスタンス名-userRoot-日時.ldif</replaceable>
+<screen>&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> db2ldif --replication userRoot</command>
+ldiffile: <replaceable>/var/lib/dirsrv/slapd-LDAP1/ldif/LDAP1-userRoot-2021_07_28_08_47_30.ldif</replaceable>
 db2ldif successful</screen>
-  <para>LDIF 形式のバックアップから復元したい場合も同様に、ファイルを指定して復元し、サーバを起動するだけです:</para>
-  <screen>&prompt.sudo;<command>dsctl ldif2db userRoot <replaceable>/var/lib/dirsrv/slapd-インスタンス名/ldif/インスタンス名-userRoot-日時.ldif</replaceable></command>
-&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> start</command></screen>
+  <para>LDIF 形式のバックアップから復元したい場合も同様に、ファイル名を指定して復元し、サーバを起動するだけです:</para>
+  <screen>&prompt.sudo;<command>dsctl ldif2db userRoot /var/lib/dirsrv/slapd-<replaceable>LDAP1</replaceable>/ldif/<replaceable>LDAP1-userRoot-2021_07_28_08_47_30.ldif</replaceable></command>
+&prompt.sudo;<command>dsctl <replaceable>LDAP1</replaceable> start</command></screen>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-online-backup">
   <title>LDAP データベースに対するオンラインバックアップの採取と復元</title>
   <para><command>dsconf</command> コマンドを利用することで、 LDAP データベースのオンラインバックアップを採取することができます:</para>
-<screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> backup create</command>
+<screen>&prompt.sudo;<command>dsconf <replaceable>LDAP1</replaceable> backup create</command>
 The backup create task has finished successfully</screen>
-  <para>
-   This creates
-   <filename>/var/lib/dirsrv/slapd-<replaceable>LDAP1</replaceable>/bak/<replaceable>LDAP1</replaceable>-2021_07_28_09_46_08</filename>.
-  </para>
+  <para>上記を実行すると、 <filename>/var/lib/dirsrv/slapd-<replaceable>LDAP1</replaceable>/bak/<replaceable>LDAP1</replaceable>-2021_07_28_09_46_08</filename> のようなディレクトリ内にバックアップが作成されます。</para>
   <para>復元は下記のようにして行います:</para>
-  <screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> backup restore <replaceable>/var/lib/dirsrv/slapd-インスタンス名/bak/インスタンス名-日時</replaceable></command></screen>
+  <screen>&prompt.sudo;<command>dsconf <replaceable>LDAP1</replaceable> backup restore /var/lib/dirsrv/slapd-<replaceable>LDAP1</replaceable>/bak/<replaceable>LDAP1-2021_07_28_09_46_08</replaceable></command></screen>
  </sect2>
 </sect1>
