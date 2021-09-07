@@ -600,25 +600,10 @@ exit,always success!=0 syscall=open</screen>
 
   <sect2 xml:id="sec-audit-aureport-ustand">
    <title>監査ログの仕組み</title>
-   <para>下記の例には、監査デーモンが記録した 2 種類の典型的なイベントと、それらの証跡が示されています。監査ログは、ローテーションしたものを含め、 <filename>/var/log/audit</filename> 内に保存されます。最初の例はシンプルな <command>less</command> コマンドの例です。 2 つ目の例は、監査デーモンが動作しているマシンに対して、ユーザがリモートからログインしようとしている際の PAM の動作に対して、記録されているログを示しています。</para>
-   <para>
-     The logs record two types of information: record types and event 
-     fields. The record types are identified by <literal>type=</literal> in
-     each log entry. Event fields are all other items on the left side of
-     the equals signs. In the following examples, 
-     <literal>type=SYSCALL</literal> and <literal>type=CWD</literal>are 
-     record types, and <literal>arch=c000003e</literal> and
-     <literal>syscall=2</literal> are event fields, followed by their values.
-   </para>
-   <para>
-     Refer to the <filename>/usr/include/libaudit.h</filename> file (from the
-     <package>audit-devel</package> package) to see
-     a complete list of record types and their definitions.
-   </para>
-   <para>
-     Run the <command>ausyscall --dump</command> command to see a table of 
-     syscall numbers, and what they represent:
-   </para>
+   <para>下記の例には、監査デーモンが記録した 2 種類の典型的なイベントと、それらの証跡が示されています。監査ログは、ローテーションしたものを含め、 <filename>/var/log/audit</filename> 内に保存されます。</para>
+   <para>ログには 2 種類の情報が記録されます。それぞれレコードタイプとイベントフィールドと呼びます。レコードタイプはそれぞれの記録内の <literal>type=</literal> 以下に書かれています。イベントフィールドはそれ以外の項目で、イコール記号の前に書かれたものを指します。下記の例では <literal>type=SYSCALL</literal> や <literal>type=CWD</literal> がレコードタイプ、 <literal>arch=c000003e</literal> や <literal>syscall=2</literal> がイベントフィールド (値付きのもの) となります。</para>
+   <para>レコードタイプの全ての一覧とそれらの意味について、詳しくは <filename>/usr/include/libaudit.h</filename> ファイル (<package>audit-devel</package> パッケージに含まれています) をお読みください。</para>
+   <para>また、 <command>ausyscall --dump</command> コマンドを実行することで、システムコールの番号と対応する関数名を出力することができます:</para>
    <screen>&prompt.user;ausyscall --dump
 Using x86_64 syscall table:
 0       read
@@ -628,13 +613,17 @@ Using x86_64 syscall table:
 4       stat
 5       fstat
 [...]</screen>
-   <para>下記の例には、監査デーモンが記録した 2 種類の典型的なイベントと、それらの証跡が示されています。監査ログは、ローテーションしたものを含め、 <filename>/var/log/audit</filename> 内に保存されます。最初の例はシンプルな <command>less</command> コマンドの例です。 2 つ目の例は、監査デーモンが動作しているマシンに対して、ユーザがリモートからログインしようとしている際の PAM の動作に対して、記録されているログを示しています。</para>
+   <para>最初の例は単純な <command>less</command> コマンドを実行した場合の例、 2 番目の例は、監査を実施しているマシン内にユーザがリモートからログインしようとした場合、ログ内に PAM の動作に関わる大量のログが出力されている場合の例を示しています。</para>
    <example xml:id="ex-audit-aureport-logtrail">
     <title>シンプルな監査イベント例: 監査ログの表示</title>
-<screen>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2 success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid
-=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=1164 comm="less" exe="/usr/bin/less" key="doc_log"
+<screen>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2 
+success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid
+=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 
+tty=pts1 ses=1164 comm="less" exe="/usr/bin/less" key="doc_log"
 type=CWD msg=audit(1234874638.599:5207):  cwd="/root"
-type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/audit.log" inode=1219041 dev=08:06 mode=0100644 ouid=0 ogid=0 rdev=00:00</screen>
+type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/
+audit.log" inode=1219041 dev=08:06 mode=0100644 ouid=0 ogid=0 rdev=00:00
+</screen>
    </example>
    <para>上記のイベントは <command>less /var/log/audit/audit.log</command> を実行した場合のログで、 3 種類のメッセージが記録されています。これらのすべては密接にリンクしているため、その他の情報が無ければ意味を理解するのが難しいものと思います。最初のメッセージには下記の情報が記録されています:</para>
    <variablelist>
