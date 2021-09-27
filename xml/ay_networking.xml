@@ -197,7 +197,7 @@
     <para><literal>interfaces</literal> セクションにはネットワークインターフェイス関連の設定を記述します。ここにはインターフェイスの起動方法や IP アドレス、サブネットマスクなどを記述します。それぞれ下記の要素は、 <literal>&lt;interfaces&gt;...&lt;/interfaces&gt;</literal> タグ内に記述しなければなりません。</para>
 
   <variablelist>
-  <varlistentry>
+<varlistentry>
     <term><literal>bootproto</literal></term>
     <listitem>
       <para>インターフェイスが使用する起動プロトコルを指定します。設定可能な値は下記のとおりです:</para>
@@ -405,6 +405,14 @@
       <para><literal>bridge</literal> デバイスの場合にのみ指定することができます。設定可能な値は <literal>4</literal> から <literal>30</literal> までのいずれかです。</para>
     </listitem>
   </varlistentry>
+  <varlistentry>
+    <term><literal>name</literal></term>
+    <listitem>
+      <para>
+          Additional IP addresses. See <xref linkend="CreateProfile-Network-Aliases"/>.
+         </para>
+    </listitem>
+  </varlistentry>
   <!-- TODO: all wireless attributes, but not so many users configure wireless with autoyast -->
 </variablelist>
 
@@ -484,6 +492,87 @@
 </screen>
    </example>
   </sect2>
+
+   <sect2 xml:id="CreateProfile-Network-Aliases">
+     <title>Assigning Multiple IP Addresses</title>
+
+     <para>
+      &ay; makes it possible to assign multiple IP addresses to the same interface. They are specified using
+      an <literal>aliases</literal> element that contains an <literal>aliasX</literal> entry for
+      each address.
+     </para>
+
+     <para>
+      Each entry supports the following elements:
+     </para>
+
+     <variablelist>
+      <varlistentry>
+       <term>IPADDR</term>
+       <listitem>
+        <para>起動プロトコルで <literal>static</literal> を指定する必要があります。また、 <literal>192.168.1.1/24</literal> のように、ネットワークプレフィクスを指定することもできます。</para>
+       </listitem>
+      </varlistentry>
+
+      <varlistentry>
+       <term>PREFIXLEN</term>
+       <listitem>
+        <para>ネットワークプレフィクスを指定します (例: <literal>24</literal>)。</para>
+       </listitem>
+      </varlistentry>
+
+      <varlistentry>
+       <term>NETMASK</term>
+       <listitem>
+        <para>ネットワーク IP アドレスを指定します。</para>
+        <para>廃止予定です。代わりに <literal>prefixlen</literal> を使用して指定するか、 <literal>ipaddr</literal> 要素でネットワークプレフィクスを指定してください。</para>
+       </listitem>
+      </varlistentry>
+
+      <varlistentry>
+       <term>LABEL</term>
+       <listitem>
+        <para>ネットワーク IP アドレスを指定します。</para>
+       </listitem>
+      </varlistentry>
+     </variablelist>
+
+     <note>
+      <title>Case Sensitive Elements</title>
+      <para>
+       Keep in mind that for historical reasons, the <literal>IPADDR</literal>, <literal>PREFIXLEN</literal>, <literal>LABEL</literal> and <literal>NETMASK</literal> elements within the <literal>aliases</literal> section are case-sensitive.
+      </para>
+     </note>
+
+   <example xml:id="ex-ay-network-config-aliases">
+     <title>Multiple IP Addresses</title>
+<screen>
+&lt;interfaces config:type="list"&gt;
+  &lt;interface&gt;
+    &lt;name&gt;br0&lt;/name&gt;
+    &lt;bootproto&gt;static&lt;/bootproto&gt;
+    &lt;bridge&gt;yes&lt;/bridge&gt;
+    &lt;bridge_forwarddelay&gt;0&lt;/bridge_forwarddelay&gt;
+    &lt;bridge_ports&gt;eth0 eth1&lt;/bridge_ports&gt;
+    &lt;bridge_stp&gt;off&lt;/bridge_stp&gt;
+    &lt;ipaddr&gt;&subnetI;.100&lt;/ipaddr&gt;
+    &lt;prefixlen&gt;24&lt;/prefixlen&gt;
+    &lt;startmode&gt;auto&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;name&gt;eth0&lt;/name&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+  &lt;interface&gt;
+    &lt;name&gt;eth1&lt;/name&gt;
+    &lt;bootproto&gt;none&lt;/bootproto&gt;
+    &lt;startmode&gt;hotplug&lt;/startmode&gt;
+  &lt;/interface&gt;
+&lt;/interfaces&gt;
+</screen>
+   </example>
+   </sect2>
 
    <sect2 xml:id="CreateProfile-Network-names">
     <title>ネットワークインターフェイス名の固定</title>
