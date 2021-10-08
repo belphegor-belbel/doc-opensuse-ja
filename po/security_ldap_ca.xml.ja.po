@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: security_ldap_ca.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
 "POT-Creation-Date: 2021-10-07 22:43+0000\n"
-"PO-Revision-Date: 2021-05-09 15:46+0900\n"
+"PO-Revision-Date: 2021-10-08 09:18+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
 "Language: ja\n"
@@ -21,9 +21,9 @@ msgstr ""
 
 #. Tag: title
 #: security_ldap_ca.xml:9
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Managing TLS certificates"
-msgstr "TLS 向けの CA (証明機関) 証明書の使用"
+msgstr "TLS 証明書の管理"
 
 #. Tag: para
 #: security_ldap_ca.xml:10
@@ -32,6 +32,8 @@ msgid ""
 "In this section you will learn how to create and manage TLS certificates for "
 "secure encrypted communications with your &ds389; server."
 msgstr ""
+"本章では、 &ds389; サーバとの間の通信を暗号化する際に使用する、 TLS 証明書の作成と"
+"管理方法について説明しています。"
 
 #. Tag: para
 #: security_ldap_ca.xml:14
@@ -45,6 +47,12 @@ msgid ""
 "<command>dsctl</command> streamlines and simplifies creating and managing "
 "your LDAP server certificates."
 msgstr ""
+"証明書の管理にあたっては、 <command>pk12util</command> (<package>mozilla-nss-"
+"tools</package> パッケージに含まれています) や <command>openssl</command> "
+"(<package>openssl</package> パッケージに含まれています) などの従来型のユーティリティ"
+"を使用してもかまいません。ですが、 &ds389a; には証明書を管理するための独自の"
+"ユーティリティ <command>dsctl</command> が提供されていますので、こちらを利用する"
+"ことで、 LDAP サーバの証明書作成や管理を簡単に行うことができます。"
 
 #. Tag: para
 #: security_ldap_ca.xml:24
@@ -55,48 +63,52 @@ msgid ""
 "<filename>/etc/dirsrv/slapd-<replaceable>INSTANCE-NAME</replaceable>/</"
 "filename> . You should see the following files:"
 msgstr ""
+"新しい &ds389a; インスタンスを作成すると、 <command>dscreate</command> は独自の"
+"証明機関を作成し、自己署名型のサーバ証明書を発行します。証明書のファイルは"
+" <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</filename> "
+"内に配置されます。それぞれ下記のようなファイルが存在します:"
 
 #. Tag: term
 #: security_ldap_ca.xml:33
 #, no-c-format
 msgid "<filename>Server-Cert.crt</filename>"
-msgstr ""
+msgstr "<filename>Server-Cert.crt</filename>"
 
 #. Tag: para
 #: security_ldap_ca.xml:35
 #, no-c-format
 msgid "The LDAP instance's public key."
-msgstr ""
+msgstr "LDAP インスタンスの公開鍵。"
 
 #. Tag: term
 #: security_ldap_ca.xml:41
 #, no-c-format
 msgid "<filename>Server-Cert.csr</filename>"
-msgstr ""
+msgstr "<filename>Server-Cert.csr</filename>"
 
 #. Tag: para
 #: security_ldap_ca.xml:43
 #, no-c-format
 msgid "The instance's certificate signing request."
-msgstr ""
+msgstr "インスタンスの証明書に対する署名要求。"
 
 #. Tag: term
 #: security_ldap_ca.xml:49
 #, no-c-format
 msgid "<filename>ca.crt</filename>"
-msgstr ""
+msgstr "<filename>ca.crt</filename>"
 
 #. Tag: para
 #: security_ldap_ca.xml:51
 #, no-c-format
 msgid "The instance's certificate authority."
-msgstr ""
+msgstr "インスタンスの証明機関。"
 
 #. Tag: term
 #: security_ldap_ca.xml:57
 #, no-c-format
 msgid "<filename>pin.txt</filename>"
-msgstr ""
+msgstr "<filename>pin.txt</filename>"
 
 #. Tag: para
 #: security_ldap_ca.xml:59
@@ -105,25 +117,26 @@ msgid ""
 "The password that the administrator uses to manage the NSS database. This "
 "password is not used by &ds389a;."
 msgstr ""
+"NSS データベースを管理する際に管理者が使用するパスワード。ただし、このパスワードは"
+" &ds389a; では使用していません。"
 
 #. Tag: term
 #: security_ldap_ca.xml:66
 #, no-c-format
 msgid "<filename>cert9.db, key4.db</filename>"
-msgstr ""
+msgstr "<filename>cert9.db, key4.db</filename>"
 
 #. Tag: para
 #: security_ldap_ca.xml:68
 #, no-c-format
-msgid ""
-"These are the NSS databases that store the instance's certificates and keys."
-msgstr ""
+msgid "These are the NSS databases that store the instance's certificates and keys."
+msgstr "これらはインスタンスの証明書と鍵を保存するための NSS データベースです。"
 
 #. Tag: title
 #: security_ldap_ca.xml:77
 #, no-c-format
 msgid "Querying installed certificates"
-msgstr ""
+msgstr "インストールされた証明書の確認"
 
 #. Tag: para
 #: security_ldap_ca.xml:78
@@ -132,6 +145,8 @@ msgid ""
 "Use the <command>dsctl</command> command to query your existing TLS "
 "certificates. Display your server certificate:"
 msgstr ""
+"<command>dsctl</command> コマンドを利用することで、既存の TLS 証明書を"
+"表示することができます。たとえば下記のようになります:"
 
 #. Tag: screen
 #: security_ldap_ca.xml:82
@@ -156,176 +171,22 @@ msgid ""
 "        Subject Public Key Info:\n"
 "        [...]"
 msgstr ""
+"&prompt.sudo;<command>dsctl 389-test3 tls show-server-cert</command>\n"
+" Certificate:\n"
+"    Data:\n"
+"        Version: 3 (0x2)\n"
+"        Serial Number:\n"
+"            00:b6:f6:08:91\n"
+"        Signature Algorithm: PKCS #1 SHA-256 With RSA Encryption\n"
+"        Issuer: \"CN=ssca.389ds.example.com,O=testing,L=389ds,ST=Queensland,"
+"C=\n"
+"            AU\"\n"
+"        Validity:\n"
+"            Not Before: Wed Dec 30 15:36:15 2020\n"
+"            Not After : Fri Dec 30 15:36:15 2022\n"
+"        Subject: \"CN=localhost,givenName=c23c7a30-"
+"dd79-4256-9c7b-5fb77c6de0eb\n"
+"            ,O=testing,L=389ds,ST=Queensland,C=AU\"\n"
+"        Subject Public Key Info:\n"
+"        [...]"
 
-#, no-c-format
-#~ msgid ""
-#~ "You can manage the CA certificates for &ds389; with the following command "
-#~ "line tools: <command>certutil</command> , <command>openssl</command> , "
-#~ "and <command>pk12util</command> ."
-#~ msgstr ""
-#~ "&ds389; 向けの CA 証明書の管理にあたっては、下記に示すコマンドラインツール"
-#~ "を使用することができます: <command>certutil</command> , <command>openssl</"
-#~ "command> , <command>pk12util</command>"
-
-#, no-c-format
-#~ msgid ""
-#~ "For testing purposes, you can create a self-signed certificate with "
-#~ "<command>dscreate</command> . Find the certificate at <filename>/etc/"
-#~ "dirsrv/slapd-localhost/ca.crt</filename> . For remote administration, "
-#~ "copy the certificate to a readable location. For production environments, "
-#~ "contact a CA authority of your organization's choice and request a server "
-#~ "certificate, a client certificate, and a root certificate."
-#~ msgstr ""
-#~ "テスト用に証明書を作成したい場合は、 <command>dscreate</command> コマンド"
-#~ "で自己署名証明書を作成することができます。証明書は <filename>/etc/dirsrv/"
-#~ "slapd-localhost/ca.crt</filename> にあるものとして扱われます。リモートから"
-#~ "管理を行う場合は、証明書を読み取り可能な場所にコピーしておいてください。本"
-#~ "番環境の場合は、ご利用の証明機関にお問い合わせのうえ、サーバ証明書とクライ"
-#~ "アント証明書、そしてルート証明書をそれぞれ取得してください。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Make sure to meet the following requirements before executing the "
-#~ "procedure below:"
-#~ msgstr ""
-#~ "下記の手順を実行する前に、まずは以下の要件を全て満たしていることをご確認く"
-#~ "ださい:"
-
-#, no-c-format
-#~ msgid ""
-#~ "You have a server certificate and a private key to use for the TLS "
-#~ "connection."
-#~ msgstr ""
-#~ "TLS 接続時に使用するサーバ証明書と、それに対応する機密鍵を保持しているこ"
-#~ "と。"
-
-#, no-c-format
-#~ msgid ""
-#~ "You have set up an NSS (Network Security Services) database (for example, "
-#~ "with the <command>certutil</command> command)."
-#~ msgstr ""
-#~ "NSS (Network Security Services) データベースを設定してあること (例: "
-#~ "<command>certutil</command> コマンド) 。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Before you can import an existing private key and certificate into the "
-#~ "NSS (Network Security Services) database, you need to create a bundle of "
-#~ "the private key and the server certificate. This results in a <filename>*."
-#~ "p12</filename> file."
-#~ msgstr ""
-#~ "NSS (Network Security Services) データベース内に機密鍵と証明書を取り込む場"
-#~ "合には、あらかじめ機密鍵とサーバ証明書をひとまとめにしておく必要がありま"
-#~ "す。ひとまとめにしたファイルは <filename>*.p12</filename> (PKCS12 形式) と"
-#~ "いうファイル名になります。"
-
-#, no-c-format
-#~ msgid "<filename>*.p12</filename> file and friendly name"
-#~ msgstr "<filename>*.p12</filename> ファイルとフレンドリ名について"
-
-#, no-c-format
-#~ msgid ""
-#~ "When creating the PKCS12 bundle, you must encode a friendly name in the "
-#~ "<filename>*.p12</filename> file."
-#~ msgstr ""
-#~ "PKCS12 形式のバンドルファイル (<filename>*.p12</filename>) を作成する場"
-#~ "合、鍵と証明書の対に対してフレンドリ名を設定しなければなりません。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Make sure to use <literal>Server-Cert</literal> as the friendly name. "
-#~ "Otherwise the TLS connection will fail, because the &ds389; searches for "
-#~ "this exact string."
-#~ msgstr ""
-#~ "本手順で TLS 接続を有効化する場合は、フレンドリ名を <literal>Server-Cert</"
-#~ "literal> に設定してください。それ以外の名前を使用してしまうと、 &ds389; が"
-#~ "証明書を検出することができず、 TLS 接続ができなくなってしまいます。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Keep in mind that the friendly name cannot be changed after you import "
-#~ "the <filename>*.p12</filename> file into the NSS database."
-#~ msgstr ""
-#~ "また、 NSS データベースに <filename>*.p12</filename> ファイルを取り込んで"
-#~ "しまうと、フレンドリ名は変更できなくなりますのでご注意ください。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Use the following command to create the PKCS12 bundle with the required "
-#~ "friendly name:"
-#~ msgstr ""
-#~ "PKCS12 バンドルファイルを指定のフレンドリ名で作成するには、下記のように入"
-#~ "力して実行します:"
-
-#, no-c-format
-#~ msgid ""
-#~ "&prompt.root;openssl pkcs12 -export -in <replaceable>SERVER.crt</"
-#~ "replaceable> \\\n"
-#~ "  -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER."
-#~ "p12</replaceable> \\\n"
-#~ "  -name Server-Cert"
-#~ msgstr ""
-#~ "&prompt.root;openssl pkcs12 -export -in <replaceable>SERVER.crt</"
-#~ "replaceable> \\\n"
-#~ "  -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER."
-#~ "p12</replaceable> \\\n"
-#~ "  -name Server-Cert"
-
-#, no-c-format
-#~ msgid ""
-#~ "Replace <replaceable>SERVER.crt</replaceable> with the server certificate "
-#~ "and <replaceable>SERVER.key</replaceable> with the private key to be "
-#~ "bundled. With <option>-out</option> , specify the name of the <filename>*."
-#~ "p12</filename> file. Use <option>-name</option> to set the friendly name "
-#~ "to use: <literal>Server-Cert</literal> ."
-#~ msgstr ""
-#~ "ここで、 <replaceable>SERVER.crt</replaceable> にはサーバの証明書として使"
-#~ "用するファイルを、 <replaceable>SERVER.key</replaceable> には対応する機密"
-#~ "鍵のファイルをそれぞれ指定します。なお、 <option>-out</option> では "
-#~ "<filename>*.p12</filename> ファイルのファイル名を指定します。 <option>-"
-#~ "name</option> はフレンドリ名を指定する箇所で、ここは必ず <literal>Server-"
-#~ "Cert</literal> のままにしておいてください。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Before you can import the file into the NSS database, you need to obtain "
-#~ "its password. To do this, use the following command:"
-#~ msgstr ""
-#~ "ファイルを NSS データベースに取り込むにあたっては、ファイルのパスワードを"
-#~ "指定する必要があります。パスワードを指定するには、下記のようなコマンドを入"
-#~ "力して実行します:"
-
-#, no-c-format
-#~ msgid ""
-#~ "pk12util -i <replaceable>PATH_TO_SERVER.p12</replaceable> -d sql:"
-#~ "PATH_TO_NSS_DB -n Server-cert -W <replaceable>SERVER.p12_PASSWORD</"
-#~ "replaceable>"
-#~ msgstr ""
-#~ "pk12util -i <replaceable>SERVER.p12_ファイルのパス</replaceable> -d sql:"
-#~ "<replaceable>NSS_データベースのパス</replaceable> -n Server-cert -W "
-#~ "<replaceable>SERVER.p12_ファイルのパスワード</replaceable>"
-
-#, no-c-format
-#~ msgid ""
-#~ "You can then find the password in the <filename>pwdfile.txt</filename> "
-#~ "file in the <replaceable>PATH_TO_NSS_DB</replaceable> directory."
-#~ msgstr ""
-#~ "パスワードを設定すると、 <replaceable>NSS_データベースのパス</"
-#~ "replaceable> で指定したディレクトリ内に <filename>pwdfile.txt</filename> "
-#~ "ファイルが作成されます。"
-
-#, no-c-format
-#~ msgid ""
-#~ "Now import the <replaceable>SERVER.p12</replaceable> file into your NSS "
-#~ "database:"
-#~ msgstr ""
-#~ "あとは <replaceable>SERVER.p12</replaceable> ファイルを NSS データベース内"
-#~ "に取り込みます:"
-
-#, no-c-format
-#~ msgid ""
-#~ "pk12util -i <replaceable>SERVER.p12</replaceable> -d "
-#~ "<replaceable>PATH_TO_NSS_DB</replaceable>"
-#~ msgstr ""
-#~ "pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_デー"
-#~ "タベースのパス</replaceable>"

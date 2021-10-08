@@ -16,7 +16,7 @@ Logger:
 http://tldp.org/LDP/LGNET/148/darin.html
 -->
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-syslog">
- <title>全ての &yast; ログファイルが含まれるディレクトリです。</title>
+ <title>システムログファイル</title>
  <info>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -709,112 +709,57 @@ logwatch --service smartd --range 'between 5/5/2005 and 5/7/2005' \
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-tuning-syslog-forward">
-  <title>Configuring mail forwarding for &rootuser;</title>
-  <para>
-   System daemons, <systemitem class="daemon">cron</systemitem> jobs, &systemd;
-   timers, and other applications can generate messages and send them to the
-   &rootuser; user of the system. By default, each user account owns a local
-   mailbox and will be notified about new mail messages upon login.
-  </para>
-  <para>
-   These messages can contain security relevant reports and incidents that might
-   require a quick response by the system administrator. To get notified about
-   these messages in a timely fashion, it is strongly recommended to forward
-   these mails to a dedicated remote email account that is regularly checked.
-  </para>
+  <title>&rootuser; 宛のメールに対する転送設定</title>
+  <para>システムデーモンや <systemitem class="daemon">cron</systemitem> ジョブ、 &systemd; タイマーなどのアプリケーションは、システム内の &rootuser; に対してメールを送信することがあります。また、既定ではそれぞれのユーザに対してローカルのメールボックスが作成され、ログイン時にメールの到着を知らせます。</para>
+  <para>これらのアプリケーションが送信するメッセージには、システム管理者が即時に対応しなければならないセキュリティレポートやインシデント報告などが含まれる場合があります。このような緊急性の高いメールに素早く気付くことができるよう、これらのメールを各担当者のメールアドレスに転送しておくことを強くお勧めします。</para>
   <procedure xml:id="pro-tuning-syslog-forward">
-   <title>Configure mail forwarding for the &rootuser; user</title>
-   <para>
-    To forward mail for the &rootuser; user, perform the following steps:
-   </para>
+   <title>&rootuser; ユーザに対するメール転送の設定</title>
+   <para>&rootuser; ユーザに対するメール転送を設定するには、下記の手順を行います:</para>
    <step>
-    <para>
-     Install the <package>yast2-mail</package> package:
-    </para>
+    <para>まずは <package>yast2-mail</package> パッケージをインストールします:</para>
     <screen>&prompt.root;<command>zypper in yast2-mail</command></screen>
    </step>
    <step>
-    <para>
-     Run the interactive &yast; mail configuration:
-    </para>
+    <para>対話的な &yast; メール設定モジュールを起動します:</para>
     <screen>&prompt.root;<command>yast mail</command></screen>
    </step>
    <step>
-    <para>
-     Choose <guimenu>Permanent</guimenu> as <guimenu>Connection type</guimenu>
-     and proceed with <guimenu>Next</guimenu>.
-    </para>
+    <para><guimenu>接続の種類</guimenu> では <guimenu>常時接続</guimenu> を選択して、 <guimenu>次へ</guimenu> を押します。</para>
    </step>
    <step>
-    <para>
-     Enter the address of the <guimenu>Outgoing mail server</guimenu>. If
-     necessary, configure <guimenu>Authentication</guimenu>. It is strongly
-     recommended to <guimenu>Enforce TLS encryption </guimenu> to prevent
-     potentially sensitive system data from being sent unencrypted over the
-     network. Proceed with <guimenu>Next</guimenu>.
-    </para>
+    <para><guimenu>外部送信用メールサーバ</guimenu> に、メールサーバのアドレスを入力します。必要であれば <guimenu>認証</guimenu> も設定してください。また、ネットワークを介して機密情報が送信されてしまわないよう、 <guimenu>TLS 暗号化</guimenu> を <guimenu>強制する</guimenu> にしておくことを強くお勧めします。あとは <guimenu>次へ</guimenu> を押します。</para>
    </step>
    <step>
-    <para>
-     Enter the email address to <guimenu>Forward root's mail to</guimenu> and
-     <guimenu>Finish</guimenu> the configuration.
-    </para>
+    <para>最後に <guimenu>root 宛のメールの転送先</guimenu> に転送先のメールアドレスを入力して <guimenu>完了</guimenu> を押します。これで設定は完了です。</para>
     <important>
-     <title>Do not accept remote SMTP connections</title>
-     <para>
-      Do <emphasis>not</emphasis> enable <guimenu>Accept remote SMTP
-       connections</guimenu>, otherwise the local machine will act as a mail
-      relay.
-     </para>
+     <title>リモートからの SMTP 接続を受け付けてはならない問題について</title>
+     <para>通常は <guimenu>リモートの SMTP 接続を許可</guimenu> を選択しては <emphasis>なりません</emphasis> 。選択してしまうと、メールを受信して中継するように動作してしまうためです。</para>
     </important>
    </step>
    <step>
-    <para>
-     Send a message to test whether mail forwarding works correctly:
-    </para>
+    <para>あとはメールの転送設定が正しく動作していることを確認します:</para>
 <screen>&prompt.user;<command>mail root</command>
 subject: test
 test
 .</screen>
    </step>
    <step>
-    <para>
-     Use the <command>mailq</command> command to verify that the test message
-     has been sent. Upon success, the queue should be empty. The message should
-     be received by the dedicated mail address configured previously.
-    </para>
+    <para>メールの転送が完了したかどうかは <command>mailq</command> コマンドで確認することができます。転送の設定に問題がなければ、 <guimenu>Mail queue is empty</guimenu> のように出力されるはずです。あとは転送先のメールアカウントにアクセスして、メールが正しく届いていることを確認しておいてください。</para>
    </step>
   </procedure>
-  <para>
-   Depending on the number of managed machines and the number of persons who
-   need to be informed about system events, different email address models can
-   be established:
-  </para>
+  <para>なお、管理対象のマシン数とシステムイベントの通知先となる担当者数によって、様々な配信形態が考えられます:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     Collect messages from different systems in an email account that is only
-     accessed by a single person.
-    </para>
+    <para>様々なシステムから配信されるメールメッセージを、 1 人の担当者のみがアクセスするメールアカウントに転送する。</para>
    </listitem>
    <listitem>
-    <para>
-     Collect messages from different systems in a group email account (aliases
-     or mailing list) that can be accessed by all relevant persons.
-    </para>
+    <para>別名やメーリングリストの機能を利用して、様々なシステムから配信されるメールメッセージを担当者全員に転送する。</para>
    </listitem>
    <listitem>
-    <para>
-     Create separate email accounts for each system.
-    </para>
+    <para>各システムに対して別々のメールアカウントを準備する。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   It is crucial that administrators regularly check the related email accounts.
-   To facilitate this effort and identify impoetant events, avoid sending
-   unnecessary information. Configure applications to only send relevant
-   information.
-  </para>
+  <para>ただし、それぞれの担当者が定期的にメールをチェックしていることが何よりも重要です。このような取り組みを促して重要なイベントを見落とさないようにするため、不必要な情報は送信しないように設定しておくことも重要です。また、アプリケーション側の設定で、関連する情報のみを送信するようにもしておいてください。</para>
  </sect1>
  <sect1 xml:id="sec-tuning-syslog-logger">
   <title><command>logger</command> コマンドによるシステムログへの記録</title>
