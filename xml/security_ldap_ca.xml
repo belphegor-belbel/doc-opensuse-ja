@@ -4,61 +4,95 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-ca">
- <title>TLS 証明書の管理</title>
- <para>本章では、 &ds389; サーバとの間の通信を暗号化する際に使用する、 TLS 証明書の作成と管理方法について説明しています。</para>
- <para>証明書の管理にあたっては、 <command>pk12util</command> (<package>mozilla-nss-tools</package> パッケージに含まれています) や <command>openssl</command> (<package>openssl</package> パッケージに含まれています) などの従来型のユーティリティを使用してもかまいません。ですが、 &ds389a; には証明書を管理するための独自のユーティリティ <command>dsctl</command> が提供されていますので、こちらを利用することで、 LDAP サーバの証明書作成や管理を簡単に行うことができます。</para>
+ <title>Importing TLS server certificates and keys</title>
+ <para>
+  You can manage your CA certificates and keys for &ds389; with the following 
+  command line tools: <command>certutil</command>, <command>openssl</command>, and <command>pk12util</command>.
+ </para>
  <para>新しい &ds389a; インスタンスを作成すると、 <command>dscreate</command> は独自の証明機関を作成し、自己署名型のサーバ証明書を発行します。証明書のファイルは <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</filename> 内に配置されます。それぞれ下記のようなファイルが存在します:</para>
- <variablelist>
-   <varlistentry>
-     <term><filename>Server-Cert.crt</filename></term>
-   <listitem>
-     <para>LDAP インスタンスの公開鍵。</para>
-   </listitem>
- </varlistentry>
- <varlistentry>
-   <term><filename>Server-Cert.csr</filename></term>
-   <listitem>
-     <para>インスタンスの証明書に対する署名要求。</para>
-   </listitem>
- </varlistentry>
- <varlistentry>
-   <term><filename>ca.crt</filename></term>
-   <listitem>
-     <para>インスタンスの証明機関。</para>
-   </listitem>
- </varlistentry>
-  <varlistentry> 
-  <term><filename>pin.txt</filename></term>
-   <listitem>
-     <para>NSS データベースを管理する際に管理者が使用するパスワード。ただし、このパスワードは &ds389a; では使用していません。</para>
-   </listitem>
- </varlistentry>
- <varlistentry> 
-  <term><filename>cert9.db, key4.db</filename></term>
-   <listitem>
-     <para>これらはインスタンスの証明書と鍵を保存するための NSS データベースです。</para>
-   </listitem>
- </varlistentry>
-</variablelist>
+  <para>
+    For production environments, it is a best practice to use a third-party 
+    certificate authority, such as Let's Encrypt, CAcert.org, SSL.com, or 
+    whatever CA you choose. Request a server certificate, a client 
+    certificate, and a root certificate.
+  </para>
+  <para>
+   Meet the following requirements before executing the procedure below:
+ </para>
+ <itemizedlist>
+  <listitem>
+   <para>
+    You have a server certificate and a private key to use for the TLS connection.
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    You have set up an NSS (Network Security Services) database (for example,
+    with the <command>certutil</command> command).
+   </para>
+  </listitem>
+ </itemizedlist>
 
-<sect2 xml:id="sec-security-ldap-query-ca">
-   <title>インストールされた証明書の確認</title>
-   <para><command>dsctl</command> コマンドを利用することで、既存の TLS 証明書を表示することができます。たとえば下記のようになります:</para>
-   <screen>&prompt.sudo;<command>dsctl 389-test3 tls show-server-cert</command>
- Certificate:
-    Data:
-        Version: 3 (0x2)
-        Serial Number:
-            00:b6:f6:08:91
-        Signature Algorithm: PKCS #1 SHA-256 With RSA Encryption
-        Issuer: "CN=ssca.389ds.example.com,O=testing,L=389ds,ST=Queensland,C=
-            AU"
-        Validity:
-            Not Before: Wed Dec 30 15:36:15 2020
-            Not After : Fri Dec 30 15:36:15 2022
-        Subject: "CN=localhost,givenName=c23c7a30-dd79-4256-9c7b-5fb77c6de0eb
-            ,O=testing,L=389ds,ST=Queensland,C=AU"
-        Subject Public Key Info:
-        [...]</screen>
-     </sect2>    
-     </sect1>
+ <!--<para>
+   NOTES
+   ldapsearch -H ldap://ldapserver -D 'cn=Directory Manager' -W -Z -b 'cn=encryption,cn=config' -x
+   /etc/openldap/ldap.conf
+   TLS_REQCERT never
+   ldapsearch -H ldap://ldapserver -D 'cn=Directory Manager' -W -Z -b 'cn=encryption,cn=config' -x
+ </para>-->
+ 
+ <procedure>
+  <para>
+  Before you can import an existing private key and certificate into the NSS
+  database, you need to create a bundle of the private key and the server 
+  certificate. This results in a <filename>*.p12</filename>
+  file.
+  </para>
+  <important>
+  <title><filename>*.p12</filename> file and friendly name</title>
+  <para>
+   When creating the PKCS12 bundle, you must encode <literal>Server-Cert</literal>
+   as the friendly name in the <filename>*.p12</filename> file.
+   Otherwise the TLS connection will fail, because the &ds389; searches for 
+   this exact string.
+  </para>
+  <para>
+    The friendly name cannot be changed after you
+    import the <filename>*.p12</filename> file into the NSS
+    database.
+  </para>
+ </important>
+ <step>
+  <para>
+   Use the following command to create the PKCS12 bundle with the required friendly name:
+  </para>
+  <screen>&prompt.sudo;<command>openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> -name Server-Cert</command></screen>
+  <para>
+   Replace <replaceable>SERVER.crt</replaceable> with the server certificate
+   and <replaceable>SERVER.key</replaceable> with the private key to be bundled.
+   With the <option>-out</option>, specify the name of the <filename>*.p12</filename>
+   file. Use <option>-name</option> to set the friendly name to use:
+   <literal>Server-Cert</literal>.
+  </para>
+ </step>
+ <step>
+   <para>
+     Before you can import the file into the NSS database, you need to
+     obtain its password. To do this, use the following command:
+   </para>
+<screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d sql:PATH_TO_NSS_DB -n Server-Cert -W <replaceable>SERVER.p12_PASSWORD</replaceable></command></screen>
+   <para>
+     You can then find the password in the
+     <filename>pwdfile.txt</filename> file in the
+     <replaceable>PATH_TO_NSS_DB</replaceable> directory.
+   </para>
+ </step>
+ <step>
+  <para>
+   Now import the <replaceable>SERVER.p12</replaceable> file
+   into your NSS database:
+  </para>
+  <screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>PATH_TO_NSS_DB</replaceable></command></screen>
+ </step>
+ </procedure>
+ </sect1>
