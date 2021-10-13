@@ -4,32 +4,17 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-ca">
- <title>Importing TLS server certificates and keys</title>
- <para>
-  You can manage your CA certificates and keys for &ds389; with the following 
-  command line tools: <command>certutil</command>, <command>openssl</command>, and <command>pk12util</command>.
- </para>
- <para>新しい &ds389a; インスタンスを作成すると、 <command>dscreate</command> は独自の証明機関を作成し、自己署名型のサーバ証明書を発行します。証明書のファイルは <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</filename> 内に配置されます。それぞれ下記のようなファイルが存在します:</para>
-  <para>
-    For production environments, it is a best practice to use a third-party 
-    certificate authority, such as Let's Encrypt, CAcert.org, SSL.com, or 
-    whatever CA you choose. Request a server certificate, a client 
-    certificate, and a root certificate.
-  </para>
-  <para>
-   Meet the following requirements before executing the procedure below:
- </para>
+ <title>TLS 証明書と鍵の取り込み</title>
+ <para>&ds389; の証明書や鍵を管理するには、 <command>certutil</command> , <command>openssl</command> , <command>pk12util</command> のようなコマンドラインツールを使用します。</para>
+ <para>新しい &ds389a; インスタンスを作成すると、 <command>dscreate</command> は独自の証明機関を作成し、自己署名型のサーバ証明書を発行します。こちらはテスト用途にのみ使用されるべきもので、証明書のファイルは <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</filename> 内に配置されます。</para>
+  <para>本番環境を構築する場合は、 Let's Encrypt, CAcert.org, SSL.com など、第三者が発行する証明書を使用するようにしてください。それぞれサーバ証明書、クライアント証明書、ルート証明書が必要になります。</para>
+  <para>手順を実行するにあたっては、まず下記の要件を満たす必要があります:</para>
  <itemizedlist>
   <listitem>
-   <para>
-    You have a server certificate and a private key to use for the TLS connection.
-   </para>
+   <para>TLS 接続を受け付けるためのサーバ証明書と、それに対応した機密鍵を用意しなければなりません。</para>
   </listitem>
   <listitem>
-   <para>
-    You have set up an NSS (Network Security Services) database (for example,
-    with the <command>certutil</command> command).
-   </para>
+   <para>NSS (Network Security Services) データベースをセットアップしなければなりません (<command>certutil</command> コマンド等で行うことができます) 。</para>
   </listitem>
  </itemizedlist>
 
@@ -42,57 +27,25 @@
  </para>-->
  
  <procedure>
-  <para>
-  Before you can import an existing private key and certificate into the NSS
-  database, you need to create a bundle of the private key and the server 
-  certificate. This results in a <filename>*.p12</filename>
-  file.
-  </para>
+  <para>NSS データベース内に機密鍵と証明書を取り込む前に、機密鍵と証明書をバンドルとして 1 つにまとめておく必要があります。まとめたファイルは <filename>*.p12</filename> というファイル名になっているはずです。</para>
   <important>
-  <title><filename>*.p12</filename> file and friendly name</title>
-  <para>
-   When creating the PKCS12 bundle, you must encode <literal>Server-Cert</literal>
-   as the friendly name in the <filename>*.p12</filename> file.
-   Otherwise the TLS connection will fail, because the &ds389; searches for 
-   this exact string.
-  </para>
-  <para>
-    The friendly name cannot be changed after you
-    import the <filename>*.p12</filename> file into the NSS
-    database.
-  </para>
+  <title><filename>*.p12</filename> ファイルとフレンドリ名について</title>
+  <para>PKCS12 バンドルを作成する際、 <filename>*.p12</filename> 内のフレンドリ名として、 <literal>Server-Cert</literal> という名前を指定しなければなりません。この名前で作成しておかないと、 &ds389; が証明書を検出できず、 TLS 接続が失敗することになってしまいます。</para>
+  <para>また、フレンドリ名は <filename>*.p12</filename> を取り込んだ後では変更することができません。</para>
  </important>
  <step>
-  <para>
-   Use the following command to create the PKCS12 bundle with the required friendly name:
-  </para>
+  <para>必要な名前で PKCS12 バンドルを作成するには、下記のようなコマンドを実行します:</para>
   <screen>&prompt.sudo;<command>openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> -name Server-Cert</command></screen>
-  <para>
-   Replace <replaceable>SERVER.crt</replaceable> with the server certificate
-   and <replaceable>SERVER.key</replaceable> with the private key to be bundled.
-   With the <option>-out</option>, specify the name of the <filename>*.p12</filename>
-   file. Use <option>-name</option> to set the friendly name to use:
-   <literal>Server-Cert</literal>.
-  </para>
+  <para>ここで、 <replaceable>SERVER.crt</replaceable> には取り込むべきサーバ証明書のファイル名を、 <replaceable>SERVER.key</replaceable> にはそれに対応した機密鍵のファイル名をそれぞれ指定します。また、 <option>-out</option> 以降では出力先の <filename>*.p12</filename> ファイル名を指定しています。最後の <option>-name</option> はフレンドリ名の指定 (<literal>Server-Cert</literal>) です。</para>
  </step>
  <step>
-   <para>
-     Before you can import the file into the NSS database, you need to
-     obtain its password. To do this, use the following command:
-   </para>
-<screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d sql:PATH_TO_NSS_DB -n Server-Cert -W <replaceable>SERVER.p12_PASSWORD</replaceable></command></screen>
-   <para>
-     You can then find the password in the
-     <filename>pwdfile.txt</filename> file in the
-     <replaceable>PATH_TO_NSS_DB</replaceable> directory.
-   </para>
+   <para>また、 NSS データベースに取り込む前に、パスワードを取得しておく必要があります。下記のようなコマンドを実行してください:</para>
+<screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d sql:<replaceable>NSS_データベースのパス</replaceable> -n Server-Cert -W <replaceable>SERVER.p12_PASSWORD</replaceable></command></screen>
+   <para>上記を実行すると、 <replaceable>NSS_データベースのパス</replaceable> で指定したディレクトリ内に <filename>pwdfile.txt</filename> ファイルが作成されます。このファイル内にパスワードが出力されます。</para>
  </step>
  <step>
-  <para>
-   Now import the <replaceable>SERVER.p12</replaceable> file
-   into your NSS database:
-  </para>
-  <screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>PATH_TO_NSS_DB</replaceable></command></screen>
+  <para>最後に NSS データベース内に <replaceable>SERVER.p12</replaceable> ファイルを取り込みます:</para>
+  <screen>&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d <replaceable>NSS_データベースのパス</replaceable></command></screen>
  </step>
  </procedure>
  </sect1>
