@@ -54,9 +54,9 @@
   <sect1 xml:id="sec-sec-prot-general-umask">
    <title>既定の umask</title>
 
-   <para><command>umask</command> (ユーザがファイルを作成する際のモードマスク値) コマンドはシェルの内蔵コマンドで、新しく作成するファイルやディレクトリに対して、そのパーミッションを制御するためのものです。この値はシステムコールを利用することで変更することができますが、多数のプログラムやユーティリティでは <command>umask</command> コマンドを呼び出しています。既定では <command>umask</command> の値は <literal>022</literal> に設定されていますが、全ユーザに対して変更を行いたい場合には <filename>/etc/profile</filename> ファイル、各ユーザに対して個別に設定したい場合は、シェルのスタートアップファイルでそれぞれ設定することができます。</para>
+   <para><command>umask</command> (ユーザがファイルを作成する際のモードマスク値) コマンドはシェルの内蔵コマンドで、新しく作成するファイルやディレクトリに対して、そのパーミッションを制御するためのものです。この値はシステムコールを利用することで変更することができますが、多数のプログラムやユーティリティでは <command>umask</command> コマンドを呼び出しています。</para>
 
-   <para>umask の値は、ファイルやディレクトリを作成する際に設定するパーミッションのうち、設定しておきたくないビットを 1 にするものです。</para>
+   <para>既定では、 <command>umask</command> の値は <literal>022</literal> に設定されています。この umask の値は <!-- NOTE: modified for clear explanation in Japanese --><quote>許可を与えたくない</quote> ビットを指定する仕組みです。</para>
 
    <para>現在の umask 値を表示するには、 <command>umask</command> コマンドに何もパラメータを付けずに実行します:</para>
 
@@ -65,58 +65,42 @@
 
    <para>既定の umask 値はほとんどのユーザにとって十分な値になっています。たとえば下記のようになります。</para>
 
-<screen>
-&prompt.user;touch a
+<screen>&prompt.user;touch a
 &prompt.user;mkdir b
 &prompt.user;ls -on
-total 16
--rw-r--r--. 1 17086    0 Nov 29 15:05 a
-drwxr-xr-x. 2 17086 4096 Nov 29 15:05 b
-</screen>
+合計 16
+-rw-r--r--. 1 17086    0 11月29 15:05 a
+drwxr-xr-x. 2 17086 4096 11月29 15:05 b</screen>
 
    <para>必要であれば umask 値を変更することもできます。</para>
 
-<screen>
-&prompt.user;umask 111
+<screen>&prompt.user;umask 111
 &prompt.user;touch c
 &prompt.user;mkdir d
 &prompt.user;ls -on
-total 16
--rw-rw-rw-. 1 17086    0 Nov 29 15:05 c
-drw-rw-rw-. 2 17086 4096 Nov 29 15:05 d
-</screen>
+合計 16
+-rw-rw-rw-. 1 17086    0 11月29 15:05 c
+drw-rw-rw-. 2 17086 4096 11月29 15:05 d</screen>
 
-   <para>使用するスレッドモデルによっては、より制限の厳しい <literal>037</literal> のような値を設定することで、不用意なデータ漏洩を防ぐことができます。</para>
+   <para>不用意なデータ漏洩を防ぐため、さらに厳しい制限を行いたい場合は、 <literal>037</literal> のような値を設定することもできます。</para>
 
-<screen>
-&prompt.user;umask 037
+<screen>&prompt.user;umask 037
 &prompt.user;touch e
 &prompt.user;mkdir f
 &prompt.user;ls -on
-total 16
--rw-r-----. 1 17086    0 Nov 29 15:06 e
-drwxr-----. 2 17086 4096 Nov 29 15:06 f
-</screen>
+合計 16
+-rw-r-----. 1 17086    0 11月29 15:06 e
+drwxr-----. 2 17086 4096 11月29 15:06 f</screen>
 
    <tip>
-    <title>Maximum security</title>
-    <para>
-     For maximum security, use a umask of <literal>077</literal>. This will
-     force newly created files and directories to be created with no
-     permissions for the group and other users.
-    </para>
-    <para>
-     Please note that this can be unexpected for users and software and might
-     cause additional load for your support team.
-    </para>
+    <title>最大限の保護について</title>
+    <para>最大限の保護を設定したい場合は、 <literal>077</literal> という umask 値を設定してください。これにより、新しく作成されたファイルやディレクトリは、自分自身しかアクセスできなくなり、グループ内に対してもその他のユーザに対しても、全てのアクセスが禁止されるようになります。</para>
+    <para>ただし、このような設定を行うことで、他のユーザに不便を強いる可能性があったり、ソフトウエアが予期しない動作をしてしまうことがあるかもしれません。また、サポートチームに余計な負担をかけてしまう可能性にも注意してください。</para>
    </tip>
 
    <sect2 xml:id="sec-sec-prot-general-umask-adjust">
-    <title>既定の umask</title>
-    <para>
-     You can modify the umask globally for all users by changing the
-     <varname>UMASK</varname> value in <filename>/etc/login.defs</filename>.
-    </para>
+    <title>既定の umask 値の調整</title>
+    <para>全てのユーザに対する umask 値を調整したい場合は、 <filename>/etc/login.defs</filename> ファイル内にある <varname>UMASK</varname> の値を変更してください。</para>
 
 <screen># Default initial "umask" value used by login(1) on non-PAM enabled systems.
 # Default "umask" value for pam_umask(8) on PAM enabled systems.
@@ -127,28 +111,11 @@ drwxr-----. 2 17086 4096 Nov 29 15:06 f
 # must make up their mind.
 UMASK           022</screen>
 
-    <para>
-     For indivudual users, add the umask to the 'gecos' field in
-     <filename>/etc/password</filename> like this:
-    </para>
+    <para>個別のユーザに対して設定したい場合は、 <filename>/etc/password</filename> ファイル内の 'gecos' フィールドに umask 値を設定します。たとえば下記のようになります:</para>
 <screen>&exampleuser_plain;:x:1000:100:&exampleuserfull;,UMASK=<replaceable>022</replaceable>:/home/tux:/bin/bash</screen>
-    <para>
-     You can do the same with <command>yast users</command> by adding
-     <literal>UMASK=<replaceable>022</replaceable></literal> to a user's
-     <menuchoice><guimenu>Details</guimenu> <guimenu>Additional User
-     Information</guimenu></menuchoice>.
-    </para>
-    <para>
-     The settings made in <filename>/etc/login.defs</filename> and
-     <filename>/etc/password</filename> are applied by the PAM module
-     <filename>pam_umask.so</filename>. For additional configuration options,
-     refer to <command>man pam_umask</command>.
-    </para>
-    <para>
-     In order for the changes to take effect, users need to log out and back in
-     again. Afterwards, use the <command>umask</command> command to verify the
-     umask is set correctly.
-    </para>
+    <para>上記の設定は <command>yast users</command> でも行うことができます。ユーザの <menuchoice><guimenu>詳細</guimenu> <guimenu>追加のユーザ情報</guimenu></menuchoice> 内に、 <literal>UMASK=<replaceable>022</replaceable></literal> のような形式で設定してください。</para>
+    <para>なお、 <filename>/etc/login.defs</filename> や <filename>/etc/password</filename> に設定した値は、 <filename>pam_umask.so</filename> という PAM モジュールが読み込んで適用します。その他の設定オプションについての詳細は、 <command>man pam_umask</command> で表示されるマニュアルページをお読みください。</para>
+    <para>また、設定値を反映させるためには、ユーザがログインし直す必要もあります。ログインし直したあと、 <command>umask</command> コマンドで正しく設定されたかどうかを確認してください。</para>
 
    </sect2>
 

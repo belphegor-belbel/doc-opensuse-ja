@@ -32,24 +32,13 @@
    <title>ネットワークブリッジ</title>
    <para>ネットワークブリッジは、 &vmguest; に対してレイヤ 2 スイッチの機能を提供します。レイヤ 2 スイッチは、ポート間のパケット転送の際にレイヤ 2 イーサネットパケットを利用し、 MAC アドレスをベースにして宛先を判断します。これにより、 &vmhost; から &vmguest; に対して、レイヤ 2 アクセスのネットワークを提供することになります。これは、 &vmguest; の仮想的なイーサネットケーブルがイーサネットハブに接続され、そこからホスト自身やホスト内で動作する他の &vmguest; に接続できる形態と同じになります。この設定は、 <emphasis>共有物理デバイス</emphasis> と称することもあります。</para>
    <para>ネットワークブリッジは、 &productname; を &kvm; または &xen; のハイパーバイザとして設定した際の既定の設定になっています。これは &vmguest; と &vmhost; の LAN を単純に接続できるため、お勧めの方法でもあります。</para>
-   <para>
-    Which tool to use to create the network bridge depends on the service you
-    use to manage the network connection on the &vmhost;:
-   </para>
+   <para>ネットワークブリッジを作成する際に使用すべきツールは、 &vmhost; 側でのネットワーク接続を管理する際に使用しているサービスによって異なります:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      If a network connection is managed by <systemitem>wicked</systemitem>,
-      use either &yast; or the command line to create the network bridge.
-      <systemitem>wicked</systemitem> is the default on server hosts.
-     </para>
+     <para>ネットワーク接続を <systemitem>wicked</systemitem> で管理している場合は、 &yast; またはコマンドラインツールを利用してネットワークブリッジを作成します。サーバ用途として構築した場合は、 <systemitem>wicked</systemitem> が既定で使用されます。</para>
     </listitem>
     <listitem>
-     <para>
-      If a network connection is managed by &nm;, use the &nm; command line tool
-      <command>nmcli</command> to create the network bridge.
-      &nm; is the default on laptops.
-     </para>
+     <para>ネットワーク接続を &nm; で管理している場合は、コマンドラインツール <command>nmcli</command> でネットワークブリッジを作成します。ラップトップ環境の場合は、 &nm; が既定で使用されます。</para>
     </listitem>
    </itemizedlist>
    <sect3 xml:id="libvirt-networks-bridged-yast">
@@ -159,13 +148,11 @@ virbr_test  1 PVID Egress Untagged
     </sect4>
    </sect3>
    <sect3 xml:id="libvirt-networks-bridged-add-nm">
-    <title><command>virsh</command> を利用した仮想ネットワークの管理</title>
-    <para>本章では、コマンドラインを利用してネットワークブリッジを追加もしくは削除する方法を説明しています。</para>
+    <title><command>nmcli</command> を利用したネットワークブリッジの作成</title>
+    <para>本章では、 &nm; が提供するコマンドラインツール <command>nmcli</command> を利用して、ネットワークブリッジを追加する方法を説明しています。</para>
     <procedure>
      <step>
-      <para>
-       List active network connections:
-      </para>
+      <para>まずは既存のネットワーク接続を確認します:</para>
 <screen>
 &prompt.sudo;nmcli connection show --active
 NAME                   UUID                                  TYPE      DEVICE
@@ -173,10 +160,7 @@ Ethernet connection 1  84ba4c22-0cfe-46b6-87bb-909be6cb1214  ethernet  eth0
 </screen>
      </step>
      <step>
-      <para>
-       Add a new bridge device named <literal>br0</literal> and verify its
-       creation:
-      </para>
+      <para><literal>br0</literal> という名前の新しいブリッジデバイスを作成し、確認します:</para>
 <screen>
 &prompt.sudo;nmcli connection add type bridge ifname br0
 Connection 'bridge-br0' (36e11b95-8d5d-4a8f-9ca3-ff4180eb89f7) \
@@ -188,9 +172,7 @@ Ethernet connection 1  84ba4c22-0cfe-46b6-87bb-909be6cb1214  ethernet  eth0
 </screen>
      </step>
      <step>
-      <para>
-       Optionally, you can view the bridge settings:
-      </para>
+      <para>必要であれば、ブリッジの設定を表示させてもよいでしょう:</para>
 <screen>
 &prompt.sudo;nmcli -f bridge connection show bridge-br0
 bridge.mac-address:                     --
@@ -208,17 +190,11 @@ bridge.vlans:                           --
 </screen>
      </step>
      <step>
-      <para>
-       Link the bridge device to the physical ethernet device
-       <literal>eth0</literal>:
-      </para>
+      <para>物理イーサネットデバイス <literal>eth0</literal> をブリッジデバイスに繋げます:</para>
 <screen>&prompt.sudo;nmcli connection add type bridge-slave ifname eth0 master br0</screen>
      </step>
      <step>
-      <para>
-       Disable the <literal>eth0</literal> interface and enable the new
-       bridge:
-      </para>
+      <para>あとは <literal>eth0</literal> インターフェイスを無効化し、新しいブリッジを有効化します:</para>
 <screen>
 &prompt.sudo;nmcli connection down "Ethernet connection 1"
 &prompt.sudo;nmcli connection up bridge-br0
