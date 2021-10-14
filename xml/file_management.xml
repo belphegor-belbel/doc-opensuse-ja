@@ -56,12 +56,12 @@
 
    <para><command>umask</command> (ユーザがファイルを作成する際のモードマスク値) コマンドはシェルの内蔵コマンドで、新しく作成するファイルやディレクトリに対して、そのパーミッションを制御するためのものです。この値はシステムコールを利用することで変更することができますが、多数のプログラムやユーティリティでは <command>umask</command> コマンドを呼び出しています。既定では <command>umask</command> の値は <literal>022</literal> に設定されていますが、全ユーザに対して変更を行いたい場合には <filename>/etc/profile</filename> ファイル、各ユーザに対して個別に設定したい場合は、シェルのスタートアップファイルでそれぞれ設定することができます。</para>
 
+   <para>umask の値は、ファイルやディレクトリを作成する際に設定するパーミッションのうち、設定しておきたくないビットを 1 にするものです。</para>
+
    <para>現在の umask 値を表示するには、 <command>umask</command> コマンドに何もパラメータを付けずに実行します:</para>
 
 <screen>&prompt.user;umask 
 022</screen>
-
-   <para>umask の値は、ファイルやディレクトリを作成する際に設定するパーミッションのうち、設定しておきたくないビットを 1 にするものです。</para>
 
    <para>既定の umask 値はほとんどのユーザにとって十分な値になっています。たとえば下記のようになります。</para>
 
@@ -75,6 +75,7 @@ drwxr-xr-x. 2 17086 4096 Nov 29 15:05 b
 </screen>
 
    <para>必要であれば umask 値を変更することもできます。</para>
+
 <screen>
 &prompt.user;umask 111
 &prompt.user;touch c
@@ -86,6 +87,7 @@ drw-rw-rw-. 2 17086 4096 Nov 29 15:05 d
 </screen>
 
    <para>使用するスレッドモデルによっては、より制限の厳しい <literal>037</literal> のような値を設定することで、不用意なデータ漏洩を防ぐことができます。</para>
+
 <screen>
 &prompt.user;umask 037
 &prompt.user;touch e
@@ -95,6 +97,60 @@ total 16
 -rw-r-----. 1 17086    0 Nov 29 15:06 e
 drwxr-----. 2 17086 4096 Nov 29 15:06 f
 </screen>
+
+   <tip>
+    <title>Maximum security</title>
+    <para>
+     For maximum security, use a umask of <literal>077</literal>. This will
+     force newly created files and directories to be created with no
+     permissions for the group and other users.
+    </para>
+    <para>
+     Please note that this can be unexpected for users and software and might
+     cause additional load for your support team.
+    </para>
+   </tip>
+
+   <sect2 xml:id="sec-sec-prot-general-umask-adjust">
+    <title>既定の umask</title>
+    <para>
+     You can modify the umask globally for all users by changing the
+     <varname>UMASK</varname> value in <filename>/etc/login.defs</filename>.
+    </para>
+
+<screen># Default initial "umask" value used by login(1) on non-PAM enabled systems.
+# Default "umask" value for pam_umask(8) on PAM enabled systems.
+# UMASK is also used by useradd(8) and newusers(8) to set the mode for new
+# home directories.
+# 022 is the default value, but 027, or even 077, could be considered
+# for increased privacy. There is no One True Answer here: each sysadmin
+# must make up their mind.
+UMASK           022</screen>
+
+    <para>
+     For indivudual users, add the umask to the 'gecos' field in
+     <filename>/etc/password</filename> like this:
+    </para>
+<screen>&exampleuser_plain;:x:1000:100:&exampleuserfull;,UMASK=<replaceable>022</replaceable>:/home/tux:/bin/bash</screen>
+    <para>
+     You can do the same with <command>yast users</command> by adding
+     <literal>UMASK=<replaceable>022</replaceable></literal> to a user's
+     <menuchoice><guimenu>Details</guimenu> <guimenu>Additional User
+     Information</guimenu></menuchoice>.
+    </para>
+    <para>
+     The settings made in <filename>/etc/login.defs</filename> and
+     <filename>/etc/password</filename> are applied by the PAM module
+     <filename>pam_umask.so</filename>. For additional configuration options,
+     refer to <command>man pam_umask</command>.
+    </para>
+    <para>
+     In order for the changes to take effect, users need to log out and back in
+     again. Afterwards, use the <command>umask</command> command to verify the
+     umask is set correctly.
+    </para>
+
+   </sect2>
 
   </sect1>
   <sect1 xml:id="sec-sec-prot-general-s-bit">
