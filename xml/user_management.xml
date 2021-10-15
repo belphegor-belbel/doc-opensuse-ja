@@ -227,90 +227,41 @@ tty1</screen>
   </sect1>
 
  <sect1 xml:id="sec-sec-prot-restrict-sudo">
-   <title><command>who</command></title>
-   <para>
-    The <command>sudo</command> command allows users to execute commands in the
-    context of another user, typically the &rootuser; user. The
-    <command>sudo</command> configuration consists of a rule-set that defines
-    the mappings between commands to execute and their allowed source and target
-    users and groups. The configuration is stored in the file
-    <filename>/etc/sudoers</filename>.
-    <!-- cha-adm-sudo is part of the admin guide,
-     which is not available for openSUSE dos -->
-    <phrase os="sles;sled">For more information about <command>sudo</command>,
-     refer to <xref linkend="cha-adm-sudo"/>.</phrase>
-   </para>
-   <para>
-    By default <command>sudo</command> asks for the &rootuser; password on
-    &suse; systems. Unlike <command>su</command> however,
-    <command>sudo</command> remembers the password and allows further commands
-    to be executed as &rootuser; without asking for the password again for five
-    minutes. Therefore <command>sudo</command> should be enabled for selected
-    administrator users only.
-   </para>
+   <title><command>sudo</command> を利用できるユーザの制限</title>
+   <para><command>sudo</command> コマンドは、他のユーザ (一般的には &rootuser;) に成り代わってコマンドを実行するためのコマンドです。 <command>sudo</command> コマンドの設定には、成り代わり元や成り代わり先のユーザやグループ、そしてそれらのユーザやグループに対して許可するコマンド等のルールセットを記述します。設定は <filename>/etc/sudoers</filename> というファイルで指定します。 <!-- cha-adm-sudo is part of the admin guide, which is not available for openSUSE dos --> <phrase os="sles;sled"><command>sudo</command> に関する詳細は、 <xref linkend="cha-adm-sudo"/> をお読みください。</phrase></para>
+   <para>&suse; システムの既定の設定では、 <command>sudo</command> コマンドは &rootuser; のパスワードを尋ねるようになっています。ただし、 <command>su</command> とは異なり、 <command>sudo</command> にはパスワードを記憶する機能が用意されていて、 5 分間以内の再実行であれば、パスワードを再度尋ねたりすることはありません。そのため、 <command>sudo</command> は管理者として信頼できるユーザにのみ提供すべきものです。</para>
    <procedure>
-    <title>Restricting <command>sudo</command> for normal users</title>
+    <title>一般ユーザに対する <command>sudo</command> の制限</title>
     <step>
-     <para>
-      Edit file <filename>/etc/sudoers</filename>, e.g. by executing
-      <command>visudo</command>.
-     </para>
+     <para><command>visudo</command> コマンドを実行して、 <filename>/etc/sudoers</filename> ファイルを編集します。</para>
     </step>
     <step>
-     <para>
-      Comment out the line that allows every user to run every command as
-      long as they know the password of the user they want to use. Afterwards,
-      it should look like this:
-     </para>
+     <para>下記のような行をコメントアウトして、それぞれのユーザがコマンドを実行する際、常に成り代わり先のユーザに対するパスワード入力を求めるように設定します。コメントアウトした後は、下記のようになるはずです:</para>
 <screen>#ALL ALL=(ALL) ALL # WARNING! Only use this together with 'Defaults targetpw'!</screen>
     </step>
     <step>
-     <para>
-      Uncomment the following line:
-     </para>
+     <para>逆に、下記の行のコメントを外します:</para>
 <screen>%wheel ALL=(ALL) ALL</screen>
-     <para>
-      This limits the functionality described above to members of the group
-      <systemitem class="groupname">wheel</systemitem>. You can use a different
-      group as <systemitem class="groupname">wheel</systemitem> might have other
-      implications that may not be suitable depending on your setup.
-     </para>
+     <para>上記の行は <systemitem class="groupname">wheel</systemitem> というグループのメンバーにのみ上述の機能を提供するための設定です。お使いの環境で <systemitem class="groupname">wheel</systemitem> グループに対して許可を与えると問題があるとお考えの場合は、他のグループでもかまいません。</para>
     </step>
     <step>
-     <para>
-      Add users that should be allowed to use <command>sudo</command> to the
-      chosen group. To add the user &exampleuser; to the group
-      <systemitem class="groupname">wheel</systemitem>, use:
-     </para>
-<screen>&prompt.root;useradd -c "<replaceable>テストユーザ</replaceable>" -g <replaceable>グループ</replaceable> <replaceable>ユーザ名</replaceable></screen>
-     <para>
-      To get the new group membership, users have to logout and back in again.
-     </para>
+     <para>あとは <command>sudo</command> を特定のグループにのみ許可するよう、グループへのユーザ追加を行います。たとえば &exampleuser; を <systemitem class="groupname">wheel</systemitem> グループに追加したい場合は、下記のように入力して実行します:</para>
+<screen><command>usermod -aG <replaceable>wheel</replaceable> <replaceable>tux</replaceable></command></screen>
+     <para>なお、グループへの追加を反映させるには、対象のユーザにログインし直してもらう必要があります。</para>
     </step>
     <step>
-     <para>
-      Verify the change by running a command with a user not in the group you
-      have chosen for access control. You should see the error message:
-     </para>
-<screen>&exampleuserII_plain; is not in the sudoers file.  This incident will be reported.</screen>
-     <para>
-      Next, try the same with a member of the group. They should still be able
-      to execute commands via <command>sudo</command>.
-     </para>
+     <para>あとはグループに追加していないユーザでコマンドを実行してみて、実行が拒否されることを確認します。拒否されると、下記のようなエラーメッセージが表示されるはずです:</para>
+<screen>&exampleuserII_plain; は sudoers ファイル内にありません。この事象は記録・報告されます。</screen>
+     <para>同様にグループに追加したユーザでコマンドを実行してみます。設定が正しければ、 <command>sudo</command> でコマンドを実行できるはずです。</para>
     </step>
    </procedure>
-   <para>
-    Please note that this configuration only limits the <command>sudo</command>
-    functionality. The <command>su</command> command is still available to all
-    users. If there are other ways to access the system, users with knowledge of
-    the &rootuser; password can easily execute commands via this vector.
-   </para>
+   <para>なお、ここまでの設定は <command>sudo</command> の機能に対する制限を設定しただけであり、 <command>su</command> コマンドの機能は制限していないことに注意してください。こちらのコマンドは従来どおり、誰にでも利用できてしまいます。また、システムへのアクセス方式として別経路の方式が存在する場合、 &rootuser; のパスワードを知っていれば、その経路でログインして実行できる可能性があることにも注意してください。</para>
   </sect1>
 
   <sect1 xml:id="sec-sec-prot-inactivity-logout">
    <title>対話型シェルセッションに対する無操作タイムアウトの設定</title>
    <para>対話型のシェルに対しては、何も操作していない場合のタイムアウト時間を設定して、一定の時間が経過すると自動的に切断するように設定するとよいでしょう。この設定を行うことでセッションの盗用を未然に防ぐことができるほか、システムリソースの浪費を防ぐことにも繋がります。</para>
-   <para>既定ではシェルに対する無操作タイムアウトは設定されていません。シェルを開いて何も操作を行わなくても、何日も何年も開いたままになります。ほとんどのシェルには無操作タイムアウトの設定が存在し、一定時間の経過後自動的にセッションを終了させることができます。下記では、一般的に使用されるシェルを対象に、無操作タイムアウトの設定を示しています。</para>
+   <para>既定では、シェルに対する無操作タイムアウトは設定されていません。シェルを開いて何も操作を行わなくても、何日も何年も開いたままになります。ほとんどのシェルには無操作タイムアウトの設定が存在し、一定時間の経過後自動的にセッションを終了させることができます。下記では、一般的に使用されるシェルを対象に、無操作タイムアウトの設定を示しています。</para>
    <para>無操作タイムアウトはログインシェルにのみ適用するか、全ての対話型シェルに適用するかを選択することができます。全ての対話型シェルに設定した場合、タイムアウトはそれぞれのシェルで別々に動作し、タイムアウト値は累積して処理されます。言い換えると、サブシェルや子シェルを起動した場合、そのシェルに対しては新しいタイムアウト値が設定されるため、サブシェルもしくは子シェルが時間切れになっても親のシェルはそのタイミングでは終了せず、動作し続けることになります。</para>
    <para>下記の表には、 &productname; に同梱されている各種のシェルと、設定方法に関する一覧が記述されています:</para>
    <informaltable frame="all" rowsep="1" colsep="1">
