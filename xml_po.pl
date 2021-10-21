@@ -12,7 +12,7 @@ my @SkipNodes =
   "menuchoice", "guimenu", "phrase", "remark", "envar", "keycombo",
   "keycap", "co", "prompt", "varname", "citetitle", "tag", "superscript",
   "constant", "email", "trademark", "productname", "productnumber", "uri",
-  "parameter", "indexterm", "primary", "secondary", "tertiary" );
+  "parameter", "indexterm", "primary", "secondary", "tertiary", "screen" );
 my @literalNodes =
   ( "screen" );
 my @ignoreNodes =
@@ -120,19 +120,31 @@ sub ProcessNode {
         my $item = $child->toString();
         $srctext .= $item;
       }
-
-      # $srctext =~ s/\n/\\n/g;
     } else {
       if (ref($node) eq "XML::LibXML::Element") {
         foreach my $child (@children) {
-          $srctext .= $child->toString() . " ";
+          my $item = $child->toString();
+
+          my $literal = 0;
+          foreach my $literalNode (@literalNodes) {
+            if (lc($literalNode) eq lc($child->nodeName)) {
+              $literal = 1;
+              last;
+            }
+          }
+
+          if ($literal < 1) {
+            $item =~ s/\r//g;
+            $item =~ s/\n//g;
+            $item .= " ";
+          }
+
+          $srctext .= $item;
         }
       } else {
         $srctext = $node->toString();
       }
 
-      $srctext =~ s/\r//g;
-      $srctext =~ s/\n//g;
       $srctext =~ s/  +/ /g;
     }
 
