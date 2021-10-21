@@ -323,12 +323,8 @@ eval $(ssh-agent)
 -->
  </sect1>
  <sect1 xml:id="sec-ssh-restrict-logins">
-  <title>Restricting SSH logins</title>
-  <para>
-   The SSH service on a machine can be restricted to allow logins only from a
-   certain IP subnet for a given account. Perform the following steps to
-   configure user remote login restrictions for <command>ssh</command> (<xref linkend="sec-ssh-programm"/>), <command>scp</command> (<xref linkend="sec-ssh-copy"/>), and <command>sftp</command> (<xref linkend="sec-ssh-sftp"/>.
-  </para>
+  <title>SSH ログインの制限</title>
+  <para>SSH 経由でのログインを制限したい場合、アカウントごとに接続元 IP サブネットを限定することができます。下記の手順を実行することで、 <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> のそれぞれに対して、ログイン制限を行うことができます。</para>
   <procedure xml:id="pro-ssh-restrict-logins">
    <!-- cwickert 2021-09-24 following lines are the 'new' format of procedures
     with title and introduction inside. Commented out for consistency for now.
@@ -338,43 +334,23 @@ eval $(ssh-agent)
     Perform the following steps to configure user remote login restrictions:
     </para> -->
    <step>
-    <para>
-     Edit the file <filename>/etc/pam.d/sshd</filename> and append the following
-     at the end of the <literal>auth</literal> block:
-    </para>
+    <para>まずは <filename>/etc/pam.d/sshd</filename> ファイルを編集して、 <literal>auth</literal> ブロックの末尾に下記を追加します:</para>
     <screen>auth required pam_access.so</screen>
    </step>
    <step>
-    <para>
-     Edit the file <filename>/etc/security/access.conf</filename> to configure
-     individual restrictions. In this example the users &rootuser; and
-     &exampleuser; are restricted to the &exampledomain1ip;.0/&subnetmask;
-     network, while the &exampleuserII; user can only login from within the
-     &exampledomain2ip;.0/&subnetmask; network:
-    </para>
+    <para>あとは <filename>/etc/security/access.conf</filename> ファイルを編集して、ユーザごとの制限を設定します。下記の例では、 &rootuser; と &exampleuser; のログインを &exampledomain1ip;.0/&subnetmask; のネットワークから、 &exampleuserII; のログインを &exampledomain2ip;.0/&subnetmask; のネットワークからにのみ制限しています:</para>
 <screen>
 + : root : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 + : &exampleuser_plain; : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 + : &exampleuserII_plain; : <replaceable>&exampledomain2ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 - : ALL : ALL</screen>
-   <para>
-    Do not forget the last line which denies access for all other users from all
-    sources, but be careful not to lock yourself out of the system.
-   </para>
-   <para>
-    For more configuration options, refer to the examples in the file and to
-    <command>man access.conf</command>.
-   </para>
+   <para>なお一番下の行は、全てのユーザに対して全てのネットワークからのアクセスを禁止する設定になります。設定を行う際は注意して設定してください。</para>
+   <para>詳しい設定オプションについては、上記ファイル内のコメント文、もしくは <command>man access.conf</command> をお読みください。</para>
    </step>
   </procedure>
   <warning>
-   <title><command>man ssh_config</command></title>
-   <para>
-    Do not use the <command>pam-config</command> utility here. It only supports
-    <systemitem>pam_access</systemitem> as a global module. The configuration
-    above is not suitable to be used globally for all services and can
-    completely deny access to the system.
-   </para>
+   <title><command>pam-config</command> の使用禁止について</title>
+   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。グローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
   </warning>
 
  </sect1>
