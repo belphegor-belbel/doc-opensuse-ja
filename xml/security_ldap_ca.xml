@@ -8,24 +8,6 @@
  <para>&ds389; の証明書や鍵を管理するには、 <command>certutil</command> , <command>openssl</command> , <command>pk12util</command> のようなコマンドラインツールを使用します。</para>
  <para>新しい &ds389a; インスタンスを作成すると、 <command>dscreate</command> は独自の証明機関を作成し、自己署名型のサーバ証明書を発行します。こちらはテスト用途にのみ使用されるべきもので、証明書のファイルは <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名</replaceable>/</filename> 内に配置されます。</para>
   <para>本番環境を構築する場合は、 Let's Encrypt, CAcert.org, SSL.com など、第三者が発行する証明書を使用するようにしてください。それぞれサーバ証明書、クライアント証明書、ルート証明書が必要になります。</para>
-  <para>手順を実行するにあたっては、まず下記の要件を満たす必要があります:</para>
- <itemizedlist>
-  <listitem>
-   <para>TLS 接続を受け付けるためのサーバ証明書と、それに対応した機密鍵を用意しなければなりません。</para>
-  </listitem>
-  <listitem>
-   <para>NSS (Network Security Services) データベースをセットアップしなければなりません (<command>certutil</command> コマンド等で行うことができます) 。</para>
-  </listitem>
- </itemizedlist>
-
- <!--<para>
-   NOTES
-   ldapsearch -H ldap://ldapserver -D 'cn=Directory Manager' -W -Z -b 'cn=encryption,cn=config' -x
-   /etc/openldap/ldap.conf
-   TLS_REQCERT never
-   ldapsearch -H ldap://ldapserver -D 'cn=Directory Manager' -W -Z -b 'cn=encryption,cn=config' -x
- </para>-->
- 
  <procedure>
   <para>NSS データベース内に機密鍵と証明書を取り込む前に、機密鍵と証明書をバンドルとして 1 つにまとめておく必要があります。まとめたファイルは <filename>*.p12</filename> というファイル名になっているはずです。</para>
   <important>
@@ -35,7 +17,7 @@
  </important>
  <step>
   <para>必要な名前で PKCS12 バンドルを作成するには、下記のようなコマンドを実行します:</para>
-  <screen>&prompt.sudo;<command>openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> -name Server-Cert</command></screen>
+<screen>&prompt.sudo;<command>openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable> -inkey <replaceable>SERVER.key</replaceable> -out <replaceable>SERVER.p12</replaceable> -name Server-Cert</command></screen>
   <para>ここで、 <replaceable>SERVER.crt</replaceable> には取り込むべきサーバ証明書のファイル名を、 <replaceable>SERVER.key</replaceable> にはそれに対応した機密鍵のファイル名をそれぞれ指定します。また、 <option>-out</option> 以降では出力先の <filename>*.p12</filename> ファイル名を指定しています。最後の <option>-name</option> はフレンドリ名の指定 (<literal>Server-Cert</literal>) です。</para>
  </step>
  <step>

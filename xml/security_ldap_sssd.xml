@@ -4,40 +4,117 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-sssd">
-  <title>SSSD の設定</title>
-  <para>SSSD (System Security Services Daemon) はリモートの識別子プロバイダとの通信を行い、 <literal>pam</literal> や <literal>nsswitch</literal> にデータを渡すことのできるデーモンです。 SSSD には複数のバックエンドを設定することができるほか、ユーザとグループのキャッシュ機能や、 SSH の鍵配布などの機能に対応しています。</para>
+  <title>Using SSSD to manage authentication</title>
+  <para>
+    The System Security Services Daemon (SSSD) manages authentication, 
+    identification, and access controls for remote clients. This section
+    describes how to use SSSD to manage authentication and identification
+    for your &ds389;.
+  </para>
+  <para>
+    SSSD mediates between your LDAP server and clients. It supports several
+    provider back-ends, such as LDAP, Active Directory, and 
+    Kerberos. SSSD supports services, including SSH, PAM, NSS, and sudo.
+    SSSD provides performance benefits and resilience through caching user 
+    IDs and credentials. Caching reduces the number of requests to your 
+    &ds389a; server, and provides authentication and identity services
+    when the back-ends are unavailable.
+  </para>
+  <para>
+    If the Name Services Caching Daemon (ncsd) is running on your network,
+    you should disable or remove it. ncsd caches only the common name service 
+    requests, such as passwd, group, hosts, service, and netgroup, and will
+    conflict with SSSD.
+  </para>
+  <para>
+    Your LDAP server is the provider, and your SSSD instance is the client
+    of the provider. You may install SSSD on your &ds389a; server, but  
+    installing it on a separate machine provides some resilience in case the 
+    &ds389a; server becomes unavailable. Use the following procedure to install 
+    and configure an SSSD client.
+  </para>
   <procedure>
-   <step>
-     <para>まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</systemitem> の各パッケージをインストールします:</para>
+    <step>
+      <para>まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</systemitem> の各パッケージをインストールします:</para>
     <screen>&prompt.sudo;<command>zypper in sssd sssd-ldap</command></screen>
-   </step>
-   <step>
-    <para><systemitem class="daemon">sssd</systemitem> と衝突してしまうことから、 <systemitem class="daemon">nscd</systemitem> デーモンを無効化して停止します:</para>
-    <screen>&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop nscd</command></screen>
-   </step>
-   <step>
-    <para>SSSD の設定ファイルを作成し、 <xref linkend="pro-security-ldap-server-groups"/> で作成しておいた、サーバ管理者を示す <systemitem class="groupname">server_admins</systemitem> グループのメンバーのみがログインできるように設定します:</para>
-    <tip>
-     <para>なお、 <literal>memberOf</literal> プラグインを有効化しておく必要があります。これにより、クライアントはログインと認可を行うことができるようになります (詳しくは <xref linkend="sec-security-ldap-modules"/> をお読みください) 。</para>
-    </tip>
-    <screen>&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config sssd.conf <replaceable>server_admins</replaceable></command></screen>
-   </step>
-   <step>
-    <para>出力内容を確認して、内容を <filename>/etc/sssd/sssd.conf</filename> に貼り付けます。必要であれば、ここから設定ファイルを調整してもかまいません。</para>
-   </step>
-   <step>
-    <para>お使いのクライアントで証明書を設定するには、 LDAP サーバからクライアントに対して <filename>ca.crt</filename> をコピーし、ハッシュを再作成します:</para>
+  </step>
+  <step>
+    <para>
+    Back up the default <filename>/etc/sssd/sssd.conf</filename> file:
+  </para>
+  <screen>&prompt.sudo;<command>zypper in sssd sssd-ldap</command></screen>
+  </step>
+  <step>
+   <para>
+     Create your new SSSD configuration. The following example creates a 
+     basic client configuration:
+   </para>
+   <screen>&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config sssd.conf <replaceable>server_admins</replaceable></command></screen>
+  </step>
+  <step>
+    <para>
+      Review the output and make any necessary changes to suit your
+      environment.
+    </para>
+  </step>
+  <step>
+    <para>
+      Edit the 
+      <filename>/etc/nsswitch.conf</filename> configuration file on 
+      the SSSD server to include the following lines:
+    </para>
+    <screen>passwd: compat sss
+group:  compat sss
+shadow: compat sss</screen>
+</step>
+<step>
+  <para>
+    Edit the PAM configuration on the SSSD server, modifying <filename>common-account-pc</filename>, 
+    <filename>common-auth-pc</filename>,
+<filename>common-password-pc</filename>, and
+<filename>common-session-pc</filename>. &sle; provides a command to
+modify all of these files at once, <command>pam-config</command>:
+</para>
+<screen>&prompt.sudo;<command>systemctl enable --now sssd</command></screen>
+  </step>
+  <step>
+    <para>
+      Verify the modified configuration:
+    </para>
+    <screen>&prompt.sudo;<command>pam-config -q --sss</command>
+auth:
+account:
+password:
+session:</screen>
+</step>
+<step>
+    <para>
+      Copy <filename>/etc/dirsrv/slapd-<replaceable>INSTANCE_NAME/</replaceable>ca.crt</filename> 
+      from the &ds389a; server to <filename>/etc/openldap/certs</filename> on your SSSD server, then rehash it:
+    </para>
 <screen>&prompt.sudo;<command>c_rehash /etc/openldap/certs</command></screen>
    </step>
    <step>
     <para>SSSD を有効化して開始します:</para>
     <screen>&prompt.sudo;<command>systemctl enable --now sssd</command></screen>
    </step>
-   <step>
-    <para>SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href="https://www.port389.org/docs/389ds/howto/howto-sssd.html"/> にある <citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS (&suse;)</citetitle> の手順に従って作業を行ってください。</para>
-   </step>
-   <step>
-    <para><!-- NOTE: inappropriate?: Your user must have their own SSH key pair, and SSH access to your SSSD server. -->全ての設定が完了すると、 &exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインできるようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="pro-security-ldap-server-groups"/> の手順で示した <literal>server_admins</literal> グループへの所属をご確認ください。</para>
-   </step>
   </procedure>
+        <!-- this will go to a separate section cschroder 2021-10-21
+   <step>
+    <para>
+     Your users must have their own SSH key pairs, and SSH access to your SSSD server.
+     If everything is set up correctly, &exampleuserII; can access the &ds389;
+     instance via SSH to the machine where you have installed and configured
+     SSSD. However, &exampleuserIII; will fail to do so, because &exampleuserIII;
+     does not belong to the group <literal>server_admins</literal>, as
+     configured in <xref linkend="pro-security-ldap-server-groups"/>.
+    </para>
+      <important>
+     <para>
+      The <literal>memberOf</literal> plug-in needs to be enabled, so that
+      clients can log in and authorize (see <xref linkend="sec-security-ldap-modules"/>).
+     </para>
+    </important>
+  
+   </step>-->
 </sect1>

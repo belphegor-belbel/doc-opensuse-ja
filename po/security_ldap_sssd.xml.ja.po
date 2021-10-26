@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: security_ldap_sssd.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-08-18 22:08+0000\n"
+"POT-Creation-Date: 2021-10-26 22:14+0000\n"
 "PO-Revision-Date: 2021-08-19 07:27+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -22,166 +22,286 @@ msgstr ""
 #. Tag: title
 #: security_ldap_sssd.xml:9
 #, no-c-format
-msgid "Setting up SSSD"
-msgstr "SSSD の設定"
+msgid "Using SSSD to manage authentication"
+msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:10
 #, no-c-format
 msgid ""
-"SSSD (System Security Services Daemon) is a daemon that communicates with "
-"remote identity providers and allows <literal>pam</literal> and "
-"<literal>nsswitch</literal> to consume that data. SSSD can have multiple "
-"back-ends, cache users and groups, and provides features such as SSH key "
-"distributions."
+"The System Security Services Daemon (SSSD) manages authentication, "
+"identification, and access controls for remote clients. This section "
+"describes how to use SSSD to manage authentication and identification for "
+"your &ds389;."
 msgstr ""
-"SSSD (System Security Services Daemon) はリモートの識別子プロバイダとの通信を"
-"行い、 <literal>pam</literal> や <literal>nsswitch</literal> にデータを渡すこ"
-"とのできるデーモンです。 SSSD には複数のバックエンドを設定することができるほ"
-"か、ユーザとグループのキャッシュ機能や、 SSH の鍵配布などの機能に対応していま"
-"す。"
 
 #. Tag: para
-#: security_ldap_sssd.xml:19
+#: security_ldap_sssd.xml:16
 #, no-c-format
 msgid ""
-"On a separate server, install the <systemitem>sssd</systemitem> and "
-"<systemitem>sssd-ldap</systemitem> packages:"
+"SSSD mediates between your LDAP server and clients. It supports several "
+"provider back-ends, such as LDAP, Active Directory, and Kerberos. SSSD "
+"supports services, including SSH, PAM, NSS, and sudo. SSSD provides "
+"performance benefits and resilience through caching user IDs and "
+"credentials. Caching reduces the number of requests to your &ds389a; server, "
+"and provides authentication and identity services when the back-ends are "
+"unavailable."
 msgstr ""
-"まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</"
-"systemitem> の各パッケージをインストールします:"
-
-#. Tag: screen
-#: security_ldap_sssd.xml:21
-#, no-c-format
-msgid "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
-msgstr "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
 
 #. Tag: para
-#: security_ldap_sssd.xml:24
+#: security_ldap_sssd.xml:25
 #, no-c-format
 msgid ""
-"Disable and stop the <systemitem class=\"daemon\">nscd</systemitem> daemon "
-"because it conflicts with <systemitem class=\"daemon\">sssd</systemitem> :"
+"If the Name Services Caching Daemon (ncsd) is running on your network, you "
+"should disable or remove it. ncsd caches only the common name service "
+"requests, such as passwd, group, hosts, service, and netgroup, and will "
+"conflict with SSSD."
 msgstr ""
-"<systemitem class=\"daemon\">sssd</systemitem> と衝突してしまうことから、 "
-"<systemitem class=\"daemon\">nscd</systemitem> デーモンを無効化して停止しま"
-"す:"
-
-#. Tag: screen
-#: security_ldap_sssd.xml:28
-#, no-c-format
-msgid ""
-"&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop nscd</"
-"command>"
-msgstr ""
-"&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop nscd</"
-"command>"
 
 #. Tag: para
 #: security_ldap_sssd.xml:31
 #, no-c-format
 msgid ""
-"Create the SSSD configuration and restrict the login to the members of a "
-"group created for server admins, such as the <systemitem class=\"groupname"
-"\">server_admins</systemitem> groups that was set up in <xref linkend=\"pro-"
-"security-ldap-server-groups\"/> :"
+"Your LDAP server is the provider, and your SSSD instance is the client of "
+"the provider. You may install SSSD on your &ds389a; server, but installing "
+"it on a separate machine provides some resilience in case the &ds389a; "
+"server becomes unavailable. Use the following procedure to install and "
+"configure an SSSD client."
 msgstr ""
-"SSSD の設定ファイルを作成し、 <xref linkend=\"pro-security-ldap-server-"
-"groups\"/> で作成しておいた、サーバ管理者を示す <systemitem class=\"groupname\">"
-"server_admins</systemitem> グループのメンバーのみがログインできるように設定します:"
 
 #. Tag: para
-#: security_ldap_sssd.xml:38
-#, no-c-format
+#: security_ldap_sssd.xml:40
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>memberOf</literal> plug-in needs to be enabled, so that clients "
-"can log in and authorize (see <xref linkend=\"sec-security-ldap-modules\"/"
-"> )."
+"Install the <systemitem>sssd</systemitem> and <systemitem>sssd-ldap</"
+"systemitem> packages:"
 msgstr ""
-"なお、 <literal>memberOf</literal> プラグインを有効化しておく必要があります。"
-"これにより、クライアントはログインと認可を行うことができるようになります (詳"
-"しくは <xref linkend=\"sec-security-ldap-modules\"/> をお読みください) 。"
+"まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</"
+"systemitem> の各パッケージをインストールします:"
 
 #. Tag: screen
 #: security_ldap_sssd.xml:43
 #, no-c-format
-msgid ""
-"&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config "
-"sssd.conf <replaceable>server_admins</replaceable></command>"
-msgstr ""
-"&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config "
-"sssd.conf <replaceable>server_admins</replaceable></command>"
+msgid "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
+msgstr "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
 
 #. Tag: para
 #: security_ldap_sssd.xml:46
 #, no-c-format
-msgid ""
-"Review the output and paste (or redirect) it to <filename>/etc/sssd/sssd."
-"conf</filename> . If required, edit the configuration file according to your "
-"needs."
+msgid "Back up the default <filename>/etc/sssd/sssd.conf</filename> file:"
 msgstr ""
-"出力内容を確認して、内容を <filename>/etc/sssd/sssd.conf</filename> に貼り付"
-"けます。必要であれば、ここから設定ファイルを調整してもかまいません。"
+
+#. Tag: screen
+#: security_ldap_sssd.xml:49
+#, fuzzy, no-c-format
+msgid "&prompt.sudo;<command>old /etc/sssd/sssd.conf</command>"
+msgstr "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
 
 #. Tag: para
 #: security_ldap_sssd.xml:52
 #, no-c-format
 msgid ""
-"To configure the certificates on your client, copy <filename>ca.crt</"
-"filename> from the LDAP server to your client, then rehash it:"
+"Create your new SSSD configuration. The following example creates a basic "
+"client configuration:"
 msgstr ""
-"お使いのクライアントで証明書を設定するには、 LDAP サーバからクライアントに対"
-"して <filename>ca.crt</filename> をコピーし、ハッシュを再作成します:"
 
 #. Tag: screen
 #: security_ldap_sssd.xml:56
+#, fuzzy, no-c-format
+msgid ""
+"\n"
+"&prompt.sudo;<command>dsidm <replaceable>INSTANCE_NAME</replaceable> "
+"client_config /etc/sssd/sssd.conf</command>\n"
+msgstr ""
+"&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config "
+"sssd.conf <replaceable>server_admins</replaceable></command>"
+
+#. Tag: para
+#: security_ldap_sssd.xml:61
+#, no-c-format
+msgid ""
+"Review the output and make any necessary changes to suit your environment."
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:67
+#, no-c-format
+msgid ""
+"Edit the <filename>/etc/nsswitch.conf</filename> configuration file on the "
+"SSSD server to include the following lines:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:72
+#, no-c-format
+msgid ""
+"passwd: compat sss\n"
+"group:  compat sss\n"
+"shadow: compat sss"
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:77
+#, no-c-format
+msgid ""
+"Edit the PAM configuration on the SSSD server, modifying <filename>common-"
+"account-pc</filename> , <filename>common-auth-pc</filename> , "
+"<filename>common-password-pc</filename> , and <filename>common-session-pc</"
+"filename> . &sle; provides a command tomodify all of these files at once, "
+"<command>pam-config</command> :"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:84
+#, fuzzy, no-c-format
+msgid "&prompt.sudo;<command>pam-config -a --sss</command>"
+msgstr "&prompt.sudo;<command>systemctl enable --now sssd</command>"
+
+#. Tag: para
+#: security_ldap_sssd.xml:87
+#, no-c-format
+msgid "Verify the modified configuration:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:90
+#, no-c-format
+msgid ""
+"&prompt.sudo;<command>pam-config -q --sss</command>\n"
+"auth:\n"
+"account:\n"
+"password:\n"
+"session:"
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:97
+#, no-c-format
+msgid ""
+"Copy <filename>/etc/dirsrv/slapd-<replaceable>INSTANCE_NAME/</replaceable>ca."
+"crt</filename> from the &ds389a; server to <filename>/etc/openldap/certs</"
+"filename> on your SSSD server, then rehash it:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:101
 #, no-c-format
 msgid "&prompt.sudo;<command>c_rehash /etc/openldap/certs</command>"
 msgstr "&prompt.sudo;<command>c_rehash /etc/openldap/certs</command>"
 
 #. Tag: para
-#: security_ldap_sssd.xml:59
+#: security_ldap_sssd.xml:104
 #, no-c-format
 msgid "Enable and start SSSD:"
 msgstr "SSSD を有効化して開始します:"
 
 #. Tag: screen
-#: security_ldap_sssd.xml:62
+#: security_ldap_sssd.xml:107
 #, no-c-format
 msgid "&prompt.sudo;<command>systemctl enable --now sssd</command>"
 msgstr "&prompt.sudo;<command>systemctl enable --now sssd</command>"
 
-#. Tag: para
-#: security_ldap_sssd.xml:65
 #, no-c-format
-msgid ""
-"To make sure SSSD is part of PAM and NSS, follow the instructions in the "
-"sections <citetitle>Configure PAM (&suse;)</citetitle> and "
-"<citetitle>Configure NSS (&suse;)</citetitle> at <link xlink:href=\"https://"
-"www.port389.org/docs/389ds/howto/howto-sssd.html\"/> ."
-msgstr ""
-"SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href=\"https://"
-"www.port389.org/docs/389ds/howto/howto-sssd.html\"/> にある "
-"<citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS "
-"(&suse;)</citetitle> の手順に従って作業を行ってください。"
+#~ msgid "Setting up SSSD"
+#~ msgstr "SSSD の設定"
 
-#. Tag: para
-#: security_ldap_sssd.xml:74
 #, no-c-format
-msgid ""
-"Your users must have their own SSH key pairs, and SSH access to your SSSD "
-"server. If everything is set up correctly, &exampleuserII; can access the "
-"&ds389; instance via SSH to the machine where you have installed and "
-"configured SSSD. However, &exampleuserIII; will fail to do so, because "
-"&exampleuserIII; does not belong to the group <literal>server_admins</"
-"literal> , as configured in <xref linkend=\"pro-security-ldap-server-groups"
-"\"/> ."
-msgstr ""
-"<!-- NOTE: inappropriate?: Your user must have their own SSH key pair, and "
-"SSH access to your SSSD server. -->全ての設定が完了すると、 &exampleuserII; "
-"は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマシンにログインでき"
-"るようになります。 &exampleuserII; がログインできない場合は、 <xref linkend="
-"\"pro-security-ldap-server-groups\"/> の手順で示した <literal>server_admins</"
-"literal> グループへの所属をご確認ください。"
+#~ msgid ""
+#~ "SSSD (System Security Services Daemon) is a daemon that communicates with "
+#~ "remote identity providers and allows <literal>pam</literal> and "
+#~ "<literal>nsswitch</literal> to consume that data. SSSD can have multiple "
+#~ "back-ends, cache users and groups, and provides features such as SSH key "
+#~ "distributions."
+#~ msgstr ""
+#~ "SSSD (System Security Services Daemon) はリモートの識別子プロバイダとの通"
+#~ "信を行い、 <literal>pam</literal> や <literal>nsswitch</literal> にデータ"
+#~ "を渡すことのできるデーモンです。 SSSD には複数のバックエンドを設定すること"
+#~ "ができるほか、ユーザとグループのキャッシュ機能や、 SSH の鍵配布などの機能"
+#~ "に対応しています。"
 
+#, no-c-format
+#~ msgid ""
+#~ "Disable and stop the <systemitem class=\"daemon\">nscd</systemitem> "
+#~ "daemon because it conflicts with <systemitem class=\"daemon\">sssd</"
+#~ "systemitem> :"
+#~ msgstr ""
+#~ "<systemitem class=\"daemon\">sssd</systemitem> と衝突してしまうことから、 "
+#~ "<systemitem class=\"daemon\">nscd</systemitem> デーモンを無効化して停止し"
+#~ "ます:"
+
+#, no-c-format
+#~ msgid ""
+#~ "&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop "
+#~ "nscd</command>"
+#~ msgstr ""
+#~ "&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop "
+#~ "nscd</command>"
+
+#, no-c-format
+#~ msgid ""
+#~ "Create the SSSD configuration and restrict the login to the members of a "
+#~ "group created for server admins, such as the <systemitem class=\"groupname"
+#~ "\">server_admins</systemitem> groups that was set up in <xref linkend="
+#~ "\"pro-security-ldap-server-groups\"/> :"
+#~ msgstr ""
+#~ "SSSD の設定ファイルを作成し、 <xref linkend=\"pro-security-ldap-server-"
+#~ "groups\"/> で作成しておいた、サーバ管理者を示す <systemitem class="
+#~ "\"groupname\">server_admins</systemitem> グループのメンバーのみがログイン"
+#~ "できるように設定します:"
+
+#, no-c-format
+#~ msgid ""
+#~ "The <literal>memberOf</literal> plug-in needs to be enabled, so that "
+#~ "clients can log in and authorize (see <xref linkend=\"sec-security-ldap-"
+#~ "modules\"/> )."
+#~ msgstr ""
+#~ "なお、 <literal>memberOf</literal> プラグインを有効化しておく必要がありま"
+#~ "す。これにより、クライアントはログインと認可を行うことができるようになりま"
+#~ "す (詳しくは <xref linkend=\"sec-security-ldap-modules\"/> をお読みくださ"
+#~ "い) 。"
+
+#, no-c-format
+#~ msgid ""
+#~ "Review the output and paste (or redirect) it to <filename>/etc/sssd/sssd."
+#~ "conf</filename> . If required, edit the configuration file according to "
+#~ "your needs."
+#~ msgstr ""
+#~ "出力内容を確認して、内容を <filename>/etc/sssd/sssd.conf</filename> に貼り"
+#~ "付けます。必要であれば、ここから設定ファイルを調整してもかまいません。"
+
+#, no-c-format
+#~ msgid ""
+#~ "To configure the certificates on your client, copy <filename>ca.crt</"
+#~ "filename> from the LDAP server to your client, then rehash it:"
+#~ msgstr ""
+#~ "お使いのクライアントで証明書を設定するには、 LDAP サーバからクライアントに"
+#~ "対して <filename>ca.crt</filename> をコピーし、ハッシュを再作成します:"
+
+#, no-c-format
+#~ msgid ""
+#~ "To make sure SSSD is part of PAM and NSS, follow the instructions in the "
+#~ "sections <citetitle>Configure PAM (&suse;)</citetitle> and "
+#~ "<citetitle>Configure NSS (&suse;)</citetitle> at <link xlink:href="
+#~ "\"https://www.port389.org/docs/389ds/howto/howto-sssd.html\"/> ."
+#~ msgstr ""
+#~ "SSSD を PAM と NSS の一部として動作させる場合は、 <link xlink:href="
+#~ "\"https://www.port389.org/docs/389ds/howto/howto-sssd.html\"/> にある "
+#~ "<citetitle>Configure PAM (&suse;)</citetitle> と <citetitle>Configure NSS "
+#~ "(&suse;)</citetitle> の手順に従って作業を行ってください。"
+
+#, no-c-format
+#~ msgid ""
+#~ "Your users must have their own SSH key pairs, and SSH access to your SSSD "
+#~ "server. If everything is set up correctly, &exampleuserII; can access the "
+#~ "&ds389; instance via SSH to the machine where you have installed and "
+#~ "configured SSSD. However, &exampleuserIII; will fail to do so, because "
+#~ "&exampleuserIII; does not belong to the group <literal>server_admins</"
+#~ "literal> , as configured in <xref linkend=\"pro-security-ldap-server-"
+#~ "groups\"/> ."
+#~ msgstr ""
+#~ "<!-- NOTE: inappropriate?: Your user must have their own SSH key pair, "
+#~ "and SSH access to your SSSD server. -->全ての設定が完了すると、 "
+#~ "&exampleuserII; は &ds389; の情報をもとに、 SSH を介して SSSD を設定したマ"
+#~ "シンにログインできるようになります。 &exampleuserII; がログインできない場"
+#~ "合は、 <xref linkend=\"pro-security-ldap-server-groups\"/> の手順で示した "
+#~ "<literal>server_admins</literal> グループへの所属をご確認ください。"

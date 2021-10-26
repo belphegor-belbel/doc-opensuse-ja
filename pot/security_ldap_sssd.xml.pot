@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-08-18 22:08+0000\n"
+"POT-Creation-Date: 2021-10-26 22:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -17,96 +17,140 @@ msgstr ""
 #. Tag: title
 #: security_ldap_sssd.xml:9
 #, no-c-format
-msgid "Setting up SSSD"
+msgid "Using SSSD to manage authentication"
 msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:10
 #, no-c-format
-msgid "SSSD (System Security Services Daemon) is a daemon that communicates with remote identity providers and allows <literal>pam</literal> and <literal>nsswitch</literal> to consume that data. SSSD can have multiple back-ends, cache users and groups, and provides features such as SSH key distributions."
+msgid "The System Security Services Daemon (SSSD) manages authentication, identification, and access controls for remote clients. This section describes how to use SSSD to manage authentication and identification for your &ds389;."
 msgstr ""
 
 #. Tag: para
-#: security_ldap_sssd.xml:19
+#: security_ldap_sssd.xml:16
 #, no-c-format
-msgid "On a separate server, install the <systemitem>sssd</systemitem> and <systemitem>sssd-ldap</systemitem> packages:"
-msgstr ""
-
-#. Tag: screen
-#: security_ldap_sssd.xml:21
-#, no-c-format
-msgid "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
+msgid "SSSD mediates between your LDAP server and clients. It supports several provider back-ends, such as LDAP, Active Directory, and Kerberos. SSSD supports services, including SSH, PAM, NSS, and sudo. SSSD provides performance benefits and resilience through caching user IDs and credentials. Caching reduces the number of requests to your &ds389a; server, and provides authentication and identity services when the back-ends are unavailable."
 msgstr ""
 
 #. Tag: para
-#: security_ldap_sssd.xml:24
+#: security_ldap_sssd.xml:25
 #, no-c-format
-msgid "Disable and stop the <systemitem class=\"daemon\">nscd</systemitem> daemon because it conflicts with <systemitem class=\"daemon\">sssd</systemitem> :"
-msgstr ""
-
-#. Tag: screen
-#: security_ldap_sssd.xml:28
-#, no-c-format
-msgid "&prompt.sudo;<command>systemctl disable nscd &amp;&amp; systemctl stop nscd</command>"
+msgid "If the Name Services Caching Daemon (ncsd) is running on your network, you should disable or remove it. ncsd caches only the common name service requests, such as passwd, group, hosts, service, and netgroup, and will conflict with SSSD."
 msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:31
 #, no-c-format
-msgid "Create the SSSD configuration and restrict the login to the members of a group created for server admins, such as the <systemitem class=\"groupname\">server_admins</systemitem> groups that was set up in <xref linkend=\"pro-security-ldap-server-groups\"/> :"
+msgid "Your LDAP server is the provider, and your SSSD instance is the client of the provider. You may install SSSD on your &ds389a; server, but installing it on a separate machine provides some resilience in case the &ds389a; server becomes unavailable. Use the following procedure to install and configure an SSSD client."
 msgstr ""
 
 #. Tag: para
-#: security_ldap_sssd.xml:38
+#: security_ldap_sssd.xml:40
 #, no-c-format
-msgid "The <literal>memberOf</literal> plug-in needs to be enabled, so that clients can log in and authorize (see <xref linkend=\"sec-security-ldap-modules\"/> )."
+msgid "Install the <systemitem>sssd</systemitem> and <systemitem>sssd-ldap</systemitem> packages:"
 msgstr ""
 
 #. Tag: screen
 #: security_ldap_sssd.xml:43
 #, no-c-format
-msgid "&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config sssd.conf <replaceable>server_admins</replaceable></command>"
+msgid "&prompt.sudo;<command>zypper in sssd sssd-ldap</command>"
 msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:46
 #, no-c-format
-msgid "Review the output and paste (or redirect) it to <filename>/etc/sssd/sssd.conf</filename> . If required, edit the configuration file according to your needs."
+msgid "Back up the default <filename>/etc/sssd/sssd.conf</filename> file:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:49
+#, no-c-format
+msgid "&prompt.sudo;<command>old /etc/sssd/sssd.conf</command>"
 msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:52
 #, no-c-format
-msgid "To configure the certificates on your client, copy <filename>ca.crt</filename> from the LDAP server to your client, then rehash it:"
+msgid "Create your new SSSD configuration. The following example creates a basic client configuration:"
 msgstr ""
 
 #. Tag: screen
 #: security_ldap_sssd.xml:56
 #, no-c-format
+msgid "\n"
+      "&prompt.sudo;<command>dsidm <replaceable>INSTANCE_NAME</replaceable> client_config /etc/sssd/sssd.conf</command>\n"
+      ""
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:61
+#, no-c-format
+msgid "Review the output and make any necessary changes to suit your environment."
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:67
+#, no-c-format
+msgid "Edit the <filename>/etc/nsswitch.conf</filename> configuration file on the SSSD server to include the following lines:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:72
+#, no-c-format
+msgid "passwd: compat sss\n"
+      "group:  compat sss\n"
+      "shadow: compat sss"
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:77
+#, no-c-format
+msgid "Edit the PAM configuration on the SSSD server, modifying <filename>common-account-pc</filename> , <filename>common-auth-pc</filename> , <filename>common-password-pc</filename> , and <filename>common-session-pc</filename> . &sle; provides a command tomodify all of these files at once, <command>pam-config</command> :"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:84
+#, no-c-format
+msgid "&prompt.sudo;<command>pam-config -a --sss</command>"
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:87
+#, no-c-format
+msgid "Verify the modified configuration:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:90
+#, no-c-format
+msgid "&prompt.sudo;<command>pam-config -q --sss</command>\n"
+      "auth:\n"
+      "account:\n"
+      "password:\n"
+      "session:"
+msgstr ""
+
+#. Tag: para
+#: security_ldap_sssd.xml:97
+#, no-c-format
+msgid "Copy <filename>/etc/dirsrv/slapd-<replaceable>INSTANCE_NAME/</replaceable>ca.crt</filename> from the &ds389a; server to <filename>/etc/openldap/certs</filename> on your SSSD server, then rehash it:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_sssd.xml:101
+#, no-c-format
 msgid "&prompt.sudo;<command>c_rehash /etc/openldap/certs</command>"
 msgstr ""
 
 #. Tag: para
-#: security_ldap_sssd.xml:59
+#: security_ldap_sssd.xml:104
 #, no-c-format
 msgid "Enable and start SSSD:"
 msgstr ""
 
 #. Tag: screen
-#: security_ldap_sssd.xml:62
+#: security_ldap_sssd.xml:107
 #, no-c-format
 msgid "&prompt.sudo;<command>systemctl enable --now sssd</command>"
-msgstr ""
-
-#. Tag: para
-#: security_ldap_sssd.xml:65
-#, no-c-format
-msgid "To make sure SSSD is part of PAM and NSS, follow the instructions in the sections <citetitle>Configure PAM (&suse;)</citetitle> and <citetitle>Configure NSS (&suse;)</citetitle> at <link xlink:href=\"https://www.port389.org/docs/389ds/howto/howto-sssd.html\"/> ."
-msgstr ""
-
-#. Tag: para
-#: security_ldap_sssd.xml:74
-#, no-c-format
-msgid "Your users must have their own SSH key pairs, and SSH access to your SSSD server. If everything is set up correctly, &exampleuserII; can access the &ds389; instance via SSH to the machine where you have installed and configured SSSD. However, &exampleuserIII; will fail to do so, because &exampleuserIII; does not belong to the group <literal>server_admins</literal> , as configured in <xref linkend=\"pro-security-ldap-server-groups\"/> ."
 msgstr ""
 
