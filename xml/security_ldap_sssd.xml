@@ -4,83 +4,41 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-sssd">
-  <title>Using SSSD to manage authentication</title>
-  <para>
-    The System Security Services Daemon (SSSD) manages authentication, 
-    identification, and access controls for remote clients. This section
-    describes how to use SSSD to manage authentication and identification
-    for your &ds389;.
-  </para>
-  <para>
-    SSSD mediates between your LDAP server and clients. It supports several
-    provider back-ends, such as LDAP, Active Directory, and 
-    Kerberos. SSSD supports services, including SSH, PAM, NSS, and sudo.
-    SSSD provides performance benefits and resilience through caching user 
-    IDs and credentials. Caching reduces the number of requests to your 
-    &ds389a; server, and provides authentication and identity services
-    when the back-ends are unavailable.
-  </para>
-  <para>
-    If the Name Services Caching Daemon (ncsd) is running on your network,
-    you should disable or remove it. ncsd caches only the common name service 
-    requests, such as passwd, group, hosts, service, and netgroup, and will
-    conflict with SSSD.
-  </para>
-  <para>
-    Your LDAP server is the provider, and your SSSD instance is the client
-    of the provider. You may install SSSD on your &ds389a; server, but  
-    installing it on a separate machine provides some resilience in case the 
-    &ds389a; server becomes unavailable. Use the following procedure to install 
-    and configure an SSSD client.
-  </para>
+  <title>認証管理のための SSSD の使用</title>
+  <para>システムセキュリティサービスデーモン (System Security Services Daemon (SSSD)) は、リモートのクライアントに対する認証や識別、アクセス制御などを行うためのシステムです。本章では、 &ds389; と SSSD を利用して、ユーザ認証やユーザ識別を行うための手順を説明しています。</para>
+  <para>SSSD は LDAP サーバとクライアントとの間を仲介します。 LDAP のほか、 Active Directory や Kerberos などのバックエンドにも対応しています。サービス側としては SSH, PAM, NSS, sudo などに対応しています。 SSSD は ID や資格情報をキャッシュする仕組みが存在することから、性能面だけでなく柔軟性も兼ね備えています。キャッシュ機能は &ds389; サーバの負荷を減らすことにつながるばかりか、バックエンドが接続不可能な状態になっても、認証機能を継続して提供することができるようになります。</para>
+  <para>なお、ネームサービスキャッシュデーモン (Name Services Caching Daemon (ncsd)) がネットワーク内で動作している場合は、無効化するか削除しておいてください。 nscd は passwd, group, hosts, service, netgroup などの名前解決要求のみをキャッシュする仕組みであることから、 SSSD と競合してしまうためです。</para>
+  <para>LDAP サーバをプロバイダ (提供元) として使用する場合、 SSSD のインスタンスはプロバイダに対するクライアントとして動作します。 &ds389a; サーバ内で SSSD を動作させてもかまいませんが、異なるマシンで動作させることで、 &ds389a; サーバが接続不可能な状況に陥った場合でもサービスを継続させることができます。下記の手順では、 SSSD クライアントのインストールと設定について説明しています。</para>
   <procedure>
     <step>
-      <para>まずは別のサーバに <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</systemitem> の各パッケージをインストールします:</para>
+      <para>まずは <systemitem>sssd</systemitem> と <systemitem>sssd-ldap</systemitem> の各パッケージをインストールします:</para>
     <screen>&prompt.sudo;<command>zypper in sssd sssd-ldap</command></screen>
   </step>
   <step>
-    <para>
-    Back up the default <filename>/etc/sssd/sssd.conf</filename> file:
-  </para>
-  <screen>&prompt.sudo;<command>zypper in sssd sssd-ldap</command></screen>
+    <para>既定の <filename>/etc/sssd/sssd.conf</filename> ファイルをバックアップしておきます:</para>
+  <screen>&prompt.sudo;<command>old /etc/sssd/sssd.conf</command></screen>
   </step>
   <step>
-   <para>
-     Create your new SSSD configuration. The following example creates a 
-     basic client configuration:
-   </para>
-   <screen>&prompt.sudo;<command>dsidm <replaceable>ldap1</replaceable> client_config sssd.conf <replaceable>server_admins</replaceable></command></screen>
+   <para>あとは新しい SSSD 設定を作成していきます。下記は、基本的なクライアント設定の例です:</para>
+   <screen>
+&prompt.sudo;<command>dsidm <replaceable>インスタンス名</replaceable> client_config /etc/sssd/sssd.conf</command>
+</screen>
   </step>
   <step>
-    <para>
-      Review the output and make any necessary changes to suit your
-      environment.
-    </para>
+    <para>出力された内容を確認して、環境に合わせた変更を行います。</para>
   </step>
   <step>
-    <para>
-      Edit the 
-      <filename>/etc/nsswitch.conf</filename> configuration file on 
-      the SSSD server to include the following lines:
-    </para>
+    <para>SSSD サーバ内の <filename>/etc/nsswitch.conf</filename> 設定ファイルを編集し、下記のような行が含まれるようにします:</para>
     <screen>passwd: compat sss
 group:  compat sss
 shadow: compat sss</screen>
 </step>
 <step>
-  <para>
-    Edit the PAM configuration on the SSSD server, modifying <filename>common-account-pc</filename>, 
-    <filename>common-auth-pc</filename>,
-<filename>common-password-pc</filename>, and
-<filename>common-session-pc</filename>. &sle; provides a command to
-modify all of these files at once, <command>pam-config</command>:
-</para>
-<screen>&prompt.sudo;<command>systemctl enable --now sssd</command></screen>
+  <para>SSSD サーバ内の PAM 設定である <filename>common-account-pc</filename> , <filename>common-auth-pc</filename> , <filename>common-password-pc</filename> , <filename>common-session-pc</filename> をそれぞれ編集します。 &sle; では <command>pam-config</command> というコマンドを使用することで、これら全てのファイルを一括変更することができます:</para>
+<screen>&prompt.sudo;<command>pam-config -a --sss</command></screen>
   </step>
   <step>
-    <para>
-      Verify the modified configuration:
-    </para>
+    <para>あとは修正後の設定を確認します:</para>
     <screen>&prompt.sudo;<command>pam-config -q --sss</command>
 auth:
 account:
@@ -88,10 +46,7 @@ password:
 session:</screen>
 </step>
 <step>
-    <para>
-      Copy <filename>/etc/dirsrv/slapd-<replaceable>INSTANCE_NAME/</replaceable>ca.crt</filename> 
-      from the &ds389a; server to <filename>/etc/openldap/certs</filename> on your SSSD server, then rehash it:
-    </para>
+    <para>さらに、 &ds389; サーバ内にある <filename>/etc/dirsrv/slapd-<replaceable>インスタンス名/</replaceable>ca.crt</filename> ファイルを SSSD サーバ内の <filename>/etc/openldap/certs</filename> にコピーして、ハッシュを再作成します:</para>
 <screen>&prompt.sudo;<command>c_rehash /etc/openldap/certs</command></screen>
    </step>
    <step>
