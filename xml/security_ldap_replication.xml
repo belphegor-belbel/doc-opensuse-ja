@@ -4,174 +4,93 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-replication">
- <title>Setting up replication</title>
+ <title>レプリケーションの設定</title>
 
- <para>
-  &ds389; supports replicating its database content between multiple servers.
-  According to the type of replication, this provides:
- </para>
+ <para>&ds389; では複数のサーバ間でデータベースをレプリケーション (複製) することができます。レプリケーションの構成にもよりますが、下記のような利点を提供することになります:</para>
 
  <itemizedlist>
   <listitem>
-   <para>
-    Faster performance and response times
-   </para>
+   <para>性能と応答時間の高速化</para>
   </listitem>
   <listitem>
-   <para>
-    Fault tolerance and failover
-   </para>
+   <para>耐障害性と冗長性の確保</para>
   </listitem>
   <listitem>
-   <para>
-    Load balancing
-   </para>
+   <para>負荷分散</para>
   </listitem>
   <listitem>
-   <para>
-    High availability
-   </para>
+   <para>高可用性</para>
   </listitem>
  </itemizedlist>
      
- <para>
-   A database is the smallest unit of a directory that can be replicated. You 
-   can replicate an entire database, but not a subtree within a database.
-   One database must correspond to one suffix. You cannot replicate a suffix 
-   that is distributed over two or more databases.
- </para>
- <para>
-   A replica that sends data to another replica is a supplier. A replica
-   that receives data from a supplier is a consumer. Replication is always
-   initiated by the supplier, and a single supplier can send data to multiple 
-   consumers. Usually the supplier 
-   is a read-write replica, and the consumer is read-only, except in the
-   case of multi-supplier replication. In multi-supplier replication the 
-   suppliers are both suppliers and consumers of the same data.
- </para>
+ <para>データベースは複製可能なディレクトリの最小単位でもあります。データベース全体を複製することはできますが、データベース内のサブツリーのみを複製することはできません。また、 1 つのデータベースは必ず 1 つのサフィックスに結びつけられるものであり、 2 つまたはそれ以上のデータベースにまたがったサフィックスを複製することはできません。</para>
+ <para>また、複製すべきデータを他に送信するサーバをサプライヤ (supplier) と呼びます。逆に、サプライヤからのデータを受け取るサーバをコンシューマ (consumer) と呼びます。レプリケーションは常にサプライヤ側から行われ、 1 つのサプライヤからは複数のコンシューマに送信することができます。また一般に、マルチサプライヤ (multi-supplier) レプリケーションの場合を除いて、サプライヤは読み書き可能なレプリカとして、コンシューマは読み込み専用のサーバとして提供されます。マルチサプライヤレプリケーションの場合、サプライヤとコンシューマを兼ねるサーバとなります。</para>
  
  <sect2 xml:id="sec-security-ldap-replication-async">
-  <title>Asynchronous writes</title>
-  <para>
-   &ds389a; manages replication differently than other databases. Replication
-   is asynchronous, and eventually consistent. This means:
-  </para>
+  <title>非同期書き込み</title>
+  <para>&ds389a; は他のデータベースとは異なるレプリケーション管理を行います。レプリケーションは非同期でありながらも、結果整合性を持つ仕組みになっています。つまり、下記のような動作になります:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     Any write or change to a single server is immediately accepted.
-    </para>
+    <para>サーバへの書き込みや変更は、即時に受け入れられます。</para>
    </listitem>
    <listitem>
-    <para>
-     There is a delay between a write finishing on one 
-     server, and then replicating and being visible on other servers.
-    </para>
+    <para>特定のサーバ内に書き込まれたあと、他のサーバにレプリケーションされて見えるようになるまでの間に、時間的な遅れが発生します。</para>
    </listitem>
    <listitem>
-    <para>
-     If that write conflicts with writes on other servers, it may be rolled
-     back at some point in the future.
-    </para>
+    <para>いずれかのサーバ内での書き込みに矛盾が発生した場合、特定のポイントまでロールバック (巻き戻される) 可能性があります。</para>
    </listitem>
    <listitem>
-    <para>
-     Not all servers may show identical content at the same time due to
-     replication delay.
-    </para>
+    <para>レプリケーションの遅延により、特定の時点で各サーバ内に存在するデータが異なる可能性があります。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   In general, as LDAP is "low-write", these factors mean that all servers are
-   at least up to a common baseline of a known consistent state. Small changes
-   occur on top of this baseline, so many of these aspects of delayed
-   replication are not perceived in day to day usage.
-  </para>
+  <para>一般的に LDAP は、 "書き込みの少ない" データベースであるため、これらの特徴を考慮しても、サーバが一貫性のない状態にはならず、常に既知の安定状態に居続けることができます。また、この安定状態からの変更は少しずつしか行われないため、日々の運用ではこのような欠点に気付くようなことはありません。</para>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-replication-topology">
-  <title>Designing your topology</title>
-  <para>
-   Consider the following factors when you are designing your replication
-   topology.
-  </para>
+  <title>構成設計</title>
+  <para>レプリケーションの構成 (トポロジ) を設計するにあたっては、下記のような要素を決めておく必要があります。</para>
   <itemizedlist>
    <listitem>
-    <para>
-     The need for replication: high availability, geo-location, read scaling,
-     or a combination of all.
-    </para>
+    <para>レプリケーションに対する要件: 高可用性、物理的な配置場所、読み込み性能やそれらの組み合わせなど。</para>
    </listitem>
    <listitem>
-    <para>
-     How many replicas (nodes, servers) you plan to have in your topology.
-    </para>
+    <para>構成内に配置するレプリカ (ノード、サーバ) 数。</para>
    </listitem>
    <listitem>
-    <para>
-     Direction of data flows, both inside of the topology, and data flowing
-     into the topology.
-    </para>
+    <para>データの流れとその方向。構成内に流入するデータと流出するデータ。</para>
    </listitem>
    <listitem>
-    <para>
-     How clients will balance across nodes of the topology for their requests
-     (multiple ldap URIs, SRV records, load balancers).
-    </para>
+    <para>クライアント側からリクエストを送信する際の、ノード選択方式 (クライアント側で LDAP URI を複数個指定して分散させるか、 SRV レコードで分散させるか、ロードバランサを用いるか等) 。</para>
    </listitem>
   </itemizedlist>
-  <para>
-   These factors all affect how you may create your topology. (See
-   <xref linkend="sec-security-ldap-replication-topologies"/> for some
-   topology examples.)
-  </para>
+  <para>これらの要素はいずれも構成そのものに影響します (詳しい構成例については <xref linkend="sec-security-ldap-replication-topologies"/> をお読みください) 。</para>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-replication-topologies">
-  <title>Example replication topologies</title>
-  <para>
-   The following sections provide examples of replication topologies, using two
-   to six &ds389; nodes. The maximum number of supported supplier replicas in
-   a topology is twenty. Operational experience shows the optimal number for
-   replication efficiency is a maximum of eight.
-  </para>
+  <title>レプリケーションの設計例</title>
+  <para>下記の章では、 2 ノードから 6 ノードまでの &ds389; ノードを使用する、いくつかのレプリケーション構成例を示しています。なお、レプリケーションを構成する際の最大サプライヤ数は 20 ノードまでです。実際の運用経験からすると、レプリケーション効率を高めるための最適なノード数は最大でも 8 ノードまでと考えられています。</para>
   
   <sect3 xml:id="sec-security-ldap-replication-two-replicas">
-   <title>Two replicas</title>
+   <title>2 つのレプリカ</title>
    <example xml:id="ex-ldap-replication-two-replicas">
-    <title>Two supplier replicas</title>
+    <title>2 つのサプライヤレプリカ</title>
 <screen>
 ┌────┐       ┌────┐
 │ S1 │◀─────▶│ S2 │
 └────┘       └────┘
 </screen>
    </example>
-   <para>
-    In <xref linkend="ex-ldap-replication-two-replicas"/> there are two nodes,
-    S1 and S2, which replicate bi-directionally between each other, so they
-    are both suppliers and consumers. S1 and S2
-    could be in separate data centers, or in the same data center. Clients can
-    balance across the servers using LDAP URIs, a load balancer, or DNS SRV
-    records. This is the simplest topology for high availability. Note that
-    each server needs to be able to provide 100% of client load, in case the
-    other server is offline for any reason. A two-node replication is 
-    generally not adequate for horizontal read scaling, as a single node will
-    handle all read requests if the other node is offline.
-   </para>
+   <para><xref linkend="ex-ldap-replication-two-replicas"/> には S1 と S2 という 2 つのノードが示されています。これらは双方向レプリケーションとして構成する場合の例で、これらのノードはいずれもサプライヤとコンシューマの両方を兼ね備えた存在となります。 S1 と S2 は別々のデータセンター内であっても、同じデータセンター内であってもかまいません。 LDAP URI や負荷分散装置、 DNS SRV レコードのいずれかでクライアント側からのアクセスを分散させることができます。また、これは高可用性を提供する際の最もシンプルな構成でもあります。ただし、一方のサーバで障害が発生してオフラインになった場合、他方のサーバでは全てのクライアントからの処理を受け付ける必要があることに注意してください。また、 2 ノードのレプリケーションでは一方のノードがオフラインになった場合、残った 1 つのノードのみで全ての処理を行わなければならないことから、水平分散としては不適切です。</para>
    <note>
-     <title>Default topology</title>
-     <para>
-       The two-node topology should be considered the default topology, 
-       because it is the simplest to manage. You can expand your toplogy, 
-       over time, as necessary.
-     </para>
+     <title>既定の構成</title>
+     <para>2 ノードの構成は最も簡単に管理できることから、既定の構成と考えられます。この構成を初期構成として、必要に応じて構成を広げていってもかまいません。</para>
    </note>
   </sect3>
   
   <sect3 xml:id="sec-security-ldap-replication-four-replicas">
-   <title>Four supplier replicas</title>
+   <title>4 つのサプライヤレプリカ</title>
    <example xml:id="ex-ldap-replication-four-replicas">
-    <title>Four supplier replicas</title>
+    <title>4 つのサプライヤレプリカ</title>
 <screen>
 ┌────┐       ┌────┐
 │ S1 │◀─────▶│ S2 │
@@ -184,20 +103,13 @@
 └────┘       └────┘
 </screen>
    </example>
-   <para>
-    <xref linkend="ex-ldap-replication-four-replicas"/> has four supplier
-    replicas, which all synchronize to each other. These
-    could be in four datacenters, or two servers per datacenter. In the case of
-    one node per data center, each node should be able to support 100% of
-    client load. When there are two per datacenter, each one only needs to
-    scale to 50% of the client load.
-   </para>
+   <para><xref linkend="ex-ldap-replication-four-replicas"/> は 4 つのサプライヤレプリカを構成する場合の例です。これらは相互にデータを同期する構成で、 4 つのデータセンターに分散させても、 1 つのデータセンターごとに 2 つのサーバを配置してもかまいません。 4 つのデータセンターに分散させた場合、各ノードは 100% のクライアント負荷を受け付ける処理能力が必要となります。 2 つのデータセンターに 2 つのサーバを配置した場合は、各ノードは 50% のクライアント負荷を受け付ければ十分になります。</para>
   </sect3>
   
   <sect3 xml:id="sec-security-ldap-replication-six-replicas">
-   <title>Six replicas</title>
+   <title>6 つのレプリカ</title>
    <example xml:id="ex-ldap-replication-six-replicas">
-    <title>Six replicas</title>
+    <title>6 つのレプリカ</title>
 <screen>
                   ┌────┐       ┌────┐                   
                   │ S1 │◀─────▶│ S2 │                   
@@ -212,20 +124,13 @@
 └────┘       └────┘                  └────┘       └────┘  
 </screen>
    </example>
-   <para>
-    In <xref linkend="ex-ldap-replication-six-replicas"/>, each pair is in a
-    separate location. S1 and S2 are the suppliers, and S3, S4, S5, and
-    S6 are consumers of S1 and S2. Each pair of servers replicate to each 
-    other. S3, S4, S5, and S6 can accept writes, though most of the 
-    replication is done through S1 and S2. This setup provides geographic 
-    separation for high availability and scaling.
-   </para>
+   <para><xref linkend="ex-ldap-replication-six-replicas"/> は各サーバ対を別々の場所に配置した場合の構成例です。 S1 と S2 はサプライヤ、 S3, S4, S5, S6 は S1 と S2 のコンシューマとして構成します。また、各サーバ対はお互いにレプリケーションしているものとし、 S3, S4, S5, S6 でも書き込み要求は受け付けるものとしますが、ほとんどのレプリケーションは S1, S2 で行われます、このような構成は、高可用性と分散処理の両方を、地理的な離れた場所から提供する際の例となります。</para>
   </sect3>
   
   <sect3 xml:id="sec-security-ldap-replication-six-replicas-read-only">
-   <title>Six replicas with read-only consumers</title>
+   <title>読み込み専用コンシューマのある 6 つのレプリカ</title>
    <example xml:id="ex-ldap-replication-six-replicas-read-only">
-    <title>Six replicas with read-only consumers</title>
+    <title>読み込み専用コンシューマのある 6 つのレプリカ</title>
 <screen>
              ┌────┐       ┌────┐             
              │ S1 │◀─────▶│ S2 │             
@@ -240,323 +145,197 @@
 └────┘       └────┘       └────┘       └────┘
 </screen>
    </example>
-   <para>
-    In <xref linkend="ex-ldap-replication-six-replicas-read-only"/>, S1 and S2 are the suppliers, and the other four
-    servers are read-only consumers. All changes occur on S1 and S2, and are
-    propagated to the four replicas. Read-only consumers can be configured to
-    store only a subset of the database, or partial entries, to limit data
-    exposure. You could have a fractional read-only server in a DMZ, for
-    example, so that if data is exposed, changes can not propagate back to 
-    the other replicas.
-   </para>
+   <para><xref linkend="ex-ldap-replication-six-replicas-read-only"/> では、 S1 と S2 の両方がサプライヤとなり、残りの 4 つのサーバは読み込み専用のコンシューマとして構成する場合の例となります。全ての書き込み要求は S1, S2 でのみ行われ、残りの 4 つのサーバに複製していく構成です。読み込み専用のコンシューマには、データ開示を最小限に留めるため、データベースの一部や項目の一部のみを保存させるようにすることもできます。このように部分的な複製のみを持つ構成は DMZ のようなネットワークを持つ場合に最適で、この場合は DMZ 内に配置したコンシューマへの書き込みはできなくなります。</para>
   </sect3>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-replication-terminology">
-  <title>Terminology</title>
-  <para>
-   In the example topologies we have seen that &ds389a; can take on a
-   number of roles in a topology. The following list clarifies the terminology.
-  </para>
+  <title>用語</title>
+  <para>ここまでに説明してきた &ds389a; の構成例やこの後の説明では、様々な用語を使用しています。下記ではそれら用語に対する説明を示しています。</para>
   <variablelist>
    <varlistentry>
-    <term>Replica</term>
+    <term>レプリカ</term>
     <listitem>
-     <para>
-      An instance of &ds389a; with an attached database.
-     </para>
+     <para>データベースを持つ &ds389a; のインスタンスを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Read-write replica</term>
+    <term>読み書き可能なレプリカ</term>
     <listitem>
-     <para>
-      A replica with a full copy of a database, that accepts read and write
-      operations.
-     </para>
+     <para>読み込みと書き込みの両方の要求を受け付けることができる、データベースの完全コピーを持つレプリカを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Read-only replica</term>
+    <term>読み込み専用レプリカ</term>
     <listitem>
-     <para>
-      A replica with a full copy of a database, that only accepts read
-      operations.
-     </para>
+     <para>読み込み要求のみを受け付けることができる、データベースの完全コピーを持つレプリカを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Fractional read-only replica</term>
+    <term>部分的な複製のみを持つレプリカ</term>
     <listitem>
-     <para>
-      A replica with a partial copy of a database, that only accepts read-
-      only operations.
-     </para>
+     <para>データベースのうちの一部のみを複製し、読み込み要求のみを受け付けることができるレプリカを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Supplier</term>
+    <term>サプライヤ</term>
     <listitem>
-     <para>
-      A replica that supplies data from its database to another replica.
-     </para>
+     <para>他のレプリカにデータベースの内容を提供することができるレプリカを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Consumer</term>
+    <term>コンシューマ</term>
     <listitem>
-     <para>
-      A replica that receives data from another replica to write into its
-      database.
-     </para>
+     <para>他のレプリカからデータを受け取って、自身のデータベースに書き込むレプリカを意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Replication agreement</term>
+    <term>レプリケーション同意</term>
     <listitem>
-     <para>
-      The configuration of a server defining its supplier and consumer relation
-      to another replica.
-     </para>
+     <para>他のレプリカとの関係性 (サプライヤ／コンシューマ) に対するサーバ設定を意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Topology</term>
+    <term>構成</term>
     <listitem>
-     <para>
-      A set of replicas connected via replication agreements.
-     </para>
+     <para>レプリケーション同意を介したレプリカ同士の接続構成を意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Replica ID</term>
+    <term>レプリカ ID</term>
     <listitem>
-     <para>
-      A unique identifier of the &ds389; instance within the replication
-      topology.
-     </para>
+     <para>レプリケーション構成内で重複しない &ds389; のインスタンス識別子を意味しています。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Replication manager</term>
+    <term>レプリケーションマネージャ</term>
     <listitem>
-     <para>
-      An account with replication rights in the directory.
-     </para>
+     <para>ディレクトリ内でレプリケーション権限を持つアカウントを意味しています。</para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect2>
 
  <sect2 xml:id="sec-security-ldap-replication-configuration">
-  <title>Configuring replication</title>
-  <para>
-   The first example sets up a two node bi-directional replication with a
-   single read-only server, as a minimal starting example. In the following
-   examples, the host names of the two read-write nodes are RW1 and RW2, and
-   the read-only server is RO1. (Of course you must use your own host names.)  
-   </para>
-  <para>
-   All servers should have a backend with an identical suffix. Only one server,
-   RW1, needs an initial copy of the database.
-  </para>
+  <title>レプリケーションの設定</title>
+  <para>最小構成例として、まずは 2 ノードの双方向レプリケーションと 1 ノードの読み込み専用サーバを構成してみます。下記の例では、読み書き可能なレプリカのサーバ名は RW1, RW2 とし、読み込み専用のレプリカのサーバ名は RO1 とします (もちろん必要に応じて自由な名前を設定してかまいません) 。</para>
+  <para>この構成内にあるサーバには、全て同じサフィックスを設定する必要があります。また、初期状態では RW1 にのみデータが存在するものとします。</para>
 
  <sect3 xml:id="sec-security-ldap-replication-two-nodes">  
-   <title>Configuring two-node replication</title>
-  <para>
-    The following commands configure the read-write replicas in a two-node setup 
-    (<xref linkend="ex-ldap-replication-two-replicas"/>), with the hostnames
-    RW1 and RW2. (Remember to use your own hostnames.) First, configure RW1:
-  </para>
+   <title>2 ノードレプリケーションの設定</title>
+  <para>下記のコマンドは 2 ノード構成 ( <xref linkend="ex-ldap-replication-two-replicas"/> ) の場合のコマンド例で、ホスト名を RW1, RW2 にしています (実際には独自の名前でかまいません) 。 RW1 側の設定は下記のようになります:</para>
   
   <warning>
-  <title>Create a strong replication manager password</title>
-  <para>
-    The replication manager should be considered equivalent to the 
-    directory manager, in terms of security and access, and should
-    have a very strong password.
-  </para>  
-  <para>
-    If you create different replication manager passwords for each server,
-    be sure to keep track of which password belongs to which server. For
-    example, when you configure the outbound connection in RW1's replication agreement, 
-    you need to set the replication manager password to the RW2 replication manager password.
-  </para>
+  <title>強力なレプリケーションマネージャパスワードの作成について</title>
+  <para>レプリケーションマネージャのアカウントはディレクトリマネージャのアカウントと同等の権限を持つことから、セキュリティを確保するために強力なパスワードを設定しておくことを強くお勧めします。</para>  
+  <para>各サーバで異なるレプリケーションマネージャのパスワードを設定する場合は、それぞれのサーバが使用するアカウントをよく覚えておいてください。たとえば RW1 側のレプリケーション同意を設定する場合、パスワードとして設定すべきなのは RW2 側のレプリケーションマネージャのパスワードとなります。</para>
 </warning>
 
-<screen>&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> replication create-manager</command>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> replication enable</command> \ 
+<screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication create-manager</command>
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication enable</command> \ 
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
 <command>--role supplier --replica-id <replaceable>1</replaceable> --bind-dn "cn=replication manager,cn=config"</command>
 </screen>
-  <para>
-   Configure RW2:
-  </para>
-<screen>&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> replication create-manager</command>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> replication enable</command> \
+  <para>RW2 側の設定は下記のようになります:</para>
+<screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication create-manager</command>
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication enable</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \ 
 <command>--role supplier --replica-id <replaceable>2</replaceable> --bind-dn "cn=replication manager,cn=config"</command>
 </screen>
-  <para>
-   This will create the replication metadata required on RW1 and RW2. Note the
-   difference in the <option>replica-id</option> between the two servers. This
-   also creates the replication manager account, which is an account with
-   replication rights for authenticating between the two nodes.
-  </para>
-  <para>
-   RW1 and RW2 are now both configured to have replication metadata. The next
-   step is to create the first agreement for outbound data from RW1 to RW2.
-  </para>
+  <para>上記のコマンドを実行することで、 RW1, RW2 の両方にレプリケーション用のデータを設定することができます。なお、 RW1 と RW2 では <option>replica-id</option> の値が異なっていることに注意してください。また、このコマンドを実行すると、レプリケーションマネージャのアカウントを作成することになります。このアカウントは、 2 つのノードが互いに認証する際に使用するアカウントとなります。</para>
+  <para>これで RW1 と RW2 の間でレプリケーションを行う準備ができました。あとは RW1 から RW2 に対して、データを発信するための最初の合意を作成します。</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> repl-agmt create</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
 <command>--host=&exampleserverip; --port=636 --conn-protocol LDAPS --bind-dn "cn=replication manager,cn=config"</command> \
-<command>--bind-passwd <replaceable>PASSWORD</replaceable> --bind-method SIMPLE <replaceable>RW1_to_RW2</replaceable></command>
+<command>--bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW1_to_RW2</replaceable></command>
 </screen>
-  <para>
-   Data will not flow from RW1 to RW2 until after a full synchronization
-   of the database, which is called an initialization or reinit. This will
-   reset all database content on RW2 to match the content of RW1. Run the
-   following command to trigger a reinit of the data:
-  </para>
+  <para>上記のコマンドだけではデータベースの同期が始まりません。同期を始めるには、初期化または再初期化と呼ばれる完全同期が必要となります。初期化または再初期化を行うと、 RW2 側の全てのデータがリセットされ、 RW1 と全く同じデータになります。これを行うには、下記のように入力して実行します:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> repl-agmt init</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt init</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable> <replaceable>RW1_to_RW2</replaceable></command>
 </screen>
-  <para>
-   Check the status by running this command on RW1:
-  </para>
+  <para>あとは RW1 側で下記のようなコマンドを入力して実行し、状況を確認します:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> repl-agmt init-status</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt init-status</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable> <replaceable>RW1_to_RW2</replaceable></command>
 </screen>
-  <para>
-   When it is finished, you should see a "Agreement successfully initialized"
-   message. If you get an error message, check the errors log. Otherwise, you
-   should see the identical content from RW1 on RW2.
-  </para>
-  <para>
-   Finally, to make this bi-directional, configure a replication agreement 
-   from RW2 outbound to RW1:
-  </para>
+  <para>同期が完了すると、 "Agreement successfully initialized" というメッセージが表示されるはずです。それ以外のエラーメッセージが表示された場合は、エラーログを調べてみてください。エラーが表示されなければ、 RW1 と RW2 は全く同じデータになっているはずです。</para>
+  <para>あとはデータを双方向に複製するため、 RW2 から RW1 に対するレプリケーション合意も設定します:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> repl-agmt create</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
 <command>--host=&exampleserver2ip; --port=636 --conn-protocol LDAPS --bind-dn "cn=replication manager,cn=config"</command> \
-<command>--bind-passwd <replaceable>PASSWORD</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RW1</replaceable></command>
+<command>--bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RW1</replaceable></command>
 </screen>
-  <para>
-   Changes made on either RW1 or RW2 will now be replicated to the other. Check
-   replication status on either server with the following command:
-  </para>
+  <para>これで RW1 と RW2 の双方向レプリケーションが完成し、一方での変更が他方にも反映されるようになっています。いずれかのサーバで下記のようなコマンドを入力して実行し、状態を確認してください:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE-NAME</replaceable> repl-agmt status</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt status</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
 <command>--bind-dn "cn=replication manager,cn=config"</command> \
-<command>--bind-passwd <replaceable>PASSWORD</replaceable> <replaceable>RW2_to_RW1</replaceable></command> 
+<command>--bind-passwd <replaceable>パスワード</replaceable> <replaceable>RW2_to_RW1</replaceable></command> 
 </screen>
 </sect3>
 
  <sect3 xml:id="sec-security-ldap-replication-four-nodes">
- <title>Configuring a read-only node</title>
- <para>
-   To create a read-only node, start by creating the replication
-   manager account and metadata. The hostname of the example server
-   is RO3:
- </para>
+ <title>読み込み専用ノードの設定</title>
+ <para>読み込み専用ノードを作成するには、まずレプリケーションマネージャのアカウントとメタデータを作成するところから始めます。ここでのサーバ名は RO3 とします:</para>
  
   <warning>
-  <title>Create a strong replication manager password</title>
-  <para>
-    The replication manager should be considered equivalent to the 
-    directory manager, in terms of security and access, and should
-    have a very strong password.
-  </para>  
-  <para>
-    If you create different replication manager passwords for each server,
-    be sure to keep track of which password belongs to which server. For
-    example, when you configure the outbound connection in RW1's replication agreement, 
-    you need to set the replication manager password to the RW2 replication manager password.
-  </para>
+  <title>強力なレプリケーションマネージャパスワードの作成について</title>
+  <para>レプリケーションマネージャのアカウントはディレクトリマネージャのアカウントと同等の権限を持つことから、セキュリティを確保するために強力なパスワードを設定しておくことを強くお勧めします。</para>  
+  <para>各サーバで異なるレプリケーションマネージャのパスワードを設定する場合は、それぞれのサーバが使用するアカウントをよく覚えておいてください。たとえば RW1 側のレプリケーション同意を設定する場合、パスワードとして設定すべきなのは RW2 側のレプリケーションマネージャのパスワードとなります。</para>
 </warning>
 
- <screen>&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> replication create-manager</command>
-&prompt.sudo;<command> dsconf <replaceable>INSTANCE_NAME</replaceable></command> \
+ <screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication create-manager</command>
+&prompt.sudo;<command> dsconf <replaceable>インスタンス名</replaceable></command> \
 <command>replication enable --suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
 <command>--role consumer --bind-dn "cn=replication manager,cn=config"</command></screen> 
 
-<para>
-  Note that for a read-only replica you do not provide a replica-id, and the 
-  role is set to <literal>consumer</literal>. This allocates a
-  special read-only replica-id for all read-only replicas. After the read-only 
-  replica is created, add the replication agreements from RW1 and RW2 
-  to the read-only instance. The following example is on RW1:
- </para>
+<para>なお、読み込み専用のレプリカに対しては、レプリカ ID の指定は不要であるほか、役割の指定を <literal>consumer</literal> にします。これにより、特殊な読み込み専用のレプリカ ID が割り当てられます。読み込み専用のレプリカを作成したら、あとは RW1, RW2 のそれぞれに対してレプリケーション同意を追加します。下記は RW1 側での実行例です:</para>
  <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable></command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable></command> \
 <command>repl-agmt create --suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
 <command>--host=&exampleserverip; --port=636 --conn-protocol LDAPS</command> \ 
-<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>PASSWORD</replaceable></command> 
+<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable></command> 
 <command>--bind-method SIMPLE <replaceable>RW1_to_RO3</replaceable></command></screen>
-<para>
-  The following example configures the replication agreement between RW2 and 
-  RO1:
-</para>
+<para>下記の例は、 RW2 と RO1 との間でのレプリケーション同意設定例です:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt create</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
 <command>--host=&exampleserver2ip; --port=636 --conn-protocol LDAPS</command> \
-<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>PASSWORD</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RO3</replaceable></command>
+<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RO3</replaceable></command>
 </screen>
-<para>
-  After these steps are completed, you can use either RW1 or RW2 to perform 
-  the initialization of the database on RO3. The following example 
-  initalizes RO3 from RW2:
-</para>
+<para>これらの作業が完了したら、あとは RW1, RW2 から RO3 へデータベースの初期化を行います。下記の例では、 RW2 から RO3 に初期化を行っています:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt init</command>
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt init</command>
 <command>--suffix dc=<replaceable>EXAMPLE,dc=COM</replaceable> <replaceable>RW2_to_RO3</replaceable></command>
 </screen>
 </sect3>
 </sect2>
 
 <sect2 xml:id="sec-security-ldap-replication-monitoring-healthcheck">
-  <title>Monitoring and healthcheck</title>
-<para>
-  The <command>dsconf</command> command includes a monitoring option. You can check the status of each
-  replica status directly on the replicas, or from other hosts. The following example commands are run on RW1,
-  checking the status on two remote replicas, and then on itself:
-</para>
+  <title>監視とヘルスチェック</title>
+<para><command>dsconf</command> コマンドには監視オプションが用意されています。このコマンドを実行することで、レプリカ内で直接状態を確認することができるほか、他のホストからでも実行することができます。下記の例は RW1 内での実行例で、 2 つのレプリカに対する状態の確認と、自分自身の確認をそれぞれ行っています:</para>
 <screen>
 &prompt.sudo;<command>dsconf -D "cn=Directory Manager" ldap://<replaceable>RW2</replaceable> replication monitor</command>
 &prompt.sudo;<command>dsconf -D "cn=Directory Manager" ldap://<replaceable>RO3</replaceable> replication monitor</command>
 &prompt.sudo;<command>dsconf -D "cn=Directory Manager" ldap://<replaceable>RW1</replaceable> replication monitor</command> 
 </screen>
 
-<para>
-  The <command>dsctl</command> command has a <option>healthcheck</option> option. The following
-  example runs a replication healthcheck on the local &ds389a; instance:
-</para>
+<para>また、 <command>dsctl</command> コマンドには <option>healthcheck</option> というオプションもあります。下記ではローカルの &ds389a; インスタンスに対して、レプリケーションの状態確認を行っています:</para>
 <screen>
-&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> healthcheck --check replication</command>
+&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> healthcheck --check replication</command>
 </screen>    
-<para>
-  Use the <option>-v</option> option for verbosity, to see what the healthcheck examines:
-</para>
+<para><option>-v</option> オプションを追加すると、 healthcheck で行っていることの詳細を表示することができます:</para>
 <screen>
-&prompt.sudo;<command>dsctl -v <replaceable>INSTANCE_NAME</replaceable> healthcheck --check replication</command>
+&prompt.sudo;<command>dsctl -v <replaceable>インスタンス名</replaceable> healthcheck --check replication</command>
 </screen>
 
-<para>
-  Run <command>dsctl <replaceable>INSTANCE_NAME</replaceable> healthcheck</command> 
-  with no options for a general health check.
-</para>
-<para>
-  Run the following command to see a list of the checks that healthcheck 
-  performs:
-</para>
+<para>オプション無しで <command>dsctl <replaceable>インスタンス名</replaceable> healthcheck</command> を実行すると、一般的な状態確認のみを行います。</para>
+<para>下記のようなコマンドを実行することで、 healthcheck を実行した際に行われる処理の内容を調べることもできます:</para>
 <screen>
-&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> healthcheck --list-checks</command>
+&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> healthcheck --list-checks</command>
 config:hr_timestamp
 config:passwordscheme
 backends:userroot:cl_trimming
@@ -567,112 +346,67 @@ encryption:check_tls_version
 fschecks:file_perms
 [...]
 </screen>
-<para>
-  You can run one or more of the individual checks:
-</para>
+<para>個別のチェックのみを実行したい場合は、下記のように入力して実行します:</para>
 <screen>
-&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> healthcheck</command> \
+&prompt.sudo;<command>dsctl <replaceable>インスタンス名</replaceable> healthcheck</command> \
 <command>--check monitor-disk-space:disk_space tls:certificate_expiration</command>
 </screen>
 </sect2>
   
   <sect2 xml:id="sec-security-ldap-replication-backups">
-    <title>Making backups</title>
-  <para>   
-   When replication is
-   enabled you need to adjust your &ds389; backup strategy 
-   (see <xref linkend="sec-security-ldap-backup"/> to learn about
-   making backups). If you are using
-   <command>db2ldif</command> you must add the <option>--replication</option> flag 
-   to ensure that replication
-   metadata is backed up. You should backup all servers in the topology. When
-   restoring from backup, start by restoring a single node of the topology, then
-   reinitialize all other nodes as new instances.
- </para>
+    <title>バックアップの作成</title>
+  <para>レプリケーションを有効化した場合は、 &ds389; のバックアップについてもいくつかの調整を行う必要があります (一般的なバックアップ方法については <xref linkend="sec-security-ldap-backup"/> をお読みください) 。具体的には、バックアップ時に <command>db2ldif</command> コマンドを実行している場合、 <option>--replication</option> フラグを指定して、レプリケーションのメタデータを最初にバックアップするようにしてください。また、バックアップは構成内の全てのサーバに対して行うものとし、バックアップからの復元に際しては、構成内の 1 ノードでのみ実施して、残りのノードは再初期化を行ってデータを複製してください。</para>
 </sect2>
 
 <sect2 xml:id="sec-security-ldap-replication-pause-resume">
-  <title>Pausing and resuming replication</title>
-  <para>
-    You can pause replication during maintenance windows, or anytime you need to
-    stop it. A node of the topology can only be offline for a maximum of days 
-    up to the limit of the changelog 
-    (see <xref linkend="sec-security-ldap-replication-changelog"/>).
-  </para>
-  <para>
-    Use the <command>repl-agmt</command> command to pause replication. The
-    following example is on RW2:
-  </para>
+  <title>レプリケーションの一時停止と再開</title>
+  <para>メンテナンスやその他の運用上の理由で、レプリケーションを一時的に停止することができます。なお、一時停止は変更履歴の保持日数で示された期間 (詳しくは <xref linkend="sec-security-ldap-replication-changelog"/> をお読みください) まで続けることができます。</para>
+  <para>レプリケーションを一時停止するには、 <command>repl-agmt</command> コマンドを使用します。 RW2 で一時停止する場合は、下記のように入力して実行します:</para>
   <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt disable</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt disable</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> <replaceable>RW2_to_RW1</replaceable></command>
 </screen>
-<para>
-  The following example re-enables replication:
-</para>
+<para>再開する場合は、下記のように入力して実行します:</para>
   <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt enable</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt enable</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> <replaceable>RW2_to_RW1</replaceable></command>
 </screen>
 </sect2>
 
 <sect2 xml:id="sec-security-ldap-replication-changelog">
-  <title> Changelog max-age</title>
-  <para>
-   A replica can be offline for up to the length of time defined by
-   the changelog <option>max-age</option> option. <option>max-age</option> 
-   defines the maximum age of any entry in the changelog. Any items older 
-   than the <option>max-age</option> value are automatically removed.
- </para>
- <para>   
-   After the replica comes back online it will synchronize with the other
-   replicas. If it is offline for longer than the <option>max-age</option> value, 
-   the replica will need to be re-initialised, and will refuse to accept or 
-   provide changes to other nodes, as they may be inconsistent. The following 
-   example sets the <option>max-age</option> to seven days:
- </para>
+  <title>Changelog max-age</title>
+  <para>レプリカを何らかの理由でしばらくオフラインにする場合には、最大で changelog <option>max-age</option> で指定した時間までが許容されます。 <option>max-age</option> オプションは過去の変更履歴を持つ長さを時間で指定するための値で、ここで指定したよりも過去の履歴は自動的に削除されます。</para>
+ <para>しばらくオフラインになっていたレプリカが復帰すると、通常のレプリケーションと同様に、他のレプリカとの間で同期が行うことができます。 <option>max-age</option> で指定したよりも長い時間オフラインであった場合は、一貫性を失うことから、他のノードからの変更を拒否したり、他のノードへの変更の送信を拒否したりするようになります。下記の例では、 <option>max-age</option> を 7 日間に設定しています:</para>
  <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable></command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable></command> \
 <command>replication set-changelog --max-age 7d</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command>
 </screen>
 </sect2>
 
 <sect2 xml:id="sec-security-ldap-replication-remove-replica">
-  <title>Removing a replica</title>
-  <para>
-   To remove a replica, first fence the node to prevent any incoming changes
-   or reads. Then, find all servers that have incoming replication agreements 
-   with the node you are removing, and remove them. The following example
-   removes RW2. Start by disabling the outbound replication agreement on RW1:
- </para>
+  <title>レプリカの削除</title>
+  <para>レプリカを削除するには、まず他のノードに対して変更点の送信を停止する必要があります。あとは削除するノードで受け付けていたレプリケーション合意を削除します。下記の例では、 RW2 を削除する場合の例を示しています。まずは RW1 での発信側レプリケーション合意を削除します:</para>
  <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt delete</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt delete</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> <replaceable>RW1_to_RW2</replaceable></command>
 </screen>
-<para>
-  On the replica you are removing, which in the following example is RW2, remove all outbound agreements:
-</para>
+<para>あとは削除対象のレプリカ (この例では RW2) で、全ての送信側レプリケーション合意を削除します:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt delete</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt delete</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> <replaceable>RW2_to_RW1</replaceable></command>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-agmt delete</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt delete</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> <replaceable>RW2_to_RO3</replaceable></command>
 </screen>
-<para>
-  Stop the instance on RW2:
-</para>
+<para>あとは RW2 インスタンスを停止します:</para>
 <screen>
 &prompt.sudo;<command>systemctl stop dirsrv@<replaceable>INSTANCE_NAME</replaceable>.service</command>
 </screen>
-<para>
-  Then run the <command>cleanallruv</command> command to remove the replica ID from the topology. 
-  The following example is run on RW1:
-</para>
+<para>あとは構成内に書かれているレプリカ ID を削除するため、 <command>cleanallruv</command> コマンドを実行します。下記は RW1 で実行した場合の例です:</para>
 <screen>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-tasks cleanallruv</command> \
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-tasks cleanallruv</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable> --replica-id <replaceable>2</replaceable></command>
-&prompt.sudo;<command>dsconf <replaceable>INSTANCE_NAME</replaceable> repl-tasks list-cleanruv-tasks</command>
+&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-tasks list-cleanruv-tasks</command>
 </screen>
  </sect2>
 </sect1>
