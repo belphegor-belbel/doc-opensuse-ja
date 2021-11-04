@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="CreateProfile-Ask">
-  <title>インストール時におけるユーザへの値の確認</title>
+ <title>インストール時におけるユーザへの値の確認</title>
 
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -13,9 +13,9 @@
   </dm:docmanager>
  </info>
 
-   <para>インストールの際、ユーザに対して制御ファイルに設定すべき値を問い合わせるように設定することもできます。この機能を使用した場合、インストールの途中でポップアップが表示され、ユーザに対して値を問い合わせます。インストールを完全に自動化したいものの、ユーザに対してローカルのアカウントに対するパスワードを尋ねたりしたいような場合は、制御ファイル内に <literal>ask</literal> ディレクティブを設定してください。</para>
+ <para>インストールの際、ユーザに対して制御ファイルに設定すべき値を問い合わせるように設定することもできます。この機能を使用した場合、インストールの途中でポップアップが表示され、ユーザに対して値を問い合わせます。インストールを完全に自動化したいものの、ユーザに対してローカルのアカウントに対するパスワードを尋ねたりしたいような場合は、制御ファイル内に <literal>ask</literal> ディレクティブを設定してください。</para>
 
-   <para>下記のような XML 構造内に、必要な要素を追加していきます:</para>
+ <para>下記のような XML 構造内に、必要な要素を追加していきます:</para>
 
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
@@ -25,32 +25,68 @@
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
 
-<variablelist>
-    <title>ユーザへの値確認: XML 表記</title>
-  <varlistentry><term><literal>question</literal></term>
-<listitem><para>ユーザに対して提示する質問文を指定します。</para><screen>&lt;question&gt;LDAP サーバのアドレスを入力してください&lt;/question&gt;</screen><para>既定値は要素のパスそのものです (これではユーザに対する問い合わせになりませんので、 question については必ず設定しておくことをお勧めします) 。</para><remark>emap 2011-11-04: not sure I understand this.</remark></listitem>
-</varlistentry>
-  <varlistentry><term><literal>default</literal></term>
-<listitem><para>ユーザに対して提示する既定値を指定します。テキスト入力の場合、表示されたタイミングでこの値が入力済みの状態になります。チェックボックスの場合は true もしくは false を指定することで、あらかじめ選択済みの状態か、そうでないかを指定することができます。</para><screen>&lt;default&gt;dc=suse,dc=de&lt;/default&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>help</literal></term>
-<listitem><para>質問の左側に表示する、任意指定のヘルプテキストを指定します。</para><screen>&lt;help&gt;LDAP サーバのアドレスを入力してください。&lt;/help&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>title</literal></term>
-<listitem><para>質問の上に表示する任意指定のタイトルを指定します。</para><screen>&lt;title&gt;LDAP サーバ&lt;/title&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>type</literal></term>
-<listitem><para>入力すべきデータの形式を指定します。指定可能な値は <literal>symbol</literal> (シンボル), <literal>boolean</literal> (ブール値), <literal>string</literal> (文字列), <literal>integer</literal> (整数) のいずれかです。たとえばパーティション内でのファイルシステムの選択であれば <literal>symbol</literal> を、ユーザ設定内でのホームディレクトリの暗号化可否設定であれば <literal>boolean</literal> になります。制御ファイル内の項目から形式を判断したい場合は、 <literal>config:type="...."</literal> の箇所をご確認ください。また、 <literal>static_text</literal> という形式を指定することもできます。この場合は、ユーザに対して入力を求めず、ヘルプテキストに含まれていない情報を表示するために使用することができます。</para><screen>&lt;type&gt;symbol&lt;/type&gt;</screen><para>任意指定です。既定値は <literal>string</literal> です。 <literal>symbol</literal> を指定した場合は、 <literal>selection</literal> 要素も設定しなければなりません (下記参照) 。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>password</literal></term>
-<listitem><para>このブール値を <literal>true</literal> に設定すると、単純なテキスト入力ではなく、パスワードダイアログを表示するようになります。なお、 <literal>type</literal> の値が <literal>string</literal> の場合にのみ効果があります。</para><screen>&lt;password config:type="boolean"&gt;true&lt;/password&gt;</screen><para>任意指定です。既定値は <literal>false</literal> です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>pathlist</literal></term>
-<listitem><para><literal>path</literal> (パス) 要素の一覧を指定します。パスはカンマ区切りのリストで、変更したい要素のパスを表すものです。たとえば制御ファイル内での LDAP サーバの要素は <literal>&lt;ldap&gt;&lt;ldap_server&gt;</literal> という場所にありますが、この場合は <literal>ldap,ldap_server</literal> のように指定します。</para><screen>&lt;pathlist config:type="list"&gt;
+ <variablelist>
+  <title>ユーザへの値確認: XML 表記</title>
+  <varlistentry>
+   <term><literal>question</literal></term>
+   <listitem>
+    <para>ユーザに対して提示する質問文を指定します。</para>
+<screen>&lt;question&gt;LDAP サーバのアドレスを入力してください&lt;/question&gt;</screen>
+    <para>既定値は要素のパスそのものです (これではユーザに対する問い合わせになりませんので、 question については必ず設定しておくことをお勧めします) 。</para>
+    <remark>emap 2011-11-04: not sure I understand this.</remark>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>default</literal></term>
+   <listitem>
+    <para>ユーザに対して提示する既定値を指定します。テキスト入力の場合、表示されたタイミングでこの値が入力済みの状態になります。チェックボックスの場合は true もしくは false を指定することで、あらかじめ選択済みの状態か、そうでないかを指定することができます。</para>
+<screen>&lt;default&gt;dc=suse,dc=de&lt;/default&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>help</literal></term>
+   <listitem>
+    <para>質問の左側に表示する、任意指定のヘルプテキストを指定します。</para>
+<screen>&lt;help&gt;LDAP サーバのアドレスを入力してください。&lt;/help&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>title</literal></term>
+   <listitem>
+    <para>質問の上に表示する任意指定のタイトルを指定します。</para>
+<screen>&lt;title&gt;LDAP サーバ&lt;/title&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>type</literal></term>
+   <listitem>
+    <para>入力すべきデータの形式を指定します。指定可能な値は <literal>symbol</literal> (シンボル), <literal>boolean</literal> (ブール値), <literal>string</literal> (文字列), <literal>integer</literal> (整数) のいずれかです。たとえばパーティション内でのファイルシステムの選択であれば <literal>symbol</literal> を、ユーザ設定内でのホームディレクトリの暗号化可否設定であれば <literal>boolean</literal> になります。制御ファイル内の項目から形式を判断したい場合は、 <literal>config:type="...."</literal> の箇所をご確認ください。また、 <literal>static_text</literal> という形式を指定することもできます。この場合は、ユーザに対して入力を求めず、ヘルプテキストに含まれていない情報を表示するために使用することができます。</para>
+<screen>&lt;type&gt;symbol&lt;/type&gt;</screen>
+    <para>任意指定です。既定値は <literal>string</literal> です。 <literal>symbol</literal> を指定した場合は、 <literal>selection</literal> 要素も設定しなければなりません (下記参照) 。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>password</literal></term>
+   <listitem>
+    <para>このブール値を <literal>true</literal> に設定すると、単純なテキスト入力ではなく、パスワードダイアログを表示するようになります。なお、 <literal>type</literal> の値が <literal>string</literal> の場合にのみ効果があります。</para>
+<screen>&lt;password config:type="boolean"&gt;true&lt;/password&gt;</screen>
+    <para>任意指定です。既定値は <literal>false</literal> です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>pathlist</literal></term>
+   <listitem>
+    <para><literal>path</literal> (パス) 要素の一覧を指定します。パスはカンマ区切りのリストで、変更したい要素のパスを表すものです。たとえば制御ファイル内での LDAP サーバの要素は <literal>&lt;ldap&gt;&lt;ldap_server&gt;</literal> という場所にありますが、この場合は <literal>ldap,ldap_server</literal> のように指定します。</para>
+<screen>&lt;pathlist config:type="list"&gt;
   &lt;path&gt;networking,dns,hostname&lt;/path&gt;
   &lt;path&gt;...&lt;/path&gt;
 &lt;/pathlist&gt;
-        </screen><para>制御ファイル内に書かれている最初のユーザに対するパスワードを変更したい場合は、パスを <literal>users,0,user_password</literal> のように指定します。ここで <literal>0</literal> は、制御ファイルの &lt;users config:type="list"&gt; 内にある最初の要素を意味します。同様に <literal>1</literal> を指定すると、 2 番目の項目を意味することになります。</para><screen>&lt;users config:type="list"&gt;
+        </screen>
+    <para>制御ファイル内に書かれている最初のユーザに対するパスワードを変更したい場合は、パスを <literal>users,0,user_password</literal> のように指定します。ここで <literal>0</literal> は、制御ファイルの &lt;users config:type="list"&gt; 内にある最初の要素を意味します。同様に <literal>1</literal> を指定すると、 2 番目の項目を意味することになります。</para>
+<screen>&lt;users config:type="list"&gt;
   &lt;user&gt;
     &lt;username&gt;root&lt;/username&gt;
     &lt;user_password&gt;password to change&lt;/user_password&gt;
@@ -62,17 +98,32 @@
     &lt;encrypted config:type="boolean"&gt;false&lt;/encrypted&gt;
   &lt;/user&gt;
 &lt;/users&gt;
-        </screen><para>この情報の設定は任意ですが、 <literal>path</literal> もしくは <literal>file</literal> のいずれかを指定すべきです。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>file</literal></term>
-<listitem><para>質問に対してユーザが入力した内容をファイルに保存することもできます。このようにすることで、スクリプトから読み込んで使用できるようになります。なお、 <literal>stage=initial</literal> を設定した場合で、第 2 ステージで回答を使用したい場合は、 <literal>chrooted=false</literal> を指定した chroot 環境スクリプトで、回答が書かれたファイルをコピーする必要があります。たとえば <command>cp /tmp/my_answer /mnt/tmp/</command> のように実行します。これは、第 1 ステージでは <filename>/tmp</filename> が RAM ディスク内に存在するため、再起動を行うと消えてしまうためです。このような仕組みから、 <filename>/mnt/</filename> 以下にマウントされたインストール先のシステムにコピーを行うことで、この問題を解決することができます。</para><screen>&lt;file&gt;/tmp/answer_hostname&lt;/file&gt;</screen><para>この情報の設定は任意ですが、 <literal>path</literal> もしくは <literal>file</literal> のいずれかを指定すべきです。</para></listitem>
-</varlistentry>
-<varlistentry><term><literal>stage</literal></term>
-<listitem><para os="sles;sled;osuse">質問を表示するインストール時のステージを指定します。ここでは <literal>cont</literal> もしくは <literal>initial</literal> のいずれかを指定することができます。 <literal>initial</literal> はインストールの冒頭で表示する意味となり、インストール前スクリプトの直後に表示されます。対する <literal>cont</literal> はシステムを初めて再起動した後に表示されます。なお、ディスク内の制御ファイルに対して回答を書き込みたい場合は、 <literal>initial</literal> を指定してください。また、 <literal>initial</literal> でパスワードを入力した場合、パスワードは暗号化されずに保存されることにも注意してください。また、 <literal>cont</literal> を指定した場合、ファイルシステム関連の質問を表示しても意味がないことにも注意してください。これは、その時点では既にパーティションの設定が完了しているため、制御ファイルを書き換えても効果が無いためです。</para><screen>&lt;stage&gt;cont&lt;/stage&gt;</screen><para>任意指定です。既定値は <literal>initial</literal> です。</para>
-        <para os="slemicro"><literal>Stage</literal> は質問を表示するインストールステージを指定します。ただし、 &slem; は単一のステージでインストールされますので、こちらの値は <literal>initial</literal> にしてください。それ以外の値は適用できません。質問のポップアップはインストール前スクリプトの実行後、インストールが完了する前に表示されます。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>selection</literal></term>
-<listitem><para><literal>selection</literal> 要素には <literal>entry</literal> 要素のリストを指定します。それぞれの <literal>entry</literal> 要素は、ユーザ側に提示される選択肢を表します。この場合、テキストボックスには直接値を指定することができません。一覧から値を選択するのみとなります。</para><screen>&lt;selection config:type="list"&gt;
+        </screen>
+    <para>この情報の設定は任意ですが、 <literal>path</literal> もしくは <literal>file</literal> のいずれかを指定すべきです。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>file</literal></term>
+   <listitem>
+    <para>質問に対してユーザが入力した内容をファイルに保存することもできます。このようにすることで、スクリプトから読み込んで使用できるようになります。なお、 <literal>stage=initial</literal> を設定した場合で、第 2 ステージで回答を使用したい場合は、 <literal>chrooted=false</literal> を指定した chroot 環境スクリプトで、回答が書かれたファイルをコピーする必要があります。たとえば <command>cp /tmp/my_answer /mnt/tmp/</command> のように実行します。これは、第 1 ステージでは <filename>/tmp</filename> が RAM ディスク内に存在するため、再起動を行うと消えてしまうためです。このような仕組みから、 <filename>/mnt/</filename> 以下にマウントされたインストール先のシステムにコピーを行うことで、この問題を解決することができます。</para>
+<screen>&lt;file&gt;/tmp/answer_hostname&lt;/file&gt;</screen>
+    <para>この情報の設定は任意ですが、 <literal>path</literal> もしくは <literal>file</literal> のいずれかを指定すべきです。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>stage</literal></term>
+   <listitem>
+    <para os="sles;sled;osuse">質問を表示するインストール時のステージを指定します。ここでは <literal>cont</literal> もしくは <literal>initial</literal> のいずれかを指定することができます。 <literal>initial</literal> はインストールの冒頭で表示する意味となり、インストール前スクリプトの直後に表示されます。対する <literal>cont</literal> はシステムを初めて再起動した後に表示されます。なお、ディスク内の制御ファイルに対して回答を書き込みたい場合は、 <literal>initial</literal> を指定してください。また、 <literal>initial</literal> でパスワードを入力した場合、パスワードは暗号化されずに保存されることにも注意してください。また、 <literal>cont</literal> を指定した場合、ファイルシステム関連の質問を表示しても意味がないことにも注意してください。これは、その時点では既にパーティションの設定が完了しているため、制御ファイルを書き換えても効果が無いためです。</para>
+<screen>&lt;stage&gt;cont&lt;/stage&gt;</screen>
+    <para>任意指定です。既定値は <literal>initial</literal> です。</para>
+    <para os="slemicro"><literal>Stage</literal> は質問を表示するインストールステージを指定します。ただし、 &slem; は単一のステージでインストールされますので、こちらの値は <literal>initial</literal> にしてください。それ以外の値は適用できません。質問のポップアップはインストール前スクリプトの実行後、インストールが完了する前に表示されます。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>selection</literal></term>
+   <listitem>
+    <para><literal>selection</literal> 要素には <literal>entry</literal> 要素のリストを指定します。それぞれの <literal>entry</literal> 要素は、ユーザ側に提示される選択肢を表します。この場合、テキストボックスには直接値を指定することができません。一覧から値を選択するのみとなります。</para>
+<screen>&lt;selection config:type="list"&gt;
   &lt;entry&gt;
     &lt;value&gt;
         btrfs
@@ -89,44 +140,96 @@
         Extended3 File System
     &lt;/label&gt;
   &lt;/entry&gt;
-&lt;/selection&gt;</screen><para><literal>type=string</literal> の場合は任意、 <literal>type=boolean</literal> の場合は設定不可、 <literal>type=symbol</literal> の場合は必須です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>dialog</literal></term>
-<listitem><para>1 つのダイアログ内で複数の質問を表示することもできます。これを行うには、この要素で整数のダイアログ ID を指定してください。同じダイアログ ID の質問は、同じダイアログ内に表示されるようになります。また、ダイアログは ID 順に並べられます。</para><screen>&lt;dialog config:type="integer"&gt;3&lt;/dialog&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>element</literal></term>
-<listitem><para>1 つのダイアログ内で複数の質問を表示することもできます。この場合、 <literal>element</literal> で整数の ID を指定する必要があります。ダイアログ内での質問は、この ID 順に並べられます。</para><screen>&lt;element config:type="integer"&gt;1&lt;/element&gt;</screen><para>任意指定です (<literal>dialog</literal> もご覧ください) 。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>width</literal></term>
-<listitem><para>既定のダイアログ幅を広げることができます。ダイアログに対して複数の幅指定が存在する場合は、最も大きいものが使用されます。値は 1 文字分をおおよそ 1 とした幅で指定します。</para><screen>&lt;width config:type="integer"&gt;50&lt;/width&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>height</literal></term>
-<listitem><para>既定のダイアログの高さを広げることができます。ダイアログに対して複数の高さ指定が存在する場合は、最も大きいものが使用されます。値は 1 行分をおおよそ 1 とした高さで指定します。</para><screen>&lt;height config:type="integer"&gt;15&lt;/height&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>frametitle</literal></term>
-<listitem><para>1 つのダイアログ内で複数の質問を表示することもできます。この場合、ダイアログ内の各質問には枠が描かれ、枠タイトルと各質問に対するキャプションが表示されます。また 1 つの枠内に複数の要素を設定することもできます。この場合、同じ枠タイトルを設定する必要があります。</para><screen>&lt;frametitle&gt;User data&lt;/frametitle&gt;</screen><para>任意指定です。既定では枠タイトルが設定されません。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>script</literal></term>
-<listitem><para>質問に対する回答を入力したあと、スクリプトを実行することができます。スクリプトに関する詳細は下記をお読みください。</para><screen>&lt;script&gt;...&lt;/script&gt;</screen><para>任意指定です。既定ではスクリプトを動作させません。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>ok_label</literal></term>
-<listitem><para><guimenu>Ok</guimenu> ボタンのラベルを変更することもできます。 1 つのダイアログに対しては、最後に指定された要素が使用されます。</para><screen>&lt;ok_label&gt;Finish&lt;/ok_label&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>back_label</literal></term>
-<listitem><para><guimenu>Back</guimenu> (戻る) ボタンのラベルを変更することもできます。 1 つのダイアログに対しては、最後に指定された要素が使用されます。</para><screen>&lt;back_label&gt;change values&lt;/back_label&gt;</screen><para>任意指定です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>timeout</literal></term>
-<listitem><para>ここではタイムアウトを秒単位で指定することができます。ここで指定した時間内に何も回答を行わなかった場合、既定値が回答されたものとして扱われます。なお、ダイアログ内のウイジェットに触れたり、何らかの変更を行ったりした場合は、タイムアウトの設定が解除され、 <guimenu>Ok</guimenu> を押すまで待機するようになります。</para><screen>&lt;timeout config:type="integer"&gt;30&lt;/timeout&gt;</screen><para>任意指定です。値を指定しない場合は <literal>0</literal> として扱われ、タイムアウトの設定がないものとして処理されます。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>default_value_script</literal></term>
-<listitem><para>質問に対する既定値を設定するために、スクリプトを動作させることができます (詳しい手順については <xref linkend="CreateProfile-Ask-default-value"/> をお読みください) 。この機能は、何らかの理由で既定値を <emphasis>計算</emphasis> しなければならないような場合に有用で、 <literal>timeout</literal> オプションと併用して使用します。</para><screen>&lt;default_value_script&gt;...&lt;/default_value_script&gt;</screen><para>任意指定です。既定ではスクリプトを動作させません。</para></listitem>
-</varlistentry>
-</variablelist>
+&lt;/selection&gt;</screen>
+    <para><literal>type=string</literal> の場合は任意、 <literal>type=boolean</literal> の場合は設定不可、 <literal>type=symbol</literal> の場合は必須です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>dialog</literal></term>
+   <listitem>
+    <para>1 つのダイアログ内で複数の質問を表示することもできます。これを行うには、この要素で整数のダイアログ ID を指定してください。同じダイアログ ID の質問は、同じダイアログ内に表示されるようになります。また、ダイアログは ID 順に並べられます。</para>
+<screen>&lt;dialog config:type="integer"&gt;3&lt;/dialog&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>element</literal></term>
+   <listitem>
+    <para>1 つのダイアログ内で複数の質問を表示することもできます。この場合、 <literal>element</literal> で整数の ID を指定する必要があります。ダイアログ内での質問は、この ID 順に並べられます。</para>
+<screen>&lt;element config:type="integer"&gt;1&lt;/element&gt;</screen>
+    <para>任意指定です (<literal>dialog</literal> もご覧ください) 。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>width</literal></term>
+   <listitem>
+    <para>既定のダイアログ幅を広げることができます。ダイアログに対して複数の幅指定が存在する場合は、最も大きいものが使用されます。値は 1 文字分をおおよそ 1 とした幅で指定します。</para>
+<screen>&lt;width config:type="integer"&gt;50&lt;/width&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>height</literal></term>
+   <listitem>
+    <para>既定のダイアログの高さを広げることができます。ダイアログに対して複数の高さ指定が存在する場合は、最も大きいものが使用されます。値は 1 行分をおおよそ 1 とした高さで指定します。</para>
+<screen>&lt;height config:type="integer"&gt;15&lt;/height&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>frametitle</literal></term>
+   <listitem>
+    <para>1 つのダイアログ内で複数の質問を表示することもできます。この場合、ダイアログ内の各質問には枠が描かれ、枠タイトルと各質問に対するキャプションが表示されます。また 1 つの枠内に複数の要素を設定することもできます。この場合、同じ枠タイトルを設定する必要があります。</para>
+<screen>&lt;frametitle&gt;User data&lt;/frametitle&gt;</screen>
+    <para>任意指定です。既定では枠タイトルが設定されません。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>script</literal></term>
+   <listitem>
+    <para>質問に対する回答を入力したあと、スクリプトを実行することができます。スクリプトに関する詳細は下記をお読みください。</para>
+<screen>&lt;script&gt;...&lt;/script&gt;</screen>
+    <para>任意指定です。既定ではスクリプトを動作させません。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>ok_label</literal></term>
+   <listitem>
+    <para><guimenu>Ok</guimenu> ボタンのラベルを変更することもできます。 1 つのダイアログに対しては、最後に指定された要素が使用されます。</para>
+<screen>&lt;ok_label&gt;Finish&lt;/ok_label&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>back_label</literal></term>
+   <listitem>
+    <para><guimenu>Back</guimenu> (戻る) ボタンのラベルを変更することもできます。 1 つのダイアログに対しては、最後に指定された要素が使用されます。</para>
+<screen>&lt;back_label&gt;change values&lt;/back_label&gt;</screen>
+    <para>任意指定です。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>timeout</literal></term>
+   <listitem>
+    <para>ここではタイムアウトを秒単位で指定することができます。ここで指定した時間内に何も回答を行わなかった場合、既定値が回答されたものとして扱われます。なお、ダイアログ内のウイジェットに触れたり、何らかの変更を行ったりした場合は、タイムアウトの設定が解除され、 <guimenu>Ok</guimenu> を押すまで待機するようになります。</para>
+<screen>&lt;timeout config:type="integer"&gt;30&lt;/timeout&gt;</screen>
+    <para>任意指定です。値を指定しない場合は <literal>0</literal> として扱われ、タイムアウトの設定がないものとして処理されます。</para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><literal>default_value_script</literal></term>
+   <listitem>
+    <para>質問に対する既定値を設定するために、スクリプトを動作させることができます (詳しい手順については <xref linkend="CreateProfile-Ask-default-value"/> をお読みください) 。この機能は、何らかの理由で既定値を <emphasis>計算</emphasis> しなければならないような場合に有用で、 <literal>timeout</literal> オプションと併用して使用します。</para>
+<screen>&lt;default_value_script&gt;...&lt;/default_value_script&gt;</screen>
+    <para>任意指定です。既定ではスクリプトを動作させません。</para>
+   </listitem>
+  </varlistentry>
+ </variablelist>
 
-   <sect2 xml:id="CreateProfile-Ask-default-value">
-    <title>既定値スクリプト</title>
-    <para>質問に対する既定値を設定するために、スクリプトを動作させることができます。この機能は、何らかの理由で既定値を <emphasis>計算</emphasis> しなければならないような場合に有用で、 <literal>timeout</literal> オプションと併用して使用します。</para>
-    <para>スクリプトは XML 構造内の要素として配置します。具体的には <xref linkend="scripts-syntax"/> のようになります:</para>
+ <sect2 xml:id="CreateProfile-Ask-default-value">
+  <title>既定値スクリプト</title>
+  <para>質問に対する既定値を設定するために、スクリプトを動作させることができます。この機能は、何らかの理由で既定値を <emphasis>計算</emphasis> しなければならないような場合に有用で、 <literal>timeout</literal> オプションと併用して使用します。</para>
+  <para>スクリプトは XML 構造内の要素として配置します。具体的には <xref linkend="scripts-syntax"/> のようになります:</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -136,14 +239,13 @@
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
+  <para><command>echo</command> コマンドで STDOUT (標準出力) に出力することで、ダイアログに対する既定値を設定することができます。なお、スクリプトの終了コードが 0 以外であった場合、通常の既定値が設定されます。なお、 <literal>\n</literal> を省略するために <command>echo -n</command> を使用する必要がある点と、出力する値が適切なものでなければならない点、そしてブール値の場合は <quote>okay</quote> 等を使用すべきではない点 (代わりに <quote>true</quote> を出力してください) にそれぞれ注意してください。</para>
+ </sect2>
 
-    <para><command>echo</command> コマンドで STDOUT (標準出力) に出力することで、ダイアログに対する既定値を設定することができます。なお、スクリプトの終了コードが 0 以外であった場合、通常の既定値が設定されます。なお、 <literal>\n</literal> を省略するために <command>echo -n</command> を使用する必要がある点と、出力する値が適切なものでなければならない点、そしてブール値の場合は <quote>okay</quote> 等を使用すべきではない点 (代わりに <quote>true</quote> を出力してください) にそれぞれ注意してください。</para>
-   </sect2>
-
-   <sect2 xml:id="CreateProfile-Ask-script">
-    <title>スクリプト</title>
-    <para>質問に対する回答が表示された後にスクリプトを実行することができます。</para>
-    <para>下記のような XML 構造内に、必要な要素を追加していきます:</para>
+ <sect2 xml:id="CreateProfile-Ask-script">
+  <title>スクリプト</title>
+  <para>質問に対する回答が表示された後にスクリプトを実行することができます。</para>
+  <para>下記のような XML 構造内に、必要な要素を追加していきます:</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -153,28 +255,42 @@
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
-
-
-    <para><xref linkend="scripts-syntax"/> 内に示した要素以外にも、 <literal>&lt;ask&gt;</literal> 要素内のスクリプトには下記を指定することができます:</para>
-<variablelist>
-  <title>スクリプト: XML 表記</title>
-  <varlistentry><term><literal>filename</literal></term>
-<listitem><para>スクリプトのファイル名を指定します。</para><screen>&lt;filename&gt;my_ask_script.sh&lt;/filename&gt;</screen><para>既定値は ask_script.sh です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>environment</literal></term>
-<listitem><para>スクリプトに対して、環境変数の形で問い合わせの回答を設定するかをブール値で指定します。設定される環境変数は <envar>VAL</envar> になります。</para><screen>&lt;environment config:type="boolean"&gt;true&lt;/environment&gt;</screen><para>任意指定です。既定値は <literal>false</literal> です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>feedback</literal></term>
-<listitem><para>スクリプトの実行時にフィードバックを表示するかどうかを指定します。 STDOUT に何らかの値を出力すると、スクリプトの実行終了後にポップアップメッセージが表示されるようになります。</para><screen>&lt;feedback config:type="boolean"&gt;true&lt;/feedback&gt;</screen><para>任意指定です。既定値は <literal>false</literal> です。</para></listitem>
-</varlistentry>
-  <varlistentry><term><literal>rerun_on_error</literal></term>
-<listitem><para>スクリプトの終了コードが 0 (ゼロ) になるまでダイアログを開いたままにします。この機能を使用することで、ユーザからの入力を検証することができます。なお、スクリプト側では適切なエラーメッセージを表示するようにしてください。また、スクリプトからのエラーメッセージを表示するには、 <literal>feedback</literal> オプションを <literal>true</literal> に設定する必要があることにも注意してください。このオプションの指定は任意で、既定値は <literal>false</literal> です。</para></listitem>
-</varlistentry>
-</variablelist>
-
-    <para>なお、スクリプト内で <filename>/tmp/next_dialog</filename> ファイルを作成することもできます。このファイル内には、次に表示すべきダイアログの ID を指定します。 -1 を書き込むと、この流れを終了することができます。</para>
-
-    <para>下記に <literal>ask</literal> 機能の使用例を示します。</para>
+  <para><xref linkend="scripts-syntax"/> 内に示した要素以外にも、 <literal>&lt;ask&gt;</literal> 要素内のスクリプトには下記を指定することができます:</para>
+  <variablelist>
+   <title>スクリプト: XML 表記</title>
+   <varlistentry>
+    <term><literal>filename</literal></term>
+    <listitem>
+     <para>スクリプトのファイル名を指定します。</para>
+<screen>&lt;filename&gt;my_ask_script.sh&lt;/filename&gt;</screen>
+     <para>既定値は ask_script.sh です。</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>environment</literal></term>
+    <listitem>
+     <para>スクリプトに対して、環境変数の形で問い合わせの回答を設定するかをブール値で指定します。設定される環境変数は <envar>VAL</envar> になります。</para>
+<screen>&lt;environment config:type="boolean"&gt;true&lt;/environment&gt;</screen>
+     <para>任意指定です。既定値は <literal>false</literal> です。</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>feedback</literal></term>
+    <listitem>
+     <para>スクリプトの実行時にフィードバックを表示するかどうかを指定します。 STDOUT に何らかの値を出力すると、スクリプトの実行終了後にポップアップメッセージが表示されるようになります。</para>
+<screen>&lt;feedback config:type="boolean"&gt;true&lt;/feedback&gt;</screen>
+     <para>任意指定です。既定値は <literal>false</literal> です。</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><literal>rerun_on_error</literal></term>
+    <listitem>
+     <para>スクリプトの終了コードが 0 (ゼロ) になるまでダイアログを開いたままにします。この機能を使用することで、ユーザからの入力を検証することができます。なお、スクリプト側では適切なエラーメッセージを表示するようにしてください。また、スクリプトからのエラーメッセージを表示するには、 <literal>feedback</literal> オプションを <literal>true</literal> に設定する必要があることにも注意してください。このオプションの指定は任意で、既定値は <literal>false</literal> です。</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>なお、スクリプト内で <filename>/tmp/next_dialog</filename> ファイルを作成することもできます。このファイル内には、次に表示すべきダイアログの ID を指定します。 -1 を書き込むと、この流れを終了することができます。</para>
+  <para>下記に <literal>ask</literal> 機能の使用例を示します。</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -228,7 +344,7 @@ echo -n "ldap1.mydom.de"
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
-    <para>下記の例は &ay; の制御ファイルを選択させる場合の例です。 &ay; は問い合わせダイアログの動作完了後に <filename>modified.xml</filename> を読み込みなおしますので、これにより制御ファイルを全く新しくすることができます。</para>
+  <para>下記の例は &ay; の制御ファイルを選択させる場合の例です。 &ay; は問い合わせダイアログの動作完了後に <filename>modified.xml</filename> を読み込みなおしますので、これにより制御ファイルを全く新しくすることができます。</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -264,7 +380,7 @@ wget http://10.10.0.162/$VAL -O /tmp/profile/modified.xml 2&gt;/dev/null
     &lt;/ask&gt;tion&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
-    <para>下記のようなスクリプトを指定することで、質問に対する回答をチェックすることができます:</para>
+  <para>下記のようなスクリプトを指定することで、質問に対する回答をチェックすることができます:</para>
 <screen>&lt;general&gt;
   &lt;ask-list config:type="list"&gt;
     &lt;ask&gt;
@@ -293,5 +409,5 @@ exit 0
     &lt;/ask&gt;
   &lt;/ask-list&gt;
 &lt;/general&gt;</screen>
-   </sect2>
-  </sect1>
+ </sect2>
+</sect1>

@@ -4,7 +4,6 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="erb-templates">
-
  <title>ERB テンプレート</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -12,130 +11,122 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
+ <para>ERB テンプレートとは、プロファイル内に Ruby 言語のコードを埋め込むことのできる機能で、インストール時にプロファイルを修正する機能を提供します。この仕組みを利用することで、システムの状態を検知してプロファイル内の設定値を調整したり、セクションの追加や削除などを行ったりすることができます。</para>
+ <para>ERB 機能を有効化するには、プロファイルのファイル名に <filename>.erb</filename> という拡張子を追加します (例: <filename>autoyast.xml.erb</filename>) 。このような仕組みが存在することから、ルールやクラスと ERB テンプレートを同時に使用することはできません。</para>
+ <sect1 xml:id="erb">
+  <title><literal>ERB</literal> とは？</title>
 
-  <para>ERB テンプレートとは、プロファイル内に Ruby 言語のコードを埋め込むことのできる機能で、インストール時にプロファイルを修正する機能を提供します。この仕組みを利用することで、システムの状態を検知してプロファイル内の設定値を調整したり、セクションの追加や削除などを行ったりすることができます。</para>
+  <para><literal>ERB</literal> とは <emphasis>Embedded Ruby</emphasis> の略で、 Ruby プログラミング言語の力を借りて様々なコンテンツ生成を行うための仕組みです。 <literal>ERB</literal> を利用してプロファイル内に Ruby コードを含めることで、インストール先のシステムに依存した様々なプロファイル調整を行うことができるようになります。</para>
 
-  <para>ERB 機能を有効化するには、プロファイルのファイル名に <filename>.erb</filename> という拡張子を追加します (例: <filename>autoyast.xml.erb</filename>) 。このような仕組みが存在することから、ルールやクラスと ERB テンプレートを同時に使用することはできません。</para>
+  <para>ERB を使用する場合、 Ruby 言語のコードは <literal>&lt;%</literal> 記号から <literal>%&gt;</literal> 記号までの間に記述します。また、コマンドの出力をそのままプロファイルに入れ込みたい場合は、単純にイコール記号 ( <literal>=</literal> ) を追加します。</para>
 
-  <sect1 xml:id="erb">
-   <title><literal>ERB</literal> とは？</title>
-
-   <para><literal>ERB</literal> とは <emphasis>Embedded Ruby</emphasis> の略で、 Ruby プログラミング言語の力を借りて様々なコンテンツ生成を行うための仕組みです。 <literal>ERB</literal> を利用してプロファイル内に Ruby コードを含めることで、インストール先のシステムに依存した様々なプロファイル調整を行うことができるようになります。</para>
-
-   <para>ERB を使用する場合、 Ruby 言語のコードは <literal>&lt;%</literal> 記号から <literal>%&gt;</literal> 記号までの間に記述します。また、コマンドの出力をそのままプロファイルに入れ込みたい場合は、単純にイコール記号 ( <literal>=</literal> ) を追加します。</para>
-
-   <example xml:id="simple-erb">
-    <title>ERB を利用したファイルの取り込み</title>
-    <screen>&lt;bootloader&gt;
+  <example xml:id="simple-erb">
+   <title>ERB を利用したファイルの取り込み</title>
+<screen>&lt;bootloader&gt;
   &lt;% require "open-uri" %&gt;
   &lt;%= URI.open("http://192.168.1.1/profiles/bootloader-common.xml").read %&gt;
 &lt;/bootloader&gt;</screen>
-   </example>
+  </example>
 
-   <para>&ay; では <emphasis>ヘルパー関数</emphasis> と呼ばれる仕組みも提供しています。これは <literal>disks</literal> (ディスク) や <literal>network_cards</literal> (ネットワークカード) など、インストール先のシステムに関する様々な情報を取得することができる仕組みです。ヘルパーの一覧と値の意味について、詳しくは <xref linkend="erb-helpers"/> をお読みください。</para>
-  </sect1>
+  <para>&ay; では <emphasis>ヘルパー関数</emphasis> と呼ばれる仕組みも提供しています。これは <literal>disks</literal> (ディスク) や <literal>network_cards</literal> (ネットワークカード) など、インストール先のシステムに関する様々な情報を取得することができる仕組みです。ヘルパーの一覧と値の意味について、詳しくは <xref linkend="erb-helpers"/> をお読みください。</para>
+ </sect1>
+ <sect1 xml:id="erb-helpers">
+  <title>テンプレートヘルパー</title>
 
-  <sect1 xml:id="erb-helpers">
-   <title>テンプレートヘルパー</title>
+  <para>テンプレートヘルパーは Ruby メソッド集であり、プロファイル内で使用することで様々なインストール先システムの情報を収集することができます。</para>
 
-   <para>テンプレートヘルパーは Ruby メソッド集であり、プロファイル内で使用することで様々なインストール先システムの情報を収集することができます。</para>
-
-   <sect2 xml:id="erb-disks-helper">
-    <title><literal>disks</literal></title>
-
-    <para><literal>disks</literal> ヘルパーは、検出されたディスクの一覧を返却するヘルパー関数です。一覧の各要素には、デバイス名やサイズなどの基本的な情報が含まれます。</para>
-
-    <informaltable>
-     <tgroup cols="3">
-      <thead>
-       <row>
-        <entry>
-         <para>キー</para>
-        </entry>
-        <entry>
-         <para>型</para>
-        </entry>
-        <entry>
-         <para>値</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para><literal>:device</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>デバイスのカーネル名 (例: <literal>sda</literal>)</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:model</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>ディスクの型番</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:serial</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>シリアル番号</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:size</literal></para>
-        </entry>
-        <entry>
-         <para>Integer</para>
-        </entry>
-        <entry>
-         <para>ディスクサイズ (バイト単位)</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:udev_names</literal></para>
-        </entry>
-        <entry>
-         <para>Array&lt;String&gt;</para>
-        </entry>
-        <entry>
-         <para>ディスクの udev 名の一覧 (プロファイル内でデバイスを指定する際、これらのいずれかを使用することができます)</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:vendor</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>製造元の名前</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-
-    <para>下記のプロファイル例は、最も容量の大きいディスクに対してインストールを行う場合の例を示しています。検出されたディスクの一覧をサイズで並び替え、末尾のデバイスを選択します。あとは <literal>device</literal> 要素に対して <literal>:device</literal> キーで取得できた値を代入して使用します。</para>
-
-    <example>
-     <title>最も容量の大きいディスクの使用</title>
-      <screen>&lt;partitioning t="list"&gt;
+  <sect2 xml:id="erb-disks-helper">
+   <title><literal>disks</literal></title>
+   <para><literal>disks</literal> ヘルパーは、検出されたディスクの一覧を返却するヘルパー関数です。一覧の各要素には、デバイス名やサイズなどの基本的な情報が含まれます。</para>
+   <informaltable>
+    <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>
+        <para>キー</para>
+       </entry>
+       <entry>
+        <para>型</para>
+       </entry>
+       <entry>
+        <para>値</para>
+       </entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>
+        <para><literal>:device</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>デバイスのカーネル名 (例: <literal>sda</literal>)</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:model</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>ディスクの型番</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:serial</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>シリアル番号</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:size</literal></para>
+       </entry>
+       <entry>
+        <para>Integer</para>
+       </entry>
+       <entry>
+        <para>ディスクサイズ (バイト単位)</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:udev_names</literal></para>
+       </entry>
+       <entry>
+        <para>Array&lt;String&gt;</para>
+       </entry>
+       <entry>
+        <para>ディスクの udev 名の一覧 (プロファイル内でデバイスを指定する際、これらのいずれかを使用することができます)</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:vendor</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>製造元の名前</para>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <para>下記のプロファイル例は、最も容量の大きいディスクに対してインストールを行う場合の例を示しています。検出されたディスクの一覧をサイズで並び替え、末尾のデバイスを選択します。あとは <literal>device</literal> 要素に対して <literal>:device</literal> キーで取得できた値を代入して使用します。</para>
+   <example>
+    <title>最も容量の大きいディスクの使用</title>
+<screen>&lt;partitioning t="list"&gt;
   &lt;drive&gt;
     &lt;% disk = disks.sort_by { |d| d[:size] }.last %&gt; &lt;!-- find the largest disk --&gt;
     &lt;device&gt;&lt;%= disk[:device] %&gt;&lt;/device&gt; &lt;!-- print the disk device name --&gt;
@@ -144,95 +135,90 @@
   &lt;/drive&gt;
 &lt;/partitioning&gt;
      </screen>
-    </example>
+   </example>
+  </sect2>
 
-   </sect2>
-
-   <sect2 xml:id="erb-network-cards-helper">
-    <title><literal>network_cards</literal></title>
-
-    <para><literal>network_cards</literal> ヘルパーはネットワークカードの一覧を返す関数です。ここにはネットワークカードの名前のほか、状態に関する情報 (接続されているかどうかなど) も含まれています。</para>
-
-    <informaltable>
-     <tgroup cols="3">
-      <thead>
-       <row>
-        <entry>
-         <para>キー</para>
-        </entry>
-        <entry>
-         <para>型</para>
-        </entry>
-        <entry>
-         <para>値</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para><literal>:device</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>デバイス名 (例: <literal>eth0</literal> , <literal>enp3s0</literal> など)</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:mac</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>MAC アドレス</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:active</literal></para>
-        </entry>
-        <entry>
-         <para>Boolean</para>
-        </entry>
-        <entry>
-         <para>デバイスが有効化されているかどうか</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:link</literal></para>
-        </entry>
-        <entry>
-         <para>Boolean</para>
-        </entry>
-        <entry>
-         <para>デバイスが接続されているかどうか</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:vendor</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>製造元の名前</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-
-    <para>下記の例では、ネットワークに接続されている最初のネットワークカードを検出し、そのネットワークカードで DHCP を使用するように設定します。</para>
-
+  <sect2 xml:id="erb-network-cards-helper">
+   <title><literal>network_cards</literal></title>
+   <para><literal>network_cards</literal> ヘルパーはネットワークカードの一覧を返す関数です。ここにはネットワークカードの名前のほか、状態に関する情報 (接続されているかどうかなど) も含まれています。</para>
+   <informaltable>
+    <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>
+        <para>キー</para>
+       </entry>
+       <entry>
+        <para>型</para>
+       </entry>
+       <entry>
+        <para>値</para>
+       </entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>
+        <para><literal>:device</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>デバイス名 (例: <literal>eth0</literal> , <literal>enp3s0</literal> など)</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:mac</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>MAC アドレス</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:active</literal></para>
+       </entry>
+       <entry>
+        <para>Boolean</para>
+       </entry>
+       <entry>
+        <para>デバイスが有効化されているかどうか</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:link</literal></para>
+       </entry>
+       <entry>
+        <para>Boolean</para>
+       </entry>
+       <entry>
+        <para>デバイスが接続されているかどうか</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:vendor</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>製造元の名前</para>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <para>下記の例では、ネットワークに接続されている最初のネットワークカードを検出し、そのネットワークカードで DHCP を使用するように設定します。</para>
    <example>
     <title>接続されているネットワークカードの設定</title>
-     <screen>&lt;interfaces t="list"&gt;
+<screen>&lt;interfaces t="list"&gt;
   &lt;% with_link = netword_cards.sort_by { |n| n[:name] }.find { |n| n[:link] } %&gt;
   &lt;% if with_link %&gt;
     &lt;interface&gt;
@@ -244,78 +230,77 @@
 &lt;/interfaces&gt;
     </screen>
    </example>
-   </sect2>
+  </sect2>
 
-   <sect2 xml:id="erb-os-release-helper">
-    <title><literal>os_release</literal></title>
-
-    <para><literal>os_release</literal> ヘルパーは、オペレーティングシステムに関する情報を返す関数です。これは <filename>/etc/os-release</filename> ファイルから情報を読み込みます。</para>
-
-    <informaltable>
-     <tgroup cols="3">
-      <thead>
-       <row>
-        <entry>
-         <para>キー</para>
-        </entry>
-        <entry>
-         <para>型</para>
-        </entry>
-        <entry>
-         <para>値</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry>
-         <para><literal>:id</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>ディストリビューション ID (例: <literal>sles</literal> , <literal>opensuse-tumbleweed</literal> )</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:name</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>ディストリビューション名 (例: <literal>SLES</literal> , <literal>openSUSE Tumbleweed</literal> )</para>
-        </entry>
-       </row>
-       <row>
-        <entry>
-         <para><literal>:version</literal></para>
-        </entry>
-        <entry>
-         <para>String</para>
-        </entry>
-        <entry>
-         <para>ディストリビューションのバージョン (例: <literal>15.2</literal>)</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-
-    <para>この情報を使用することで、インストールすべき製品を判断することができます。たとえば SLE と openSUSE で異なる設定を適用することができるようになります。</para>
-
-    <example>
-     <title>異なるディストリビューションに対して同じプロファイルを適用する設定</title>
-     <screen>&lt;products t="list"&gt;
+  <sect2 xml:id="erb-os-release-helper">
+   <title><literal>os_release</literal></title>
+   <para><literal>os_release</literal> ヘルパーは、オペレーティングシステムに関する情報を返す関数です。これは <filename>/etc/os-release</filename> ファイルから情報を読み込みます。</para>
+   <informaltable>
+    <tgroup cols="3">
+     <thead>
+      <row>
+       <entry>
+        <para>キー</para>
+       </entry>
+       <entry>
+        <para>型</para>
+       </entry>
+       <entry>
+        <para>値</para>
+       </entry>
+      </row>
+     </thead>
+     <tbody>
+      <row>
+       <entry>
+        <para><literal>:id</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>ディストリビューション ID (例: <literal>sles</literal> , <literal>opensuse-tumbleweed</literal> )</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:name</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>ディストリビューション名 (例: <literal>SLES</literal> , <literal>openSUSE Tumbleweed</literal> )</para>
+       </entry>
+      </row>
+      <row>
+       <entry>
+        <para><literal>:version</literal></para>
+       </entry>
+       <entry>
+        <para>String</para>
+       </entry>
+       <entry>
+        <para>
+         Distribution version (<phrase os="sles;osuse">for example,
+         <literal>15.2</literal></phrase><phrase os="slemicro"><literal>5.1</literal></phrase>)
+        </para>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <para os="sles;osuse">この情報を使用することで、インストールすべき製品を判断することができます。たとえば SLE と openSUSE で異なる設定を適用することができるようになります。</para>
+   <example os="sles;osuse">
+    <title>異なるディストリビューションに対して同じプロファイルを適用する設定</title>
+<screen>&lt;products t="list"&gt;
   &lt;% if os_release[:id] == 'sle' %&gt;
   &lt;product&gt;SLES&lt;/product&gt;
   &lt;% else %&gt;
   &lt;product&gt;openSUSE&lt;/product&gt;
   &lt;% end %&lt;
 &lt;/products&gt;</screen>
-        </example>
-    </sect2>
-   </sect1>
- </chapter>
+   </example>
+  </sect2>
+ </sect1>
+</chapter>

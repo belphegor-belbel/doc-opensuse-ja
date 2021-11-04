@@ -20,10 +20,20 @@
   <para>&susefirewall; ベースのプロファイルの使用は、多くのオプションが &firewalld; で使用できなくなっていることから、部分的なサポートにとどまっています。そのため、移行できなかった設定によって、ネットワークセキュリティに影響がある場合があります。</para>
  </important>
 
-<para os="slemicro">&productname; では &firewalld; サービスを使用します。</para>
+ <para os="slemicro">&productname; では &firewalld; サービスを使用します。</para>
+
  <sect2 xml:id="CreateProfile-firewall-general">
   <title>一般的なファイアウオール設定</title>
   <para>&firewalld; では、一般的な設定は少数のプロパティでのみ提供されていて、ほとんどの設定はゾーン内で行うようになっています。</para>
+  <important os="slemicro">
+   <title>Running firewall along with Podman</title>
+   <para>
+    Running Podman with enabled and started firewall may result in missing
+    Podman related firewall rules after the firewall configuration is reloaded.
+    To avoid this situation, do not start the <literal>firewalld</literal>
+    service.
+   </para>
+  </important>
   <informaltable>
    <tgroup cols="3">
     <thead>
@@ -212,7 +222,7 @@
   </informaltable>
  </sect2>
 
-<!-- SLE 15 SP3 and up only -->
+ <!-- SLE 15 SP3 and up only -->
 
  <sect2 os="sles;sled;osuse" xml:id="CreateProfile-firewall-stage">
   <title>プロファイル内にある &firewalld; 設定が適用されるステージ</title>
@@ -241,7 +251,40 @@
   <para><literal>firewall</literal> セクションの例です。ここには一般的なプロパティのほか、ゾーン固有のプロパティも書かれています。</para>
   <example>
    <title>firewall セクションの例</title>
-<screen>&lt;firewall&gt;
+<screen os="sles;osuse">&lt;firewall&gt;
+  &lt;enable_firewall config:type="boolean"&gt;true&lt;/enable_firewall&gt;
+  &lt;log_denied_packets&gt;all&lt;/log_denied_packets&gt;
+  &lt;default_zone&gt;external&lt;/default_zone&gt;
+  &lt;zones config:type="list"&gt;
+    &lt;zone&gt;
+      &lt;name&gt;public&lt;/name&gt;
+      &lt;interfaces config:type="list"&gt;
+        &lt;interface&gt;eth0&lt;/interface&gt;
+      &lt;/interfaces&gt;
+      &lt;services config:type="list"&gt;
+        &lt;service&gt;ssh&lt;/service&gt;
+        &lt;service&gt;dhcp&lt;/service&gt;
+        &lt;service&gt;dhcpv6&lt;/service&gt;
+        &lt;service&gt;samba&lt;/service&gt;
+        &lt;service&gt;vnc-server&lt;/service&gt;
+      &lt;/services&gt;
+      &lt;ports config:type="list"&gt;
+        &lt;port&gt;21/udp&lt;/port&gt;
+        &lt;port&gt;22/udp&lt;/port&gt;
+        &lt;port&gt;80/tcp&lt;/port&gt;
+        &lt;port&gt;443/tcp&lt;/port&gt;
+        &lt;port&gt;8080/tcp&lt;/port&gt;
+      &lt;/ports&gt;
+    &lt;/zone&gt;
+    &lt;zone&gt;
+      &lt;name&gt;dmz&lt;/name&gt;
+      &lt;interfaces config:type="list"&gt;
+        &lt;interface&gt;eth1&lt;/interface&gt;
+      &lt;/interfaces&gt;
+    &lt;/zone&gt;
+  &lt;/zones&gt;
+&lt;/firewall&gt;</screen>
+<screen os="slemicro">&lt;firewall&gt;
   &lt;enable_firewall config:type="boolean"&gt;true&lt;/enable_firewall&gt;
   &lt;log_denied_packets&gt;all&lt;/log_denied_packets&gt;
   &lt;default_zone&gt;external&lt;/default_zone&gt;

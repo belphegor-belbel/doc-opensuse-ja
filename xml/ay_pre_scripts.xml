@@ -4,7 +4,6 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="pre-scripts">
-
  <title>ERB テンプレートとスクリプトの組み合わせ</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -12,21 +11,18 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
+ <para><xref linkend="pre-install-scripts"/> で示しているとおり、プロファイルの内容を変更するためのインストール前スクリプトを設定することができます。このスクリプトは簡単に言うと、スクリプトが <filename>/tmp/profile/modified.xml</filename> ファイルを生成すると、 &ay; はその生成されたプロファイルを読み込み、元のプロファイルを廃棄する仕組みです。</para>
+ <para>これは比較的柔軟な仕組みですが、インストールメディア内に存在する言語とライブラリのみが使用できるという点にご注意ください。</para>
+ <sect1 xml:id="erb-and-scripts">
+  <title>スクリプト内への ERB の組み込み</title>
 
-  <para><xref linkend="pre-install-scripts"/> で示しているとおり、プロファイルの内容を変更するためのインストール前スクリプトを設定することができます。このスクリプトは簡単に言うと、スクリプトが <filename>/tmp/profile/modified.xml</filename> ファイルを生成すると、 &ay; はその生成されたプロファイルを読み込み、元のプロファイルを廃棄する仕組みです。</para>
+  <para><emphasis>ルール</emphasis> とは異なり、 ERB テンプレートの仕組みとスクリプトを組み合わせて使用することもできます。 &ay; では、対象のスクリプトを実行する前に、 ERB タグの評価が行われます。この動作はプロファイル内に組み込まれたスクリプトに対してのみ有効で、外部のスクリプトに対しては適用されません。</para>
 
-  <para>これは比較的柔軟な仕組みですが、インストールメディア内に存在する言語とライブラリのみが使用できるという点にご注意ください。</para>
+  <para>下記の例では、 MAC アドレスをベースにしてプロファイルをダウンロードしています。ファイルは <filename>/tmp/profile/modified.xml</filename> 内に保存されますので、 &ay; はそれを読み込んで使用するようになります。</para>
 
-  <sect1 xml:id="erb-and-scripts">
-   <title>スクリプト内への ERB の組み込み</title>
-
-   <para><emphasis>ルール</emphasis> とは異なり、 ERB テンプレートの仕組みとスクリプトを組み合わせて使用することもできます。 &ay; では、対象のスクリプトを実行する前に、 ERB タグの評価が行われます。この動作はプロファイル内に組み込まれたスクリプトに対してのみ有効で、外部のスクリプトに対しては適用されません。</para>
-
-   <para>下記の例では、 MAC アドレスをベースにしてプロファイルをダウンロードしています。ファイルは <filename>/tmp/profile/modified.xml</filename> 内に保存されますので、 &ay; はそれを読み込んで使用するようになります。</para>
-
-   <example xml:id="combining-erb-and-scripts">
-    <title>プロファイルを取得するために MAC アドレスを使用する方法</title>
-    <screen>&lt;scripts&gt;
+  <example xml:id="combining-erb-and-scripts">
+   <title>プロファイルを取得するために MAC アドレスを使用する方法</title>
+<screen>&lt;scripts&gt;
   &lt;pre-scripts config:type="list"&gt;
     &lt;script&gt;
       &lt;interpreter&gt;shell&lt;/interpreter&gt;
@@ -38,18 +34,16 @@ wget -O /tmp/profile/modified.xml http://myserver/&lt;%= network_cards.first[:ma
     &lt;/script&gt;
   &lt;/pre-scripts&gt;
 &lt;/scripts&gt;</screen>
-   </example>
-  </sect1>
+  </example>
+ </sect1>
+ <sect1 xml:id="erb-helpers-in-scripts">
+  <title>Ruby スクリプト内からの ERB ヘルパーへのアクセス</title>
 
-  <sect1 xml:id="erb-helpers-in-scripts">
+  <para>Ruby スクリプト内から ERB ヘルパーを使用することもできます。ヘルパーを使用するには <emphasis>require</emphasis> で <filename>yast</filename> と <filename>autoinstall/y2erb</filename> ライブラリを指定してください。また、 ERB ヘルパーへのアクセスには <literal>Y2Autoinstall::Y2ERB::TemplateEnvironment</literal> クラスを指定してください。</para>
+
+  <example xml:id="ruby-script-erb-helpers">
    <title>Ruby スクリプト内からの ERB ヘルパーへのアクセス</title>
-
-   <para>Ruby スクリプト内から ERB ヘルパーを使用することもできます。ヘルパーを使用するには <emphasis>require</emphasis> で <filename>yast</filename> と <filename>autoinstall/y2erb</filename> ライブラリを指定してください。また、 ERB ヘルパーへのアクセスには <literal>Y2Autoinstall::Y2ERB::TemplateEnvironment</literal> クラスを指定してください。</para>
-
-   <example xml:id="ruby-script-erb-helpers">
-    <title>Ruby スクリプト内からの ERB ヘルパーへのアクセス</title>
-
-    <screen>
+<screen>
 &lt;scripts&gt;
   &lt;pre-scripts config:type="list"&gt;
     &lt;script&gt;
@@ -67,6 +61,6 @@ File.write("/root/disks.txt", disk_devices.join("
     &lt;/script&gt;
   &lt;/pre-scripts&gt;
 &lt;/scripts&gt;</screen>
-   </example>
-  </sect1>
- </chapter>
+  </example>
+ </sect1>
+</chapter>
