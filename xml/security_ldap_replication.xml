@@ -80,7 +80,7 @@
 └────┘       └────┘
 </screen>
    </example>
-   <para><xref linkend="ex-ldap-replication-two-replicas"/> には S1 と S2 という 2 つのノードが示されています。これらは双方向レプリケーションとして構成する場合の例で、これらのノードはいずれもサプライヤとコンシューマの両方を兼ね備えた存在となります。 S1 と S2 は別々のデータセンター内であっても、同じデータセンター内であってもかまいません。 LDAP URI や負荷分散装置、 DNS SRV レコードのいずれかでクライアント側からのアクセスを分散させることができます。また、これは高可用性を提供する際の最もシンプルな構成でもあります。ただし、一方のサーバで障害が発生してオフラインになった場合、他方のサーバでは全てのクライアントからの処理を受け付ける必要があることに注意してください。また、 2 ノードのレプリケーションでは一方のノードがオフラインになった場合、残った 1 つのノードのみで全ての処理を行わなければならないことから、水平分散としては不適切です。</para>
+   <para><xref linkend="ex-ldap-replication-two-replicas"/> には S1 と S2 という 2 つのレプリカが示されています。これらは双方向レプリケーションとして構成する場合の例で、これらのノードはいずれもサプライヤとコンシューマの両方を兼ね備えた存在となります。 S1 と S2 は別々のデータセンター内であっても、同じデータセンター内であってもかまいません。 LDAP URI や負荷分散装置、 DNS SRV レコードのいずれかでクライアント側からのアクセスを分散させることができます。また、これは高可用性を提供する際の最もシンプルな構成でもあります。ただし、一方のサーバで障害が発生してオフラインになった場合、他方のサーバでは全てのクライアントからの処理を受け付ける必要があることに注意してください。また、 2 ノードのレプリケーションでは一方のノードがオフラインになった場合、残った 1 つのノードのみで全ての処理を行わなければならないことから、水平分散としては不適切です。</para>
    <note>
      <title>既定の構成</title>
      <para>2 ノードの構成は最も簡単に管理できることから、既定の構成と考えられます。この構成を初期構成として、必要に応じて構成を広げていってもかまいません。</para>
@@ -223,7 +223,7 @@
 
  <sect3 xml:id="sec-security-ldap-replication-two-nodes">  
    <title>2 ノードレプリケーションの設定</title>
-  <para>下記のコマンドは 2 ノード構成 ( <xref linkend="ex-ldap-replication-two-replicas"/> ) の場合のコマンド例で、ホスト名を RW1, RW2 にしています (実際には独自の名前でかまいません) 。 RW1 側の設定は下記のようになります:</para>
+  <para>下記のコマンドは 2 ノード構成 ( <xref linkend="ex-ldap-replication-two-replicas"/> ) の場合のコマンド例で、ホスト名を RW1, RW2 にしています (実際には独自の名前でかまいません) 。</para>
   
   <warning>
   <title>強力なレプリケーションマネージャパスワードの作成について</title>
@@ -231,7 +231,7 @@
   <para>各サーバで異なるレプリケーションマネージャのパスワードを設定する場合は、それぞれのサーバが使用するアカウントをよく覚えておいてください。たとえば RW1 側のレプリケーション同意を設定する場合、パスワードとして設定すべきなのは RW2 側のレプリケーションマネージャのパスワードとなります。</para>
 </warning>
 
-<para>RW2 側の設定は下記のようになります:</para>
+<para>まずは RW1 側を設定します:</para>
 
 <screen>&prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication create-manager</command>
 &prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> replication enable</command> \ 
@@ -249,7 +249,7 @@
 <screen>
 &prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
 <command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
-<command>--host=&exampleserverip; --port=636 --conn-protocol LDAPS --bind-dn "cn=replication manager,cn=config"</command> \
+<command>--host=<replaceable>RW2</replaceable> --port=636 --conn-protocol LDAPS --bind-dn "cn=replication manager,cn=config"</command> \
 <command>--bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW1_to_RW2</replaceable></command>
 </screen>
   <para>上記のコマンドだけではデータベースの同期が始まりません。同期を始めるには、初期化または再初期化と呼ばれる完全同期が必要となります。初期化または再初期化を行うと、 RW2 側の全てのデータがリセットされ、 RW1 と全く同じデータになります。これを行うには、下記のように入力して実行します:</para>
@@ -266,9 +266,10 @@
   <para>あとはデータを双方向に複製するため、 RW2 から RW1 に対するレプリケーション合意も設定します:</para>
 <screen>
 &prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
-<command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
-<command>--host=&exampleserver2ip; --port=636 --conn-protocol LDAPS</command> \
-<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RO3</replaceable></command>
+<command>--suffix <replaceable>dc=example,dc=com</replaceable></command> \
+<command>--host=<replaceable>RW1</replaceable> --port=636 --conn-protocol LDAPS</command> \
+<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable></command> \
+<command>--bind-method SIMPLE <replaceable>RW2_to_RW1</replaceable></command>
 </screen>
   <para>これで RW1 と RW2 の双方向レプリケーションが完成し、一方での変更が他方にも反映されるようになっています。いずれかのサーバで下記のようなコマンドを入力して実行し、状態を確認してください:</para>
 <screen>
@@ -298,15 +299,16 @@
  <screen>
 &prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable></command> \
 <command>repl-agmt create --suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
-<command>--host=&exampleserverip; --port=636 --conn-protocol LDAPS</command> \ 
+<command>--host=<replaceable>RO3</replaceable> --port=636 --conn-protocol LDAPS</command> \ 
 <command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable></command> 
 <command>--bind-method SIMPLE <replaceable>RW1_to_RO3</replaceable></command></screen>
-<para>下記の例は、 RW2 と RO1 との間でのレプリケーション同意設定例です:</para>
+<para>下記の例は、 RW2 と RO3 との間でのレプリケーション同意を RW2 側で設定する場合の例です:</para>
 <screen>
 &prompt.sudo;<command>dsconf <replaceable>インスタンス名</replaceable> repl-agmt create</command> \
 <command>--suffix <replaceable>dc=EXAMPLE,dc=COM</replaceable></command> \
-<command>--host=&exampleserver2ip; --port=636 --conn-protocol LDAPS</command> \
-<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable> --bind-method SIMPLE <replaceable>RW2_to_RO3</replaceable></command>
+<command>--host=<replaceable>RO3</replaceable> --port=636 --conn-protocol LDAPS</command> \
+<command>--bind-dn "cn=replication manager,cn=config" --bind-passwd <replaceable>パスワード</replaceable></command> \
+<command>--bind-method SIMPLE <replaceable>RW2_to_RO3</replaceable></command>
 </screen>
 <para>これらの作業が完了したら、あとは RW1, RW2 から RO3 へデータベースの初期化を行います。下記の例では、 RW2 から RO3 に初期化を行っています:</para>
 <screen>
