@@ -762,180 +762,99 @@ test
   <para>ただし、それぞれの担当者が定期的にメールをチェックしていることが何よりも重要です。このような取り組みを促して重要なイベントを見落とさないようにするため、不必要な情報は送信しないように設定しておくことも重要です。また、アプリケーション側の設定で、関連する情報のみを送信するようにもしておいてください。</para>
  </sect1>
  <sect1 xml:id="sec-tuning-syslog-server">
-  <title>ニュースサーバからのログファイルが配置されるディレクトリです。</title>
-  <para>
-   System log data can be forwarded from individual systems to a central
-   syslog server on the network. This allows administrators to get an overview
-   of events on all hosts, and prevents attackers that succeed in taking over a
-   system from manipulating system logs to cover their tracks.
-  </para>
-  <para>
-   Setting up a central syslog server consists of two parts. First you configure
-   the central log server, then the clients for remote logging.
-  </para>
+  <title>中央の syslog サーバへのログメッセージの転送</title>
+  <para>システムログに記録されるメッセージを、個別のシステムからネットワーク内の中央に位置するサーバに転送するように設定することができます。これにより、全てのホストが出力したログメッセージを一括で閲覧および管理できるようになるほか、不正攻撃によって特定のホストが乗っ取られてしまったような場合でも、ログを削除して足跡を隠蔽するようなことができなくなります。</para>
+  <para>中央の syslog サーバにログを集約する設定を行う場合、中央の syslog サーバの設定を行ったあと、各システム (クライアント) の設定を行うことになります。</para>
   <sect2 xml:id="sec-tuning-syslog-server-setup">
-   <title>Set up the central syslog server</title>
+   <title>中央の syslog サーバの設定</title>
    <procedure xml:id="pro-tuning-syslog-server">
-    <title>Configure the central <systemitem>rsyslog</systemitem> server</title>
-    <para>&rootuser; ユーザに対するメール転送を設定するには、下記の手順を行います:</para>
+    <title>中央の <systemitem>rsyslog</systemitem> サーバの設定</title>
+    <para>中央に配置する syslog サーバを設定するには、下記の手順を実施します:</para>
     <step>
-     <para><filename>/etc/logrotate.conf</filename> の例</para>
+     <para>設定ファイル <filename>/etc/rsyslog.d/remote.conf</filename> をエディタなどで開きます。</para>
     </step>
     <step>
-     <para>
-      Uncomment the following lines in the <literal>UDP Syslog Server</literal>
-      or <literal>TCP Syslog Server</literal> section of the configuration file.
-      Assign an IP address and port for <systemitem class="daemon">rsyslogd</systemitem>.
-     </para>
-     <para>
-      TCP example:
-     </para>
+     <para>設定ファイル内にある <literal>UDP Syslog Server</literal> もしくは <literal>TCP Syslog Server</literal> のセクションを探すと、下記のような行があるはずです。これらの行のコメント文字 (#) を外します。また、 <systemitem class="daemon">rsyslogd</systemitem> に割り当てる IP アドレスとポートをそれぞれ設定します。</para>
+     <para>TCP の場合の例:</para>
      <screen>$ModLoad imtcp.so
 $UDPServerAddress <replaceable>IP</replaceable><co xml:id="co-tuning-syslog-server-ip"/>
-$InputTCPServerRun <replaceable>PORT</replaceable><co xml:id="co-tuning-syslog-server-port"/></screen>
-     <para>
-      UDP example:
-     </para>
+$InputTCPServerRun <replaceable>ポート</replaceable><co xml:id="co-tuning-syslog-server-port"/></screen>
+     <para>UDP の場合の例:</para>
      <screen>$ModLoad imudp.so
 $UDPServerAddress <replaceable>IP</replaceable><xref linkend="co-tuning-syslog-server-ip" xrefstyle="select:label nopage"/>
-$UDPServerRun <replaceable>PORT</replaceable><xref linkend="co-tuning-syslog-server-port" xrefstyle="select:label nopage"/></screen>
+$UDPServerRun <replaceable>ポート</replaceable><xref linkend="co-tuning-syslog-server-port" xrefstyle="select:label nopage"/></screen>
      <calloutlist>
       <callout arearefs="co-tuning-syslog-server-ip">
-       <para>
-        IP address of the interface for <systemitem class="daemon">rsyslogd</systemitem> to listen on. If no address is
-        given, the daemon listens on all interfaces.
-       </para>
+       <para><systemitem class="daemon">rsyslogd</systemitem> がメッセージを受信する際に使用するインターフェイスの IP アドレスを指定します。アドレスを指定しない場合、デーモンは全てのインターフェイスで待ち受けを行います。</para>
       </callout>
       <callout arearefs="co-tuning-syslog-server-port">
-       <para>
-        Port for <systemitem class="daemon">rsyslogd</systemitem> to listen on.
-        Select a privileged port below 1024. The default is 514.
-       </para>
+       <para><systemitem class="daemon">rsyslogd</systemitem> がメッセージを受け付けるポートを指定します。特権ポートとして規定されている 1024 未満の値を指定してください。既定値は 514 です。</para>
       </callout>
      </calloutlist>
      <important>
-      <title>TCP versus UDP protocol</title>
-      <para>
-       Traditionally syslog uses the UDP protocol to transmit log messages over
-       the network. This involves less overhead, but lacks reliability. Log
-       messages can get lost under high load.
-       <!-- cwickert 2021-03-02 Original text before shortening -->
-       <!-- The TCP protocol is more
-       reliable. Messages will only get lost under
-       <emphasis>constant</emphasis> high load, which should not occur under
-       normal circumstances.
-      </para>
-      <para>
-       Since the advantages of centralized logging could suffer from
-       unreliability, using TCP recommended. -->
-      </para>
-      <para>
-       The TCP protocol is more reliable and should be preferred over UDP.
-      </para>
+      <title>TCP と UDP の違いについて</title>
+      <para>従来型の syslog では、 UDP プロトコルを利用してネットワーク内にメッセージを転送していました。これにより負荷を減らす効果があるものの、その分だけ信頼性が失われることになります。つまり、高負荷な環境ではログメッセージが記録されない場合があり得ることになります。 <!-- cwickert 2021-03-02 Original text before shortening --> <!-- The TCP protocol is more reliable. Messages will only get lost under <emphasis>constant</emphasis> high load, which should not occur under normal circumstances. </para> <para> Since the advantages of centralized logging could suffer from unreliability, using TCP recommended. --></para>
+      <para>そのため、 UDP プロトコルではなく、信頼性の高い TCP プロトコルの使用をお勧めします。</para>
      </important>
      <note>
-      <title><literal>UDPServerAddress</literal> with TCP</title>
-      <para>
-       The <literal>$UDPServerAddress</literal> configuration parameter in the
-       TCP example is no error. Despite its name it is used for both TCP and
-       UDP.
-      </para>
+      <title>TCP での <literal>UDPServerAddress</literal> について</title>
+      <para>TCP の例でも <literal>$UDPServerAddress</literal> という設定パラメータを指定していますが、こちらは間違いではありません。名称とは異なり、 TCP と UDP の両方に効果があります。</para>
      </note>
     </step>
     <step>
-     <para>
-      Save the file.
-     </para>
+     <para>ファイルを保存してエディタを終了します。</para>
     </step>
     <step>
-     <para>
-      Restart the <systemitem class="daemon">rsyslog</systemitem> service:
-     </para>
-<screen>&prompt.root;<command>yast mail</command></screen>
+     <para><systemitem class="daemon">rsyslog</systemitem> サービスを再起動します:</para>
+<screen>&prompt.sudo;<command>systemctl restart rsyslog.service</command></screen>
     </step>
     <step>
-     <para>Open the respective port in the firewall. For <systemitem class="daemon">firewalld</systemitem> with TCP on port 514 run:
-     </para>
+     <para>ファイアウオールで対象のポートを開きます。 <systemitem class="daemon">firewalld</systemitem> を TCP ポート 514 で動作させる場合は、下記のように入力して実行します:</para>
 <screen>&prompt.sudo;<command>firewall-cmd --add-port <replaceable>514/tcp</replaceable> --permanent</command>
 &prompt.sudo;<command>firewall-cmd --reload</command></screen>
     </step>
    </procedure>
-   <para>
-    You have now configured the central syslog server. Next, configure clients
-    for remote logging.
-   </para>
+   <para>これで中央側の syslog サーバの設定は完了です。あとはログを送信する側、つまり個別のシステム側の設定を行います。</para>
   </sect2>
   <sect2 xml:id="sec-tuning-syslog-server-client">
-   <title>Set up the client machines</title>
+   <title>クライアント側の設定</title>
    <procedure xml:id="pro-tuning-syslog-client">
-    <title>Configure a <guimenu>rsyslog</guimenu> instance for remote logging</title>
-    <para>&rootuser; ユーザに対するメール転送を設定するには、下記の手順を行います:</para>
+    <title>リモートログ記録のための <guimenu>rsyslog</guimenu> インスタンスの設定</title>
+    <para>中央の syslog サーバにログを送信するようマシンを設定したい場合は、下記の手順を実施します:</para>
     <step>
-     <para><filename>/etc/logrotate.conf</filename> の例</para>
+     <para>設定ファイル <filename>/etc/rsyslog.d/remote.conf</filename> をエディタなどで開きます。</para>
     </step>
     <step>
-     <para>
-      Uncomment the appropriate line (TCP or UDP) and replace
-      <literal>remote-host</literal> with the address of the central syslog
-      server set up in <xref linkend="sec-tuning-syslog-server-setup"/>.
-     </para>
-     <para>
-      TCP example:
-     </para>
+     <para>設定ファイル内に下記のような行 (TCP または UDP) がありますので、これらの行のコメント文字 (#) を外したあと、 <literal>remote-host</literal> の箇所を <xref linkend="sec-tuning-syslog-server-setup"/> で設定した中央の syslog サーバのアドレスに置き換えます。</para>
+     <para>TCP の場合の例:</para>
      <screen># Remote Logging using TCP for reliable delivery
 # remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
 *.* <replaceable>@@remote-host</replaceable></screen>
-     <para>
-      UDP example:
-     </para>
+     <para>UDP の場合の例:</para>
      <screen># Remote Logging using UDP
 # remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
 *.* <replaceable>@remote-host</replaceable></screen>
     </step>
     <step>
-     <para>
-      Save the file.
-     </para>
+     <para>ファイルを保存してエディタを終了します。</para>
     </step>
     <step>
-     <para>
-      Restart the <systemitem class="daemon">rsyslog</systemitem> service:
-     </para>
-     <screen>&prompt.root;<command>yast mail</command></screen>
+     <para><systemitem class="daemon">rsyslog</systemitem> サービスを再起動します:</para>
+     <screen>&prompt.sudo;<command>systemctl restart rsyslog.service</command></screen>
     </step>
     <step>
-     <para>
-      Verify the proper function of the syslog forwarding:
-     </para>
-     <screen>&prompt.root;<command>yast mail</command></screen>
-     <para>
-      The log message <literal>hello world</literal> should now appear on the
-      central syslog server.
-     </para>
+     <para>あとは syslog のメッセージが正しく転送できていることを確認します:</para>
+     <screen>&prompt.user;<command>logger "hello world"</command></screen>
+     <para>上記を実行すると、中央の syslog サーバに <literal>hello world</literal> というメッセージが記録されているはずです。</para>
     </step>
    </procedure>
-   <para>
-    You have now configured a system for remote logging to your central syslog
-    server. Repeat this procedure for all systems that should log remotely.
-   </para>
+   <para>中央の syslog サーバに送信するマシンがほかにもあれば、上記の手順をそれぞれで実施してください。これにより、中央の syslog サーバに情報を集約できるようになります。</para>
   </sect2>
   <sect2 xml:id="sec-tuning-syslog-server-more">
-   <title>More information</title>
-   <para>
-    This basic setup does not include encryption and is only suitable for
-    trusted internal networks. TLS encryption is strongly recommended, but
-    requires a certificate infrastructure.
-   </para>
-   <para>
-    In this configuration, all messages from remote hosts will be treated the
-    same on the central syslog server. Consider filtering messages into separate
-    files by remote host or classify them by message category.
-   </para>
-   <para>
-    For more information about encryption, filtering, and other advanced topics,
-    consult the <phrase role="productname">RSyslog</phrase> documentation at
-    <link xlink:href="https://www.rsyslog.com/doc/master/index.html#manual"/>.
-   </para>
+   <title>さらなる情報</title>
+   <para>ここで説明した基本的な手順は暗号化を設定していないため、信頼のできる内部ネットワーク内でのみ適用可能な手順になっています。信頼のできないネットワークを経由する場合は TLS による暗号化が必須となりますが、これには証明書のインフラを構築する必要があります。</para>
+   <para>また、ここまでの説明では、遠隔からの全てのメッセージは全て同じに扱われる設定になります。ログの送信元が増えれば増えるほどメッセージも増えていくことになりますので、送信元ごとに別々のファイルに記録したり、メッセージの分類を行ったりなどの作業も必要となることでしょう。</para>
+   <para>暗号化やフィルタリング、もしくはその他の高度な設定について、詳しくは <link xlink:href="https://www.rsyslog.com/doc/master/index.html#manual"/> (英語) にある <phrase role="productname">RSyslog</phrase> のドキュメンテーションをお読みください。</para>
   </sect2>
  </sect1>
 
