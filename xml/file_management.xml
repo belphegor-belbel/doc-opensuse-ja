@@ -40,17 +40,120 @@
 
    <para>&productname; ではそのほかに、パーティションや単一のディレクトリを暗号化することができほか、ファイルをコンテナとして利用して暗号化することもできます。詳しくは <xref linkend="cha-security-cryptofs"/> をお読みください。</para>
   </sect1>
-  <sect1 xml:id="sec-sec-prot-general-check-perms">
-   <title>ファイルのパーミッションと所有権の確認</title>
 
-   <para>本章では、ホストのセキュリティをより向上させるために、既定のパーミッションやファイルの設定を取り扱うための方法について説明しています。なお、 &productname; に付属する <command>seccheck</command> のようなユーティリティを使用することで、一般的なロックダウンのほか、ファイルセキュリティやユーザ環境の改善を行うことができます。しかしながら、これらの設定を変更する方法についても知っておくとよいでしょう。</para>
+ <sect1 xml:id="sec-sec-prot-general-file-permissions">
+  <title>Modifying permissions of certain system files</title>
 
-   <para>&productname; には 3 種類の既定のパーミッション設定が添付されています。それぞれ <filename>permissions.easy</filename> , <filename>permissions.secure</filename> , <filename>permissions.paranoid</filename> というファイル名で、いずれも <filename>/etc</filename> ディレクトリ内に配置されています。これらのファイルは全ユーザが書き込み可能なディレクトリやファイル、 setuid ビット (プログラムを起動したユーザの権限ではなく、ファイル所有者 (通常は &rootuser;) の権限で動作させるためのビット) などの特殊なパーミッション設定を表すものです。</para>
+  <para>
+   Many files&mdash;especially in the <filename>/etc</filename>
+   directory&mdash;are world-readable, which means that unprivileged users can
+   read their contents. Normally this is not a problem, but if you want to take
+   extra care, you can remove the world-readable or group-readable bits for
+   sensitive files.
+  </para>
 
-   <para>独自の設定を行いたい場合は、 <filename>/etc/permissions.local</filename> ファイル内に設定を追加してください。また、簡単に設定したい場合は、 &yast; の <guimenu>セキュリティセンター<!-- NOTE: original is "Local Security", but.. --></guimenu>モジュールを使用するとよいでしょう。</para>
+  <para>
+   &sle; provides the <package>permissions</package> package to easily apply
+   file permissions. The package comes with three pre-defined system profiles:
+  </para>
 
-   <para>以降のトピックで説明している内容は上記で選択したルールセットによって上書きされてしまいますが、どのような設定ができるのかを知っておくことが重要です。</para>
-  </sect1>
+  <variablelist>
+   <varlistentry>
+    <term>easy</term>
+    <listitem>
+     <para>
+      Profile for systems that require user-friendly graphical user interaction.
+      This is the default profile.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>secure</term>
+    <listitem>
+     <para>
+      Profile for server systems without fully-fledged graphical user
+      interfaces.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>paranoid</term>
+    <listitem>
+     <para>
+      Profile for maximum security. In addition to the <literal>secure</literal>
+      profile, it removes <emphasis>all</emphasis> special permissions like
+      setuid/setgid and capability bits.
+     </para>
+
+     <warning>
+      <title>Unusable system for non-privileged users</title>
+      <para>
+       Except for simple tasks like changing passwords, a system without special
+       permissions might be unusable for non-privileged users.
+      </para>
+      <para>
+       Do not use the <literal>paranoid</literal> profile is as-is, but as a
+       template for custom permissions. More information can be found in the
+       <filename>permissions.paranoid</filename> file.
+      </para>
+     </warning>
+
+    </listitem>
+   </varlistentry>
+  </variablelist>
+
+  <para>
+   To define custom file permissions, edit
+   <filename>/etc/permissions.local</filename> or create a drop-in file in the
+   <filename>/etc/permissions.d/</filename> directory.
+  </para>
+
+  <screen># Additional custom hardening
+   /etc/security/access.conf       root:root       0400
+   /etc/sysctl.conf                root:root       0400
+   /root/                          root:root       0700</screen>
+
+  <para>
+   The first column specifies the file name; note that directory names must end with a
+   slash. The second column specifies the owner and group, and the third column
+   specifies the mode.
+   For more information about the configuration file format, refer to
+   <command>man permissions</command>.
+  </para>
+
+  <para>
+   Select the profile in <filename>/etc/sysconfig/security</filename>. To use
+   the <literal>easy</literal> profile and custom permissions from
+   <filename>/etc/permissions.local</filename>, set:
+  </para>
+
+  <screen>PERMISSION_SECURITY="<replaceable>easy local</replaceable>"</screen>
+
+  <para>
+   To apply the setting, run <command>chkstat --system --set</command>.
+  </para>
+
+  <para>
+   The permissions will also be applied during package updates via
+   <command>zypper</command>. You could also call <command>chkstat</command>
+   regularly via <systemitem class="daemon">cron</systemitem> or a &systemd;
+   timer.
+  </para>
+
+  <important>
+   <title>Custom file permissions</title>
+   <para>
+    While the system profiles are well tested, custom permissions can break
+    standard applications. &suse; cannot provide support for such scenarios.
+   </para>
+   <para>
+    Always test custom file permissions before applying them with
+    <command>chkstat</command> to make sure everything works as desired.
+   </para>
+  </important>
+
+ </sect1>
+
   <sect1 xml:id="sec-sec-prot-general-umask">
    <title>既定の umask</title>
 
@@ -120,7 +223,8 @@ UMASK           022</screen>
    </sect2>
 
   </sect1>
-  <sect1 xml:id="sec-sec-prot-general-s-bit">
+
+ <sect1 xml:id="sec-sec-prot-general-s-bit">
    <title>SUID/SGID フラグの付いたファイル</title>
 
    <para>SUID (set user ID) や SGID (set group ID) のビットを実行可能なファイルに設定すると、そのプログラムを起動したユーザではなく、その実行可能なファイルを所有しているユーザもしくはグループとしてプログラムを起動することができます。たとえば SUID ビットが設定され、 &rootuser; が所有するプログラムがあった場合、誰がそのプログラムを起動しても、プログラムは &rootuser; の UID で実行されることになります。よくある例は <command>passwd</command> コマンドで、 &rootuser; が所有する <filename>/etc/shadow</filename> ファイルのパスワード欄に書き込みを行うために設定されています。</para>
@@ -142,7 +246,8 @@ UMASK           022</screen>
    <para>上記の例では、 <command>ping</command> を実行するユーザに対して <literal>CAP_NET_RAW</literal> のケーパビリティを許可しています。この場合、たとえ <command>ping</command> に脆弱性が存在していても、攻撃者は CAP_NET_RAW のケーパビリティのみが許可され、 &rootuser; の全権限を得ることはありません。また可能であれば、 SUID ビットとともにファイルのケーパビリティを設定しておくことをお勧めします。ただし、これは &rootuser; にのみ当てはまるもので、それ以外の <literal>news</literal> , <literal>lp</literal> などのシステムユーザには当てはまりません。</para>
 
   </sect1>
-  <sect1 xml:id="sec-sec-prot-general-filepermissions">
+
+  <sect1 xml:id="sec-sec-prot-general-world-writable-files">
    <title>全てのユーザが書き込むことのできるファイル</title>
 
    <para>誰にでも書き込み可能なファイルは、システム内の任意のユーザが書き込めるファイルであることから、セキュリティリスクとなりうるものです。これに加えて、誰にでも書き込めるディレクトリは、誰にでもファイルの作成や削除ができてしまいます。これらのファイルやディレクトリを検索するには、下記のようなコマンドを入力して実行します:</para>
