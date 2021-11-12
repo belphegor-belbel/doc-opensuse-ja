@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-10-25 22:17+0000\n"
+"POT-Creation-Date: 2021-11-12 22:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -113,6 +113,12 @@ msgstr ""
 msgid "The <filename>script</filename> configuration file is a set of commands that are executed on your system in a transactional-update shell. This section provides examples for performing various configuration tasks by using Combustion."
 msgstr ""
 
+#. Tag: title
+#: deployment_images_combustion.xml:107
+#, no-c-format
+msgid "Include interpreter declaration"
+msgstr ""
+
 #. Tag: para
 #: deployment_images_combustion.xml:108
 #, no-c-format
@@ -160,19 +166,109 @@ msgid "Using this statement will pass the <literal>rd.neednet=1</literal> argume
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:149
+#: deployment_images_combustion.xml:143
+#, no-c-format
+msgid "Partitioning"
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:144
+#, no-c-format
+msgid "&slema; raw images are delivered with a default partitioning scheme as described in <xref linkend=\"sec-default-partitioning\"/> . You might want to use a different partitioning. The following set of example snippets moves the <filename>/home</filename> to a different partition."
+msgstr ""
+
+#. Tag: title
+#: deployment_images_combustion.xml:151
+#, no-c-format
+msgid "Performing changes outside of directories included in snapshots"
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:152
+#, no-c-format
+msgid "The following script performs changes that are not included in snapshots. If the script fails and the snapshot get discarded, some changes remains visible and cannot be reverted (like the changes to the <literal>/dev/vdb</literal> device.)"
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:159
+#, no-c-format
+msgid "The following snippet creates a GPT with a single partition on the <literal>/dev/vdb</literal> device:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_images_combustion.xml:163
+#, no-c-format
+msgid "\n"
+      "sfdisk /dev/vdb &lt;&lt;EOF\n"
+      "label: gpt\n"
+      "type=linux\n"
+      "EOF \n"
+      "\n"
+      "partition=/dev/vdb1\n"
+      "   "
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:171
+#, no-c-format
+msgid "The partition is formatted to BTRFS:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_images_combustion.xml:174
+#, no-c-format
+msgid "\n"
+      "wipefs --all ${partition}\n"
+      "mkfs.btrfs ${partition} \n"
+      "   "
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:178
+#, no-c-format
+msgid "Possible content of <filename>/home</filename> is moved to the new <filename>/home</filename> folder location by the following snippet:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_images_combustion.xml:182
+#, no-c-format
+msgid "\n"
+      "mount /home\n"
+      "mount ${partition} /mnt \n"
+      "rsync -aAXP /home/ /mnt/\n"
+      "umount /home /mnt\n"
+      "   "
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:188
+#, no-c-format
+msgid "The snippet below removes an old entry in <filename>/etc/fstab</filename> and creates a new entry:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_images_combustion.xml:192
+#, no-c-format
+msgid "\n"
+      "awk -i inplace '$2 != \"/home\"' /etc/fstab\n"
+      "echo \"$(blkid -o export ${partition} | grep ^UUID=) /home btrfs defaults 0 0\" &gt;&gt;/etc/fstab\n"
+      "   "
+msgstr ""
+
+#. Tag: title
+#: deployment_images_combustion.xml:199
 #, no-c-format
 msgid "Setting a password for &rootuser;"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:150
+#: deployment_images_combustion.xml:200
 #, no-c-format
 msgid "Before you set the &rootuser; password, generate a hash of the password, e.g. by using the <command>openssl passwd -6</command> . To set the password, add the following to your <filename>script</filename> :"
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:155
+#: deployment_images_combustion.xml:205
 #, no-c-format
 msgid "\n"
       " echo 'root:$5$.wn2BZHlEJ5R3B1C$TAHEchlU.h2tvfOpOki54NaHpGYKwdNhjaBuSpDotD7' | chpasswd -e\n"
@@ -180,19 +276,19 @@ msgid "\n"
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:161
+#: deployment_images_combustion.xml:211
 #, no-c-format
 msgid "Adding SSH keys"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:162
+#: deployment_images_combustion.xml:212
 #, no-c-format
 msgid "The following snippet creates a directory to store the &rootuser;'s SSH key and then copies the public SSH key located on the configuration device to the <filename>authorized_keys</filename> file."
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:167
+#: deployment_images_combustion.xml:217
 #, no-c-format
 msgid "\n"
       " mkdir -pm700 /root/.ssh/\n"
@@ -201,25 +297,25 @@ msgid "\n"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:172
+#: deployment_images_combustion.xml:222
 #, no-c-format
 msgid "The SSH service must be enabled in case you need to use remote login via SSH. For details, refer to <xref linkend=\"sec-script-services\"/> ."
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:180
+#: deployment_images_combustion.xml:230
 #, no-c-format
 msgid "Enabling services"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:181
+#: deployment_images_combustion.xml:231
 #, no-c-format
 msgid "You may need to enable some services, for example the SSH service. To enable the SSH service add the following line to <filename>script</filename> :"
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:186
+#: deployment_images_combustion.xml:236
 #, no-c-format
 msgid "\n"
       " systemctl enable sshd.service\n"
@@ -227,31 +323,31 @@ msgid "\n"
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:192
+#: deployment_images_combustion.xml:242
 #, no-c-format
 msgid "Installing packages"
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:194
+#: deployment_images_combustion.xml:244
 #, no-c-format
 msgid "Network connection and registering your system might be necessary"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:195
+#: deployment_images_combustion.xml:245
 #, no-c-format
 msgid "As some package may require additional subscription, you might need to register your system beforehand. Also available network connection may be needed to install additional packages."
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:201
+#: deployment_images_combustion.xml:251
 #, no-c-format
 msgid "During the first boot configuration, you can install additional packages to your system. For example, you can install the <literal>vim</literal> editor by adding:"
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:206
+#: deployment_images_combustion.xml:256
 #, no-c-format
 msgid "\n"
       "zypper --non-interactive install vim-small\n"
@@ -259,7 +355,7 @@ msgid "\n"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:210
+#: deployment_images_combustion.xml:260
 #, no-c-format
 msgid "Bear in mind that you will not be able to use <command>zypper</command> after the configuration is complete and you boot to the configured system. To perform changes later, you must use the <command>transactional-update</command> command to create a changed snapshot. For details, refer to <xref linkend=\"sec-transactional-udate\"/> ."
 msgstr ""
