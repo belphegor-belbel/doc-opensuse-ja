@@ -12,7 +12,7 @@ my @SkipNodes =
   "menuchoice", "guimenu", "phrase", "remark", "envar", "keycombo",
   "keycap", "co", "prompt", "varname", "citetitle", "tag", "superscript",
   "constant", "email", "trademark", "productname", "productnumber", "uri",
-  "parameter", "indexterm", "primary", "secondary", "tertiary", "screen" );
+  "parameter", "indexterm", "primary", "secondary", "tertiary", "screen", "function" );
 my @literalNodes =
   ( "screen" );
 my @ignoreNodes =
