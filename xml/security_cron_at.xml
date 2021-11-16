@@ -4,139 +4,72 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" role="General" xml:id="cha-sec-cron-at">
- <title>Restricting <command>cron</command> and <command>at</command></title>
+ <title><command>cron</command> と <command>at</command> の制限</title>
  <info>
   <abstract>
-   <para>
-    This chapter explains how to restrict access to the <systemitem class="daemon">cron</systemitem> and <systemitem class="daemon">at</systemitem> daemons to improve the security of a system.
-   </para>
+   <para>本章では、システムのセキュリティを改善するため、 <systemitem class="daemon">cron</systemitem> や <systemitem class="daemon">at</systemitem> デーモンへのアクセスを制限する方法について説明しています。</para>
   </abstract>
  </info>
  <sect1>
-  <title>Restricting the <systemitem class="daemon">cron</systemitem> daemon</title>
-  <para>
-   The <systemitem class="daemon">cron</systemitem> system is used to
-   automatically run commands in the background at predefined times. For more
-   information about <systemitem class="daemon">cron</systemitem>,
-   refer to the <xref linkend="sec-suse-packages-cron"/>.
-  </para>
-  <para>
-   The <filename>cron.allow</filename> file specifies a list of users that are
-   allowed to execute jobs via <systemitem class="daemon">cron</systemitem>.
-   The file does not exist by default, so all users can create
-   <systemitem class="daemon">cron</systemitem> jobs&mdash;except for those
-   listed in <filename>cron.deny</filename>.
-  </para>
+  <title><systemitem class="daemon">cron</systemitem> デーモンの制限</title>
+  <para><systemitem class="daemon">cron</systemitem> は指定した時間に裏でコマンドを自動的に実行させるためのデーモンです。 <systemitem class="daemon">cron</systemitem> そのものに関する詳細は、 <xref linkend="sec-suse-packages-cron"/> をお読みください。</para>
+  <para><filename>cron.allow</filename> ファイルは <systemitem class="daemon">cron</systemitem> を利用してジョブを実行することのできるユーザリストを指定するためのファイルです。このファイルは既定では存在していないため、 <filename>cron.deny</filename> ファイルに記載されている場合を除き、全てのユーザがジョブを作成できるようになっています。</para>
   <procedure>
-   <para>
-    To prevent users except for root from creating <systemitem class="daemon">cron</systemitem> jobs, perform the following steps.
-   </para>
+   <para><systemitem class="daemon">cron</systemitem> ジョブを root 以外のユーザが利用できないようにするには、下記の手順を実施します。</para>
    <step>
-    <para>
-     Create an empty file <filename>/etc/cron.allow</filename>:
-    </para>
+    <para>まずは空の <filename>/etc/cron.allow</filename> ファイルを作成します:</para>
 <screen>&prompt.sudo;<command>touch</command> /etc/cron.allow</screen>
    </step>
    <step>
-    <para>
-     Allow users to create <systemitem class="daemon">cron</systemitem> jobs by
-     adding their usernames to the file:
-    </para>
+    <para><systemitem class="daemon">cron</systemitem> ジョブを作成できるユーザのユーザ名を、下記のようにして追加していきます:</para>
 <screen>&prompt.sudo;<command>echo</command> "&exampleuser_plain;" &gt;&gt; /etc/cron.allow</screen>
    </step>
    <step>
-    <para>
-     To verify, try creating a cron job as non-root user listed in
-     <filename>cron.allow</filename>. You should see the message:
-    </para>
+    <para>動作を確認したい場合は、 root 以外でかつ <filename>cron.allow</filename> 内に追加したユーザになってからジョブを作成してみます。下記のようなメッセージが表示されるはずです:</para>
 <screen>&prompt.user;<command>crontab -e</command>
 no crontab for &exampleuser_plain; - using an empty one</screen>
-    <para>
-     Quit the crontab editor and try the same with a user
-     <emphasis>not</emphasis> listed in the file (or before adding them in step
-     2 of this procedure):
-    </para>
+    <para>crontab のエディタを終了し、今度は上記のファイル内に追加していないユーザで同じことを実施します (もちろんユーザを追加する前に行ってもかまいません):</para>
 <screen>&prompt.user2;<command>crontab -e</command>
 You (&exampleuserII_plain;) are not allowed to use this program (crontab)
 See crontab(1) for more information</screen>
    </step>
   </procedure>
   <important>
-   <title>Existing <systemitem class="daemon">cron</systemitem> jobs</title>
-   <para>
-    implementing <function>cron.allow</function> only prevents users from
-    creating new <systemitem class="daemon">cron</systemitem> jobs. Existing
-    jobs will still be run, even for users listed in
-    <filename>cron.deny</filename>. To prevent this, create the file as
-    described and remove existing user crontabs from the directory
-    <filename>/var/spool/cron/tabs</filename> to ensure they are not run
-    anymore.
-   </para>
+   <title>既に存在する <systemitem class="daemon">cron</systemitem> ジョブについて</title>
+   <para><function>cron.allow</function> はユーザに対して、新しい <systemitem class="daemon">cron</systemitem> ジョブの作成を禁止するための設定です。 ユーザが <filename>cron.deny</filename> 内に登録されていた場合でも、既にそのユーザのジョブが存在していれば、それらは実行されてしまいます。既存のジョブについても禁止したい場合は、上述の手順でファイルを作成したあと、 <filename>/var/spool/cron/tabs</filename> ディレクトリ内にあるユーザの crontab ファイルを削除してください。</para>
   </important>
   <note>
-   <title>Switching to &systemd; timer units</title>
-   <para>
-    You should also consider switching to &systemd; timer units, as they allow
-    for more powerful and reliable task execution. By default, users cannot use
-    them to run code when they are not logged in. This limits the way users can
-    interact with the system while not being connected to it.
-   </para>
-   <para>
-    For more information about &systemd; timer units, refer to <xref linkend="sec-boot-systemd-timer-units"/>.
-   </para>
+   <title>&systemd; タイマーユニットへの切り替えについて</title>
+   <para>&systemd; タイマーユニットへの切り替えについても検討しておくことをお勧めします。&systemd; タイマーユニットではさらに高度な設定が可能になっているほか、タスクの実行に対しても信頼性が高められています。既定では、一般ユーザはログインしていない限り、コードを実行することができないように設定されています。これにより、ユーザが接続していない場合のシステムとの対話を制限しています。</para>
+   <para>&systemd; のタイマーユニットに関する詳細は、 <xref linkend="sec-boot-systemd-timer-units"/> をお読みください。</para>
   </note>
  </sect1>
 
  <sect1>
-  <title>Restricting the <systemitem class="daemon">at</systemitem> scheduler</title>
-  <para>
-   The <systemitem class="daemon">at</systemitem> job execution system allows
-   users to scheduled one-time running jobs. The <filename>at.allow</filename>
-   file specifies a list of users that are allowed to schedule jobs via
-   <systemitem class="daemon">at</systemitem>. The file does not exist by
-   default, so all users can schedule <systemitem class="daemon">at</systemitem>
-   jobs&mdash;except for those listed in <filename>at.deny</filename>)
-  </para>
+  <title><systemitem class="daemon">at</systemitem> スケジューラの制限</title>
+  <para><systemitem class="daemon">at</systemitem> ジョブ実行システムは、ユーザに対して 1 回限りのジョブ実行の機能を提供します。 <filename>at.allow</filename> ファイルは <systemitem class="daemon">at</systemitem> を利用してジョブを実行することのできるユーザリストを指定するためのファイルです。このファイルは既定では存在していないため、 <filename>at.deny</filename> ファイルに記載されている場合を除き、全てのユーザがジョブを作成できるようになっています。</para>
   <procedure>
-   <para>
-    To prevent users except for root from scheduling jobs with <systemitem class="daemon">at</systemitem>, perform the following steps.
-   </para>
+   <para><systemitem class="daemon">at</systemitem> ジョブを root 以外のユーザが利用できないようにするには、下記の手順を実施します。</para>
    <step>
-    <para>
-     Create an empty file <filename>/etc/at.allow</filename>:
-    </para>
+    <para>まずは空の <filename>/etc/at.allow</filename> ファイルを作成します:</para>
 <screen>&prompt.sudo;<command>touch</command> /etc/at.allow</screen>
    </step>
    <step>
-    <para>
-     Allow users to schedule jobs with <systemitem class="daemon">at</systemitem> by adding their usernames to the file:
-    </para>
+    <para><systemitem class="daemon">at</systemitem> ジョブを作成できるユーザのユーザ名を、下記のようにして追加していきます:</para>
 <screen>&prompt.sudo;<command>echo</command> "&exampleuser_plain;" &gt;&gt; /etc/at.allow</screen>
    </step>
    <step>
-    <para>
-     To verify, try scheduling a job as non-root user listed in
-     <filename>at.allow</filename>:
-    </para>
+    <para>動作を確認したい場合は、 root 以外でかつ <filename>at.allow</filename> 内に追加したユーザになってからジョブを作成してみます。下記のようなメッセージが表示されるはずです:</para>
 <screen>&prompt.user;<command>at 00:00</command>
 at&gt;</screen>
-    <para>
-     Quit the <systemitem class="daemon">at</systemitem>prompt with
-     <keycombo><keycap function="control"/><keycap>C</keycap></keycombo> and
-     try the same with a user <emphasis>not</emphasis> listed in the file (or
-     before adding them in step 2 of this procedure):
-    </para>
+    <para><keycombo><keycap function="control"/><keycap>C</keycap></keycombo> を押して <systemitem class="daemon">at</systemitem> プロンプトを抜け、今度は上記のファイル内に追加していないユーザで同じことを実施します (もちろんユーザを追加する前に行ってもかまいません):</para>
 <screen>&prompt.user2;<command>at 00:00</command>
 You do not have permission to use at.</screen>
    </step>
   </procedure>
    <note>
-   <title>Uninstalling <systemitem class="daemon">at</systemitem></title>
-   <para>
-    <systemitem class="daemon">at</systemitem> is not widely used anymore.
-    If you do not have valid use cases, consider uninstalling the daemon instead
-    of just restricting its access.
-   </para>
+   <title><systemitem class="daemon">at</systemitem> のアンインストールについて</title>
+   <para><systemitem class="daemon">at</systemitem> は現在、一般的には使用されていません。明確な用途がある場合を除き、使用を制限するのではなくデーモンをアンインストールしておくことをお勧めします。</para>
   </note>
  </sect1>
 
