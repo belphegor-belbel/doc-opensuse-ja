@@ -29,7 +29,17 @@
   <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などのリソース制限を割り当てます。</para>
   <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; には、 cgroup の設定を行うためのインターフェイスも用意されています。</para>
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
-  <para>本章は概要のみを説明しています。詳しい説明については、列挙されている参照先をお読みください。</para>
+  <para>
+  There are two versions of cgroup APIs provided by the kernel. These differ in
+  the cgroup attributes they provide, and in the organization of controller
+  hierarchies. &systemd; attempts to abstract the differences away.
+  By default &systemd; runs in the <emphasis>hybrid</emphasis> mode,
+  which means controllers are used through the v1 API. cgroup v2 is only used for
+  systemd's own tracking.
+  There is also the <emphasis>unified</emphasis> mode when the controllers are used
+  though v2 API. The mode in which controllers is exclusive.
+  </para>
+  <para>この設定は、統合型のコントロールグループ階層構造を使用している場合にのみ利用することができます。また、 <option>MemoryLimit=</option> の設定が無効化されます。統合型のコントロールグループ階層構造を使用するには、 &grub; ブートローダのカーネルコマンドラインパラメータに対して、 <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。なお、 &grub; の設定に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec-tuning-cgroups-accounting">
@@ -49,68 +59,18 @@
   <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>名前</replaceable> <replaceable>プロパティ_1</replaceable>=<replaceable>値</replaceable> [<replaceable>プロパティ_2</replaceable>=<replaceable>値</replaceable>]</command></screen>
   <para>必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
   <para>なお、 <replaceable>名前</replaceable> には &systemd; のスライス名やスコープ名、ソケット名やマウント名、スワップ名を指定します。また、プロパティには下記のものがあります:</para>
-  <variablelist>
-   <varlistentry>
-    <term><literal>CPUQuota=</literal> <replaceable>パーセント値</replaceable></term>
-    <listitem>
-     <para>プロセスに対して CPU 時間の割り当てを行います。この値はパーセント単位で指定するため、末尾に <literal>%</literal> を付けて指定します。この設定を行うと、 <literal>CPUAccounting=yes</literal> が設定されたものとして扱われます。</para>
-     <para>例:</para>
-     <screen>&prompt.root;<command>systemctl set-property user.slice CPUQuota=50%</command></screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>MemoryLow=</literal> <replaceable>容量</replaceable></term>
-    <listitem>
-     <para>プロセスからの未使用メモリが指定した容量より少ない場合、メモリを他の用途に再利用しないようにします。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を行うと、 <literal>MemoryAccounting=yes</literal> が設定されたものとして扱われます。</para>
-     <para>例:</para>
-     <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryLow=512M</command></screen>
-     <note>
-      <title>統合型のコントロールグループ階層構造について</title>
-      <para>この設定は、統合型のコントロールグループ階層構造を使用している場合にのみ利用することができます。また、 <option>MemoryLimit=</option> の設定が無効化されます。統合型のコントロールグループ階層構造を使用するには、 &grub; ブートローダのカーネルコマンドラインパラメータに対して、 <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。なお、 &grub; の設定に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>MemoryHigh=</literal> <replaceable>容量</replaceable></term>
-    <listitem>
-     <para>この制限以上にメモリを使用した場合、プロセスからできる限り積極的にメモリを取り除こうとする動きをします。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を行うと、 <literal>MemoryAccounting=yes</literal> が設定されたものとして扱われます。たとえば下記のようになります:</para>
-     <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryHigh=2G</command></screen>
-     <note>
-      <title>統合型のコントロールグループ階層構造について</title>
-      <para>この設定は、統合型のコントロールグループ階層構造を使用している場合にのみ利用することができます。また、 <option>MemoryLimit=</option> の設定が無効化されます。統合型のコントロールグループ階層構造を使用するには、 &grub; ブートローダのカーネルコマンドラインパラメータに対して、 <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。なお、 &grub; の設定に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>MemoryMax=</literal> <replaceable>容量</replaceable></term>
-    <listitem>
-     <para>メモリの最大値を設定することができます。プロセスがこの値を超えてメモリを確保した場合、プロセスは kill されます。 <replaceable>容量</replaceable> の値には K (キロ), M (メガ), G (ギガ), T (テラ) の各接頭辞を使用することができます。この設定を行うと、 <literal>MemoryAccounting=yes</literal> が設定されたものとして扱われます。</para>
-     <para>例:</para>
-     <screen>&prompt.root;<command>systemctl set-property nginx.service MemoryMax=4G</command></screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>DeviceAllow=</literal></term>
-    <listitem>
-     <para>読み込み ( <literal>r</literal> ), 書き込み ( <literal>w</literal> ), mknod ( <literal>m</literal> ) のアクセスを許可します。このコマンドの場合、デバイスノードの指定と、スペースを入れて <literal>r</literal> , <literal>w</literal>, <literal>m</literal> の一覧を指定する必要があります。</para>
-     <para>例:</para>
-     <screen>&prompt.root;<command>systemctl set-property system.slice DeviceAllow="/dev/sdb1 r"</command></screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>DevicePolicy=</literal> <option>[auto|closed|strict]</option></term>
-    <listitem>
-     <para><literal>strict</literal> に設定した場合、 <literal>DeviceAllow</literal> に列挙したデバイスにのみアクセスを許可するようになります。 <literal>closed</literal> を指定すると、 <filename>/dev/null</filename> , <filename>/dev/zero</filename> , <filename>/dev/full</filename> , <filename>/dev/random</filename> , <filename>/dev/urandom</filename> などの標準疑似デバイスにもアクセスを許可するようになります。 <literal>auto</literal> を設定した場合は、 <literal>DeviceAllow</literal> でルールが設定されない場合、全てのデバイスへのアクセスが許可されるようになります。既定値は <literal>auto</literal> です。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
   <para>プロパティに対する詳細と完全な一覧については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
  </sect1>
  
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
   <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
-   <para>&systemd; 228 では <literal>DefaultTasksMax</literal> の制限が 512 に設定されています。これは systemd の各ユニットに対して、作成できるプロセス数の制限を行うための仕組みで、それ以前のバージョンでは制限がありませんでした。このように設定を行ったのは、 fork によって作成される過剰なプロセスやスレッドによってシステム資源が枯渇してしまうのを防ぐ、セキュリティ改善のためのものです。</para> 
-   <para>しかしながら、この既定値は全ての用途に対して適用可能なものではありません。また、 CPU やメモリの使用量に対する直接的な制限ではありませんので、 512 に設定してもシステムの安定性を保つことができるかどうかはわかりませんし、データベースシステムなどのように 512 個以上のプロセスを動作させなければならない場合もあります。 &systemd; 234 では、この値が 15% (カーネル側に設定されたプロセス数の最大値である 32768 の 15% 。詳しくは <command>cat /proc/sys/kernel/pid_max</command> をご覧ください) に設定されていますが、必要に応じて設定ファイルで変更することができます。具体的には、 <filename>/etc/systemd/system.conf</filename> ファイルを編集して設定を行ってください。なお、下記ではそれ以外の方法について説明しています。</para>
+   <para>
+    &systemd; allows configuring task count limits both for each individual leaf unit or aggregated on slices (mainly `user-$UID.slice`).
+
+    Upstream &systemd; ships with defaults that limit the number of tasks in
+    each unit (15% of the kernel global limit, see <command>cat /proc/sys/kernel/pid_max</command>).
+    Each user's slice is limited to 33% of the kernel limit.
+   </para>
 
    <sect2 xml:id="sec-tasksmax-defaults">
     <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
@@ -184,14 +144,18 @@ TasksMax=8192
 [Slice]
 TasksMax=16284
 </screen>
+   <note>
+     <title>Numeric prefixes reference</title>
+     <para>
+     See 
+     <link xlink:href="https://documentation.suse.com/sles/15-SP3/html/SLES-all/cha-systemd.html#sec-boot-systemd-custom-drop-in"/>
+     to learn what numeric prefixes are expected for drop-in files.
+   </para>
+   </note>
    <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
 <screen>&prompt.sudo;systemctl daemon-reload
-
-&prompt.user;systemctl show --property TasksMax user-.slice
-TasksMax=16284
-
-&prompt.user;systemctl show --property TasksMax user-1000.slice
-TasksMax=16284
+&prompt.user;systemctl show --property DefaultTasksMax
+DefaultTasksMax=256
 </screen>
    <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
    <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
@@ -214,9 +178,6 @@ TasksMax=16284
    <title>cgroup-v1 での例</title>
    <para>下記の比例型重み付けポリシーファイルは読み込み側のプロセスに対して作用するもので、他のプロセスよりも優先的にアクセスができるようにするためのものです。</para>
    <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para><filename>blkio.weight</filename> (カーネルバージョン 4.20 もしくはそれ以前の古いブロックレイヤを使用していて、かつ CFQ I/O スケジューラを使用する場合にのみ利用できるファイルです)</para>
-    </listitem>
     <listitem>
      <para><filename>blkio.bfq.weight</filename> (カーネルバージョン 5.0 もしくはそれ以降の blk-mq を使用していて、かつ BFQ I/O スケジューラを使用する場合にのみ利用できるファイルです)</para>
     </listitem>
