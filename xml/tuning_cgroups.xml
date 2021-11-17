@@ -29,17 +29,8 @@
   <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などのリソース制限を割り当てます。</para>
   <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; には、 cgroup の設定を行うためのインターフェイスも用意されています。</para>
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
-  <para>
-  There are two versions of cgroup APIs provided by the kernel. These differ in
-  the cgroup attributes they provide, and in the organization of controller
-  hierarchies. &systemd; attempts to abstract the differences away.
-  By default &systemd; runs in the <emphasis>hybrid</emphasis> mode,
-  which means controllers are used through the v1 API. cgroup v2 is only used for
-  systemd's own tracking.
-  There is also the <emphasis>unified</emphasis> mode when the controllers are used
-  though v2 API. The mode in which controllers is exclusive.
-  </para>
-  <para>この設定は、統合型のコントロールグループ階層構造を使用している場合にのみ利用することができます。また、 <option>MemoryLimit=</option> の設定が無効化されます。統合型のコントロールグループ階層構造を使用するには、 &grub; ブートローダのカーネルコマンドラインパラメータに対して、 <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。なお、 &grub; の設定に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
+  <para>カーネルが提供する cgroup の API には 2 種類のものが存在します。これらは提供する cgroup 属性が異なるほか、コントローラの階層構造が異なります。 &systemd; は抽象化の仕組みによって、これらの違いを吸収しています。既定では &systemd; は <emphasis>ハイブリッド</emphasis> モードで動作し、 v1 API を利用してコントローラを制御します。 cgroup v2 は systemd 内でのみ使用されます。このほか <emphasis>統合</emphasis> モードとして、コントローラを v2 API で制御するモードもあります。モードはいずれか一方のみを排他的に使用することができます。</para>
+  <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください (&grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください) 。</para>
  </sect1>
 
  <sect1 xml:id="sec-tuning-cgroups-accounting">
@@ -57,24 +48,18 @@
   </note>
   <para><literal>cgroup</literal> に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
   <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>名前</replaceable> <replaceable>プロパティ_1</replaceable>=<replaceable>値</replaceable> [<replaceable>プロパティ_2</replaceable>=<replaceable>値</replaceable>]</command></screen>
-  <para>必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
-  <para>なお、 <replaceable>名前</replaceable> には &systemd; のスライス名やスコープ名、ソケット名やマウント名、スワップ名を指定します。また、プロパティには下記のものがあります:</para>
-  <para>プロパティに対する詳細と完全な一覧については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
+  <para>設定値は即時に適用されます。なお、必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
+  <para>また、 <replaceable>名前</replaceable> には &systemd; のサービス名やスコープ名、もしくはスライス名を指定します。</para>
+  <para>プロパティの一覧と詳細については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
  </sect1>
  
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
   <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
-   <para>
-    &systemd; allows configuring task count limits both for each individual leaf unit or aggregated on slices (mainly `user-$UID.slice`).
-
-    Upstream &systemd; ships with defaults that limit the number of tasks in
-    each unit (15% of the kernel global limit, see <command>cat /proc/sys/kernel/pid_max</command>).
-    Each user's slice is limited to 33% of the kernel limit.
-   </para>
+   <para>&systemd; では、ユニットごとやスライスごと (主に `user-$UID.slice`) にタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値を、 カーネル全体での制限 (詳しくは <command>cat /proc/sys/kernel/pid_max</command> を参照) に対して 15% に設定しています。各ユーザのスライスはカーネル全体での制限の 33% になっています。</para>
 
    <sect2 xml:id="sec-tasksmax-defaults">
     <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
-    <para>&productname; では、 systemd のユニットやユーザスライスに対する提供元の既定値を上書きするため、独自の設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
+    <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
 <screen>
 [Manager]
 DefaultTasksMax=infinity
@@ -112,17 +97,13 @@ DefaultTasksMax=256
    CGroup: /system.slice/mariadb.service
            └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
 </screen>
-  <para><quote>Tasks</quote> 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。設定値を変更するには、 <command>systemctl edit</command> コマンドを実行して、下記のような設定を記入します:</para>
-<screen>&prompt.sudo;systemctl edit mariadb.service
-
-[Service]
-TasksMax=8192
-
+  <para>Tasks 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。</para>
+<screen>&prompt.sudo;systemctl set-property mariadb.service TasksMax=8192
 &prompt.user;systemctl status mariadb.service 
 ● mariadb.service - MariaDB database server
    Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset: disab&gt;
   Drop-In: /etc/systemd/system/mariadb.service.d
-           └─override.conf
+           └─50-TasksMax.conf
    Active: active (running) since Tue 2020-06-02 17:57:48 PDT; 7min ago
      Docs: man:mysqld(8)
            https://mariadb.com/kb/en/library/systemd/
@@ -134,28 +115,25 @@ TasksMax=8192
    CGroup: /system.slice/mariadb.service
            └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
 </screen>
-   <para><command>systemctl edit</command> コマンドは <filename>/etc/systemd/system/mariadb.service.d/override.conf</filename> という名前の上書き用設定ファイルを作成します。ここには既存のユニットファイルに対する上書き値のみが保存されます。もちろん 8192 でなくてもかまいません。お使いの要件に合わせて設定してください。</para>
+   <para><command>systemctl set-property</command> コマンドは、 <filename>/etc/systemd/system/mariadb.service.d/50-TasksMax.conf</filename> という名前の上書き用設定ファイルを作成して、新しい制限を設定します。ここには既存のユニットファイルに対する上書き値のみを保存します。もちろん 8192 でなくてもかまいません。お使いのシステムの負荷状況に合わせて設定してください。</para>
   </sect2>
 
   <sect2>
    <title>ユーザに対する既定の <literal>TasksMax</literal> 制限</title>
-   <para>ユーザに対する既定の制限値は十分に高く設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
+   <para>ユーザに対する既定の制限値は十分に高く設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
 <screen>
 [Slice]
 TasksMax=16284
 </screen>
    <note>
-     <title>Numeric prefixes reference</title>
-     <para>
-     See 
-     <link xlink:href="https://documentation.suse.com/sles/15-SP3/html/SLES-all/cha-systemd.html#sec-boot-systemd-custom-drop-in"/>
-     to learn what numeric prefixes are expected for drop-in files.
-   </para>
+     <title>ファイル名の冒頭に付与する数値について</title>
+     <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <link xlink:href="https://documentation.suse.com/sles/15-SP3/html/SLES-all/cha-systemd.html#sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
    </note>
    <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
 <screen>&prompt.sudo;systemctl daemon-reload
-&prompt.user;systemctl show --property DefaultTasksMax
-DefaultTasksMax=256
+
+&prompt.user;systemctl show --property TasksMax user-1000.slice
+TasksMax=16284
 </screen>
    <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
    <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
