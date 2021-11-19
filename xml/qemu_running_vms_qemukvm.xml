@@ -28,24 +28,15 @@
   </calloutlist>
   <important>
    <title>&aarch64; アーキテクチャについて</title>
-   <para>
-    &kvm; support is available only for 64-bit ARM architecture (&aarch64;).
-    Running &qemu; on the &aarch64; architecture requires you to specify:
-   </para>
+   <para>&kvm; サポートは 64 ビット ARM アーキテクチャ (&aarch64;) 向けにのみ提供されています。 &aarch64; アーキテクチャで &qemu; を実行する場合、それぞれ下記を行う必要があります:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      A machine type designed for &qemu; ARM virtual machines using the
-      <option>-machine virt-<replaceable>VERSION_NUMBER</replaceable></option>
-      option.
-     </para>
+     <para><option>-machine virt-<replaceable>バージョン番号</replaceable></option> オプションを指定して、 &qemu; ARM 仮想マシンの種類を選択する必要があります。</para>
     </listitem>
     <listitem>
-     <para>
-      A firmware image file using the <option>-bios</option> option.
-     </para>
+     <para><option>-bios</option> オプションを指定して、ファームウエアイメージファイルを選択する必要があります。</para>
      <tip>
-      <para>&aarch64; アーキテクチャで &qemu; を実行する場合、 <option>-bios</option> オプションでファームウエアイメージを指定する必要があります。たとえば下記のようになります:</para>
+      <para>ファームウエアイメージファイルの指定に関しては、 <option>-drive</option> オプションを利用する方法もあります。たとえば下記のようになります:</para>
 <screen>
 -drive file=/usr/share/edk2/aarch64/QEMU_EFI-pflash.raw,if=pflash,format=raw
 -drive file=/var/lib/libvirt/qemu/nvram/opensuse_VARS.fd,if=pflash,format=raw
@@ -53,28 +44,16 @@
      </tip>
     </listitem>
     <listitem>
-     <para>
-      A CPU of the &vmhost; using the <option>-cpu host</option> option
-      (default is <option>cortex-15</option>).
-     </para>
+     <para><option>-cpu host</option> オプションを指定して、 &vmhost; の CPU を指定する必要があります (既定値: <option>cortex-15</option>) 。</para>
     </listitem>
     <listitem>
-     <para>
-      The same Generic Interrupt Controller (GIC) version as the host using
-      the <option>-machine gic-version=host</option> option (default is
-      <option>2</option>).
-     </para>
+     <para>ホストと同一のバージョンの Generic Interrupt Controller (GIC) を使用したい場合は、 <option>-machine gic-version=host</option> を指定する必要があります (既定値: <option>2</option>) 。</para>
     </listitem>
     <listitem>
-     <para>
-      If a graphic mode is needed, a graphic device of type
-      <literal>virtio-gpu-pci</literal>.
-     </para>
+     <para>グラフィックモードが必要な場合は、 <literal>virtio-gpu-pci</literal> のグラフィックデバイスの種類を指定する必要があります。</para>
     </listitem>
    </itemizedlist>
-   <para>
-    For example:
-   </para>
+   <para>たとえば下記のようになります:</para>
 <screen>
 &prompt.sudo;qemu-system-aarch64 [...] \
  -bios /usr/share/qemu/qemu-uefi-aarch64.bin \
@@ -167,8 +146,13 @@
      </varlistentry>
     </variablelist>
     <para>下記は <command>qemu-system-ARCH</command> のコマンドライン例です:</para>
-<screen>&prompt.user;qemu-system-x86_64 -name "SLES 12 SP2" -M pc-i440fx-2.7 -m 512 \
--machine accel=kvm -cpu kvm64 -smp 2 -drive format=raw,file=/images/sles.raw</screen>
+<screen>
+&prompt.sudo;qemu-system-x86_64 \
+ -name "SLES &productnumber;" \
+ -M pc-i440fx-2.7 -m 512 \
+ -machine accel=kvm -cpu kvm64 -smp 2 \
+ -drive format=raw,file=/images/sles.raw
+</screen>
     <figure>
      <title>&vmguest; として SLES を動作させた場合の &qemu; のウインドウ</title>
      <mediaobject>
@@ -210,8 +194,10 @@
      <term><literal>-writeconfig <replaceable>設定ファイル</replaceable></literal></term>
      <listitem>
       <para>現在の仮想マシンのデバイス設定を、テキストファイルに保存します。保存したテキストファイルは、後から <literal>-readconfig</literal> オプションで指定することができます。</para>
-<screen>&prompt.user;qemu-system-x86_64 -name "SLES 12 SP2" -machine accel=kvm -M pc-i440fx-2.7 -m 512 -cpu kvm64 \
--smp 2 /images/sles.raw -writeconfig /images/sles.cfg
+<screen>
+&prompt.sudo;qemu-system-x86_64 -name "SLES &productnumber;" \
+ -machine accel=kvm -M pc-i440fx-2.7 -m 512 -cpu kvm64 \
+ -smp 2 /images/sles.raw -writeconfig /images/sles.cfg
 (exited)
 &prompt.user;cat /images/sles.cfg
 # qemu config file
@@ -219,7 +205,8 @@
 [drive]
   index = "0"
   media = "disk"
-  file = "/images/sles_base.raw"</screen>
+  file = "/images/sles_base.raw"
+</screen>
 
       <para>このような仕組みにより、仮想マシンの設定をより効率的かつ整理して管理することができるようになります。</para>
      </listitem>
@@ -236,7 +223,7 @@
       <para>&vmguest; 内での RTC (リアルタイムクロック) の処理方法を指定します。既定ではゲスト側のクロックはホストシステム側から派生させて使用することになります。そのため、ホスト側のシステムクロックは、正確な外部クロック (例: NTP サービス) と同期させておくことをお勧めします。</para>
       <para>&vmguest; と &vmhost; のクロックを分離したい場合は、既定値である <literal>clock=host</literal> の代わりに <literal>clock=vm</literal> を指定してください。</para>
       <para>なお、 &vmguest; 側の起動時点の時刻を指定することもできます。時刻の指定は <literal>base</literal> オプションで行ってください:</para>
-<screen>&prompt.user;qemu-system-x86_64 [...] -rtc clock=vm,base=2010-12-03T01:02:00</screen>
+<screen>&prompt.sudo;qemu-system-x86_64 [...] -rtc clock=vm,base=2010-12-03T01:02:00</screen>
       <para>上記のようなタイムスタンプではなく、 <literal>utc</literal> や <literal>localtime</literal> を指定することもできます。前者の場合、 &vmguest; を現在の UTC 時刻 (Coordinated Universal Time (協定世界時; <link xlink:href="https://ja.wikipedia.org/wiki/UTC"/> )) に、後者の場合は現在のローカル時刻にそれぞれ設定されます。</para>
      </listitem>
     </varlistentry>
@@ -336,14 +323,14 @@
     <title>IOThreads</title>
     <para>IOThreads は virtio デバイス向けのイベントループスレッドで、スケーラビリティを改善するために I/O 要求を専門で処理するスレッドです。特に SMP 型の &vmhost; 内で多数のディスクデバイスの接続された SMP 型の &vmguest; を動作させているような場合に有用です。 I/O 処理に &qemu; のメインイベントループを使用する代わりに、 IOThreads では複数の CPU に I/O 処理を分散させ、適切に設定されていれば遅延を改善することができるようになっています。</para>
     <para>IOThreads は IOThread オブジェクトを定義することで有効化することができます。あとは virtio デバイスを使用することで、 I/O イベントループ向けのオブジェクトを使用するようになります。多くの virtio デバイスで 1 つの IOThread オブジェクトを共用することもできますし、 virtio デバイスと IOThread オブジェクトを 1:1 で作成して割り当てることもできます。下記の例では、 ID <literal>iothread0</literal> で IOThread を 1 つだけ作成し、それを 2 つの virtio-blk デバイスから使用する場合の例を示しています。</para>
-<screen>&prompt.user;qemu-system-x86_64 [...] -object iothread,id=iothread0\
+<screen>&prompt.sudo;qemu-system-x86_64 [...] -object iothread,id=iothread0\
 -drive if=none,id=drive0,cache=none,aio=native,\
 format=raw,file=filename -device virtio-blk-pci,drive=drive0,scsi=off,\
 iothread=iothread0 -drive if=none,id=drive1,cache=none,aio=native,\
 format=raw,file=filename -device virtio-blk-pci,drive=drive1,scsi=off,\
 iothread=iothread0 [...]</screen>
     <para>下記の qemu コマンドラインでは、 virtio デバイスと IOThread を 1:1 で割り当てる設定を示しています:</para>
-<screen>&prompt.user;qemu-system-x86_64 [...] -object iothread,id=iothread0\
+<screen>&prompt.sudo;qemu-system-x86_64 [...] -object iothread,id=iothread0\
 -object iothread,id=iothread1 -drive if=none,id=drive0,cache=none,aio=native,\
 format=raw,file=filename -device virtio-blk-pci,drive=drive0,scsi=off,\
 iothread=iothread0 -drive if=none,id=drive1,cache=none,aio=native,\
@@ -502,7 +489,7 @@ format=raw,file=filename -device virtio-blk-pci,drive=drive1,scsi=off,\
       <listitem>
        <para>&qemu; のグラフィカル出力を無効化します。コンソールの内容は、擬似シリアルポートに転送されます。</para>
        <para><literal>-nographic</literal> を指定した仮想マシンを起動した場合、仮想コンソール内で <keycombo><keycap function="control"/><keycap>A</keycap></keycombo> <keycap>H</keycap> を押すことで、さまざまなショートカットの一覧を表示することができます。これにはたとえば、コンソールと &qemu; モニタの切り替えなどの機能があります。</para>
-<screen>&prompt.user;qemu-system-x86_64 -hda /images/sles_base.raw -nographic
+<screen>&prompt.sudo;qemu-system-x86_64 -hda /images/sles_base.raw -nographic
 
 C-a h    print this help
 C-a x    exit emulator
@@ -557,7 +544,7 @@ QEMU 2.3.1 monitor - type 'help' for more information
       <term><literal>disk</literal></term>
       <listitem>
        <para>ファイルをベースにしたマスストレージデバイスを擬似します。ファイルの形式を自動検出させたくない場合は、 <literal>format</literal> オプションで形式を指定してください。</para>
-<screen>&prompt.user;qemu-system-x86_64 [...] -usbdevice
+<screen>&prompt.sudo;qemu-system-x86_64 [...] -usbdevice
         disk:format=raw:/virt/usb_disk.raw</screen>
       </listitem>
      </varlistentry>
@@ -1056,7 +1043,7 @@ sudo tunctl -d $tap<co xml:id="co-qemu-net-bridge-deltap"/></screen>
 
   <para>VNC の使用例:</para>
 
-<screen>&prompt.user;qemu-system-x86_64 [...] -vnc :5
+<screen>&prompt.sudo;qemu-system-x86_64 [...] -vnc :5
 # (クライアント側で:)
 &prompt.user2;vncviewer &wsII;:5 &amp;</screen>
 
