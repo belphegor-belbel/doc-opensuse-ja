@@ -26,11 +26,63 @@
     <para>ディスクイメージには、仮想化を行うゲストシステムのディスクのイメージが含まれているものを指定します。 <command>qemu-system-ARCH</command> では多数のイメージ形式に対応していますので、詳しくは <command>qemu-img</command> <option>--help</option> と入力して実行してください。</para>
    </callout>
   </calloutlist>
-  <tip>
+  <important>
    <title>&aarch64; アーキテクチャについて</title>
-   <para>&aarch64; アーキテクチャで &qemu; を実行する場合、 <option>-bios</option> オプションでファームウエアイメージを指定する必要があります。たとえば下記のようになります:</para>
-<screen>&prompt.user;qemu-system-arm [...] -bios /usr/share/qemu/qemu-uefi-aarch64.bin</screen>
-  </tip>
+   <para>
+    &kvm; support is available only for 64-bit ARM architecture (&aarch64;).
+    Running &qemu; on the &aarch64; architecture requires you to specify:
+   </para>
+   <itemizedlist>
+    <listitem>
+     <para>
+      A machine type designed for &qemu; ARM virtual machines using the
+      <option>-machine virt-<replaceable>VERSION_NUMBER</replaceable></option>
+      option.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      A firmware image file using the <option>-bios</option> option.
+     </para>
+     <tip>
+      <para>&aarch64; アーキテクチャで &qemu; を実行する場合、 <option>-bios</option> オプションでファームウエアイメージを指定する必要があります。たとえば下記のようになります:</para>
+<screen>
+-drive file=/usr/share/edk2/aarch64/QEMU_EFI-pflash.raw,if=pflash,format=raw
+-drive file=/var/lib/libvirt/qemu/nvram/opensuse_VARS.fd,if=pflash,format=raw
+</screen>
+     </tip>
+    </listitem>
+    <listitem>
+     <para>
+      A CPU of the &vmhost; using the <option>-cpu host</option> option
+      (default is <option>cortex-15</option>).
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      The same Generic Interrupt Controller (GIC) version as the host using
+      the <option>-machine gic-version=host</option> option (default is
+      <option>2</option>).
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      If a graphic mode is needed, a graphic device of type
+      <literal>virtio-gpu-pci</literal>.
+     </para>
+    </listitem>
+   </itemizedlist>
+   <para>
+    For example:
+   </para>
+<screen>
+&prompt.sudo;qemu-system-aarch64 [...] \
+ -bios /usr/share/qemu/qemu-uefi-aarch64.bin \
+ -cpu host \
+ -device virtio-gpu-pci \
+ -machine virt,accel=kvm,gic-version=host
+</screen>
+  </important>
  </sect1>
  <sect1 xml:id="cha-qemu-running-gen-opts">
   <title>一般的な <command>qemu-system-ARCH</command> のオプション</title>
@@ -168,6 +220,7 @@
   index = "0"
   media = "disk"
   file = "/images/sles_base.raw"</screen>
+
       <para>このような仕組みにより、仮想マシンの設定をより効率的かつ整理して管理することができるようになります。</para>
      </listitem>
     </varlistentry>
