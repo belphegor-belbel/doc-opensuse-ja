@@ -6,54 +6,73 @@
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-cachemodes">
  <title>ディスクのキャッシュモード</title>
  <info>
-      <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-        <dm:bugtracker>
-          </dm:bugtracker>
-      </dm:docmanager>
-    </info>
-    <para/>
- <sect1 xml:id="sec-cachemodes">
-  <title>ディスクインターフェイスのキャッシュモード</title>
+  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+   <dm:bugtracker/>
+  </dm:docmanager>
+ </info>
+ <para/>
+ <sect1 xml:id="what-is-disk-cache">
+  <title>What is a disk cache?</title>
 
-  <para>ハイパーバイザでは、 &vmguest; を設定するにあたって、さまざまなストレージキャッシュ方式を指定することができます。それぞれのゲスト側のディスクインターフェイスに対して、 <emphasis>writethrough</emphasis> , <emphasis>writeback</emphasis> , <emphasis>none</emphasis> , <emphasis>directsync</emphasis> , <emphasis>unsafe</emphasis> のいずれかを指定することができます。何もキャッシュモードを指定しない場合、適切な既定のキャッシュモードを使用します。これらのキャッシュモードはホストベースのストレージのアクセス方法を指定するもので、具体的には下記のような効果を提供します:</para>
+  <para>
+   A disk cache is a memory used to speed up the process of storing and
+   accessing data from the hard disk. Physical hard disks have their cache
+   integrated as a standard feature. For virtual disks, the cache uses
+   &vmhost;'s memory and you can fine-tune its behavior, for example, by
+   setting its type.
+  </para>
+ </sect1>
+ <sect1 xml:id="how-it-works-disk-cache">
+  <title>How does a disk cache work?</title>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para>読み込んだデータや書き込むべきデータを、ホスト側のページキャッシュに一時保存します。</para>
-   </listitem>
-   <listitem>
-    <para>ゲスト側のストレージコントローラに対して、書き込みキャッシュが存在しているかどうかを通知し、フラッシュ (キャッシュ掃き出し) コマンドを使用できるようにします。</para>
-   </listitem>
-   <listitem>
-    <para>ストレージデバイスに実際に書き込みが完了するまで書き込み要求を待機させる、同期書き込みモードを使用することができるようになります。</para>
-   </listitem>
-   <listitem>
-    <para>ゲスト側のストレージコントローラから生成されたフラッシュコマンドを、性能要件に応じて無視することもできます。</para>
-   </listitem>
-  </itemizedlist>
+  <para>
+   Normally, a disk cache stores the most recent and frequently used programs
+   and data. When a user or program requests data, the operating system first
+   checks the disk cache. If the data is there, the operating system quickly
+   delivers the data to the program instead of re-reading the data from the
+   disk.
+  </para>
 
-  <para>ゲストとストレージコントローラの間の通信が不正に切断された場合、キャッシュモードによってはデータの損失が発生することになります。また、キャッシュモードはディスクの性能に顕著に影響します。これに加えて、キャッシュモードによっては、いくつかの要素に依存してライブマイグレーション機能と非互換なものもあります。キャッシュモードとディスクイメージの形式、イメージの配置方法やストレージサブシステムに対して、最適な選択がどれになるのかは単純には判断できません。お使いのユーザ側でゲスト側の設定を注意深く確認し、どれが最適な選択であるのかを試しながら決定を下してください。</para>
+  <figure xml:id="fig-caching">
+   <title>Caching mechanism</title>
+   <mediaobject>
+    <imageobject role="html">
+     <imagedata fileref="virt-disk-cache.png"/>
+    </imageobject>
+    <imageobject role="fo">
+     <imagedata fileref="virt-disk-cache.png" width="85%"/>
+    </imageobject>
+   </mediaobject>
+  </figure>
+ </sect1>
+ <sect1 xml:id="benefits-disk-cache">
+  <title>Benefits of disk caching</title>
+
+  <para>
+   Caching of virtual disk devices affects the overall performance of guest
+   machines. You can improve the performance by optimizing the combination of
+   cache mode, disk image format, and storage subsystem.
+  </para>
  </sect1>
  <sect1 xml:id="cachemodes-descr">
-  <title>キャッシュモードの説明</title>
+  <title>ディスクのキャッシュモード</title>
+
+  <para>
+   If you do not specify a cache mode, <literal>writeback</literal> is used by
+   default. Each guest disk can use a one of the following cache modes:
+  </para>
 
   <variablelist>
-   <varlistentry>
-    <term>キャッシュモードを指定しない場合</term>
+   <varlistentry xml:id="cache-writeback">
+    <term>writeback</term>
     <listitem>
-     <para>古いバージョンの &qemu; でキャッシュモードを指定しない場合は、既定値として <emphasis>writethrough</emphasis> が指定されているものとみなしていました。現行の &productname; に同梱されている新しいバージョンの場合、さまざまなゲスト側のストレージインターフェイスで、 <emphasis>writeback</emphasis> や <emphasis>writethrough</emphasis> の方式をより正しく処理するように修正されていることから、既定のキャッシュモードが <emphasis>writeback</emphasis> になっています。ただし、 <literal>ide</literal> , <literal>scsi</literal> , <literal>virtio</literal> の各ゲスト側ドライバには writeback でのキャッシュを無効化する権限が与えられているため、キャッシュモードは <emphasis>writethrough</emphasis> に戻されるようになっています。それ以外のゲスト側ストレージドライバは、前述のとおり <emphasis>writeback</emphasis> を使用します。</para>
+     <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> も <literal>O_DIRECT</literal> も指定せずにディスクイメージやブロックデバイスを扱うように指定します。ホスト側のページキャッシュも使用し、書き込み処理はホスト側のページキャッシュ内に保存した段階で完了となります。通常のページキャッシュ管理で実際のストレージデバイスへの書き込みを行うことになります。これに加えて、ゲスト側の仮想ストレージアダプタに対してライトバックキャッシュが存在しているものとして通知しますので、ゲスト側からはデータの一貫性維持のため、フラッシュコマンドを送信する必要があることになります。これにより、メモリキャッシュ付きの RAID コントローラを使用しているような動作になります。</para>
     </listitem>
    </varlistentry>
    <varlistentry xml:id="cache-writethrough">
     <term>writethrough</term>
     <listitem>
      <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> を指定してディスクイメージやブロックデバイスを扱うように指定します。書き込みは実際のストレージデバイスに書き込みが完了するまで待機させられるようになります。つまり、ホスト側のページキャッシュは、ライトスルーキャッシュとして使用されることになります。ゲスト側の仮想ストレージアダプタにはライトバックキャッシュが存在しないものとして通知しますので、ゲスト側からはデータの一貫性維持に必要なフラッシュコマンドを送信する必要がなくなります。これにより、ストレージはライトスルーキャッシュが存在する動作になります。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry xml:id="cache-writeback">
-    <term>writeback</term>
-    <listitem>
-     <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> も <literal>O_DIRECT</literal> も指定せずにディスクイメージやブロックデバイスを扱うように指定します。ホスト側のページキャッシュも使用し、書き込み処理はホスト側のページキャッシュ内に保存した段階で完了となります。通常のページキャッシュ管理で実際のストレージデバイスへの書き込みを行うことになります。これに加えて、ゲスト側の仮想ストレージアダプタに対してライトバックキャッシュが存在しているものとして通知しますので、ゲスト側からはデータの一貫性維持のため、フラッシュコマンドを送信する必要があることになります。これにより、メモリキャッシュ付きの RAID コントローラを使用しているような動作になります。</para>
     </listitem>
    </varlistentry>
    <varlistentry xml:id="cache-none">
@@ -71,20 +90,28 @@
    <varlistentry xml:id="cache-directsync">
     <term>directsync</term>
     <listitem>
-     <para>このモードはハイパーバイザに対して、 <literal>O_DSYNC</literal> と <literal>O_DIRECT</literal> の両方を指定してディスクイメージやブロックデバイスを扱うように指定します。これにより、書き込みは実際のストレージデバイスに書き込みが完了するまで待機させられるようになるほか、ホスト側のページキャッシュも迂回することになります。 <xref linkend="cache-writethrough"/> と同様に、ゲスト側からはデータの一貫性維持に必要なフラッシュコマンドを送信する必要がなくなります。これが最後に追加されたキャッシュモードであり、これによって全てのキャッシュおよび直接アクセス方式を網羅していることになります。</para>
+     <para>
+      Writes are reported as completed only when the data has been committed to
+      the storage device and the host cache is bypassed. Similar to
+      <emphasis>writethrough</emphasis>, this mode can be useful for guests
+      that do not send flushes when needed.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
-
  <sect1 xml:id="qemu-cachemodes-data-integrity">
-  <title>キャッシュモードごとのデータの一貫性維持に関する説明</title>
+  <title>Cache modes and data integrity</title>
 
   <variablelist>
    <varlistentry>
     <term>writethrough, none, directsync</term>
     <listitem>
-     <para>これらはゲスト側のオペレーティングシステムが <quote>新しく、かつ正しく動作する</quote>  (つまり、必要に応じてフラッシュコマンドを使用する) ものである限り、最も安全なモードであり、いずれも同等に安全であると考えられます。なお、ゲスト側の動作が不審である場合は、 <emphasis>writethough</emphasis> もしくは <emphasis>directsync</emphasis> をお使いになることをお勧めします。ただし、ファイルシステムによっては O_DIRECT に対応しておらず、このフラグを使用する <literal>none</literal> や <literal>directsync</literal> を使用できないものがあることに注意してください。</para>
+     <para>
+      These modes are considered to be safest when the guest operating system
+      uses flushes as needed. For unsafe or unstable guests, use
+      <emphasis>writethough</emphasis> or <emphasis>directsync</emphasis>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -96,16 +123,14 @@
    <varlistentry>
     <term>unsafe</term>
     <listitem>
-     <para>このモードは <emphasis>writeback</emphasis> とほぼ同様ですが、ゲスト側からのフラッシュコマンドが無視されるという点に違いがあります。これにより、フラッシュコマンドの目的であったデータの一貫性維持が無効化されることになりますので、ホスト側で障害が発生した場合、データ損失のリスクがより高くなります。 <quote>unsafe</quote> の名前にもあるとおり、潜在的な危険性が存在することに注意してください。</para>
+     <para>
+      This mode is similar to <emphasis>writeback</emphasis> caching, except
+      the guest flush commands are ignored. This means a higher risk of data
+      loss due to host failure.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
- </sect1>
-
- <sect1 xml:id="qemu-cachemodes-performance">
-  <title>キャッシュモードごとの性能に関する説明</title>
-
-  <para>ページキャッシュを最大限に活用し、キャッシュ経由で必要なデータを書き込むのか、それともキャッシュを迂回するのかの選択は、性能面には大きな影響があります。もちろん実際のストレージシステムのディスク性能や使用しているディスクイメージ形式、そしてページキャッシュの潜在的なサイズや使用している IO スケジューラについても、性能への影響があります。これに加えて、書き込みキャッシュをフラッシュしないまま使用することで、上述のとおりリスクが高くなるものの、性能を向上させる効果もあります。一般的にはハイエンドのシステムの場合、発生するデータコピーの量を減らすため、キャッシュモードを <literal>none</literal> に設定しておくのがお勧めです。また、ホスト側のページキャッシュを複数のゲストで共有する設定や読み込みと書き込みの比率、そして AIO モード <literal>native</literal> の使用 (後述) も考慮しておくとよいでしょう。</para>
  </sect1>
  <sect1 xml:id="sec-cache-mode-live-migration">
   <title>ライブマイグレーション時のキャッシュモードの効果</title>
