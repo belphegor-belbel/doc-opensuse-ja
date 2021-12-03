@@ -119,21 +119,13 @@ session   optional   pam_umask.so</screen>
 
     <sect2 xml:id="sec-sec-prot-general-pam-lock-accounts">
      <title>ログイン失敗時のユーザアカウントのロックアウト</title>
-     <para>ssh, login, su, sudo などで一定回数以上のログイン失敗が繰り返された場合、対象のアカウントをロックアウトする措置は、一般的なセキュリティ対策として実施されるものです。しかしながら、これを実施してしまうとアプリケーションや管理者、 root ユーザでのログインができなくなってしまいますから、悪意のある攻撃者がサービス拒否攻撃として使用できてしまうものでもあります。幸いなことに、 PAM での制御は非常に直感的です。</para>
+     <para>ssh, login, su, sudo などで一定回数以上のログイン失敗が繰り返された場合、対象のアカウントをロックアウトする措置は、一般的なセキュリティ対策として実施されるものです。しかしながら、これを実施してしまうとアプリケーションや管理者、 &rootuser; ユーザでのログインができなくなってしまいます。</para>
      <important>
-      <title>Denial-of-service attacks</title>
-      <para>
-       Password failure counts can easily be abuse to cause denial-of-service
-       attacks by deliberately creating login failures.
-      </para>
-      <para>
-       Only use password failure counts if you have to. Ristrict locking to the
-       necessary minimum and do not lock critical accounts. Keep in mind that
-       lockig not only applies to human users but also to system accounts used
-       to provide services.
-      </para>
+      <title>サービス拒否攻撃について</title>
+      <para>パスワードの入力失敗回数は、故意にログインを失敗させるだけで増やすことができてしまいますから、サービス拒否攻撃として容易に悪用されてしまいます。</para>
+      <para>そのため、パスワードの入力失敗回数によるロックアウトは、どうしても必要な場合だけに留めるものとし、対象のアカウントは少なく、かつ必須のアカウントについては除外するようにしてください。また、ロックアウトは人間が使用するアカウントだけでなく、サービスを提供するシステムアカウントに対しても発生しうることにも注意してください。</para>
      </important>
-     <para>既定では PAM は全ての root ログインを許可します。 <command>pam_tally2</command> モジュールを使用することで、その他のユーザ (一般ユーザおよびシステムユーザ) に対するロックアウトを設定することができます。 <filename>/etc/pam.d/login</filename> 内の冒頭に下記の内容を記述することで、 root を除く全ユーザに対し、 6 回のログイン失敗時に 10 分間のロックアウトを設定することができます:</para>
+     <para>&productname; の既定では、アカウントのロックアウトは行いません。ただし、 <command>pam_tally2</command> モジュールを使用することで容易にロックアウトを設定することができます。 <filename>/etc/pam.d/login</filename> 内の冒頭に下記の内容を記述することで、 &rootuser; を除く全ユーザに対し、 6 回のログイン失敗時に 10 分間のロックアウトを設定することができます:</para>
 <screen>auth required pam_tally2.so deny=6 unlock_time=600</screen>
      <para>下記は <filename>/etc/pam.d/login</filename> ファイルに設定した場合の例です:</para>
 <screen>#%PAM-1.0
@@ -147,16 +139,16 @@ session  required       pam_loginuid.so
 session  include        common-session
 #session  optional       pam_lastlog.so nowtmp showfailed
 session  optional       pam_mail.so standard</screen>        
-     <para>root ユーザに対してもロックアウトを設定することができますが、注意してお使いください:</para>
+     <para>&rootuser; ユーザに対してもロックアウトを設定することができますが、注意してお使いください:</para>
 <screen>auth required pam_tally2.so deny=6 even_deny_root unlock_time=600</screen>
      <para>root に対して異なるロックアウトを設定することもできます:</para>
      <screen>auth required pam_tally2.so deny=6 root_unlock_time=120  unlock_time=600</screen>
     <para>ロックアウトの解除を自動では行わず、管理者の操作を必要としたい場合は、 <literal>unlock_time</literal> オプションを削除してください。下記の 2 つのコマンド例では、ログイン失敗回数を表示して、ロックアウト解除を行う例を示しています:</para>
-<screen>&prompt.root;<command>pam_tally2 -u <replaceable>username</replaceable></command>
+<screen>&prompt.sudo;<command>pam_tally2 -u <replaceable>username</replaceable></command>
 Login           Failures Latest failure     From
 username            6    12/17/19 13:49:43  pts/1
 
-&prompt.root;<command>pam_tally2 -r -u <replaceable>username</replaceable></command></screen>
+&prompt.sudo;<command>pam_tally2 -r -u <replaceable>username</replaceable></command></screen>
        
      <para>ログインを試した記録は、既定で <filename>/var/log/tallylog</filename> 内に保存されます。</para>
      <para>ロックアウト時間の経過後や管理者によるロックアウト解除を実施すると、上記のカウンタは 0 にリセットされます。</para>
