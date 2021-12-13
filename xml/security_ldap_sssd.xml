@@ -27,6 +27,40 @@
   </step>
   <step>
     <para>出力された内容を確認して、環境に合わせた変更を行います。</para>
+    <screen>[sssd]
+services = nss, pam, ssh, sudo
+config_file_version = 2
+domains = default
+
+[nss]
+homedir_substring = /home
+
+[domain/default]
+# If you have large groups (IE 50+ members), 
+# you should set this to True
+ignore_group_members = False
+debug_level=3
+cache_credentials = True
+id_provider = ldap
+auth_provider = ldap
+access_provider = ldap
+chpass_provider = ldap
+ldap_schema = rfc2307bis
+ldap_search_base = <replaceable>dc=example,dc=com</replaceable>
+# We strongly recommend ldaps
+ldap_uri = <replaceable>ldaps://ldap.example.com</replaceable>
+ldap_tls_reqcert = demand
+ldap_tls_cacert = /etc/openldap/ldap.crt
+ldap_access_filter = (|(memberof=cn=&lt;login group&gt;,ou=Groups,dc=example,dc=com))
+enumerate = false
+access_provider = ldap
+ldap_user_member_of = memberof
+ldap_user_gecos = cn
+ldap_user_uuid = nsUniqueId
+ldap_group_uuid = nsUniqueId
+ldap_account_expire_policy = rhds
+ldap_access_order = filter, expire
+ldap_user_ssh_public_key = nsSshPublicKey</screen>
   </step>
   <step>
     <para>SSSD サーバ内の <filename>/etc/nsswitch.conf</filename> 設定ファイルを編集し、下記のような行が含まれるようにします:</para>
@@ -73,4 +107,8 @@ session:</screen>
     </important>
   
    </step>-->
-</sect1>
+  <para>
+    See <xref linkend="cha-security-auth"/> for information on managing the 
+    sssd.service with systemctl.
+  </para>
+  </sect1>
