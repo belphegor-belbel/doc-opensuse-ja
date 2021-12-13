@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: security_ldap_sssd.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
 "POT-Creation-Date: 2021-12-13 22:26+0000\n"
-"PO-Revision-Date: 2021-10-27 07:59+0900\n"
+"PO-Revision-Date: 2021-12-14 07:35+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
 "Language: ja\n"
@@ -21,20 +21,20 @@ msgstr ""
 
 #. Tag: title
 #: security_ldap_sssd.xml:14
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Using SSSD to manage LDAP authentication"
-msgstr "認証管理のための SSSD の使用"
+msgstr "LDAP 認証管理のための SSSD の使用"
 
 #. Tag: para
 #: security_ldap_sssd.xml:15
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The System Security Services Daemon (SSSD) manages authentication, "
 "identification, and access controls for remote users. This section describes "
 "how to use SSSD to manage authentication and identification for your &ds389;."
 msgstr ""
 "システムセキュリティサービスデーモン (System Security Services Daemon "
-"(SSSD)) は、リモートのクライアントに対する認証や識別、アクセス制御などを行う"
+"(SSSD)) は、リモートのユーザに対する認証や識別、アクセス制御などを行う"
 "ためのシステムです。本章では、 &ds389; と SSSD を利用して、ユーザ認証やユーザ"
 "識別を行うための手順を説明しています。"
 
@@ -142,12 +142,14 @@ msgstr ""
 
 #. Tag: para
 #: security_ldap_sssd.xml:66
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Review the output and make any necessary changes to suit your environment. "
 "The following <filename>/etc/sssd/sssd.conf</filename> file demonstrates a "
 "complete example."
-msgstr "出力された内容を確認して、環境に合わせた変更を行います。"
+msgstr ""
+"出力された内容を確認して、環境に合わせた変更を行います。下記は <filename>/etc/sssd"
+"/sssd.conf</filename> ファイルの設定例 (全体) です。"
 
 #. Tag: screen
 #: security_ldap_sssd.xml:71
@@ -189,6 +191,41 @@ msgid ""
 "ldap_access_order = filter, expire\n"
 "ldap_user_ssh_public_key = nsSshPublicKey"
 msgstr ""
+"[sssd]\n"
+"services = nss, pam, ssh, sudo\n"
+"config_file_version = 2\n"
+"domains = default\n"
+"\n"
+"[nss]\n"
+"homedir_substring = /home\n"
+"\n"
+"[domain/default]\n"
+"# 多数の (具体的には 50 個以上の) グループを設定する場合、"
+"# 下記は True に設定しておくことをお勧めします\n"
+"ignore_group_members = False\n"
+"debug_level=3\n"
+"cache_credentials = True\n"
+"id_provider = ldap\n"
+"auth_provider = ldap\n"
+"access_provider = ldap\n"
+"chpass_provider = ldap\n"
+"ldap_schema = rfc2307bis\n"
+"ldap_search_base = <replaceable>dc=example,dc=com</replaceable>\n"
+"# ldaps の使用をお勧めします\n"
+"ldap_uri = <replaceable>ldaps://ldap.example.com</replaceable>\n"
+"ldap_tls_reqcert = demand\n"
+"ldap_tls_cacert = /etc/openldap/ldap.crt\n"
+"ldap_access_filter = (|(memberof=cn=&lt;login group&gt;,ou=Groups,dc=example,"
+"dc=com))\n"
+"enumerate = false\n"
+"access_provider = ldap\n"
+"ldap_user_member_of = memberof\n"
+"ldap_user_gecos = cn\n"
+"ldap_user_uuid = nsUniqueId\n"
+"ldap_group_uuid = nsUniqueId\n"
+"ldap_account_expire_policy = rhds\n"
+"ldap_access_order = filter, expire\n"
+"ldap_user_ssh_public_key = nsSshPublicKey"
 
 #. Tag: para
 #: security_ldap_sssd.xml:107
@@ -294,3 +331,6 @@ msgid ""
 "See <xref linkend=\"cha-security-auth\"/> for information on managing the "
 "sssd.service with systemctl."
 msgstr ""
+"systemctl での sssd.service の制御方法については、 <xref linkend=\"cha-security-auth\"/> "
+"をお読みください。"
+

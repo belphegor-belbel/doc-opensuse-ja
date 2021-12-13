@@ -5,8 +5,8 @@
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-security-ldap-server-sssd">
   
-  <title>認証管理のための SSSD の使用</title>
-  <para>システムセキュリティサービスデーモン (System Security Services Daemon (SSSD)) は、リモートのクライアントに対する認証や識別、アクセス制御などを行うためのシステムです。本章では、 &ds389; と SSSD を利用して、ユーザ認証やユーザ識別を行うための手順を説明しています。</para>
+  <title>LDAP 認証管理のための SSSD の使用</title>
+  <para>システムセキュリティサービスデーモン (System Security Services Daemon (SSSD)) は、リモートのユーザに対する認証や識別、アクセス制御などを行うためのシステムです。本章では、 &ds389; と SSSD を利用して、ユーザ認証やユーザ識別を行うための手順を説明しています。</para>
   <para>SSSD は LDAP サーバとクライアントとの間を仲介します。 LDAP のほか、 Active Directory や Kerberos などのバックエンドにも対応しています。サービス側としては SSH, PAM, NSS, sudo などに対応しています。 SSSD は ID や資格情報をキャッシュする仕組みが存在することから、性能面だけでなく柔軟性も兼ね備えています。キャッシュ機能は &ds389; サーバの負荷を減らすことにつながるばかりか、バックエンドが接続不可能な状態になっても、認証機能を継続して提供することができるようになります。</para>
   <para>なお、ネームサービスキャッシュデーモン (Name Services Caching Daemon (ncsd)) がネットワーク内で動作している場合は、無効化するか削除しておいてください。 nscd は passwd, group, hosts, service, netgroup などの名前解決要求のみをキャッシュする仕組みであることから、 SSSD と競合してしまうためです。</para>
   <para>LDAP サーバをプロバイダ (提供元) として使用する場合、 SSSD のインスタンスはプロバイダに対するクライアントとして動作します。 &ds389a; サーバ内で SSSD を動作させてもかまいませんが、異なるマシンで動作させることで、 &ds389a; サーバが接続不可能な状況に陥った場合でもサービスを継続させることができます。下記の手順では、 SSSD クライアントのインストールと設定について説明しています。</para>
@@ -26,7 +26,7 @@
 </screen>
   </step>
   <step>
-    <para>出力された内容を確認して、環境に合わせた変更を行います。</para>
+    <para>出力された内容を確認して、環境に合わせた変更を行います。下記は <filename>/etc/sssd/sssd.conf</filename> ファイルの設定例 (全体) です。</para>
     <screen>[sssd]
 services = nss, pam, ssh, sudo
 config_file_version = 2
@@ -36,8 +36,7 @@ domains = default
 homedir_substring = /home
 
 [domain/default]
-# If you have large groups (IE 50+ members), 
-# you should set this to True
+# 多数の (具体的には 50 個以上の) グループを設定する場合、# 下記は True に設定しておくことをお勧めします
 ignore_group_members = False
 debug_level=3
 cache_credentials = True
@@ -47,7 +46,7 @@ access_provider = ldap
 chpass_provider = ldap
 ldap_schema = rfc2307bis
 ldap_search_base = <replaceable>dc=example,dc=com</replaceable>
-# We strongly recommend ldaps
+# ldaps の使用をお勧めします
 ldap_uri = <replaceable>ldaps://ldap.example.com</replaceable>
 ldap_tls_reqcert = demand
 ldap_tls_cacert = /etc/openldap/ldap.crt
@@ -107,8 +106,5 @@ session:</screen>
     </important>
   
    </step>-->
-  <para>
-    See <xref linkend="cha-security-auth"/> for information on managing the 
-    sssd.service with systemctl.
-  </para>
+  <para>systemctl での sssd.service の制御方法については、 <xref linkend="cha-security-auth"/> をお読みください。</para>
   </sect1>
