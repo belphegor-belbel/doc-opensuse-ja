@@ -30,18 +30,18 @@
 
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
 
-  <para>カーネルが提供する cgroup の API には 2 種類のものが存在します。これらは提供する cgroup 属性が異なるほか、コントローラの階層構造が異なります。 &systemd; は抽象化の仕組みによって、これらの違いを吸収しています。既定では &systemd; は <emphasis>ハイブリッド</emphasis> モードで動作し、 v1 API を利用してコントローラを制御します。 cgroup v2 は systemd 内でのみ使用されます。このほか <emphasis>統合</emphasis> モードとして、コントローラを v2 API で制御するモードもあります。モードはいずれか一方のみを排他的に使用することができます。</para>
+  <para>カーネルが提供する cgroup の API には 2 種類のものが存在します。これらは提供する cgroup 属性が異なるほか、コントローラの階層構造が異なります。 &systemd; は抽象化の仕組みによって、これらの違いを吸収しています。既定では &systemd; は <emphasis>ハイブリッド</emphasis> モードで動作し、 v1 API を利用してコントローラを制御します。 cgroup v2 は systemd 内でのみ使用されます。このほか <emphasis>統合</emphasis> モードとして、コントローラを v2 API で制御するモードもあります。なお、モードはいずれか 1 つを選択します。</para>
 
   <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください (&grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください) 。</para>
  </sect1>
  <sect1 xml:id="sec-tuning-cgroups-accounting">
   <title>リソースアカウンティング</title>
 
-  <para>複数の cgroup にプロセスを別々に配置することで、 cgroup ごとのリソース消費量の情報を取得できるようになります。</para>
+  <para>複数の cgroup にプロセスをまとめることで、 cgroup ごとの資源消費データを取得できるようになります。</para>
 
-  <para>このような機能をアカウンティングと呼びますが、この機能自身にも小さいながらオーバーヘッドが存在しています。このオーバーヘッドはその中での処理内容にも依存しますが、特定の 1 つのユニットに対してアカウンティングを有効にすると、同じスライスに含まれる全てのユニットだけでなく、親スライスやそこに直接含まれるユニットに対しても、機能が有効化されることに注意してください。そのため、アカウンティングによる負荷は 1 つのユニットだけにとどまらないことになります。</para>
+  <para>このような機能をアカウンティングと呼びますが、この機能自身にも小さいながらオーバーヘッドが存在しています。このオーバーヘッドはその中での処理内容にも依存しますが、特定の 1 つのユニットに対してアカウンティングを有効にすると、同じスライスに含まれる全てのユニットだけでなく、親スライスやそこに直接含まれるユニットに対しても、この機能が有効化されることに注意してください。</para>
 
-  <para>ユニット単位でアカウンティングを有効化したい場合は <literal>MemoryAccounting=</literal> のようなディレクティブを使用することができます。全てのユニットに対して有効化したい場合は、 <filename>/etc/systemd/system.conf</filename> ファイル内の <literal>DefaultMemoryAccounting=</literal> を設定してください。設定可能なディレクティブに関する詳細は、 <literal>systemd.resource-control (5)</literal> をお読みください。</para>
+  <para>ユニット単位でアカウンティングを有効化したい場合は <literal>MemoryAccounting=</literal> のようなディレクティブを使用することができます。全てのユニットに対して有効化したい場合は、 <filename>/etc/systemd/system.conf</filename> ファイル内の <literal>DefaultMemoryAccounting=</literal> ディレクティブを設定してください。設定可能なディレクティブに関する詳細は、 <command>man systemd.resource-control</command> で表示されるマニュアルページ (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-tuning-cgroups-usage">
   <title>リソース制限の設定</title>
@@ -51,7 +51,7 @@
    <para>暗黙のうちに消費され、実行環境によって異なるリソースが存在することに注意してください。これにはたとえば、ライブラリやカーネル内のデータ構造のほか、利用しているユーティリティの fork() 処理の振る舞い、計算の効率性などがあります。このようなことから、実行環境を変えた場合は、リソース制限を再計算する必要があります。</para>
   </note>
 
-  <para><literal>cgroup</literal> に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
+  <para>cgroup に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
 
 <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>名前</replaceable> <replaceable>プロパティ_1</replaceable>=<replaceable>値</replaceable> [<replaceable>プロパティ_2</replaceable>=<replaceable>値</replaceable>]</command></screen>
 
@@ -64,26 +64,22 @@
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
   <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
 
-  <para>&systemd; では、ユニットごとやスライスごと (主に `user-$UID.slice`) にタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値を、 カーネル全体での制限 (詳しくは <command>cat /proc/sys/kernel/pid_max</command> を参照) に対して 15% に設定しています。各ユーザのスライスはカーネル全体での制限の 33% になっています。</para>
+  <para>&systemd; では、ユニットごとやスライスごとにタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値が設定されています (カーネル全体での制限 (詳しくは <command>/usr/sbin/sysctl kernel.pid_max</command> を参照) に対して 15% に設定しています) 。また、各ユーザのスライスはカーネル全体での制限の 33% になっています。ただし、 &slea; では異なる設定になっています。</para>
 
   <sect2 xml:id="sec-tasksmax-defaults">
    <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
-   <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
+   <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf </filename> には、下記のような設定が書かれています:</para>
 <screen>
 [Manager]
 DefaultTasksMax=infinity
 </screen>
-   <para>もう 1 つの存在である <filename>/usr/lib/systemd/system/user-.slice.d/20-suse-defaults.conf</filename> には、下記のような設定が書かれています:</para>
+   <para>もう 1 つの存在である <filename>/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf </filename> には、下記のような設定が書かれています:</para>
 <screen>[Slice]
 TasksMax=infinity
 </screen>
-   <para>
-    Use <command>systemctl</command> to verify the DefaultTasksMax value:
-   </para>
-<screen>&prompt.sudo;systemctl daemon-reload
-&prompt.user;systemctl show --property DefaultTasksMax
-DefaultTasksMax=256
-</screen>
+   <para>DefaultTasksMax の値を確認するには、 <command>systemctl</command> を下記のように入力して実行します:</para>
+<screen>&prompt.user;<command>systemctl show --property DefaultTasksMax</command>
+DefaultTasksMax=infinity</screen>
    <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、必要であれば設定を変更してください。</para>
   </sect2>
 
@@ -95,13 +91,13 @@ DefaultTasksMax=256
 DefaultTasksMax=256
 </screen>
    <para>新しい設定を読み込んで、設定が反映されたことを確認します:</para>
-<screen>&prompt.sudo;systemctl daemon-reload
-&prompt.user;systemctl show --property DefaultTasksMax
+<screen>&prompt.sudo;<command>systemctl daemon-reload</command>
+&prompt.user;<command>systemctl show --property DefaultTasksMax</command>
 DefaultTasksMax=256
 </screen>
    <para>設定値はお使いのシステムの要件に合わせて指定してください。また、特定のサービスに限定して制限を高くすることもできます。たとえば MariaDB で設定を変更したい場合、まずは現在の設定値を確認します:</para>
 <screen>
-&prompt.user;systemctl status mariadb.service
+&prompt.user;<command>systemctl status mariadb.service</command>
   ● mariadb.service - MariaDB database server
    Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset&gt;
    Active: active (running) since Tue 2020-05-26 14:15:03 PDT; 27min ago
@@ -114,8 +110,8 @@ DefaultTasksMax=256
            └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
 </screen>
    <para>Tasks 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。</para>
-<screen>&prompt.sudo;systemctl set-property mariadb.service TasksMax=8192
-&prompt.user;systemctl status mariadb.service 
+<screen>&prompt.sudo;<command>systemctl set-property mariadb.service TasksMax=8192</command>
+&prompt.user;<command>systemctl status mariadb.service</command> 
 ● mariadb.service - MariaDB database server
    Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset: disab&gt;
   Drop-In: /etc/systemd/system/mariadb.service.d
@@ -146,9 +142,8 @@ TasksMax=16284
     <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <link xlink:href="https://documentation.suse.com/sles/15-SP3/html/SLES-all/cha-systemd.html#sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
    </note>
    <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
-<screen>&prompt.sudo;systemctl daemon-reload
-
-&prompt.user;systemctl show --property TasksMax user-1000.slice
+<screen>&prompt.sudo;<command>systemctl daemon-reload</command>
+&prompt.user;<command>systemctl show --property TasksMax user-1000.slice</command>
 TasksMax=16284
 </screen>
    <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
