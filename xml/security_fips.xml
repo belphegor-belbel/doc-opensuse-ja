@@ -4,21 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-security-fips">
- <title>FIPS 140-2 の有効化</title>
+ <title>FIPS 140-2 準拠機能の有効化</title>
  <info>
   <abstract>
-   <para>
-     If your organization does any work for the United States federal
-     government, it is likely that your cryptography applications (such
-     as openSSL, GnuTLS, and OpenJDK) will be required to be in
-     compliance with Federal Information Processing Standards (FIPS)
-     140-2. FIPS 140-2 is a security accreditation program for validating  
-     cryptographic modules produced by private companies. If your 
-     organization is not required by compliance rules to run &sle; in
-     FIPS mode, it is most likely best to not do it. This chapter 
-     provides guidance on enabling FIPS mode, and links to resources with 
-     detailed information.
-   </para>
+   <para>アメリカ合衆国連邦政府向けの業務を行うような場合、暗号化アプリケーション (OpenSSL, GnuTLS, OpenJDK) の使用にあたっては Federal Information Processing Standards (FIPS) 140-2 に準拠するよう求められることがあります。 FIPS 140-2 は私企業が提供する暗号化モジュールに向けて作られたセキュリティ認定プログラムで、このプログラムへの準拠が求められた場合にのみ有効化すべき仕組みです (求められていない場合は、何もする必要はありません) 。本章では FIPS モードの有効化を行うための手順のほか、より詳しい情報のリンクも示しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -27,94 +16,49 @@
  </info>
  
 <sect1 xml:id="sec-fips-concept">
-  <title>FIPS 140-2 overview</title>
+  <title>FIPS 140-2 の概要</title>
   
   <warning>
-    <title>FIPS requires expertise</title>
-    <para>
-      Administering FIPS is complex and requires significant expertise.
-      Implementing it correctly, testing, and troubleshooting all require
-      a high degree of knowledge.
-    </para>
+    <title>FIPS の使用には専門知識が必要となる件について</title>
+    <para>FIPS の管理は複雑で、専門的な知識が必要となります。適切な実装やテスト、トラブルシューティングの実施の全てにおいて、高度な知識が求められることに注意してください。</para>
   </warning>
   
-  <para>
-    Every vendor that develops and maintains cryptographic applications, and 
-    wants them to be tested for FIPS compliance, must submit them to the 
-    Cryptographic Module Validation Program (CMVP) (see
-    <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/>).
-  </para>
-  <para>
-    There are currently two FIPS cryptographic standards, FIPS 140-2 and FIPS 
-    140-3. The FIPS 140-2 standard was finalized in 2002, and is valid until 
-    September 22, 2026. The FIPS 140-3 standard was approved in March 2019, 
-    and is replacing 140-2. CMVP is no longer accepting modules for 
-    FIPS 140-2 testing, but only FIPS 140-3.
-  </para>
-  <para>
-    &suse; maintains a list of certified modules at 
-    <link xlink:href="https://www.suse.com/support/security/certifications/"/>, along with a lot of other useful information.
-  </para>
+  <para>組織や企業が暗号化アプリケーションを FIPS 準拠として認定を受けるには、 Cryptographic Module Validation Program (CMVP) (詳しくは <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/> を参照) への申請を行わなくてはなりません。</para>
+  <para>また、現時点では FIPS 暗号化標準として FIPS 140-2 と FIPS 140-3 の 2 種類が存在しています。 FIPS 140-2 標準は 2002 年に確定した標準で、 2026 年 9 月 22 日まで有効とされています。もう一方の FIPS 140-3 標準は 2019 年 3 月に承認された標準で、 140-2 を置き換えるものとして作られています。なお、現時点で CMVP は FIPS 140-2 テストへの受け付けは行っておらず、 FIPS 140-3 の受け付けのみを行っています。</para>
+  <para>&suse; では認証済みモジュールの一覧を <link xlink:href="https://www.suse.com/support/security/certifications/"/> で公開しています。ここには様々な情報も提供されています。</para>
 </sect1>
 
 <sect1 xml:id="sec-fips-use-case">
-  <title>When to enable FIPS mode</title>
-  <para>
-    The use case for enabling FIPS mode on &sle; is simple: run your    
-    server in FIPS mode it when it is required to meet compliance rules. 
-  </para>
-  <para>
-     When you are not required to meet compliance rules, running your systems 
-     in FIPS mode is most likely not a good idea. These are some of the reasons to not use FIPS mode:
-  </para>
+  <title>FIPS モードを必要とする条件</title>
+  <para>&sle; で FIPS モードを有効化するのは簡単です。準拠が必要なサーバを FIPS モードで動作させるだけです。</para>
+  <para>FIPS 準拠を求められていない場合は、 FIPS モードの有効化を行わないほうが適切です。なぜなら、下記のような理由があるからです:</para>
   <itemizedlist>
     <listitem>
-      <para>
-        FIPS is restrictive. It enforces the use of specific validated 
-        cryptographic algorithms, and specific certified binaries that 
-        implement these validated algorithms. You must use only the certified 
-        binaries.
-      </para>
+      <para>FIPS では制限が強すぎます。特定の暗号化アルゴリズムの使用を強制するばかりか、そのアルゴリズムを適切に実装している認証済みバイナリのみを実行するようにしてしまいます。</para>
     </listitem>
     <listitem>
-      <para>
-        Upgrades may break functionality.        
-      </para>
+      <para>アップグレードによって機能が制限されることもあります。</para>
     </listitem>
     <listitem>
-      <para>
-         The approval process is very long, so certified binaries are always
-         several releases behind the newest release.
-      </para>
+      <para>認証にかかる時間が非常に長く、認証された頃には古いリリースになってしまいます。</para>
     </listitem>
     <listitem>
-      <para>
-        Certified binaries, such as ssh, sshd, and sftp-server, run their own
-        self-checks at startup, and run only when these checks succeed. 
-        This creates some small performance degradation.
-      </para>
+      <para>ssh, sshd, sftp-server などの認証済みバイナリは、その起動時に自分自身をチェックして、それが成功した場合にのみ動作するようになってしまいます。これによって、少ないながらも性能劣化を引き起こしてしまいます。</para>
     </listitem>    
     <listitem>
-      <para>
-        Administering FIPS is complex and requires significant expertise.
-      </para>
+      <para>FIPS の管理は複雑で、比較的高度な知識が必要となります。</para>
     </listitem>
   </itemizedlist>
 </sect1>
  
 <sect1 xml:id="sec-fips-install">
   <title>FIPS のインストール</title>
-  <para>&sle; を新規にインストールしている場合は、 <package>patterns-server-enterprise-fips</package> という名称のパターンを選択してください。インストールが完了したあとは、 <xref linkend="sec-fips-enable"/> に示された手順に従って、 FIPS を有効化してください。</para>
-  <para>
-    You may install <package>patterns-server-enterprise-fips</package>
-    and enable FIPS mode on a running system, but then it is likely you will 
-    have to make adjustments, such as regenerating keys, and auditing your 
-    setup to ensure it is set up correctly.
-  </para>
+  <para>新規にインストールしている場合は、 <package>patterns-server-enterprise-fips</package> という名称のパターンをインストールしてください。インストールが完了したあとは、 <xref linkend="sec-fips-enable"/> に示された手順に従って、 FIPS を有効化してください。</para>
+  <para>お使いのシステムに <package>patterns-server-enterprise-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
 </sect1>    
     
 <sect1 xml:id="sec-fips-enable">
-  <title>FIPS の有効化</title>
+  <title>FIPS モードの有効化</title>
 
 <!-- The file paths for the two READMEs are different than in earlier 
   releases. In SLE 15 SP2 and older the path is /usr/share/doc/packages/openssh/
