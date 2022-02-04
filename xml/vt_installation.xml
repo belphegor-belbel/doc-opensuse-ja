@@ -7,17 +7,19 @@
  <title>仮想化コンポーネントのインストール</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker>
-   </dm:bugtracker>
+   <dm:bugtracker/>
   </dm:docmanager>
  </info>
  <sect1 xml:id="introduction-install-virtualization-components">
   <title>概要</title>
+
   <para>1 つまたは複数のゲストシステム (&vmguest;) を実行する仮想化サーバ (&vmhost;) を動作させるには、サーバ内に仮想化コンポーネントをインストールする必要があります。インストールすべきコンポーネントは、利用したい仮想化技術によって異なります。</para>
  </sect1>
-<sect1 xml:id="install-virtualization-components">
+ <sect1 xml:id="install-virtualization-components">
   <title>仮想化コンポーネントのインストール</title>
+
   <para>&vmhost; を実行するのに必要な仮想化ツールをインストールするには、下記のいずれかの方式をとることができます:</para>
+
   <itemizedlist>
    <listitem>
     <para>&vmhost; 側での &productname; のインストール時に、システムの役割を選択する方式</para>
@@ -29,6 +31,7 @@
     <para>既にインストール済みで動作中の &productname; において、特定のパターンを選択してインストールする方式</para>
    </listitem>
   </itemizedlist>
+
   <sect2 xml:id="install-virtualization-components-system-role">
    <title>システムの役割の指定</title>
    <para>&vmhost; 側での &productname; のインストールの際、仮想化に必要なツール類全てをインストールするよう選択することができます。具体的にはインストールの際、 <guimenu>システムの役割</guimenu> 画面でそれを行います。</para>
@@ -48,6 +51,7 @@
     <para>どちらの仮想化ホストを選択した場合でも、 <filename>/var/lib/libvirt</filename> にマウントされる専用のパーティションが作成されるほか、 &firewalld; と &kdump; サービスの有効化がそれぞれ設定されます。</para>
    </tip>
   </sect2>
+
   <sect2 xml:id="install-virtualization-components-yast">
    <title><emphasis>&yast; 仮想化</emphasis> モジュールの実行</title>
    <para>&vmhost; 側での &productname; のインストール指定にもよりますが、通常はお使いのシステム内に仮想化ツールは全くインストールされません。必要なツールは <emphasis>&yast; 仮想化</emphasis> モジュールでハイパーバイザを選択することによって、インストールを行うことができます。</para>
@@ -91,6 +95,7 @@
     </step>
    </procedure>
   </sect2>
+
   <sect2 xml:id="install-virtualization-components-pattern">
    <title>特定のインストールパターンの選択</title>
    <para>&productname; のソフトウエアリポジトリでは、関連するソフトウエアパッケージをまとめて <emphasis>インストールパターン</emphasis> という形で提供しています。動作中の &productname; でこれらのパターンをインストールすることで、特定の仮想化に必要なコンポーネントをまとめてインストールすることができます。パターンをインストールするには <command>zypper</command> コマンドを下記のように入力して実行します:</para>
@@ -129,18 +134,29 @@
  </sect1>
  <sect1 xml:id="sec-vt-installation-ovmf">
   <title>UEFI サポートのインストール</title>
+
   <note>
    <para>&kvm; ゲストの場合、 OVMF ファームウエアを使用することで &uefisecboot; に対応させることができます。 &xen; HVM ゲストの場合は、 OVMF からの起動には対応しているものの、 &uefisecboot; には対応できません。</para>
   </note>
+
   <para>UEFI への対応は <emphasis>OVMF</emphasis> ( <emphasis>Open Virtual Machine Firmware</emphasis> ) で提供されています。 UEFI での起動を有効化するには、まずお使いのアーキテクチャに合わせて <package>qemu-ovmf-x86_64</package> もしくは <package>qemu-uefi-aarch64</package> パッケージをインストールしてください。</para>
+
   <para>仮想マシンで使用されるファームウエアは自動的に選択されます。この自動選択の機能は、上述のファームウエアパッケージ内にある *.json ファイルをベースにしています。 &libvirt; &qemu; ドライバは読み込み時にこれらのファイルを処理して、ファームウエア側での機能を知ることができるようになっています。その後、 &libvirt; 側でユーザ側の要件に合わせ、必要な機能 (&uefisecboot; の有効可否など) のあるファームウエアを選択します。</para>
+
   <para>たとえば &uefisecboot; 機能付きの EFI を有効化するには、下記のような設定を追加します:</para>
+
 <screen>
 &lt;os firmware='efi'&gt;
  &lt;loader secure='yes'/&gt;
 &lt;/os&gt;
 </screen>
-  <para>また、 UEFI ファームウエアパッケージには下記のようなファイルが含まれています:</para>
+
+  <para>
+   The <package>qemu-ovmf-x86_64</package> package contains the following
+   important UEFI firmware images. They provide &uefisecboot; capability for
+   various &vmguest;s:
+  </para>
+
 <screen>
 &prompt.root;<command>rpm -ql qemu-ovmf-x86_64</command>
 [...]
@@ -152,6 +168,33 @@
 /usr/share/qemu/ovmf-x86_64-suse.bin
 [...]
 </screen>
+
+  <itemizedlist>
+   <listitem>
+    <para>
+     To use &uefisecboot; for &sle; guests, use the
+     <filename>ovmf-x86_64-smm-suse-code.bin</filename> firmware.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     To use &uefisecboot; for &opensuse; guests, use the
+     <filename>ovmf-x86_64-smm-opensuse-code.bin</filename> firmware.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     To use &uefisecboot; for &mswin; guests, use the
+     <filename>ovmf-x86_64-smm-ms-code.bin</filename> firmware.
+    </para>
+   </listitem>
+  </itemizedlist>
+
+  <para>
+   For the &aarch64; architecture, the package is named
+   <package>qemu-uefi-aarch32</package>:
+  </para>
+
 <screen>
 &prompt.root;<command>rpm -ql qemu-uefi-aarch32</command>
 [...]
@@ -161,8 +204,11 @@
 /usr/share/qemu/firmware/60-aavmf-aarch32.json
 /usr/share/qemu/qemu-uefi-aarch32.bin
 </screen>
+
   <para><filename>*-code.bin</filename> ファイルは UEFI ファームウエアです。 <filename>*-vars.bin</filename> ファイルは対応する変数ストアイメージで、 VM ごとの不揮発性ストア向けのテンプレートとして使用できるファイルです。 &libvirt; は VM を初めて作成する際、指定された <literal>vars</literal> テンプレートを VM ごとのパス (<filename>/var/lib/libvirt/qemu/nvram/</filename>) にコピーします。なお、ファイル名の中に <literal>code</literal> や <literal>vars</literal> を含まないファイルは、単独の UEFI イメージとして使用することができるものです。これらは VM のシャットダウン後には UEFI 変数が維持されない仕組みであることから、有用ではありません。</para>
+
   <para><filename>*-ms*.bin</filename> ファイルには、実際のハードウエア内に存在する  UEFI CA の鍵が含まれています。そのため、これらは &libvirt; の既定で設定されるようになっています。同様に、 <filename>*-suse*.bin</filename> ファイルには、事前にインストールされる &suse; の鍵が含まれています。このほか、事前にインストールされる鍵の無いファイルも提供されています。</para>
+
   <para>詳しくは <xref linkend="vle-libvirt-inst-virt-install-ovmf"/> と <link xlink:href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt"/> (英語) をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-vt-installation-nested-vms">
@@ -235,11 +281,11 @@
   <itemizedlist>
    <listitem>
     <para>Intel CPU の場合は、 <filename>/etc/modprobe.d/kvm_intel.conf</filename> ファイルを作成して、下記のような行を記述します:</para>
-    <screen>options kvm_intel nested=1</screen>
+<screen>options kvm_intel nested=1</screen>
    </listitem>
    <listitem>
     <para>AMD CPU の場合は、 <filename>/etc/modprobe.d/kvm_amd.conf</filename> ファイルを作成して、下記のような行を記述します:</para>
-    <screen>options kvm_amd nested=1</screen>
+<screen>options kvm_amd nested=1</screen>
    </listitem>
   </itemizedlist>
 
@@ -253,10 +299,11 @@
     <para>&qemu; のコマンドラインオプションの <option>-cpu</option> 以下に、 <literal>vmx</literal> (Intel CPU の場合) もしくは <literal>svm</literal> (AMD CPU の場合) を追加します。これにより、仮想 CPU 内で仮想化ができるようになります。</para>
    </listitem>
   </itemizedlist>
+
   <sect2 xml:id="sec-vt-installation-nested-vms-esxi">
    <title>&esx; のゲストハイパーバイザとしての使用</title>
    <para>&kvm; ハイパーバイザ内で入れ子型の &esx; ハイパーバイザを動作させると、ネットワークの接続が不安定になる事象が発生します。この問題は特に、 &kvm; ゲストとハイパーバイザの間、もしくは &kvm; ゲストと外部ネットワークとの間で発生します。これは &kvm; ゲストの設定で、下記のような既定の CPU 設定が存在する場合に生じる問題です:</para>
-   <screen>&lt;cpu mode='host-model' check='partial'/&gt;</screen>
+<screen>&lt;cpu mode='host-model' check='partial'/&gt;</screen>
    <para>この問題を解決するには、 CPU の設定を下記のように変更してください:</para>
 <screen>
 [...]
