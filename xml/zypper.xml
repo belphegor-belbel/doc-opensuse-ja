@@ -238,6 +238,12 @@
   <para>zypper では 3 種類の方法でソフトウエアを更新することができます。 1 つめの方法は修正 (パッチ) をインストールする方法で、 2 つめは同じパッケージの新しいバージョンをインストールする方法、そして最後はディストリビューション全体を更新する方法です。ディストリビューション全体を更新する場合は <command>zypper dist-upgrade</command> を使用しますが、こちらに関しては <!-- cwickert 2018-11-19: No whitespace and no line break with indention between the phrases, otherwise there will be a trailing whitespace in the resulting media at the end of the sentence just before the dot. --> <phrase os="sles;sled"><xref linkend="cha-upgrade-paths"/></phrase> <phrase os="osuse"><xref linkend="cha-update-osuse"/></phrase> をお読みください。</para>
   <sect3 xml:id="sec-zypper-softup-patch">
    <title>必要な全パッケージのインストール</title>
+   <para>
+    <emphasis>Patching</emphasis> &sle; is the most reliable way to install
+    new versions of installed packages. It guaranties that all required
+    packages with correct versions are installed and ensures that package versions
+    considered as <emphasis>conflicting</emphasis> are omitted.
+   </para>
    <para>お使いのシステムに対して、提供されている全ての修正をインストールするには、下記のコマンドを実行します:</para>
 <screen>&prompt.sudo;zypper patch</screen>
    <para>お使いのコンピュータに設定されているリポジトリについて、提供されている全ての修正を現在のインストール状態と比較して、インストール作業を行います。これらの修正が必要なものであれば (<literal>optional</literal> (任意指定) または <literal>feature</literal> (機能追加) でなければ) 、それらを即時にインストールします。 <phrase os="sles;sled">なお、公式の更新リポジトリは、お使いの &productname; を登録した場合にのみ利用できます。</phrase></para>
@@ -310,8 +316,8 @@
       <para>特定の CVE データベースエントリに対応する修正を一覧表示するには、 <option>--cve=<replaceable>NUMBER</replaceable></option> のようにして CVE 番号を指定します。複数の CVE データベースエントリに関連する修正を検索するには、 CVE 番号をカンマで区切って指定してください。たとえば下記のようになります:</para>
 <screen>&prompt.user;zypper list-patches --bugzilla=CVE-2016-2315,CVE-2016-2324</screen>
      </listitem>
-    </varlistentry>
-    <varlistentry>
+     </varlistentry>
+     <varlistentry>
       <term>撤回された修正の一覧表示</term>
       <listitem>
         <para>&sle;&nbsp;15 では、必要に応じて修正が自動的に取り下げられる場合があります。メンテナンス更新は、その更新自体に新しいバグが含まれる危険性があることから、注意深くテストされています。ですが、更新内にバグが見つかると、そのバグが実際のシステムに反映されることのないよう、更新内容を取り消す新しい更新が提供されるようになります (バージョン番号も大きくなります) 。このような修正を一覧表示したい場合は、 <command>zypper</command> コマンドを利用して下記のように実行します:</para>
@@ -352,6 +358,53 @@ SLE-Module-Basesystem15-SP3-Updates | SUSE-SLE-Module-Basesystem-15-SP3-2021-365
     [...]</screen>   
       </listitem>
      </varlistentry>
+     <varlistentry>
+       <term>Patch with conflicting packages</term>
+       <listitem>
+<screen>
+Information for patch openSUSE-SLE-15.3-2022-333:
+-------------------------------------------------
+Repository  : Update repository with updates from SUSE Linux Enterprise 15
+Name        : openSUSE-SLE-15.3-2022-333
+Version     : 1
+Arch        : noarch
+Vendor      : maint-coord@suse.de
+Status      : needed
+Category    : security
+Severity    : important
+Created On  : Fri Feb  4 09:30:32 2022
+Interactive : reboot
+Summary     : Security update for xen
+Description :
+    This update for xen fixes the following issues:
+
+    - CVE-2022-23033: Fixed guest_physmap_remove_page not removing the p2m mappings. (XSA-393) (bsc#1194576)
+    - CVE-2022-23034: Fixed possible DoS by a PV guest Xen while unmapping a grant. (XSA-394) (bsc#1194581)
+    - CVE-2022-23035: Fixed insufficient cleanup of passed-through device IRQs. (XSA-395) (bsc#1194588)
+Provides    : patch:openSUSE-SLE-15.3-2022-333 = 1
+Conflicts   : [22]
+    xen.src &lt; 4.14.3_06-150300.3.18.2
+    xen.noarch &lt; 4.14.3_06-150300.3.18.2
+    xen.x86_64 &lt; 4.14.3_06-150300.3.18.2
+    xen-devel.x86_64 &lt; 4.14.3_06-150300.3.18.2
+    xen-devel.noarch &lt; 4.14.3_06-150300.3.18.2
+[...]
+</screen>
+        <para>
+         The above patch conflicts with the affected or vulnerable versions of
+         22 packages. If any of these affected or vulnerable packages are
+         installed, it triggers a conflict, and the patch is classified as
+         <emphasis>needed</emphasis>. <command>zypper patch</command> tries to
+         install all available patches. If it encounters problems, it reports
+         them, thus informing you that not all updates are installed. The
+         conflict can be resolved by either updating the affected or vulnerable
+         packages or by removing them. Because &suse; update repositories also
+         ship fixed packages, updating is a standard way to resolve conflicts.
+         If the package cannot be updated&mdash;for example, due to dependency
+         issues or package locks&mdash;it is deleted after the user's approval.
+        </para>
+       </listitem>
+      </varlistentry>
     </variablelist>
    <para>不要な修正であるかどうかに関わらず修正を一覧表示したい場合は、 <option>--all</option> オプションをお使いください。たとえば CVE 番号が割り当てられている全ての修正を一覧表示するには、下記のように実行します:</para>
 <screen><?dbsuse-fo font-size="0.70em"?>&prompt.user;zypper list-patches --all --cve
@@ -368,6 +421,15 @@ cve      | CVE-2019-3566 | SUSE-SLE-SERVER.. | recommended | moderate  | 不要
    <title>新しいバージョンのパッケージのインストール</title>
    <para>リポジトリ内に新しいバージョンのパッケージだけが用意されていて、修正としては提供していない場合、 <command>zypper&nbsp;patch</command> は何も行いません。システムの一貫性を維持したまま、利用可能な新しいバージョンに更新するには、下記のように実行します:</para>
 <screen>&prompt.sudo;zypper update</screen>
+<important>
+ <para>
+  <command>zypper update</command> ignores problematic packages.
+  For example, if a package is locked, <command>zypper update</command> 
+  omits the package, even if a higher version of it is available. Conversely,
+  <command>zypper patch</command> reports a conflict if the package is
+  considered vulnerable.
+ </para>
+</important>
    <para>個別のパッケージを更新したい場合は、 update もしくは install のコマンドでパッケージ名を指定してください:</para>
 <screen>&prompt.sudo;zypper update <replaceable>パッケージ名</replaceable>
 &prompt.sudo;zypper install <replaceable>パッケージ名</replaceable></screen>
