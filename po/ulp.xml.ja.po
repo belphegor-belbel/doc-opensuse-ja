@@ -1,0 +1,327 @@
+# Japanese translations for PACKAGE package
+# PACKAGE パッケージに対する英訳.
+# Automatically generated, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
+"POT-Creation-Date: 2022-02-21 22:40+0000\n"
+"PO-Revision-Date: 2022-02-21 22:40+0000\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. Tag: title
+#: ulp.xml:11
+#, no-c-format
+msgid "Userspace live patching"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:18
+#, no-c-format
+msgid "This document describes the basic principles and usage of &ulp;."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:24
+#, no-c-format
+msgid "About &ulp;"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:26
+#, no-c-format
+msgid ""
+"Userspace live patching (&ulpa;) refers to the process of applying patches "
+"to the libraries used by a running process, without interrupting it. Live "
+"patching operations are performed using the <systemitem>ulp</systemitem> "
+"tool that is part of the <systemitem>libpulp</systemitem> ."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:33
+#, no-c-format
+msgid ""
+"<systemitem>libpulp</systemitem> is a framework that enables &ulp;. It "
+"consists of the <systemitem>libpulp.so</systemitem> library and tools for "
+"making libraries live-patchable and applying live patches (the "
+"<systemitem>ulp</systemitem> binary)."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:41
+#, no-c-format
+msgid "Prerequisites"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:42
+#, no-c-format
+msgid "For &ulpa; to work, two requirements must be met."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:47
+#, no-c-format
+msgid ""
+"To be live-patchable, a library must be compiled with the <option>-"
+"fpatchable-function-entry</option> GCC flag. No changes to the library "
+"source code are required."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:54
+#, no-c-format
+msgid "Processes must preload the <systemitem>libpulp.so</systemitem> library."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:62
+#, no-c-format
+msgid "Using libpulp"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:63
+#, no-c-format
+msgid ""
+"To use <systemitem>libpulp</systemitem> with an application, you must "
+"perform the following steps:"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:69
+#, no-c-format
+msgid "Make a library live-patchable."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:74
+#, no-c-format
+msgid ""
+"When launching the application, preload <systemitem>libpulp</systemitem> "
+"with the <command>LD_PRELOAD=/usr/lib64/libpulp.so ./"
+"<replaceable>APPLICATION</replaceable></command> command."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:82
+#, no-c-format
+msgid "Preparing a library to be live-patchable"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:83
+#, no-c-format
+msgid ""
+"For a library to be live-patchable, it must contain a <literal>NOP</literal> "
+"prologue in all function calls. GCC version 8 and higher, as well as the GCC "
+"version that ships with &sls;, provides the <option>-fpatchable-function-"
+"entry</option> specifically for that purpose. Thus on the &x86-64; "
+"architecture, compiling a library written in C with <option>-fpatchable-"
+"function-entry=16,14</option> flag is sufficient to make it live-patchable."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:92
+#, no-c-format
+msgid ""
+"The glibc, libssl.so.1.1, and libcrypto.so.1.1 libraries are already live-"
+"patchable on &sle; &product-ga; SP&product-sp;."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:98
+#, no-c-format
+msgid "Checking if a library is live-patchable"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:99
+#, no-c-format
+msgid "To check whether a library is live-patchable, use the following script:"
+msgstr ""
+
+#. Tag: screen
+#: ulp.xml:102
+#, no-c-format
+msgid ""
+"#!/bin/sh\n"
+"\n"
+"is_lib_livepatcheable() {\n"
+"  ULP_NOPS_LEN=16\n"
+"  ULP_PRE_NOPS_LEN=14\n"
+"  ULP_NOP_OPCODE=90\n"
+"\n"
+"  local lib_path=$1\n"
+"  local address_of_a_symbol=`objdump -T $lib_path | grep '\\.text' | head -n "
+"1 | awk '{ print $1 }'`\n"
+"\n"
+"  if [ $? -ne 0 ]; then\n"
+"    echo \"Unable to find a symbol in $lib_path\"\n"
+"    exit 1\n"
+"  fi\n"
+"\n"
+"  # Convert hexadecimal address in decimal so we can do mathematical "
+"operations\n"
+"  local addr_decimal=`printf \"%llu\" \"0x$address_of_a_symbol\"`\n"
+"  if [ $addr_decimal -eq 0 ]; then\n"
+"    echo \"Symbol at address found is invalid: $address_of_a_symbol\"\n"
+"    exit 1\n"
+"  fi\n"
+"\n"
+"  local ulp_prologue_dec=`expr $addr_decimal - $ULP_PRE_NOPS_LEN`\n"
+"  local ulp_prologue_addr=`printf \"0x%lx\" $ulp_prologue_dec`\n"
+"\n"
+"  # Get bytes at target library. It should have $ULP_NOPS_LEN nops (0x90 on "
+"x86)\n"
+"  local insns=`xxd -s $ulp_prologue_addr -l $ULP_PRE_NOPS_LEN -c "
+"$ULP_PRE_NOPS_LEN \\\n"
+"    -g $ULP_PRE_NOPS_LEN $lib_path | grep -oEi \"($ULP_NOP_OPCODE)"
+"{$ULP_PRE_NOPS_LEN}\"`\n"
+"\n"
+"  # If library is not live-patchable, insns is empty.\n"
+"  if [ -z \"$insns\" ]; then\n"
+"    return 1\n"
+"  fi\n"
+"\n"
+"  return 0\n"
+"}\n"
+"\n"
+"if [ -z $1 ]; then\n"
+"  echo \"usage: $0 &lt;.so_to_check&gt;\"\n"
+"  exit 1\n"
+"fi\n"
+"\n"
+"is_lib_livepatcheable $1\n"
+"if [ $? -ne 0 ]; then\n"
+"  echo \"library $1 is not livepatchable: missing NOP prologue\"\n"
+"else\n"
+"  echo \"library $1 is livepatchable\"\n"
+"fi"
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:152
+#, no-c-format
+msgid "Applying live patches"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:153
+#, no-c-format
+msgid ""
+"Live patches are applied using the <systemitem>ulp trigger</systemitem> "
+"command, for example:"
+msgstr ""
+
+#. Tag: screen
+#: ulp.xml:157
+#, no-c-format
+msgid ""
+"ulp trigger -p <replaceable>PID</replaceable> <replaceable>LIVEPATCH</"
+"replaceable>.ulp"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:158
+#, no-c-format
+msgid ""
+"In this example, <literal>PID</literal> is the PID of the running process "
+"that uses the library to be patched and <literal>LIVEPATCH.ulp</literal> is "
+"the actual live patch file."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:163
+#, no-c-format
+msgid ""
+"The <literal>live patching succeeded</literal> message indicates that the "
+"live-patching operation was successful."
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:169
+#, no-c-format
+msgid "Reverting live patches"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:170
+#, no-c-format
+msgid ""
+"<command>ulp trigger</command> can be used to revert live patches. There are "
+"two ways to revert live patches. You can revert a live patch by applying the "
+"appropriate <filename>.rev</filename> patch:"
+msgstr ""
+
+#. Tag: screen
+#: ulp.xml:175
+#, no-c-format
+msgid ""
+"ulp trigger -p <replaceable>PID</replaceable> <replaceable>LIVEPATCH</"
+"replaceable>.rev"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:176
+#, no-c-format
+msgid ""
+"Alternatively, it is possible to remove all patches associated with a "
+"particular library. For example:"
+msgstr ""
+
+#. Tag: screen
+#: ulp.xml:180
+#, no-c-format
+msgid ""
+"ulp trigger -p <replaceable>PID</replaceable> --revert-"
+"all=<replaceable>LIBRARY</replaceable>"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:181
+#, no-c-format
+msgid ""
+"In the example above, <replaceable>LIBRARY</replaceable> refers to the "
+"actual library, for example: <systemitem>libcrypto.so.1.1</systemitem> ."
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:185
+#, no-c-format
+msgid ""
+"The latter approach can be useful when the source code of the original live "
+"patch is not available, or you want to remove a specific old patch and apply "
+"a new one, without the target application running potentially unsecure code. "
+"For example:"
+msgstr ""
+
+#. Tag: screen
+#: ulp.xml:191
+#, no-c-format
+msgid ""
+"ulp trigger -p <replaceable>PID</replaceable>  --revert-all=libcrypto.so.1.1 "
+"new_livepatch2.ulp"
+msgstr ""
+
+#. Tag: title
+#: ulp.xml:196
+#, no-c-format
+msgid "More information"
+msgstr ""
+
+#. Tag: para
+#: ulp.xml:198
+#, no-c-format
+msgid ""
+"Further information about <systemitem>libpulp</systemitem> is available in "
+"the project's <link xlink:href=\"https://github.com/SUSE/libpulp\">Git "
+"repository</link> ."
+msgstr ""
