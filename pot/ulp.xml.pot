@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2022-02-21 22:40+0000\n"
+"POT-Creation-Date: 2022-03-04 09:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -119,148 +119,101 @@ msgstr ""
 #. Tag: para
 #: ulp.xml:99
 #, no-c-format
-msgid "To check whether a library is live-patchable, use the following script:"
+msgid "To check whether a library is live-patchable, use the following command:"
 msgstr ""
 
 #. Tag: screen
 #: ulp.xml:102
 #, no-c-format
-msgid "#!/bin/sh\n"
-      "\n"
-      "is_lib_livepatcheable() {\n"
-      "  ULP_NOPS_LEN=16\n"
-      "  ULP_PRE_NOPS_LEN=14\n"
-      "  ULP_NOP_OPCODE=90\n"
-      "\n"
-      "  local lib_path=$1\n"
-      "  local address_of_a_symbol=`objdump -T $lib_path | grep '\\.text' | head -n 1 | awk '{ print $1 }'`\n"
-      "\n"
-      "  if [ $? -ne 0 ]; then\n"
-      "    echo \"Unable to find a symbol in $lib_path\"\n"
-      "    exit 1\n"
-      "  fi\n"
-      "\n"
-      "  # Convert hexadecimal address in decimal so we can do mathematical operations\n"
-      "  local addr_decimal=`printf \"%llu\" \"0x$address_of_a_symbol\"`\n"
-      "  if [ $addr_decimal -eq 0 ]; then\n"
-      "    echo \"Symbol at address found is invalid: $address_of_a_symbol\"\n"
-      "    exit 1\n"
-      "  fi\n"
-      "\n"
-      "  local ulp_prologue_dec=`expr $addr_decimal - $ULP_PRE_NOPS_LEN`\n"
-      "  local ulp_prologue_addr=`printf \"0x%lx\" $ulp_prologue_dec`\n"
-      "\n"
-      "  # Get bytes at target library. It should have $ULP_NOPS_LEN nops (0x90 on x86)\n"
-      "  local insns=`xxd -s $ulp_prologue_addr -l $ULP_PRE_NOPS_LEN -c $ULP_PRE_NOPS_LEN \\\n"
-      "    -g $ULP_PRE_NOPS_LEN $lib_path | grep -oEi \"($ULP_NOP_OPCODE){$ULP_PRE_NOPS_LEN}\"`\n"
-      "\n"
-      "  # If library is not live-patchable, insns is empty.\n"
-      "  if [ -z \"$insns\" ]; then\n"
-      "    return 1\n"
-      "  fi\n"
-      "\n"
-      "  return 0\n"
-      "}\n"
-      "\n"
-      "if [ -z $1 ]; then\n"
-      "  echo \"usage: $0 &lt;.so_to_check&gt;\"\n"
-      "  exit 1\n"
-      "fi\n"
-      "\n"
-      "is_lib_livepatcheable $1\n"
-      "if [ $? -ne 0 ]; then\n"
-      "  echo \"library $1 is not livepatchable: missing NOP prologue\"\n"
-      "else\n"
-      "  echo \"library $1 is livepatchable\"\n"
-      "fi"
+msgid "ulp livepatchable <replaceable>LIBRARY</replaceable>"
 msgstr ""
 
 #. Tag: title
-#: ulp.xml:152
+#: ulp.xml:105
 #, no-c-format
 msgid "Applying live patches"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:153
+#: ulp.xml:106
 #, no-c-format
 msgid "Live patches are applied using the <systemitem>ulp trigger</systemitem> command, for example:"
 msgstr ""
 
 #. Tag: screen
-#: ulp.xml:157
+#: ulp.xml:110
 #, no-c-format
 msgid "ulp trigger -p <replaceable>PID</replaceable> <replaceable>LIVEPATCH</replaceable>.ulp"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:158
+#: ulp.xml:111
 #, no-c-format
 msgid "In this example, <literal>PID</literal> is the PID of the running process that uses the library to be patched and <literal>LIVEPATCH.ulp</literal> is the actual live patch file."
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:163
+#: ulp.xml:116
 #, no-c-format
 msgid "The <literal>live patching succeeded</literal> message indicates that the live-patching operation was successful."
 msgstr ""
 
 #. Tag: title
-#: ulp.xml:169
+#: ulp.xml:122
 #, no-c-format
 msgid "Reverting live patches"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:170
+#: ulp.xml:123
 #, no-c-format
 msgid "<command>ulp trigger</command> can be used to revert live patches. There are two ways to revert live patches. You can revert a live patch by applying the appropriate <filename>.rev</filename> patch:"
 msgstr ""
 
 #. Tag: screen
-#: ulp.xml:175
+#: ulp.xml:128
 #, no-c-format
 msgid "ulp trigger -p <replaceable>PID</replaceable> <replaceable>LIVEPATCH</replaceable>.rev"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:176
+#: ulp.xml:129
 #, no-c-format
 msgid "Alternatively, it is possible to remove all patches associated with a particular library. For example:"
 msgstr ""
 
 #. Tag: screen
-#: ulp.xml:180
+#: ulp.xml:133
 #, no-c-format
 msgid "ulp trigger -p <replaceable>PID</replaceable> --revert-all=<replaceable>LIBRARY</replaceable>"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:181
+#: ulp.xml:134
 #, no-c-format
 msgid "In the example above, <replaceable>LIBRARY</replaceable> refers to the actual library, for example: <systemitem>libcrypto.so.1.1</systemitem> ."
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:185
+#: ulp.xml:138
 #, no-c-format
 msgid "The latter approach can be useful when the source code of the original live patch is not available, or you want to remove a specific old patch and apply a new one, without the target application running potentially unsecure code. For example:"
 msgstr ""
 
 #. Tag: screen
-#: ulp.xml:191
+#: ulp.xml:144
 #, no-c-format
 msgid "ulp trigger -p <replaceable>PID</replaceable>  --revert-all=libcrypto.so.1.1 new_livepatch2.ulp"
 msgstr ""
 
 #. Tag: title
-#: ulp.xml:196
+#: ulp.xml:149
 #, no-c-format
 msgid "More information"
 msgstr ""
 
 #. Tag: para
-#: ulp.xml:198
+#: ulp.xml:151
 #, no-c-format
 msgid "Further information about <systemitem>libpulp</systemitem> is available in the project's <link xlink:href=\"https://github.com/SUSE/libpulp\">Git repository</link> ."
 msgstr ""
