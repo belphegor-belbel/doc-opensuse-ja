@@ -5,19 +5,10 @@
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:lang="ja" xml:id="cha-ssh">
 
- <title>SSH: 機密を保持するネットワーク操作</title>
+ <title>OpenSSH によるネットワーク操作の機密保持</title>
  <info>
   <abstract>
-   <para>
-    OpenSSH is the SSH (secure shell) implementation that ships with &sles;,
-    for securing
-    network operations such as remote administration, file transfers, and
-    tunneling insecure protocols. SSH encrypts all traffic, including
-    authentication, to protect against eavesdropping and connection
-    hijacking. This chapter covers basic operations, plus host key
-    rotation and certificate authentication, which are especially useful
-    for managing larger SSH deployments.
-   </para>
+   <para>OpenSSH は &sles; に同梱される SSH (secure shell) 実装で、遠隔からの管理やファイル転送、機密を保持できないプロトコルへの機密トンネル設定など、さまざまな機能を提供するソフトウエアです。 SSH は認証を含む全ての通信を暗号化しますので、盗聴や接続の乗っ取りなどの被害から通信を保護することができます。本章では基本的な操作のほか、ホスト鍵の切り替えや証明書認証など、特に大規模展開向けに便利な機能を説明しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
@@ -26,171 +17,97 @@
  </info>
 
  <sect1 xml:id="sec-ssh-overview">
-  <title>OpenSSH overview</title>
-  <para>
-   SSH is a protocol that provides end-to-end protection for
-   communications between the computers on your network, or between
-   computers on your network and systems outside your network. SSH is
-   a client-server protocol. Any host running the
-   <systemitem class="daemon">sshd</systemitem>
-   daemon can accept connections from any other host. Every host running
-   <systemitem class="daemon">sshd</systemitem> can have their own custom
-   custom configurations, such as limiting who can have access, and which
-   authentication protocols are allowed.
-  </para>
-  <para>
-   The <package>openssh</package> package installs the server, client,
-   file transfer commands, and helper utilities.
-  </para>
-  <para>
-   OpenSSH supports several different types of authentication:
-  </para>
+  <title>OpenSSH の概要</title>
+  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証プロトコルを制限したりすることもできるようになっています。</para>
+  <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドと支援系のユーティリティが含まれています。</para>
+  <para>OpenSSH では下記のような認証方式に対応しています:</para>
   <variablelist>
    <varlistentry>
-    <term>Password authentication</term>
+    <term>パスワード認証</term>
     <listitem>
-     <para>
-      Uses your system login and password; you must have a user
-      account on the machine you are connecting to. This is the simplest
-      and most flexible authentication because you can open an SSH session
-      from anywhere, on any machine. It is also the least secure, because it
-      is vulnerable to password-cracking and keystroke logging.
-     </para>
+     <para>ユーザ名とパスワードで認証する方式です。接続先のホストにユーザアカウントを作成しておく必要があります。この方式は、 SSH のセッションをどのマシンからでも受け付けることができますので、最も単純で柔軟な認証方式です。ただし、パスワードクラッキングには弱く、キーロガーなどによる窃取にも弱いため、機密性は低くなります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Public key authentication</term>
+    <term>公開鍵認証</term>
     <listitem>
-     <para>
-      Authenticates with your personal SSH public keys, rather than your
-      system login. This is less flexible than password authentication,
-      because you can open SSH sessions only from a machine that holds
-      your private identity key. It is much stronger because it is not
-      vulnerable to password cracking or keystroke logging; an attacker must
-      possess your private key and know its passphrase.
-     </para>
+     <para>パスワードではなく、個人単位で公開鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-     <term>Passphrase-less public key authentication</term>
+     <term>パスフレーズ無しの公開鍵認証</term>
      <listitem>
-      <para>
-       Public key authentication, using private identity keys that do not
-       have passphrases. This is useful for automated services, like scripts
-       and cron jobs. You must protect private keys, because anyone who
-       gains access to them can easily masquerade as the key owner.
-      </para>
-      <para>
-       A useful alternative is to use <command>ssh-agent</command> and
-       related utilities for managing passphrase-protected keys. These
-       hold passphrases in memory, and apply them as needed.
-      </para>
+      <para>機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。スクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
+      <para>なお、 <command>ssh-agent</command> と関連するユーティリティを利用して、パスフレーズで保護した鍵を使用する方法もあります。この場合、パスフレーズはメモリ内に保持され、必要に応じてパスフレーズを提供します。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>Certificate authentication</term>
+     <term>証明書認証</term>
      <listitem>
-      <para>
-       OpenSSH supports certification authentication, for easier key
-       management and large-scale SSH deployments.
-      </para>
+      <para>OpenSSH では証明書認証にも対応しています。これにより、鍵の管理と大規模な SSH 展開が容易になっています。</para>
      </listitem>
     </varlistentry>
    </variablelist>
 
- <para>
-  &productname; installs the OpenSSH package by default, providing the
-  following commands:
- </para>
+ <para>&productname; では既定で OpenSSH パッケージをインストールします。パッケージ内には、下記のようなファイルが含まれています:</para>
 
  <variablelist>
   <varlistentry>
-   <term><command>man ssh</command></term>
+   <term><command>ssh</command></term>
    <listitem>
-    <para>
-     The client command for initiating an SSH connection to a remote host.
-    </para>
+    <para>遠隔のホストに対して SSH 接続を開始するためのクライアント側コマンドです。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man scp</command></term>
+   <term><command>scp</command></term>
    <listitem>
-    <para>
-     Secure file copy from or to a remote host.
-    </para>
+    <para>遠隔のホストとの間でファイルをやり取りするためのコマンドです。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man sftp</command></term>
+   <term><command>sftp</command></term>
    <listitem>
-    <para>
-     Secure file transfer between a client and an SFTP server.
-     <!--the SFTP protocol (SSH FTP), a protocol made from scratch
-     and that has nothing to do with FTPS or FTPES (FTP over SSL / TLS).-->
-    </para>
+    <para>クライアントと SFTP サーバとの間でファイルを送受信するためのコマンドです。<!--the SFTP protocol (SSH FTP), a protocol made from scratch and that has nothing to do with FTPS or FTPES (FTP over SSL / TLS).--></para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man ssh-add</command></term>
+   <term><command>ssh-add</command></term>
    <listitem>
-    <para>
-     Add private key identities to the authentication agent,
-     <command>ssh-agent</command>.
-    </para>
+    <para><command>ssh-agent</command> コマンドで動作する認証エージェントに対して、機密鍵の情報を追加するためのコマンドです。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man ssh-agent</command></term>
+   <term><command>ssh-agent</command></term>
    <listitem>
-    <para>
-     Manages a user's private identity keys and their passphrases, for
-     public key authentication. <command>ssh-agent</command> holds the
-     passphrases in memory and applies them as needed, so that users do not
-     have to type their passphrases to authenticate.
-    </para>
+    <para>公開鍵認証で使用する、ユーザの機密鍵とパスフレーズを管理するためのエージェントです。 <command>ssh-agent</command> はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供します。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man ssh-copy-id</command></term>
+   <term><command>ssh-copy-id</command></term>
    <listitem>
-    <para>
-     Securely transfer a public key to a remote host, to set up
-     public key authentication.
-    </para>
+    <para>公開鍵認証を設定して、公開鍵を遠隔のホストにコピーするコマンドです。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term><command>man ssh-keyscan</command></term>
+   <term><command>ssh-keyscan</command></term>
    <listitem>
-    <para>
-     Collect the public SSH host keys of a number of hosts, for
-     populating <filename>known_hosts</filename> files.
-    </para>
+    <para>複数のホストにある SSH ホスト鍵を収集するコマンドです。 <filename>known_hosts</filename> ファイルの作成用に提供されているものです。</para>
    </listitem>
   </varlistentry>
  </variablelist>
 </sect1>
 
 <sect1 xml:id="sec-ssh-server-config">
- <title>Server hardening</title>
- <para>
-  OpenSSH ships with a usable default server configuration, but there are
-  additional steps you can take to secure your server.
- </para>
- <para>
-  The default server configuration file, <filename>/etc/ssh/sshd_config</filename>,
-  contains the default configuration, and all the defaults are commented
-  out. Override any default item by entering your own configuration item,
-  uncommented, like the following example that sets a different listening
-  port, and specifies the listening IPv4 address:
- </para>
+ <title>サーバのセキュリティ強化</title>
+ <para>OpenSSH はインストール当初の状態でそれなりに強固な設定になっていますが、サーバのセキュリティを強化するための追加設定も用意されています。</para>
+ <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、待ち受けるポートと IPv4 アドレスを変更しています:</para>
  <screen>
   #Port 22
   Port 2022
 
   #ListenAddress 0.0.0.0
   ListenAddress 192.168.10.100</screen>
- <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
+ <para>なお、下記の <filename>/etc/ssh/sshd_config</filename> ファイル例は、アクセス制御をより強化した設定例です:</para>
  <screen># Check if the file modes and ownership of the user’s files and
 # home directory are correct before allowing them to login
 StrictModes yes
@@ -219,34 +136,22 @@ PermitRootLogin prohibit-password
 # for all users
 PasswordAuthentication no</screen>
 
- <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
- <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
- <para>
-  The syntax checker only checks for correct syntax, and does not find configuration errors. When you are finished, reload the configuration:
- </para>
- <screen>&prompt.root;<command>systemctl restart sshd.service</command>
-    </screen>
- <para>
-  Check the server's key directories for correct permissions.
- </para>
- <para>
-  <filename>/etc/ssh</filename> should be mode 0755/drwxr-xr-x, owned by
-  root:root.
- </para>
- <para>
-  Private keys should be 0600/-rw-------, owned by root:root.
- </para>
- <para>
-  Private keys should be 0644/-rw-r--r--, owned by root:root.
- </para>
+ <para><filename>/etc/ssh/sshd_config</filename> ファイルを変更したあとは、下記のようにして文法チェックを行ってください:</para>
+ <screen>&prompt.sudo;<command>sudo sshd -t</command></screen>
+ <para>なお、文法チェック機能は文法のみをチェックする仕組みであり、設定の誤りは検出されないことに注意してください。チェック完了後は下記のように入力して実行することで、設定を再読み込みさせることができます:</para>
+ <screen>&prompt.sudo;<command>systemctl reload sshd.server</command></screen>
+ <para>サーバの鍵ディレクトリに適切なパーミッションが設定されていることを確認します。</para>
+ <para><filename>/etc/ssh</filename> ディレクトリには 0755/drwxr-xr-x のパーミッションが設定され、 root が所有するディレクトリでなければいけません。</para>
+ <para>機密鍵には 0600/-rw------- のパーミッションが設定され、 root が所有していなければなりません。</para>
+ <para>公開鍵には 0644/-rw-r--r-- のパーミッションが設定され、 root が所有していなければなりません。</para>
 </sect1>
 
 <sect1 xml:id="sec-ssh-programm">
-  <title>Password authentication</title>
+  <title>パスワード認証</title>
   <para><command>ssh</command> コマンドを使用することで、ネットワーク上離れたシステムにログインして対話的な作業を行うことができます。たとえば &exampleuser; というユーザ名で <literal>&exampleserver;</literal> というホストにログインしたい場合は、下記のいずれかのコマンドを実行します:</para>
 
-<screen>&prompt.user;ssh &exampleuser_plain;@&exampleserver;
-&prompt.user;ssh -l &exampleuser_plain; &exampleserver;</screen>
+<screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
+  &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
 
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
 
@@ -428,8 +333,8 @@ cd path                            Change remote directory to 'path'
    <para>まずは新しい鍵 (複数可) を作成します。下記の例では新しい RSA 鍵と Ed25519 鍵を作成しています。新しい鍵は既存の鍵に上書きせず、異なるファイル名を指定してください。一般的には作成日などを含めておくとよいでしょう。また、ホスト鍵にはパスフレーズを設定してはいけません:</para>
    <screen>&prompt.root;<command>ssh-keygen -t rsa -f ssh_host_rsa_2022-01 -C "main server"</command>
 Generating public/private rsa key pair.
-Enter passphrase (empty for no passphrase): 
-Enter same passphrase again: 
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
 Your identification has been saved in ssh_host_rsa_2022-01
 Your public key has been saved in ssh_host_rsa_2022-01.pub
 The key fingerprint is:
@@ -449,8 +354,8 @@ The key's randomart image is:
 
 &prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01</command>
 Generating public/private ed25519 key pair.
-Enter passphrase (empty for no passphrase): 
-Enter same passphrase again: 
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
 Your identification has been saved in ssh_host_ed25519_2022-01
 Your public key has been saved in ssh_host_ed25519_2022-01.pub
 The key fingerprint is:
@@ -476,7 +381,7 @@ HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 
 ## 新しい鍵
-HostKey /etc/ssh/ssh_host_rsa_2022-01  
+HostKey /etc/ssh/ssh_host_rsa_2022-01
 HostKey /etc/ssh/ssh_host_ed25519_2022-01</screen>
 
     <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
@@ -488,9 +393,9 @@ StrictHostKeyChecking yes</screen>
     <para>クライアント側からサーバに SSH で接続してテストしてみます。既に接続している場合はいったんログアウトして再接続してみてください。下記のようなメッセージが表示されるはずです:</para>
     <screen>The server has updated its host keys.
 These changes were verified by the server's existing trusted key.
-Deprecating obsolete hostkey: ED25519 
+Deprecating obsolete hostkey: ED25519
 SHA256:V28d3VpHgjsCoV04RBCZpLo5c0kEslCZDVdIUnCvqPI
-Deprecating obsolete hostkey: 
+Deprecating obsolete hostkey:
 RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I
 Accept updated hostkeys? (yes/no):</screen>
     <para><literal>UpdateHostKeys ask</literal> を <literal>UpdateHostKeys yes</literal> に設定することで、変更された鍵を自動的に受け付けるように設定することもできますが、鍵の変更について問い合わせを行うように設定したほうが安全です。</para>
