@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: security_ssh.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2022-02-17 22:06+0000\n"
+"POT-Creation-Date: 2022-03-09 04:46+0000\n"
 "PO-Revision-Date: 2022-02-18 16:34+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -20,104 +20,377 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: security_ssh.xml:13
-#, no-c-format
-msgid "SSH: secure network operations"
+#: security_ssh.xml:15
+#, fuzzy, no-c-format
+msgid "Securing network operations with OpenSSH"
 msgstr "SSH: 機密を保持するネットワーク操作"
 
 #. Tag: para
-#: security_ssh.xml:16
+#: security_ssh.xml:18
 #, no-c-format
 msgid ""
-"In networked environments, it is often necessary to access hosts from a "
-"remote location. If a user sends login and password strings for "
-"authentication purposes as plain text, they could be intercepted and misused "
-"to gain access to that user account. This would open all the user's files to "
-"an attacker and the illegal account could be used to obtain administrator or "
-"<systemitem class=\"username\">root</systemitem> access, or to penetrate "
-"other systems. In the past, remote connections were established with "
-"<command>telnet</command> , <command>rsh</command> or <command>rlogin</"
-"command> , which offered no guards against eavesdropping in the form of "
-"encryption or other security mechanisms. There are other unprotected "
-"communication channels, like the traditional FTP protocol and some remote "
-"copying programs like <command>rcp</command> ."
+"OpenSSH is the SSH (secure shell) implementation that ships with &sles;, for "
+"securing network operations such as remote administration, file transfers, "
+"and tunneling insecure protocols. SSH encrypts all traffic, including "
+"authentication, to protect against eavesdropping and connection hijacking. "
+"This chapter covers basic operations, plus host key rotation and certificate "
+"authentication, which are especially useful for managing larger SSH "
+"deployments."
 msgstr ""
-"ネットワークによる接続が提供されている環境では、一方のホストから他方のホスト"
-"にログインする必要が生じることがあります。ユーザが認証を目的としてユーザ名と"
-"パスワードを送信する際、それをそのままテキスト形式で送ってしまうと、それは容"
-"易に傍受することができてしまうため、そのアカウントになりすましてログインでき"
-"るようになってしまいます。これにより、攻撃者がユーザの保持しているファイルを"
-"読み取ることができてしまうほか、管理者や <systemitem class=\"username"
-"\">root</systemitem> のアカウントを奪取して不正なアカウントを作成することもで"
-"きてしまいますし、他のコンピュータを攻撃する際の踏み台として使用することもで"
-"きてしまいます。その昔は <command>telnet</command> , <command>rsh</"
-"command> , <command>rlogin</command> などのコマンドを利用して、ネットワーク上"
-"離れた場所との通信を確立していましたが、これらの方法はいずれも盗聴に対する保"
-"護が存在せず、暗号化などのセキュリティ機構も備わっていませんでした。それ以外"
-"にも、今もなお使用されている FTP などのプロトコルや、 <command>rcp</command> "
-"などのプログラムについても、暗号化が行われていませんでした。"
-
-#. Tag: para
-#: security_ssh.xml:36
-#, no-c-format
-msgid ""
-"The SSH suite provides the necessary protection by encrypting the "
-"authentication strings and all the other data exchanged between the hosts. "
-"With SSH, the data flow could still be recorded by a third party, but the "
-"contents are encrypted and cannot be reverted to plain text unless the "
-"encryption key is known. So SSH enables secure communication over insecure "
-"networks, such as the Internet. The SSH implementation in &productname; is "
-"OpenSSH."
-msgstr ""
-"SSH スイートは認証文字列だけでなく、コンピュー"
-"タ間でやり取りされている全てのデータを暗号化することによって、必要な保護が得"
-"られるような仕組みを提供しています。 SSH でも第三者がデータの流れを傍受するこ"
-"とはできてしまいますが、内容は暗号化されているため、暗号鍵を知らない限り元の"
-"データを得ることができなくなっています。そのため、 SSH はインターネットなどの"
-"機密保護のないネットワークで、通信の機密を保持するために使用されます。なお、 "
-"&productname; での SSH 実装は、 OpenSSH という名称で提供されています。"
-
-#. Tag: para
-#: security_ssh.xml:45
-#, no-c-format
-msgid ""
-"&productname; installs the OpenSSH package by default providing the commands "
-"<command>ssh</command> , <command>scp</command> , and <command>sftp</"
-"command> . In the default configuration, remote access of a &productname; "
-"system is only possible with the OpenSSH utilities, and only if the "
-"<systemitem class=\"daemon\">sshd</systemitem> is running and the firewall "
-"permits access."
-msgstr ""
-"&productname; では、 <command>ssh</command> , <command>scp</command> , "
-"<command>sftp</command> の各コマンドを提供する OpenSSH パッケージが既定でイン"
-"ストールされます。また、既定の設定では、 &productname; システムへのリモートア"
-"クセスは OpenSSH を利用した場合にのみできるようになっていて、 <systemitem "
-"class=\"daemon\">sshd</systemitem> を動作させ、ファイアウオールでアクセスを許"
-"可するように設定する必要があります。"
-
-#. Tag: para
-#: security_ssh.xml:53
-#, no-c-format
-msgid ""
-"SSH on &productname; uses cryptographic hardware acceleration if available. "
-"As a result, the transfer of large quantities of data through an SSH "
-"connection is considerably faster than without cryptographic hardware. As an "
-"additional benefit, the CPU will see a significant reduction in load."
-msgstr ""
-"&productname; での SSH は、ハードウエアアクセラレーション機能が利用できる環境"
-"であれば、それを使用するように設定されています。その結果、 SSH を介した巨大な"
-"ファイルの転送は、暗号化ハードウエア無しの場合に比べてかなり高速になるように"
-"作られています。また、追加の利点として、 CPU への負荷も少なくなるようになって"
-"います。"
 
 #. Tag: title
-#: security_ssh.xml:61
+#: security_ssh.xml:36
 #, no-c-format
-msgid "<command>ssh</command> &mdash;secure shell"
-msgstr "<command>ssh</command> - Secure SHell"
+msgid "OpenSSH overview"
+msgstr ""
 
 #. Tag: para
-#: security_ssh.xml:63
+#: security_ssh.xml:37
+#, no-c-format
+msgid ""
+"SSH is a protocol that provides end-to-end protection for communications "
+"between the computers on your network, or between computers on your network "
+"and systems outside your network. SSH is a client-server protocol. Any host "
+"running the <systemitem class=\"daemon\">sshd</systemitem> daemon can accept "
+"connections from any other host. Every host running <systemitem class="
+"\"daemon\">sshd</systemitem> can have their own custom custom "
+"configurations, such as limiting who can have access, and which "
+"authentication protocols are allowed."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:48
+#, no-c-format
+msgid ""
+"The <package>openssh</package> package installs the server, client, file "
+"transfer commands, and helper utilities."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:52
+#, no-c-format
+msgid "OpenSSH supports several different types of authentication:"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:59
+#, no-c-format
+msgid ""
+"Uses your system login and password; you must have a user account on the "
+"machine you are connecting to. This is the simplest and most flexible "
+"authentication because you can open an SSH session from anywhere, on any "
+"machine. It is also the least secure, because it is vulnerable to password-"
+"cracking and keystroke logging."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:69
+#, no-c-format
+msgid "Public key authentication"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:71
+#, no-c-format
+msgid ""
+"Authenticates with your personal SSH public keys, rather than your system "
+"login. This is less flexible than password authentication, because you can "
+"open SSH sessions only from a machine that holds your private identity key. "
+"It is much stronger because it is not vulnerable to password cracking or "
+"keystroke logging; an attacker must possess your private key and know its "
+"passphrase."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:82
+#, no-c-format
+msgid "Passphrase-less public key authentication"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:84
+#, no-c-format
+msgid ""
+"Public key authentication, using private identity keys that do not have "
+"passphrases. This is useful for automated services, like scripts and cron "
+"jobs. You must protect private keys, because anyone who gains access to them "
+"can easily masquerade as the key owner."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:90
+#, no-c-format
+msgid ""
+"A useful alternative is to use <command>ssh-agent</command> and related "
+"utilities for managing passphrase-protected keys. These hold passphrases in "
+"memory, and apply them as needed."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:98
+#, no-c-format
+msgid "Certificate authentication"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:100
+#, no-c-format
+msgid ""
+"OpenSSH supports certification authentication, for easier key management and "
+"large-scale SSH deployments."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:108
+#, no-c-format
+msgid ""
+"&productname; installs the OpenSSH package by default, providing the "
+"following commands:"
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:115
+#, fuzzy, no-c-format
+msgid "<command>ssh</command>"
+msgstr "<command>man ssh</command>"
+
+#. Tag: para
+#: security_ssh.xml:117
+#, no-c-format
+msgid "The client command for initiating an SSH connection to a remote host."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:123
+#, fuzzy, no-c-format
+msgid "<command>scp</command>"
+msgstr "<command>man scp</command>"
+
+#. Tag: para
+#: security_ssh.xml:125
+#, no-c-format
+msgid "Secure file copy from or to a remote host."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:131
+#, fuzzy, no-c-format
+msgid "<command>sftp</command>"
+msgstr "<command>man sftp</command>"
+
+#. Tag: para
+#: security_ssh.xml:133
+#, no-c-format
+msgid ""
+"Secure file transfer between a client and an SFTP server. <!--the SFTP "
+"protocol (SSH FTP), a protocol made from scratch and that has nothing to do "
+"with FTPS or FTPES (FTP over SSL / TLS).-->"
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:141
+#, fuzzy, no-c-format
+msgid "<command>ssh-add</command>"
+msgstr "<command>man ssh-add</command>"
+
+#. Tag: para
+#: security_ssh.xml:143
+#, no-c-format
+msgid ""
+"Add private key identities to the authentication agent, <command>ssh-agent</"
+"command> ."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:150
+#, fuzzy, no-c-format
+msgid "<command>ssh-agent</command>"
+msgstr "<command>man ssh-agent</command>"
+
+#. Tag: para
+#: security_ssh.xml:152
+#, no-c-format
+msgid ""
+"Manages a user's private identity keys and their passphrases, for public key "
+"authentication. <command>ssh-agent</command> holds the passphrases in memory "
+"and applies them as needed, so that users do not have to type their "
+"passphrases to authenticate."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:161
+#, fuzzy, no-c-format
+msgid "<command>ssh-copy-id</command>"
+msgstr "<command>man ssh-copy-id</command>"
+
+#. Tag: para
+#: security_ssh.xml:163
+#, no-c-format
+msgid ""
+"Securely transfer a public key to a remote host, to set up public key "
+"authentication."
+msgstr ""
+
+#. Tag: term
+#: security_ssh.xml:170
+#, fuzzy, no-c-format
+msgid "<command>ssh-keyscan</command>"
+msgstr "<command>man ssh-keyscan</command>"
+
+#. Tag: para
+#: security_ssh.xml:172
+#, no-c-format
+msgid ""
+"Collect the public SSH host keys of a number of hosts, for populating "
+"<filename>known_hosts</filename> files."
+msgstr ""
+
+#. Tag: title
+#: security_ssh.xml:182
+#, no-c-format
+msgid "Server hardening"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:183
+#, no-c-format
+msgid ""
+"OpenSSH ships with a usable default server configuration, but there are "
+"additional steps you can take to secure your server."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:187
+#, no-c-format
+msgid ""
+"The default server configuration file, <filename>/etc/ssh/sshd_config</"
+"filename> , contains the default configuration, and all the defaults are "
+"commented out. Override any default item by entering your own configuration "
+"item, uncommented, like the following example that sets a different "
+"listening port, and specifies the listening IPv4 address:"
+msgstr ""
+
+#. Tag: screen
+#: security_ssh.xml:194
+#, no-c-format
+msgid ""
+"\n"
+"  #Port 22\n"
+"  Port 2022\n"
+"\n"
+"  #ListenAddress 0.0.0.0\n"
+"  ListenAddress 192.168.10.100"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:200
+#, fuzzy, no-c-format
+msgid ""
+"The following settings for <filename>/etc/ssh/sshd_config</filename> "
+"strengthen access controls:"
+msgstr ""
+"なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記の"
+"ような設定をしている必要があります:"
+
+#. Tag: screen
+#: security_ssh.xml:204
+#, no-c-format
+msgid ""
+"# Check if the file modes and ownership of the user’s files and\n"
+"# home directory are correct before allowing them to login\n"
+"StrictModes yes\n"
+"\n"
+"# If your machine has more than one IP address, define which address or\n"
+"# addresses it listens on\n"
+"ListenAddress 192.168.10.100\n"
+"\n"
+"# Allow only members of the listed groups to log in\n"
+"AllowGroups ldapadmins backupadmins\n"
+"\n"
+"# Or, deny certain groups. If you use both, DenyGroups is read first\n"
+"DenyGroups users\n"
+"\n"
+"# Allow or deny certain users. If you use both, DenyUsers is read first\n"
+"AllowUsers &exampleuser; &exampleuserII;\n"
+"DenyUsers &exampleuserIII;\n"
+"\n"
+"# Do not allow root logins\n"
+"PermitRootLogin no\n"
+"\n"
+"# Allow root logins only with public key authentication\n"
+"PermitRootLogin prohibit-password\n"
+"\n"
+"# Disable password authentication and allow only public key authentication\n"
+"# for all users\n"
+"PasswordAuthentication no"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:232
+#, fuzzy, no-c-format
+msgid ""
+"After changing <filename>/etc/ssh/sshd_config</filename> , run the syntax "
+"checker:"
+msgstr ""
+"なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記の"
+"ような設定をしている必要があります:"
+
+#. Tag: screen
+#: security_ssh.xml:236
+#, fuzzy, no-c-format
+msgid "&prompt.sudo;<command>sudo sshd -t</command>"
+msgstr "&prompt.user;<command>ssh-keygen -b 4096</command>"
+
+#. Tag: para
+#: security_ssh.xml:237
+#, no-c-format
+msgid ""
+"The syntax checker only checks for correct syntax, and does not find "
+"configuration errors. When you are finished, reload the configuration:"
+msgstr ""
+
+#. Tag: screen
+#: security_ssh.xml:240
+#, fuzzy, no-c-format
+msgid "&prompt.sudo;<command>systemctl reload sshd.server</command>"
+msgstr ""
+"&prompt.root;<command>systemctl restart sshd.service</command>\n"
+"    "
+
+#. Tag: para
+#: security_ssh.xml:241
+#, no-c-format
+msgid "Check the server's key directories for correct permissions."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:244
+#, no-c-format
+msgid ""
+"<filename>/etc/ssh</filename> should be mode 0755/drwxr-xr-x, owned by root:"
+"root."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:248
+#, no-c-format
+msgid "Private keys should be 0600/-rw-------, owned by root:root."
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:251
+#, no-c-format
+msgid "Private keys should be 0644/-rw-r--r--, owned by root:root."
+msgstr ""
+
+#. Tag: title
+#: security_ssh.xml:257
+#, no-c-format
+msgid "Password authentication"
+msgstr ""
+
+#. Tag: para
+#: security_ssh.xml:258
 #, no-c-format
 msgid ""
 "With <command>ssh</command> it is possible to log in to remote systems and "
@@ -130,17 +403,17 @@ msgstr ""
 "合は、下記のいずれかのコマンドを実行します:"
 
 #. Tag: screen
-#: security_ssh.xml:70
-#, no-c-format
+#: security_ssh.xml:265
+#, fuzzy, no-c-format
 msgid ""
-"&prompt.user;ssh &exampleuser_plain;@&exampleserver;\n"
-"&prompt.user;ssh -l &exampleuser_plain; &exampleserver;"
+"&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>\n"
+"  &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command>"
 msgstr ""
 "&prompt.user;ssh &exampleuser_plain;@&exampleserver;\n"
 "&prompt.user;ssh -l &exampleuser_plain; &exampleserver;"
 
 #. Tag: para
-#: security_ssh.xml:73
+#: security_ssh.xml:268
 #, no-c-format
 msgid ""
 "If the user name is the same on both machines, you can omit it. Using "
@@ -157,7 +430,7 @@ msgstr ""
 "なアプリケーションを使用したりすることができるようになります。"
 
 #. Tag: para
-#: security_ssh.xml:81
+#: security_ssh.xml:276
 #, no-c-format
 msgid ""
 "Furthermore, <command>ssh</command> offers the possibility to run non-"
@@ -174,7 +447,7 @@ msgstr ""
 "きます。"
 
 #. Tag: screen
-#: security_ssh.xml:89
+#: security_ssh.xml:284
 #, no-c-format
 msgid ""
 "&prompt.user;ssh root@&exampleserver; \"dmesg -T | tail -n 25\"\n"
@@ -184,13 +457,13 @@ msgstr ""
 "&prompt.user;ssh root@&exampleserver; \"cat /etc/issue &amp;&amp; uptime\""
 
 #. Tag: title
-#: security_ssh.xml:93
+#: security_ssh.xml:288
 #, no-c-format
 msgid "Starting X applications on a remote host"
 msgstr "ネットワーク上の離れたホストでの X アプリケーションの起動"
 
 #. Tag: para
-#: security_ssh.xml:94
+#: security_ssh.xml:289
 #, no-c-format
 msgid ""
 "SSH also simplifies the use of remote X applications. If you run "
@@ -208,13 +481,13 @@ msgstr ""
 "うになります。"
 
 #. Tag: title
-#: security_ssh.xml:105
+#: security_ssh.xml:300
 #, no-c-format
 msgid "Agent forwarding"
 msgstr "エージェント転送"
 
 #. Tag: para
-#: security_ssh.xml:106
+#: security_ssh.xml:301
 #, no-c-format
 msgid ""
 "By adding the <option>-A</option> option, the ssh-agent authentication "
@@ -230,7 +503,7 @@ msgstr ""
 "key-copy\"/> をお読みください。"
 
 #. Tag: para
-#: security_ssh.xml:114
+#: security_ssh.xml:309
 #, no-c-format
 msgid ""
 "This mechanism is deactivated in the default settings, but can be "
@@ -244,13 +517,13 @@ msgstr ""
 "に有効化することができます。"
 
 #. Tag: title
-#: security_ssh.xml:123
+#: security_ssh.xml:318
 #, no-c-format
 msgid "<command>scp</command> &mdash;secure copy"
 msgstr "<command>scp</command> - 機密を確保したファイルのコピー"
 
 #. Tag: para
-#: security_ssh.xml:125
+#: security_ssh.xml:320
 #, no-c-format
 msgid ""
 "<command>scp</command> copies files to or from a remote machine. If the user "
@@ -271,7 +544,7 @@ msgstr ""
 "しています。"
 
 #. Tag: screen
-#: security_ssh.xml:137
+#: security_ssh.xml:332
 #, no-c-format
 msgid ""
 "&prompt.user;scp ~/MyLetter.tex &exampleuser_plain;@&exampleserver;:/tmp <co "
@@ -285,25 +558,25 @@ msgstr ""
 "xml:id=\"co-scp-remote-local\"/>"
 
 #. Tag: para
-#: security_ssh.xml:141
+#: security_ssh.xml:336
 #, no-c-format
 msgid "local to remote"
 msgstr "ローカルから接続先に"
 
 #. Tag: para
-#: security_ssh.xml:144
+#: security_ssh.xml:339
 #, no-c-format
 msgid "remote to local"
 msgstr "接続先からローカルに"
 
 #. Tag: title
-#: security_ssh.xml:148
+#: security_ssh.xml:343
 #, no-c-format
 msgid "The <option>-l</option> option"
 msgstr "<option>-l</option> オプションについて"
 
 #. Tag: para
-#: security_ssh.xml:149
+#: security_ssh.xml:344
 #, no-c-format
 msgid ""
 "With the <command>ssh</command> command, the option <option>-l</option> can "
@@ -320,7 +593,7 @@ msgstr ""
 "するためのオプションを意味しています。"
 
 #. Tag: para
-#: security_ssh.xml:159
+#: security_ssh.xml:354
 #, no-c-format
 msgid ""
 "After the correct password is entered, <command>scp</command> starts the "
@@ -333,7 +606,7 @@ msgstr ""
 "ます。"
 
 #. Tag: para
-#: security_ssh.xml:166
+#: security_ssh.xml:361
 #, no-c-format
 msgid ""
 "<command>scp</command> also provides a recursive copying feature for entire "
@@ -343,13 +616,13 @@ msgstr ""
 "ことができます:"
 
 #. Tag: screen
-#: security_ssh.xml:171
+#: security_ssh.xml:366
 #, no-c-format
 msgid "&prompt.user;scp -r src/ sun:backup/"
 msgstr "&prompt.user;scp -r src/ sun:backup/"
 
 #. Tag: para
-#: security_ssh.xml:173
+#: security_ssh.xml:368
 #, no-c-format
 msgid ""
 "copies the entire contents of the directory <filename>src</filename> "
@@ -363,7 +636,7 @@ msgstr ""
 "は、それらは自動的に作成されます。"
 
 #. Tag: para
-#: security_ssh.xml:180
+#: security_ssh.xml:375
 #, no-c-format
 msgid ""
 "The <option>-p</option> option tells <command>scp</command> to leave the "
@@ -378,19 +651,19 @@ msgstr ""
 "が上昇します。"
 
 #. Tag: title
-#: security_ssh.xml:188
+#: security_ssh.xml:383
 #, no-c-format
 msgid "<command>sftp</command> &mdash;secure file transfer"
 msgstr "<command>sftp</command> - 機密を保持したファイルの転送"
 
 #. Tag: title
-#: security_ssh.xml:191
+#: security_ssh.xml:386
 #, no-c-format
 msgid "Using <command>sftp</command>"
 msgstr "<command>sftp</command> の使用"
 
 #. Tag: para
-#: security_ssh.xml:192
+#: security_ssh.xml:387
 #, no-c-format
 msgid ""
 "If you want to copy several files from or to different locations, "
@@ -409,7 +682,7 @@ msgstr ""
 "ます。"
 
 #. Tag: screen
-#: security_ssh.xml:201
+#: security_ssh.xml:396
 #, no-c-format
 msgid ""
 "&prompt.user;sftp &exampleserver;\n"
@@ -431,13 +704,13 @@ msgstr ""
 "[...]"
 
 #. Tag: title
-#: security_ssh.xml:211
+#: security_ssh.xml:406
 #, no-c-format
 msgid "Setting permissions for file uploads"
 msgstr "ファイルアップロードのパーミッション設定"
 
 #. Tag: para
-#: security_ssh.xml:212
+#: security_ssh.xml:407
 #, no-c-format
 msgid ""
 "As with a regular FTP server, a user cannot only download, but also upload "
@@ -454,13 +727,13 @@ msgstr ""
 "してください:"
 
 #. Tag: term
-#: security_ssh.xml:222
+#: security_ssh.xml:417
 #, no-c-format
 msgid "Setting a umask"
 msgstr "umask の設定"
 
 #. Tag: para
-#: security_ssh.xml:224
+#: security_ssh.xml:419
 #, no-c-format
 msgid ""
 "A umask works as a filter against the permissions of the original file on "
@@ -471,67 +744,67 @@ msgstr ""
 "なお、アクセス許可を追加することはできません。取り消すことのみ実現できます:"
 
 #. Tag: para
-#: security_ssh.xml:236
+#: security_ssh.xml:431
 #, no-c-format
 msgid "permissions original"
 msgstr "元々のパーミッション"
 
 #. Tag: para
-#: security_ssh.xml:241
+#: security_ssh.xml:436
 #, no-c-format
 msgid "umask"
 msgstr "umask の値"
 
 #. Tag: para
-#: security_ssh.xml:246
+#: security_ssh.xml:441
 #, no-c-format
 msgid "permissions uploaded"
 msgstr "アップロードされたファイルのパーミッション"
 
 #. Tag: para
-#: security_ssh.xml:255
+#: security_ssh.xml:450
 #, no-c-format
 msgid "0666"
 msgstr "0666"
 
 #. Tag: para
-#: security_ssh.xml:265
+#: security_ssh.xml:460
 #, no-c-format
 msgid "0664"
 msgstr "0664"
 
 #. Tag: para
-#: security_ssh.xml:277
+#: security_ssh.xml:472
 #, no-c-format
 msgid "0002"
 msgstr "0002"
 
 #. Tag: para
-#: security_ssh.xml:282
+#: security_ssh.xml:477
 #, no-c-format
 msgid "0600"
 msgstr "0600"
 
 #. Tag: para
-#: security_ssh.xml:289
+#: security_ssh.xml:484
 #, no-c-format
 msgid "0775"
 msgstr "0775"
 
 #. Tag: para
-#: security_ssh.xml:294
+#: security_ssh.xml:489
 #, no-c-format
 msgid "0025"
 msgstr "0025"
 
 #. Tag: para
-#: security_ssh.xml:299
+#: security_ssh.xml:494
 #, no-c-format
 msgid "0750"
 msgstr "0750"
 
 #. Tag: para
-#: security_ssh.xml:307
+#: security_ssh.xml:502
 #, no-c-format
 msgid ""
 "To apply a umask on an SFTP server, edit the file <filename>/etc/ssh/"
@@ -546,19 +819,19 @@ msgstr ""
 "い。たとえば下記のようになります:"
 
 #. Tag: screen
-#: security_ssh.xml:313
+#: security_ssh.xml:508
 #, no-c-format
 msgid "Subsystem sftp /usr/lib/ssh/sftp-server -u 0002"
 msgstr "Subsystem sftp /usr/lib/ssh/sftp-server -u 0002"
 
 #. Tag: term
-#: security_ssh.xml:317
+#: security_ssh.xml:512
 #, no-c-format
 msgid "Explicitly setting the permissions"
 msgstr "明示的なパーミッションの指定"
 
 #. Tag: para
-#: security_ssh.xml:319
+#: security_ssh.xml:514
 #, no-c-format
 msgid ""
 "Explicitly setting the permissions sets the same permissions for all files "
@@ -575,7 +848,7 @@ msgstr ""
 "ます。"
 
 #. Tag: para
-#: security_ssh.xml:327
+#: security_ssh.xml:522
 #, no-c-format
 msgid ""
 "To apply explicit permissions for uploaded files on an SFTP server, edit the "
@@ -591,19 +864,19 @@ msgstr ""
 "になります:"
 
 #. Tag: screen
-#: security_ssh.xml:334
+#: security_ssh.xml:529
 #, no-c-format
 msgid "Subsystem sftp /usr/lib/ssh/sftp-server -m 600"
 msgstr "Subsystem sftp /usr/lib/ssh/sftp-server -m 600"
 
 #. Tag: title
-#: security_ssh.xml:341
+#: security_ssh.xml:536
 #, no-c-format
 msgid "The SSH daemon ( <systemitem class=\"daemon\">sshd</systemitem> )"
 msgstr "SSH デーモン ( <systemitem class=\"daemon\">sshd</systemitem> )"
 
 #. Tag: para
-#: security_ssh.xml:343
+#: security_ssh.xml:538
 #, no-c-format
 msgid ""
 "To work with the SSH client programs <command>ssh</command> and "
@@ -633,7 +906,7 @@ msgstr ""
 "信されるものであり、全てのユーザから読み込むことができるようになっています。"
 
 #. Tag: para
-#: security_ssh.xml:359
+#: security_ssh.xml:554
 #, no-c-format
 msgid ""
 "A connection is initiated by the SSH client. The waiting SSH daemon and the "
@@ -649,7 +922,7 @@ msgstr ""
 "きるようになっています。"
 
 #. Tag: para
-#: security_ssh.xml:367
+#: security_ssh.xml:562
 #, no-c-format
 msgid ""
 "The private host and server keys are absolutely required to decrypt the "
@@ -665,13 +938,13 @@ msgstr ""
 "を行うことで、より詳しく表示することができます。"
 
 #. Tag: title
-#: security_ssh.xml:376
+#: security_ssh.xml:571
 #, no-c-format
 msgid "Viewing the SSH daemon log file"
 msgstr "SSH デーモンのログファイルの表示について"
 
 #. Tag: para
-#: security_ssh.xml:377
+#: security_ssh.xml:572
 #, no-c-format
 msgid ""
 "To watch the log entries from the <systemitem class=\"daemon\">sshd</"
@@ -681,19 +954,19 @@ msgstr ""
 "場合は、下記のコマンドを使用します:"
 
 #. Tag: screen
-#: security_ssh.xml:381
+#: security_ssh.xml:576
 #, no-c-format
 msgid "&prompt.sudo;journalctl -u sshd"
 msgstr "&prompt.sudo;journalctl -u sshd"
 
 #. Tag: title
-#: security_ssh.xml:386
+#: security_ssh.xml:581
 #, no-c-format
 msgid "Maintaining SSH keys"
 msgstr "SSH 鍵の管理"
 
 #. Tag: para
-#: security_ssh.xml:387
+#: security_ssh.xml:582
 #, no-c-format
 msgid ""
 "It is recommended to back up the private and public keys stored in "
@@ -707,13 +980,13 @@ msgstr ""
 "をインストールし直すような場合にも対応することができます。"
 
 #. Tag: title
-#: security_ssh.xml:395
+#: security_ssh.xml:590
 #, no-c-format
 msgid "Existing SSH host keys"
 msgstr "既存の SSH ホスト鍵"
 
 #. Tag: para
-#: security_ssh.xml:396
+#: security_ssh.xml:591
 #, no-c-format
 msgid ""
 "If you install &productname; on a machine with existing Linux installations, "
@@ -725,7 +998,7 @@ msgstr ""
 "時のものを自動的に取り込むことができるようになっています。"
 
 #. Tag: para
-#: security_ssh.xml:403
+#: security_ssh.xml:598
 #, no-c-format
 msgid ""
 "When establishing a secure connection with a remote host for the first time, "
@@ -744,7 +1017,7 @@ msgstr ""
 "れるか、もしくはサーバ側でメッセージが解読できないことで判明します。"
 
 #. Tag: para
-#: security_ssh.xml:414
+#: security_ssh.xml:609
 #, no-c-format
 msgid ""
 "If the public keys of a host have changed (that needs to be verified before "
@@ -757,13 +1030,13 @@ msgstr ""
 "てください。"
 
 #. Tag: title
-#: security_ssh.xml:423
+#: security_ssh.xml:618
 #, no-c-format
 msgid "Rotating host keys"
 msgstr "ホスト鍵の切り替え"
 
 #. Tag: para
-#: security_ssh.xml:424
+#: security_ssh.xml:619
 #, no-c-format
 msgid ""
 "As of version 6.8, OpenSSH includes a protocol extension that supports host "
@@ -778,19 +1051,20 @@ msgid ""
 "new key. Any automated SSH connections, such as scheduled backups, would "
 "fail."
 msgstr ""
-"OpenSSH バージョン 6.8 およびそれ以降のバージョンでは、ホスト鍵を切り替えながら使用"
-"することのできるプロトコル拡張が利用できます。サーバの管理者は、たとえばホスト鍵が"
-"漏洩したり、既存の鍵の強度では弱いと判断したりした場合、古いホスト鍵を廃棄"
-"して新しいホスト鍵に切り替えなければならなくなります。バージョン 6.8 以前では、"
-"クライアント側の <filename>ssh_config</filename> で <literal>StrictHostKeyChecking"
-"</literal> が <literal>yes</literal> に設定されていると、ホスト鍵の変更が検出されると"
-"警告メッセージを表示して接続が行われなくなっていました。この場合、クライアント側で"
-"対応する公開鍵を <filename>known_hosts</filename> ファイルから手作業で削除して"
-"接続し直し、新しい鍵を受け付ける作業が必要になります。 SSH 経由でのスケジュール"
-"バックアップなど、自動化を行っている場合には面倒になってしまいます。"
+"OpenSSH バージョン 6.8 およびそれ以降のバージョンでは、ホスト鍵を切り替えなが"
+"ら使用することのできるプロトコル拡張が利用できます。サーバの管理者は、たとえ"
+"ばホスト鍵が漏洩したり、既存の鍵の強度では弱いと判断したりした場合、古いホス"
+"ト鍵を廃棄して新しいホスト鍵に切り替えなければならなくなります。バージョン "
+"6.8 以前では、クライアント側の <filename>ssh_config</filename> で "
+"<literal>StrictHostKeyChecking</literal> が <literal>yes</literal> に設定され"
+"ていると、ホスト鍵の変更が検出されると警告メッセージを表示して接続が行われな"
+"くなっていました。この場合、クライアント側で対応する公開鍵を "
+"<filename>known_hosts</filename> ファイルから手作業で削除して接続し直し、新し"
+"い鍵を受け付ける作業が必要になります。 SSH 経由でのスケジュールバックアップな"
+"ど、自動化を行っている場合には面倒になってしまいます。"
 
 #. Tag: para
-#: security_ssh.xml:438
+#: security_ssh.xml:633
 #, no-c-format
 msgid ""
 "The new host key rotation scheme provides a method to distribute new keys "
@@ -801,28 +1075,29 @@ msgid ""
 "files on the clients are automatically updated, with new keys added and the "
 "old keys removed."
 msgstr ""
-"新しいホスト鍵の切り替え方式では、サービスの停止を伴うことなく新しい鍵を配布できる"
-"方式を提供しています。クライアントからの接続があると、サーバは手持ちの鍵を一覧で送信し"
-"ますので、次回以降のログインで新しい鍵を自動的に受け付けるようにすることができます。"
-"これにより、鍵の移行のための猶予期間を設定することができますので、しばらく待ってから"
-"古い鍵を削除すれば、移行が完了することになります。クライアント側の <filename>known_hosts"
-"</filename> ファイルも自動的に更新されますので、古い鍵から新しい鍵への切り替えも"
-"自動でできることになります。"
+"新しいホスト鍵の切り替え方式では、サービスの停止を伴うことなく新しい鍵を配布"
+"できる方式を提供しています。クライアントからの接続があると、サーバは手持ちの"
+"鍵を一覧で送信しますので、次回以降のログインで新しい鍵を自動的に受け付けるよ"
+"うにすることができます。これにより、鍵の移行のための猶予期間を設定することが"
+"できますので、しばらく待ってから古い鍵を削除すれば、移行が完了することになり"
+"ます。クライアント側の <filename>known_hosts</filename> ファイルも自動的に更"
+"新されますので、古い鍵から新しい鍵への切り替えも自動でできることになります。"
 
 #. Tag: para
-#: security_ssh.xml:447
+#: security_ssh.xml:642
 #, no-c-format
 msgid ""
 "Setting up host key rotations requires creating new keys on the server, some "
 "changes to <filename>/etc/ssh/sshd_config</filename> on the server, and to "
 "<filename>/etc/ssh/ssh_config</filename> on the clients."
 msgstr ""
-"ホスト鍵の切り替え機能を使用するには、新しい鍵の作成のほか、サーバ側では <filename>"
-"/etc/ssh/sshd_config</filename> ファイルの変更を、クライアント側では <filename>"
-"/etc/ssh/ssh_config</filename> ファイルの変更をそれぞれ行う必要があります。"
+"ホスト鍵の切り替え機能を使用するには、新しい鍵の作成のほか、サーバ側では "
+"<filename>/etc/ssh/sshd_config</filename> ファイルの変更を、クライアント側で"
+"は <filename>/etc/ssh/ssh_config</filename> ファイルの変更をそれぞれ行う必要"
+"があります。"
 
 #. Tag: para
-#: security_ssh.xml:452
+#: security_ssh.xml:647
 #, no-c-format
 msgid ""
 "First create your new key or keys. The following example creates a new RSA "
@@ -830,20 +1105,20 @@ msgid ""
 "names. A useful convention is to name them with the creation date. Remember, "
 "a host key must not have a passphrase:"
 msgstr ""
-"まずは新しい鍵 (複数可) を作成します。下記の例では新しい RSA 鍵と Ed25519 鍵を"
-"作成しています。新しい鍵は既存の鍵に上書きせず、異なるファイル名を指定してください。"
-"一般的には作成日などを含めておくとよいでしょう。また、ホスト鍵にはパスフレーズを"
-"設定してはいけません:"
+"まずは新しい鍵 (複数可) を作成します。下記の例では新しい RSA 鍵と Ed25519 鍵"
+"を作成しています。新しい鍵は既存の鍵に上書きせず、異なるファイル名を指定して"
+"ください。一般的には作成日などを含めておくとよいでしょう。また、ホスト鍵には"
+"パスフレーズを設定してはいけません:"
 
 #. Tag: screen
-#: security_ssh.xml:458
-#, no-c-format
+#: security_ssh.xml:653
+#, fuzzy, no-c-format
 msgid ""
 "&prompt.root;<command>ssh-keygen -t rsa -f ssh_host_rsa_2022-01 -C \"main "
 "server\"</command>\n"
 "Generating public/private rsa key pair.\n"
-"Enter passphrase (empty for no passphrase): \n"
-"Enter same passphrase again: \n"
+"Enter passphrase (empty for no passphrase):\n"
+"Enter same passphrase again:\n"
 "Your identification has been saved in ssh_host_rsa_2022-01\n"
 "Your public key has been saved in ssh_host_rsa_2022-01.pub\n"
 "The key fingerprint is:\n"
@@ -864,8 +1139,8 @@ msgid ""
 "&prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01</"
 "command>\n"
 "Generating public/private ed25519 key pair.\n"
-"Enter passphrase (empty for no passphrase): \n"
-"Enter same passphrase again: \n"
+"Enter passphrase (empty for no passphrase):\n"
+"Enter same passphrase again:\n"
 "Your identification has been saved in ssh_host_ed25519_2022-01\n"
 "Your public key has been saved in ssh_host_ed25519_2022-01.pub\n"
 "The key fingerprint is:\n"
@@ -928,24 +1203,26 @@ msgstr ""
 "+----[SHA256]-----+"
 
 #. Tag: para
-#: security_ssh.xml:500
+#: security_ssh.xml:695
 #, no-c-format
 msgid "Record the fingerprints, for users to verify the new keys."
-msgstr "表示されたフィンガープリント (key fingerprint) を、ユーザ側で鍵を検証する際の確認として記録しておいてください。"
+msgstr ""
+"表示されたフィンガープリント (key fingerprint) を、ユーザ側で鍵を検証する際の"
+"確認として記録しておいてください。"
 
 #. Tag: para
-#: security_ssh.xml:503
+#: security_ssh.xml:698
 #, no-c-format
 msgid ""
 "Add the new key names to <filename>/etc/ssh/sshd_config</filename> , and "
 "uncomment any existing keys that are in use:"
 msgstr ""
-"新しい鍵のファイル名を <filename>/etc/ssh/sshd_config</filename> で指定します。"
-"既存の鍵はコメントアウトせず、そのまま設定しておいてください:"
+"新しい鍵のファイル名を <filename>/etc/ssh/sshd_config</filename> で指定しま"
+"す。既存の鍵はコメントアウトせず、そのまま設定しておいてください:"
 
 #. Tag: screen
-#: security_ssh.xml:507
-#, no-c-format
+#: security_ssh.xml:702
+#, fuzzy, no-c-format
 msgid ""
 "## Old keys\n"
 "HostKey /etc/ssh/ssh_host_rsa_key\n"
@@ -953,7 +1230,7 @@ msgid ""
 "HostKey /etc/ssh/ssh_host_ecdsa_key\n"
 "\n"
 "## New replacement keys\n"
-"HostKey /etc/ssh/ssh_host_rsa_2022-01  \n"
+"HostKey /etc/ssh/ssh_host_rsa_2022-01\n"
 "HostKey /etc/ssh/ssh_host_ed25519_2022-01"
 msgstr ""
 "## 古い鍵\n"
@@ -966,17 +1243,17 @@ msgstr ""
 "HostKey /etc/ssh/ssh_host_ed25519_2022-01"
 
 #. Tag: para
-#: security_ssh.xml:516
+#: security_ssh.xml:711
 #, no-c-format
 msgid ""
 "Save your changes, then restart <systemitem class=\"daemon\">sshd</"
 "systemitem> :"
 msgstr ""
-"ファイルを保存したら、 <systemitem class=\"daemon\">sshd</systemitem> "
-"を再起動します:"
+"ファイルを保存したら、 <systemitem class=\"daemon\">sshd</systemitem> を再起"
+"動します:"
 
 #. Tag: screen
-#: security_ssh.xml:519
+#: security_ssh.xml:714
 #, no-c-format
 msgid ""
 "&prompt.root;<command>systemctl restart sshd.service</command>\n"
@@ -986,17 +1263,17 @@ msgstr ""
 "    "
 
 #. Tag: para
-#: security_ssh.xml:521
+#: security_ssh.xml:716
 #, no-c-format
 msgid ""
 "The <filename>/etc/ssh/ssh_config</filename> file on the clients must "
 "include the following settings:"
 msgstr ""
-"なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、"
-"下記のような設定をしている必要があります:"
+"なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記の"
+"ような設定をしている必要があります:"
 
 #. Tag: screen
-#: security_ssh.xml:525
+#: security_ssh.xml:720
 #, no-c-format
 msgid ""
 "UpdateHostKeys ask\n"
@@ -1006,26 +1283,26 @@ msgstr ""
 "StrictHostKeyChecking yes"
 
 #. Tag: para
-#: security_ssh.xml:527
+#: security_ssh.xml:722
 #, no-c-format
 msgid ""
 "Test connecting from a client by opening an SSH session to the server to "
 "receive the new keys list. Log out, then log back in. When you log back in "
 "you should see something like the following message:"
 msgstr ""
-"クライアント側からサーバに SSH で接続してテストしてみます。既に接続している場合は"
-"いったんログアウトして再接続してみてください。下記のようなメッセージが表示される"
-"はずです:"
+"クライアント側からサーバに SSH で接続してテストしてみます。既に接続している場"
+"合はいったんログアウトして再接続してみてください。下記のようなメッセージが表"
+"示されるはずです:"
 
 #. Tag: screen
-#: security_ssh.xml:532
-#, no-c-format
+#: security_ssh.xml:727
+#, fuzzy, no-c-format
 msgid ""
 "The server has updated its host keys.\n"
 "These changes were verified by the server's existing trusted key.\n"
-"Deprecating obsolete hostkey: ED25519 \n"
+"Deprecating obsolete hostkey: ED25519\n"
 "SHA256:V28d3VpHgjsCoV04RBCZpLo5c0kEslCZDVdIUnCvqPI\n"
-"Deprecating obsolete hostkey: \n"
+"Deprecating obsolete hostkey:\n"
 "RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I\n"
 "Accept updated hostkeys? (yes/no):"
 msgstr ""
@@ -1038,7 +1315,7 @@ msgstr ""
 "Accept updated hostkeys? (yes/no):"
 
 #. Tag: para
-#: security_ssh.xml:539
+#: security_ssh.xml:734
 #, no-c-format
 msgid ""
 "You may set <literal>UpdateHostKeys ask</literal> to <literal>UpdateHostKeys "
@@ -1046,24 +1323,24 @@ msgid ""
 "to approve the changes, though asking them to review the changes and compare "
 "fingerprints is safer."
 msgstr ""
-"<literal>UpdateHostKeys ask</literal> を <literal>UpdateHostKeys yes</literal> "
-"に設定することで、変更された鍵を自動的に受け付けるように設定することもできますが、"
-"鍵の変更について問い合わせを行うように設定したほうが安全です。"
+"<literal>UpdateHostKeys ask</literal> を <literal>UpdateHostKeys yes</"
+"literal> に設定することで、変更された鍵を自動的に受け付けるように設定すること"
+"もできますが、鍵の変更について問い合わせを行うように設定したほうが安全です。"
 
 #. Tag: para
-#: security_ssh.xml:545
+#: security_ssh.xml:740
 #, no-c-format
 msgid "For more information:"
 msgstr "さらに詳しい情報を知りたい場合は、下記を参照してください:"
 
 #. Tag: para
-#: security_ssh.xml:551
+#: security_ssh.xml:746
 #, no-c-format
 msgid "<xref linkend=\"sec-ssh-authentic-gen-key\"/>"
 msgstr "<xref linkend=\"sec-ssh-authentic-gen-key\"/>"
 
 #. Tag: para
-#: security_ssh.xml:556
+#: security_ssh.xml:751
 #, no-c-format
 msgid ""
 "<link xlink:href=\"http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68."
@@ -1073,19 +1350,19 @@ msgstr ""
 "html\"/> (英語)"
 
 #. Tag: para
-#: security_ssh.xml:561
+#: security_ssh.xml:756
 #, no-c-format
 msgid "man 5 ssh_config, man 5 sshd_config"
 msgstr "man 5 ssh_config, man 5 sshd_config"
 
 #. Tag: title
-#: security_ssh.xml:570
+#: security_ssh.xml:765
 #, no-c-format
 msgid "SSH authentication mechanisms"
 msgstr "SSH 認証の仕組み"
 
 #. Tag: para
-#: security_ssh.xml:572
+#: security_ssh.xml:767
 #, no-c-format
 msgid ""
 "In its simplest form, authentication is done by entering the user's password "
@@ -1104,7 +1381,7 @@ msgstr ""
 "い場合もあります。"
 
 #. Tag: para
-#: security_ssh.xml:582
+#: security_ssh.xml:777
 #, no-c-format
 msgid ""
 "To accomplish a login that does not require to enter the remote user's "
@@ -1120,7 +1397,7 @@ msgstr ""
 "filename> もしくは <filename>id_dsa</filename> ) が含まれています。"
 
 #. Tag: para
-#: security_ssh.xml:590
+#: security_ssh.xml:785
 #, no-c-format
 msgid ""
 "To be able to log in without having to specify the remote user's password, "
@@ -1137,7 +1414,7 @@ msgstr ""
 "に対する完全な制御を実現できることになります。"
 
 #. Tag: para
-#: security_ssh.xml:599
+#: security_ssh.xml:794
 #, no-c-format
 msgid ""
 "For maximum security such a key should be protected by a passphrase which "
@@ -1153,7 +1430,7 @@ msgstr ""
 "ザのパスワードとは連動していないものですので、自由に管理することができます。"
 
 #. Tag: para
-#: security_ssh.xml:607
+#: security_ssh.xml:802
 #, no-c-format
 msgid ""
 "An alternative to the key-based authentication described above, SSH also "
@@ -1170,13 +1447,13 @@ msgstr ""
 "は説明していません。"
 
 #. Tag: title
-#: security_ssh.xml:618
+#: security_ssh.xml:813
 #, no-c-format
 msgid "File permissions for host-based authentication"
 msgstr "ホストベースの認証でのファイルパーミッションについて"
 
 #. Tag: para
-#: security_ssh.xml:619
+#: security_ssh.xml:814
 #, no-c-format
 msgid ""
 "If the host-based authentication is to be used, the file <filename>/usr/lib/"
@@ -1194,13 +1471,13 @@ msgstr ""
 "供された場合でも、パーミッションを設定し直す必要が無くなります。"
 
 #. Tag: title
-#: security_ssh.xml:631
+#: security_ssh.xml:826
 #, no-c-format
 msgid "Generating SSH keys"
 msgstr "SSH 鍵の生成"
 
 #. Tag: para
-#: security_ssh.xml:632
+#: security_ssh.xml:827
 #, no-c-format
 msgid ""
 "There are several key types to choose from: DSA, RSA, ECDSA, ECDSA-SK, "
@@ -1210,42 +1487,43 @@ msgid ""
 msgstr ""
 "生成できる鍵の種類としては、 DSA, RSA, ECDSA, ECDSA-SK, Ed25519, Ed25519-SK "
 "があります。ただし、 DSA は何年も前に廃止予定とされていて、 OpenSSH 7.0 では"
-"無効化されていて使用すべきではありません。 RSA は最も一般的に使用されている種類"
-"で、古い仕組みではあるものの一般的に使用されています。"
+"無効化されていて使用すべきではありません。 RSA は最も一般的に使用されている種"
+"類で、古い仕組みではあるものの一般的に使用されています。"
 
 #. Tag: para
-#: security_ssh.xml:638
+#: security_ssh.xml:833
 #, no-c-format
 msgid ""
 "Ed25519 and ECDSA are stronger and faster. Ed25519 is considered to be the "
 "strongest. If you must support older clients that do not support Ed25519, "
 "create both Ed25519 and RSA host keys."
 msgstr ""
-"Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供されて"
-"いますが、 Ed25519 に対応していない古いクライアントを受け付ける必要がある場合は、"
-" Ed25519 と RSA の両方のホスト鍵を作成してください。"
+"Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供"
+"されていますが、 Ed25519 に対応していない古いクライアントを受け付ける必要があ"
+"る場合は、 Ed25519 と RSA の両方のホスト鍵を作成してください。"
 
 #. Tag: title
-#: security_ssh.xml:644
+#: security_ssh.xml:839
 #, no-c-format
 msgid "Older clients may be unsafe"
 msgstr "古いクライアントの安全性について"
 
 #. Tag: para
-#: security_ssh.xml:645
+#: security_ssh.xml:840
 #, no-c-format
 msgid ""
 "Some older SSH clients do not support ECDSA and ED25519. ECDSA and ED25519 "
 "were released with OpenSSH 6.5 in 2014. It is important to keep security "
 "services updated, and, if possible, to not allow unsafe old clients."
 msgstr ""
-"古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と ED25519 "
-"への対応は 2014 年に公開された OpenSSH 6.5 から提供されているものです。どうしても"
-"接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用しておいてください。"
-"また、可能であれば古いクライアントからの接続は許可しないでください。"
+"古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と "
+"ED25519 への対応は 2014 年に公開された OpenSSH 6.5 から提供されているもので"
+"す。どうしても接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用し"
+"ておいてください。また、可能であれば古いクライアントからの接続は許可しないで"
+"ください。"
 
 #. Tag: para
-#: security_ssh.xml:652
+#: security_ssh.xml:847
 #, no-c-format
 msgid ""
 "SSH keys serve two purposes: authenticating servers with host keys, and "
@@ -1253,50 +1531,50 @@ msgid ""
 "filename> . Client keys are specific to users, and are stored in <filename>/"
 "home/<replaceable>user</replaceable>/.ssh</filename> ."
 msgstr ""
-"SSH の鍵は 2 種類の目的で使用されます。サーバ側を認証するためのホスト鍵と、"
-"クライアントを認証するためのクライアント鍵です。ホスト鍵は <filename>/etc/ssh</"
-"filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリで"
-"ある <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> "
-"に保存されます。"
+"SSH の鍵は 2 種類の目的で使用されます。サーバ側を認証するためのホスト鍵と、ク"
+"ライアントを認証するためのクライアント鍵です。ホスト鍵は <filename>/etc/ssh</"
+"filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリ"
+"である <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> に"
+"保存されます。"
 
 #. Tag: para
-#: security_ssh.xml:658
+#: security_ssh.xml:853
 #, no-c-format
 msgid "Host keys must not have passphrases."
 msgstr "ホスト鍵にはパスフレーズを設定してはいけません。"
 
 #. Tag: para
-#: security_ssh.xml:661
+#: security_ssh.xml:856
 #, no-c-format
 msgid "In most cases, private client keys should have strong passwords."
 msgstr "ほとんどの場合、クライアント鍵には強力なパスワードを設定します。"
 
 #. Tag: para
-#: security_ssh.xml:664
+#: security_ssh.xml:859
 #, no-c-format
 msgid "The following procedure shows how to create client keys."
 msgstr "下記に示す手順では、クライアント鍵の作成方法を説明しています。"
 
 #. Tag: title
-#: security_ssh.xml:669
+#: security_ssh.xml:864
 #, no-c-format
 msgid "Creating client SSH key pairs"
 msgstr "クライアント側の SSH 鍵の生成"
 
 #. Tag: para
-#: security_ssh.xml:671
+#: security_ssh.xml:866
 #, no-c-format
 msgid ""
 "To generate a client key pair with the default parameters (RSA, 3072 bits), "
 "use the <command>ssh-keygen</command> command with no options. Protect your "
 "private key with a strong passphrase:"
 msgstr ""
-"既定のパラメータ (RSA, 3072 ビット) でクライアント側の鍵対を生成するには、"
-"オプションを何も指定せず <command>ssh-keygen</command> と入力して実行します。"
-"なお、機密鍵を保護するため、強力なパスフレーズを設定しておいてください:"
+"既定のパラメータ (RSA, 3072 ビット) でクライアント側の鍵対を生成するには、オ"
+"プションを何も指定せず <command>ssh-keygen</command> と入力して実行します。な"
+"お、機密鍵を保護するため、強力なパスフレーズを設定しておいてください:"
 
 #. Tag: screen
-#: security_ssh.xml:676
+#: security_ssh.xml:871
 #, no-c-format
 msgid ""
 "&prompt.user;<command>ssh-keygen</command>\n"
@@ -1344,19 +1622,21 @@ msgstr ""
 "+----[SHA256]-----+"
 
 #. Tag: para
-#: security_ssh.xml:699
+#: security_ssh.xml:894
 #, no-c-format
 msgid "Create an RSA key pair with a longer bit length:"
-msgstr "より長いビット長で RSA 鍵対を作成したい場合は、下記のように入力して実行します:"
+msgstr ""
+"より長いビット長で RSA 鍵対を作成したい場合は、下記のように入力して実行しま"
+"す:"
 
 #. Tag: screen
-#: security_ssh.xml:702
+#: security_ssh.xml:897
 #, no-c-format
 msgid "&prompt.user;<command>ssh-keygen -b 4096</command>"
 msgstr "&prompt.user;<command>ssh-keygen -b 4096</command>"
 
 #. Tag: para
-#: security_ssh.xml:703
+#: security_ssh.xml:898
 #, no-c-format
 msgid ""
 "OpenSSH RSA keys can be a maximum of 16,384 bits. However, longer bit "
@@ -1365,18 +1645,20 @@ msgid ""
 "html#no_default_of_rsa4096\"/> ."
 msgstr ""
 "OpenSSH での RSA 鍵は、最大で 16,384 ビットまでとなっています。しかしながら、"
-"ビット長を大きくしても、かかる負荷に見合うだけの効果を得られません。詳しくは"
-" GnuPG の FAQ <link xlink:href=\"https://www.gnupg.org/faq/gnupg-faq."
+"ビット長を大きくしても、かかる負荷に見合うだけの効果を得られません。詳しくは "
+"GnuPG の FAQ <link xlink:href=\"https://www.gnupg.org/faq/gnupg-faq."
 "html#no_default_of_rsa4096\"/> (英語) をお読みください。"
 
 #. Tag: para
-#: security_ssh.xml:710
+#: security_ssh.xml:905
 #, no-c-format
 msgid "Create an RSA key pair with a custom name and a comment:"
-msgstr "独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:"
+msgstr ""
+"独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにし"
+"ます:"
 
 #. Tag: screen
-#: security_ssh.xml:713
+#: security_ssh.xml:908
 #, no-c-format
 msgid ""
 "&prompt.user;<command>ssh-keygen -f <replaceable>backup-server-key -C "
@@ -1388,13 +1670,13 @@ msgstr ""
 "      "
 
 #. Tag: para
-#: security_ssh.xml:717
+#: security_ssh.xml:912
 #, no-c-format
 msgid "Create an Ed25519 key pair with a comment:"
 msgstr "Ed25519 鍵対を作成する場合は、下記のようにします:"
 
 #. Tag: screen
-#: security_ssh.xml:720
+#: security_ssh.xml:915
 #, no-c-format
 msgid ""
 "&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -"
@@ -1406,15 +1688,17 @@ msgstr ""
 "     "
 
 #. Tag: para
-#: security_ssh.xml:722
+#: security_ssh.xml:917
 #, no-c-format
 msgid ""
 "Ed25519 keys are fixed at 256 bits, which is equivalent in cryptographic "
 "strength to RSA 4096."
-msgstr "Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度になります。"
+msgstr ""
+"Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度にな"
+"ります。"
 
 #. Tag: para
-#: security_ssh.xml:729
+#: security_ssh.xml:924
 #, no-c-format
 msgid ""
 "Host keys are managed a little differently. A host key must not have a "
@@ -1422,13 +1706,13 @@ msgid ""
 "OpenSSH automatically generates a set of host keys when it is installed, "
 "like the following example:"
 msgstr ""
-"ホスト鍵はクライアント鍵とは違った管理方法になります。ホスト鍵にはパスフレーズを"
-"設定してはならないほか、鍵対は <filename>/etc/ssh</filename> ディレクトリ内に"
-"保存します。 OpenSSH では、必要に応じて自動的にホスト鍵を生成します。たとえば"
-"下記のようになります:"
+"ホスト鍵はクライアント鍵とは違った管理方法になります。ホスト鍵にはパスフレー"
+"ズを設定してはならないほか、鍵対は <filename>/etc/ssh</filename> ディレクトリ"
+"内に保存します。 OpenSSH では、必要に応じて自動的にホスト鍵を生成します。たと"
+"えば下記のようになります:"
 
 #. Tag: screen
-#: security_ssh.xml:735
+#: security_ssh.xml:930
 #, no-c-format
 msgid ""
 "&prompt.user;<command>ls -l /etc/ssh</command>\n"
@@ -1460,7 +1744,7 @@ msgstr ""
 "-rw-r--r-- 1 root root    568  2月 10 2021 ssh_host_rsa_key.pub"
 
 #. Tag: para
-#: security_ssh.xml:749
+#: security_ssh.xml:944
 #, no-c-format
 msgid ""
 "<command>ssh-keygen</command> has a special option, <option>-A</option> , "
@@ -1471,14 +1755,14 @@ msgid ""
 "existing keys, then creating a new set:"
 msgstr ""
 "なお、 <command>ssh-keygen</command> には新しいホスト鍵を作成するための特別な"
-"オプションである <option>-A</option> が用意されています。これはそれぞれの種類の"
-"ホスト鍵対が存在していなかった場合、それらを自動的に生成することができます。"
-"保存先や空のパスフレーズ設定、鍵の種類ごとのビット長や空のコメントも自動的に"
-"設定されます。下記のように入力して実行すると、既存の鍵を削除して新しいホスト鍵対を"
-"生成することができます:"
+"オプションである <option>-A</option> が用意されています。これはそれぞれの種類"
+"のホスト鍵対が存在していなかった場合、それらを自動的に生成することができま"
+"す。保存先や空のパスフレーズ設定、鍵の種類ごとのビット長や空のコメントも自動"
+"的に設定されます。下記のように入力して実行すると、既存の鍵を削除して新しいホ"
+"スト鍵対を生成することができます:"
 
 #. Tag: screen
-#: security_ssh.xml:758
+#: security_ssh.xml:953
 #, no-c-format
 msgid ""
 "&prompt.sudo;<command>rm /etc/ssh/ssh_host*</command>\n"
@@ -1488,18 +1772,19 @@ msgstr ""
 "&prompt.sudo;<command>ssh-keygen -A</command>"
 
 #. Tag: para
-#: security_ssh.xml:760
+#: security_ssh.xml:955
 #, no-c-format
 msgid ""
 "You can replace selected key pairs by first deleting only the keys you want "
 "to replace, because <command>ssh-keygen -A</command> does not replace "
 "existing keys."
 msgstr ""
-"なお、 <command>ssh-keygen -A</command> では既存の鍵を上書きすることはありません"
-"ので、ホスト鍵を完全に入れ替える場合は、事前に削除しておく必要があります。"
+"なお、 <command>ssh-keygen -A</command> では既存の鍵を上書きすることはありま"
+"せんので、ホスト鍵を完全に入れ替える場合は、事前に削除しておく必要がありま"
+"す。"
 
 #. Tag: para
-#: security_ssh.xml:766
+#: security_ssh.xml:961
 #, no-c-format
 msgid ""
 "<command>ssh-keygen -A</command> still creates DSA keys, even though they "
@@ -1507,13 +1792,13 @@ msgid ""
 "still created, but disabled by not being listed in <filename>sshd_config</"
 "filename> . You may safely delete DSA keys."
 msgstr ""
-"<command>ssh-keygen -A</command> を実行すると、既に何年も前から安全性に問題がある"
-"と考えられている DSA 鍵も生成されます。 OpenSSH 7.0 の時点でも未だ作成されますが、"
-" <filename>sshd_config</filename> 側で使用されないように設定されています。そのため、"
-"生成された DSA 鍵は削除して問題ありません。"
+"<command>ssh-keygen -A</command> を実行すると、既に何年も前から安全性に問題が"
+"あると考えられている DSA 鍵も生成されます。 OpenSSH 7.0 の時点でも未だ作成さ"
+"れますが、 <filename>sshd_config</filename> 側で使用されないように設定されて"
+"います。そのため、生成された DSA 鍵は削除して問題ありません。"
 
 #. Tag: para
-#: security_ssh.xml:773
+#: security_ssh.xml:968
 #, no-c-format
 msgid ""
 "When you want to rotate host keys, you must create the new keys "
@@ -1524,16 +1809,17 @@ msgid ""
 "the year and month they were created. Remember, the new host ukeys must not "
 "have passphrases:"
 msgstr ""
-"ホスト鍵の切り替えを検討している場合は、新しいホスト鍵を別のファイル名に保存しなければ"
-"なりません。単純に新しい鍵に入れ替えるだけの作業では、クライアント側がホスト鍵の"
-"正しさを検証できないためです。ホスト鍵を切り替えるには、サーバ側で古い鍵と新しい鍵の"
-"両方を送信するように設定し、古い鍵で新しい鍵を検証できるようにしてください。そのため、"
-"古い鍵とは別のファイル名に保存する必要があります。下記の例では、新しい RSA, Ed25519 "
-"のホスト鍵を作成して、年月を指定した新しいファイル名に保存しています。もちろん"
-"新しいホスト鍵にはパスフレーズを設定してはなりません:"
+"ホスト鍵の切り替えを検討している場合は、新しいホスト鍵を別のファイル名に保存"
+"しなければなりません。単純に新しい鍵に入れ替えるだけの作業では、クライアント"
+"側がホスト鍵の正しさを検証できないためです。ホスト鍵を切り替えるには、サーバ"
+"側で古い鍵と新しい鍵の両方を送信するように設定し、古い鍵で新しい鍵を検証でき"
+"るようにしてください。そのため、古い鍵とは別のファイル名に保存する必要があり"
+"ます。下記の例では、新しい RSA, Ed25519 のホスト鍵を作成して、年月を指定した"
+"新しいファイル名に保存しています。もちろん新しいホスト鍵にはパスフレーズを設"
+"定してはなりません:"
 
 #. Tag: screen
-#: security_ssh.xml:782
+#: security_ssh.xml:977
 #, no-c-format
 msgid ""
 "&prompt.user;<command>cd /etc/ssh</command>\n"
@@ -1543,23 +1829,25 @@ msgid ""
 "command>"
 msgstr ""
 "&prompt.user;<command>cd /etc/ssh</command>\n"
-"&prompt.sudo;<command>ssh-keygen -b 4096 -f \"ssh_host_rsa_2022_02\"</command>\n"
-"&prompt.sudo;<command>ssh-keygen -t ed25519 -f \"ssh_host_ed25519_2022_02\"</command>"
+"&prompt.sudo;<command>ssh-keygen -b 4096 -f \"ssh_host_rsa_2022_02\"</"
+"command>\n"
+"&prompt.sudo;<command>ssh-keygen -t ed25519 -f \"ssh_host_ed25519_2022_02\"</"
+"command>"
 
 #. Tag: para
-#: security_ssh.xml:785
+#: security_ssh.xml:980
 #, no-c-format
 msgid "You may name your new keys whatever you want."
 msgstr "なお、新しい鍵に設定するファイル名は任意のものでかまいません。"
 
 #. Tag: title
-#: security_ssh.xml:791
+#: security_ssh.xml:986
 #, no-c-format
 msgid "Copying an SSH key"
 msgstr "SSH 鍵のコピー"
 
 #. Tag: para
-#: security_ssh.xml:792
+#: security_ssh.xml:987
 #, no-c-format
 msgid ""
 "To copy a public SSH key to <filename>~/.ssh/authorized_keys</filename> of a "
@@ -1575,7 +1863,7 @@ msgstr ""
 "に保存している場合は、パスを指定して実行する必要があります:"
 
 #. Tag: screen
-#: security_ssh.xml:800
+#: security_ssh.xml:995
 #, no-c-format
 msgid ""
 "&prompt.user;<prompt>~/.ssh/id_rsa.pub</prompt>\n"
@@ -1597,7 +1885,7 @@ msgstr ""
 "ssh-copy-id -i ~notme/.ssh/id_rsa.pub  &exampleuser_plain;@&exampleserver;"
 
 #. Tag: para
-#: security_ssh.xml:808
+#: security_ssh.xml:1003
 #, no-c-format
 msgid ""
 "To successfully copy the key, you need to enter the remote user's password. "
@@ -1609,13 +1897,13 @@ msgstr ""
 "ルを手作業で編集してください。"
 
 #. Tag: title
-#: security_ssh.xml:816
+#: security_ssh.xml:1011
 #, no-c-format
 msgid "Using the <command>ssh-agent</command>"
 msgstr "<command>ssh-agent</command> の使用"
 
 #. Tag: para
-#: security_ssh.xml:817
+#: security_ssh.xml:1012
 #, no-c-format
 msgid ""
 "When doing lots of secure shell operations it is cumbersome to type the SSH "
@@ -1640,7 +1928,7 @@ msgstr ""
 "command> のマニュアルページをお読みください。"
 
 #. Tag: para
-#: security_ssh.xml:829
+#: security_ssh.xml:1024
 #, no-c-format
 msgid ""
 "After the <command>ssh-agent</command> is started, you need to add your keys "
@@ -1654,13 +1942,13 @@ msgstr ""
 "コマンドを使用することができるようになります。"
 
 #. Tag: title
-#: security_ssh.xml:837
+#: security_ssh.xml:1032
 #, no-c-format
 msgid "Using <command>ssh-agent</command> in an X session"
 msgstr "X セッション内での <command>ssh-agent</command> の使用"
 
 #. Tag: para
-#: security_ssh.xml:838
+#: security_ssh.xml:1033
 #, no-c-format
 msgid ""
 "On &productname;, the <command>ssh-agent</command> is automatically started "
@@ -1675,7 +1963,7 @@ msgstr ""
 "実行します:"
 
 #. Tag: para
-#: security_ssh.xml:846
+#: security_ssh.xml:1041
 #, no-c-format
 msgid ""
 "Log in as the desired user and check whether the file <filename>~/.xinitrc</"
@@ -1685,7 +1973,7 @@ msgstr ""
 "存在していないかどうかを確認します。"
 
 #. Tag: para
-#: security_ssh.xml:852
+#: security_ssh.xml:1047
 #, no-c-format
 msgid ""
 "If it does not exist, use an existing template or copy it from <filename>/"
@@ -1695,7 +1983,7 @@ msgstr ""
 "設定するか、もしくはシンプルにコピーして使用します:"
 
 #. Tag: screen
-#: security_ssh.xml:856
+#: security_ssh.xml:1051
 #, no-c-format
 msgid ""
 "if [ -f ~/.xinitrc.template ]; then mv ~/.xinitrc.template ~/.xinitrc; \\\n"
@@ -1705,7 +1993,7 @@ msgstr ""
 "else cp /etc/skel/.xinitrc.template ~/.xinitrc; fi"
 
 #. Tag: para
-#: security_ssh.xml:860
+#: security_ssh.xml:1055
 #, no-c-format
 msgid ""
 "If you have copied the template, search for the following lines and "
@@ -1717,7 +2005,7 @@ msgstr ""
 "行を追加します (コメント文字 (#) は外して記入してください) 。"
 
 #. Tag: screen
-#: security_ssh.xml:865
+#: security_ssh.xml:1060
 #, no-c-format
 msgid ""
 "# if test -S \"$SSH_AUTH_SOCK\" -a -x \"$SSH_ASKPASS\"; then\n"
@@ -1729,21 +2017,22 @@ msgstr ""
 "# fi"
 
 #. Tag: para
-#: security_ssh.xml:870
+#: security_ssh.xml:1065
 #, no-c-format
-msgid "When starting a new X session, you will be prompted for your SSH passphrase."
+msgid ""
+"When starting a new X session, you will be prompted for your SSH passphrase."
 msgstr ""
 "新しい X セッションを開始すると、 SSH 鍵に対するパスフレーズの入力を求められ"
 "ます。"
 
 #. Tag: title
-#: security_ssh.xml:878
+#: security_ssh.xml:1073
 #, no-c-format
 msgid "Using <command>ssh-agent</command> in a terminal session"
 msgstr "端末セッション内での <command>ssh-agent</command> の使用"
 
 #. Tag: para
-#: security_ssh.xml:879
+#: security_ssh.xml:1074
 #, no-c-format
 msgid ""
 "In a terminal session you need to manually start the <command>ssh-agent</"
@@ -1760,7 +2049,7 @@ msgstr ""
 "して、必要に応じて環境を書き換える方法です。"
 
 #. Tag: screen
-#: security_ssh.xml:887
+#: security_ssh.xml:1082
 #, no-c-format
 msgid ""
 "&prompt.user;ssh-agent -s /bin/bash\n"
@@ -1772,7 +2061,7 @@ msgstr ""
 "    "
 
 #. Tag: para
-#: security_ssh.xml:890
+#: security_ssh.xml:1085
 #, no-c-format
 msgid ""
 "After the agent has been started, run <command>ssh-add</command> to provide "
@@ -1782,13 +2071,13 @@ msgstr ""
 "いってください。"
 
 #. Tag: title
-#: security_ssh.xml:908
+#: security_ssh.xml:1103
 #, no-c-format
 msgid "Restricting SSH logins"
 msgstr "SSH ログインの制限"
 
 #. Tag: para
-#: security_ssh.xml:909
+#: security_ssh.xml:1104
 #, no-c-format
 msgid ""
 "The SSH service on a machine can be restricted to allow logins only from a "
@@ -1805,7 +2094,7 @@ msgstr ""
 "ssh-sftp\"/> のそれぞれに対して、ログイン制限を行うことができます。"
 
 #. Tag: para
-#: security_ssh.xml:926
+#: security_ssh.xml:1121
 #, no-c-format
 msgid ""
 "Edit the file <filename>/etc/pam.d/sshd</filename> and append the following "
@@ -1815,13 +2104,13 @@ msgstr ""
 "<literal>auth</literal> ブロックの末尾に下記を追加します:"
 
 #. Tag: screen
-#: security_ssh.xml:930
+#: security_ssh.xml:1125
 #, no-c-format
 msgid "auth required pam_access.so"
 msgstr "auth required pam_access.so"
 
 #. Tag: para
-#: security_ssh.xml:933
+#: security_ssh.xml:1128
 #, no-c-format
 msgid ""
 "Edit the file <filename>/etc/security/access.conf</filename> to configure "
@@ -1837,7 +2126,7 @@ msgstr ""
 "からにのみ制限しています:"
 
 #. Tag: screen
-#: security_ssh.xml:940
+#: security_ssh.xml:1135
 #, no-c-format
 msgid ""
 "\n"
@@ -1859,7 +2148,7 @@ msgstr ""
 "- : ALL : ALL"
 
 #. Tag: para
-#: security_ssh.xml:945
+#: security_ssh.xml:1140
 #, no-c-format
 msgid ""
 "Do not forget the last line which denies access for all other users from all "
@@ -1869,7 +2158,7 @@ msgstr ""
 "する設定になります。設定を行う際は注意して設定してください。"
 
 #. Tag: para
-#: security_ssh.xml:949
+#: security_ssh.xml:1144
 #, no-c-format
 msgid ""
 "For more configuration options, refer to the examples in the file and to "
@@ -1879,13 +2168,13 @@ msgstr ""
 "<command>man access.conf</command> をお読みください。"
 
 #. Tag: title
-#: security_ssh.xml:956
+#: security_ssh.xml:1151
 #, no-c-format
 msgid "Do not use <command>pam-config</command>"
 msgstr "<command>pam-config</command> の使用禁止について"
 
 #. Tag: para
-#: security_ssh.xml:957
+#: security_ssh.xml:1152
 #, no-c-format
 msgid ""
 "Do not use the <command>pam-config</command> utility here. It only supports "
@@ -1900,13 +2189,13 @@ msgstr ""
 "グインが上記に合わせて許可または禁止されることになってしまいます。"
 
 #. Tag: title
-#: security_ssh.xml:967
+#: security_ssh.xml:1162
 #, no-c-format
 msgid "Port forwarding"
 msgstr "ポート転送"
 
 #. Tag: para
-#: security_ssh.xml:969
+#: security_ssh.xml:1164
 #, no-c-format
 msgid ""
 "<command>ssh</command> can also be used to redirect TCP/IP connections. This "
@@ -1919,7 +2208,7 @@ msgstr ""
 "ます。"
 
 #. Tag: para
-#: security_ssh.xml:976
+#: security_ssh.xml:1171
 #, no-c-format
 msgid ""
 "With the following command, any connection directed to &wsI; port 25 (SMTP) "
@@ -1939,13 +2228,13 @@ msgstr ""
 "す。"
 
 #. Tag: screen
-#: security_ssh.xml:985
+#: security_ssh.xml:1180
 #, no-c-format
 msgid "&prompt.root;ssh -L 25:&exampleserver;:25 &wsI;"
 msgstr "&prompt.root;ssh -L 25:&exampleserver;:25 &wsI;"
 
 #. Tag: para
-#: security_ssh.xml:987
+#: security_ssh.xml:1182
 #, no-c-format
 msgid ""
 "Similarly, all POP3 requests (port&nbsp;110) on &wsI; can be forwarded to "
@@ -1955,13 +2244,13 @@ msgstr ""
 "合は、下記のように実行します:"
 
 #. Tag: screen
-#: security_ssh.xml:992
+#: security_ssh.xml:1187
 #, no-c-format
 msgid "&prompt.root;ssh -L 110:&exampleserver;:110 &wsI;"
 msgstr "&prompt.root;ssh -L 110:&exampleserver;:110 &wsI;"
 
 #. Tag: para
-#: security_ssh.xml:994
+#: security_ssh.xml:1189
 #, no-c-format
 msgid ""
 "Both commands must be executed as &rootuser;, because the connection is made "
@@ -1981,13 +2270,13 @@ msgstr ""
 "内にあります。"
 
 #. Tag: title
-#: security_ssh.xml:1007
+#: security_ssh.xml:1202
 #, no-c-format
 msgid "Adding and removing public keys on an installed system"
 msgstr "インストール済みのシステムにおける公開鍵の追加と削除"
 
 #. Tag: para
-#: security_ssh.xml:1008
+#: security_ssh.xml:1203
 #, no-c-format
 msgid ""
 "In some environments, it is convenient or necessary to log in over SSH. As "
@@ -2000,13 +2289,13 @@ msgstr ""
 "するには、下記の手順で行います:"
 
 #. Tag: para
-#: security_ssh.xml:1015
+#: security_ssh.xml:1210
 #, no-c-format
 msgid "Open &yast;."
 msgstr "&yast; を開きます。"
 
 #. Tag: para
-#: security_ssh.xml:1018
+#: security_ssh.xml:1213
 #, no-c-format
 msgid ""
 "Under <guimenu>Security and Users</guimenu> , open the <guimenu>User and "
@@ -2016,7 +2305,7 @@ msgstr ""
 "管理</guimenu> を選択します。"
 
 #. Tag: para
-#: security_ssh.xml:1024
+#: security_ssh.xml:1219
 #, no-c-format
 msgid "Select the user you want to change and press <guimenu>Edit</guimenu> ."
 msgstr ""
@@ -2024,13 +2313,13 @@ msgstr ""
 "す。"
 
 #. Tag: para
-#: security_ssh.xml:1029
+#: security_ssh.xml:1224
 #, no-c-format
 msgid "Switch to the <guimenu>SSH Public Key</guimenu> tab."
 msgstr "<guimenu>SSH 公開鍵</guimenu> タブに切り替えます。"
 
 #. Tag: para
-#: security_ssh.xml:1034
+#: security_ssh.xml:1229
 #, no-c-format
 msgid ""
 "Add or remove your public key(s). If you add a public SSH key, look for the "
@@ -2041,135 +2330,136 @@ msgstr ""
 "を追加することができます。"
 
 #. Tag: para
-#: security_ssh.xml:1040
+#: security_ssh.xml:1235
 #, no-c-format
 msgid "Confirm with <guimenu>Ok</guimenu> ."
 msgstr "<guimenu>OK</guimenu> を押して閉じます。"
 
 #. Tag: para
-#: security_ssh.xml:1044
+#: security_ssh.xml:1239
 #, no-c-format
-msgid "Your public SSH key is saved in <filename>~/.ssh/authorized_keys</filename> ."
+msgid ""
+"Your public SSH key is saved in <filename>~/.ssh/authorized_keys</filename> ."
 msgstr ""
 "追加した公開鍵は、 <filename>~/.ssh/authorized_keys</filename> 内に保存されま"
 "す。"
 
 #. Tag: title
-#: security_ssh.xml:1050
+#: security_ssh.xml:1245
 #, no-c-format
 msgid "More information"
 msgstr "さらなる情報"
 
 #. Tag: term
-#: security_ssh.xml:1056
+#: security_ssh.xml:1251
 #, no-c-format
 msgid "<link xlink:href=\"https://www.openssh.com\"/>"
 msgstr "<link xlink:href=\"https://www.openssh.com\"/>"
 
 #. Tag: para
-#: security_ssh.xml:1059
+#: security_ssh.xml:1254
 #, no-c-format
 msgid "The home page of OpenSSH"
 msgstr "OpenSSH の Web ページ"
 
 #. Tag: term
-#: security_ssh.xml:1065
+#: security_ssh.xml:1260
 #, no-c-format
 msgid "<link xlink:href=\"https://en.wikibooks.org/wiki/OpenSSH\"/>"
 msgstr "<link xlink:href=\"https://en.wikibooks.org/wiki/OpenSSH\"/>"
 
 #. Tag: para
-#: security_ssh.xml:1068
+#: security_ssh.xml:1263
 #, no-c-format
 msgid "The OpenSSH Wikibook"
 msgstr "OpenSSH Wikibook (英語)"
 
 #. Tag: term
-#: security_ssh.xml:1074
+#: security_ssh.xml:1269
 #, no-c-format
 msgid "<command>man sshd</command>"
 msgstr "<command>man sshd</command>"
 
 #. Tag: para
-#: security_ssh.xml:1077
+#: security_ssh.xml:1272
 #, no-c-format
 msgid "The man page of the OpenSSH daemon"
 msgstr "OpenSSH デーモンのマニュアルページ"
 
 #. Tag: term
-#: security_ssh.xml:1083
+#: security_ssh.xml:1278
 #, no-c-format
 msgid "<command>man ssh_config</command>"
 msgstr "<command>man ssh_config</command>"
 
 #. Tag: para
-#: security_ssh.xml:1086
+#: security_ssh.xml:1281
 #, no-c-format
 msgid "The man page of the OpenSSH SSH client configuration files"
 msgstr "OpenSSH のクライアント側設定ファイルのマニュアルページ"
 
 #. Tag: term
-#: security_ssh.xml:1092
+#: security_ssh.xml:1287
 #, no-c-format
 msgid "<command>man scp</command>"
 msgstr "<command>man scp</command>"
 
 #. Tag: term
-#: security_ssh.xml:1094
+#: security_ssh.xml:1289
 #, no-c-format
 msgid "<command>man sftp</command>"
 msgstr "<command>man sftp</command>"
 
 #. Tag: term
-#: security_ssh.xml:1096
+#: security_ssh.xml:1291
 #, no-c-format
 msgid "<command>man slogin</command>"
 msgstr "<command>man slogin</command>"
 
 #. Tag: term
-#: security_ssh.xml:1098
+#: security_ssh.xml:1293
 #, no-c-format
 msgid "<command>man ssh</command>"
 msgstr "<command>man ssh</command>"
 
 #. Tag: term
-#: security_ssh.xml:1100
+#: security_ssh.xml:1295
 #, no-c-format
 msgid "<command>man ssh-add</command>"
 msgstr "<command>man ssh-add</command>"
 
 #. Tag: term
-#: security_ssh.xml:1102
+#: security_ssh.xml:1297
 #, no-c-format
 msgid "<command>man ssh-agent</command>"
 msgstr "<command>man ssh-agent</command>"
 
 #. Tag: term
-#: security_ssh.xml:1104
+#: security_ssh.xml:1299
 #, no-c-format
 msgid "<command>man ssh-copy-id</command>"
 msgstr "<command>man ssh-copy-id</command>"
 
 #. Tag: term
-#: security_ssh.xml:1106
+#: security_ssh.xml:1301
 #, no-c-format
 msgid "<command>man ssh-keyconvert</command>"
 msgstr "<command>man ssh-keyconvert</command>"
 
 #. Tag: term
-#: security_ssh.xml:1108
+#: security_ssh.xml:1303
 #, no-c-format
 msgid "<command>man ssh-keygen</command>"
 msgstr "<command>man ssh-keygen</command>"
 
 #. Tag: term
-#: security_ssh.xml:1110
+#: security_ssh.xml:1305
 #, no-c-format
 msgid "<command>man ssh-keyscan</command>"
 msgstr "<command>man ssh-keyscan</command>"
 
 #. Tag: para
-#: security_ssh.xml:1113
+#: security_ssh.xml:1308
 #, no-c-format
 msgid ""
 "Man pages of several binary files to securely copy files ( <command>scp</"
@@ -2181,19 +2471,21 @@ msgstr ""
 "ンドに対するマニュアルページ。"
 
 #. Tag: term
-#: security_ssh.xml:1122
+#: security_ssh.xml:1317
 #, no-c-format
 msgid "<filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename>"
-msgstr "<filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename>"
+msgstr ""
+"<filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename>"
 
 #. Tag: term
-#: security_ssh.xml:1125
+#: security_ssh.xml:1320
 #, no-c-format
 msgid "<filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename>"
-msgstr "<filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename>"
+msgstr ""
+"<filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename>"
 
 #. Tag: para
-#: security_ssh.xml:1129
+#: security_ssh.xml:1324
 #, no-c-format
 msgid ""
 "&suse; package specific documentation; changes in defaults with respect to "
@@ -2202,3 +2494,86 @@ msgstr ""
 "&suse; 固有のパッケージドキュメンテーション; FIPS モードなど、提供元からの既"
 "定値の変更点などを説明しています。"
 
+#, no-c-format
+#~ msgid ""
+#~ "In networked environments, it is often necessary to access hosts from a "
+#~ "remote location. If a user sends login and password strings for "
+#~ "authentication purposes as plain text, they could be intercepted and "
+#~ "misused to gain access to that user account. This would open all the "
+#~ "user's files to an attacker and the illegal account could be used to "
+#~ "obtain administrator or <systemitem class=\"username\">root</systemitem> "
+#~ "access, or to penetrate other systems. In the past, remote connections "
+#~ "were established with <command>telnet</command> , <command>rsh</command> "
+#~ "or <command>rlogin</command> , which offered no guards against "
+#~ "eavesdropping in the form of encryption or other security mechanisms. "
+#~ "There are other unprotected communication channels, like the traditional "
+#~ "FTP protocol and some remote copying programs like <command>rcp</"
+#~ "command> ."
+#~ msgstr ""
+#~ "ネットワークによる接続が提供されている環境では、一方のホストから他方のホス"
+#~ "トにログインする必要が生じることがあります。ユーザが認証を目的としてユーザ"
+#~ "名とパスワードを送信する際、それをそのままテキスト形式で送ってしまうと、そ"
+#~ "れは容易に傍受することができてしまうため、そのアカウントになりすましてログ"
+#~ "インできるようになってしまいます。これにより、攻撃者がユーザの保持している"
+#~ "ファイルを読み取ることができてしまうほか、管理者や <systemitem class="
+#~ "\"username\">root</systemitem> のアカウントを奪取して不正なアカウントを作"
+#~ "成することもできてしまいますし、他のコンピュータを攻撃する際の踏み台として"
+#~ "使用することもできてしまいます。その昔は <command>telnet</command> , "
+#~ "<command>rsh</command> , <command>rlogin</command> などのコマンドを利用し"
+#~ "て、ネットワーク上離れた場所との通信を確立していましたが、これらの方法はい"
+#~ "ずれも盗聴に対する保護が存在せず、暗号化などのセキュリティ機構も備わってい"
+#~ "ませんでした。それ以外にも、今もなお使用されている FTP などのプロトコル"
+#~ "や、 <command>rcp</command> などのプログラムについても、暗号化が行われてい"
+#~ "ませんでした。"
+
+#, no-c-format
+#~ msgid ""
+#~ "The SSH suite provides the necessary protection by encrypting the "
+#~ "authentication strings and all the other data exchanged between the "
+#~ "hosts. With SSH, the data flow could still be recorded by a third party, "
+#~ "but the contents are encrypted and cannot be reverted to plain text "
+#~ "unless the encryption key is known. So SSH enables secure communication "
+#~ "over insecure networks, such as the Internet. The SSH implementation in "
+#~ "&productname; is OpenSSH."
+#~ msgstr ""
+#~ "SSH スイートは認証文字列だけでなく、コンピュータ間でやり取りされている全て"
+#~ "のデータを暗号化することによって、必要な保護が得られるような仕組みを提供し"
+#~ "ています。 SSH でも第三者がデータの流れを傍受することはできてしまいます"
+#~ "が、内容は暗号化されているため、暗号鍵を知らない限り元のデータを得ることが"
+#~ "できなくなっています。そのため、 SSH はインターネットなどの機密保護のない"
+#~ "ネットワークで、通信の機密を保持するために使用されます。なお、 "
+#~ "&productname; での SSH 実装は、 OpenSSH という名称で提供されています。"
+
+#, no-c-format
+#~ msgid ""
+#~ "&productname; installs the OpenSSH package by default providing the "
+#~ "commands <command>ssh</command> , <command>scp</command> , and "
+#~ "<command>sftp</command> . In the default configuration, remote access of "
+#~ "a &productname; system is only possible with the OpenSSH utilities, and "
+#~ "only if the <systemitem class=\"daemon\">sshd</systemitem> is running and "
+#~ "the firewall permits access."
+#~ msgstr ""
+#~ "&productname; では、 <command>ssh</command> , <command>scp</command> , "
+#~ "<command>sftp</command> の各コマンドを提供する OpenSSH パッケージが既定で"
+#~ "インストールされます。また、既定の設定では、 &productname; システムへのリ"
+#~ "モートアクセスは OpenSSH を利用した場合にのみできるようになっていて、 "
+#~ "<systemitem class=\"daemon\">sshd</systemitem> を動作させ、ファイアウオー"
+#~ "ルでアクセスを許可するように設定する必要があります。"
+
+#, no-c-format
+#~ msgid ""
+#~ "SSH on &productname; uses cryptographic hardware acceleration if "
+#~ "available. As a result, the transfer of large quantities of data through "
+#~ "an SSH connection is considerably faster than without cryptographic "
+#~ "hardware. As an additional benefit, the CPU will see a significant "
+#~ "reduction in load."
+#~ msgstr ""
+#~ "&productname; での SSH は、ハードウエアアクセラレーション機能が利用できる"
+#~ "環境であれば、それを使用するように設定されています。その結果、 SSH を介し"
+#~ "た巨大なファイルの転送は、暗号化ハードウエア無しの場合に比べてかなり高速に"
+#~ "なるように作られています。また、追加の利点として、 CPU への負荷も少なくな"
+#~ "るようになっています。"
+
+#, no-c-format
+#~ msgid "<command>ssh</command> &mdash;secure shell"
+#~ msgstr "<command>ssh</command> - Secure SHell"

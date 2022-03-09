@@ -3,24 +3,246 @@
 <!ENTITY % entities SYSTEM "generic-entities.ent">
 %entities;
 ]>
-<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-ssh">
+<chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:lang="ja" xml:id="cha-ssh">
 
  <title>SSH: 機密を保持するネットワーク操作</title>
  <info>
   <abstract>
-   <para>ネットワークによる接続が提供されている環境では、一方のホストから他方のホストにログインする必要が生じることがあります。ユーザが認証を目的としてユーザ名とパスワードを送信する際、それをそのままテキスト形式で送ってしまうと、それは容易に傍受することができてしまうため、そのアカウントになりすましてログインできるようになってしまいます。これにより、攻撃者がユーザの保持しているファイルを読み取ることができてしまうほか、管理者や <systemitem class="username">root</systemitem> のアカウントを奪取して不正なアカウントを作成することもできてしまいますし、他のコンピュータを攻撃する際の踏み台として使用することもできてしまいます。その昔は <command>telnet</command> , <command>rsh</command> , <command>rlogin</command> などのコマンドを利用して、ネットワーク上離れた場所との通信を確立していましたが、これらの方法はいずれも盗聴に対する保護が存在せず、暗号化などのセキュリティ機構も備わっていませんでした。それ以外にも、今もなお使用されている FTP などのプロトコルや、 <command>rcp</command> などのプログラムについても、暗号化が行われていませんでした。</para>
+   <para>
+    OpenSSH is the SSH (secure shell) implementation that ships with &sles;,
+    for securing
+    network operations such as remote administration, file transfers, and
+    tunneling insecure protocols. SSH encrypts all traffic, including
+    authentication, to protect against eavesdropping and connection
+    hijacking. This chapter covers basic operations, plus host key
+    rotation and certificate authentication, which are especially useful
+    for managing larger SSH deployments.
+   </para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
    </dm:bugtracker>
   </dm:docmanager>
  </info>
- <para>SSH スイートは認証文字列だけでなく、コンピュータ間でやり取りされている全てのデータを暗号化することによって、必要な保護が得られるような仕組みを提供しています。 SSH でも第三者がデータの流れを傍受することはできてしまいますが、内容は暗号化されているため、暗号鍵を知らない限り元のデータを得ることができなくなっています。そのため、 SSH はインターネットなどの機密保護のないネットワークで、通信の機密を保持するために使用されます。なお、 &productname; での SSH 実装は、 OpenSSH という名称で提供されています。</para>
- <para>&productname; では、 <command>ssh</command> , <command>scp</command> , <command>sftp</command> の各コマンドを提供する OpenSSH パッケージが既定でインストールされます。また、既定の設定では、 &productname; システムへのリモートアクセスは OpenSSH を利用した場合にのみできるようになっていて、 <systemitem class="daemon">sshd</systemitem> を動作させ、ファイアウオールでアクセスを許可するように設定する必要があります。</para>
- <para>&productname; での SSH は、ハードウエアアクセラレーション機能が利用できる環境であれば、それを使用するように設定されています。その結果、 SSH を介した巨大なファイルの転送は、暗号化ハードウエア無しの場合に比べてかなり高速になるように作られています。また、追加の利点として、 CPU への負荷も少なくなるようになっています。</para>
- <sect1 xml:id="sec-ssh-programm">
-  <title><command>ssh</command> - Secure SHell</title>
 
+ <sect1 xml:id="sec-ssh-overview">
+  <title>OpenSSH overview</title>
+  <para>
+   SSH is a protocol that provides end-to-end protection for
+   communications between the computers on your network, or between
+   computers on your network and systems outside your network. SSH is
+   a client-server protocol. Any host running the
+   <systemitem class="daemon">sshd</systemitem>
+   daemon can accept connections from any other host. Every host running
+   <systemitem class="daemon">sshd</systemitem> can have their own custom
+   custom configurations, such as limiting who can have access, and which
+   authentication protocols are allowed.
+  </para>
+  <para>
+   The <package>openssh</package> package installs the server, client,
+   file transfer commands, and helper utilities.
+  </para>
+  <para>
+   OpenSSH supports several different types of authentication:
+  </para>
+  <variablelist>
+   <varlistentry>
+    <term>Password authentication</term>
+    <listitem>
+     <para>
+      Uses your system login and password; you must have a user
+      account on the machine you are connecting to. This is the simplest
+      and most flexible authentication because you can open an SSH session
+      from anywhere, on any machine. It is also the least secure, because it
+      is vulnerable to password-cracking and keystroke logging.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Public key authentication</term>
+    <listitem>
+     <para>
+      Authenticates with your personal SSH public keys, rather than your
+      system login. This is less flexible than password authentication,
+      because you can open SSH sessions only from a machine that holds
+      your private identity key. It is much stronger because it is not
+      vulnerable to password cracking or keystroke logging; an attacker must
+      possess your private key and know its passphrase.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+     <term>Passphrase-less public key authentication</term>
+     <listitem>
+      <para>
+       Public key authentication, using private identity keys that do not
+       have passphrases. This is useful for automated services, like scripts
+       and cron jobs. You must protect private keys, because anyone who
+       gains access to them can easily masquerade as the key owner.
+      </para>
+      <para>
+       A useful alternative is to use <command>ssh-agent</command> and
+       related utilities for managing passphrase-protected keys. These
+       hold passphrases in memory, and apply them as needed.
+      </para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>Certificate authentication</term>
+     <listitem>
+      <para>
+       OpenSSH supports certification authentication, for easier key
+       management and large-scale SSH deployments.
+      </para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
+
+ <para>
+  &productname; installs the OpenSSH package by default, providing the
+  following commands:
+ </para>
+
+ <variablelist>
+  <varlistentry>
+   <term><command>man ssh</command></term>
+   <listitem>
+    <para>
+     The client command for initiating an SSH connection to a remote host.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man scp</command></term>
+   <listitem>
+    <para>
+     Secure file copy from or to a remote host.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man sftp</command></term>
+   <listitem>
+    <para>
+     Secure file transfer between a client and an SFTP server.
+     <!--the SFTP protocol (SSH FTP), a protocol made from scratch
+     and that has nothing to do with FTPS or FTPES (FTP over SSL / TLS).-->
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man ssh-add</command></term>
+   <listitem>
+    <para>
+     Add private key identities to the authentication agent,
+     <command>ssh-agent</command>.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man ssh-agent</command></term>
+   <listitem>
+    <para>
+     Manages a user's private identity keys and their passphrases, for
+     public key authentication. <command>ssh-agent</command> holds the
+     passphrases in memory and applies them as needed, so that users do not
+     have to type their passphrases to authenticate.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man ssh-copy-id</command></term>
+   <listitem>
+    <para>
+     Securely transfer a public key to a remote host, to set up
+     public key authentication.
+    </para>
+   </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term><command>man ssh-keyscan</command></term>
+   <listitem>
+    <para>
+     Collect the public SSH host keys of a number of hosts, for
+     populating <filename>known_hosts</filename> files.
+    </para>
+   </listitem>
+  </varlistentry>
+ </variablelist>
+</sect1>
+
+<sect1 xml:id="sec-ssh-server-config">
+ <title>Server hardening</title>
+ <para>
+  OpenSSH ships with a usable default server configuration, but there are
+  additional steps you can take to secure your server.
+ </para>
+ <para>
+  The default server configuration file, <filename>/etc/ssh/sshd_config</filename>,
+  contains the default configuration, and all the defaults are commented
+  out. Override any default item by entering your own configuration item,
+  uncommented, like the following example that sets a different listening
+  port, and specifies the listening IPv4 address:
+ </para>
+ <screen>
+  #Port 22
+  Port 2022
+
+  #ListenAddress 0.0.0.0
+  ListenAddress 192.168.10.100</screen>
+ <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
+ <screen># Check if the file modes and ownership of the user’s files and
+# home directory are correct before allowing them to login
+StrictModes yes
+
+# If your machine has more than one IP address, define which address or
+# addresses it listens on
+ListenAddress 192.168.10.100
+
+# Allow only members of the listed groups to log in
+AllowGroups ldapadmins backupadmins
+
+# Or, deny certain groups. If you use both, DenyGroups is read first
+DenyGroups users
+
+# Allow or deny certain users. If you use both, DenyUsers is read first
+AllowUsers &exampleuser; &exampleuserII;
+DenyUsers &exampleuserIII;
+
+# Do not allow root logins
+PermitRootLogin no
+
+# Allow root logins only with public key authentication
+PermitRootLogin prohibit-password
+
+# Disable password authentication and allow only public key authentication
+# for all users
+PasswordAuthentication no</screen>
+
+ <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
+ <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
+ <para>
+  The syntax checker only checks for correct syntax, and does not find configuration errors. When you are finished, reload the configuration:
+ </para>
+ <screen>&prompt.root;<command>systemctl restart sshd.service</command>
+    </screen>
+ <para>
+  Check the server's key directories for correct permissions.
+ </para>
+ <para>
+  <filename>/etc/ssh</filename> should be mode 0755/drwxr-xr-x, owned by
+  root:root.
+ </para>
+ <para>
+  Private keys should be 0600/-rw-------, owned by root:root.
+ </para>
+ <para>
+  Private keys should be 0644/-rw-r--r--, owned by root:root.
+ </para>
+</sect1>
+
+<sect1 xml:id="sec-ssh-programm">
+  <title>Password authentication</title>
   <para><command>ssh</command> コマンドを使用することで、ネットワーク上離れたシステムにログインして対話的な作業を行うことができます。たとえば &exampleuser; というユーザ名で <literal>&exampleserver;</literal> というホストにログインしたい場合は、下記のいずれかのコマンドを実行します:</para>
 
 <screen>&prompt.user;ssh &exampleuser_plain;@&exampleserver;
@@ -273,7 +495,7 @@ RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I
 Accept updated hostkeys? (yes/no):</screen>
     <para><literal>UpdateHostKeys ask</literal> を <literal>UpdateHostKeys yes</literal> に設定することで、変更された鍵を自動的に受け付けるように設定することもできますが、鍵の変更について問い合わせを行うように設定したほうが安全です。</para>
     <para>さらに詳しい情報を知りたい場合は、下記を参照してください:</para>
-    
+
 <itemizedlist>
     <listitem>
       <para><xref linkend="sec-ssh-authentic-gen-key"/></para>
