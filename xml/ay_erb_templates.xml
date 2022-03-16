@@ -15,44 +15,39 @@
  <para>ERB テンプレートとは、プロファイル内に Ruby 言語のコードを埋め込むことのできる機能で、インストール時にプロファイルを修正する機能を提供します。この仕組みを利用することで、システムの状態を検知してプロファイル内の設定値を調整したり、セクションの追加や削除などを行ったりすることができます。</para>
  <para>ERB 機能を有効化するには、プロファイルのファイル名に <filename>.erb</filename> という拡張子を追加します (例: <filename>autoyast.xml.erb</filename>) 。このような仕組みが存在することから、ルールやクラスと ERB テンプレートを同時に使用することはできません。</para>
  <sect1 xml:id="erb">
-  <title>What is ERB?</title>
+  <title>ERB とは？</title>
 
-  <para><literal>ERB</literal> とは <emphasis>Embedded Ruby</emphasis> の略で、 Ruby プログラミング言語の力を借りて様々なコンテンツ生成を行うための仕組みです。 <literal>ERB</literal> を利用してプロファイル内に Ruby コードを含めることで、インストール先のシステムに依存した様々なプロファイル調整を行うことができるようになります。</para>
+  <para>ERB とは <emphasis>Embedded Ruby</emphasis> の略で、 Ruby プログラミング言語の力を借りて様々なコンテンツ生成を行うための仕組みです。 ERB を利用してプロファイル内に Ruby コードを含めることで、インストール先のシステムに依存した様々なプロファイル調整を行うことができるようになります。</para>
 
-  <para>ERB を使用する場合、 Ruby 言語のコードは <literal>&lt;%</literal> 記号から <literal>%&gt;</literal> 記号までの間に記述します。また、コマンドの出力をそのままプロファイルに入れ込みたい場合は、単純にイコール記号 ( <literal>=</literal> ) を追加します。</para>
+  <para>ERB を使用する場合、 Ruby 言語のコードは <literal>&lt;%</literal> 記号から <literal>%&gt;</literal> 記号までの間に記述します。また、コマンドの出力をそのままプロファイルに入れ込みたい場合は、イコール記号 ( <literal>=</literal> ) で設定します。</para>
 
   <example xml:id="simple-erb">
    <title>ERB を利用したファイルの取り込み</title>
 <screen>&lt;bootloader&gt;
   &lt;% require "open-uri" %&gt;
   &lt;%= URI.open("http://192.168.1.1/profiles/bootloader-common.xml").read %&gt;
-&lt;/bootloader&gt;</screen>
-  </example>
-
- <para>
-   You can use Ruby facilities to run arbitrary commands. If you want
-   to get the output of a command, then enclose it between backticks.
-   If you want to know whether a command was successful or not, run the
-   command with the <literal>system</literal> function.
-  </para>
-  <example os="sles;osuse">
-   <title>Running commands with Ruby</title>
-<screen>
-&lt;% files = `ls` %&gt; &lt;!-- files contains the output of the command (for instance "file1\nfile2\nfile3") --&gt;
-&lt;% success = system("dmidecode | grep some-model") %&gt; &lt;!-- success contains true or false --&gt;
+&lt;/bootloader&gt; &lt;!-- this line gets replaced with the content of bootloader-common.xml --&gt;
 </screen>
   </example>
 
-  <para>
-   Also, you can use more advanced Ruby code structures such as conditions
-   and loops.
-  </para>
+ <para>Ruby の仕組みを利用することで、任意のコマンドを実行することもできます。たとえばコマンドの出力結果を取得したい場合は、コマンドの前後をバッククオートで括ります。また、コマンドの実行が成功したかどうかを調べたい場合は、 <literal>system</literal> 関数を使用してください。</para>
   <example os="sles;osuse">
-   <title>Using Ruby structures</title>
+   <title>Ruby におけるコマンドの実行</title>
+<screen>
+&lt;% files = `ls` %&gt; &lt;!-- files にはコマンドの実行結果が入ります (例: "file1
+file2
+file3") --&gt;
+&lt;% success = system("dmidecode | grep some-model") %&gt; &lt;!-- success には true もしくは false のいずれかが入ります --&gt;
+</screen>
+  </example>
+
+  <para>このほか条件句やループなど、高度な Ruby 言語構造を含めることもできます。</para>
+  <example os="sles;osuse">
+   <title>Ruby 言語構造の使用</title>
 <screen>
 &lt;% ip_forward = File.read("/proc/sys/net/ipv4/ip_forward").strip %&gt;
 &lt;% if ip_forward == "1" %&gt;
-  &lt;!-- something --&gt;
+  &lt;!-- 何らかの処理 --&gt;
 &lt;% end %&gt;
 
 &lt;% files = `ls /tmp/config/*.xml` %&gt;
@@ -71,15 +66,11 @@
   <para>テンプレートヘルパーは Ruby メソッド集であり、プロファイル内で使用することで様々なインストール先システムの情報を収集することができます。</para>
 
   <sect2 xml:id="erb-boot-efi-helper">
-   <title><literal>:id</literal></title>
-   <para>
-    <literal>boot_efi?</literal> is a boolean helper that returns
-    whether the system is booted using EFI. In the example below, the
-    profile configures the bootloader according to the current boot mode.
-   </para>
+   <title><literal>boot_efi?</literal></title>
+   <para><literal>boot_efi?</literal> はブール値のヘルパーで、システムが EFI で起動されているかどうかを表します。下記の例では、現在の起動モードに合わせてブートローダを設定しています。</para>
 
   <example os="sles;osuse">
-   <title>Configuring the boot loader</title>
+   <title>ブートローダの設定</title>
 <screen>
 &lt;% if env.boot_efi? %&gt;
   &lt;loader_type&gt;grub2-efi&lt;/loader_type&gt;
@@ -356,19 +347,11 @@
   </sect2>
 
   <sect2 xml:id="erb-hardware-helper">
-   <title><literal>:name</literal></title>
-   <para>
-    The <literal>hardware</literal> helper provides additional hardware information.
-    It returns all the information from <literal>hwinfo</literal> command. You can
-    use this helper as an escape hatch for those cases in which the information available
-    through the described helpers is not enough. In the next example,
-    <literal>hardware</literal> helper is used to filter USB devices. Check
-    <xref linkend="erb-running-helpers"/> to learn how to inspect all the information
-    provided by the <literal>hardware</literal> helper.
-   </para>
+   <title><literal>hardware</literal></title>
+   <para><literal>hardware</literal> ヘルパーは追加のハードウエア情報を提供する仕組みです。ここには <literal>hwinfo</literal> コマンドからの全ての情報が含まれていて、その他のヘルパーでは不十分な場合の緊急手段として使用することができます。たとえば下記の例では、 <literal>hardware</literal> ヘルパーを利用して USB デバイスのフィルタリングを行っています。 <literal>hardware</literal> ヘルパーで提供される情報についての詳細は、 <xref linkend="erb-running-helpers"/> をお読みください。</para>
 
   <example os="sles;osuse">
-   <title>Filtering USB devices</title>
+   <title>USB デバイスのフィルタ</title>
 <screen>
 &lt;% usb_disks = hardware["disk"].select { |d| d["driver"] != "usb-storage" } %&gt;
 </screen>
@@ -377,21 +360,14 @@
  </sect1>
 
  <sect1 xml:id="erb-running-helpers">
-  <title>Running ERB helpers</title>
+  <title>ERB ヘルパーの実行</title>
 
-  <para>
-   You can use the Ruby console to run &ay; ERB
-   helpers and find out what they offer. All ERB helpers are
-   accessed through an instance of the
-   <literal>Y2Autoinstallation::Y2ERB::TemplateEnvironment</literal> class. Start the
-   Ruby interactive interpreter by running, as root:
-   <literal>irb -ryast -rautoinstall/y2erb</literal>.
-  </para>
+  <para>&ay; の ERB ヘルパーを実行するにあたって Ruby コンソールを使用して結果を確認することができます。 ERB ヘルパーは <literal>Y2Autoinstallation::Y2ERB::TemplateEnvironment</literal> クラスのインスタンスを介してアクセスできます。下記のようにして root で Ruby インタプリタを起動して確認してください: <literal>irb -ryast -rautoinstall/y2erb</literal></para>
 
   <example os="sles;osuse">
-   <title>Running helpers</title>
+   <title>ヘルパーの実行</title>
 <screen>
-irb &gt; env = Y2Autoinstallation::Y2ERB::TemplateEnvironment.new  # the env variable gives access to the helpers
+irb &gt; env = Y2Autoinstallation::Y2ERB::TemplateEnvironment.new  # env 変数にはヘルパーのインスタンスが代入されます
 
 irb &gt; env.disks
 =&gt;
@@ -414,88 +390,55 @@ irb &gt; env.hardware["architecture"]
  </sect1>
 
  <sect1 xml:id="erb-rendering-profile">
-  <title>Rendering ERB profiles</title>
+  <title>ERB プロファイルの生成</title>
 
-  <para>
-   The &ay; command line provides a <literal>check-profile</literal> command that can be used
-   to generate a profile from a ERB file. This command asks &ay; to parse, run the ERB code, and
-   generate the resulting profile. You can inspect the rendered profile to check that everything
-   worked as expected. See the command help for all the options if supports:
-   <literal>autoyast check-profile --help</literal>.
-   In the following example <literal>check-profile</literal> asks &ay; to download and parse
-   the profile, interpret the ERB code and run the pre-scripts. The result
-   will be dumped to the <literal>result.xml</literal> file.
-  </para>
+  <para>&ay; のコマンドラインでは <literal>check-profile</literal> コマンドが提供されています。これは ERB ファイルからプロファイルを生成するための仕組みで、このコマンドは &ay; に対して ERB コードの処理と実行を依頼して、プロファイルの生成を行います。これを利用することで、期待通りにプロファイルが生成されるかどうかを確認することができます。サポートされている全てのオプションを表示するには、 <literal>autoyast check-profile --help</literal> のように入力して実行してください。たとえば下記の例では、 &ay; に対してプロファイルのダウンロードと解釈を依頼して、 ERB コードの実行と事前スクリプトの実行までを行っています。実行結果は <literal>result.xml</literal> ファイルに出力されます。</para>
 
   <example os="sles;osuse">
-   <title>Rendering profile</title>
+   <title>プロファイルの生成</title>
 <screen>
  &prompt.sudo;yast2 autoyast check-profile filename=<replaceable>http://192.168.1.100</replaceable>/autoinst.erb output=result.xml run-scripts=true run-erb=true
 </screen>
   </example>
   <warning>
-   <title><literal>:serial</literal></title>
-   <para>
-    In most cases, <literal>check-profile</literal> requires root permissions,
-    so be careful when running pre-installation scripts and ERB profiles as root.
-    Use only profiles that you trust.
-   </para>
+   <title><literal>check-profile</literal> の許可について</title>
+   <para>ほとんどの場合、 <literal>check-profile</literal> には root のアクセス権限が必要となります。そのため、インストール前スクリプトや ERB プロファイルを root で動作させることになることに注意してください。信頼できるプロファイルのみを指定してください。</para>
   </warning>
  </sect1>
 
  <sect1 xml:id="erb-debugging-erb">
-  <title>Debugging ERB profiles</title>
+  <title>ERB プロファイルのデバッグ</title>
 
-  <para>
-   For those cases in which you would like to stop the ERB evaluation
-   and check what is happening, &yast; offers integration with the
-   <literal>byebug</literal>
-   debugger. Install the <literal>rubygem(byebug)</literal> package and set
-   the <literal>Y2DEBUGGER</literal> environment variable to 1.
-  </para>
+  <para>ERB の処理や動作を 1 つずつ確認していきたい場合は、 &yast; の提供する <literal>byebug</literal> デバッガをお使いください。具体的には <literal>rubygem(byebug)</literal> パッケージをインストールしたあと、 <literal>Y2DEBUGGER</literal> 環境変数を 1 に設定します。</para>
 
   <example os="sles;osuse">
-   <title>Preparing the debug environment</title>
+   <title>デバッグ環境の準備</title>
 <screen>
 &prompt.sudo;zypper --non-interactive in "rubygem(byebug)"
 &prompt.sudo;Y2DEBUGGER=1 yast2 autoyast check-profile ...
 </screen>
   </example>
 
-  <para>
-   Adding breakpoints is as easy as adding &lt;% byebug %&gt; where you want to stop.
-   For more information about <literal>byebug</literal>, see
-   <link xlink:href="https://github.com/deivid-rodriguez/byebug"/>.
-  </para>
+  <para>ブレークポイントを追加したい場合は、その箇所に &lt;% byebug %&gt; を追加するだけです。 <literal>byebug</literal> に関する詳細は、 <link xlink:href="https://github.com/deivid-rodriguez/byebug"/> (英語) をお読みください。</para>
 
   <example os="sles;osuse">
-   <title>Adding a breakpoint</title>
+   <title>ブレークポイントの追加</title>
 <screen>
 &lt;% byebug %&gt;
 &lt;% if system("dmidecode | grep some-model") %&gt;
-  &lt;!-- do something --&gt;
+  &lt;!-- 何らかの処理 --&gt;
 %&lt;% end %&gt;
 </screen>
   </example>
  </sect1>
 
  <sect1 xml:id="erb-comparisson">
-  <title>ERB vs. rules and classes</title>
+  <title>ERB とルール／クラス</title>
 
-  <para>
-   Although both ERB and rules/classes enable generating profiles
-   dynamically, in general ERB profiles are easier to read and
-   understand. One important difference is that rules and classes can
-   merge profiles,
-   and ERB can not. See more about merging profiles at
-   <xref linkend="rulesandclass"/>. On the other hand, ERB brings all
-   the power of a high level language, Ruby. Let's see an example
-   using both. In the following example, we want to place <literal>/home</literal>
-   directory in <literal>/dev/sdb</literal> if it exists.
-  </para>
+  <para>ERB とルール／クラスのどちらもプロファイルを動的に生成する仕組みですが、一般的には ERB のほうが読みやすく理解しやすい仕組みです。大きく異なる点として、ルールとクラスがプロファイルの合成に対応しているのに対して、 ERB は対応していないことがあげられます。プロファイルの合成に関する詳細は、 <xref linkend="rulesandclass"/> をお読みください。その一方 ERB では、 Ruby という高度な言語の威力を存分に発揮することができます。たとえば下記の 2 つの例では、 <literal>/dev/sdb</literal> が存在した場合、 <literal>/home</literal> をそのデバイス内に作成するよう指示しています。</para>
 
   <example os="sles;osuse">
-   <title>Rules and classes</title>
+   <title>ルールとクラス</title>
 <screen>
 &lt;rule&gt;
   &lt;custom1&gt;
