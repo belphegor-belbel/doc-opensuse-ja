@@ -4,14 +4,10 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-nvdimm">
- <title>Persistent memory</title>
+ <title>永続型メモリ</title>
  <info>
   <abstract>
-   <para>
-    This chapter contains additional information about using &sle; with
-    non-volatile main memory, also known as <emphasis>Persistent Memory</emphasis>,
-    comprising one or more NVDIMMs.
-   </para>
+   <para>本章では、 1 枚以上の NVDIMM から構成される不揮発性メインメモリ (<emphasis>永続型メモリ</emphasis> と呼ばれる場合もあります) を &sle; で使用するための情報を記述しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -19,128 +15,56 @@
   </dm:docmanager>
  </info>
  <sect1 xml:id="sec-nvdimm-intro">
-  <title>Introduction</title>
+  <title>概要</title>
 
-  <para>
-   Persistent memory is a new type of computer storage, combining speeds
-   approaching those of dynamic RAM (DRAM) along with RAM's byte-by-byte
-   addressability, plus the permanence of solid-state disks (SSDs).
-  </para>
+  <para>永続型メモリは新しいタイプのコンピュータストレージで、 DRAM (ダイナミック RAM) の高速性とバイト単位でのアクセス機能を維持したまま、ソリッドステートディスク (SSD) の永続性を付加した仕組みを指します。</para>
 
-  <para>
-   &suse; currently supports the use of persistent memory with &sls; on machines
-   with the &x86-64; and &power; architectures.
-  </para>
+  <para>&suse; では現在、 &x86-64; および &power; の各アーキテクチャで動作する &sls; で、永続型メモリの使用をサポートしています。</para>
   
-  <para>
-   Like conventional RAM, persistent memory is installed directly into
-   motherboard memory slots. As such, it is supplied in the same physical form
-   factor as RAM&mdash;as DIMMs. These are known as NVDIMMs: non-volatile dual
-   inline memory modules.
-  </para>
+  <para>一般的な RAM と同様に、永続型メモリはマザーボードのメモリスロットに直接差し込む形態で設置を行います。つまりこれは、 DIMM と呼ばれる通常型の RAM と物理的に全く同じ構造であることを意味しています。このような永続型メモリを NVDIMM (不揮発型 DIMM) と呼ぶ場合もあります。</para>
 
-  <para>
-   Unlike RAM, though, persistent memory is also similar to flash-based SSDs in
-   several ways. Both are based on forms of solid-state memory circuitry, but 
-   despite this, both provide non-volatile storage: Their contents are retained
-   when the system is powered off or restarted. For both forms of medium,
-   writing data is slower than reading it, and both support a limited number of
-   rewrite cycles. Finally, also like SSDs, sector-level access to persistent
-   memory is possible if that is more suitable for a particular application.
-  </para>
+  <para>ただし RAM とは異なり、永続型メモリは SSD のようなフラッシュメモリとも類似しています。 SSD も永続型メモリも半導体メモリではありますが、いずれも揮発性がありません。つまり、システムの電源を落としたり、再起動したりしても、中に書き込まれた内容はそのまま保持されるということを意味しています。またどちらの媒体も、書き込みのほうが読み込みよりも遅く、書き換え回数にも制限が存在しています。このほか SSD と同様に、永続型メモリはセクタ単位でのアクセスにも対応し、アプリケーション側からの要件に合わせることができるようになっています。</para>
 
-  <para>
-   Different models use different forms of electronic storage medium, such as
-   Intel 3D XPoint, or a combination of NAND-flash and DRAM. New forms of
-   non-volatile RAM are also in development. This means that different vendors
-   and models of NVDIMM offer different performance and durability
-   characteristics.
-  </para>
+  <para>また、不揮発型メモリは Intel 3D XPoint という特殊なフラッシュメモリを搭載したものや、 NAND フラッシュと DRAM の両方を搭載したものなど、様々な構成で提供されています。このような新しい不揮発型メモリは現在も開発が続けられていて、様々な販売元がさらに性能を強化し耐久性を高めるよう新製品が作り続けられています。</para>
 
-  <para>
-   Because the storage technologies involved are in an early stage of
-   development, different vendors' hardware may impose different limitations.
-   Thus, the following statements are generalizations.
-  </para>
+  <para>このような永続型メモリの技術は未だ発展途上の段階にあるため、販売元によって様々な制限が存在する場合があります。そのため本章では、一般論のみを説明しています。</para>
   
-  <para>
-   Persistent memory is up to ten times slower than DRAM, but around a thousand
-   times faster than flash storage. It can be rewritten on a byte-by-byte basis
-   rather than flash memory's whole-sector erase-and-rewrite process. Finally, 
-   while rewrite cycles are limited, most forms of persistent memory can handle
-   millions of rewrites, compared to the thousands of cycles of flash storage.
-  </para>
+  <para>永続型メモリは DRAM と比べると 10 倍程度遅い仕組みですが、フラッシュメモリと比較すると 1000 倍程度高速です。フラッシュメモリは一般にセクタ単位で消去して書き換えを行いますが、永続型メモリは 1 バイト単位で書き換えが可能です。また、書き換え回数には制限があるものの、ほとんどの永続型メモリは 100 万回程度の書き換えに対応しています。これはフラッシュメモリの 1000 回程度に比べるとずっと大きな値です。</para>
   
-  <para>
-   This has two important consequences:
-  </para>
+  <para>このようなことから、下記の 2 つの結果をもたらします:</para>
 
   <itemizedlist>
    <listitem>
-    <para>
-     It is not possible with current technology to run a system with only
-     persistent memory and thus achieve completely non-volatile main memory. You
-     must use a mixture of both conventional RAM and NVDIMMs. The operating
-     system and applications will execute in conventional RAM, with the NVDIMMs
-     providing very fast supplementary storage.
-    </para>
+    <para>現在の技術では、システムのメモリ全体を永続型メモリに置き換えることはできず、完全な永続性は提供できません。通常型の RAM と NVDIMM の両方を組み合わせて使用することになります。オペレーティングシステムやアプリケーションは通常型の RAM 内で実行し、 NVDIMM は高速な補助型ストレージとして使用することになります。</para>
    </listitem>
    <listitem>
-    <para>
-     The performance characteristics of different vendors' persistent memory
-     mean that it may be necessary for programmers to be aware of the hardware
-     specifications of the NVDIMMs in a particular server, including how many
-     NVDIMMs there are and in which memory slots they are fitted. This will
-     obviously impact hypervisor use, migration of software between different
-     host machines, and so on.
-    </para>
+    <para>永続型メモリは販売元によって様々な性能の差異や特徴があることから、プログラマ側はサーバ内の NVDIMM のハードウエア特性を知っておく必要があります。これには NVDIMM の容量のほか、使用しているメモリスロットの場所も含まれます。これによってハイパーバイザ用途での使用やホストマシン間のソフトウエア移行など、様々な箇所の性能に影響があるためです。</para>
    </listitem>
   </itemizedlist>
 
-  <para>
-   This new storage subsystem is defined in version 6 of the ACPI standard.
-   However, <filename>libnvdimm</filename> supports pre-standard NVDIMMs and
-   they can be used in the same way.
-  </para>
+  <para>この新しいストレージサブシステムは、 ACPI のバージョン 6 標準で規定されています。ただし、 <filename>libnvdimm</filename> は標準化される前の NVDIMM のみに対応しているため、その仕組みでのみ使用できることに注意してください。</para>
   
  </sect1>
  <sect1 xml:id="sec-nvdimm-terms">
-  <title>Terms</title>
+  <title>用語</title>
 
   <variablelist>
    <varlistentry>
-    <term>Region</term>
+    <term>リージョン</term>
     <listitem>
-     <para>
-      A <emphasis>region</emphasis> is a block of persistent memory that can
-      be divided up into one or more <emphasis>namespace</emphasis>s. You
-      cannot access the persistent memory of a region without first allocating
-      it to a namespace.
-     </para>
+     <para><emphasis>リージョン</emphasis> とは永続型メモリの中のブロックを意味する用語で、 1 つまたは複数の <emphasis>ネームスペース</emphasis> が含まれるものです。永続型メモリを使用する際には、まずネームスペースに割り当ててからアクセスを行います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Namespace</term>
+    <term>ネームスペース</term>
     <listitem>
-     <para>
-      A single contiguously-addressed range of non-volatile storage, comparable
-      to NVM Express SSD namespaces, or to SCSI Logical Units (LUNs). Namespaces
-      appear in the server's <filename>/dev</filename> directory as separate
-      block devices. Depending on the method of access required, namespaces can
-      either amalgamate storage from multiple NVDIMMs into larger volumes, or
-      allow it to be partitioned into smaller volumes.
-     </para>
+     <para>永続型メモリ内の連続したアドレス領域を指す用語で、 NVM Express SSD におけるネームスペースや SCSI での Logical Unit (LUN) と同じような意味を持ちます。ネームスペースはサーバ内の <filename>/dev</filename> ディレクトリ内に個別のブロックデバイスとして提供されます。必要なアクセス方式によっても異なりますが、複数の NVDIMM からのストレージを組み合わせてネームスペースを大きなボリュームにしたり、小さなボリュームに分割したりすることもできます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>Mode</term>
+    <term>モード</term>
     <listitem>
-     <para>
-      Each namespace also has a <emphasis>mode</emphasis> that defines which
-      NVDIMM features are enabled for that namespace. Sibling namespaces of the
-      same parent region will always have the same type, but might be
-      configured to have different modes. Namespace modes include:
-     </para>
+     <para>それぞれのネームスペースには <emphasis>モード</emphasis> が設定されます。これはネームスペース内で有効化する NVDIMM の機能を意味するもので、同じ親リージョンを共有する兄弟姉妹間のネームスペースでは同じ型になるものの、異なるモードを設定することができます。ネームスペースのモードには下記のようなものがあります:</para>
      <variablelist>
       <varlistentry>
        <term>devdax</term>
@@ -215,7 +139,7 @@
         </para>
         <variablelist>
          <varlistentry>
-          <term>PMEM with DAX</term>
+          <term>DAX を使用する PMEM</term>
           <listitem>
            <para>
             A PMEM namespace configured for Direct Access (DAX) means that
@@ -309,10 +233,10 @@
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-nvdimm-uses">
-  <title>Use cases</title>
+  <title>用途</title>
 
   <sect2 xml:id="sec-nvdimm-uses-pmem">
-   <title>PMEM with DAX</title>
+   <title>DAX を使用する PMEM</title>
    <para>
     It is important to note that this form of memory access is
     <emphasis>not</emphasis> transactional. In the event of a power outage or
@@ -321,8 +245,7 @@
     partially-written data.
    </para>
    <sect3>
-    <title>
-     Applications that benefit from large amounts of byte-addressable storage</title>
+    <title>1 バイト単位でアクセス可能な巨大ストレージとしての使用</title>
     <para>
      If the server will host an application that can directly use large amounts
      of fast storage on a byte-by-byte basis, the programmer can use the <literal>mmap</literal>
@@ -331,7 +254,7 @@
     </para>
    </sect3>
    <sect3>
-    <title>Avoiding use of the kernel page cache</title>
+    <title>カーネルのページキャッシュの回避について</title>
     <para>
      Avoid using the kernel page cache if you wish to conserve the use of RAM for the page cache, and instead
      give it to your applications. For instance, non-volatile memory could be
@@ -343,7 +266,7 @@
   </sect2>
 
   <sect2>
-   <title>PMEM with BTT</title>
+   <title>BTT を使用する PMEM</title>
    <para>
     This is useful when you want to use the persistent memory on a set of
     NVDIMMs as a disk-like pool of very fast storage. For example, placing
@@ -366,7 +289,7 @@
  </sect1>
 
  <sect1 xml:id="sec-nvdimm-tools">
-  <title>Tools for managing persistent memory</title>
+  <title>永続型メモリを管理するためのツール</title>
 
   <para>
    To manage persistent memory, it is necessary to install the
@@ -507,10 +430,10 @@
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-nvdimm-setup">
-  <title>Setting up persistent memory</title>
+  <title>永続型メモリの設定</title>
 
   <sect2 xml:id="sec-nvdimm-setup-view">
-   <title>Viewing available NVDIMM storage</title>
+   <title>利用可能な NVDIMM ストレージの表示</title>
    <para>
     The <command>ndctl</command> <literal>list</literal> command can be used to
     list all available NVDIMMs in a system.
@@ -590,7 +513,7 @@
   </sect2>
 
   <sect2 xml:id="sec-nvdimm-setup-dax">
-   <title>Configuring the storage as a single PMEM namespace with DAX</title>
+   <title>DAX を利用し単一の PMEM ネームスペースとして使用する設定</title>
    <para>
     For the first example, we will configure our three NVDIMMs into a single
     PMEM namespace with Direct Access (DAX).
@@ -672,7 +595,7 @@ realtime =none            extsz=4096   blocks=0, rtextents=0</screen>
     <literal>mmap</literal> mappings.
    </para>
    <sect3 xml:id="sec-nvdimm-setup-deldax">
-    <title>Removing a namespace</title>
+    <title>ネームスペースの削除</title>
     <para>
      Before creating any other type of volume that uses the same storage, we
      must unmount and then remove this PMEM volume.
@@ -695,7 +618,7 @@ destroyed 1 namespace</screen>
   </sect2>
 
   <sect2 xml:id="sec-nvdimm-setup-btt">
-   <title>Creating a PMEM namespace with BTT</title>
+   <title>BTT を利用した PMEM ネームスペースの作成</title>
    <para>
      BTT provides sector write atomicity, which makes it a good choice
      when you need data protection, for example for Ext4 and XFS journals. 
@@ -756,7 +679,7 @@ I/O size (minimum/optimal): 4096 bytes / 4096 bytes</screen>
   </sect2>
   
   <sect2 xml:id="sec-nvdimm-fs-journal">
-      <title>Placing the file system journal on PMEM/BTT</title>
+      <title>PMEM/BTT 内へのファイルシステムジャーナルの配置</title>
    <para>
       When you place the file system journal on a separate device, it
       must use the same file system block size as the file system. Most 
@@ -786,7 +709,7 @@ I/O size (minimum/optimal): 4096 bytes / 4096 bytes</screen>
  </sect1>
 
  <sect1 xml:id="sec-nvdimm-moreinfo">
-  <title>More information</title>
+  <title>さらなる情報</title>
 
   <para>
    More about this topic can be found in the following list:
