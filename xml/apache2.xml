@@ -7,7 +7,7 @@
  <title>Apache HTTP サーバ</title>
  <info>
   <abstract>
-   <para><link xlink:href="http://www.netcraft.com/"/> の調査によると、 Apache HTTP サーバ (Apache) は世界で最も使われている Web サーバです。この Web サーバは Apache Software Foundation ( <link xlink:href="http://www.apache.org/"/> ) によって開発されているソフトウエアで、ほとんどのオペレーティングシステムで動作します。 &productnamereg; では Apache バージョン 2.4 が同梱されています。本章では、 Web サーバのインストールから設定のほか、 SSL や CGI などの追加モジュールの設定方法やトラブルシューティングまでの範囲を説明しています。</para>
+   <para><link xlink:href="http://www.netcraft.com/"/> や <link xlink:href="https://w3techs.com/"/> の調査によると、 Apache HTTP サーバ (Apache) は世界で最も有名な Web サーバのうちの 1 つです。この Web サーバは Apache Software Foundation ( <link xlink:href="http://www.apache.org/"/> ) によって開発されているソフトウエアで、ほとんどのオペレーティングシステムで動作します。 &productnamereg; では Apache バージョン 2.4 が同梱されています。本章では Apache のインストールから設定のほか、 SSL や CGI などの追加モジュールの設定方法やトラブルシューティングまでの範囲を説明しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -59,10 +59,10 @@
    <title>起動</title>
    <para>Apache はシステムの起動時に自動的に開始することができるほか、手作業で開始することもできます。</para>
    <para>Apache をシステムの起動時に自動的に開始したい場合は、 <literal>multi-user.target</literal> と <literal>graphical.target</literal> のターゲット内に Apache を追加します。具体的には、下記のコマンドを実行します:</para>
-<screen>&prompt.sudo;systemctl enable apache2</screen>
+<screen>&prompt.sudo;systemctl enable apache2.service</screen>
   
    <para>&productname; における <systemitem class="daemon">systemd</systemitem> のターゲットに関する説明や、 &yast; の <guimenu>&ycc_runlevel;</guimenu> の説明について、詳しくは <xref linkend="sec-boot-runlevel-edit"/> をお読みください。</para>
-   <para>シェルを利用して Apache を手作業で開始したい場合は、 <command>systemctl start apache2</command> を実行します。</para>
+   <para>シェルを利用して Apache を手作業で開始したい場合は、 <command>systemctl start apache2.service</command> を実行します。</para>
    <procedure>
     <title>Apache が動作しているかどうかの確認</title>
     <para>Apache の開始時に何もエラーメッセージが表示されない場合は、 Web サーバが問題なく起動して動作していることを表しています。動作確認を行うには、下記の手順で行います:</para>
@@ -95,7 +95,7 @@
 
   <important>
    <title>設定変更後の Apache の再読み込みもしくは再起動について</title>
-   <para>設定を変更した場合は、設定を反映させるために Apache の再読み込み (場合によっては再起動) が必要となります。手作業で再読み込みを行いたい場合は、 <command>systemctl reload apache2</command> を実行してください。また、再起動は <xref linkend="sec-apache2-start-stop"/> に示されているいずれかの方法を実行してください。</para>
+   <para>設定を変更した場合は、設定を反映させるために Apache の再読み込み (場合によっては再起動) が必要となります。手作業で再読み込みを行いたい場合は、 <command>systemctl reload apache2.service</command> を実行してください。また、再起動は <xref linkend="sec-apache2-start-stop"/> に示されているいずれかの方法を実行してください。</para>
    <para>&yast; で Apache を設定した場合は、 <guimenu>HTTP サービス</guimenu> が <guimenu>有効</guimenu> に設定されていると、再読み込みを自動的に実施するようになっています。詳しくは <xref linkend="sec-apache2-configuration-yast-server-configuration"/> をお読みください。</para>
   </important>
 
@@ -128,14 +128,17 @@
      |
      |- default-server.conf
      |- errors.conf
+     |- global.conf
      |- httpd.conf
      |- listen.conf
+     |- loadmodule.conf
      |- magic
      |- mime.types
      |- mod_*.conf
+     |- protocols.conf
      |- server-tuning.conf
-     |- ssl.*
      |- ssl-global.conf
+     |- ssl.*
      |- sysconfig.d
      |   |
      |   |- global.conf
@@ -172,12 +175,9 @@
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term><filename>mod_*.conf</filename></term>
+      <term><filename>global.conf</filename></term>
       <listitem>
-       <para>
-        General configuration of the main Web server process, such as the access
-        path, error logs, or the level of logging.
-       </para>
+       <para>Web サーバのメインプロセスに対する一般的な設定を記述するファイルです。アクセスパスやエラーログ、ログレベルなどの設定が含まれています。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -211,11 +211,9 @@
       </listitem>
      </varlistentry>
      <varlistentry>
-      <term><filename>errors.conf</filename></term>
+      <term><filename>protocols.conf</filename></term>
       <listitem>
-       <para>
-        Configuration directives for serving pages over HTTP2 connection.
-       </para>
+       <para>HTTP2 でページを提供するための設定ディレクティブが含まれるファイルです。</para>
       </listitem>
      </varlistentry>
      <varlistentry>
@@ -414,37 +412,37 @@ Allow from all</screen>
 
   <variablelist>
    <varlistentry>
-    <term><command>systemctl status apache2</command></term>
+    <term><command>systemctl status apache2.service</command></term>
     <listitem>
      <para>Apache が動作しているかどうかを調べます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>systemctl start apache2</command></term>
+    <term><command>systemctl start apache2.service</command></term>
     <listitem>
      <para>Apache が動作していない場合、 Apache を開始します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>systemctl stop apache2</command></term>
+    <term><command>systemctl stop apache2.service</command></term>
     <listitem>
      <para>親プロセスを終了させることで Apache を終了します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>systemctl restart apache2</command></term>
+    <term><command>systemctl restart apache2.service</command></term>
     <listitem>
-     <para>Apache を一旦停止して起動し直します。 Apache が動作中でなかった場合は、単純に開始します。</para>
+     <para>Apache を一旦停止して起動し直します。 Apache が動作中でなかった場合は、単純に開始のみを行います。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>systemctl try-restart apache2</command></term>
+    <term><command>systemctl try-restart apache2.service</command></term>
     <listitem>
      <para>動作中の場合にのみ、 Apache をいったん停止して起動し直します。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>systemctl reload apache2</command></term>
+    <term><command>systemctl reload apache2.service</command></term>
     <listitem>
      <para>全ての起動済み Apache プロセスに対して、現在処理中のリクエストの処理を完了してから終了するように促します。それぞれのプロセスが終了したタイミングで新しいプロセスを起動して入れ替えていき、最終的に Apache が完全に <quote>再起動</quote> できるようにします。</para>
      <tip>
@@ -480,7 +478,7 @@ Allow from all</screen>
     </listitem>
    </varlistentry> -->
    <varlistentry>
-    <term><command>systemctl stop apache2</command></term>
+    <term><command>systemctl stop apache2.service</command></term>
     <listitem>
      <para>Web サーバを停止しますが、その際に <systemitem>GracefulShutdownTimeout</systemitem> で指定された長さの時間だけ終了を待機します。これにより、既存のリクエスト処理を正常に終了させることができるようになります。</para>
     </listitem>
@@ -585,7 +583,7 @@ sknorr, 2017-06-07 -->
 
   <sect2 xml:id="sec-apache2-modules-activating">
    <title>有効化と無効化</title>
-   <para>モジュールの有効化と無効化は、手作業で実施することができるほか、 &yast; でも設定することができます。 &yast; では、 <xref linkend="sec-apache2-configuration-yast-wizard"/> で説明しているとおり、スクリプト言語モジュール (PHP 5 および Python) を有効化もしくは無効化することができます。その他のモジュールの有効化と無効化については、 <xref linkend="sec-apache2-configuration-yast-server-configuration-modules"/> で説明しています。</para>
+   <para>モジュールの有効化と無効化は、手作業で実施することができるほか、 &yast; でも設定することができます。 &yast; では、 <xref linkend="sec-apache2-configuration-yast-wizard"/> で説明しているとおり、スクリプト言語モジュール (PHP &php-version; および Python) を有効化もしくは無効化することができます。その他のモジュールの有効化と無効化については、 <xref linkend="sec-apache2-configuration-yast-server-configuration-modules"/> で説明しています。</para>
    <para>モジュールの有効化や無効化を手作業で実施したい場合は、 <command>a2enmod</command> <replaceable>モジュール名</replaceable> もしくは <command>a2dismod</command> <replaceable>モジュール名</replaceable> のコマンドをお使いください。 <command>a2enmod -l</command> と入力して実行すると、現時点で有効化されている全てのモジュールを一覧表示することができます。</para>
    <important>
     <title>外部モジュールに対する設定ファイルの取り込み</title>
@@ -778,16 +776,16 @@ sknorr, 2017-06-07 -->
     <varlistentry>
      <term><systemitem>mod_apparmor</systemitem></term>
      <listitem>
-      <para><systemitem>mod_php5</systemitem> などで処理される CGI スクリプトに対して、 &aa; の制約を適用する Apache 向けのモジュールです。</para>
+      <para><systemitem>mod_php&php-version;</systemitem> などで処理される CGI スクリプトに対して、 &aa; の制約を適用する Apache 向けのモジュールです。</para>
       <simplelist><member>パッケージ名: <systemitem>apache2-mod_apparmor</systemitem></member><member>詳しい情報: <xref linkend="part-apparmor"/></member>
       </simplelist>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>mod_python</systemitem></term>
+     <term><systemitem>mod_php&php-version;</systemitem></term>
      <listitem>
       <para>PHP はサーバサイドスクリプトで複数プラットフォームに対応する HTML 組み込み型のスクリプト言語です。</para>
-      <simplelist><member>パッケージ名: <systemitem>apache2-mod_python</systemitem></member><member>設定ファイル: <filename>/etc/apache2/conf.d/php5.conf</filename></member>
+      <simplelist><member>パッケージ名: <systemitem>apache2-mod_php&php-version;</systemitem></member><member>設定ファイル: <filename>/etc/apache2/conf.d/php&php-version;.conf</filename></member>
       </simplelist>
      </listitem>
     </varlistentry>
@@ -887,7 +885,7 @@ sknorr, 2017-06-07 -->
    <itemizedlist mark="bullet" spacing="normal">
     <title>CGI トラブルシューティング</title>
     <listitem>
-     <para><emphasis>設定の変更後、設定を反映させるために再読み込みを実施しましたか？</emphasis> 実施していない場合は、 <command>systemctl reload apache2</command> で再読み込みを実施してください。</para>
+     <para><emphasis>設定の変更後、設定を反映させるために再読み込みを実施しましたか？</emphasis> 実施していない場合は、 <command>systemctl reload apache2.service</command> で再読み込みを実施してください。</para>
     </listitem>
     <listitem>
      <para><emphasis>独自の CGI ディレクトリを設定している場合は、その設定が適切に行われていますか？</emphasis> 何か不安な点がある場合は、既定の CGI ディレクトリである <filename>/srv/www/cgi-bin/</filename> にスクリプトをコピーして、 <literal>http://localhost/cgi-bin/test.cgi</literal> にアクセスしてみてください。</para>
@@ -1105,7 +1103,7 @@ An optional company name []:<co xml:id="co-ssl-self-optional"/></screen>
 
   <para>既定の Apache インスタンスについては、通常通り開始することができます:</para>
 
-<screen>&prompt.sudo;systemctl start apache2</screen>
+<screen>&prompt.sudo;systemctl start apache2.service</screen>
 
   <para>上記を実行すると、既定の <filename>/etc/sysconfig/apache2</filename> ファイルを読み込みます。このファイルが存在しない場合や、 <systemitem>APACHE_HTTPD_CONF</systemitem> 変数が設定されていない場合は、 <filename>/etc/apache2/httpd.conf</filename> を読み込みます。</para>
 
@@ -1254,7 +1252,7 @@ An optional company name []:<co xml:id="co-ssl-self-optional"/></screen>
    <varlistentry>
     <term><systemitem class="service">apache2.service</systemitem> サブコマンドの出力:</term>
     <listitem>
-     <para><filename>/usr/sbin/apache2ctl</filename> バイナリで Web サーバを開始したり停止したりするのではなく、 <command>systemctl</command> コマンドをお使いください (詳しくは <xref linkend="sec-apache2-start-stop"/> をお読みください) 。なお、 <command>systemctl status apache2</command> と入力して実行すると、エラーに関する詳細な情報を出力することができます。ここから設定エラーを修正するためのヒントが得られます。</para>
+     <para><filename>/usr/sbin/apache2ctl</filename> バイナリで Web サーバを開始したり停止したりするのではなく、 <command>systemctl</command> コマンドをお使いください (詳しくは <xref linkend="sec-apache2-start-stop"/> をお読みください) 。なお、 <command>systemctl status apache2.service</command> と入力して実行すると、エラーに関する詳細な情報を出力することができます。ここから設定エラーを修正するためのヒントが得られます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -1263,7 +1261,7 @@ An optional company name []:<co xml:id="co-ssl-self-optional"/></screen>
      <para>致命的なエラーであってもそうでなくても、 Apache のログファイルを調査することで原因を調査することができます。既定の設定では、主なエラーログは <filename>/var/log/apache2/error_log</filename> に出力されます。これに加えて <systemitem>LogLevel</systemitem> ディレクティブを使用することで、ログファイル内により詳しい情報を出力することができます。</para>
      <tip>
       <title>シンプルなテストについて</title>
-      <para>まずは <command>tail -F /var/log/apache2/<replaceable>エラーログファイル名</replaceable></command> を実行して、 Apache のログファイルを監視してください。監視を続けた状態で <command>systemctl restart apache2</command> を実行し、ブラウザで接続してみて出力される内容を確認すると良いでしょう。</para>
+      <para>まずは <command>tail -F /var/log/apache2/<replaceable>エラーログファイル名</replaceable></command> を実行して、 Apache のログファイルを監視してください。監視を続けた状態で <command>systemctl restart apache2.service</command> を実行し、ブラウザで接続してみて出力される内容を確認すると良いでしょう。</para>
      </tip>
     </listitem>
    </varlistentry>
@@ -1298,15 +1296,10 @@ An optional company name []:<co xml:id="co-ssl-self-optional"/></screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><systemitem>mod_python</systemitem></term>
+     <term><systemitem>mod_php&php-version;</systemitem></term>
      <listitem>
       <para><link xlink:href="http://www.php.net/manual/en/install.unix.apache2.php"/></para>
-      <para>
-       You can obtain detailed information about
-       <systemitem>mod_php&php-version;</systemitem> configuration in its
-       well-commented main configuration file
-       <filename>/etc/php&php-version;/apache2/php.ini</filename>.
-      </para>
+      <para><systemitem>mod_php&php-version;</systemitem> の設定に関する詳細な情報は、メインの設定ファイルである <filename>/etc/php&php-version;/apache2/php.ini</filename> 内にコメントとして記述されています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
