@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-network-iface-bonding">
- <title>ボンディングデバイスの設定</title>
+ <title>ボンドデバイスの設定</title>
 
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -13,9 +13,9 @@
   </dm:docmanager>
  </info>
 
- <para>システムによっては、一般的なイーサネットデバイスにおける標準的なセキュリティや可用性の要件を越えて、ネットワーク接続を実装する要望がある場合があります。このような場合は、複数のイーサネットデバイスをまとめて、 1 つのボンディングデバイスにすることができます。</para>
+ <para>システムによっては、一般的なイーサネットデバイスにおける標準的なセキュリティや可用性の要件を越えて、ネットワーク接続を実装する要望がある場合があります。このような場合は、複数のイーサネットデバイスをまとめて、 1 つのボンドデバイスにすることができます。</para>
 
- <para>ボンディングデバイスの設定は、ボンディングモジュールを設定して行います。また、このモジュールの動作はモードによって切り替えることができます。既定では <systemitem>active-backup</systemitem> (アクティブ-バックアップ) モードに設定されていて、一方のデバイスに障害が発生した場合に、他方のデバイスに切り替える動作を行います。モードには下記の設定が用意されています:</para>
+ <para>ボンドデバイスの設定はボンドモジュールを設定して行います。また、このモジュールの動作はモードによって切り替えることができます。既定では <systemitem>active-backup</systemitem> (アクティブ-バックアップ) モードに設定されていて、一方のデバイスに障害が発生した場合に、他方のデバイスに切り替える動作を行います。モードには下記の設定が用意されています:</para>
 
  <variablelist>
   <varlistentry>
@@ -33,7 +33,7 @@
   <varlistentry>
    <term><guimenu>2</guimenu> (balance-xor)</term>
    <listitem>
-    <para>パケットは下記のポリシーを利用して、利用可能な全てのインターフェイスに分散されます: <literal>[({送信元 MAC アドレス} XOR {送信先 MAC アドレス} XOR {パケットタイプ ID}) をインターフェイス数で割った余り]</literal> 。接続するスイッチ側での対応が必要です。冗長化と負荷分散の両方を提供します。</para>
+    <para>パケットはボンド内に含まれているデバイス数を基準に、利用可能な全てのインターフェイスに分散されます。接続するスイッチ側での対応が必要です。冗長化と負荷分散の両方を提供します。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
@@ -65,16 +65,16 @@
  <para>モードに関する詳細な説明については、 <link xlink:href="https://www.kernel.org/doc/Documentation/networking/bonding.txt"/> をお読みください。</para>
 
  <tip>
-  <title>ボンディングと &xen;</title>
-  <para>ボンディングデバイスの使用は、複数のネットワークカードを接続しているマシンでのみ設定することができる仕様です。ほとんどの設定において、ボンディングデバイスは &dom0; でのみ使用すべきものであることを意味します。 &vmguest; システムに対して複数のネットワークカードを割り当てている場合にのみ、 &vmguest; 内でボンディングを設定することができることになります。</para>
+  <title>ボンドと &xen;</title>
+  <para>ボンドデバイスの使用は、複数のネットワークカードを接続しているマシンでのみ設定することができる仕様です。ほとんどの設定において、ボンドデバイスは &dom0; でのみ使用すべきものであることを意味します。 &vmguest; システムに対して複数のネットワークカードを割り当てている場合にのみ、 &vmguest; 内でボンディングを設定することができることになります。</para>
  </tip>
 
  <note arch="power">
-  <title>IBM &power;: ボンディングモード 5 と 6 (balance-tlb / balance-alb) は ibmveth でサポートされない問題について</title>
-  <para>tlb/alb のボンディング設定と Power のファームウエアには矛盾が存在しています。 tlb/alb モードでのボンディングドライバは、仮想イーサネット MAC アドレスとしてリストされている発信元および送信先 MAC アドレスの両方に対して、イーサネットのループバックパケットを送信しますが、これらのパケットは Power ファームウエア側で対応していません。そのため、 ibmveth ではボンディングモード 5 と 6 に対応できません。</para>
+  <title>IBM &power;: ボンドモード 5 と 6 (balance-tlb / balance-alb) は ibmveth でサポートされない問題について</title>
+  <para>tlb/alb のボンド設定と Power のファームウエアには矛盾が存在しています。 tlb/alb モードでのボンドドライバは、仮想イーサネット MAC アドレスとしてリストされている発信元および送信先 MAC アドレスの両方に対して、イーサネットのループバックパケットを送信しますが、これらのパケットは Power ファームウエア側で対応していません。そのため、 ibmveth ではボンドモード 5 と 6 に対応できません。</para>
  </note>
 
- <para>ボンディングデバイスを設定するには、下記の手順で行います:</para>
+ <para>ボンドデバイスを設定するには、下記の手順で行います:</para>
 
  <procedure>
   <step>
@@ -94,7 +94,7 @@
    </informalfigure>
   </step>
   <step>
-   <para>ボンディングデバイスへの IP アドレスの割り当て方法を指定します。下記の 3 種類の中から選択します:</para>
+   <para>ボンドデバイスへの IP アドレスの割り当て方法を指定します。下記の 3 種類の中から選択します:</para>
    <itemizedlist mark="bullet" spacing="normal">
     <listitem>
      <para>IP の設定無し</para>
@@ -109,7 +109,7 @@
    <para>お使いの環境に適切なものを選択してください。</para>
   </step>
   <step>
-   <para>また、 <guimenu>ボンドスレーブ</guimenu> のタブでは、ボンディングデバイスに含めるべきインターフェイスを、チェックボックスで選択します。</para>
+   <para>また、 <guimenu>Bond ポート</guimenu> のタブでは、ボンドデバイスに含めるべきインターフェイスを、チェックボックスで選択します。</para>
   </step>
   <step>
    <para><guimenu>ボンドドライバのオプション</guimenu> を編集して、モードを設定します。</para>
@@ -123,9 +123,9 @@
  </procedure>
 
  <sect2 xml:id="sec-network-iface-bonding-hotplug">
-  <title>ボンドスレーブのホットプラグ</title>
-  <para>ネットワーク環境 (たとえば高可用性が必要な環境) によっては、障害の発生したネットワークインターフェイスを別のものに交換する必要がある場合があります。このような要件を満たすには、ボンドスレーブのホットプラグを設定して解決する必要があります。</para>
-  <para>ボンディングの設定を通常通りに行います (詳しくは <command>man 5 ifcfg-bonding</command> をお読みください) 。たとえば下記のようになります:</para>
+  <title>ボンドポートのホットプラグ</title>
+  <para>ネットワーク環境 (たとえば高可用性が必要な環境) によっては、障害の発生したネットワークインターフェイスを別のものに交換する必要がある場合があります。このような要件を満たすには、ボンドポートのホットプラグを設定して解決する必要があります。</para>
+  <para>ボンドの設定を通常通りに行います (詳しくは <command>man 5 ifcfg-bonding</command> をお読みください) 。たとえば下記のようになります:</para>
 <screen>ifcfg-bond0
           STARTMODE='auto' # or 'onboot'
           BOOTPROTO='static'
@@ -134,7 +134,7 @@
           BONDING_SLAVE_0='eth0'
           BONDING_SLAVE_1='eth1'
           BONDING_MODULE_OPTS='mode=active-backup miimon=100'</screen>
-  <para>スレーブ側には <literal>STARTMODE=hotplug</literal> と <literal>BOOTPROTO=none</literal> を指定します:</para>
+  <para>ボンドポート側には <literal>STARTMODE=hotplug</literal> と <literal>BOOTPROTO=none</literal> を指定します:</para>
 <screen>ifcfg-eth0
           STARTMODE='hotplug'
           BOOTPROTO='none'
@@ -149,14 +149,14 @@ ifcfg-eth1
    <literal>ens3</literal> and <literal>ens4</literal>.
   </para>
 -->
-  <para><literal>BOOTPROTO=none</literal> を指定すると、 <command>ethtool</command> を使用して設定が行われますが、 <command>ifup eth0</command> で起動が行われなくなります。これはスレーブインターフェイスはボンドマスター側で制御されるべきであるためです。</para>
-  <para><literal>STARTMODE=hotplug</literal> を指定すると、スレーブインターフェイスが利用可能な状態になった際に、自動的にボンディングデバイスに参加するようになります。</para>
+  <para><literal>BOOTPROTO=none</literal> を指定すると、 <command>ethtool</command> を使用して設定が行われますが、 <command>ifup eth0</command> で起動が行われなくなります。これはボンドポートのインターフェイスはボンドデバイス側で制御されるべきであるためです。</para>
+  <para><literal>STARTMODE=hotplug</literal> を指定すると、ボンドポートインターフェイスが利用可能な状態になった際に、自動的にボンドデバイスに参加するようになります。</para>
   <para>また、 <filename>/etc/udev/rules.d/70-persistent-net.rules</filename> 内にある <systemitem>udev</systemitem> のルールを、 MAC アドレスではなくバス ID を指定する形式に変更する必要があります (udev の <systemitem>KERNELS</systemitem> キーに、 <command>hwinfo --netcard</command> で出力される "SysFS のバス ID"を指定します) 。これにより、障害の発生したハードウエア (同じスロットにありながら、 MAC アドレスの異なるハードウエア) を交換することができるようになり、 MAC アドレスが変更されることによるボンドドライバ側の問題を回避できるようになります。</para>
   <para>たとえば下記のようになります:</para>
 <screen>SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*",
 KERNELS=="0000:00:19.0", ATTR{dev_id}=="0x0", ATTR{type}=="1",
 KERNEL=="eth*", NAME="eth0"</screen>
-  <para>システムの起動時点では、 systemd の <systemitem>network.service</systemitem> はホットプラグ指定されたスレーブを待機しませんが、ボンドインターフェイスを動作させるためには、少なくとも 1 つ以上のスレーブが必要となります。スレーブインターフェイスのいずれかが取り外される (NIC ドライバからバインド解除される、つまり NIC のドライバが <command>rmmod</command> されるか、 PCI ホットプラグで取り外される) と、カーネルはボンドデバイスについても自動的に削除を行います。新しいカードがシステムに接続される (置き換えとして同じスロットに接続される) と、 <systemitem>udev</systemitem> はバス ID ベースの固定名をスレーブに付与して <command>ifup</command> を呼び出します。 <command>ifup</command> 側では、ボンドデバイス側への参加を自動的に行います。<remark> ke: I think this can stay that way for now. </remark></para>
+  <para>システムの起動時点では、 systemd の <systemitem>network.service</systemitem> はホットプラグ指定されたボンドポートを待機しませんが、ボンドインターフェイスを動作させるためには、少なくとも 1 つ以上のボンドポートが必要となります。ボンドポートのいずれかが取り外される (NIC ドライバからバインド解除される、つまり NIC のドライバが <command>rmmod</command> されるか、 PCI ホットプラグで取り外される) と、カーネルはボンドデバイスについても自動的に削除を行います。新しいカードがシステムに接続される (置き換えとして同じスロットに接続される) と、 <systemitem>udev</systemitem> はバス ID ベースの固定名を付与して <command>ifup</command> を呼び出します。 <command>ifup</command> 側では、ボンドデバイス側への参加を自動的に行います。<remark> ke: I think this can stay that way for now. </remark></para>
  </sect2>
 
 <!--
