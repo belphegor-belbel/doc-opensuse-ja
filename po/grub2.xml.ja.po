@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: grub2.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2021-06-11 23:41+0000\n"
+"POT-Creation-Date: 2022-04-14 12:06+0000\n"
 "PO-Revision-Date: 2021-06-12 09:07+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -39,9 +39,9 @@ msgid ""
 "linkend=\"cha-uefi\"/> ."
 msgstr ""
 "本章では、 &productnamereg; 内で使用されているブートローダである &grub; につ"
-"いて、その設定方法を説明しています。 <phrase os=\"sled;sles\">&grub; は従来バージョンの"
-" GRUB ブートローダ (現在は <quote>GRUB Legacy</quote> と呼ばれています) の後継となる"
-"バージョンです。 &grub; は &productnamereg; バージョン "
+"いて、その設定方法を説明しています。 <phrase os=\"sled;sles\">&grub; は従来"
+"バージョンの GRUB ブートローダ (現在は <quote>GRUB Legacy</quote> と呼ばれて"
+"います) の後継となるバージョンです。 &grub; は &productnamereg; バージョン "
 "12 以降で既定のブートローダになっています。</phrase> なお、 &yast; モジュール"
 "を利用すれば、ほとんどの重要な設定を行うことができます。起動処理そのものに関"
 "する説明は <xref linkend=\"cha-boot\"/> を、 UEFI 環境における Secure Boot サ"
@@ -69,7 +69,8 @@ msgstr "さらに多くのファイルシステム (例: btrfs など) に対応
 #: grub2.xml:43
 #, no-c-format
 msgid "Can directly read files stored on LVM or RAID devices."
-msgstr "LVM や RAID デバイスに保存されているファイルを直接読み込むことができます。"
+msgstr ""
+"LVM や RAID デバイスに保存されているファイルを直接読み込むことができます。"
 
 #. Tag: para
 #: grub2.xml:48
@@ -222,7 +223,8 @@ msgstr ""
 #: grub2.xml:143
 #, no-c-format
 msgid "These configuration files contain architecture-specific options."
-msgstr "これらの設定ファイルには、アーキテクチャ固有のオプションが含まれています。"
+msgstr ""
+"これらの設定ファイルには、アーキテクチャ固有のオプションが含まれています。"
 
 #. Tag: para
 #: grub2.xml:150
@@ -1211,8 +1213,8 @@ msgstr ""
 
 #. Tag: title
 #: grub2.xml:677
-#, no-c-format
-msgid "Booting requires password"
+#, fuzzy, no-c-format
+msgid "Booting requires a password"
 msgstr "起動時にパスワードを求める設定"
 
 #. Tag: para
@@ -1286,12 +1288,6 @@ msgstr ""
 msgid "To import the changes into the main configuration file, run:"
 msgstr "内容をメインの設定ファイルに取り込むには、下記のように実行します:"
 
-#. Tag: screen
-#: grub2.xml:711
-#, no-c-format
-msgid "&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg"
-msgstr "&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg"
-
 #. Tag: para
 #: grub2.xml:714
 #, no-c-format
@@ -1318,13 +1314,132 @@ msgstr ""
 "html#Security\"/> をお読みください。"
 
 #. Tag: title
-#: grub2.xml:729
+#: grub2.xml:727
+#, no-c-format
+msgid "Authorized access to boot menu entries"
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:728
+#, no-c-format
+msgid ""
+"You can configure &grub; to allow access to boot menu entries depending on "
+"the level of authorization. You can configure multiple user accounts "
+"protected with passwords and assign them access to different menu entries. "
+"To configure authorization in &grub;, follow these steps:"
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:736
+#, no-c-format
+msgid ""
+"Create and encrypt one password for each user account you want to use in "
+"&grub;. Use the <command>grub2-mkpasswd-pbkdf2</command> command as "
+"described in <xref linkend=\"sec-grub2-password\"/> ."
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:743
+#, no-c-format
+msgid ""
+"Delete the content of the <filename>/etc/grub.d/10_linux</filename> file and "
+"save it. This prevents outputting the default &grub; menu entries."
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:749
+#, no-c-format
+msgid ""
+"Edit the <filename>/boot/grub2/custom.cfg</filename> file and add custom "
+"menu entries manually. The following template is just an example, adjust it "
+"to better match your use case:"
+msgstr ""
+
+#. Tag: screen
+#: grub2.xml:754
+#, no-c-format
+msgid ""
+"\n"
+"set superusers=admin\n"
+"password admin <replaceable>ADMIN_PASSWORD</replaceable>\n"
+"password maintainer <replaceable>MAINTAINER_PASSWORD</replaceable>\n"
+"\n"
+"menuentry 'Operational mode' {\n"
+"  insmod ext2\n"
+"  set root=hd0,1\n"
+"  echo 'Loading Linux ...'\n"
+"  linux /boot/vmlinuz root=/dev/vda1 $GRUB_CMDLINE_LINUX_DEFAULT "
+"$GRUB_CMDLINE_LINUX mode=operation\n"
+"  echo 'Loading Initrd ...'\n"
+"  initrd /boot/initrd\n"
+"}\n"
+"\n"
+"menuentry 'Maintenance mode' --users maintainer {\n"
+"  insmod ext2\n"
+"  set root=hd0,1\n"
+"  echo 'Loading Linux ...'\n"
+"  linux /boot/vmlinuz root=/dev/vda1 $GRUB_CMDLINE_LINUX_DEFAULT "
+"$GRUB_CMDLINE_LINUX mode=maintenance\n"
+"  echo 'Loading Initrd ...'\n"
+"  initrd /boot/initrd\n"
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:778
+#, fuzzy, no-c-format
+msgid "Import the changes into the main configuration file:"
+msgstr "内容をメインの設定ファイルに取り込むには、下記のように実行します:"
+
+#. Tag: screen
+#: grub2.xml:781
+#, no-c-format
+msgid "&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg"
+msgstr "&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg"
+
+#. Tag: para
+#: grub2.xml:784
+#, no-c-format
+msgid "In the above example:"
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:789
+#, no-c-format
+msgid ""
+"The &grub; menu has two entries, <guimenu>Operational mode</guimenu> and "
+"<guimenu>Maintenance mode</guimenu> ."
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:795
+#, no-c-format
+msgid ""
+"If no user is specified, both boot menu entries are accessible, but no one "
+"can access &grub; command line nor edit existing menu entries."
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:801
+#, no-c-format
+msgid ""
+"<literal>admin</literal> user can access &grub; command line and edit "
+"existing menu entries."
+msgstr ""
+
+#. Tag: para
+#: grub2.xml:807
+#, no-c-format
+msgid "<literal>maintenance</literal> user can select the recovery menu item."
+msgstr ""
+
+#. Tag: title
+#: grub2.xml:816
 #, no-c-format
 msgid "Differences in terminal usage on &zseries;"
 msgstr "&zseries; での端末の使用法の違いについて"
 
 #. Tag: para
-#: grub2.xml:731
+#: grub2.xml:818
 #, no-c-format
 msgid ""
 "On 3215 and 3270 terminals there are some differences and limitations on how "
@@ -1334,19 +1449,19 @@ msgstr ""
 "方法について、違いと制限が存在しています。"
 
 #. Tag: title
-#: grub2.xml:737
+#: grub2.xml:824
 #, no-c-format
 msgid "Limitations"
 msgstr "制限"
 
 #. Tag: term
-#: grub2.xml:740
+#: grub2.xml:827
 #, no-c-format
 msgid "Interactivity"
 msgstr "対話性"
 
 #. Tag: para
-#: grub2.xml:742
+#: grub2.xml:829
 #, no-c-format
 msgid ""
 "Interactivity is strongly limited. Typing often does not result in visual "
@@ -1358,27 +1473,28 @@ msgstr ""
 "( <keycap>_</keycap> ) を入力してください。"
 
 #. Tag: title
-#: grub2.xml:748
+#: grub2.xml:835
 #, no-c-format
 msgid "3270 compared to 3215"
 msgstr "3270 と 3215 の比較"
 
 #. Tag: para
-#: grub2.xml:749
+#: grub2.xml:836
 #, no-c-format
 msgid ""
 "The 3270 terminal is much better at displaying and refreshing screens than "
 "the 3215 terminal."
-msgstr "3270 端末は 3215 端末と比べると、表示や画面の更新がよりよく改善されています。"
+msgstr ""
+"3270 端末は 3215 端末と比べると、表示や画面の更新がよりよく改善されています。"
 
 #. Tag: term
-#: grub2.xml:757
+#: grub2.xml:844
 #, no-c-format
 msgid "Cursor movement"
 msgstr "カーソルの移動"
 
 #. Tag: para
-#: grub2.xml:759
+#: grub2.xml:846
 #, no-c-format
 msgid ""
 "<quote>Traditional</quote> cursor movement is not possible. <keycap function="
@@ -1393,13 +1509,13 @@ msgstr ""
 "します。"
 
 #. Tag: term
-#: grub2.xml:769
+#: grub2.xml:856
 #, no-c-format
 msgid "Caret"
 msgstr "キャレット"
 
 #. Tag: para
-#: grub2.xml:771
+#: grub2.xml:858
 #, no-c-format
 msgid ""
 "The caret ( <keycap>^</keycap> ) is used as a control character. To type a "
@@ -1411,13 +1527,13 @@ msgstr ""
 "<keycap>^</keycap> , <replaceable>文字</replaceable> のように入力します。"
 
 #. Tag: term
-#: grub2.xml:780
+#: grub2.xml:867
 #, no-c-format
 msgid "Enter"
 msgstr "Enter"
 
 #. Tag: para
-#: grub2.xml:782
+#: grub2.xml:869
 #, no-c-format
 msgid ""
 "The <keycap function=\"enter\"/> key does not work, use <keycombo><keycap>^</"
@@ -1427,97 +1543,97 @@ msgstr ""
 "<keycombo><keycap>^</keycap> <keycap>J</keycap></keycombo> をお使いください。"
 
 #. Tag: title
-#: grub2.xml:792
+#: grub2.xml:879
 #, no-c-format
 msgid "Key combinations"
 msgstr "キーの組み合わせ"
 
 #. Tag: para
-#: grub2.xml:798
+#: grub2.xml:885
 #, no-c-format
 msgid "Common Substitutes:"
 msgstr "一般的な作業でのキー入力方法:"
 
 #. Tag: para
-#: grub2.xml:803
+#: grub2.xml:890
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap> <keycap>J</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap> <keycap>J</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:808
+#: grub2.xml:895
 #, no-c-format
 msgid "engage ( <quote>Enter</quote> )"
 msgstr "実行 ( 一般的な PC での <quote>Enter</quote> キー )"
 
 #. Tag: para
-#: grub2.xml:820
+#: grub2.xml:907
 #, no-c-format
 msgid "abort, return to previous <quote>state</quote>"
 msgstr "中止して以前の <quote>状態</quote> に戻る"
 
 #. Tag: para
-#: grub2.xml:827
+#: grub2.xml:914
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>I</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>I</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:832
+#: grub2.xml:919
 #, no-c-format
 msgid "tab completion (in edit and shell mode)"
 msgstr "タブ補完 (編集およびシェルモード)"
 
 #. Tag: para
-#: grub2.xml:839
+#: grub2.xml:926
 #, no-c-format
 msgid "Keys Available in Menu Mode:"
 msgstr "メニューモードで利用可能なキー:"
 
 #. Tag: para
-#: grub2.xml:849
+#: grub2.xml:936
 #, no-c-format
 msgid "first entry"
 msgstr "最初の項目"
 
 #. Tag: para
-#: grub2.xml:861
+#: grub2.xml:948
 #, no-c-format
 msgid "last entry"
 msgstr "最後の項目"
 
 #. Tag: para
-#: grub2.xml:873
+#: grub2.xml:960
 #, no-c-format
 msgid "previous entry"
 msgstr "前の項目"
 
 #. Tag: para
-#: grub2.xml:885
+#: grub2.xml:972
 #, no-c-format
 msgid "next entry"
 msgstr "次の項目"
 
 #. Tag: para
-#: grub2.xml:892
+#: grub2.xml:979
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>G</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>G</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:897
+#: grub2.xml:984
 #, no-c-format
 msgid "previous page"
 msgstr "前のページ"
 
 #. Tag: para
-#: grub2.xml:909
+#: grub2.xml:996
 #, no-c-format
 msgid "next page"
 msgstr "次のページ"
 
 #. Tag: para
-#: grub2.xml:921
+#: grub2.xml:1008
 #, no-c-format
 msgid ""
 "boot selected entry or enter submenu (same as <keycombo><keycap>^</"
@@ -1527,241 +1643,241 @@ msgstr ""
 "keycap><keycap>J</keycap></keycombo> と同じです)"
 
 #. Tag: para
-#: grub2.xml:929
+#: grub2.xml:1016
 #, no-c-format
 msgid "<keycombo><keycap>E</keycap></keycombo>"
 msgstr "<keycombo><keycap>E</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:934
+#: grub2.xml:1021
 #, no-c-format
 msgid "edit selected entry"
 msgstr "選択した項目の編集"
 
 #. Tag: para
-#: grub2.xml:941
+#: grub2.xml:1028
 #, no-c-format
 msgid "<keycombo><keycap>C</keycap></keycombo>"
 msgstr "<keycombo><keycap>C</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:953
+#: grub2.xml:1040
 #, no-c-format
 msgid "Keys Available in Edit Mode:"
 msgstr "編集モードで利用可能なキー:"
 
 #. Tag: para
-#: grub2.xml:963
+#: grub2.xml:1050
 #, no-c-format
 msgid "previous line"
 msgstr "前の行"
 
 #. Tag: para
-#: grub2.xml:975
+#: grub2.xml:1062
 #, no-c-format
 msgid "next line"
 msgstr "次の行"
 
 #. Tag: para
-#: grub2.xml:1078
+#: grub2.xml:1165
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>O</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>O</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1083
+#: grub2.xml:1170
 #, no-c-format
 msgid "open line"
 msgstr "行を開く"
 
 #. Tag: para
-#: grub2.xml:1090
+#: grub2.xml:1177
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>L</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>L</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1095
+#: grub2.xml:1182
 #, no-c-format
 msgid "refresh screen"
 msgstr "画面の更新"
 
 #. Tag: para
-#: grub2.xml:1102
+#: grub2.xml:1189
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>X</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>X</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1107
+#: grub2.xml:1194
 #, no-c-format
 msgid "boot entry"
 msgstr "項目の起動"
 
 #. Tag: para
-#: grub2.xml:1114
+#: grub2.xml:1201
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>C</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>C</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1119
+#: grub2.xml:1206
 #, no-c-format
 msgid "enter GRUB-Shell"
 msgstr "GRUB シェルの起動"
 
 #. Tag: para
-#: grub2.xml:1126
+#: grub2.xml:1213
 #, no-c-format
 msgid "Keys Available in Command Line Mode:"
 msgstr "コマンドラインモードで利用可能なキー:"
 
 #. Tag: para
-#: grub2.xml:1131
+#: grub2.xml:1218
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>P</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>P</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1136
+#: grub2.xml:1223
 #, no-c-format
 msgid "previous command"
 msgstr "前のコマンド"
 
 #. Tag: para
-#: grub2.xml:1143
+#: grub2.xml:1230
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>N</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>N</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1148
+#: grub2.xml:1235
 #, no-c-format
 msgid "next command from history"
 msgstr "履歴内の次のコマンド"
 
 #. Tag: para
-#: grub2.xml:1155
+#: grub2.xml:1242
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>A</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>A</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1160
+#: grub2.xml:1247
 #, no-c-format
 msgid "beginning of line"
 msgstr "行頭に移動"
 
 #. Tag: para
-#: grub2.xml:1167
+#: grub2.xml:1254
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>E</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>E</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1172
+#: grub2.xml:1259
 #, no-c-format
 msgid "end of line"
 msgstr "行末に移動"
 
 #. Tag: para
-#: grub2.xml:1179
+#: grub2.xml:1266
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>B</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>B</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1184
+#: grub2.xml:1271
 #, no-c-format
 msgid "backward char"
 msgstr "1 文字前に移動"
 
 #. Tag: para
-#: grub2.xml:1191
+#: grub2.xml:1278
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>F</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>F</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1196
+#: grub2.xml:1283
 #, no-c-format
 msgid "forward char"
 msgstr "1 文字後ろに移動"
 
 #. Tag: para
-#: grub2.xml:1203
+#: grub2.xml:1290
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>H</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>H</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1208
+#: grub2.xml:1295
 #, no-c-format
 msgid "backspace"
 msgstr "1 文字前の文字を削除"
 
 #. Tag: para
-#: grub2.xml:1215
+#: grub2.xml:1302
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>D</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>D</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1220
+#: grub2.xml:1307
 #, no-c-format
 msgid "delete"
 msgstr "カーソルのある位置の文字を削除"
 
 #. Tag: para
-#: grub2.xml:1227
+#: grub2.xml:1314
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>K</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>K</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1232
+#: grub2.xml:1319
 #, no-c-format
 msgid "kill line"
 msgstr "行を削除"
 
 #. Tag: para
-#: grub2.xml:1239
+#: grub2.xml:1326
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>U</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>U</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1244
+#: grub2.xml:1331
 #, no-c-format
 msgid "discard line"
 msgstr "行の破棄"
 
 #. Tag: para
-#: grub2.xml:1251
+#: grub2.xml:1338
 #, no-c-format
 msgid "<keycombo><keycap>^</keycap><keycap>Y</keycap></keycombo>"
 msgstr "<keycombo><keycap>^</keycap><keycap>Y</keycap></keycombo>"
 
 #. Tag: para
-#: grub2.xml:1256
+#: grub2.xml:1343
 #, no-c-format
 msgid "yank"
 msgstr "ヤンク"
 
 #. Tag: title
-#: grub2.xml:1267
+#: grub2.xml:1354
 #, no-c-format
 msgid "Helpful &grub; commands"
 msgstr "便利な &grub; コマンド"
 
 #. Tag: term
-#: grub2.xml:1271
+#: grub2.xml:1358
 #, no-c-format
 msgid "<command>grub2-mkconfig</command>"
 msgstr "<command>grub2-mkconfig</command>"
 
 #. Tag: para
-#: grub2.xml:1274
+#: grub2.xml:1361
 #, no-c-format
 msgid ""
 "Generates a new <filename>/boot/grub2/grub.cfg</filename> based on "
@@ -1773,25 +1889,25 @@ msgstr ""
 "cfg</filename> を生成します。"
 
 #. Tag: title
-#: grub2.xml:1280
+#: grub2.xml:1367
 #, no-c-format
 msgid "Usage of grub2-mkconfig"
 msgstr "grub2-mkconfig の使用方法"
 
 #. Tag: screen
-#: grub2.xml:1281
+#: grub2.xml:1368
 #, no-c-format
 msgid "grub2-mkconfig -o /boot/grub2/grub.cfg"
 msgstr "grub2-mkconfig -o /boot/grub2/grub.cfg"
 
 #. Tag: title
-#: grub2.xml:1284
+#: grub2.xml:1371
 #, no-c-format
 msgid "Syntax check"
 msgstr "文法チェック"
 
 #. Tag: para
-#: grub2.xml:1285
+#: grub2.xml:1372
 #, no-c-format
 msgid ""
 "Running <command>grub2-mkconfig</command> without any parameters prints the "
@@ -1806,7 +1922,7 @@ msgstr ""
 "を利用して文法をチェックすることができます。"
 
 #. Tag: title
-#: grub2.xml:1294
+#: grub2.xml:1381
 #, no-c-format
 msgid "<command>grub2-mkconfig</command> cannot repair UEFI Secure Boot tables"
 msgstr ""
@@ -1814,7 +1930,7 @@ msgstr ""
 "ない問題について"
 
 #. Tag: para
-#: grub2.xml:1295
+#: grub2.xml:1382
 #, no-c-format
 msgid ""
 "If you are using UEFI Secure Boot and your system is not reaching &grub; "
@@ -1826,19 +1942,19 @@ msgstr ""
 "す。具体的には、下記のように実行します:"
 
 #. Tag: screen
-#: grub2.xml:1300
+#: grub2.xml:1387
 #, no-c-format
 msgid "&prompt.root;shim-install --config-file=/boot/grub2/grub.cfg"
 msgstr "&prompt.root;shim-install --config-file=/boot/grub2/grub.cfg"
 
 #. Tag: term
-#: grub2.xml:1305
+#: grub2.xml:1392
 #, no-c-format
 msgid "<command>grub2-mkrescue</command>"
 msgstr "<command>grub2-mkrescue</command>"
 
 #. Tag: para
-#: grub2.xml:1307
+#: grub2.xml:1394
 #, no-c-format
 msgid "Creates a bootable rescue image of your installed &grub; configuration."
 msgstr ""
@@ -1846,49 +1962,49 @@ msgstr ""
 "ます。"
 
 #. Tag: title
-#: grub2.xml:1311
+#: grub2.xml:1398
 #, no-c-format
 msgid "Usage of grub2-mkrescue"
 msgstr "grub2-mkrescue の使用方法"
 
 #. Tag: screen
-#: grub2.xml:1312
+#: grub2.xml:1399
 #, no-c-format
 msgid "grub2-mkrescue -o save_path/name.iso iso"
 msgstr "grub2-mkrescue -o save_path/name.iso iso"
 
 #. Tag: term
-#: grub2.xml:1317
+#: grub2.xml:1404
 #, no-c-format
 msgid "<command>grub2-script-check</command>"
 msgstr "<command>grub2-script-check</command>"
 
 #. Tag: para
-#: grub2.xml:1320
+#: grub2.xml:1407
 #, no-c-format
 msgid "Checks the given file for syntax errors."
 msgstr "指定したファイルに文法上のエラーがないかどうかをチェックします。"
 
 #. Tag: title
-#: grub2.xml:1324
+#: grub2.xml:1411
 #, no-c-format
 msgid "Usage of grub2-script-check"
 msgstr "grub2-script-check の使用方法"
 
 #. Tag: screen
-#: grub2.xml:1325
+#: grub2.xml:1412
 #, no-c-format
 msgid "grub2-script-check /boot/grub2/grub.cfg"
 msgstr "grub2-script-check /boot/grub2/grub.cfg"
 
 #. Tag: term
-#: grub2.xml:1330
+#: grub2.xml:1417
 #, no-c-format
 msgid "<command>grub2-once</command>"
 msgstr "<command>grub2-once</command>"
 
 #. Tag: para
-#: grub2.xml:1333
+#: grub2.xml:1420
 #, no-c-format
 msgid ""
 "Set the default boot entry for the next boot only. To get the list of "
@@ -1898,25 +2014,25 @@ msgstr ""
 "たい場合は、 <option>--list</option> オプションをお使いください。"
 
 #. Tag: title
-#: grub2.xml:1338
+#: grub2.xml:1425
 #, no-c-format
 msgid "Usage of grub2-once"
 msgstr "grub2-once の使用方法"
 
 #. Tag: screen
-#: grub2.xml:1339
+#: grub2.xml:1426
 #, no-c-format
 msgid "grub2-once number_of_the_boot_entry"
 msgstr "grub2-once <replaceable>番号</replaceable>"
 
 #. Tag: title
-#: grub2.xml:1342
+#: grub2.xml:1429
 #, no-c-format
 msgid "<command>grub2-once</command> help"
 msgstr "<command>grub2-once</command> のヘルプ"
 
 #. Tag: para
-#: grub2.xml:1343
+#: grub2.xml:1430
 #, no-c-format
 msgid ""
 "Call the program without any option to get a full list of all possible "
@@ -1926,13 +2042,13 @@ msgstr ""
 "覧を表示することができます。"
 
 #. Tag: title
-#: grub2.xml:1353
+#: grub2.xml:1440
 #, no-c-format
 msgid "More information"
 msgstr "さらなる情報"
 
 #. Tag: para
-#: grub2.xml:1355
+#: grub2.xml:1442
 #, no-c-format
 msgid ""
 "Extensive information about &grub; is available at <link xlink:href="
@@ -1948,4 +2064,3 @@ msgstr ""
 "xlink:href=\"https://www.suse.com/support\"/> にある Technical Information "
 "Search で、キーワード <quote>&grub;</quote> を指定して検索すると、様々な問題"
 "点などを検索することができます。</phrase>"
-
