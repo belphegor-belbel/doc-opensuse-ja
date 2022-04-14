@@ -150,180 +150,230 @@ TasksMax=16284
    <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
   </sect2>
  </sect1>
- <sect1>
-  <title>比例型の重み付けポリシーによる I/O の制御</title>
 
-  <para>本章では、 Linux カーネル内に存在する I/O コントローラを利用して、 I/O 処理の優先付けを行うための方法について説明しています。 cgroup blkio サブシステムでは、ブロックデバイスに対する I/O 処理を制御したり監視したりすることができるほか、 cgroup の仮想ファイルシステム (擬似ファイルシステムとも呼ばれます) 内のファイルとして、 cgroup 向けのサブシステムパラメータを含むステートオブジェクトが提供されています。</para>
+<!-- BEGIN NEW VERSION -->
+<sect1 xml:id="sec-control-io-cgroups">
+<title>カーネルコントロールグループ</title>
+<para>
+This section introduces using the Linux kernel's block I/O controller to
+prioritize or throttle I/O operations. This leverages the means provided by
+systemd to configure cgroups, and discusses probable pitfalls when dealing
+with proportional I/O control.
+</para>
 
-  <para>本章では、アクセスや帯域を制限するための擬似ファイルへの書き込み方法のほか、 I/O 処理の関する様々な情報を提供する擬似ファイルの読み込み方法を説明しています。また、 cgroup-v1 と cgroup-v2 の両方に対する例を示しています。</para>
+<sect2 xml:id="sec-cgroups-prerequisites">
+<title>Prerequisites</title>
+<para>
+The following subsections describe steps that you must take in advance when
+you design and configure your system, since those aspects cannot be changed
+during runtime.
+</para>
 
-  <para>まずはテスト用のディレクトリを作成し、その中にファイルを 2 つ作成して性能のテストを行います。ある程度のサイズのファイルを作成するため、本章では <command>yes</command> コマンドを使用します。下記の例ではテストディレクトリを作成し、その中に 537MB のテキストファイルを作成しています:</para>
-
-<screen>&prompt.plain-root;mkdir /io-cgroup
-&prompt.plain-root;cd /io-cgroup
-&prompt.plain-root;yes this is a test file | head -c 537MB &gt; file1.txt
-&prompt.plain-root;yes this is a test file | head -c 537MB &gt; file2.txt
-</screen>
-
-  <para>例を実行するために 3 つのコマンドシェルを開いてください。 2 つのシェルは読み込み側のプロセスを動作させるもので、残りの 1 つは I/O を制御するためのものです。下記の例では行頭に reader1/reader2 (読み込み側), io-controller (制御側) としてラベルを示しています。</para>
-
-  <sect2>
-   <title>cgroup-v1 での例</title>
-   <para>下記の比例型重み付けポリシーファイルは読み込み側のプロセスに対して作用するもので、他のプロセスよりも優先的にアクセスができるようにするためのものです。</para>
+<sect3 xml:id="sec-cgroups-filesystems">
+<title>Filesystem</title>
+<para>
+You should use a cgroup-writeback-aware filesystem (otherwise writeback charging is not possible).
+The recommended SLES filesystems added support in the following upstream
+releases:
+<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docs
+cjs: that slide is old! We must find something newer.
+-->
+</para>
    <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para><filename>blkio.bfq.weight</filename> (カーネルバージョン 5.0 もしくはそれ以降の blk-mq を使用していて、かつ BFQ I/O スケジューラを使用する場合にのみ利用できるファイルです)</para>
-    </listitem>
+	   <listitem>
+     <para>
+      Btrfs (v4.3)
+      </para>
+      </listitem>
+	   <listitem>
+     <para>
+      Ext4 (v4.3)
+      </para>
+      </listitem>
+	   <listitem>
+     <para>
+      XFS (v5.3)
+      </para>
+      </listitem>
    </itemizedlist>
-   <para>まずはシェルのうちの 1 つを利用して、 I/O 制御を行わない場合の <filename>file2.txt</filename> の読み込み性能を調べてみます:</para>
-<screen> 
-&prompt.io-controller;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.io-controller;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5251
-131072+0 records in
-131072+0 records out
-536870912 bytes (537 MB, 512 MiB) copied, 1.33049 s, 404 MB/s
-</screen>
-   <para>次に、同じディスクに対して読み込み処理を同時に 2 つ動作させます:</para>
-<screen>
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1.txt of=/dev/null bs=4k
-5220
-...
-&prompt.reader2;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5251
-131072+0 records in
-131072+0 records out
-536870912 bytes (537 MB, 512 MiB) copied, 2.61592 s, 205 MB/s
-</screen>
-   <para>上記のとおり、 I/O 性能はおおよそ半分になっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成します。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行います:</para>
-<screen>
-&prompt.io-controller;cd /sys/fs/cgroup/blkio/
-&prompt.blkio;mkdir reader1
-&prompt.blkio;mkdir reader2
-&prompt.blkio;echo 5220 &gt; reader1/cgroup.procs
-&prompt.blkio;echo 5251 &gt; reader2/cgroup.procs
-&prompt.blkio;cat /sys/block/sda/queue/scheduler
-mq-deadline kyber [bfq] none
-&prompt.blkio;cat reader1/blkio.bfq.weight
-100
-&prompt.blkio;echo 200 &gt; reader2/blkio.bfq.weight
-&prompt.blkio;cat reader2/blkio.bfq.weight
-200
-</screen>
-   <para>上記の設定で reader1 と reader2 を動作させると、 reader2 に対して優先的に性能が割り当てられるようになります:</para>
-<screen>
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1.txt of=/dev/null bs=4k
-5220
-...
-&prompt.reader2;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5251
-131072+0 records in
-131072+0 records out
-536870912 bytes (537 MB, 512 MiB) copied, 2.06604 s, 260 MB/s
-</screen>
-   <para>reader2 に対する重み付けの値を大きくすればするほど、より優先的に性能が割り当てられるようになります。さらに値を倍にしてみます:</para>
-<screen>
-&prompt.blkio;cat reader1/blkio.bfq.weight
-100
-&prompt.blkio;echo 400 &gt; reader2/blkio.bfq.weight
-&prompt.blkio;cat reader2/blkio.bfq.weight
-400
-</screen>
-   <para>これにより、 reader2 側がさらに高い性能を得るようになります:</para>
-<screen>
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1.txt of=/dev/null bs=4k
-5220
-...
-&prompt.reader2;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5251
-131072+0 records in
-131072+0 records out
-536870912 bytes (537 MB, 512 MiB) copied, 1.69026 s, 318 MB/s
-</screen>
-  </sect2>
+<para>
+As of &productname;&nbsp;15&nbsp;SP3, any of the named filesystems can be used.
+</para>
+</sect3>
 
-  <sect2>
-   <title>cgroup-v2 での例</title>
-   <para>まずは前の章の手順に従ってテスト環境を準備してください。</para>
-   <para>次にブロック IO コントローラ (cgroup-v1) の動作を停止します。これを行うには、カーネルのパラメータに <option>cgroup_no_v1=blkio</option> を追加します。このパラメータが使用されていることを確認したあと、 IO コントローラ (cgroup-v2) が利用できるかどうかを確認します:</para>
+<sect3 xml:id="sec-cgroups-unified-hierarchy">
+<title>Unified cgroup hierarchy</title>
+<para>
+To properly account writeback I/O, it is necessary to have equal I/O
+and memory controller cgroup hierarchies, and to use the cgroup v2 I/O
+controller. Together, this means that one has to use the
+<emphasis>unified</emphasis> cgroup hierarchy. This has to be requested
+explicitly in SLES by passing a kernel command line option,
+<option>systemd.unified_cgroup_hierarchy=1</option>.
+</para>
+</sect3>
+
+<sect3 xml:id="sec-cgroups-block-io-scheduler">
+<title>Block I/O scheduler</title>
+<para>
+The throttling policy is implemented higher in the stack, therefore it
+does not require any additional adjustments.
+The proportional I/O control policies have two different implementations:
+the BFQ controller, and the cost-based model.
+We describe the BFQ controller here. In order to exert its proportional
+implementation for a particular device, we must make sure that BFQ is the
+chosen scheduler. Check the current scheduler:
+</para>
 <screen>
-&prompt.io-controller;cat /proc/cmdline
-BOOT_IMAGE=... cgroup_no_v1=blkio ...
-&prompt.io-controller;cat /sys/fs/cgroup/unified/cgroup.controllers
-io
+&prompt.user;<command>cat /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
+mq-deadline kyber bfq [none]
 </screen>
-   <para>あとは IO コントローラを有効化します:</para>
+<para>
+Switch the scheduler to BFQ:
+</para>
 <screen>
-&prompt.io-controller;cd /sys/fs/cgroup/unified/
-&prompt.unified;echo '+io' &gt; cgroup.subtree_control
-&prompt.unified;cat cgroup.subtree_control
-io
+ &prompt.root;<command>echo bfq &gt; /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 </screen>
-   <para>あとは cgroup-v1 と同じような手順を実行するだけです。ただし、ディレクトリのうちのいくつかが異なることに注意してください。まずはシェルのうちの 1 つを利用して、 I/O 制御を行わない場合の <filename>file2.txt</filename> の読み込み性能を調べてみます (この例では、 SSD から読み込みを行っています):</para>
+<para>
+You must specify the disk device (not a partition). The
+optimal way to set this attribute is a udev rule specific to the device
+(note that &slsa; ships udev rules that already enable BFQ for rotational
+disk drives).
+</para>
+</sect3>
+
+<sect3 xml:id="sec-cgroups-hierarchy">
+<title>Cgroup hierarchy layout</title>
+<para>
+Normally, all tasks reside in the root cgroup and they compete against
+each other. When the tasks are distributed into the cgroup tree the
+competition occurs between sibling cgroups only.
+This applies to the proportional I/O control; the throttling
+hierarchically aggregates throughput of all descendants (see the following
+diagram).
+</para>
+<!-- this is not code but a picture -->
 <screen>
-&prompt.unified;cd -
-&prompt.io-controller;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.io-controller;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5633
-[...]
+r
+`-  a      IOWeight=100
+    `- [c] IOWeight=300
+    `-  d  IOWeight=100
+`- [b]     IOWeight=200
 </screen>
-   <para>次に、同じディスクに対して読み込み処理を同時に 2 つ動作させて性能を確認します:</para>
+<para>
+I/O is originating only from cgroups c and b. Even though c has a higher
+weight, it will be treated with lower priority because it is level-competing
+with b.
+</para>
+</sect3>
+</sect2>
+
+<sect2 xml:id="sec-cgroups-configure-control-quantities">
+<title>Configuring control quantities</title>
+<para>
+You can apply the values to (long running) services permanently.
+</para>
 <screen>
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1.txt of=/dev/null bs=4k
-5633
-[...]
-&prompt.reader2;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-5703
-[...]
+&prompt.sudo;<command>systemctl set-property <replaceable>fast.service</replaceable> IOWeight=<replaceable>400</replaceable></command>
+&prompt.sudo;<command>systemctl set-property <replaceable>slow.service</replaceable> IOWeight=<replaceable>50</replaceable></command>
+&prompt.sudo;<command>systemctl set-property <replaceable>throttled.service</replaceable> IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>"</command>
 </screen>
-   <para>上記のとおり、 I/O 性能はおおよそ半分になっていることがわかります。次に、それぞれの読み込み側プロセスに適用できるよう、 2 種類の制御グループを作成して、それぞれのプロセスに割り当てます。このとき、 BFQ が適用されていることを確認しておいてください。また、 reader2 に対して異なる重み付けを行います:</para>
+
+<para>
+Alternatively, you can apply I/O control to individual commands, for
+example:
+</para>
 <screen>
-&prompt.io-controller;cd -
-&prompt.unified;mkdir reader1
-&prompt.unified;mkdir reader2
-&prompt.unified;echo 5633 &gt; reader1/cgroup.procs
-&prompt.unified;echo 5703 &gt; reader2/cgroup.procs
-&prompt.unified;cat /sys/block/sda/queue/scheduler
-mq-deadline kyber [bfq] none
-&prompt.unified;cat reader1/io.bfq.weight
-default 100
-&prompt.unified;echo 200 &gt; reader2/io.bfq.weight
-&prompt.unified;cat reader2/io.bfq.weight
-default 200
+&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>400</replaceable> <replaceable>high_prioritized_command</replaceable></command>
+&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>50</replaceable> <replaceable>low_prioritized_command</replaceable></command>
+&prompt.sudo;<command>systemd-run --scope -p IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>" <replaceable>dd if=/dev/sda of=/dev/null bs=1M count=10</replaceable></command>
 </screen>
-   <para>上記の設定で reader1 と reader2 を動作させると、 reader2 に対して優先的に性能が割り当てられるようになります:</para>
-<screen>
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1 of=/dev/null bs=4k
-5633
-[...]
-&prompt.reader2;echo $$; dd if=file2 of=/dev/null bs=4k count=131072
-5703
-[...]
-</screen>
-   <para>reader2 に対する重み付けの値を大きくすればするほど、より優先的に性能が割り当てられるようになります。さらに値を倍にしてみます:</para>
-<screen>
-&prompt.reader2;echo 400 &gt; reader1/blkio.bfq.weight
-&prompt.reader2;cat reader2/blkio.bfq.weight
-400
-&prompt.reader1;sync; echo 3 &gt; /proc/sys/vm/drop_caches
-&prompt.reader1;echo $$; dd if=file1.txt of=/dev/null bs=4k
-[...]
-&prompt.reader2;echo $$; dd if=file2.txt of=/dev/null bs=4k count=131072
-[...]
-</screen>
-  </sect2>
- </sect1>
+</sect2>
+
+<sect2 xml:id="sec-cgroups-control-behavior">
+<title>I/O control behavior and setting expectations</title>
+<para>
+ The following list items describe I/O control behavior, and what you
+ should expect under various conditions.
+</para>
+<itemizedlist>
+<listitem>
+<para>
+I/O control works best for direct I/O operations (bypassing page cache),
+the situations where the actual I/O is decoupled from the caller (typically
+writeback via page cache) may manifest variously. For example, delayed I/O
+control or even no observed I/O control (consider little bursts or competing
+workloads that happen to never "meet", submitting I/O at the same time, and
+saturating the bandwidth). For these reasons, the resulting ratio of
+I/O throughputs does not strictly follow the ratio of configured weights.
+</para>
+</listitem>
+<listitem>
+<para>
+systemd performs scaling of configured weights (to adjust for narrower BFQ
+weight range), hence the resulting throughput ratios also differ.
+</para>
+</listitem>
+<listitem>
+<para>
+The writeback activity depends on the amount of dirty pages, besides the
+global sysctl knobs (<filename>vm.dirty_background_ratio</filename> and
+<filename>vm.dirty_ratio</filename>)). Memory limits of individual cgroups
+come into play when the dirty limits are distributed among cgroups, and
+this in turn may affect I/O intensity of affected cgroups.
+</para>
+</listitem>
+<listitem>
+<para>
+Not all storages are equal. The I/O control happens at the I/O scheduler
+layer, which has ramifications for setups with devices stacked on these
+that do no actual scheduling. Consider device mapper logical volumes
+spanning multiple physical devices, MD RAID, or even Btrfs RAID.
+I/O control over such setups may be challenging.
+</para>
+</listitem>
+<listitem>
+<para>
+There is no separate setting for proportional I/O control of reads and
+writes.
+</para>
+</listitem>
+<listitem>
+<para>
+Proportional I/O control is only one of the policies that can interact with
+each other (but responsible resource design perhaps avoids that).
+</para>
+</listitem>
+<listitem>
+<para>
+The I/O device bandwidth is not the only shared resource on the I/O path.
+Global filesystem structures are involved, which is relevant
+when I/O control is meant to guarantee certain bandwidth; it won’t and it
+may even lead to priority inversion (prioritized cgroup waiting for a
+transaction of slower cgroup).
+</para>
+</listitem>
+<listitem>
+<para>
+So far, we have been discussing only explicit I/O of filesystem data, but
+swap-in and swap-out can also be controlled. Although if such a need
+arises, it usually points out to improperly provisioned memory (or memory limits).
+</para>
+</listitem>
+</itemizedlist>
+</sect2>
+</sect1>
+<!-- END NEW VERSION -->
+
  <sect1>
   <title>さらなる情報</title>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
     <para>カーネルのドキュメンテーション (<systemitem>kernel-source</systemitem> パッケージ内):  <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v1</filename> および <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v2.rst</filename> の各ファイル</para>
+   </listitem>
+   <listitem>
+    <para>プロパティの一覧と詳細については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
    </listitem>
    <listitem>
     <para><link xlink:href="https://lwn.net/Articles/604609/"/>: Brown, Neil: Control Groups Series (2014 年, 7 部構成)</para>
