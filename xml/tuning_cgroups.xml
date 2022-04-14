@@ -111,7 +111,7 @@ DefaultTasksMax=256
 </screen>
    <para>Tasks 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。</para>
 <screen>&prompt.sudo;<command>systemctl set-property mariadb.service TasksMax=8192</command>
-&prompt.user;<command>systemctl status mariadb.service</command> 
+&prompt.user;<command>systemctl status mariadb.service</command>
 ● mariadb.service - MariaDB database server
    Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset: disab&gt;
   Drop-In: /etc/systemd/system/mariadb.service.d
@@ -153,105 +153,52 @@ TasksMax=16284
 
 <!-- BEGIN NEW VERSION -->
 <sect1 xml:id="sec-control-io-cgroups">
-<title>カーネルコントロールグループ</title>
-<para>
-This section introduces using the Linux kernel's block I/O controller to
-prioritize or throttle I/O operations. This leverages the means provided by
-systemd to configure cgroups, and discusses probable pitfalls when dealing
-with proportional I/O control.
-</para>
+<title>cgroups と</title>
+<para>本章では、 Linux カーネルのブロック I/O コントローラに対して、 I/O 操作の優先順位を設定したり、負荷制限を行ったりするための方法を説明しています。この仕組みにより、 systemd が提供する cgroup の仕組みをさらに効果的なものにすることができますが、 I/O の制御によって陥りやすい落とし穴もまた存在しています。</para>
 
 <sect2 xml:id="sec-cgroups-prerequisites">
-<title>Prerequisites</title>
-<para>
-The following subsections describe steps that you must take in advance when
-you design and configure your system, since those aspects cannot be changed
-during runtime.
-</para>
+<title>事前要件</title>
+<para>ここではまず、システムを設定する前の準備について説明しています。これらはいずれも、動作中に変更できるようなものではないためです。</para>
 
 <sect3 xml:id="sec-cgroups-filesystems">
-<title>Filesystem</title>
-<para>
-You should use a cgroup-writeback-aware filesystem (otherwise writeback charging is not possible).
-The recommended SLES filesystems added support in the following upstream
-releases:
-<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docs
-cjs: that slide is old! We must find something newer.
--->
-</para>
+<title>ファイルシステム</title>
+<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと言う機能が使用できないためです) 。 SLES では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
    <itemizedlist mark="bullet" spacing="normal">
 	   <listitem>
-     <para>
-      Btrfs (v4.3)
-      </para>
+     <para>Btrfs (v4.3)</para>
       </listitem>
 	   <listitem>
-     <para>
-      Ext4 (v4.3)
-      </para>
+     <para>Ext4 (v4.3)</para>
       </listitem>
 	   <listitem>
-     <para>
-      XFS (v5.3)
-      </para>
+     <para>XFS (v5.3)</para>
       </listitem>
    </itemizedlist>
-<para>
-As of &productname;&nbsp;15&nbsp;SP3, any of the named filesystems can be used.
-</para>
+<para>&productname;&nbsp;15&nbsp;SP3 の時点では、上記のファイルシステムのいずれかを使用することができます。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-unified-hierarchy">
-<title>Unified cgroup hierarchy</title>
-<para>
-To properly account writeback I/O, it is necessary to have equal I/O
-and memory controller cgroup hierarchies, and to use the cgroup v2 I/O
-controller. Together, this means that one has to use the
-<emphasis>unified</emphasis> cgroup hierarchy. This has to be requested
-explicitly in SLES by passing a kernel command line option,
-<option>systemd.unified_cgroup_hierarchy=1</option>.
-</para>
+<title>統合型 cgroup 階層構造</title>
+<para>I/O の書き戻し処理を適切に集計できるようにするため、 I/O とメモリコントローラの cgroup 階層構造を同じに設定するほか、 cgroup v2 I/O コントローラを使用する必要もあります。これらを組み合わせることで、 <emphasis>統合型の</emphasis> cgroup 階層構造を持つことになります。 SLES の場合、 <option>systemd.unified_cgroup_hierarchy=1</option> をカーネルのコマンドラインオプションに指定することで、明示的に設定を行うことができます。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-block-io-scheduler">
-<title>Block I/O scheduler</title>
-<para>
-The throttling policy is implemented higher in the stack, therefore it
-does not require any additional adjustments.
-The proportional I/O control policies have two different implementations:
-the BFQ controller, and the cost-based model.
-We describe the BFQ controller here. In order to exert its proportional
-implementation for a particular device, we must make sure that BFQ is the
-chosen scheduler. Check the current scheduler:
-</para>
+<title>ブロック I/O スケジューラ</title>
+<para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されています。ここでは BFQ のみを説明しています。特定のデバイスに対してこのような制御を発揮するため、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
 <screen>
 &prompt.user;<command>cat /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 mq-deadline kyber bfq [none]
 </screen>
-<para>
-Switch the scheduler to BFQ:
-</para>
+<para>スケジューラを BFQ に変更します:</para>
 <screen>
  &prompt.root;<command>echo bfq &gt; /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 </screen>
-<para>
-You must specify the disk device (not a partition). The
-optimal way to set this attribute is a udev rule specific to the device
-(note that &slsa; ships udev rules that already enable BFQ for rotational
-disk drives).
-</para>
+<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに最も適切な方法は、 udev のルール設定です (ただし &slsa; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください) 。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-hierarchy">
-<title>Cgroup hierarchy layout</title>
-<para>
-Normally, all tasks reside in the root cgroup and they compete against
-each other. When the tasks are distributed into the cgroup tree the
-competition occurs between sibling cgroups only.
-This applies to the proportional I/O control; the throttling
-hierarchically aggregates throughput of all descendants (see the following
-diagram).
-</para>
+<title>cgroup の階層構造の仕組み</title>
+<para>通常、全ての処理は階層構造内のルート (根幹) に位置し、互いに競い合う関係になります。処理が cgroup の階層構造内に配布されると、兄弟姉妹関係の cgroup 間でのみ競合が発生します。これにより、負荷制御は全ての子孫が持つ帯域を集約することになりますので、これによって I/O の負荷制御が実現されます (下記の図を参照) 。</para>
 <!-- this is not code but a picture -->
 <screen>
 r
@@ -260,105 +207,54 @@ r
     `-  d  IOWeight=100
 `- [b]     IOWeight=200
 </screen>
-<para>
-I/O is originating only from cgroups c and b. Even though c has a higher
-weight, it will be treated with lower priority because it is level-competing
-with b.
-</para>
+<para>I/O は cgroups の c と b からのみ発生するものとすると、 c には高い優先順位が付けられているものの、 b との比較では低いため、低い優先順位として扱われます。</para>
 </sect3>
 </sect2>
 
 <sect2 xml:id="sec-cgroups-configure-control-quantities">
-<title>Configuring control quantities</title>
-<para>
-You can apply the values to (long running) services permanently.
-</para>
+<title>制御量の設定</title>
+<para>値は長期間動作するようなサービスに対して、恒久的に適用することができます。</para>
 <screen>
 &prompt.sudo;<command>systemctl set-property <replaceable>fast.service</replaceable> IOWeight=<replaceable>400</replaceable></command>
 &prompt.sudo;<command>systemctl set-property <replaceable>slow.service</replaceable> IOWeight=<replaceable>50</replaceable></command>
 &prompt.sudo;<command>systemctl set-property <replaceable>throttled.service</replaceable> IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>"</command>
 </screen>
 
-<para>
-Alternatively, you can apply I/O control to individual commands, for
-example:
-</para>
+<para>それ以外にも、個別のコマンドに対して I/O 制御を適用することもできます。たとえば下記のようになります:</para>
 <screen>
-&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>400</replaceable> <replaceable>high_prioritized_command</replaceable></command>
-&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>50</replaceable> <replaceable>low_prioritized_command</replaceable></command>
+&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>400</replaceable> <replaceable>高い優先順位で実行するコマンド</replaceable></command>
+&prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>50</replaceable> <replaceable>低い優先順位で実行するコマンド</replaceable></command>
 &prompt.sudo;<command>systemd-run --scope -p IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>" <replaceable>dd if=/dev/sda of=/dev/null bs=1M count=10</replaceable></command>
 </screen>
 </sect2>
 
 <sect2 xml:id="sec-cgroups-control-behavior">
-<title>I/O control behavior and setting expectations</title>
-<para>
- The following list items describe I/O control behavior, and what you
- should expect under various conditions.
-</para>
+<title>I/O 制御の動作説明</title>
+<para>下記は I/O 制御の動作と、様々な状況下において何を期待すべきかについて説明しています。</para>
 <itemizedlist>
 <listitem>
-<para>
-I/O control works best for direct I/O operations (bypassing page cache),
-the situations where the actual I/O is decoupled from the caller (typically
-writeback via page cache) may manifest variously. For example, delayed I/O
-control or even no observed I/O control (consider little bursts or competing
-workloads that happen to never "meet", submitting I/O at the same time, and
-saturating the bandwidth). For these reasons, the resulting ratio of
-I/O throughputs does not strictly follow the ratio of configured weights.
-</para>
+<para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
 </listitem>
 <listitem>
-<para>
-systemd performs scaling of configured weights (to adjust for narrower BFQ
-weight range), hence the resulting throughput ratios also differ.
-</para>
+<para>systemd ではより厳密な BFQweight に調整するため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比が異なる場合があります。</para>
 </listitem>
 <listitem>
-<para>
-The writeback activity depends on the amount of dirty pages, besides the
-global sysctl knobs (<filename>vm.dirty_background_ratio</filename> and
-<filename>vm.dirty_ratio</filename>)). Memory limits of individual cgroups
-come into play when the dirty limits are distributed among cgroups, and
-this in turn may affect I/O intensity of affected cgroups.
-</para>
+<para>書き戻しの処理は sysctl で設定したグローバル値 ( <filename>vm.dirty_background_ratio</filename> および <filename>vm.dirty_ratio</filename> ) のほか、 dirty ページの量に依存して動作を行います。また、個別の cgroup に対して dirty 制限が分散されるような場合、それぞれの cgroup に対するメモリ制限にも影響を受けることがあります。これによって、それら cgroup の I/O 集中度に影響がある場合があります。</para>
 </listitem>
 <listitem>
-<para>
-Not all storages are equal. The I/O control happens at the I/O scheduler
-layer, which has ramifications for setups with devices stacked on these
-that do no actual scheduling. Consider device mapper logical volumes
-spanning multiple physical devices, MD RAID, or even Btrfs RAID.
-I/O control over such setups may be challenging.
-</para>
+<para>全てのストレージが等価でないことにも注意してください。 I/O 制御は I/O スケジューラの階層で行われるため、その先にスケジューリングを行わないデバイスが存在しているような場合には異なる動作になります。たとえば複数の物理デバイスを利用した論理ボリュームのデバイスマッパーや MD RAID 、そして btrfs の RAID などがそれに該当します。これらのデバイスに対して I/O 制御を行う場合は、注意してお使いください。</para>
 </listitem>
 <listitem>
-<para>
-There is no separate setting for proportional I/O control of reads and
-writes.
-</para>
+<para>読み込みと書き込みのそれぞれに対して I/O 制御を行うような設定は提供されていません。</para>
 </listitem>
 <listitem>
-<para>
-Proportional I/O control is only one of the policies that can interact with
-each other (but responsible resource design perhaps avoids that).
-</para>
+<para>I/O 制御の制限は相互に作用するポリシーのうちの 1 つであることに注意してください。ただし、適切なリソース設計をしていれば、問題なく動作するはずのものです。</para>
 </listitem>
 <listitem>
-<para>
-The I/O device bandwidth is not the only shared resource on the I/O path.
-Global filesystem structures are involved, which is relevant
-when I/O control is meant to guarantee certain bandwidth; it won’t and it
-may even lead to priority inversion (prioritized cgroup waiting for a
-transaction of slower cgroup).
-</para>
+<para>I/O デバイスの帯域は I/O パス内での共有資源というだけではないことに注意してください。I/O 制御が一定の帯域を保障することを目指している場合、グローバルなファイルシステム構造も考慮する必要があります。場合によっては優先順位が効果を発揮しない場合があるほか、優先順位の高い cgroup が遅い cgroup を待ち合わせる必要が生じてしまうことにより、優先順位が逆転する可能性すらあることに注意してください。</para>
 </listitem>
 <listitem>
-<para>
-So far, we have been discussing only explicit I/O of filesystem data, but
-swap-in and swap-out can also be controlled. Although if such a need
-arises, it usually points out to improperly provisioned memory (or memory limits).
-</para>
+<para>ここまではファイルシステムデータに対する明示的な I/O 制御について説明してきましたが、スワップデバイスの入出力に対する制御も行うことができます。このような要件が発生した場合は、メモリの配置 (もしくはメモリ制限) を設定することを検討してください。</para>
 </listitem>
 </itemizedlist>
 </sect2>
@@ -373,7 +269,7 @@ arises, it usually points out to improperly provisioned memory (or memory limits
     <para>カーネルのドキュメンテーション (<systemitem>kernel-source</systemitem> パッケージ内):  <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v1</filename> および <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v2.rst</filename> の各ファイル</para>
    </listitem>
    <listitem>
-    <para>プロパティの一覧と詳細については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
+    <para><command>man systemd.resource-control</command></para>
    </listitem>
    <listitem>
     <para><link xlink:href="https://lwn.net/Articles/604609/"/>: Brown, Neil: Control Groups Series (2014 年, 7 部構成)</para>
