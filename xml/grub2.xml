@@ -356,37 +356,21 @@ password_pbkdf2 root grub.pbkdf2.sha512.10000.9CA4611006FE96BC77A...</screen>
    <para>詳しくは <link xlink:href="https://www.gnu.org/software/grub/manual/grub.html#Security"/> をお読みください。</para>
   </sect2>
   <sect2 xml:id="sec-grub2-authorization">
-   <title>Authorized access to boot menu entries</title>
-   <para>
-    You can configure &grub; to allow access to boot menu entries depending
-    on the level of authorization. You can configure multiple user accounts
-    protected with passwords and assign them access to different menu entries.
-    To configure authorization in &grub;, follow these steps:
-   </para>
+   <title>起動メニュー項目に対するアクセス保護</title>
+   <para>&grub; では、認可レベルを設定して起動メニュー項目へのアクセスを制限することができます。具体的には、複数のユーザアカウントとパスワードを設定して、それぞれ異なるメニュー項目へのアクセス許可を設定することができます。 &grub; でこのようなアクセス制限を設定するには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Create and encrypt one password for each user account you want to use in
-      &grub;. Use the <command>grub2-mkpasswd-pbkdf2</command> command as
-      described in <xref linkend="sec-grub2-password"/>.
-     </para>
+     <para>まずは &grub; 内に設定したいユーザ名とパスワードを用意します。このとき、パスワードは <xref linkend="sec-grub2-password"/> で説明しているとおり、 <command>grub2-mkpasswd-pbkdf2</command> を利用して暗号化しておきます。</para>
     </step>
     <step>
-     <para>
-      Delete the content of the <filename>/etc/grub.d/10_linux</filename> file
-      and save it. This prevents outputting the default &grub; menu entries.
-     </para>
+     <para><filename>/etc/grub.d/10_linux</filename> ファイルに書かれている内容を削除して保存します。これにより、既定の &grub; メニュー項目が作成されないようにすることができます。</para>
     </step>
     <step>
-     <para>
-      Edit the <filename>/boot/grub2/custom.cfg</filename> file and add custom
-      menu entries manually. The following template is just an example, adjust
-      it to better match your use case:
-     </para>
+     <para>あとは <filename>/boot/grub2/custom.cfg</filename> ファイルを編集して、独自のメニュー項目を追加していきます。下記は単純な例ですので、容易に合わせて編集してお使いください:</para>
 <screen>
 set superusers=admin
-password admin <replaceable>ADMIN_PASSWORD</replaceable>
-password maintainer <replaceable>MAINTAINER_PASSWORD</replaceable>
+password admin <replaceable>管理者パスワード</replaceable>
+password maintainer <replaceable>メンテナパスワード</replaceable>
 
 menuentry 'Operational mode' {
   insmod ext2
@@ -411,32 +395,19 @@ menuentry 'Maintenance mode' --users maintainer {
      <screen>&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg</screen>
     </step>
    </procedure>
-   <para>
-    In the above example:
-   </para>
+   <para>上記の例は下記のような構成です:</para>
    <itemizedlist>
     <listitem>
-     <para>
-      The &grub; menu has two entries, <guimenu>Operational mode</guimenu>
-      and <guimenu>Maintenance mode</guimenu>.
-     </para>
+     <para>&grub; には 2 種類の項目 <guimenu>Operational mode</guimenu> と <guimenu>Maintenance mode</guimenu> が存在しています。</para>
     </listitem>
     <listitem>
-     <para>
-      If no user is specified, both boot menu entries are accessible, but
-      no one can access &grub; command line nor edit existing menu entries.
-     </para>
+     <para>何もユーザを指定しない場合、いずれのメニュー項目とも使用できますが、 &grub; のコマンドラインに入ることはできず、かつ既存のメニュー項目を編集することもできなくなります。</para>
     </listitem>
     <listitem>
-     <para>
-      <literal>admin</literal> user can access &grub; command line and edit
-      existing menu entries.
-     </para>
+     <para><literal>admin</literal> ユーザを指定した場合、 &grub; のコマンドラインに入ることができるほか、既存のメニュー項目を編集することもできるようになります。</para>
     </listitem>
     <listitem>
-     <para>
-      <literal>maintenance</literal> user can select the recovery menu item.
-     </para>
+     <para><literal>maintenance</literal> ユーザを指定した場合は回復用のメニュー項目を選択できます。</para>
     </listitem>
    </itemizedlist>
   </sect2>
