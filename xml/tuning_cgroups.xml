@@ -153,7 +153,7 @@ TasksMax=16284
 
 <!-- BEGIN NEW VERSION -->
 <sect1 xml:id="sec-control-io-cgroups">
-<title>cgroups と</title>
+<title>cgroups と I/O 制御の併用</title>
 <para>本章では、 Linux カーネルのブロック I/O コントローラに対して、 I/O 操作の優先順位を設定したり、負荷制限を行ったりするための方法を説明しています。この仕組みにより、 systemd が提供する cgroup の仕組みをさらに効果的なものにすることができますが、 I/O の制御によって陥りやすい落とし穴もまた存在しています。</para>
 
 <sect2 xml:id="sec-cgroups-prerequisites">
@@ -162,7 +162,7 @@ TasksMax=16284
 
 <sect3 xml:id="sec-cgroups-filesystems">
 <title>ファイルシステム</title>
-<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと言う機能が使用できないためです) 。 SLES では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
+<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 SLES では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
    <itemizedlist mark="bullet" spacing="normal">
 	   <listitem>
      <para>Btrfs (v4.3)</para>
@@ -184,7 +184,7 @@ TasksMax=16284
 
 <sect3 xml:id="sec-cgroups-block-io-scheduler">
 <title>ブロック I/O スケジューラ</title>
-<para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されています。ここでは BFQ のみを説明しています。特定のデバイスに対してこのような制御を発揮するため、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
+<para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されていますが、ここでは BFQ のみを説明しています。それは、特定のデバイスに対して負荷制御を行う場合、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
 <screen>
 &prompt.user;<command>cat /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 mq-deadline kyber bfq [none]
@@ -198,7 +198,7 @@ mq-deadline kyber bfq [none]
 
 <sect3 xml:id="sec-cgroups-hierarchy">
 <title>cgroup の階層構造の仕組み</title>
-<para>通常、全ての処理は階層構造内のルート (根幹) に位置し、互いに競い合う関係になります。処理が cgroup の階層構造内に配布されると、兄弟姉妹関係の cgroup 間でのみ競合が発生します。これにより、負荷制御は全ての子孫が持つ帯域を集約することになりますので、これによって I/O の負荷制御が実現されます (下記の図を参照) 。</para>
+<para>通常、全ての処理は階層構造内のルート (根幹) に位置し、互いに競合する関係になります。処理が cgroup の階層構造内に配布されると、兄弟姉妹関係の cgroup 間でのみ競合が発生します。これにより、負荷制御は全ての子孫が持つ帯域を集約することになりますので、これによって I/O の負荷制御が実現されます (下記の図を参照) 。</para>
 <!-- this is not code but a picture -->
 <screen>
 r
@@ -213,7 +213,7 @@ r
 
 <sect2 xml:id="sec-cgroups-configure-control-quantities">
 <title>制御量の設定</title>
-<para>値は長期間動作するようなサービスに対して、恒久的に適用することができます。</para>
+<para>長期間動作するようなサービスに対しては、値を恒久的に適用することができます。</para>
 <screen>
 &prompt.sudo;<command>systemctl set-property <replaceable>fast.service</replaceable> IOWeight=<replaceable>400</replaceable></command>
 &prompt.sudo;<command>systemctl set-property <replaceable>slow.service</replaceable> IOWeight=<replaceable>50</replaceable></command>
@@ -236,7 +236,7 @@ r
 <para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
 </listitem>
 <listitem>
-<para>systemd ではより厳密な BFQweight に調整するため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比が異なる場合があります。</para>
+<para>systemd ではより厳密な BFQ 調整のため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比も異なる場合があります。</para>
 </listitem>
 <listitem>
 <para>書き戻しの処理は sysctl で設定したグローバル値 ( <filename>vm.dirty_background_ratio</filename> および <filename>vm.dirty_ratio</filename> ) のほか、 dirty ページの量に依存して動作を行います。また、個別の cgroup に対して dirty 制限が分散されるような場合、それぞれの cgroup に対するメモリ制限にも影響を受けることがあります。これによって、それら cgroup の I/O 集中度に影響がある場合があります。</para>
@@ -251,7 +251,7 @@ r
 <para>I/O 制御の制限は相互に作用するポリシーのうちの 1 つであることに注意してください。ただし、適切なリソース設計をしていれば、問題なく動作するはずのものです。</para>
 </listitem>
 <listitem>
-<para>I/O デバイスの帯域は I/O パス内での共有資源というだけではないことに注意してください。I/O 制御が一定の帯域を保障することを目指している場合、グローバルなファイルシステム構造も考慮する必要があります。場合によっては優先順位が効果を発揮しない場合があるほか、優先順位の高い cgroup が遅い cgroup を待ち合わせる必要が生じてしまうことにより、優先順位が逆転する可能性すらあることに注意してください。</para>
+<para>I/O デバイスの帯域は I/O パス内での共有資源というだけではないことに注意してください。I/O 制御が一定の帯域を保障することを目指している場合、グローバルなファイルシステム構造も考慮する必要があります。場合によっては優先順位が効果を発揮しない場合があるほか、たとえば優先順位の高い cgroup が遅い cgroup を待ち合わせる必要が生じてしまうことにより、優先順位が逆転する可能性すらあることに注意してください。</para>
 </listitem>
 <listitem>
 <para>ここまではファイルシステムデータに対する明示的な I/O 制御について説明してきましたが、スワップデバイスの入出力に対する制御も行うことができます。このような要件が発生した場合は、メモリの配置 (もしくはメモリ制限) を設定することを検討してください。</para>
