@@ -14,15 +14,15 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
- 
+
 <sect1 xml:id="sec-fips-concept">
   <title>FIPS 140-2 の概要</title>
-  
+
   <warning>
     <title>FIPS の使用には専門知識が必要となる件について</title>
     <para>FIPS の管理は複雑で、専門的な知識が必要となります。適切な実装やテスト、トラブルシューティングの実施の全てにおいて、高度な知識が求められることに注意してください。</para>
   </warning>
-  
+
   <para>組織や企業が暗号化アプリケーションを FIPS 準拠として認定を受けるには、 Cryptographic Module Validation Program (CMVP) (詳しくは <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/> を参照) への申請を行わなくてはなりません。</para>
   <para>また、現時点では FIPS 暗号化標準として FIPS 140-2 と FIPS 140-3 の 2 種類が存在しています。 FIPS 140-2 標準は 2002 年に確定した標準で、 2026 年 9 月 22 日まで有効とされています。もう一方の FIPS 140-3 標準は 2019 年 3 月に承認された標準で、 140-2 を置き換えるものとして作られています。なお、現時点で CMVP は FIPS 140-2 テストへの受け付けは行っておらず、 FIPS 140-3 の受け付けのみを行っています。</para>
   <para>&suse; では認証済みモジュールの一覧を <link xlink:href="https://www.suse.com/support/security/certifications/"/> で公開しています。ここには様々な情報も提供されています。</para>
@@ -44,30 +44,30 @@
     </listitem>
     <listitem>
       <para>ssh, sshd, sftp-server などの認証済みバイナリは、その起動時に自分自身をチェックして、それが成功した場合にのみ動作するようになってしまいます。これによって、少ないながらも性能劣化を引き起こしてしまいます。</para>
-    </listitem>    
+    </listitem>
     <listitem>
       <para>FIPS の管理は複雑で、比較的高度な知識が必要となります。</para>
     </listitem>
   </itemizedlist>
 </sect1>
- 
+
 <sect1 xml:id="sec-fips-install">
   <title>FIPS のインストール</title>
   <para>新規にインストールしている場合は、 <package>patterns-server-enterprise-fips</package> という名称のパターンをインストールしてください。インストールが完了したあとは、 <xref linkend="sec-fips-enable"/> に示された手順に従って、 FIPS を有効化してください。</para>
   <para>お使いのシステムに <package>patterns-server-enterprise-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
-</sect1>    
-    
+</sect1>
+
 <sect1 xml:id="sec-fips-enable">
   <title>FIPS モードの有効化</title>
 
-<!-- The file paths for the two READMEs are different than in earlier 
+<!-- The file paths for the two READMEs are different than in earlier
   releases. In SLE 15 SP2 and older the path is /usr/share/doc/packages/openssh/
-  cschroder Jan 13, 2022 -->  
+  cschroder Jan 13, 2022 -->
 <para>FIPS の有効化を行うには、いくつかの作業が必要となります。まずは <package>openssh-common</package> パッケージに含まれる <filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename> と <filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename> のファイルをお読みください (いずれも英語) 。これらのファイルには、 &sle; における FIPS の重要な情報が書かれています。</para>
   <para>FIPS が既に有効化されているかどうかを確認するには、下記のように実行します:</para>
   <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
 crypto.fips_enabled = 0</screen>
-  <para><literal>crypto.fips_enabled = 0</literal> が出力された場合、 FIPS は有効化されていません。有効化されていれば 1 になるはずです。</para>  
+  <para><literal>crypto.fips_enabled = 0</literal> が出力された場合、 FIPS は有効化されていません。有効化されていれば 1 になるはずです。</para>
   <para>その後 <filename>/etc/default/grub</filename> ファイルを編集します。 <filename>/boot</filename> が個別のパーティションに存在していない場合であれば、 <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal> に <literal>fips=1</literal> を追加します・たとえば下記のようになります:</para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1"</screen>
   <para><filename>/boot</filename> が個別のパーティションとして存在する場合は、下記のようにしてそのパーティションを指定します。下記の例のうち、デバイス名をお使いの環境に合わせて指定してください:</para>
@@ -79,5 +79,21 @@ crypto.fips_enabled = 0</screen>
 <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
 crypto.fips_enabled = 1</screen>
   <para>FIPS を有効化すると、システムがうまく起動しなくなってしまうことがあります。このような場合は、再起動時に GRUB メニューが表示された際、 <keycap>E</keycap> を押して編集モードに移行し、 <literal>linux</literal> の行内にある <literal>fips=1</literal> を削除したあと、 <keycap>F10</keycap> キーを押して起動してください。たいていは <filename>/etc/default/grub</filename> ファイルの記述ミスですので、この手順で一時的に FIPS を無効化して起動したあと、ファイルを修正して GRUB と initramfs を再構築し、起動し直してください。</para>
+ </sect1>
+
+ <sect1 xml:id="sec-fips-samba-cifs">
+  <title>MD5 not supported in Samba/CIFS</title>
+  <para>
+   According to the FIPS standards, MD5 is not a secure hashing
+   algorithm, and it must not be used for authentication. If you run a
+   FIPS-compliant network environment, and you have clients or servers
+   that run in FIPS-compliant mode, you must use a Kerberos service for
+   authenticating Samba/CIFS users. This is necessary as all other Samba
+   authentication modes include MD5.
+  </para>
+  <para>
+   See the &samba; section of the &storage_guide; for more information on
+   running a &samba; server.
+  </para>
  </sect1>
 </chapter>
