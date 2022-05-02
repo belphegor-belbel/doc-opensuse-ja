@@ -458,32 +458,18 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
   <para>本章では、 Samba スイートのクライアントとサーバにおける、さらに高度な技術に関する説明を行っています。</para>
 
   <sect2 xml:id="sec-automount-systemd">
-   <title>Automounting CIFS file system using &systemd;</title>
-   <para>
-    You can use &systemd; to mount CIFS shares on startup. To do so, proceed as
-    described further:
-   </para>
+   <title>&systemd; を利用した CIFS ファイルシステムの自動マウント</title>
+   <para>&systemd; を利用することで、 CIFS 共有を起動時にマウントすることができます。これを行うには、下記の手順を実施します:</para>
    <procedure>
     <step>
-     <para>
-      Create the mount points:
-     </para>
-<screen>&prompt.user;mkdir -p <replaceable>PATH_SERVER_SHARED_FOLDER</replaceable></screen>
-     <para>
-      where <replaceable>PATH_SERVER_SHARED_FOLDER</replaceable> is
-      <literal>/cifs/shared</literal> in further steps.
-     </para>
+     <para>まずはマウントポイントを作成します:</para>
+<screen>&prompt.user;mkdir -p <replaceable>マウントポイント</replaceable></screen>
+     <para>以降は <replaceable>マウントポイント</replaceable> に <literal>/cifs/shared</literal> を指定したものとします。</para>
     </step>
     <step>
-     <para>
-      Create the &systemd; unit file and generate a file name from the path
-      specified in the previous step where "/" are replaced with "-", for
-      example:
-     </para>
+     <para>次に &systemd; のユニットファイルを作成します。このときユニットファイルのファイル名には、マウントポイントの "/" を "-" に置き換えたものを使用します。たとえば下記のようになります:</para>
 <screen>&prompt.sudo;touch /etc/systemd/system/cifs-shared.mount</screen>
-     <para>
-      with the following content:
-     </para>
+     <para>上記で作成したファイルには、下記の内容を記述します:</para>
 <screen>
 [Unit]
 Description=CIFS share from The-Server
@@ -499,31 +485,24 @@ WantedBy=multi-user.target
             </screen>
     </step>
     <step>
-     <para>
-      Enable the service:
-     </para>
-<screen>&prompt.sudo;systemctl restart nmb smb</screen>
+     <para>サービスを有効化します:</para>
+<screen>&prompt.sudo;systemctl enable cifs-shared.mount</screen>
     </step>
     <step>
-     <para>サーバの開始</para>
-<screen>&prompt.sudo;systemctl restart nmb smb</screen>
-     <para>
-      To verify that the service is running, run the command:
-     </para>
-<screen>&prompt.sudo;systemctl restart nmb smb</screen>
+     <para>サービスを開始します:</para>
+<screen>&prompt.sudo;systemctl start cifs-shared.mount</screen>
+     <para>サービスが正しく開始できたかどうかを確認するには、下記のコマンドを実行します:</para>
+<screen>&prompt.sudo;systemctl status cifs-shared.mount</screen>
     </step>
     <step>
-     <para>
-      To confirm that the CIFS shared path is available, try the following
-      command:
-     </para>
+     <para>CIFS で正しくマウントできたかどうかを確認するには、下記のように実行します:</para>
 <screen>&prompt.user; cd /cifs/shared
 &prompt.user;ls -l
 
 total 0
--rwxrwxrwx. 1 root    root    0 Oct 24 22:31 hello-world-cifs.txt
-drwxrwxrwx. 2 root    root    0 Oct 24 22:31 subfolder
--rw-r--r--. 1 vagrant vagrant 0 Oct 28 21:51 testfile.txt
+-rwxrwxrwx. 1 root    root    0 10月 24 22:31 hello-world-cifs.txt
+drwxrwxrwx. 2 root    root    0 10月 24 22:31 subfolder
+-rw-r--r--. 1 vagrant vagrant 0 10月 28 21:51 testfile.txt
             </screen>
     </step>
    </procedure>
