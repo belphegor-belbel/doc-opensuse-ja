@@ -4,14 +4,13 @@
 %entities;
 ]>
 <!--PM's doc requirements:
- *  Server based automounting of home directories
-       1.Configuration and usage description (m)
-       2.Firewall configuration for SMB support (m)
-       3.Kerberos support description (d)
-
- This is related to #300967: Mount Server Home Directory Automatically with
- Authentication.  Everything that's being done there to ensure that the users
- will be able to access their home directories when hosted on CIFS.
+*  Server based automounting of home directories
+1.Configuration and usage description (m)
+2.Firewall configuration for SMB support (m)
+3.Kerberos support description (d)
+This is related to #300967: Mount Server Home Directory Automatically with
+Authentication.  Everything that's being done there to ensure that the users
+will be able to access their home directories when hosted on CIFS.
 -->
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-samba">
  <title>Samba</title>
@@ -83,6 +82,7 @@
  </sect1>
  <sect1 xml:id="sec-samba-server-sled" os="sled">
   <title>Samba サーバのインストール</title>
+
   <para>Samba サーバのインストールは &sled; ではサポートしていません。 Samba サーバのインストールと設定について、詳しくは &sls; 向けの &admin; をお読みください。</para>
  </sect1>
  <sect1 xml:id="sec-samba-install" os="sles;osuse">
@@ -343,6 +343,7 @@
    <para><guimenu>熟練者向け設定</guimenu> を押すと、より高度な設定オプションにアクセスすることができます。たとえば <guimenu>サーバディレクトリのマウント</guimenu> の表では、サーバのホームディレクトリの認証を指定して自動的にマウントする設定を行うことができます。この方法により、 CIFS で提供されているホームディレクトリに対して、ユーザがアクセスできるようになります。詳しくは <systemitem>pam_mount</systemitem> のマニュアルページをお読みください。</para>
    <para>全ての設定が完了したら、 <guimenu>OK</guimenu> を押して閉じることで設定を保存することができます。</para>
   </sect2>
+
   <sect2 xml:id="sec-samba-client-old-server">
    <title>クライアント側での SMB1/CIFS 共有のマウント</title>
    <para>SMB1 (CIFS) は SMB ネットワークプロトコルの初代となるバージョンで、古くて安全性も保たれておらず、作成者である Microsoft 自身も廃止対象としているものです。また、このようなセキュリティ面の理由から、 &productname; での <command>mount</command> コマンドも、既定では SMB 2.1, SMB 3.0, SMB 3.02 の新しいプロトコルバージョンを利用して SMB 共有をマウントするようになっています。</para>
@@ -371,11 +372,11 @@
     <para os="sles;osuse">&productname; での新しいプロトコルバージョンの有効化について、詳しくは <xref linkend="sec-samba-server-new-protocol"/> をお読みください。</para>
    </important>
    <para>現在の &productname; カーネルで SMB1 共有を有効化する必要がある場合は、 <command>mount</command> コマンドを実行する際に <option>vers=1.0</option> というオプションを追加してください:</para>
-   <screen>&prompt.root;mount -t cifs //<replaceable>ホスト</replaceable>/<replaceable>共有名</replaceable> /<replaceable>マウントポイント</replaceable> –o username=<replaceable>ユーザ_ID</replaceable>,<emphasis role="bold">vers=1.0</emphasis></screen>
+<screen>&prompt.root;mount -t cifs //<replaceable>ホスト</replaceable>/<replaceable>共有名</replaceable> /<replaceable>マウントポイント</replaceable> –o username=<replaceable>ユーザ_ID</replaceable>,<emphasis role="bold">vers=1.0</emphasis></screen>
    <para>それ以外にも、 &productname; では SMB1 を全ての共有に対して有効化することもできます。これを行うには、 <filename>/etc/samba/smb.conf</filename> の <literal>[global]</literal> セクション内に下記を追加します:</para>
    <!-- Screen indentation is intentional, to match typical config file
-   indentation level. -->
-   <screen>client min protocol = CORE</screen>
+    indentation level. -->
+<screen>client min protocol = CORE</screen>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-samba-anmeld-serv">
@@ -455,6 +456,78 @@ smbpasswd -a -m <replaceable>ホスト名</replaceable></screen>
   <title>高度なトピック</title>
 
   <para>本章では、 Samba スイートのクライアントとサーバにおける、さらに高度な技術に関する説明を行っています。</para>
+
+  <sect2 xml:id="sec-automount-systemd">
+   <title>Automounting CIFS file system using &systemd;</title>
+   <para>
+    You can use &systemd; to mount CIFS shares on startup. To do so, proceed as
+    described further:
+   </para>
+   <procedure>
+    <step>
+     <para>
+      Create the mount points:
+     </para>
+<screen>&prompt.user;mkdir -p <replaceable>PATH_SERVER_SHARED_FOLDER</replaceable></screen>
+     <para>
+      where <replaceable>PATH_SERVER_SHARED_FOLDER</replaceable> is
+      <literal>/cifs/shared</literal> in further steps.
+     </para>
+    </step>
+    <step>
+     <para>
+      Create the &systemd; unit file and generate a file name from the path
+      specified in the previous step where "/" are replaced with "-", for
+      example:
+     </para>
+<screen>&prompt.sudo;touch /etc/systemd/system/cifs-shared.mount</screen>
+     <para>
+      with the following content:
+     </para>
+<screen>
+[Unit]
+Description=CIFS share from The-Server
+
+[Mount]
+What=//The-Server/Shared-Folder
+Where=/cifs/shared
+Type=cifs
+Options=rw,username=vagrant,password=admin
+
+[Install]
+WantedBy=multi-user.target
+            </screen>
+    </step>
+    <step>
+     <para>
+      Enable the service:
+     </para>
+<screen>&prompt.sudo;systemctl restart nmb smb</screen>
+    </step>
+    <step>
+     <para>サーバの開始</para>
+<screen>&prompt.sudo;systemctl restart nmb smb</screen>
+     <para>
+      To verify that the service is running, run the command:
+     </para>
+<screen>&prompt.sudo;systemctl restart nmb smb</screen>
+    </step>
+    <step>
+     <para>
+      To confirm that the CIFS shared path is available, try the following
+      command:
+     </para>
+<screen>&prompt.user; cd /cifs/shared
+&prompt.user;ls -l
+
+total 0
+-rwxrwxrwx. 1 root    root    0 Oct 24 22:31 hello-world-cifs.txt
+drwxrwxrwx. 2 root    root    0 Oct 24 22:31 subfolder
+-rw-r--r--. 1 vagrant vagrant 0 Oct 28 21:51 testfile.txt
+            </screen>
+    </step>
+   </procedure>
+  </sect2>
 
   <sect2 xml:id="sec-samba-advanced-compress">
    <title>btrfs による透過型ファイル圧縮</title>
