@@ -30,10 +30,63 @@
 
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
 
-  <para>カーネルが提供する cgroup の API には 2 種類のものが存在します。これらは提供する cgroup 属性が異なるほか、コントローラの階層構造が異なります。 &systemd; は抽象化の仕組みによって、これらの違いを吸収しています。既定では &systemd; は <emphasis>ハイブリッド</emphasis> モードで動作し、 v1 API を利用してコントローラを制御します。 cgroup v2 は systemd 内でのみ使用されます。このほか <emphasis>統合</emphasis> モードとして、コントローラを v2 API で制御するモードもあります。なお、モードはいずれか 1 つを選択します。</para>
-
-  <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください (&grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください) 。</para>
+  <para>
+   The kernel cgroup API comes in two variants, v1 and v2. Additionally,
+   there can be multiple cgroup hierarchies exposing different APIs. From
+   the numerous possible combinations, there are two practical choices:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     hybrid: v2 hierarchy without controllers, and the controllers are on v1
+     hierarchies
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     unified: v2 hierarchy with controllers
+    </para>
+   </listitem>
+  </itemizedlist>
+  <para>
+   The current default mode is hybrid (as of &slea;&nbsp;SP3). This
+   provides backwards compatibility for applications that need it.
+   The following features are available only with the unified v2 hierarchy:
+  </para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     memory controller: reclaim protection (aka memory.low), memory.high,
+     PSI (pressure stall information)
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+    io controller: writeback control, new control policies
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    controller delegation to non-privileged users (rootless containers)
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    freezer support in systemd
+   </para>
+  </listitem>
+  <listitem>
+   <para>
+    simpler handling of the single hierararchy
+   </para>
+  </listitem>
+ </itemizedlist>
+   <para>
+    You may set only one mode.
+  </para>
+   <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください (&grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください) 。</para>
  </sect1>
+
  <sect1 xml:id="sec-tuning-cgroups-accounting">
   <title>リソースアカウンティング</title>
 
