@@ -31,7 +31,7 @@
    <varlistentry>
     <term>公開鍵認証</term>
     <listitem>
-     <para>パスワードではなく、個人単位で公開鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
+     <para>パスワードではなく、個人単位で鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -102,11 +102,11 @@
  <para>OpenSSH はインストール当初の状態でそれなりに強固な設定になっていますが、サーバのセキュリティを強化するための追加設定も用意されています。</para>
  <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、待ち受けるポートと IPv4 アドレスを変更しています:</para>
  <screen>
-  #Port 22
-  Port 2022
+#Port 22
+Port <replaceable>2022</replaceable>
 
-  #ListenAddress 0.0.0.0
-  ListenAddress 192.168.10.100</screen>
+#ListenAddress 0.0.0.0
+ListenAddress <replaceable>192.168.10.100</replaceable></screen>
  <para>なお、下記の <filename>/etc/ssh/sshd_config</filename> ファイル例は、アクセス制御をより強化した設定例です:</para>
  <screen># Check if the file modes and ownership of the user’s files and
 # home directory are correct before allowing them to login
@@ -114,20 +114,17 @@ StrictModes yes
 
 # If your machine has more than one IP address, define which address or
 # addresses it listens on
-ListenAddress 192.168.10.100
+ListenAddress <replaceable>192.168.10.100</replaceable>
 
 # Allow only members of the listed groups to log in
-AllowGroups ldapadmins backupadmins
+AllowGroups <replaceable>ldapadmins backupadmins</replaceable>
 
 # Or, deny certain groups. If you use both, DenyGroups is read first
-DenyGroups users
+DenyGroups <replaceable>users</replaceable>
 
 # Allow or deny certain users. If you use both, DenyUsers is read first
-AllowUsers &exampleuser; &exampleuserII;
-DenyUsers &exampleuserIII;
-
-# Do not allow root logins
-PermitRootLogin no
+AllowUsers <replaceable>user1 user2 user3</replaceable>
+DenyUsers <replaceable>user4</replaceable>
 
 # Allow root logins only with public key authentication
 PermitRootLogin prohibit-password
@@ -137,7 +134,7 @@ PermitRootLogin prohibit-password
 PasswordAuthentication no</screen>
 
  <para><filename>/etc/ssh/sshd_config</filename> ファイルを変更したあとは、下記のようにして文法チェックを行ってください:</para>
- <screen>&prompt.sudo;<command>sudo sshd -t</command></screen>
+ <screen>&prompt.sudo;<command>sshd -t</command></screen>
  <para>なお、文法チェック機能は文法のみをチェックする仕組みであり、設定の誤りは検出されないことに注意してください。チェック完了後は下記のように入力して実行することで、設定を再読み込みさせることができます:</para>
  <screen>&prompt.sudo;<command>systemctl reload sshd.server</command></screen>
  <para>サーバの鍵ディレクトリに適切なパーミッションが設定されていることを確認します。</para>
@@ -151,58 +148,45 @@ PasswordAuthentication no</screen>
   <para><command>ssh</command> コマンドを使用することで、ネットワーク上離れたシステムにログインして対話的な作業を行うことができます。たとえば &exampleuser; というユーザ名で <literal>&exampleserver;</literal> というホストにログインしたい場合は、下記のいずれかのコマンドを実行します:</para>
 
 <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
-  &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
+&prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
 
-  <para>
-   Type <literal>exit</literal> and press Enter to close an SSH session.
-  </para>
+  <para><literal>exit</literal> と入力して Enter を押すと、 SSH セッションを終了することができます。</para>
 
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
 
-  <para>これら加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
+  <para>これらに加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ユーザ名</replaceable>@<replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
-<screen>&prompt.user;ssh root@&exampleserver; "dmesg -T | tail -n 25"
-&prompt.user;ssh root@&exampleserver; "cat /etc/issue &amp;&amp; uptime"</screen>
+<screen>&prompt.user;<command>ssh root@&exampleserver; "dmesg -T | tail -n 25"</command>
+&prompt.user;<command>ssh root@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
 
   <sect2 xml:id="sec-ssh-programm-x">
-   <title>ネットワーク上の離れたホストでの X アプリケーションの起動</title>
-   <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。<command>ssh</command> コマンドに <option>-X</option> オプションを付けることで接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
-   <para>
-    A quick test is to run a simple game from the remote machine, such as
-    GNOME Mines:
-   </para>
+   <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
+   <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。接続先のマシンの <filename>/etc/ssh/sshd_config</filename> で <literal>X11Forwarding Yes</literal> を設定しておかなければなりませんが、 <command>ssh</command> コマンドに <option>-X</option> オプションを付けることで、接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
+   <para>たとえば下記のように実行することで、リモートのマシンでシンプルなゲームである GNOME Mines を動かすことができます:</para>
    <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
-  &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
-   <para>
-     The remote application should appear on your local machine just as
-     though it were installed locally. (Note that network lag may affect
-     performance.) Close the remote application in the usual way, such as
-     clicking the close button. This closes only the application, and your
-     SSH session remains open.
-   </para>
+Password:
+Last login: Tue May 10 11:29:06 2022 from 192.168.163.13
+Have a lot of fun...
+
+&exampleuser_plain;@&exampleserver; gnome-mines</screen>
+   <para>起動したアプリケーションはローカルにインストールされているかのように、ローカル側に表示されるはずです (ただしネットワーク側の遅延があると、その分だけ性能に影響があります)。アプリケーションの終了も通常と同じで、閉じるボタンを押すだけです。ただし、アプリケーションを閉じても SSH のセッションは終了せず、そのまま動作し続けます。</para>
 
    <important>
-    <title>X11 forwarding does not work on Wayland</title>
-    <para>
-     X11 forwarding requires the X Windows System, which is the default on
-     &slea;, and not the Wayland display server protocol. The X Windows
-     System has built-in networking, while Wayland does not.
-    </para>
-    <para>
-     Use the following command to learn if your system runs X or Wayland:
-    </para>
-    <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
-    <para>
-     If Wayland is in use, it looks like the following example:
-    </para>
-    <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
+    <title>Wayland では X11 転送機能が使用できない問題について</title>
+    <para>X11 転送機能は &slea; での既定値である X Window System の機能を使用しており、 Wayland ディスプレイサーバプロトコルには対応していません。これは、 Wayland がネットワークに対応していないことによるものです。</para>
+    <para>X Window System で動作しているのか、それとも Wayland で動作しているかを確認するには、下記のように入力して実行します:</para>
+    <screen>&prompt.user;<command>echo $XDG_SESSION_TYPE</command>
+x11</screen>
+    <para>Wayland で動作している場合は、下記のような出力になります:</para>
+    <screen>&prompt.user;<command>echo $XDG_SESSION_TYPE</command>
+wayland</screen>
    </important>
   </sect2>
 
   <!-- this section needs improving and expanding -->
   <sect2 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
-   <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります。詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください。</para>
+   <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります (詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください) 。</para>
 <!--
    <para>
     <literal>AllowAgentForwarding yes</literal> is the default in
@@ -342,7 +326,7 @@ cd path                            Change remote directory to 'path'
 
   <para>接続は SSH クライアント側から行います。その後、待ち受けている SSH デーモンと SSH クライアントとの間でプロトコルとソフトウエアバージョンを含む識別情報を交換し、誤ったポートからの接続が行われないようにします。 SSH デーモンの子プロセスが要求に応答する仕組みであるため、複数の SSH 接続を同時に受け付けることができるようになっています。</para>
 
-  <para>セッション鍵を解読するには、ホスト鍵とサーバ鍵の両方の機密鍵必要となるほか、機密鍵は公開鍵からは生成できないものです。そのため、通信相手となっている SSH デーモンのみがセッション鍵を解読できることになります。このような接続当初の動作は、 SSH クライアント側で <option>-v</option> オプションを指定して冗長出力を行うことで、より詳しく表示することができます。</para>
+  <para>セッション鍵を解読するには、ホスト鍵とサーバ鍵の両方の機密鍵が必要となるほか、機密鍵は公開鍵からは生成できない性質があります。そのため、通信相手となっている SSH デーモンのみがセッション鍵を解読できることになります。このような接続当初の動作は、 SSH クライアント側で <option>-v</option> オプションを指定して冗長出力を行うことで、より詳しく表示することができます。</para>
 
   <tip>
    <title>SSH デーモンのログファイルの表示について</title>
@@ -392,7 +376,7 @@ The key's randomart image is:
 |       .oo++..   |
 +----[SHA256]-----+
 
-&prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01</command>
+&prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01 -C "main server"</command>
 Generating public/private ed25519 key pair.
 Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
@@ -475,7 +459,7 @@ Accept updated hostkeys? (yes/no):</screen>
   </note>
 
   <sect2 xml:id="sec-ssh-authentic-gen-key">
-   <title>SSH 鍵の生成</title>
+   <title>SSH クライアント鍵とホスト鍵の生成</title>
    <para>生成できる鍵の種類としては、 DSA, RSA, ECDSA, ECDSA-SK, Ed25519, Ed25519-SK があります。ただし、 DSA は何年も前に廃止予定とされていて、 OpenSSH 7.0 では無効化されていて使用すべきではありません。 RSA は最も一般的に使用されている種類で、古い仕組みではあるものの一般的に使用されています。</para>
    <para>Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供されていますが、 Ed25519 に対応していない古いクライアントを受け付ける必要がある場合は、 Ed25519 と RSA の両方のホスト鍵を作成してください。</para>
    <note>
