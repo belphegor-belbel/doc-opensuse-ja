@@ -153,6 +153,10 @@ PasswordAuthentication no</screen>
 <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
   &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
 
+  <para>
+   Type <literal>exit</literal> and press Enter to close an SSH session.
+  </para>
+
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
 
   <para>これら加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
@@ -163,17 +167,53 @@ PasswordAuthentication no</screen>
   <sect2 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X アプリケーションの起動</title>
    <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。<command>ssh</command> コマンドに <option>-X</option> オプションを付けることで接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
+   <para>
+    A quick test is to run a simple game from the remote machine, such as
+    GNOME Mines:
+   </para>
+   <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
+  &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
+   <para>
+     The remote application should appear on your local machine just as
+     though it were installed locally. (Note that network lag may affect
+     performance.) Close the remote application in the usual way, such as
+     clicking the close button. This closes only the application, and your
+     SSH session remains open.
+   </para>
+
+   <important>
+    <title>X11 forwarding does not work on Wayland</title>
+    <para>
+     X11 forwarding requires the X Windows System, which is the default on
+     &slea;, and not the Wayland display server protocol. The X Windows
+     System has built-in networking, while Wayland does not.
+    </para>
+    <para>
+     Use the following command to learn if your system runs X or Wayland:
+    </para>
+    <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
+    <para>
+     If Wayland is in use, it looks like the following example:
+    </para>
+    <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
+   </important>
   </sect2>
 
+  <!-- this section needs improving and expanding -->
   <sect2 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
    <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります。詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください。</para>
-   <para>この仕組みは既定の設定では無効化されていますが、 <filename>/etc/ssh/sshd_config</filename> というシステム全体の設定に <literal>AllowAgentForwarding yes</literal> を追加するだけで、いつでも恒久的に有効化することができます。</para>
+<!--
+   <para>
+    <literal>AllowAgentForwarding yes</literal> is the default in
+    <filename>/etc/ssh/sshd_config</filename>. Change it to
+    <literal>No</literal> to disable it.
+   </para> -->
   </sect2>
  </sect1>
+
  <sect1 xml:id="sec-ssh-copy">
   <title><command>scp</command> - 機密を確保したファイルのコピー</title>
-
   <para><command>scp</command> は、指定したファイルをリモートのマシンとの間でコピーするプログラムです。 &wsI; 内でのユーザ名と &exampleserver; 内でのユーザ名が異なる場合は、 <option><replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable></option> の形式で指定してください。また、ホームディレクトリ以外のディレクトリにファイルをコピーしたい場合は、 &exampleserver;: <replaceable>ディレクトリ</replaceable> の形式で指定してください。下記の例では、ローカルから接続先に、および接続先からローカルにそれぞれファイルをコピーしています。</para>
 
 <screen>&prompt.user;scp ~/MyLetter.tex &exampleuser_plain;@&exampleserver;:/tmp <co xml:id="co-scp-local-remote"/>
