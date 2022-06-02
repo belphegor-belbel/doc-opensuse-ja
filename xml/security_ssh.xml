@@ -95,9 +95,9 @@
    </listitem>
   </varlistentry>
  </variablelist>
-</sect1>
+ </sect1>
 
-<sect1 xml:id="sec-ssh-server-config">
+ <sect1 xml:id="sec-ssh-server-config">
  <title>サーバのセキュリティ強化</title>
  <para>OpenSSH はインストール当初の状態でそれなりに強固な設定になっていますが、サーバのセキュリティを強化するための追加設定も用意されています。</para>
  <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、待ち受けるポートと IPv4 アドレスを変更しています:</para>
@@ -107,6 +107,17 @@ Port <replaceable>2022</replaceable>
 
 #ListenAddress 0.0.0.0
 ListenAddress <replaceable>192.168.10.100</replaceable></screen>
+
+<important>
+ <title>Update /etc/services</title>
+ <para>
+  When you use non-standard listening ports, first check the
+  <filename>/etc/services</filename> file for unused ports.
+  Select any unused port above 1024. Then document the ports you are using
+  in <filename>/etc/services</filename>.
+ </para>
+</important>
+
  <para>なお、下記の <filename>/etc/ssh/sshd_config</filename> ファイル例は、アクセス制御をより強化した設定例です:</para>
  <screen># Check if the file modes and ownership of the user’s files and
 # home directory are correct before allowing them to login
@@ -141,23 +152,54 @@ PasswordAuthentication no</screen>
  <para><filename>/etc/ssh</filename> ディレクトリには 0755/drwxr-xr-x のパーミッションが設定され、 root が所有するディレクトリでなければいけません。</para>
  <para>機密鍵には 0600/-rw------- のパーミッションが設定され、 root が所有していなければなりません。</para>
  <para>公開鍵には 0644/-rw-r--r-- のパーミッションが設定され、 root が所有していなければなりません。</para>
-</sect1>
+ <para>SSH 経由でのログインを制限したい場合、アカウントごとに接続元 IP サブネットを限定することができます。下記の手順を実行することで、 <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> のそれぞれに対して、ログイン制限を行うことができます。</para>
+  <procedure xml:id="pro-ssh-restrict-logins">
+   <title>Configuring remote login restrictions</title>
+   <para>
+    Perform the following steps to configure user remote login restrictions:
+    </para>
+   <step>
+    <para>まずは <filename>/etc/pam.d/sshd</filename> ファイルを編集して、 <literal>auth</literal> ブロックの末尾に下記を追加します:</para>
+    <screen>auth required pam_access.so</screen>
+   </step>
+   <step>
+    <para>あとは <filename>/etc/security/access.conf</filename> ファイルを編集して、ユーザごとの制限を設定します。下記の例では、 &rootuser; と &exampleuser; のログインを &exampledomain1ip;.0/&subnetmask; のネットワークから、 &exampleuserII; のログインを &exampledomain2ip;.0/&subnetmask; のネットワークからにのみ制限しています:</para>
+<screen>
++ : root : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
++ : &exampleuser_plain; : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
++ : &exampleuserII_plain; : <replaceable>&exampledomain2ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
+- : ALL : ALL</screen>
+   <para>なお一番下の行は、全てのユーザに対して全てのネットワークからのアクセスを禁止する設定になります。設定を行う際は注意して設定してください。</para>
+   <para>詳しい設定オプションについては、上記ファイル内のコメント文、もしくは <command>man access.conf</command> をお読みください。</para>
+   </step>
+  </procedure>
+  <warning>
+   <title><command>pam-config</command> の使用禁止について</title>
+   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。グローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
+  </warning>
+ </sect1>
 
 <sect1 xml:id="sec-ssh-programm">
   <title>パスワード認証</title>
-  <para><command>ssh</command> コマンドを使用することで、ネットワーク上離れたシステムにログインして対話的な作業を行うことができます。たとえば &exampleuser; というユーザ名で <literal>&exampleserver;</literal> というホストにログインしたい場合は、下記のいずれかのコマンドを実行します:</para>
+  <para>
+   With password authentication, you must have a user account on the
+   remote machine. In the following example, user &exampleuserIII; logs into
+   the host &exampleserver;:
+  </para>
 
 <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
 &prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
 
   <para><literal>exit</literal> と入力して Enter を押すと、 SSH セッションを終了することができます。</para>
-
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
-
   <para>これらに加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ユーザ名</replaceable>@<replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
 <screen>&prompt.user;<command>ssh root@&exampleserver; "dmesg -T | tail -n 25"</command>
 &prompt.user;<command>ssh root@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
+
+<!-- Public key auth
+     Passphrase-less public key auth
+     Certificate auth -->
 
   <sect2 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
@@ -180,6 +222,14 @@ x11</screen>
     <para>Wayland で動作している場合は、下記のような出力になります:</para>
     <screen>&prompt.user;<command>echo $XDG_SESSION_TYPE</command>
 wayland</screen>
+    <para>
+     The systemd way is to query with <command>loginctl</command>:
+    </para>
+     <screen>&prompt.user;<command>loginctl show-session "$XDG_SESSION_ID" -p Type</command>
+Type=x11
+
+&prompt.user;<command>loginctl show-session "$XDG_SESSION_ID" -p Type</command>
+Type=wayland</screen>
    </important>
   </sect2>
 
@@ -187,12 +237,11 @@ wayland</screen>
   <sect2 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
    <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります (詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください) 。</para>
-<!--
    <para>
     <literal>AllowAgentForwarding yes</literal> is the default in
     <filename>/etc/ssh/sshd_config</filename>. Change it to
     <literal>No</literal> to disable it.
-   </para> -->
+   </para>
   </sect2>
  </sect1>
 
@@ -225,6 +274,7 @@ wayland</screen>
 
   <para><option>-p</option> オプションは、 <command>scp</command> に対してファイルのタイムスタンプを変更しないようにするオプションです。 <option>-C</option> はデータ転送を圧縮するよう指示するオプションです。これにより転送の際のデータ量を減らすことができますが、送信側・受信側両方のホストでプロセッサにかかる負荷が上昇します。</para>
  </sect1>
+
  <sect1 xml:id="sec-ssh-sftp">
   <title><command>sftp</command> - 機密を保持したファイルの転送</title>
 
@@ -318,21 +368,51 @@ cd path                            Change remote directory to 'path'
     </varlistentry>
    </variablelist>
   </sect2>
- </sect1>
- <sect1 xml:id="sec-ssh-sshdserver">
-  <title>SSH デーモン ( <systemitem class="daemon">sshd</systemitem> )</title>
 
-  <para><command>ssh</command> や <command>scp</command> などのクライアント側プログラムを動作させるには、サーバ側で SSH デーモンを動作させておかなければなりません。 SSH デーモンは通常、裏で動く仕組みで、 <literal>TCP/IP ポート 22</literal> で接続を待ち受けています。デーモンは初回の起動時にホスト側の鍵対を作成しますが、それぞれの鍵対には公開鍵と機密鍵が含まれています。そのため、この処理は公開鍵ベースの鍵の生成と呼ばれます。また、 SSH を介した通信の機密が保たれるようにするため、機密鍵を含むファイルへのアクセスは、システム管理者にのみ許可するように設定しなければなりません。ただし、ファイルへのアクセス権は自動的に設定されます。さらに、機密鍵はローカルの SSH デーモンのみが使用するものであり、それ以外のユーザに公開してはなりません。逆に公開鍵 (ファイル名の拡張子が <filename>.pub</filename> になっているもの) は、接続を行うクライアントに送信されるものであり、全てのユーザから読み込むことができるようになっています。</para>
+ <!-- <sect2 xml:id="sec-ssh-sshdserver">
+  <title>The SSH daemon (<systemitem class="daemon">sshd</systemitem>)</title>
 
-  <para>接続は SSH クライアント側から行います。その後、待ち受けている SSH デーモンと SSH クライアントとの間でプロトコルとソフトウエアバージョンを含む識別情報を交換し、誤ったポートからの接続が行われないようにします。 SSH デーモンの子プロセスが要求に応答する仕組みであるため、複数の SSH 接続を同時に受け付けることができるようになっています。</para>
+  <para>
+   To work with the SSH client programs <command>ssh</command> and
+   <command>scp</command>, a server (the SSH daemon) must be running in the
+   background, listening for connections on <literal>TCP/IP port
+   22</literal>. The daemon generates host key pairs when starting for the
+   first time. Each key pair consists of a private and a public key.
+   Therefore, this procedure is called public key-based. To
+   guarantee the security of the communication via SSH, access to the
+   private key files must be restricted to the system administrator. The
+   file permissions are set accordingly by the default installation. The
+   private keys are only required locally by the SSH daemon and must not be
+   given to anyone else. The public key components (recognizable by the name
+   extension <filename>.pub</filename>) are sent to the client requesting
+   the connection. They are readable for all users.
+  </para>
 
-  <para>セッション鍵を解読するには、ホスト鍵とサーバ鍵の両方の機密鍵が必要となるほか、機密鍵は公開鍵からは生成できない性質があります。そのため、通信相手となっている SSH デーモンのみがセッション鍵を解読できることになります。このような接続当初の動作は、 SSH クライアント側で <option>-v</option> オプションを指定して冗長出力を行うことで、より詳しく表示することができます。</para>
+  <para>
+   A connection is initiated by the SSH client. The waiting SSH daemon and
+   the requesting SSH client exchange identification data to compare the
+   protocol and software versions, and to prevent connections through the
+   wrong port. Because a child process of the original SSH daemon replies to
+   the request, several SSH connections can be made simultaneously.
+  </para>
+
+  <para>
+   The private host and server keys are absolutely required to decrypt the
+   session key and cannot be derived from the public parts. Only the
+   contacted SSH daemon can decrypt the session key using its private keys.
+   This initial connection phase can be watched closely by turning on
+   verbose debugging using the <option>-v</option> option of the SSH client.
+  </para>
 
   <tip>
-   <title>SSH デーモンのログファイルの表示について</title>
-   <para><systemitem class="daemon">sshd</systemitem> が生成したログの出力を読みたい場合は、下記のコマンドを使用します:</para>
+   <title>Viewing the SSH daemon log file</title>
+   <para>
+    To watch the log entries from the <systemitem
+    class="daemon">sshd</systemitem> use the following command:
+   </para>
    <screen>&prompt.sudo;journalctl -u sshd</screen>
-  </tip>
+   </tip>
+  </sect2> -->
 
 
   <sect2>
@@ -437,26 +517,6 @@ Accept updated hostkeys? (yes/no):</screen>
     </listitem>
    </itemizedlist>
   </sect2>
- </sect1>
-
-<sect1 xml:id="sec-ssh-authentic">
-  <title>SSH 認証の仕組み</title>
-
-  <para>最も簡単な構成では、ログイン時にユーザのパスワードを入力させて認証を行います。しかしながら、複数のコンピュータを利用しているような場合、いちいちパスワードを覚えておくのは非効率ですし、面倒です。また、これらのパスワードは管理上の理由などで変更を行わなければならないこともあります。それだけでなく、 &rootuser; のアクセスを許可するような場合、管理者側では &rootuser; のパスワードを変更することなく、素早く個別の許可を取り消す措置を備えていなければならない場合もあります。</para>
-
-  <para>このような要件に対応するため、接続先のパスワードを入力することなくログインできる仕組みが用意されています。ユーザ側で鍵対を生成して、この鍵対を認証の代用として使用する方法です。この鍵対には公開鍵 ( <filename>id_rsa.pub</filename> もしくは <filename>id_dsa.pub</filename> ) と機密鍵 ( <filename>id_rsa</filename> もしくは <filename>id_dsa</filename> ) が含まれています。</para>
-
-  <para>接続先のユーザのパスワードを指定せずにログインできるようにするには、生成した公開鍵を、接続先のユーザのホームディレクトリ以下にある <filename>~/.ssh/authorized_keys</filename> というファイルに保存しておかなければなりません。このファイルに保存する際には、このユーザのパスワードを知っておかなければなりませんし、公開鍵を削除すればアクセスも拒否されるようになることから、アカウントに対する完全な制御を実現できることになります。</para>
-
-  <para>生成した鍵対そのものに対する機密を保護するため、鍵対にはパスフレーズを設定しておいて、 <command>ssh</command> , <command>scp</command> , <command>sftp</command> のような各コマンドを使用する際に、パスフレーズを入力するように設定しておくことをお勧めします。通常のパスワード認証とは異なり、接続先ホストのユーザのパスワードとは連動していないものですので、自由に管理することができます。</para>
-
-  <para>上述のとおり鍵対を利用した認証方法のほかに、 SSH ではホストベースの認証にも対応しています。ホストベースの認証では、信頼されているホスト内のユーザは、同じユーザに対して同機能が有効化されている接続先にログインすることができるようになります。 &productname; では鍵対ベースの認証を設定しますので、本マニュアルでは説明していません。</para>
-
-  <note>
-<!-- fix for bug #398647 -->
-   <title>ホストベースの認証でのファイルパーミッションについて</title>
-   <para>ホストベースの認証を使用している場合、 <filename>/usr/lib/ssh/ssh-keysign</filename> に対して setuid ビットを設定する必要があります。既定の &productname; ではそのような設定を行っていませんので、必要であれば手作業で設定を行ってください。なお、 <filename>/etc/permissions.local</filename> ファイルで必要な設定を行うことで、 <package>openssh</package> 自身に対する更新が提供された場合でも、パーミッションを設定し直す必要が無くなります。</para>
-  </note>
 
   <sect2 xml:id="sec-ssh-authentic-gen-key">
    <title>SSH クライアント鍵とホスト鍵の生成</title>
@@ -595,49 +655,8 @@ eval $(ssh-agent)
     <para>エージェントを起動したら、 <command>ssh-add</command> を実行して鍵を追加していってください。</para>
    </sect3>
   </sect2>
-
-<!-- fs 2012-10-02:
-
-     Not sure what to do with this...
-
-    <sect2 id="sec-ssh-authentic-host-based">
-   <title>Host-based authentication</title>
-   <para></para>
-  </sect2>
--->
  </sect1>
- <sect1 xml:id="sec-ssh-restrict-logins">
-  <title>SSH ログインの制限</title>
-  <para>SSH 経由でのログインを制限したい場合、アカウントごとに接続元 IP サブネットを限定することができます。下記の手順を実行することで、 <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> のそれぞれに対して、ログイン制限を行うことができます。</para>
-  <procedure xml:id="pro-ssh-restrict-logins">
-   <!-- cwickert 2021-09-24 following lines are the 'new' format of procedures
-    with title and introduction inside. Commented out for consistency for now.
-   -->
-   <!-- <title>Configuring user remote login restrictions</title>
-   <para>
-    Perform the following steps to configure user remote login restrictions:
-    </para> -->
-   <step>
-    <para>まずは <filename>/etc/pam.d/sshd</filename> ファイルを編集して、 <literal>auth</literal> ブロックの末尾に下記を追加します:</para>
-    <screen>auth required pam_access.so</screen>
-   </step>
-   <step>
-    <para>あとは <filename>/etc/security/access.conf</filename> ファイルを編集して、ユーザごとの制限を設定します。下記の例では、 &rootuser; と &exampleuser; のログインを &exampledomain1ip;.0/&subnetmask; のネットワークから、 &exampleuserII; のログインを &exampledomain2ip;.0/&subnetmask; のネットワークからにのみ制限しています:</para>
-<screen>
-+ : root : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
-+ : &exampleuser_plain; : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
-+ : &exampleuserII_plain; : <replaceable>&exampledomain2ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
-- : ALL : ALL</screen>
-   <para>なお一番下の行は、全てのユーザに対して全てのネットワークからのアクセスを禁止する設定になります。設定を行う際は注意して設定してください。</para>
-   <para>詳しい設定オプションについては、上記ファイル内のコメント文、もしくは <command>man access.conf</command> をお読みください。</para>
-   </step>
-  </procedure>
-  <warning>
-   <title><command>pam-config</command> の使用禁止について</title>
-   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。グローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
-  </warning>
 
- </sect1>
  <sect1 xml:id="sec-ssh-port-forwarding">
   <title>ポート転送</title>
 
