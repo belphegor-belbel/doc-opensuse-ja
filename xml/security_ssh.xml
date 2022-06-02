@@ -18,7 +18,7 @@
 
  <sect1 xml:id="sec-ssh-overview">
   <title>OpenSSH の概要</title>
-  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証プロトコルを制限したりすることもできるようになっています。</para>
+  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
   <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドと支援系のユーティリティが含まれています。</para>
   <para>OpenSSH では下記のような認証方式に対応しています:</para>
   <variablelist>
@@ -100,7 +100,7 @@
  <sect1 xml:id="sec-ssh-server-config">
  <title>サーバのセキュリティ強化</title>
  <para>OpenSSH はインストール当初の状態でそれなりに強固な設定になっていますが、サーバのセキュリティを強化するための追加設定も用意されています。</para>
- <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、待ち受けるポートと IPv4 アドレスを変更しています:</para>
+ <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、複数のネットワークインターフェイスを持つマシンで待ち受けるポートと IPv4 アドレスを指定しています:</para>
  <screen>
 #Port 22
 Port <replaceable>2022</replaceable>
@@ -109,13 +109,8 @@ Port <replaceable>2022</replaceable>
 ListenAddress <replaceable>192.168.10.100</replaceable></screen>
 
 <important>
- <title>Update /etc/services</title>
- <para>
-  When you use non-standard listening ports, first check the
-  <filename>/etc/services</filename> file for unused ports.
-  Select any unused port above 1024. Then document the ports you are using
-  in <filename>/etc/services</filename>.
- </para>
+ <title>/etc/services の更新について</title>
+ <para>非標準の待ち受けポートを使用する場合は、 <filename>/etc/services</filename> ファイルを参照して、使用していないポートの中から選択してください。通常は 1024 以上の未使用ポートを使用します。設定後は、 <filename>/etc/services</filename> ファイル内にポートが使用中である旨を記録しておくことをお勧めします。</para>
 </important>
 
  <para>なお、下記の <filename>/etc/ssh/sshd_config</filename> ファイル例は、アクセス制御をより強化した設定例です:</para>
@@ -134,15 +129,23 @@ AllowGroups <replaceable>ldapadmins backupadmins</replaceable>
 DenyGroups <replaceable>users</replaceable>
 
 # Allow or deny certain users. If you use both, DenyUsers is read first
-AllowUsers <replaceable>user1 user2 user3</replaceable>
-DenyUsers <replaceable>user4</replaceable>
+AllowUsers <replaceable>user1 user2@example.com user3</replaceable>
+DenyUsers <replaceable>user4 user5@192.168.10.10</replaceable>
 
 # Allow root logins only with public key authentication
 PermitRootLogin prohibit-password
 
 # Disable password authentication and allow only public key authentication
 # for all users
-PasswordAuthentication no</screen>
+PasswordAuthentication no
+
+# Length of time the server waits for a user to log in and complete the
+# connection. The default is 120 seconds:
+LoginGraceTime <replaceable>60</replaceable>
+
+# Limit the number of failed connection attempts. The default is 6
+MaxAuthTries <replaceable>4</replaceable>
+</screen>
 
  <para><filename>/etc/ssh/sshd_config</filename> ファイルを変更したあとは、下記のようにして文法チェックを行ってください:</para>
  <screen>&prompt.sudo;<command>sshd -t</command></screen>
@@ -150,14 +153,12 @@ PasswordAuthentication no</screen>
  <screen>&prompt.sudo;<command>systemctl reload sshd.server</command></screen>
  <para>サーバの鍵ディレクトリに適切なパーミッションが設定されていることを確認します。</para>
  <para><filename>/etc/ssh</filename> ディレクトリには 0755/drwxr-xr-x のパーミッションが設定され、 root が所有するディレクトリでなければいけません。</para>
- <para>機密鍵には 0600/-rw------- のパーミッションが設定され、 root が所有していなければなりません。</para>
- <para>公開鍵には 0644/-rw-r--r-- のパーミッションが設定され、 root が所有していなければなりません。</para>
- <para>SSH 経由でのログインを制限したい場合、アカウントごとに接続元 IP サブネットを限定することができます。下記の手順を実行することで、 <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> のそれぞれに対して、ログイン制限を行うことができます。</para>
+ <para>機密鍵には 0600/-rw------- のパーミッションを設定し、 root が所有していなければなりません。</para>
+ <para>公開鍵には 0644/-rw-r--r-- のパーミッションを設定し、 root が所有していなければなりません。</para>
+ <para>PAM (Pluggable Authentication Modules) を利用することで、ログインを許可するサブネットを制限することができます。下記の手順では、特定のユーザに対してリモートからのログインを制限する設定を行っています。なお、下記の手順は <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> ) の全ての OpenSSH コマンドに対して適用されます。</para>
   <procedure xml:id="pro-ssh-restrict-logins">
-   <title>Configuring remote login restrictions</title>
-   <para>
-    Perform the following steps to configure user remote login restrictions:
-    </para>
+   <title>リモートからのログイン制限の設定</title>
+   <para>リモートからのログイン制限を設定するには、下記の手順を実施します:</para>
    <step>
     <para>まずは <filename>/etc/pam.d/sshd</filename> ファイルを編集して、 <literal>auth</literal> ブロックの末尾に下記を追加します:</para>
     <screen>auth required pam_access.so</screen>
@@ -174,25 +175,21 @@ PasswordAuthentication no</screen>
    </step>
   </procedure>
   <warning>
-   <title><command>pam-config</command> の使用禁止について</title>
-   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。グローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
+   <title>pam-config の使用禁止について</title>
+   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>git pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。これをグローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
   </warning>
  </sect1>
 
 <sect1 xml:id="sec-ssh-programm">
   <title>パスワード認証</title>
-  <para>
-   With password authentication, you must have a user account on the
-   remote machine. In the following example, user &exampleuserIII; logs into
-   the host &exampleserver;:
-  </para>
+  <para>パスワード認証の場合、接続先のマシン内にユーザアカウントを作成しておかなければなりません。下記の例では、 &exampleserver; というホストに対して &exampleuserIII; というユーザ名でログインしています:</para>
 
-<screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
-&prompt.user;<command>ssh -l &exampleuser_plain; &exampleserver;</command></screen>
+<screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver;</command>
+</screen>
 
-  <para><literal>exit</literal> と入力して Enter を押すと、 SSH セッションを終了することができます。</para>
-  <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh &exampleserver;</command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
-  <para>これらに加えて、 <command>ssh</command> では <command>ssh</command> <replaceable>ユーザ名</replaceable>@<replaceable>ホスト</replaceable> <replaceable>コマンド</replaceable> のように入力して実行することで、対話操作を伴わないコマンドの実行にも対応しています。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
+  <para><literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
+  <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh <replaceable>ホスト名</replaceable></command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
+  <para>これらに加えて、 <command>ssh <replaceable>ユーザ名@ホスト コマンド</replaceable></command> の書式を使用することで、対話的でないコマンドを実行することもできます。この場合、ログインしてコマンドを実行したあと、そのまま接続を終了する動作になります。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
 <screen>&prompt.user;<command>ssh root@&exampleserver; "dmesg -T | tail -n 25"</command>
 &prompt.user;<command>ssh root@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
@@ -205,26 +202,24 @@ PasswordAuthentication no</screen>
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
    <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。接続先のマシンの <filename>/etc/ssh/sshd_config</filename> で <literal>X11Forwarding Yes</literal> を設定しておかなければなりませんが、 <command>ssh</command> コマンドに <option>-X</option> オプションを付けることで、接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
    <para>たとえば下記のように実行することで、リモートのマシンでシンプルなゲームである GNOME Mines を動かすことができます:</para>
-   <screen>&prompt.user;<command>ssh &exampleuser_plain;@&exampleserver;</command>
+   <screen>&prompt.user;<command>ssh &exampleuserII_plain;@&exampleserver;</command>
 Password:
 Last login: Tue May 10 11:29:06 2022 from 192.168.163.13
 Have a lot of fun...
 
-&exampleuser_plain;@&exampleserver; gnome-mines</screen>
+&exampleuserII;@&exampleserver;<command>gnome-mines</command></screen>
    <para>起動したアプリケーションはローカルにインストールされているかのように、ローカル側に表示されるはずです (ただしネットワーク側の遅延があると、その分だけ性能に影響があります)。アプリケーションの終了も通常と同じで、閉じるボタンを押すだけです。ただし、アプリケーションを閉じても SSH のセッションは終了せず、そのまま動作し続けます。</para>
 
    <important>
     <title>Wayland では X11 転送機能が使用できない問題について</title>
-    <para>X11 転送機能は &slea; での既定値である X Window System の機能を使用しており、 Wayland ディスプレイサーバプロトコルには対応していません。これは、 Wayland がネットワークに対応していないことによるものです。</para>
+    <para>X11 転送機能は &slea; での既定値である X Window System の機能を使用しており、 Wayland ディスプレイサーバプロトコルには対応していません。これは、 Wayland がネットワークに対応していないことによるものです。また、 Wayland は &slea; でのサポート対象外となっております。</para>
     <para>X Window System で動作しているのか、それとも Wayland で動作しているかを確認するには、下記のように入力して実行します:</para>
     <screen>&prompt.user;<command>echo $XDG_SESSION_TYPE</command>
 x11</screen>
     <para>Wayland で動作している場合は、下記のような出力になります:</para>
     <screen>&prompt.user;<command>echo $XDG_SESSION_TYPE</command>
 wayland</screen>
-    <para>
-     The systemd way is to query with <command>loginctl</command>:
-    </para>
+    <para>systemd を利用して判断したい場合は、 <command>loginctl</command> コマンドを使用します:</para>
      <screen>&prompt.user;<command>loginctl show-session "$XDG_SESSION_ID" -p Type</command>
 Type=x11
 
@@ -237,11 +232,7 @@ Type=wayland</screen>
   <sect2 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
    <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります (詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください) 。</para>
-   <para>
-    <literal>AllowAgentForwarding yes</literal> is the default in
-    <filename>/etc/ssh/sshd_config</filename>. Change it to
-    <literal>No</literal> to disable it.
-   </para>
+   <para><filename>/etc/ssh/sshd_config</filename> では、既定で <literal>AllowAgentForwarding yes</literal> が設定されています。無効化したい場合は <literal>No</literal> に変更してください。</para>
   </sect2>
  </sect1>
 
