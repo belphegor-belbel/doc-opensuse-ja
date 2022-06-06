@@ -152,9 +152,9 @@ MaxAuthTries <replaceable>4</replaceable>
  <para>なお、文法チェック機能は文法のみをチェックする仕組みであり、設定の誤りは検出されないことに注意してください。チェック完了後は下記のように入力して実行することで、設定を再読み込みさせることができます:</para>
  <screen>&prompt.sudo;<command>systemctl reload sshd.server</command></screen>
  <para>サーバの鍵ディレクトリに適切なパーミッションが設定されていることを確認します。</para>
- <para><filename>/etc/ssh</filename> ディレクトリには 0755/drwxr-xr-x のパーミッションが設定され、 root が所有するディレクトリでなければいけません。</para>
- <para>機密鍵には 0600/-rw------- のパーミッションを設定し、 root が所有していなければなりません。</para>
- <para>公開鍵には 0644/-rw-r--r-- のパーミッションを設定し、 root が所有していなければなりません。</para>
+ <para><filename>/etc/ssh</filename> ディレクトリは 0755/drwxr-xr-x のパーミッションで所有者が root:root でなければいけません。</para>
+ <para>機密鍵は 0600/-rw------- のパーミッションで所有者が root:root でなければいけません。</para>
+ <para>公開鍵は 0644/-rw-r--r-- のパーミッションで所有者が root:root でなければいけません。</para>
  <para>PAM (Pluggable Authentication Modules) を利用することで、ログインを許可するサブネットを制限することができます。下記の手順では、特定のユーザに対してリモートからのログインを制限する設定を行っています。なお、下記の手順は <command>ssh</command> ( <xref linkend="sec-ssh-programm"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> ) の全ての OpenSSH コマンドに対して適用されます。</para>
   <procedure xml:id="pro-ssh-restrict-logins">
    <title>リモートからのログイン制限の設定</title>
@@ -171,7 +171,7 @@ MaxAuthTries <replaceable>4</replaceable>
 + : &exampleuserII_plain; : <replaceable>&exampledomain2ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 - : ALL : ALL</screen>
    <para>なお一番下の行は、全てのユーザに対して全てのネットワークからのアクセスを禁止する設定になります。設定を行う際は注意して設定してください。</para>
-   <para>詳しい設定オプションについては、上記ファイル内のコメント文、もしくは <command>man access.conf</command> をお読みください。</para>
+   <para>詳しい設定オプションについては、 <filename>/etc/security/access.conf</filename> ファイル内の設定例や <command>man access.conf</command> をお読みください。</para>
    </step>
   </procedure>
   <warning>
@@ -182,18 +182,14 @@ MaxAuthTries <replaceable>4</replaceable>
 
 <sect1 xml:id="sec-ssh-programm">
   <title>パスワード認証</title>
-  <para>パスワード認証の場合、接続先のマシン内にユーザアカウントを作成しておかなければなりません。下記の例では、 &exampleserver; というホストに対して &exampleuserIII; というユーザ名でログインしています:</para>
+  <para>パスワード認証の場合、接続先のマシン内にユーザアカウントを作成しておかなければなりません。下記の例では、 &exampleserver; というホストに対して &exampleuserIII_plain; というユーザ名でログインしています:</para>
 <screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver;</command>
 </screen>
   <para><literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh <replaceable>ホスト名</replaceable></command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
   <tip>
-   <title>Different passwords on remote hosts</title>
-   <para>
-    Remember, when you have user accounts on multiple machines, each one can
-    have a different password. When the remote host prompts for your
-    password, it is requesting the password for the remote machine.
-   </para>
+   <title>入力すべきパスワードについて</title>
+   <para>複数のマシンで同じユーザアカウントを使用している場合、それぞれのマシンに対して別々のパスワードを設定することができます。そのため接続時に入力すべきパスワードは、接続先のパスワードとなることに注意してください。</para>
   </tip>
   <para>これらに加えて、 <command>ssh <replaceable>ユーザ名@ホスト コマンド</replaceable></command> の書式を使用することで、対話的でないコマンドを実行することもできます。この場合、ログインしてコマンドを実行したあと、そのまま接続を終了する動作になります。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
@@ -214,7 +210,7 @@ Password:
 Last login: Tue May 10 11:29:06 2022 from 192.168.163.13
 Have a lot of fun...
 
-&exampleuserII;@&exampleserver;<command>gnome-mines</command></screen>
+&exampleuserII_plain;@&exampleserver;&prompt.user; <command>gnome-mines</command></screen>
    <para>起動したアプリケーションはローカルにインストールされているかのように、ローカル側に表示されるはずです (ただしネットワーク側の遅延があると、その分だけ性能に影響があります)。アプリケーションの終了も通常と同じで、閉じるボタンを押すだけです。ただし、アプリケーションを閉じても SSH のセッションは終了せず、そのまま動作し続けます。</para>
 
    <important>
