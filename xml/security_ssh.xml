@@ -183,12 +183,18 @@ MaxAuthTries <replaceable>4</replaceable>
 <sect1 xml:id="sec-ssh-programm">
   <title>パスワード認証</title>
   <para>パスワード認証の場合、接続先のマシン内にユーザアカウントを作成しておかなければなりません。下記の例では、 &exampleserver; というホストに対して &exampleuserIII; というユーザ名でログインしています:</para>
-
 <screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver;</command>
 </screen>
-
   <para><literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh <replaceable>ホスト名</replaceable></command> のように入力して実行するだけで済みます。このコマンドを実行すると、パスワードの入力が求められますので、相手側のコンピュータでのパスワードを入力してください。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
+  <tip>
+   <title>Different passwords on remote hosts</title>
+   <para>
+    Remember, when you have user accounts on multiple machines, each one can
+    have a different password. When the remote host prompts for your
+    password, it is requesting the password for the remote machine.
+   </para>
+  </tip>
   <para>これらに加えて、 <command>ssh <replaceable>ユーザ名@ホスト コマンド</replaceable></command> の書式を使用することで、対話的でないコマンドを実行することもできます。この場合、ログインしてコマンドを実行したあと、そのまま接続を終了する動作になります。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます。</para>
 
 <screen>&prompt.user;<command>ssh root@&exampleserver; "dmesg -T | tail -n 25"</command>
@@ -197,8 +203,9 @@ MaxAuthTries <replaceable>4</replaceable>
 <!-- Public key auth
      Passphrase-less public key auth
      Certificate auth -->
+  </sect1>
 
-  <sect2 xml:id="sec-ssh-programm-x">
+  <sect1 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
    <para>SSH では、ネットワーク上離れた場所にある X アプリケーションも簡単に使用することができます。接続先のマシンの <filename>/etc/ssh/sshd_config</filename> で <literal>X11Forwarding Yes</literal> を設定しておかなければなりませんが、 <command>ssh</command> コマンドに <option>-X</option> オプションを付けることで、接続先の <envar>DISPLAY</envar> 変数が自動的に設定され、全ての X 出力が SSH の接続を介してローカルマシンに表示されるようになります。それと同時に接続先で起動された X アプリケーションは、不正に傍受されたりできないようになります。</para>
    <para>たとえば下記のように実行することで、リモートのマシンでシンプルなゲームである GNOME Mines を動かすことができます:</para>
@@ -226,14 +233,13 @@ Type=x11
 &prompt.user;<command>loginctl show-session "$XDG_SESSION_ID" -p Type</command>
 Type=wayland</screen>
    </important>
-  </sect2>
+  </sect1>
 
   <!-- this section needs improving and expanding -->
-  <sect2 xml:id="sec-ssh-programm-forwarding">
+  <sect1 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
    <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンで有効化されます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります (詳しくは <xref linkend="sec-ssh-authentic-key-copy"/> をお読みください) 。</para>
    <para><filename>/etc/ssh/sshd_config</filename> では、既定で <literal>AllowAgentForwarding yes</literal> が設定されています。無効化したい場合は <literal>No</literal> に変更してください。</para>
-  </sect2>
  </sect1>
 
  <sect1 xml:id="sec-ssh-copy">
