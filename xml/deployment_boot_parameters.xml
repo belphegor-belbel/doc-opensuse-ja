@@ -113,7 +113,7 @@
     <varlistentry>
      <term><keycap>F4</keycap> <guimenu>ソース</guimenu></term>
      <listitem>
-      <para>通常は、接続されたインストールメディアからインストールを行います。ここでは、 FTP や NFS サーバなど、他のインストール元 (ソース) を利用する設定を行うことができます。 SLP サーバが配置されたネットワーク内でインストールを行う場合は、このオプション内に SLP サーバが表示されます。 <phrase os="sles;sled">インストールサーバの設定方法について、詳しくは <xref linkend="cha-deployment-instserver"/> をお読みください。</phrase></para>
+      <para>通常は、接続されたインストールメディアからインストールを行います。ここでは、 FTP や NFS サーバなどのインストール元 (ソース) やプロキシサーバを設定することができます。 <phrase os="sles;sled"> SLP サーバが配置されたネットワーク内でインストールを行う場合は、このオプション内に SLP サーバが表示されます。インストールサーバの設定方法について、詳しくは <xref linkend="cha-deployment-instserver"/> をお読みください。</phrase></para>
      </listitem>
     </varlistentry>
     <varlistentry xml:id="vle-boot-parameters-screen-kernel">
@@ -369,11 +369,11 @@
     <varlistentry>
      <term><option>install=SOURCE</option></term>
      <listitem>
-      <para>使用するインストール元 (ソース) の場所を指定します。利用可能なプロトコルは下記のとおりです: <literal>cd</literal> , <literal>hd</literal> , <literal>slp</literal> , <literal>nfs</literal> , <literal>smb</literal> (Samba/CIFS), <literal>ftp</literal> , <literal>tftp</literal> , <literal>http</literal> , <literal>https</literal> 。なお、全てのプラットフォームで全てのソースが利用できるというわけではありません。 <phrase os="sles">たとえば &zseries; では、 <literal>cd</literal> と <literal>hd</literal> は使用できません。</phrase></para>
-      <para>通信を暗号化したい場合は、 <literal>https</literal> をお使いください。また、使用する証明書が一般的な証明書でない場合は、 <literal>sslcerts=0</literal> を起動パラメータに追加することで、証明書チェックを無効化することもできます。</para>
-      <para><literal>ftp</literal> , <literal>tftp</literal>, <literal>smb</literal> のいずれかの場合、 URL の一部としてユーザ名とパスワードを設定することができます。これらのパラメータは必要な場合にのみ設定すべきもので、何も指定しない場合は匿名もしくはゲストでログインすることになります。ユーザ名とパスワードは、下記のようにして指定します:</para>
-<screen>install=ftp://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@<replaceable>サーバ</replaceable>/<replaceable>ディレクトリ</replaceable>/DVD1/</screen>
-      <para>Samba/CIFS を利用してインストールする場合は、下記のようにしてドメインを指定することができます:</para>
+      <para>使用するインストール元 (ソース) の場所を指定します。利用可能なプロトコルは下記のとおりです: <literal>cd</literal> , <literal>hd</literal> , <literal>slp</literal> , <literal>nfs</literal> , <literal>smb</literal> (Samba/CIFS), <literal>ftp</literal> , <literal>tftp</literal> , <literal>http</literal> , <literal>https</literal> 。 <phrase os="sles">なお、全てのプラットフォームで全てのソースが利用できるというわけではありません。たとえば &zseries; では、 <literal>cd</literal> と <literal>hd</literal> は使用できません。</phrase> 既定値は <literal>cd</literal> です。</para>
+      <para>通信を暗号化したい場合は、 <literal>https</literal> の URL を指定してください。また、使用する証明書が一般的な証明書でない場合は、 <literal>sslcerts=0</literal> を起動パラメータに追加することで、証明書チェックを無効化することもできます。</para>
+      <para>また、 <literal>http</literal> , <literal>https</literal> , <literal>ftp</literal> , <literal>tftp</literal> , <literal>smb</literal> の各 URL を指定する場合、 URL 内でユーザ名とパスワードを指定することで、認証を設定することもできます。たとえば下記のようになります:</para>
+<screen>install=https://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@<replaceable>サーバ</replaceable>/<replaceable>ディレクトリ</replaceable>/DVD1/</screen>
+      <para>Samba/CIFS を利用してインストールする場合は、下記のようにしてドメインを指定することもできます:</para>
 <screen>install=smb://<replaceable>ドメインまたはワークグループ</replaceable>;<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@<replaceable>サーバ</replaceable>/<replaceable>ディレクトリ</replaceable>/DVD1/</screen>
       <para><literal>cd</literal> , <literal>hd</literal> , <literal>slp</literal> の場合は、下記のようにして指定します:</para>
 <screen>install=cd:/
@@ -521,13 +521,10 @@ install=slp:/</screen>
     </step>
     <step>
      <para>下記の書式で新しい行を追加します:</para>
-<screen>http://proxy.example.com:<replaceable>ポート番号</replaceable></screen>
-     <para>
-      If the server certificate cannot be verified, disable certificate
-      checking with the <literal>sslcerts=0</literal> boot parameter.
-     </para>
-     <para><option>console=</option> <replaceable>シリアルデバイス</replaceable> [, <replaceable>モード</replaceable> ]</para>
-<screen>proxy=http://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@proxy.example.com:<replaceable>ポート番号</replaceable></screen>
+<screen>http://&proxyname;:<replaceable>ポート番号</replaceable></screen>
+     <para>また、使用する証明書が一般的な証明書でない場合は、 <literal>sslcerts=0</literal> を起動パラメータに追加することで、証明書チェックを無効化することもできます。</para>
+     <para>サーバに接続する際に認証が必要な場合は、 <replaceable>ユーザ名</replaceable> と <replaceable>パスワード</replaceable> を指定することもできます:</para>
+<screen>proxy=https://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@&proxyname;:<replaceable>ポート番号</replaceable></screen>
      <para>結果は下記のようになります:</para>
      <figure>
       <title>GRUB オプションエディタ</title>
