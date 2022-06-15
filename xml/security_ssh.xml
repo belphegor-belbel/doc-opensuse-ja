@@ -8,15 +8,7 @@
  <title>OpenSSH によるネットワーク操作の機密保持</title>
  <info>
   <abstract>
-   <para>
-    OpenSSH is the SSH (secure shell) implementation that ships with &sls;,
-    for securing network operations such as remote administration, file
-    transfers, and tunneling insecure protocols. SSH encrypts all traffic,
-    including authentication, to protect against eavesdropping and
-    connection hijacking. This chapter covers basic operations, plus host
-    key rotation and certificate authentication, which are especially useful
-    for managing larger SSH deployments.
-   </para>
+   <para>OpenSSH は &sles; に同梱される SSH (secure shell) 実装で、遠隔からの管理やファイル転送、機密を保持できないプロトコルへの機密トンネル設定など、さまざまな機能を提供するソフトウエアです。 SSH は 2 つのホスト間での認証を含む全通信を暗号化しますので、盗聴や接続の乗っ取りなどの被害から通信を保護することができます。本章では基本的な操作のほか、ホスト鍵の切り替えや証明書認証など、特に大規模展開向けに便利な機能を説明しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker>
@@ -27,10 +19,7 @@
  <sect1 xml:id="sec-ssh-overview">
   <title>OpenSSH の概要</title>
   <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
-  <para>
-   The <package>openssh</package> package installs the server, client,
-   file transfer commands, and helper utilities.
-  </para>
+  <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドといくつかのユーティリティが含まれています。</para>
   <para>OpenSSH では下記のような認証方式に対応しています:</para>
   <variablelist>
    <varlistentry>
@@ -49,11 +38,7 @@
      <term>パスフレーズ無しの公開鍵認証</term>
      <listitem>
       <para>機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。スクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
-      <para>
-       A useful alternative is to use <command>ssh-agent</command> and
-       related utilities for managing passphrase-protected keys. These
-       hold passphrases in memory, and apply them as needed.
-      </para>
+      <para>なお、 Keychain と関連するユーティリティを利用することで、パスフレーズで保護したまま鍵を管理する方法もあります。 Keychain はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供する仕組みで、ログインしている間のみ有効となります。いったんログアウトしてしまうと、パスフレーズの記憶は消去されます。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -63,6 +48,10 @@
      </listitem>
     </varlistentry>
    </variablelist>
+
+  <para>初めてホストに接続した場合、クライアントは公開鍵を <filename>~/.ssh/known_hosts</filename> 内に保存します。これにより、盗聴を行いたい攻撃者が自前で暗号鍵を用意してそれを接続元に提供し、いったん攻撃者側で暗号を解除して盗聴してから、再度本来の暗号鍵で暗号化して接続先にデータを送信するといった、中間者攻撃を防ぐことができます。このような攻撃が行われた場合、 <filename>~/.ssh/known_hosts</filename> 内に保存されているホスト鍵とは異なる鍵が検出されるか、もしくはサーバ側でメッセージが解読できなくなります。 <!--mutual auth--></para>
+
+  <para>何らかの理由でホストの公開鍵が変わってしまった場合、クライアントはサーバへの接続前にその旨のメッセージを受け取ります。以前の鍵を削除したい場合は、 <command>ssh-keygen -r <replaceable>ホスト名</replaceable></command> を実行してください。</para>
 
  <para>&productname; では既定で OpenSSH パッケージをインストールします。パッケージ内には、下記のようなファイルが含まれています:</para>
 
@@ -115,6 +104,10 @@
  <sect1 xml:id="sec-ssh-server-config">
  <title>サーバのセキュリティ強化</title>
  <para>OpenSSH はインストール当初の状態でそれなりに強固な設定になっていますが、サーバのセキュリティを強化するための追加設定も用意されています。</para>
+ <important>
+  <title>リモートマシンに対するアクセスの管理について</title>
+  <para>SSH サーバに対して何らかの設定変更を行う場合は、その変更が期待通りのものであることを確認できるまで、そのマシンに対して物理的なアクセス手段を残しておくか、もしくは root の SSH セッションを開いたままにしておく必要があります。これにより、期待通りの動作で無かった場合、設定をすぐに戻すことができるためです。</para>
+ </important>
  <para>既定のサーバ設定は <filename>/etc/ssh/sshd_config</filename> で、ここには既定で使用される設定が書かれています。また、コメント内には全ての既定値が示されています。既定値を変更したい場合は、これらのコメント文字を外してから、必要な設定を記述してください。たとえば下記の例では、複数のネットワークインターフェイスを持つマシンで待ち受けるポートと IPv4 アドレスを指定しています:</para>
  <screen>
 #Port 22
@@ -128,39 +121,12 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
  <para>非標準の待ち受けポートを使用する場合は、 <filename>/etc/services</filename> ファイルを参照して、使用していないポートの中から選択してください。通常は 1024 以上の未使用ポートを使用します。設定後は、 <filename>/etc/services</filename> ファイル内にポートが使用中である旨を記録しておくことをお勧めします。</para>
 </important>
 
+ <para>root のログインは許可しないようにしておくことが最適です。その代わり、一般ユーザでのログインを行ったあと、 <command>sudo</command> コマンドを利用して root 権限が必要な作業を行うようにしてください。どうしても root でのログインが必要な場合は、下記のサーバ設定例 (<xref linkend="sec-ssh-public-key-auth"/>) を参考にして、公開鍵認証のみを受け付けるように設定してください。</para>
  <para>なお、下記の <filename>/etc/ssh/sshd_config</filename> ファイル例は、アクセス制御をより強化した設定例です:</para>
- <screen># Check if the file modes and ownership of the user’s files and
-# home directory are correct before allowing them to login
-StrictModes yes
-
-# If your machine has more than one IP address, define which address or
-# addresses it listens on
-ListenAddress <replaceable>192.168.10.100</replaceable>
-
-# Allow only members of the listed groups to log in
-AllowGroups <replaceable>ldapadmins backupadmins</replaceable>
-
-# Or, deny certain groups. If you use both, DenyGroups is read first
-DenyGroups <replaceable>users</replaceable>
-
-# Allow or deny certain users. If you use both, DenyUsers is read first
-AllowUsers <replaceable>user1 user2@example.com user3</replaceable>
-DenyUsers <replaceable>user4 user5@192.168.10.10</replaceable>
-
-# Allow root logins only with public key authentication
-PermitRootLogin prohibit-password
-
-# Disable password authentication and allow only public key authentication
-# for all users
-PasswordAuthentication no
-
-# Length of time the server waits for a user to log in and complete the
-# connection. The default is 120 seconds:
-LoginGraceTime <replaceable>60</replaceable>
-
-# Limit the number of failed connection attempts. The default is 6
-MaxAuthTries <replaceable>4</replaceable>
-</screen>
+ <example xml:id="ex-sshd-conf">
+  <title>sshd.conf の例</title>
+  <programlisting># Check if the file modes and ownership of the user’s files and# home directory are correct before allowing them to loginStrictModes yes# If your machine has more than one IP address, define which address or# addresses it listens onListenAddress <replaceable>192.168.10.100</replaceable> # Allow only members of the listed groups to log inAllowGroups <replaceable>ldapadmins backupadmins</replaceable> # Or, deny certain groups. If you use both, DenyGroups is read firstDenyGroups <replaceable>users</replaceable> # Allow or deny certain users. If you use both, DenyUsers is read firstAllowUsers <replaceable>user1 user2@example.com user3</replaceable> DenyUsers <replaceable>user4 user5@192.168.10.10</replaceable> # Allow root logins only with public key authenticationPermitRootLogin prohibit-password# Disable password authentication and allow only public key authentication# for all usersPasswordAuthentication no# Length of time the server waits for a user to log in and complete the# connection. The default is 120 seconds:LoginGraceTime <replaceable>60</replaceable> # Limit the number of failed connection attempts. The default is 6MaxAuthTries <replaceable>4</replaceable></programlisting>
+</example>
 
  <para><filename>/etc/ssh/sshd_config</filename> ファイルを変更したあとは、下記のようにして文法チェックを行ってください:</para>
  <screen>&prompt.sudo;<command>sshd -t</command></screen>
@@ -170,15 +136,7 @@ MaxAuthTries <replaceable>4</replaceable>
  <para><filename>/etc/ssh</filename> ディレクトリは 0755/drwxr-xr-x のパーミッションで所有者が root:root でなければいけません。</para>
  <para>機密鍵は 0600/-rw------- のパーミッションで所有者が root:root でなければいけません。</para>
  <para>公開鍵は 0644/-rw-r--r-- のパーミッションで所有者が root:root でなければいけません。</para>
- <para>
-  You may restrict logins from subnets with PAM (Pluggable Authentication
-  Modules). The following steps configure remote login restrictions for
-  certain users. These restrictions affect all OpenSSH commands,
-  including <command>ssh</command>
-  (<xref linkend="sec-ssh-programm"/>),
-  <command>scp</command> (<xref linkend="sec-ssh-copy"/>), and
-  <command>sftp</command> (<xref linkend="sec-ssh-sftp"/>).
-  </para>
+ <para>PAM (Pluggable Authentication Modules) を利用することで、ログインを許可するサブネットを制限することができます。下記の手順では、特定のユーザに対してリモートからのログインを制限する設定を行っています。なお、下記の手順は <command>ssh</command> ( <xref linkend="sec-ssh-password-auth"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> ) の全ての OpenSSH コマンドに対して適用されます。</para>
   <procedure xml:id="pro-ssh-restrict-logins">
    <title>リモートからのログイン制限の設定</title>
    <para>リモートからのログイン制限を設定するには、下記の手順を実施します:</para>
@@ -203,49 +161,229 @@ MaxAuthTries <replaceable>4</replaceable>
   </warning>
  </sect1>
 
-<sect1 xml:id="sec-ssh-programm">
+<sect1 xml:id="sec-ssh-password-auth">
   <title>パスワード認証</title>
-  <para>
-   With password authentication, you must have a user account on the
-   remote machine. In the following example, user &exampleuserIII_plain;
-   logs into the host &exampleserver;:
-  </para>
+  <para>パスワード認証を行う場合は、接続先のマシン内にユーザアカウントとパスワードを設定し、 <systemitem class="daemon">sshd</systemitem> を設定して接続先のマシンを起動させておかなければなりません。下記は、 &exampleserver; というホストに対して &exampleuserIII_plain; というユーザ名で SSH ログインする場合の例です:</para>
 <screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver;</command>
 </screen>
-  <para>
-   Type <literal>exit</literal> and press <keycap>Enter</keycap> to close an
-   SSH session.
-  </para>
-  <para>
-   If the user name is the same on both machines, you can omit it, and then
-   using <command>ssh <replaceable>HOST_NAME</replaceable></command> is
-   sufficient. The remote host prompts for the remote user's password. After
-   a successful authentication, you can work on the command line or
-   use interactive applications, such as &yast; in text mode.
-  </para>
-  <tip>
-   <title>Different passwords on remote hosts</title>
-   <para>
-    Remember, when you have user accounts on multiple machines, each one can
-    have a different password. When the remote host prompts for your
-    password, it is requesting the password for the remote machine.
-   </para>
-  </tip>
-  <para>
-   You may also run non-interactive commands (log in, run the command, then
-   exit) on remote systems using the
-   <command>ssh <replaceable>USER_NAME HOST COMMAND</replaceable></command> syntax.
-   <replaceable>COMMAND</replaceable> must be properly quoted. Multiple
-   commands can be concatenated as on a local shell:
-  </para>
+  <para>接続を行うと、まずは &exampleuserIII_plain; のパスワード入力を求められます。また、 <literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
+  <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh <replaceable>ホスト名</replaceable></command> のように入力して実行するだけで済みます。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
+  <para>これらに加えて、 <command>ssh <replaceable>ユーザ名@ホスト コマンド</replaceable></command> の書式を使用することで、対話的でないコマンドを実行することもできます。この場合、ログインしてコマンドを実行したあと、そのまま接続を終了する動作になります。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます:</para>
 
-<screen>&prompt.user;<command>ssh root@&exampleserver; "dmesg -T | tail -n 25"</command>
-&prompt.user;<command>ssh root@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
+<screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver; "df -h &amp;&amp; du -sh  /home"</command>
+&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
 
 <!-- Public key auth
      Passphrase-less public key auth
-     Certificate auth -->
+     Certificate auth
+     verifying keys -->
   </sect1>
+
+   <sect1 xml:id="sec-ssh-authentic-gen-key">
+   <title>SSH クライアント鍵とホスト鍵の生成</title>
+   <para>生成できる鍵の種類としては、 DSA, RSA, ECDSA, ECDSA-SK, Ed25519, Ed25519-SK があります。ただし、 DSA は何年も前に廃止予定とされていて、 OpenSSH 7.0 では無効化されていて使用すべきではありません。 RSA は最も一般的に使用されている種類で、古い仕組みではあるものの一般的に使用されています。</para>
+   <para>Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供されていますが、 Ed25519 に対応していない古いクライアントを受け付ける必要がある場合は、 Ed25519 と RSA の両方のホスト鍵を作成してください。</para>
+   <note>
+     <title>古いクライアントの安全性について</title>
+     <para>古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と ED25519 への対応は 2014 年に公開された OpenSSH 6.5 から提供されているものです。どうしても接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用しておいてください。また、可能であれば古いクライアントからの接続は許可しないでください。</para>
+   </note>
+   <para>SSH の鍵は 2 種類の目的で使用されます。サーバ側を認証するためのホスト鍵と、クライアントを認証するためのクライアント鍵です。ホスト鍵は <filename>/etc/ssh</filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリである <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> に保存されます。なお、 OpenSSH をインストールしても <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリは自動では作成されませんので、必要に応じて作成する必要があります。</para>
+   <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
+   <para>ほとんどの場合、クライアント鍵には強力なパスワードを設定します。</para>
+
+   <sect2 xml:id="sec-create-ssh-key-client">
+     <title>クライアント側の SSH 鍵の生成</title>
+      <para>下記に示す手順では、クライアント鍵の作成方法を説明しています。</para>
+     <procedure xml:id="pro-create-ssh-client-keys">
+     <title>既定の鍵と独自の鍵について</title>
+    <step>
+     <para>既定のパラメータ (RSA, 3072 ビット) でクライアント側の鍵対を生成するには、オプションを何も指定せず <command>ssh-keygen</command> と入力して実行します。なお、機密鍵を保護するため、強力なパスフレーズを設定しておいてください:</para>
+     <screen>&prompt.user;<command>ssh-keygen</command>
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in id_rsa
+Your public key has been saved in id_rsa.pub
+The key fingerprint is:
+SHA256:z0uJIuc7Doy07bFTe1ppZHLVrkD/bWWlBAF/PcHjblU user@host2
+The key's randomart image is:
++---[RSA 3072]----+
+|          ..o... |
+|           o . +E|
+|        . . o +.=|
+|       . o . o o+|
+|  .   . S . . o +|
+| . =  .= * + . = |
+|  o *.o.= * . +  |
+|   ..Bo+.. . .   |
+|    oo==  .      |
++----[SHA256]-----+</screen>
+    </step>
+    <step>
+      <para>より長いビット長で RSA 鍵対を作成したい場合は、下記のように入力して実行します:</para>
+      <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
+      <para>OpenSSH での RSA 鍵は、最大で 16,384 ビットまでとなっています。しかしながら、ビット長を大きくしても、かかる負荷に見合うだけの効果を得られません。詳しくは GnuPG の FAQ <link xlink:href="https://www.gnupg.org/faq/gnupg-faq.html#no_default_of_rsa4096"/> (英語) をお読みください。</para>
+    </step>
+    <step>
+      <para>独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:</para>
+    <screen>&prompt.user;<command>ssh-keygen -f <replaceable>backup-server-key -C "infrastructure backup server"</replaceable></command>
+      </screen>
+    </step>
+    <step>
+     <para>Ed25519 鍵対を作成する場合は、下記のようにします:</para>
+     <screen>&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -C "Internal LDAP server"</replaceable></command>
+     </screen>
+     <para>Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度になります。</para>
+    </step>
+   </procedure>
+  </sect2>
+
+   <sect2 xml:id="sec-create-ssh-host-keys">
+    <title>SSH サーバのホスト鍵作成</title>
+    <para>ホスト鍵はクライアント鍵とは違った管理方法になります。ホスト鍵にはパスフレーズを設定してはならないほか、鍵対は <filename>/etc/ssh</filename> ディレクトリ内に保存します。 OpenSSH では、必要に応じて自動的にホスト鍵を生成します。たとえば下記のようになります:</para>
+    <screen>&prompt.user;<command>ls -l /etc/ssh</command>
+total 608
+-rw------- 1 root root 577834  5月  6 2021 moduli
+-rw-r--r-- 1 root root   2403  5月  6 2021 ssh_config
+-rw-r----- 1 root root   3420  5月  6 2021 sshd_config
+-rw------- 1 root root   1381  2月 10 2021 ssh_host_dsa_key
+-rw-r--r-- 1 root root    604  2月 10 2021 ssh_host_dsa_key.pub
+-rw------- 1 root root    505  2月 10 2021 ssh_host_ecdsa_key
+-rw-r--r-- 1 root root    176  2月 10 2021 ssh_host_ecdsa_key.pub
+-rw------- 1 root root    411  2月 10 2021 ssh_host_ed25519_key
+-rw-r--r-- 1 root root     96  2月 10 2021 ssh_host_ed25519_key.pub
+-rw------- 1 root root   2602  2月 10 2021 ssh_host_rsa_key
+-rw-r--r-- 1 root root    568  2月 10 2021 ssh_host_rsa_key.pub</screen>
+
+    <para>なお、 <command>ssh-keygen</command> には新しいホスト鍵を作成するための特別なオプションである <option>-A</option> が用意されています。これはそれぞれの種類のホスト鍵対が存在していなかった場合、それらを自動的に生成することができます。保存先や空のパスフレーズ設定、鍵の種類ごとのビット長や空のコメントも自動的に設定されます。下記のように入力して実行すると、既存の鍵を削除して新しいホスト鍵対を生成することができます:</para>
+    <screen>&prompt.sudo;<command>rm /etc/ssh/ssh_host*</command>
+&prompt.sudo;<command>ssh-keygen -A</command></screen>
+    <para>なお、 <command>ssh-keygen -A</command> では既存の鍵を上書きすることはありませんので、ホスト鍵を完全に入れ替える場合は、事前に削除しておく必要があります。</para>
+    <important>
+     <title>DSA 鍵の使用禁止について</title>
+      <para><command>ssh-keygen -A</command> を実行すると、既に何年も前から安全性に問題があると考えられている DSA 鍵も生成されます。 OpenSSH 7.0 の時点でも未だ作成されますが、 <filename>sshd_config</filename> 側で使用されないように設定されています。そのため、生成された DSA 鍵は削除して問題ありません。</para>
+    </important>
+    <para>ホスト鍵の切り替え (詳しくは <xref linkend="sec-ssh-sshdserver-rotation"/> をお読みください) を検討している場合は、新しいホスト鍵を別のファイル名に保存しなければなりません。単純に新しい鍵に入れ替えるだけの作業では、クライアント側がホスト鍵の正しさを検証できないためです。ホスト鍵を切り替えるには、サーバ側で古い鍵と新しい鍵の両方を送信するように設定し、古い鍵で新しい鍵を検証できるようにしてください。そのため、古い鍵とは別のファイル名に保存する必要があります。下記の例では、新しい RSA, Ed25519 のホスト鍵を作成して、年月を指定した新しいファイル名に保存しています。もちろん新しいホスト鍵にはパスフレーズを設定してはなりません:</para>
+    <screen>&prompt.user;<command>cd /etc/ssh</command>
+&prompt.sudo;<command>ssh-keygen -b 4096 -f "SSH_HOST_RSA_2022_02"</command>
+&prompt.sudo;<command>ssh-keygen -t ed25519 -f "SSH_HOST_ED25519_2022_02"</command></screen>
+    <para>なお、新しい鍵に設定するファイル名は任意のものでかまいません。</para>
+   </sect2>
+  </sect1>
+
+   <sect1 xml:id="sec-ssh-sshdserver-rotation">
+   <title>ホスト鍵の切り替え</title>
+   <para>OpenSSH バージョン 6.8 およびそれ以降のバージョンでは、ホスト鍵を切り替えながら使用することのできるプロトコル拡張が利用できます。サーバの管理者は、たとえばホスト鍵が漏洩したり、既存の鍵の強度では弱いと判断したりした場合、古いホスト鍵を廃棄して新しいホスト鍵に切り替えなければならなくなります。バージョン 6.8 以前では、クライアント側の <filename>ssh_config</filename> で <literal>StrictHostKeyChecking</literal> が <literal>yes</literal> に設定されていると、ホスト鍵の変更が検出されると警告メッセージを表示して接続が行われなくなっていました。この場合、クライアント側で対応する公開鍵を <filename>known_hosts</filename> ファイルから手作業で削除して接続し直し、新しい鍵を受け付ける作業が必要になります。 SSH 経由でのスケジュールバックアップなど、自動化を行っている場合には面倒になってしまいます。</para>
+   <para>新しいホスト鍵の切り替え方式では、サービスの停止を伴うことなく新しい鍵を配布できる方式を提供しています。クライアントからの接続があると、サーバは手持ちの鍵を一覧で送信しますので、次回以降のログインで新しい鍵を自動的に受け付けるようにすることができます。これにより、鍵の移行のための猶予期間を設定することができますので、しばらく待ってから古い鍵を削除すれば、移行が完了することになります。クライアント側の <filename>known_hosts</filename> ファイルも自動的に更新されますので、古い鍵から新しい鍵への切り替えも自動でできることになります。</para>
+    <para>ホスト鍵の切り替え機能を使用するには、新しい鍵の作成のほか、サーバ側では <filename>/etc/ssh/sshd_config</filename> ファイルの変更を、クライアント側では <filename>/etc/ssh/ssh_config</filename> ファイルの変更をそれぞれ行う必要があります。</para>
+   <para>まずは新しい鍵 (複数可) を作成します。下記の例では新しい RSA 鍵と Ed25519 鍵を作成しています。新しい鍵は既存の鍵に上書きせず、異なるファイル名を指定してください。一般的には作成日などを含めておくとよいでしょう。また、ホスト鍵にはパスフレーズを設定してはいけません:</para>
+   <screen>&prompt.root;<command>ssh-keygen -t rsa -f ssh_host_rsa_2022-01 -C "main server"</command>
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in ssh_host_rsa_2022-01
+Your public key has been saved in ssh_host_rsa_2022-01.pub
+The key fingerprint is:
+SHA256:F1FIF2aqOz7D3mGdsjzHpH/kjUWZehBN3uG7FM4taAQ main server
+The key's randomart image is:
++---[RSA 3072]----+
+|         .Eo*.oo |
+|          .B .o.o|
+|          o . .++|
+|         . o ooo=|
+|        S . o +*.|
+|         o o.oooo|
+|       .o ++oo.= |
+|       .+=o+o + .|
+|       .oo++..   |
++----[SHA256]-----+
+
+&prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01 -C "main server"</command>
+Generating public/private ed25519 key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in ssh_host_ed25519_2022-01
+Your public key has been saved in ssh_host_ed25519_2022-01.pub
+The key fingerprint is:
+SHA256:2p9K0giXv7WsRnLjwjs4hJ8EFcoX1FWR4nQz6fxnjxg main server
+The key's randomart image is:
++--[ED25519 256]--+
+|   .+o ...o+     |
+| . .... o *      |
+|  o..  o = o     |
+|  ..   .. o      |
+|   o. o S  .     |
+|  . oo.*+   E o  |
+|   + ++==..  = o |
+|    = +oo= o. . .|
+|     ..=+o=      |
++----[SHA256]-----+</screen>
+
+   <para>表示されたフィンガープリント (key fingerprint) を、ユーザ側で鍵を検証する際の確認として記録しておいてください。</para>
+   <para>新しい鍵のファイル名を <filename>/etc/ssh/sshd_config</filename> で指定します。既存の鍵はコメントアウトせず、そのまま設定しておいてください:</para>
+   <screen>## 古い鍵
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+
+## 新しい鍵
+HostKey /etc/ssh/ssh_host_rsa_2022-01
+HostKey /etc/ssh/ssh_host_ed25519_2022-01</screen>
+
+    <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
+    <screen>&prompt.root;<command>systemctl restart sshd.service</command>
+    </screen>
+    <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
+    <screen>UpdateHostKeys ask
+StrictHostKeyChecking yes</screen>
+    <para>クライアント側からサーバに SSH で接続してテストしてみます。既に接続している場合はいったんログアウトして再接続してみてください。下記のようなメッセージが表示されるはずです:</para>
+    <screen>The server has updated its host keys.
+These changes were verified by the server's existing trusted key.
+Deprecating obsolete hostkey: ED25519
+SHA256:V28d3VpHgjsCoV04RBCZpLo5c0kEslCZDVdIUnCvqPI
+Deprecating obsolete hostkey:
+RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I
+Accept updated hostkeys? (yes/no):</screen>
+    <para><literal>UpdateHostKeys ask</literal> を <literal>UpdateHostKeys yes</literal> に変更することで、変更された鍵を自動的に受け付けるように設定することもできますが、鍵の変更について問い合わせを行うように設定したほうが安全です。</para>
+    <para>さらに詳しい情報を知りたい場合は、下記を参照してください:</para>
+
+   <itemizedlist>
+    <listitem>
+      <para><xref linkend="sec-ssh-authentic-gen-key"/></para>
+    </listitem>
+    <listitem>
+     <para><link xlink:href="http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html"/> (英語)</para>
+    </listitem>
+    <listitem>
+     <para>man 5 ssh_config, man 5 sshd_config</para>
+    </listitem>
+   </itemizedlist>
+ </sect1>
+
+  <sect1 xml:id="sec-ssh-public-key-auth">
+  <title>公開鍵認証</title>
+  <para>公開鍵認証は、アカウントに対して設定されたパスワードではなく、ユーザが作成した個人用の鍵で認証を行う方法です。</para>
+  <para>下記は、コメント付きで個人用の RSA 鍵を作成する場合の例を示しています。まずは <filename>~/.ssh</filename> ディレクトリに移動 (存在していない場合は作成して移動) したあと、新しい鍵対を作成します。この場合、パスフレーズはできる限り複雑なものとし、パスフレーズは安全な場所に記録しておいてください:</para>
+  <screen>&prompt.user;<command>cd ~/.ssh</command>
+&prompt.user;<command>ssh-keygen -C <replaceable>"web server1"</replaceable> -f <replaceable>id-web1</replaceable> -t rsa -b <replaceable>4096</replaceable></command></screen>
+  <para>あとは作成した鍵対のうち、公開鍵を接続先のホストにコピーします。接続先のマシンにユーザアカウントがあれば、 SSH でアクセスして鍵を書き込みます:</para>
+  <screen>&prompt.user;<command>ssh-copy-id -i <replaceable>id-web1 user@web1</replaceable></command></screen>
+  <para>あとは作成した鍵でログインを試してみるだけです:</para>
+  <screen>&prompt.user;<command>ssh -i <replaceable>id-web1 user@web1</replaceable></command>
+Enter passphrase for key 'id-web1':
+Last login: Sat Jul 11 11:09:53 2022 from 192.168.10.122
+Have a lot of fun...</screen>
+  <para>この場合、パスフレーズの入力を求められますが、接続先のマシンのパスワードではなく、鍵のパスフレーズを入力する必要があることに注意してください。</para>
+  <para>なお、安全性を高めたい場合は、接続先のマシンで公開鍵認証を強制して、パスワード認証を拒否するように設定することをお勧めします (詳しくは <xref linkend="ex-sshd-conf"/> ) をお読みください) 。この場合、接続先のマシンに個人用の公開鍵を設定していないと、 <command>ssh-copy-id</command> やその他の方法での公開鍵書き込みもまた実行できなくなることに注意してください。このような場合は、 USB メモリなどに公開鍵を書き込んで、接続先のマシンの <filename>~/.ssh/authorized_keys</filename> にコピーする作業を実施しなければなりません。なお、公開鍵は純粋なテキストファイルですので、テキストとして扱うことができます。たとえば下記は Ed25519 公開鍵の例です:</para>
+  <screen>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtGHg2xn5KF4+OfejO9Bv+m
+   yRt5gc8/VunbTGB6d6+F shared server1</screen>
+ </sect1>
+
+ <sect1 xml:id="sec-ssh-passphrase-less-auth">
+  <title>パスフレーズ無しの公開鍵認証</title>
+  <para>これは機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。パスフレーズを指定せずに新しい鍵を作成したあとは、パスフレーズ付きの鍵と同じ手順で鍵を使用することができます。これは特にスクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
+  <para>パスフレーズ無しで鍵を使用するもう 1 つの方法としては、 Keychain を使用する方法もあります。この場合、機密鍵は Keychain が記憶することになります。システムの起動時に一回だけパスフレーズを入力すれば、あとはシャットダウンするまでの間 Keychain がそれを記憶してくれます。</para>
+ </sect1>
 
   <sect1 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
@@ -280,15 +418,7 @@ Type=wayland</screen>
   <!-- this section needs improving and expanding -->
   <sect1 xml:id="sec-ssh-programm-forwarding">
    <title>エージェント転送</title>
-   <para>
-    By adding the <option>-A</option> option, the ssh-agent authentication
-    mechanism is carried over to the next machine. This way, you can work
-    from different machines without having to enter a password, but only if
-    you have distributed your public key to the destination hosts and
-    properly saved it there. (Refer to
-    <xref linkend="sec-ssh-authentic-key-copy"/> to learn the safe way
-    to copy your public keys to other hosts.)
-   </para>
+   <para><option>-A</option> オプションを追加することで、 ssh-agent 認証の仕組みが接続先のマシンに引き継がれます。このオプションを使用することで、公開鍵を様々なホストに登録して適切な場所に保存しておくだけで、それらのホストにパスワード無しでログインできるようになります (詳しくは <xref linkend="sec-ssh-public-key-auth"/> をお読みください) 。</para>
    <para><filename>/etc/ssh/sshd_config</filename> では、既定で <literal>AllowAgentForwarding yes</literal> が設定されています。無効化したい場合は <literal>No</literal> に変更してください。</para>
  </sect1>
 
@@ -463,261 +593,8 @@ cd path                            Change remote directory to 'path'
 
 
   <sect2>
-   <title>Maintaining SSH keys</title>
+   <title>SSH 鍵の保護</title>
   <para><filename>/etc/ssh/</filename> 内にある機密鍵と公開鍵の両方を、機密の保持される外部のデバイスにバックアップしておくことをお勧めします。バックアップを採取しておくことで、鍵が不正に書き換えられた際の検出ができるほか、新しくシステムをインストールし直すような場合にも対応することができます。</para>
-
-  <tip>
-   <title>Existing SSH host keys</title>
-   <para>
-    If you install &productname; on a machine with existing Linux
-    installations, the installation routine automatically imports the SSH
-    host key with the most recent access time from an existing installation.
-   </para>
-  </tip>
-
-  <para>
-   When establishing a secure connection with a remote host for the first
-   time, the client stores all public host keys in
-   <filename>~/.ssh/known_hosts</filename>. This prevents any
-   man-in-the-middle attacks&mdash;attempts by foreign SSH servers to use
-   spoofed names and IP addresses. Such attacks are detected either by a
-   host key that is not included in <filename>~/.ssh/known_hosts</filename>,
-   or by the server's inability to decrypt the session key in the absence of
-   an appropriate private counterpart.
-  </para>
-
-  <para>何らかの理由でホストの公開鍵が変わってしまった場合、クライアントはサーバへの接続前にその旨のメッセージを受け取ります。以前の鍵を削除したい場合は、 <command>ssh-keygen -r <replaceable>ホスト名</replaceable></command> を実行してください。</para>
-  </sect2>
-
-  <sect2 xml:id="sec-ssh-sshdserver-rotation">
-   <title>ホスト鍵の切り替え</title>
-   <para>OpenSSH バージョン 6.8 およびそれ以降のバージョンでは、ホスト鍵を切り替えながら使用することのできるプロトコル拡張が利用できます。サーバの管理者は、たとえばホスト鍵が漏洩したり、既存の鍵の強度では弱いと判断したりした場合、古いホスト鍵を廃棄して新しいホスト鍵に切り替えなければならなくなります。バージョン 6.8 以前では、クライアント側の <filename>ssh_config</filename> で <literal>StrictHostKeyChecking</literal> が <literal>yes</literal> に設定されていると、ホスト鍵の変更が検出されると警告メッセージを表示して接続が行われなくなっていました。この場合、クライアント側で対応する公開鍵を <filename>known_hosts</filename> ファイルから手作業で削除して接続し直し、新しい鍵を受け付ける作業が必要になります。 SSH 経由でのスケジュールバックアップなど、自動化を行っている場合には面倒になってしまいます。</para>
-   <para>新しいホスト鍵の切り替え方式では、サービスの停止を伴うことなく新しい鍵を配布できる方式を提供しています。クライアントからの接続があると、サーバは手持ちの鍵を一覧で送信しますので、次回以降のログインで新しい鍵を自動的に受け付けるようにすることができます。これにより、鍵の移行のための猶予期間を設定することができますので、しばらく待ってから古い鍵を削除すれば、移行が完了することになります。クライアント側の <filename>known_hosts</filename> ファイルも自動的に更新されますので、古い鍵から新しい鍵への切り替えも自動でできることになります。</para>
-    <para>ホスト鍵の切り替え機能を使用するには、新しい鍵の作成のほか、サーバ側では <filename>/etc/ssh/sshd_config</filename> ファイルの変更を、クライアント側では <filename>/etc/ssh/ssh_config</filename> ファイルの変更をそれぞれ行う必要があります。</para>
-   <para>まずは新しい鍵 (複数可) を作成します。下記の例では新しい RSA 鍵と Ed25519 鍵を作成しています。新しい鍵は既存の鍵に上書きせず、異なるファイル名を指定してください。一般的には作成日などを含めておくとよいでしょう。また、ホスト鍵にはパスフレーズを設定してはいけません:</para>
-   <screen>&prompt.root;<command>ssh-keygen -t rsa -f ssh_host_rsa_2022-01 -C "main server"</command>
-Generating public/private rsa key pair.
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in ssh_host_rsa_2022-01
-Your public key has been saved in ssh_host_rsa_2022-01.pub
-The key fingerprint is:
-SHA256:F1FIF2aqOz7D3mGdsjzHpH/kjUWZehBN3uG7FM4taAQ main server
-The key's randomart image is:
-+---[RSA 3072]----+
-|         .Eo*.oo |
-|          .B .o.o|
-|          o . .++|
-|         . o ooo=|
-|        S . o +*.|
-|         o o.oooo|
-|       .o ++oo.= |
-|       .+=o+o + .|
-|       .oo++..   |
-+----[SHA256]-----+
-
-&prompt.root;<command>ssh-keygen -t ed25519 -f ssh_host_ed25519_2022-01 -C "main server"</command>
-Generating public/private ed25519 key pair.
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in ssh_host_ed25519_2022-01
-Your public key has been saved in ssh_host_ed25519_2022-01.pub
-The key fingerprint is:
-SHA256:2p9K0giXv7WsRnLjwjs4hJ8EFcoX1FWR4nQz6fxnjxg root@server2
-The key's randomart image is:
-+--[ED25519 256]--+
-|   .+o ...o+     |
-| . .... o *      |
-|  o..  o = o     |
-|  ..   .. o      |
-|   o. o S  .     |
-|  . oo.*+   E o  |
-|   + ++==..  = o |
-|    = +oo= o. . .|
-|     ..=+o=      |
-+----[SHA256]-----+</screen>
-
-   <para>表示されたフィンガープリント (key fingerprint) を、ユーザ側で鍵を検証する際の確認として記録しておいてください。</para>
-   <para>新しい鍵のファイル名を <filename>/etc/ssh/sshd_config</filename> で指定します。既存の鍵はコメントアウトせず、そのまま設定しておいてください:</para>
-   <screen>## 古い鍵
-HostKey /etc/ssh/ssh_host_rsa_key
-HostKey /etc/ssh/ssh_host_ed25519_key
-HostKey /etc/ssh/ssh_host_ecdsa_key
-
-## 新しい鍵
-HostKey /etc/ssh/ssh_host_rsa_2022-01
-HostKey /etc/ssh/ssh_host_ed25519_2022-01</screen>
-
-    <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
-    <screen>&prompt.root;<command>systemctl restart sshd.service</command>
-    </screen>
-    <para>なお、クライアント側の <filename>/etc/ssh/ssh_config</filename> では、下記のような設定をしている必要があります:</para>
-    <screen>UpdateHostKeys ask
-StrictHostKeyChecking yes</screen>
-    <para>クライアント側からサーバに SSH で接続してテストしてみます。既に接続している場合はいったんログアウトして再接続してみてください。下記のようなメッセージが表示されるはずです:</para>
-    <screen>The server has updated its host keys.
-These changes were verified by the server's existing trusted key.
-Deprecating obsolete hostkey: ED25519
-SHA256:V28d3VpHgjsCoV04RBCZpLo5c0kEslCZDVdIUnCvqPI
-Deprecating obsolete hostkey:
-RSA SHA256:+NR4DVdbsUNsqJPIhISzx+eqD4x/awCCwijZ4a9eP8I
-Accept updated hostkeys? (yes/no):</screen>
-    <para>
-      You may set <literal>UpdateHostKeys ask</literal> to
-      <literal>UpdateHostKeys yes</literal> to apply the changes
-      automatically, and avoid asking the user to approve the changes, though
-      asking them to review the changes and compare fingerprints is safer.
-    </para>
-    <para>さらに詳しい情報を知りたい場合は、下記を参照してください:</para>
-
-<itemizedlist>
-    <listitem>
-      <para><xref linkend="sec-ssh-authentic-gen-key"/></para>
-    </listitem>
-    <listitem>
-     <para><link xlink:href="http://blog.djm.net.au/2015/02/key-rotation-in-openssh-68.html"/> (英語)</para>
-    </listitem>
-    <listitem>
-     <para>man 5 ssh_config, man 5 sshd_config</para>
-    </listitem>
-   </itemizedlist>
-  </sect2>
-
-  <sect2 xml:id="sec-ssh-authentic-gen-key">
-   <title>Generating Client and Host SSH keys</title>
-   <para>
-     There are several key types to choose from: DSA, RSA, ECDSA, ECDSA-SK,
-     Ed25519, and Ed25519-SK. DSA was deprecated several years, and disabled
-     in OpenSSH 7.0 and should not be used. RSA is the most universal as it
-     is older, and more widely used.
-   </para>
-   <para>Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供されていますが、 Ed25519 に対応していない古いクライアントを受け付ける必要がある場合は、 Ed25519 と RSA の両方のホスト鍵を作成してください。</para>
-   <note>
-     <title>Older clients may be unsafe</title>
-     <para>古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と ED25519 への対応は 2014 年に公開された OpenSSH 6.5 から提供されているものです。どうしても接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用しておいてください。また、可能であれば古いクライアントからの接続は許可しないでください。</para>
-   </note>
-   <para>
-     SSH keys serve two purposes: authenticating servers with host keys, and
-     authenticating clients. Host keys are stored in
-     <filename>/etc/ssh</filename>. Client keys are specific to users, and
-     are stored in <filename>/home/<replaceable>user</replaceable>/.ssh</filename>.
-   </para>
-   <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
-   <para>ほとんどの場合、クライアント鍵には強力なパスワードを設定します。</para>
-   <para>
-     The following procedure shows how to create client keys.
-   </para>
-
-   <procedure xml:id="pro-ssh-key-client">
-     <title>クライアント側の SSH 鍵の生成</title>
-    <step>
-     <para>既定のパラメータ (RSA, 3072 ビット) でクライアント側の鍵対を生成するには、オプションを何も指定せず <command>ssh-keygen</command> と入力して実行します。なお、機密鍵を保護するため、強力なパスフレーズを設定しておいてください:</para>
-     <screen>&prompt.user;<command>ssh-keygen</command>
-Generating public/private rsa key pair.
-Enter file in which to save the key (/home/user/.ssh/id_rsa):
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in /home/user/.ssh/id_rsa
-Your public key has been saved in /home/user/.ssh/id_rsa.pub
-The key fingerprint is:
-SHA256:z0uJIuc7Doy07bFTe1ppZHLVrkD/bWWlBAF/PcHjblU user@server2
-The key's randomart image is:
-+---[RSA 3072]----+
-|          ..o... |
-|           o . +E|
-|        . . o +.=|
-|       . o . o o+|
-|  .   . S . . o +|
-| . =  .= * + . = |
-|  o *.o.= * . +  |
-|   ..Bo+.. . .   |
-|    oo==  .      |
-+----[SHA256]-----+</screen>
-    </step>
-    <step>
-      <para>より長いビット長で RSA 鍵対を作成したい場合は、下記のように入力して実行します:</para>
-      <screen>&prompt.user;<command>ssh-keygen -b 4096</command></screen>
-      <para>OpenSSH での RSA 鍵は、最大で 16,384 ビットまでとなっています。しかしながら、ビット長を大きくしても、かかる負荷に見合うだけの効果を得られません。詳しくは GnuPG の FAQ <link xlink:href="https://www.gnupg.org/faq/gnupg-faq.html#no_default_of_rsa4096"/> (英語) をお読みください。</para>
-    </step>
-    <step>
-      <para>独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:</para>
-    <screen>&prompt.user;<command>ssh-keygen -f <replaceable>backup-server-key -C "infrastructure backup server"</replaceable></command>
-      </screen>
-    </step>
-    <step>
-     <para>Ed25519 鍵対を作成する場合は、下記のようにします:</para>
-     <screen>&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -C "Internal HTTP server"</replaceable></command>
-     </screen>
-     <para>Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度になります。</para>
-    </step>
-   </procedure>
-
-    <para>ホスト鍵はクライアント鍵とは違った管理方法になります。ホスト鍵にはパスフレーズを設定してはならないほか、鍵対は <filename>/etc/ssh</filename> ディレクトリ内に保存します。 OpenSSH では、必要に応じて自動的にホスト鍵を生成します。たとえば下記のようになります:</para>
-    <screen>&prompt.user;<command>ls -l /etc/ssh</command>
-total 608
--rw------- 1 root root 577834  5月  6 2021 moduli
--rw-r--r-- 1 root root   2403  5月  6 2021 ssh_config
--rw-r----- 1 root root   3420  5月  6 2021 sshd_config
--rw------- 1 root root   1381  2月 10 2021 ssh_host_dsa_key
--rw-r--r-- 1 root root    604  2月 10 2021 ssh_host_dsa_key.pub
--rw------- 1 root root    505  2月 10 2021 ssh_host_ecdsa_key
--rw-r--r-- 1 root root    176  2月 10 2021 ssh_host_ecdsa_key.pub
--rw------- 1 root root    411  2月 10 2021 ssh_host_ed25519_key
--rw-r--r-- 1 root root     96  2月 10 2021 ssh_host_ed25519_key.pub
--rw------- 1 root root   2602  2月 10 2021 ssh_host_rsa_key
--rw-r--r-- 1 root root    568  2月 10 2021 ssh_host_rsa_key.pub</screen>
-
-    <para>なお、 <command>ssh-keygen</command> には新しいホスト鍵を作成するための特別なオプションである <option>-A</option> が用意されています。これはそれぞれの種類のホスト鍵対が存在していなかった場合、それらを自動的に生成することができます。保存先や空のパスフレーズ設定、鍵の種類ごとのビット長や空のコメントも自動的に設定されます。下記のように入力して実行すると、既存の鍵を削除して新しいホスト鍵対を生成することができます:</para>
-    <screen>&prompt.sudo;<command>rm /etc/ssh/ssh_host*</command>
-&prompt.sudo;<command>ssh-keygen -A</command></screen>
-    <para>なお、 <command>ssh-keygen -A</command> では既存の鍵を上書きすることはありませんので、ホスト鍵を完全に入れ替える場合は、事前に削除しておく必要があります。</para>
-    <important>
-     <title>DSA 鍵の使用禁止について</title>
-      <para>
-        <command>ssh-keygen -A</command> still creates DSA keys, even though
-        they have been deprecated as unsafe for several years. In OpenSSH 7.0
-        they are still created, but disabled by not being listed in
-        <filename>sshd_config</filename>. You may safely delete DSA keys.
-      </para>
-    </important>
-    <para>
-      When you want to rotate host keys, you must create the new keys
-      individually, because they must exist at the same time as your
-      old host keys. Your clients will authenticate with the old keys,
-      and then receive the list of new keys. They need unique names,
-      to not conflict with the old keys. The following example creates new
-      RSA and Ed25519 host keys, labeled with the year and month they were
-      created. Remember, the new host ukeys must not have passphrases:
-    </para>
-    <screen>&prompt.user;<command>cd /etc/ssh</command>
-&prompt.sudo;<command>ssh-keygen -b 4096 -f "ssh_host_rsa_2022_02"</command>
-&prompt.sudo;<command>ssh-keygen -t ed25519 -f "ssh_host_ed25519_2022_02"</command></screen>
-    <para>なお、新しい鍵に設定するファイル名は任意のものでかまいません。</para>
-  </sect2>
-
-  <sect2 xml:id="sec-ssh-authentic-key-copy">
-   <title>Copying an SSH key</title>
-   <para>
-    To copy a public SSH key to <filename>~/.ssh/authorized_keys</filename>
-    of a user on a remote machine, use the command
-    <command>ssh-copy-id</command>. To copy your personal key
-    stored under <filename>~/.ssh/id_rsa.pub</filename> you may use the
-    short form. To copy DSA keys or keys of other users, you need
-    to specify the path:
-   </para>
-  <screen>&prompt.user;<prompt>~/.ssh/id_rsa.pub</prompt>
-ssh-copy-id -i &exampleuser_plain;@&exampleserver;
-
-&prompt.user;<prompt>~/.ssh/id_dsa.pub</prompt>
-ssh-copy-id -i ~/.ssh/id_dsa.pub  &exampleuser_plain;@&exampleserver;
-
-&prompt.user;<prompt>~notme/.ssh/id_rsa.pub</prompt>
-ssh-copy-id -i ~notme/.ssh/id_rsa.pub  &exampleuser_plain;@&exampleserver;</screen>
-   <para>
-    To successfully copy the key, you need to enter the remote
-    user's password. To remove an existing key, manually edit
-    <filename>~/.ssh/authorized_keys</filename>.
-   </para>
   </sect2>
 
   <sect2 xml:id="sec-ssh-authentic-agent">
@@ -772,49 +649,6 @@ eval $(ssh-agent)
 <screen>&prompt.root;ssh -L 110:&exampleserver;:110 &wsI;</screen>
 
   <para>いずれのコマンドも特権ポートを使用していることから、 &rootuser; で実行しなければなりません。いったんコマンドを実行すれば、一般ユーザからもそのポートを使用して電子メールを送受信できるようになります。この場合、電子メールソフトウエア側のサーバ設定は <literal>localhost</literal> を指定します。上記で説明したそれぞれのプログラムのオプションに関する説明は、 <filename>/usr/share/doc/packages/openssh</filename> 内にある OpenSSH のパッケージドキュメンテーション内にあります。</para>
- </sect1>
-
- <sect1 xml:id="sec-ssh-publickey">
-  <title>Adding and removing public keys on an installed system</title>
-  <para>
-   In some environments, it is convenient or necessary to log in over SSH.
-   As such, the user needs to provide a public SSH key. To add or remove
-   an SSH key, proceed as follows:
-  </para>
-  <procedure>
-   <step>
-    <para>Open &yast;.</para>
-   </step>
-   <step>
-    <para>
-      Under <guimenu>Security and Users</guimenu>, open the
-     <guimenu>User and Group Management</guimenu> module.
-    </para>
-   </step>
-   <step>
-    <para>
-     Select the user you want to change and press <guimenu>Edit</guimenu>.
-    </para>
-   </step>
-   <step>
-    <para>
-     Switch to the <guimenu>SSH Public Key</guimenu> tab.
-    </para>
-   </step>
-   <step>
-    <para>
-     Add or remove your public key(s). If you add a public SSH key, look
-     for the file extension <filename class="extension">.pub</filename>.
-    </para>
-   </step>
-   <step>
-    <para>Confirm with <guimenu>Ok</guimenu>.</para>
-   </step>
-  </procedure>
-
-  <para>
-   Your public SSH key is saved in <filename>~/.ssh/authorized_keys</filename>.
-  </para>
  </sect1>
 
  <sect1 xml:id="sec-security-ssh-moreinfo">
