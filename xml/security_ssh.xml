@@ -19,6 +19,52 @@
  <sect1 xml:id="sec-ssh-overview">
   <title>OpenSSH の概要</title>
   <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
+  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
+  <para>
+   Authentication and encryption are provided by encryption key pairs. Each
+   key pair has a public key and a private key. Public keys encrypt, and
+   private keys decrypt. Public keys are meant to be freely shared, while
+   private keys must be protected and not shared. When a private key is
+   compromised, anyone who has possession of it can masquerade as the
+   original key owner.
+  </para>
+  <para>
+   SSH provides very strong authentication, because the server and client
+   must both authenticate to each other. When a client first attempts to
+   open an SSH session, the server presents its public host key. If the
+   client already possesses a copy of this key (stored in
+   <filename>~/.ssh/known_hosts</filename> on the client machine), the
+   client knows to trust the server. If the client does not have the
+   appropriate host key, it is asked whether it should trust the server:
+  </para>
+  <screen>The authenticity of host '192.168.22.219 (192.168.22.219)'
+   can't be established. ECDSA key fingerprint is
+   SHA256:yXf6pjV26N0fegvEYIt3HgG95s3Q1X6WYRhtHLF99pUo.
+   Are you sure you want to continue connecting (yes/no/[fingerprint])?
+  </screen>
+  <para>
+   The user can type yes, no, or paste their copy of the host key
+   fingerprint.
+  </para>
+  <note>
+   <title>ホスト鍵の切り替え</title>
+   <para>
+    Distributing copies of your host key fingerprints to your users
+    enables them to verify that they are receiving the correct host
+    keys. When they paste their copy of a host key fingerprint,
+    <command>ssh</command> compares the fingerprints, and accepts the
+    offered host key when the fingerprints match. This ensures a more
+    accurate match than a visual comparison.
+   </para>
+   <para>
+    If the fingerprints do not match, the user can still type
+    <literal>yes</literal>, or copy the fingerprint in the message, and
+    complete the connection. <!-- A stronger alternative is to use
+    certificate authentication, which provides a global authentication
+    mechansism, and does not require perfect behavior from users
+    (see TODO)-->
+   </para>
+  </note>
   <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドといくつかのユーティリティが含まれています。</para>
   <para>OpenSSH では下記のような認証方式に対応しています:</para>
   <variablelist>
@@ -49,10 +95,34 @@
     </varlistentry>
    </variablelist>
 
-  <para>初めてホストに接続した場合、クライアントは公開鍵を <filename>~/.ssh/known_hosts</filename> 内に保存します。これにより、盗聴を行いたい攻撃者が自前で暗号鍵を用意してそれを接続元に提供し、いったん攻撃者側で暗号を解除して盗聴してから、再度本来の暗号鍵で暗号化して接続先にデータを送信するといった、中間者攻撃を防ぐことができます。このような攻撃が行われた場合、 <filename>~/.ssh/known_hosts</filename> 内に保存されているホスト鍵とは異なる鍵が検出されるか、もしくはサーバ側でメッセージが解読できなくなります。 <!--mutual auth--></para>
-
-  <para>何らかの理由でホストの公開鍵が変わってしまった場合、クライアントはサーバへの接続前にその旨のメッセージを受け取ります。以前の鍵を削除したい場合は、 <command>ssh-keygen -r <replaceable>ホスト名</replaceable></command> を実行してください。</para>
-
+  <para>
+   Clients store copies of public host keys in
+   <filename>~/.ssh/known_hosts</filename>. If the public keys of a host
+   have changed, the connection is denied with a scary warning:
+  </para>
+  <screen>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ECDSA key sent by the remote host is
+SHA256:keNu/rJFWmpQu9B0SjIuo8NLjbeDY/x3Tktpl7oDJqo.
+Please contact your system administrator.
+Add correct host key in /home/geeko/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in /home/geeko/.ssh/known_hosts:210
+You can use following command to remove the offending key:
+ssh-keygen -R 192.168.121.219 -f /home/geeko/.ssh/known_hosts
+ECDSA host key for 192.168.121.219 has changed and you have requested strict
+checking.
+Host key verification failed.</screen>
+  <para>
+   The remedy is to delete the offending key from
+   <filename>~/.ssh/known_hosts</filename> with the command given
+   in the scary warning, then re-connect and accept the new host key.
+   <!-- see TODO and TODO for key management methods that do not require
+   users to verify or accept new host keys -->
+  </para>
  <para>&productname; では既定で OpenSSH パッケージをインストールします。パッケージ内には、下記のようなファイルが含まれています:</para>
 
  <variablelist>
@@ -190,6 +260,11 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
    <para>SSH の鍵は 2 種類の目的で使用されます。サーバ側を認証するためのホスト鍵と、クライアントを認証するためのクライアント鍵です。ホスト鍵は <filename>/etc/ssh</filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリである <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> に保存されます。なお、 OpenSSH をインストールしても <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリは自動では作成されませんので、必要に応じて作成する必要があります。</para>
    <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
    <para>ほとんどの場合、クライアント鍵には強力なパスワードを設定します。</para>
+   <important>
+    <title>SSH 鍵の保護</title>
+    <para>Be sure to maintain secure backups of all keys, hosts and clients.
+    </para>
+   </important>
 
    <sect2 xml:id="sec-create-ssh-key-client">
      <title>クライアント側の SSH 鍵の生成</title>
@@ -230,7 +305,7 @@ The key's randomart image is:
       </screen>
     </step>
     <step>
-     <para>Ed25519 鍵対を作成する場合は、下記のようにします:</para>
+     <para>独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:</para>
      <screen>&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -C "Internal LDAP server"</replaceable></command>
      </screen>
      <para>Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度になります。</para>
@@ -384,6 +459,56 @@ Have a lot of fun...</screen>
   <para>これは機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。パスフレーズを指定せずに新しい鍵を作成したあとは、パスフレーズ付きの鍵と同じ手順で鍵を使用することができます。これは特にスクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
   <para>パスフレーズ無しで鍵を使用するもう 1 つの方法としては、 Keychain を使用する方法もあります。この場合、機密鍵は Keychain が記憶することになります。システムの起動時に一回だけパスフレーズを入力すれば、あとはシャットダウンするまでの間 Keychain がそれを記憶してくれます。</para>
  </sect1>
+
+ <!--<sect1 xml:id="sec-ssh-certificate-auth">
+  <title>OpenSSH certificate authentication</title>
+  <para>
+   OpenSSH introduced certificate authentication in OpenSSH 5.4. This is
+   similar to an OpenSSL certificate authority, and serves a similar
+   purpose: setting up a central authority for public key authentication
+   that verifies and manages encryption certificates.
+  </para>
+  <para>
+   Traditional OpenSSH public key authentication requires copying client
+   public keys to every SSH server they need access to, and relying on
+   users to verify new host keys before accepting them. Both methods are
+   error-prone and complicated to manage, especially for distributing client
+   public keys. When public key authentication is enforced on an SSH server,
+   then new client keys must be copied manually, for example from a USB
+   stick.
+  </para>
+  <para>
+   Host keys are automatically presented to a client on their first
+   connection attempt, and the user chooses whether or not to accept them.
+   The server presents the host key fingerprint for the user to verify that
+   it is legitimate. However, most users accept new host keys without
+   verification, even if you devise a secure method of distributing host
+   key fingerprints.
+  </para>
+  <para>
+   If you are used to managing OpenSSL certificate authorities, you will
+   find that managing an OpenSSH certificate authority is simpler. The basic
+   principles are similar:
+  </para>
+ <itemizedlist>
+  <listitem>
+  <para>
+   Set up a trusted server for creating and signing new host and client
+   keys.
+  </para>
+  </listitem>
+  <listitem>
+  <para>
+   Create, sign, and distribute host keys.
+  </para>
+  </listitem>
+  <listitem>
+  <para>
+   Create, sign, and distribute host keys.
+  </para>
+  </listitem>
+ </itemizedlist>
+ </sect1> -->
 
   <sect1 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
