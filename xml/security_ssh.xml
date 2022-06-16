@@ -18,52 +18,20 @@
 
  <sect1 xml:id="sec-ssh-overview">
   <title>OpenSSH の概要</title>
-  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
-  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。なお、 SSH はクライアント／サーバ型のプロトコルであり、他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
-  <para>
-   Authentication and encryption are provided by encryption key pairs. Each
-   key pair has a public key and a private key. Public keys encrypt, and
-   private keys decrypt. Public keys are meant to be freely shared, while
-   private keys must be protected and not shared. When a private key is
-   compromised, anyone who has possession of it can masquerade as the
-   original key owner.
-  </para>
-  <para>
-   SSH provides very strong authentication, because the server and client
-   must both authenticate to each other. When a client first attempts to
-   open an SSH session, the server presents its public host key. If the
-   client already possesses a copy of this key (stored in
-   <filename>~/.ssh/known_hosts</filename> on the client machine), the
-   client knows to trust the server. If the client does not have the
-   appropriate host key, it is asked whether it should trust the server:
-  </para>
+  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。 SSH で他のコンピュータに接続するには、接続先でのユーザ名と適切な認証手段を提示する必要があります。</para>
+  <para>SSH はクライアント／サーバ型のプロトコルです。他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
+  <para>認証と暗号化の機能は暗号鍵対によって行われます。それぞれの鍵対には公開鍵と機密鍵という 2 つの鍵が存在し、公開鍵は暗号化を、機密鍵は暗号の復号化を行うために使用します。また、機密鍵がきちんと保護されている限り、公開鍵は誰にでも配布してかまいません。機密鍵が漏洩してしまうと、機密鍵の元の所有者になりすまして暗号化した通信を行うことができるようになってしまいます。</para>
+  <para>SSH ではサーバとクライアントの双方が互いに認証しなければならない仕組みになっていることから、非常に強力な認証手段を提供しています。クライアントが SSH での接続を開始すると、サーバは自身の持つ公開鍵を提示します。示された公開鍵が既知のものであった場合 (クライアント側の <filename>~/.ssh/known_hosts</filename> 内に保存されます) 、クライアントはサーバを信頼してそのまま処理を続行します。既知のものでなかった場合は、サーバを信頼して良いかどうか、下記のようにしてユーザに尋ねます:</para>
   <screen>The authenticity of host '192.168.22.219 (192.168.22.219)'
    can't be established. ECDSA key fingerprint is
    SHA256:yXf6pjV26N0fegvEYIt3HgG95s3Q1X6WYRhtHLF99pUo.
    Are you sure you want to continue connecting (yes/no/[fingerprint])?
   </screen>
-  <para>
-   The user can type yes, no, or paste their copy of the host key
-   fingerprint.
-  </para>
+  <para>ユーザは "yes" (このまま接続を続ける), "no" (接続を中止する) のどちらかを入力するか、もしくは鍵の指紋 (fingerprint) そのものを入力して確認を行います。</para>
   <note>
-   <title>ホスト鍵の切り替え</title>
-   <para>
-    Distributing copies of your host key fingerprints to your users
-    enables them to verify that they are receiving the correct host
-    keys. When they paste their copy of a host key fingerprint,
-    <command>ssh</command> compares the fingerprints, and accepts the
-    offered host key when the fingerprints match. This ensures a more
-    accurate match than a visual comparison.
-   </para>
-   <para>
-    If the fingerprints do not match, the user can still type
-    <literal>yes</literal>, or copy the fingerprint in the message, and
-    complete the connection. <!-- A stronger alternative is to use
-    certificate authentication, which provides a global authentication
-    mechansism, and does not require perfect behavior from users
-    (see TODO)-->
-   </para>
+   <title>ホスト鍵の指紋 (fingerprint) について</title>
+   <para>ホスト鍵の指紋 (fingerprint) を接続するユーザに配布することで、接続時にホスト鍵が正しいかどうかを確認できるようになります。上記の表示で指紋を入力すると、 <command>ssh</command> 側で指紋が一致しているかどうかを確認し、一致した場合にのみ接続を続けることができるようになります。これにより、目視で比較するよりずっと信頼性の高い確認を行うことができます。</para>
+   <para>なお、指紋が一致していなかった場合でも、再度 <literal>yes</literal> を入力するか、表示された指紋をそのまま貼り付けることで、接続を続行することができます。<!-- A stronger alternative is to use certificate authentication, which provides a global authentication mechansism, and does not require perfect behavior from users (see TODO)--></para>
   </note>
   <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドといくつかのユーティリティが含まれています。</para>
   <para>OpenSSH では下記のような認証方式に対応しています:</para>
@@ -71,13 +39,13 @@
    <varlistentry>
     <term>パスワード認証</term>
     <listitem>
-     <para>ユーザ名とパスワードで認証する方式です。接続先のホストにユーザアカウントを作成しておく必要があります。この方式は、 SSH のセッションをどのマシンからでも受け付けることができますので、最も単純で柔軟な認証方式です。ただし、パスワードクラッキングには弱く、キーロガーなどによる窃取にも弱いため、機密性は低くなります。</para>
+     <para>ユーザ名とパスワードで認証する方式です。この方式は、 SSH のセッションをどのマシンからでも受け付けることができますので、最も単純で柔軟な認証方式です。ただし、パスワードクラッキングには弱く、キーロガーなどによる窃取にも弱いため、機密性は低くなります。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>公開鍵認証</term>
     <listitem>
-     <para>パスワードではなく、個人単位で鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
+     <para>ユーザ名とパスワードではなく、個人単位で鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -90,16 +58,12 @@
     <varlistentry>
      <term>証明書認証</term>
      <listitem>
-      <para>OpenSSH では証明書認証にも対応しています。これにより、鍵の管理と大規模な SSH 展開が容易になっています。</para>
+      <para>OpenSSH では証明書認証にも対応しています。これにより、鍵の管理の手間を省くことができるほか、より強力な認証手段となり、かつ大規模な SSH 展開にも対応できるようになります。</para>
      </listitem>
     </varlistentry>
    </variablelist>
 
-  <para>
-   Clients store copies of public host keys in
-   <filename>~/.ssh/known_hosts</filename>. If the public keys of a host
-   have changed, the connection is denied with a scary warning:
-  </para>
+  <para>なお、クライアント側では接続先のホストの公開鍵を <filename>~/.ssh/known_hosts</filename> にコピーします。接続先のホストの公開鍵が変更された場合、下記のようにセキュリティ警告を表示して接続が拒否されます:</para>
   <screen>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -116,13 +80,7 @@ ssh-keygen -R 192.168.121.219 -f /home/geeko/.ssh/known_hosts
 ECDSA host key for 192.168.121.219 has changed and you have requested strict
 checking.
 Host key verification failed.</screen>
-  <para>
-   The remedy is to delete the offending key from
-   <filename>~/.ssh/known_hosts</filename> with the command given
-   in the scary warning, then re-connect and accept the new host key.
-   <!-- see TODO and TODO for key management methods that do not require
-   users to verify or accept new host keys -->
-  </para>
+  <para>このような場合、警告メッセージを表示せずに接続を行わせたい場合は、 <filename>~/.ssh/known_hosts</filename> 内にある古い公開鍵を削除してから再度接続を行ってください。これにより、新しい鍵を受け付けるかどうかの確認が表示されるようになります。 <!-- see TODO and TODO for key management methods that do not require users to verify or accept new host keys --></para>
  <para>&productname; では既定で OpenSSH パッケージをインストールします。パッケージ内には、下記のようなファイルが含まれています:</para>
 
  <variablelist>
@@ -153,7 +111,7 @@ Host key verification failed.</screen>
   <varlistentry>
    <term><command>ssh-agent</command></term>
    <listitem>
-    <para>公開鍵認証で使用する、ユーザの機密鍵とパスフレーズを管理するためのエージェントです。 <command>ssh-agent</command> はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供します。</para>
+    <para>公開鍵認証で使用する、ユーザの機密鍵とパスフレーズを管理するためのエージェントです。 <command>ssh-agent</command> はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供しますので、パスフレーズの再入力を省略することができるようになります。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
@@ -233,10 +191,10 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
 
 <sect1 xml:id="sec-ssh-password-auth">
   <title>パスワード認証</title>
-  <para>パスワード認証を行う場合は、接続先のマシン内にユーザアカウントとパスワードを設定し、 <systemitem class="daemon">sshd</systemitem> を設定して接続先のマシンを起動させておかなければなりません。下記は、 &exampleserver; というホストに対して &exampleuserIII_plain; というユーザ名で SSH ログインする場合の例です:</para>
+  <para>パスワード認証を行う場合は、接続先のマシン内にユーザアカウントとパスワードを設定し、 <systemitem class="daemon">sshd</systemitem> を設定してそれを動作させておくだけです。個人用の SSH 鍵を作成する必要はありません。下記は、 &exampleserver; というホストに対して &exampleuserIII_plain; というユーザ名で SSH ログインする場合の例です:</para>
 <screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver;</command>
 </screen>
-  <para>接続を行うと、まずは &exampleuserIII_plain; のパスワード入力を求められます。また、 <literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
+  <para>接続を行うと、まずは接続先で設定した &exampleuserIII_plain; のパスワード入力を求められます。また、 <literal>exit</literal> と入力して <keycap>Enter</keycap> を押すと、 SSH セッションを終了することができます。</para>
   <para>両方のマシンでユーザ名が同じであれば、ユーザ名を指定する必要はありません。 <command>ssh <replaceable>ホスト名</replaceable></command> のように入力して実行するだけで済みます。認証が成功すると、相手側のコンピュータのコマンドラインを使用したり、 &yast; のテキストモードのような対話的なアプリケーションを使用したりすることができるようになります。</para>
   <para>これらに加えて、 <command>ssh <replaceable>ユーザ名@ホスト コマンド</replaceable></command> の書式を使用することで、対話的でないコマンドを実行することもできます。この場合、ログインしてコマンドを実行したあと、そのまま接続を終了する動作になります。なお、 <replaceable>コマンド</replaceable> では適切に引用符を指定する必要があります。また、複数のコマンドはローカルのシェルと同じ方法で繋げることができます:</para>
 
@@ -250,7 +208,7 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
   </sect1>
 
    <sect1 xml:id="sec-ssh-authentic-gen-key">
-   <title>SSH クライアント鍵とホスト鍵の生成</title>
+   <title>クライアント鍵とホスト鍵の管理</title>
    <para>生成できる鍵の種類としては、 DSA, RSA, ECDSA, ECDSA-SK, Ed25519, Ed25519-SK があります。ただし、 DSA は何年も前に廃止予定とされていて、 OpenSSH 7.0 では無効化されていて使用すべきではありません。 RSA は最も一般的に使用されている種類で、古い仕組みではあるものの一般的に使用されています。</para>
    <para>Ed25519 と ECDSA はより強力で高速な鍵です。 Ed25519 が最も強力な鍵として提供されていますが、 Ed25519 に対応していない古いクライアントを受け付ける必要がある場合は、 Ed25519 と RSA の両方のホスト鍵を作成してください。</para>
    <note>
@@ -261,9 +219,8 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
    <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
    <para>ほとんどの場合、クライアント鍵には強力なパスワードを設定します。</para>
    <important>
-    <title>SSH 鍵の保護</title>
-    <para>Be sure to maintain secure backups of all keys, hosts and clients.
-    </para>
+    <title>SSH 鍵の保護について</title>
+    <para>ホスト鍵とクライアント鍵の両方をバックアップするものとし、バックアップは不正アクセスされないように保護を行ってください。</para>
    </important>
 
    <sect2 xml:id="sec-create-ssh-key-client">
@@ -305,7 +262,7 @@ The key's randomart image is:
       </screen>
     </step>
     <step>
-     <para>独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:</para>
+     <para>独自のファイル名やコメントを指定して Ed25519 鍵対を作成する場合は、下記のようにします:</para>
      <screen>&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -C "Internal LDAP server"</replaceable></command>
      </screen>
      <para>Ed25519 の鍵は 256 ビットの固定長です。暗号強度は RSA 4096 ビットと同程度になります。</para>
