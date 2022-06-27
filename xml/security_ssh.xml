@@ -33,6 +33,24 @@
    <para>ホスト鍵の指紋 (fingerprint) を接続するユーザに配布することで、接続時にホスト鍵が正しいかどうかを確認できるようになります。上記の表示で指紋を入力すると、 <command>ssh</command> 側で指紋が一致しているかどうかを確認し、一致した場合にのみ接続を続けることができるようになります。これにより、目視で比較するよりずっと信頼性の高い確認を行うことができます。</para>
    <para>なお、指紋が一致していなかった場合でも、再度 <literal>yes</literal> を入力するか、表示された指紋をそのまま貼り付けることで、接続を続行することができます。<!-- A stronger alternative is to use certificate authentication, which provides a global authentication mechansism, and does not require perfect behavior from users (see TODO)--></para>
   </note>
+   <para>なお、クライアント側では接続先のホストの公開鍵を <filename>~/.ssh/known_hosts</filename> にコピーします。接続先のホストの公開鍵が変更された場合、下記のようにセキュリティ警告を表示して接続が拒否されます:</para>
+  <screen>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ECDSA key sent by the remote host is
+SHA256:keNu/rJFWmpQu9B0SjIuo8NLjbeDY/x3Tktpl7oDJqo.
+Please contact your system administrator.
+Add correct host key in /home/geeko/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in /home/geeko/.ssh/known_hosts:210
+You can use following command to remove the offending key:
+ssh-keygen -R 192.168.121.219 -f /home/geeko/.ssh/known_hosts
+ECDSA host key for 192.168.121.219 has changed and you have requested strict
+checking.
+Host key verification failed.</screen>
+  <para>このような場合、警告メッセージを表示せずに接続を行わせたい場合は、 <filename>~/.ssh/known_hosts</filename> 内にある古い公開鍵を削除してから再度接続を行ってください。これにより、新しい鍵を受け付けるかどうかの確認が表示されるようになります。 <!-- see TODO and TODO for key management methods that do not require users to verify or accept new host keys --></para>
   <para><package>openssh</package> パッケージにはサーバとクライアントのほか、ファイル転送コマンドといくつかのユーティリティが含まれています。</para>
   <para>OpenSSH では下記のような認証方式に対応しています:</para>
   <variablelist>
@@ -63,24 +81,6 @@
     </varlistentry>
    </variablelist>
 
-  <para>なお、クライアント側では接続先のホストの公開鍵を <filename>~/.ssh/known_hosts</filename> にコピーします。接続先のホストの公開鍵が変更された場合、下記のようにセキュリティ警告を表示して接続が拒否されます:</para>
-  <screen>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
-Someone could be eavesdropping on you right now (man-in-the-middle attack)!
-It is also possible that a host key has just been changed.
-The fingerprint for the ECDSA key sent by the remote host is
-SHA256:keNu/rJFWmpQu9B0SjIuo8NLjbeDY/x3Tktpl7oDJqo.
-Please contact your system administrator.
-Add correct host key in /home/geeko/.ssh/known_hosts to get rid of this message.
-Offending ECDSA key in /home/geeko/.ssh/known_hosts:210
-You can use following command to remove the offending key:
-ssh-keygen -R 192.168.121.219 -f /home/geeko/.ssh/known_hosts
-ECDSA host key for 192.168.121.219 has changed and you have requested strict
-checking.
-Host key verification failed.</screen>
-  <para>このような場合、警告メッセージを表示せずに接続を行わせたい場合は、 <filename>~/.ssh/known_hosts</filename> 内にある古い公開鍵を削除してから再度接続を行ってください。これにより、新しい鍵を受け付けるかどうかの確認が表示されるようになります。 <!-- see TODO and TODO for key management methods that do not require users to verify or accept new host keys --></para>
  <para>&productname; では既定で OpenSSH パッケージをインストールします。パッケージ内には、下記のようなファイルが含まれています:</para>
 
  <variablelist>
@@ -164,29 +164,64 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
  <para><filename>/etc/ssh</filename> ディレクトリは 0755/drwxr-xr-x のパーミッションで所有者が root:root でなければいけません。</para>
  <para>機密鍵は 0600/-rw------- のパーミッションで所有者が root:root でなければいけません。</para>
  <para>公開鍵は 0644/-rw-r--r-- のパーミッションで所有者が root:root でなければいけません。</para>
- <para>PAM (Pluggable Authentication Modules) を利用することで、ログインを許可するサブネットを制限することができます。下記の手順では、特定のユーザに対してリモートからのログインを制限する設定を行っています。なお、下記の手順は <command>ssh</command> ( <xref linkend="sec-ssh-password-auth"/> ), <command>scp</command> ( <xref linkend="sec-ssh-copy"/> ), <command>sftp</command> ( <xref linkend="sec-ssh-sftp"/> ) の全ての OpenSSH コマンドに対して適用されます。</para>
+
+ <!-- not sure if this should be included, it seems redundant. cjs 27 June 2022 -->
+ <!--
+ <para>
+  You may restrict logins from subnets with PAM (Pluggable Authentication
+  Modules). The following steps configure remote login restrictions for
+  certain users. These restrictions affect all OpenSSH commands,
+  including <command>ssh</command>
+  (<xref linkend="sec-ssh-password-auth"/>),
+  <command>scp</command> (<xref linkend="sec-ssh-copy"/>), and
+  <command>sftp</command> (<xref linkend="sec-ssh-sftp"/>).
+  </para>
+
   <procedure xml:id="pro-ssh-restrict-logins">
-   <title>リモートからのログイン制限の設定</title>
-   <para>リモートからのログイン制限を設定するには、下記の手順を実施します:</para>
+   <title>Configuring remote login restrictions</title>
+   <para>
+    Perform the following steps to configure user remote login restrictions:
+    </para>
    <step>
-    <para>まずは <filename>/etc/pam.d/sshd</filename> ファイルを編集して、 <literal>auth</literal> ブロックの末尾に下記を追加します:</para>
+    <para>
+     Edit the file <filename>/etc/pam.d/sshd</filename> and append the
+     following at the end of the <literal>auth</literal> block:
+    </para>
     <screen>auth required pam_access.so</screen>
    </step>
    <step>
-    <para>あとは <filename>/etc/security/access.conf</filename> ファイルを編集して、ユーザごとの制限を設定します。下記の例では、 &rootuser; と &exampleuser; のログインを &exampledomain1ip;.0/&subnetmask; のネットワークから、 &exampleuserII; のログインを &exampledomain2ip;.0/&subnetmask; のネットワークからにのみ制限しています:</para>
+    <para>
+     Edit the file <filename>/etc/security/access.conf</filename> to
+     configure individual restrictions. In this example the users &rootuser;
+     and &exampleuser; are restricted to the &exampledomain1ip;.0/&subnetmask;
+     network, while the &exampleuserII; user can only login from within the
+     &exampledomain2ip;.0/&subnetmask; network:
+    </para>
 <screen>
 + : root : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 + : &exampleuser_plain; : <replaceable>&exampledomain1ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 + : &exampleuserII_plain; : <replaceable>&exampledomain2ip;.0</replaceable>/<replaceable>&subnetmask;</replaceable>
 - : ALL : ALL</screen>
-   <para>なお一番下の行は、全てのユーザに対して全てのネットワークからのアクセスを禁止する設定になります。設定を行う際は注意して設定してください。</para>
-   <para>詳しい設定オプションについては、 <filename>/etc/security/access.conf</filename> ファイル内の設定例や <command>man access.conf</command> をお読みください。</para>
+   <para>
+    Do not forget the last line which denies access for all other users from
+    all sources, and be careful not to lock yourself out of the system.
+   </para>
+   <para>
+    For more configuration options, refer to the examples in
+    <filename>/etc/security/access.conf</filename>, and to
+    <command>man access.conf</command>.
+   </para>
    </step>
   </procedure>
   <warning>
-   <title>pam-config の使用禁止について</title>
-   <para>本章で記述している設定を行う場合は、 <command>pam-config</command> ユーティリティを使用してはなりません。このユーティリティは <systemitem>git pam_access</systemitem> をグローバルモジュールとして設定する機能しか持ち合わせていないためです。これをグローバルモジュールとして設定してしまうと、全てのサービス経由でのログインが上記に合わせて許可または禁止されることになってしまいます。</para>
-  </warning>
+   <title>Do not use pam-config</title>
+   <para>
+    Do not use the <command>pam-config</command> utility here. It only
+    supports <systemitem>git pam_access</systemitem> as a global module. The
+    configuration above is not suitable to be used globally for all services
+    and can completely deny access to the system.
+   </para>
+ </warning>-->
  </sect1>
 
 <sect1 xml:id="sec-ssh-password-auth">
@@ -201,10 +236,10 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
 <screen>&prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver; "df -h &amp;&amp; du -sh  /home"</command>
 &prompt.user;<command>ssh &exampleuserIII_plain;@&exampleserver; "cat /etc/os-release &amp;&amp; uptime"</command></screen>
 
-<!-- Public key auth
-     Passphrase-less public key auth
-     Certificate auth
-     verifying keys -->
+  <para>
+   When you run <command>sudo</command> on the remote machine, you will be
+   prompted for the <command>sudo</command> password.
+  </para>
   </sect1>
 
    <sect1 xml:id="sec-ssh-authentic-gen-key">
@@ -216,6 +251,10 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
      <para>古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と ED25519 への対応は 2014 年に公開された OpenSSH 6.5 から提供されているものです。どうしても接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用しておいてください。また、可能であれば古いクライアントからの接続は許可しないでください。</para>
    </note>
    <para>SSH の鍵は 2 種類の目的で使用されます。サーバ側を認証するためのホスト鍵と、クライアントを認証するためのクライアント鍵です。ホスト鍵は <filename>/etc/ssh</filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリである <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> に保存されます。なお、 OpenSSH をインストールしても <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリは自動では作成されませんので、必要に応じて作成する必要があります。</para>
+    <para>
+     <filename>/home/<replaceable>user</replaceable>/.ssh</filename> is not
+     created when OpenSSH is installed, so the user must create it.
+   </para>
    <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
    <para>ほとんどの場合、クライアント鍵には強力なパスワードを設定します。</para>
    <important>
@@ -257,7 +296,12 @@ The key's randomart image is:
       <para>OpenSSH での RSA 鍵は、最大で 16,384 ビットまでとなっています。しかしながら、ビット長を大きくしても、かかる負荷に見合うだけの効果を得られません。詳しくは GnuPG の FAQ <link xlink:href="https://www.gnupg.org/faq/gnupg-faq.html#no_default_of_rsa4096"/> (英語) をお読みください。</para>
     </step>
     <step>
-      <para>独自のファイル名やコメントを指定して RSA 鍵対を作成する場合は、下記のようにします:</para>
+      <para>
+       You may create as many client keys as you want, for accessing
+       different servers. Each key pair must have a unique name, and  optionally, a comment. These help you remember what each
+       key pair is for. Create an RSA key pair with a custom name and a
+       comment:
+    </para>
     <screen>&prompt.user;<command>ssh-keygen -f <replaceable>backup-server-key -C "infrastructure backup server"</replaceable></command>
       </screen>
     </step>
@@ -407,17 +451,62 @@ Last login: Sat Jul 11 11:09:53 2022 from 192.168.10.122
 Have a lot of fun...</screen>
   <para>この場合、パスフレーズの入力を求められますが、接続先のマシンのパスワードではなく、鍵のパスフレーズを入力する必要があることに注意してください。</para>
   <para>なお、安全性を高めたい場合は、接続先のマシンで公開鍵認証を強制して、パスワード認証を拒否するように設定することをお勧めします (詳しくは <xref linkend="ex-sshd-conf"/> ) をお読みください) 。この場合、接続先のマシンに個人用の公開鍵を設定していないと、 <command>ssh-copy-id</command> やその他の方法での公開鍵書き込みもまた実行できなくなることに注意してください。このような場合は、 USB メモリなどに公開鍵を書き込んで、接続先のマシンの <filename>~/.ssh/authorized_keys</filename> にコピーする作業を実施しなければなりません。なお、公開鍵は純粋なテキストファイルですので、テキストとして扱うことができます。たとえば下記は Ed25519 公開鍵の例です:</para>
-  <screen>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtGHg2xn5KF4+OfejO9Bv+m
-   yRt5gc8/VunbTGB6d6+F shared server1</screen>
  </sect1>
+
+ <sect1 xml:id="sec-ssh-change-passphrase">
+  <title>Changing an SSH private key passphrase</title>
+  <para>
+   You may change or remove the passphrase from a private key with
+   <command>ssh-keygen</command>:
+  </para>
+  <screen>&prompt.user;<command>ssh-keygen -pf ~/.ssh/<replaceable>server1</replaceable></command>
+Enter old passphrase:
+Key has comment 'shared videos server1'
+Enter new passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved with the new passphrase.</screen>
+ </sect1>
+
+ <sect1 xml:id="sec-ssh-get-key-fingerprint">
+  <title>ホスト鍵の指紋 (fingerprint) について</title>
+  <para>
+   Use the <command>ssh-keygen</command> to display the public key
+   fingerprint. The following example prints the SHA256 hash on a
+   ED25519 key:
+  </para>
+  <screen>&prompt.user;<command>ssh-keygen -t ed25519 -f <replaceable>ldap-server-key -C "Internal LDAP server"</replaceable></command>
+     </screen>
+  <para>
+   Add the <command>-v</command> flag to display the ASCII art
+   representation of the key:
+  </para>
+  <screen>&prompt.user;<command>ssh-keygen -lvf <replaceable>ldap-server</replaceable></command>
+256 SHA256:W45lbmj24ZoASbrqW0q9+NhF04muvfKZ+FkRa2cCiqo comment (ED25519)
++--[ED25519 256]--+
+|                 |
+|                 |
+|    .. .         |
+|  .o..+ +        |
+| ...o+ BSo+      |
+|. ..o.o =X       |
+|...o o..* =      |
+|o.*.* =+ = .     |
+|E*o*+O. o.o      |
++----[SHA256]-----+</screen>
+</sect1>
 
  <sect1 xml:id="sec-ssh-passphrase-less-auth">
   <title>パスフレーズ無しの公開鍵認証</title>
   <para>これは機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。パスフレーズを指定せずに新しい鍵を作成したあとは、パスフレーズ付きの鍵と同じ手順で鍵を使用することができます。これは特にスクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
-  <para>パスフレーズ無しで鍵を使用するもう 1 つの方法としては、 Keychain を使用する方法もあります。この場合、機密鍵は Keychain が記憶することになります。システムの起動時に一回だけパスフレーズを入力すれば、あとはシャットダウンするまでの間 Keychain がそれを記憶してくれます。</para>
+ <!-- <para>
+   An alternative to using keys without passphrases is Keychain, which
+   remembers your private keys for you. You enter your passphrases at
+   system startup, then Keychain remembers them until shutdown.
+  </para>-->
  </sect1>
 
- <!--<sect1 xml:id="sec-ssh-certificate-auth">
+ <!--
+  <sect1 xml:id="sec-ssh-certificate-auth">
   <title>OpenSSH certificate authentication</title>
   <para>
    OpenSSH introduced certificate authentication in OpenSSH 5.4. This is
@@ -430,17 +519,15 @@ Have a lot of fun...</screen>
    public keys to every SSH server they need access to, and relying on
    users to verify new host keys before accepting them. Both methods are
    error-prone and complicated to manage, especially for distributing client
-   public keys. When public key authentication is enforced on an SSH server,
-   then new client keys must be copied manually, for example from a USB
-   stick.
+   public keys.
   </para>
   <para>
    Host keys are automatically presented to a client on their first
    connection attempt, and the user chooses whether or not to accept them.
    The server presents the host key fingerprint for the user to verify that
-   it is legitimate. However, most users accept new host keys without
-   verification, even if you devise a secure method of distributing host
-   key fingerprints.
+   it is legitimate. However, trusting all users to always follow this
+   procedure may not be the best approach. Using certificate authentication
+   makes it easier to distribute, verify, and manage host and client keys.
   </para>
   <para>
    If you are used to managing OpenSSL certificate authorities, you will
@@ -461,11 +548,25 @@ Have a lot of fun...</screen>
   </listitem>
   <listitem>
   <para>
-   Create, sign, and distribute host keys.
+   Create, sign, and distribute client keys.
+  </para>
+  </listitem>
+  <listitem>
+  <para>
+   revoke
   </para>
   </listitem>
  </itemizedlist>
- </sect1> -->
+
+ <sect2 xml:id="sec-ssh-certificate-create-signing-keys">
+  <title>werds</title>
+  <para>
+   First, create a host key:
+  </para>
+  <screen>&prompt.user;<command>ssh-keygen -s <replaceable>ca_host_key -I certificate_ID id_rsa.pub</replaceable>
+ </sect2>
+
+ </sect1>-->
 
   <sect1 xml:id="sec-ssh-programm-x">
    <title>ネットワーク上の離れたホストでの X11 アプリケーションの起動</title>
@@ -672,12 +773,6 @@ cd path                            Change remote directory to 'path'
    <screen>&prompt.sudo;journalctl -u sshd</screen>
    </tip>
   </sect2> -->
-
-
-  <sect2>
-   <title>SSH 鍵の保護</title>
-  <para><filename>/etc/ssh/</filename> 内にある機密鍵と公開鍵の両方を、機密の保持される外部のデバイスにバックアップしておくことをお勧めします。バックアップを採取しておくことで、鍵が不正に書き換えられた際の検出ができるほか、新しくシステムをインストールし直すような場合にも対応することができます。</para>
-  </sect2>
 
   <sect2 xml:id="sec-ssh-authentic-agent">
    <title><command>ssh-agent</command> の使用</title>
