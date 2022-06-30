@@ -64,16 +64,8 @@ Host key verification failed.</screen>
     <term>公開鍵認証</term>
     <listitem>
      <para>ユーザ名とパスワードではなく、個人単位で鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
-     <para>
-       See <xref linkend="sec-ssh-gnome-keyring"/> to learn how to use
-       <command>gnome-keyring</command> for automated public key
-       authentication in GNOME sessions.
-      </para>
-      <para>
-       See <xref linkend="sec-ssh-authentic-agent"/> to learn how to use
-       <literal>ssh-agent</literal> for automated public key
-       authentication in console sessions.
-      </para>
+     <para>GNOME セッション内で公開鍵認証を自動化したい場合は、 <command>gnome-keyring</command> を使用することができます。詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください。</para>
+      <para>また、コンソールセッション内で公開鍵認証を自動化したい場合は、 <literal>ssh-agent</literal> を使用することができます。詳しくは <xref linkend="sec-ssh-authentic-agent"/> をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -114,13 +106,13 @@ Host key verification failed.</screen>
   <varlistentry>
    <term><command>ssh-add</command></term>
    <listitem>
-    <para><command>ssh-agent</command> コマンドで動作する認証エージェントに対して、機密鍵の情報を追加するためのコマンドです。</para>
+    <para><literal>ssh-agent</literal> コマンドで動作する認証エージェントに対して、機密鍵の情報を追加するためのコマンドです。</para>
    </listitem>
   </varlistentry>
 <varlistentry>
    <term><command>ssh-agent</command></term>
    <listitem>
-    <para>公開鍵認証で使用する、ユーザの機密鍵とパスフレーズを管理するためのエージェントです。 <command>ssh-agent</command> はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供しますので、パスフレーズの再入力を省略することができるようになります。</para>
+    <para>公開鍵認証で使用する、ユーザの機密鍵とパスフレーズを管理するためのエージェントです。 <literal>ssh-agent</literal> はパスフレーズをメモリ内に保持し、必要に応じてパスフレーズを提供しますので、パスフレーズの再入力を省略することができるようになります。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
@@ -252,7 +244,7 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
      <para>古い SSH クライアントは ECDSA や ED25519 に対応していませんが、 ECDSA と ED25519 への対応は 2014 年に公開された OpenSSH 6.5 から提供されているものです。どうしても接続を受け付ける必要がある場合は、必ずセキュリティ更新を適用しておいてください。また、可能であれば古いクライアントからの接続は許可しないでください。</para>
    </note>
    <para>SSH の鍵は 2 種類の目的で使用されます。クライアントがサーバを認証するためのホスト鍵と、サーバがクライアントを認証するためのクライアント鍵です (詳しくは <xref linkend="sec-ssh-public-key-auth"/> をお読みください) 。サーバのホスト鍵は <filename>/etc/ssh</filename> ディレクトリ内に保存され、クライアント鍵はユーザごとのディレクトリである <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリ内に保存されます。</para>
-    <para>なお、 OpenSSH をインストールしても <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリは自動では作成されませんので、必要に応じて作成する必要があります。</para>
+    <para>なお、ユーザ側で新しい SSH 鍵を作成すると、 <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリが作成されます。</para>
    <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
    <para>ほとんどの場合、クライアント鍵には強力なパスフレーズを設定します。</para>
    <important>
@@ -269,6 +261,7 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
      <para>既定のパラメータ (RSA, 3072 ビット) でクライアント側の鍵対を生成するには、オプションを何も指定せず <command>ssh-keygen</command> と入力して実行します。なお、機密鍵を保護するため、強力なパスフレーズを設定しておいてください:</para>
      <screen>&prompt.user;<command>ssh-keygen</command>
 Generating public/private rsa key pair.
+Enter file in which to save the key (/home/tux/.ssh/id_rsa):
 Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
 Your identification has been saved in id_rsa
@@ -434,7 +427,8 @@ Accept updated hostkeys? (yes/no):</screen>
   <para>公開鍵認証は、アカウントに対して設定されたパスワードではなく、ユーザが作成した個人用の鍵で認証を行う方法です。</para>
   <para>下記は、コメント付きで個人用の RSA 鍵を作成する場合の例を示しています。まずは <filename>~/.ssh</filename> ディレクトリに移動 (存在していない場合は作成して移動) したあと、新しい鍵対を作成します。この場合、パスフレーズはできる限り複雑なものとし、パスフレーズは安全な場所に記録しておいてください:</para>
   <screen>&prompt.user;<command>cd ~/.ssh</command>
-&prompt.user;<command>ssh-keygen -C <replaceable>"web server1"</replaceable> -f <replaceable>id-web1</replaceable> -t rsa -b <replaceable>4096</replaceable></command></screen>
+&prompt.user;<command>ssh-keygen -C <replaceable>"web server1"</replaceable> -f <replaceable>id-web1</replaceable> -t rsa -b <replaceable>4096</replaceable></command>
+</screen>
   <para>あとは作成した鍵対のうち、公開鍵を接続先のホストにコピーします。接続先のマシンにユーザアカウントがあれば、 SSH でアクセスして鍵を書き込みます:</para>
   <screen>&prompt.user;<command>ssh-copy-id -i <replaceable>id-web1 user@web1</replaceable></command></screen>
   <para>あとは作成した鍵でログインを試してみるだけです:</para>
@@ -449,41 +443,19 @@ Have a lot of fun...</screen>
   <sect1 xml:id="sec-ssh-passphrase-less-auth">
   <title>パスフレーズ無しの公開鍵認証</title>
   <para>これは機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。パスフレーズを指定せずに新しい鍵を作成したあとは、パスフレーズ付きの鍵と同じ手順で鍵を使用することができます。これは特にスクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
-  <para>
-   An alternative to using keys without passphrases is
-   <literal>gnome-keyring</literal>, which
-   remembers and applies your private keys and passphrases for you.
-   <literal>gnome-keyring</literal> is for GNOME desktop sessions
-   (<xref linkend="sec-ssh-gnome-keyring"/>).
-  </para>
-  <para>
-   For console sessions, use <literal>ssh-agent</literal>
-   (<xref linkend="sec-ssh-authentic-agent"/>).
-  </para>
+  <para>なお、パスフレーズ無しで鍵を使用するもう 1 つの方法として、 <literal>gnome-keyring</literal> があります。こちらは機密鍵のパスフレーズを記憶して、必要に応じて適用を行うことができます。 <literal>gnome-keyring</literal> は GNOME デスクトップセッション向けの仕組みです (詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください) 。</para>
+  <para>コンソールセッションの場合は <literal>ssh-agent</literal> を使用することができます (詳しくは <xref linkend="sec-ssh-authentic-agent"/> をお読みください) 。</para>
  </sect1>
 
  <sect1 xml:id="sec-ssh-gnome-keyring">
-  <title>Automated public key logins with gnome-keyring</title>
-  <para>
-   The <package>gnome-keyring</package> package is installed and enabled
-   by default when the GNOME desktop environment is installed.
-   <literal>gnome-keyring</literal> is integrated with your
-   system login, automatically unlocking your secrets storage at login.
-   When you change your login password, <literal>gnome-keyring</literal>
-   automatically updates itself with your new password.
-  </para>
-  <para>
-   <literal>gnome-keyring</literal> automatically loads all key pairs in
-   <filename>~/.ssh</filename>, for each pair that has a
-   <filename>*.pub</filename> file. You may manually load other keys with
-   the <command>ssh-add</command> command, for example:
-  </para>
-  <screen>&prompt.user;<command>ssh-copy-id -i <replaceable>id-web1 user@web1</replaceable></command></screen>
-  <para>
-   List all loaded keys:
-  </para>
-  <screen>&prompt.sudo;<command>sshd -t</command></screen>
-  <para>新しい X セッションを開始すると、 SSH 鍵に対するパスフレーズの入力を求められます。</para>
+  <title>gnome-keyring を利用した公開鍵認証の自動化</title>
+  <para>GNOME デスクトップ環境をインストールすると、 <package>gnome-keyring</package> パッケージも自動的にインストールされ、有効化されます。 <package>gnome-keyring</package> はシステムのログインに統合され動作する仕組みであるため、ログイン時に自動的に機密記憶領域の保護が解除されます。ログイン時のパスワードを変更しても、 <literal>gnome-keyring</literal> はそれを自動的に認識して更新処理を行います。</para>
+  <para><literal>gnome-keyring</literal> は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵対 (<filename>*.pub</filename> の形式の公開鍵があるもの) を自動的に読み込みます。その他のディレクトリ内にあるファイルを読み込みたい場合は、 <command>ssh-add</command> コマンドで読み込みを行ってください。たとえば下記のようになります:</para>
+  <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
+   </screen>
+  <para>読み込まれた全ての鍵を表示するには、下記のコマンドを実行します:</para>
+  <screen>&prompt.user;<command>ssh-add -L</command></screen>
+  <para>システムを起動して SSH セッションを開くと、機密鍵のパスフレーズの入力を促されます。</para>
  <!-- commenting out until I can create links for the localization
   dirs, as this is a new image file. cjs 30-6-2022
   <screen>&prompt.user;<command>ssh -i <replaceable>id-web1 user@web1</replaceable></command>
@@ -498,21 +470,13 @@ Have a lot of fun...</screen>
        </imageobject>
       </mediaobject>
   </informalfigure>-->
-   <para>
-    <literal>gnome-keyring</literal> will remember the passphrase for the rest of your
-    session. You will not have to re-enter the passphrase until after a system restart.
-   </para>
+   <para><literal>gnome-keyring</literal> はセッションを終了するまでの間パスフレーズを記憶します。そのため、システムを再起動しない限り、パスフレーズを再度入力する必要がなくなります。</para>
  </sect1>
 
   <sect1 xml:id="sec-ssh-authentic-agent">
-   <title>Automated public key logins with ssh-agent</title>
-   <para>
-    The <package>openssh</package> package
-    provides the <command>ssh-agent</command> utility, which retains your
-    private keys and passphrases, and automatically applies your passphrases
-    for you.
-   </para>
-   <para><command>ssh-agent</command> を起動したあとは、 <command>ssh-add</command> コマンドで鍵を追加していきます。このとき、パスフレーズの入力を求められます。パスフレーズをいったん入力してしまえば、再度認証を行うことなく Secure SHell のコマンドを使用することができるようになります。</para>
+   <title>ssh-agent を利用した公開鍵認証の自動化</title>
+   <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは機密鍵とパスフレーズを記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
+   <para><command>ssh-agent</command> を起動したあとは、 <command>ssh-add</command> コマンドで鍵を追加していきます。このとき、パスフレーズの入力を求められます。パスフレーズをいったん入力してしまえば、セッションを終了するまでは再度認証を行うことなく SSH のコマンドを使用できるようになります。</para>
    <sect2 xml:id="sec-ssh-authentic-agent-x">
     <title>X セッション内での <command>ssh-agent</command> の使用</title>
     <para>&productname; では、 &gnome; ディスプレイマネージャ経由でログインすることで、自動的に <command>ssh-agent</command> が起動されます。あとは <command>ssh-add</command> コマンドを実行して、 X セッションの冒頭で鍵を追加していくことになりますが、この処理をログイン時に自動的に実施したい場合は、下記のようにして実行します:</para>
@@ -538,8 +502,8 @@ else cp /etc/skel/.xinitrc.template ~/.xinitrc; fi</screen>
    </sect2>
 
    <sect2 xml:id="sec-ssh-authentic-agent-terminal">
-    <title>X セッション内での <command>ssh-agent</command> の使用</title>
-    <para>端末セッションの場合は、 <command>ssh-agent</command> を手作業で起動して、後から <command>ssh-add</command> を実行する必要があります。 <command>ssh-agent</command> の起動方法には 2 種類のものがあります。 1 行目の例は既存のシェルから <command>ssh-agent</command> を起動して、その中で新しいシェルを起動する方法、 2 行目の例は既存のシェル内で <command>ssh-agent</command> を起動して、必要に応じて環境を書き換える方法です。</para>
+    <title>コンソールセッション内での <command>ssh-agent</command> の使用</title>
+    <para>コンソールセッションの場合は、 <command>ssh-agent</command> を手作業で起動して、後から <command>ssh-add</command> を実行する必要があります。 <command>ssh-agent</command> の起動方法には 2 種類のものがあります。 1 行目の例は既存のシェルから <command>ssh-agent</command> を起動して、その中で新しいシェルを起動する方法、 2 行目の例は既存のシェル内で <command>ssh-agent</command> を起動して、必要に応じて環境を書き換える方法です。</para>
 <screen>&prompt.user;ssh-agent -s /bin/bash
 eval $(ssh-agent)
     </screen>
@@ -591,7 +555,7 @@ Last login: Tue May 10 11:29:06 2022 from 192.168.163.13
 Have a lot of fun...
 
 &exampleuserII_plain;@&exampleserver;&prompt.user; <command>gnome-mines</command></screen>
-   <para>起動したアプリケーションはローカルにインストールされているかのように、ローカル側に表示されるはずです (ただしネットワーク側の遅延があると、その分だけ性能に影響があります)。アプリケーションの終了も通常と同じで、閉じるボタンを押すだけです。ただし、アプリケーションを閉じても SSH のセッションは終了せず、そのまま動作し続けます。</para>
+   <para>起動したアプリケーションはローカルにインストールされているかのように、ローカル側に表示されるはずです (ただしネットワーク側の遅延があると、その分だけ性能に影響があります) 。アプリケーションの終了も通常と同じで、閉じるボタンを押すだけです。ただし、アプリケーションを閉じても SSH のセッションは終了せず、そのまま動作し続けます。</para>
 
    <important>
     <title>Wayland では X11 転送機能が使用できない問題について</title>
@@ -666,7 +630,7 @@ cd path                            Change remote directory to 'path'
   </sect2>
   <sect2 xml:id="sec-ssh-sftp-perms">
    <title>ファイルアップロードのパーミッション設定</title>
-   <para>通常の FTP サーバと同様に、ユーザは SFTP を利用することで、ダウンロードだけでなくアップロードも行うことができます。コマンドは通常の FTP サーバと同じで、 <command>put</command> コマンドを利用します。既定では、アップロードしたファイルのパーミッションは、ローカル側のパーミッションと同じに設定されます。ただし、自動的に設定されるパーミッションを変更したい場合は、下記のいずれかを実施してください:</para>
+   <para>通常の FTP サーバと同様に、ユーザは SFTP を利用することで、ダウンロードやアップロードを行うことができます。コマンドも通常の FTP サーバと同じで、 たとえばアップロードであれば <command>put</command> コマンドを利用します。既定では、アップロードしたファイルのパーミッションは、ローカル側のパーミッションと同じに設定されます。ただし、自動的に設定されるパーミッションを変更したい場合は、下記のいずれかを実施してください:</para>
    <variablelist>
     <varlistentry>
      <term>umask の設定</term>
@@ -742,15 +706,15 @@ cd path                            Change remote directory to 'path'
    </variablelist>
 
   <tip>
-   <title>Viewing the SSH daemon log file</title>
-   <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
+   <title>SSH デーモンのログファイル表示</title>
+   <para><systemitem class="daemon">sshd</systemitem> が出力したログを表示したい場合は、下記のコマンドを実行します:</para>
    <screen>&prompt.sudo;journalctl -u sshd</screen>
    </tip>
   </sect2>
  </sect1>
 
  <sect1 xml:id="sec-ssh-port-forwarding">
-  <title>ポート転送</title>
+  <title>ポート転送 (SSH トンネリング)</title>
 
   <para><command>ssh</command> は TCP/IP 接続を転送するような用途でも使用することができます。この機能は <literal>SSH トンネリング</literal> とも呼ばれ、暗号化された通信を介して TCP の接続を別のマシン内にある特定のポートに転送することができます。</para>
 
