@@ -18,7 +18,7 @@
 
  <sect1 xml:id="sec-ssh-overview">
   <title>OpenSSH の概要</title>
-  <para>SSH はエンドツーエンドで通信を保護するためのプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。 SSH で他のコンピュータに接続するには、接続先でのユーザ名と適切な認証手段を設定する必要があります。</para>
+  <para>SSH はエンドツーエンドで通信を保護するためのネットワークプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。 SSH で他のコンピュータに接続するには、接続先でのユーザ名と適切な認証手段を設定する必要があります。</para>
   <para>SSH はクライアント／サーバ型のプロトコルです。他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
   <para>認証と暗号化の機能は暗号鍵対によって行われます。それぞれの鍵対には公開鍵と機密鍵という 2 つの鍵が存在し、公開鍵は暗号化を、機密鍵は暗号の復号化を行うために使用します。また、機密鍵がきちんと保護されている限り、公開鍵は誰にでも配布してかまいません。機密鍵が漏洩してしまうと、機密鍵の元の所有者になりすまして暗号化した通信を行うことができるようになってしまいます。</para>
   <para>SSH ではサーバとクライアントの双方が互いに認証しなければならない仕組みになっていることから、非常に強力な保護を提供しています。クライアントが SSH での接続を開始すると、サーバは自身の持つ公開鍵を提示します。示された公開鍵が既知のものであった場合 (クライアント側の <filename>~/.ssh/known_hosts</filename> 内に保存されます) 、クライアントはサーバを信頼してそのまま処理を続行します。既知のものでなかった場合は、サーバを信頼して良いかどうか、下記のようにしてユーザに尋ねます:</para>
@@ -100,7 +100,7 @@ Host key verification failed.</screen>
   <varlistentry>
    <term><command>sftp</command></term>
    <listitem>
-    <para>クライアントと SFTP サーバとの間でファイルを送受信するためのコマンドです。<!--the SFTP protocol (SSH FTP), a protocol made from scratch and that has nothing to do with FTPS or FTPES (FTP over SSL / TLS).--></para>
+    <para>クライアントと SFTP サーバとの間でファイルを送受信するためのコマンドです (なお、 SFTP (SSH FTP) プロトコルは FTPS や FTPES (FTP over SSL/TLS) と呼ばれるプロトコルとは異なり、独自に作成されているものです) 。</para>
    </listitem>
   </varlistentry>
   <varlistentry>
@@ -523,29 +523,13 @@ Have a lot of fun...</screen>
 
   <sect1 xml:id="sec-ssh-authentic-agent">
    <title>ssh-agent を利用した公開鍵認証の自動化</title>
-   <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは機密鍵とパスフレーズを記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
-   <para>
-    Configure <command>ssh-agent</command> to start automatically and load
-    your keys by entering the following lines in your
-    <filename>~./profile</filename> file:
-   </para>
+   <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは、機密鍵とパスフレーズをセッションが終了するまでの間だけ記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
+   <para><command>ssh-agent</command> をログイン時に自動的に起動して鍵を読み込むように設定したい場合は、 <filename>~./profile</filename> ファイル内に下記のような行を記述します:</para>
    <screen>eval "$(ssh-agent)"
 ssh-add</screen>
-   <para>
-    The first line starts <command>ssh-agent</command>, and the second line
-    loads all the keys in your <filename>~/.ssh</filename> folder.
-    When you open an SSH session that requires public key authentication,
-    you will be prompted for the passphrase. After the passphrase has been
-    provided once, you will not have to enter it again, until after you
-    restart your system.
-   </para>
-   <para>
-    You may configure <filename>~./profile</filename> to load only
-    specific keys, like the following example that loads
-    <filename>id_rsa</filename> and <filename>id_ed25519</filename>:
-   </para>
-   <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
-   </screen>
+   <para>上記の行のうち、最初の行は <command>ssh-agent</command> を起動するコマンドで、次の行は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵を読み込むコマンドです。このように起動を行うことで、公開鍵認証が必要な SSH セッションを開始すると、最初の 1 回だけはパスフレーズの入力を求められます。その後はシステムを再起動するまでパスフレーズを記憶しますので、再入力を行う必要が無くなります。</para>
+   <para>なお、特定の鍵のみを読み込むように設定したい場合は、下記のように <filename>~./profile</filename> 内で <filename>id_rsa</filename> や <filename>id_ed25519</filename> のファイルを指定してください:</para>
+   <screen>&prompt.user;ssh-add <replaceable>id_rsa id_ed25519</replaceable></screen>
 
    <sect2 xml:id="sec-ssh-authentic-agent-x">
     <title>X セッション内での <command>ssh-agent</command> の使用</title>
