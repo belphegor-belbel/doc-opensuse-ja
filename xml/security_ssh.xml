@@ -65,7 +65,7 @@ Host key verification failed.</screen>
     <listitem>
      <para>ユーザ名とパスワードではなく、個人単位で鍵を設定して認証を行う方式です。公開鍵に対応する機密鍵を持つホストからしかログインできない仕組みであるため、パスワード認証に比べると柔軟性が落ちますが、パスワードクラッキングに強く、キーロガーなどによる窃取も回避できますので、パスワード認証よりはずっと強力です。</para>
      <para>GNOME セッション内で公開鍵認証を自動化したい場合は、 <command>gnome-keyring</command> を使用することができます。詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください。</para>
-      <para>また、コンソールセッション内で公開鍵認証を自動化したい場合は、 <literal>ssh-agent</literal> を使用することができます。詳しくは <xref linkend="sec-ssh-authentic-agent"/> をお読みください。</para>
+      <para>また、コンソールセッション内で公開鍵認証を自動化したい場合は、 <literal>ssh-agent</literal> を使用することができます。詳しくは <xref linkend="sec-ssh-ssh-agent"/> をお読みください。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -444,39 +444,29 @@ Have a lot of fun...</screen>
   <title>パスフレーズ無しの公開鍵認証</title>
   <para>これは機密鍵に対してパスフレーズを設定せずに公開鍵認証を使用する方式です。パスフレーズを指定せずに新しい鍵を作成したあとは、パスフレーズ付きの鍵と同じ手順で鍵を使用することができます。これは特にスクリプトや cron ジョブなどの自動化されたサービスで便利な方式です。ただし、機密鍵はきちんと保護しておかないと、容易にそのユーザになりすましてログインできてしまうので、注意が必要です。</para>
   <para>なお、パスフレーズ無しで鍵を使用するもう 1 つの方法として、 <literal>gnome-keyring</literal> があります。こちらは機密鍵のパスフレーズを記憶して、必要に応じて適用を行うことができます。 <literal>gnome-keyring</literal> は GNOME デスクトップセッション向けの仕組みです (詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください) 。</para>
-  <para>コンソールセッションの場合は <literal>ssh-agent</literal> を使用することができます (詳しくは <xref linkend="sec-ssh-authentic-agent"/> をお読みください) 。</para>
+  <para>コンソールセッションの場合は <literal>ssh-agent</literal> を使用することができます (詳しくは <xref linkend="sec-ssh-ssh-agent"/> をお読みください) 。</para>
  </sect1>
 
  <sect1 xml:id="sec-ssh-keyrings">
-  <title>ssh-agent を利用した公開鍵認証の自動化</title>
-  <para>
-   When you run a lot of SSH sessions, continually re-entering passphrases
-   is a bit of a chore, especially if you have proper strong passphrases.
-   There are two solutions for this: <package>gnome-keyring</package> and
-   <literal>ssh-agent</literal>, which remember your keys and passphrases,
-   and load them for you.
-  </para>
-  <para>
-   <package>gnome-keyring</package> is launched automatically by the
-   GNOME desktop environment. When you are running a system without
-   GNOME and boot to the console, use <literal>ssh-agent</literal>.
-  </para>
+  <title>公開鍵ログインの自動化</title>
+  <para>多数の SSH セッションを扱う場合、特に強力なパスフレーズを設定しているような環境では非常に面倒です。このような問題を解決したい場合は、 <package>gnome-keyring</package> や <literal>ssh-agent</literal> を使用すると良いでしょう。いずれも鍵とパスフレーズを記憶して、必要なときに自動提供を行ってくれます。</para>
+  <para>GNOME デスクトップ環境を使用している場合、 <package>gnome-keyring</package> は自動的に起動されます。 GNOME 以外のデスクトップ環境を使用しているような場合や、コンソール (GUI 無し) を使用しているような場合は、 <literal>ssh-agent</literal> をお使いください。</para>
 
   <sect2 xml:id="sec-ssh-gnome-keyring">
-   <title>gnome-keyring を利用した公開鍵認証の自動化</title>
+   <title>GNOME 内での gnome-keyring を利用した公開鍵ログインの自動化</title>
   <para>GNOME デスクトップ環境をインストールすると、 <package>gnome-keyring</package> パッケージも自動的にインストールされ、有効化されます。 <package>gnome-keyring</package> はシステムのログインに統合され動作する仕組みであるため、ログイン時に自動的に機密記憶領域の保護が解除されます。ログイン時のパスワードを変更しても、 <literal>gnome-keyring</literal> はそれを自動的に認識して更新処理を行います。</para>
   <para><literal>gnome-keyring</literal> は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵対 (<filename>*.pub</filename> の形式の公開鍵があるもの) を自動的に読み込みます。その他のディレクトリ内にあるファイルを読み込みたい場合は、 <command>ssh-add</command> コマンドで読み込みを行ってください。たとえば下記のようになります:</para>
   <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
    </screen>
   <para>読み込まれた全ての鍵を表示するには、下記のコマンドを実行します:</para>
-  <screen>&prompt.user;<command>ssh-add -L</command></screen>
+  <screen>&prompt.user;<command>ssh-add -l</command></screen>
   <para>システムを起動して SSH セッションを開くと、機密鍵のパスフレーズの入力を促されます。</para>
    <para><literal>gnome-keyring</literal> はセッションを終了するまでの間パスフレーズを記憶します。そのため、システムを再起動しない限り、パスフレーズを再度入力する必要がなくなります。</para>
  </sect2>
 
   <sect2 xml:id="sec-ssh-ssh-agent">
-   <title>ssh-agent を利用した公開鍵認証の自動化</title>
-   <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは、機密鍵とパスフレーズをセッションが終了するまでの間だけ記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
+   <title>コンソール内での ssh-agent を利用した公開鍵ログインの自動化</title>
+   <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは、コンソール (GUI 無し) を利用しているような場合や GNOME 以外のデスクトップ環境を利用しているような場合のユーティリティで、セッションが終了するまでの間だけ機密鍵とパスフレーズを記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
    <para><command>ssh-agent</command> をログイン時に自動的に起動して鍵を読み込むように設定したい場合は、 <filename>~./profile</filename> ファイル内に下記のような行を記述します:</para>
    <screen>eval "$(ssh-agent)"
 ssh-add</screen>
