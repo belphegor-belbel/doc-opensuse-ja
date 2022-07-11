@@ -447,70 +447,23 @@ Have a lot of fun...</screen>
   <para>コンソールセッションの場合は <literal>ssh-agent</literal> を使用することができます (詳しくは <xref linkend="sec-ssh-authentic-agent"/> をお読みください) 。</para>
  </sect1>
 
-  <!-- this is awesome sauce
-  <sect1 xml:id="sec-ssh-certificate-auth">
-  <title>OpenSSH certificate authentication</title>
+ <sect1 xml:id="sec-ssh-keyrings">
+  <title>ssh-agent を利用した公開鍵認証の自動化</title>
   <para>
-   OpenSSH introduced certificate authentication in OpenSSH 5.4. This is
-   similar to an OpenSSL certificate authority, and serves a similar
-   purpose: setting up a central authority for public key authentication
-   that verifies and manages encryption certificates.
+   When you run a lot of SSH sessions, continually re-entering passphrases
+   is a bit of a chore, especially if you have proper strong passphrases.
+   There are two solutions for this: <package>gnome-keyring</package> and
+   <literal>ssh-agent</literal>, which remember your keys and passphrases,
+   and load them for you.
   </para>
   <para>
-   Traditional OpenSSH public key authentication requires copying client
-   public keys to every SSH server they need access to, and relying on
-   users to verify new host keys before accepting them. Both methods are
-   error-prone and complicated to manage, especially for distributing client
-   public keys.
+   <package>gnome-keyring</package> is launched automatically by the
+   GNOME desktop environment. When you are running a system without
+   GNOME and boot to the console, use <literal>ssh-agent</literal>.
   </para>
-  <para>
-   Host keys are automatically presented to a client on their first
-   connection attempt, and the user chooses whether or not to accept them.
-   The server presents the host key fingerprint for the user to verify that
-   it is legitimate. However, trusting all users to always follow this
-   procedure may not be the best approach. Using certificate authentication
-   makes it easier to distribute, verify, and manage host and client keys.
-  </para>
-  <para>
-   If you are used to managing OpenSSL certificate authorities, you will
-   find that managing an OpenSSH certificate authority is simpler. The basic
-   principles are similar:
-  </para>
- <itemizedlist>
-  <listitem>
-  <para>
-   Set up a trusted server for creating and signing new host and client
-   keys.
-  </para>
-  </listitem>
-  <listitem>
-  <para>
-   Create, sign, and distribute host keys.
-  </para>
-  </listitem>
-  <listitem>
-  <para>
-   Create, sign, and distribute client keys.
-  </para>
-  </listitem>
-  <listitem>
-  <para>
-   revoke
-  </para>
-  </listitem>
- </itemizedlist>
- <sect2 xml:id="sec-ssh-certificate-create-signing-keys">
-  <title>werds</title>
-  <para>
-   First, create a host key:
-  </para>
-  <screen>&prompt.user;<command>ssh-keygen -s <replaceable>ca_host_key -I certificate_ID id_rsa.pub</replaceable>
- </sect2>
 
- </sect1>-->
-
- <sect1 xml:id="sec-ssh-gnome-keyring">
-  <title>gnome-keyring を利用した公開鍵認証の自動化</title>
+  <sect2 xml:id="sec-ssh-gnome-keyring">
+   <title>gnome-keyring を利用した公開鍵認証の自動化</title>
   <para>GNOME デスクトップ環境をインストールすると、 <package>gnome-keyring</package> パッケージも自動的にインストールされ、有効化されます。 <package>gnome-keyring</package> はシステムのログインに統合され動作する仕組みであるため、ログイン時に自動的に機密記憶領域の保護が解除されます。ログイン時のパスワードを変更しても、 <literal>gnome-keyring</literal> はそれを自動的に認識して更新処理を行います。</para>
   <para><literal>gnome-keyring</literal> は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵対 (<filename>*.pub</filename> の形式の公開鍵があるもの) を自動的に読み込みます。その他のディレクトリ内にあるファイルを読み込みたい場合は、 <command>ssh-add</command> コマンドで読み込みを行ってください。たとえば下記のようになります:</para>
   <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
@@ -519,9 +472,9 @@ Have a lot of fun...</screen>
   <screen>&prompt.user;<command>ssh-add -L</command></screen>
   <para>システムを起動して SSH セッションを開くと、機密鍵のパスフレーズの入力を促されます。</para>
    <para><literal>gnome-keyring</literal> はセッションを終了するまでの間パスフレーズを記憶します。そのため、システムを再起動しない限り、パスフレーズを再度入力する必要がなくなります。</para>
- </sect1>
+ </sect2>
 
-  <sect1 xml:id="sec-ssh-authentic-agent">
+  <sect2 xml:id="sec-ssh-ssh-agent">
    <title>ssh-agent を利用した公開鍵認証の自動化</title>
    <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは、機密鍵とパスフレーズをセッションが終了するまでの間だけ記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
    <para><command>ssh-agent</command> をログイン時に自動的に起動して鍵を読み込むように設定したい場合は、 <filename>~./profile</filename> ファイル内に下記のような行を記述します:</para>
@@ -529,31 +482,8 @@ Have a lot of fun...</screen>
 ssh-add</screen>
    <para>上記の行のうち、最初の行は <command>ssh-agent</command> を起動するコマンドで、次の行は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵を読み込むコマンドです。このように起動を行うことで、公開鍵認証が必要な SSH セッションを開始すると、最初の 1 回だけはパスフレーズの入力を求められます。その後はシステムを再起動するまでパスフレーズを記憶しますので、再入力を行う必要が無くなります。</para>
    <para>なお、特定の鍵のみを読み込むように設定したい場合は、下記のように <filename>~./profile</filename> 内で <filename>id_rsa</filename> や <filename>id_ed25519</filename> のファイルを指定してください:</para>
-   <screen>&prompt.user;ssh-add <replaceable>id_rsa id_ed25519</replaceable></screen>
-
-   <sect2 xml:id="sec-ssh-authentic-agent-x">
-    <title>X セッション内での <command>ssh-agent</command> の使用</title>
-    <para>&productname; では、 &gnome; ディスプレイマネージャ経由でログインすることで、自動的に <command>ssh-agent</command> が起動されます。あとは <command>ssh-add</command> コマンドを実行して、 X セッションの冒頭で鍵を追加していくことになりますが、この処理をログイン時に自動的に実施したい場合は、下記のようにして実行します:</para>
-    <procedure>
-     <step>
-      <para>まずは目的のユーザでログインして、 <filename>~/.xinitrc</filename> ファイルが存在していないかどうかを確認します。</para>
-     </step>
-     <step>
-      <para>存在していない場合は、 <filename>/etc/skel</filename> 内にある雛形を使用して設定するか、もしくはシンプルにコピーして使用します:</para>
-<screen>if [ -f ~/.xinitrc.template ]; then mv ~/.xinitrc.template ~/.xinitrc; \
-else cp /etc/skel/.xinitrc.template ~/.xinitrc; fi</screen>
-     </step>
-     <step>
-      <para>雛形をコピーしたあとは、下記のような行を探してコメント文字 (#) を外します。 <filename>~/.xinitrc</filename> が既に存在しているような場合は、下記のような行を追加します (コメント文字 (#) は外して記入してください) 。</para>
-<screen># if test -S "$SSH_AUTH_SOCK" -a -x "$SSH_ASKPASS"; then
-#       ssh-add &lt; /dev/null
-# fi</screen>
-     </step>
-     <step>
-      <para>新しい X セッションを開始すると、 SSH 鍵に対するパスフレーズの入力を求められます。</para>
-     </step>
-    </procedure>
-   </sect2>
+   <screen>ssh-add id_rsa id_ed25519</screen>
+  </sect2>
  </sect1>
 
  <sect1 xml:id="sec-ssh-change-passphrase">
