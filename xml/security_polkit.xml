@@ -4,11 +4,11 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-security-polkit">
- <title>&pk; 認証フレームワーク</title>
+ <title>&pk; 認可フレームワーク</title>
  <info>
       <abstract>
         <para>&pk; は Linux デスクトップで使用される認証フレームワークで、システムでの権限管理をより精密に行うための仕組みです。従来の Linux システムでは、最高位のシステム権限を持つユーザとして &rootuser; を規定してそれ以外のユーザやグループと分離していましたが、サウンドハードウエアにアクセスするための <literal>audio</literal> グループなど、 &rootuser; とは別の権限構成も存在していました。このような構成では、特定の状況下に対応できなくなってしまうほか、一時的に許可するようなことも実現できませんでした。</para>
-        <para>このような場合、通常は <command>sudo</command> コマンドなどで &rootuser; に成り代わり、特権を得て作業を行うことになりますが、 &pk; では要件に応じて特定のユーザやグループに対して必要な権限のみを与えることができます。権限は処理と権限内容を記した設定ファイル内に記述して、動的に対応を行うことができます。</para>
+        <para>このような場合、通常は <command>sudo</command> コマンドなどで &rootuser; に成り代わり、特権を得て作業を行うことになりますが、 &pk; では要件に応じて特定のユーザやグループに対して必要な権限のみを与えることができます。権限は処理と権限内容を記した設定ファイル内に記述して、動的に対応することができます。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -21,7 +21,7 @@
 
   <para>&pk; は複数のコンポーネント (部品) から構成されています。まず <command>polkitd</command> は裏で動作する特権サービスで、 &pk; の設定ファイルを読み込んで必要な認証チェックを実施します。 &pk; 対応のアプリケーションは認証要求を <command>polkitd</command> に送信しますが、このとき特権を持たない &pk; 認証エージェントが動作して、 <command>polkitd</command> が求める認証要求を表示します。ここでユーザが対話的に入力した値は、エージェントを介して <command>polkitd</command> に送信されます。</para>
 
-  <para>&pk; での <emphasis>アクション</emphasis> は、 &pk; の認可ルールに記された 1 つの処理を意味します。このアクションはたとえば、コンピュータを再起動したいなどの意図を表します。それぞれのアクションには唯一の識別子が設定され、たとえばコンピュータの再起動であれば <literal>org.freedesktop.login1.reboot</literal> という名称が割り当てられています。</para>
+  <para>&pk; での <emphasis>アクション</emphasis> は、 &pk; の認可ルールに記された 1 つの処理を意味します。このアクションはたとえば、コンピュータを再起動したいなどの意図を表します。それぞれのアクションには唯一の ID が設定され、たとえばコンピュータの再起動であれば <literal>org.freedesktop.login1.reboot</literal> という名称が割り当てられています。</para>
 
   <sect2 xml:id="sec-security-polkit-agents">
    <title>認証エージェント</title>
@@ -82,7 +82,7 @@
  <sect1 xml:id="sec-security-polkit-types">
   <title>認可の種類</title>
 
-  <para>&pk; が有効化されたプロセスが権限操作を行うと、このプロセスに対して権限が設定されているかどうかを &pk; に尋ねる処理を行います。 &pk; はそのプロセスに対して設定されているポリシーを元にして、応答を返します。応答は <literal>yes</literal> (はい), <literal>no</literal> (いいえ), <literal>authentication needed</literal> (要認証) のいずれかとなります。 <literal>authentication needed</literal> (要認証) の場合はユーザに対して認証ダイアログを表示し、必要な認可を得る処理を行います。</para>
+  <para>&pk; を有効化したプロセスが権限操作を行うと、このプロセスに対して権限が設定されているかどうかを &pk; に尋ねる処理を行います。 &pk; はそのプロセスに対して設定されているポリシーを元にして、応答を返します。応答は <literal>yes</literal> (はい), <literal>no</literal> (いいえ), <literal>authentication needed</literal> (要認証) のいずれかとなります。 <literal>authentication needed</literal> (要認証) の場合はユーザに対して認証ダイアログを表示し、必要な認可を得る処理を行います。</para>
 
   <sect2 xml:id="sec-security-polkit-policies-implicit">
    <title>暗黙の認可</title>
@@ -146,10 +146,7 @@
     <varlistentry>
      <term><filename>/etc/polkit-default-privs.restrictive</filename></term>
      <listitem>
-      <para>
-       More conservative authorization settings that reduce possible attack surface
-       at the expense of user experience in some areas.
-      </para>
+      <para>使いやすさを犠牲にして、考えられる攻撃手法をできる限り無効化することを目指した、より保守的な権限セットです。</para>
      </listitem>
     </varlistentry>
    </variablelist>
@@ -185,7 +182,7 @@ org.freedesktop.login1.reboot:
  <sect1 xml:id="sec-security-polkit-change-modify-config">
   <title>&pk; の設定変更</title>
 
-  <para>たとえば特定のチーム内に配布するコンピュータをセットアップするような場合など、複数のマシンに同じポリシーセットを設定したいような場合、 &pk; の設定を修正する必要があります。このほか、 &pk; の認可設定をカスタマイズすることで、特定のアクションに対するセキュリティを強化したり、よく使用されるアクションに対して繰り返しのパスワード入力を省略したりなどを行うこともできます。ただし、認証無しで &pk; のアクションを不用意に実行できるように設定してしまうと、設定によっては完全な &rootuser; 権限を得る結果になってしまうこともあります。そのため、 &pk; の認証設定の弱化は、特定の環境下でシステムのセキュリティを侵さない範囲でのみ設定するようにしてください。</para>
+  <para>たとえば特定のチーム内に配布するコンピュータをセットアップするような場合など、複数のマシンに同じポリシーセットを設定したいような場合、 &pk; の設定を修正する必要があります。このほか、 &pk; の認可設定をカスタマイズすることで、特定のアクションに対するセキュリティを強化したり、よく使用されるアクションに対して繰り返しのパスワード入力を省略したりなどを行うこともできます。ただし、認証無しで &pk; のアクションを不用意に実行できるように設定してしまうと、設定によっては完全な &rootuser; 権限を得る結果になってしまうこともあります。そのため、 &pk; で認証設定を弱くする場合は、お使いの環境下でシステムのセキュリティを侵さない範囲でのみ設定するようにしてください。</para>
 
   <sect2 xml:id="sec-security-polkit-change-modify-config-actions">
    <title>&pk; ポリシーファイルの上書き</title>
