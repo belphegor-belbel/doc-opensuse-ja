@@ -8,8 +8,8 @@
  <title>&pk; 認可フレームワーク</title>
  <info>
       <abstract>
-        <para>&pk; は Linux デスクトップで使用される認可フレームワークで、システムでの権限管理をより精密に行うための仕組みです。従来の Linux システムでは、最高位のシステム権限を持つユーザとして &rootuser; を規定してそれ以外のユーザやグループと分離していましたが、サウンドハードウエアにアクセスするための <literal>audio</literal> グループなど、 &rootuser; とは別の権限構成も存在していました。このような構成では、特定の状況下に対応できなくなってしまうほか、一時的に許可するようなことも実現できませんでした。</para>
-        <para>このような場合、通常は <command>sudo</command> コマンドなどで &rootuser; に成り代わり、特権を得て作業を行うことになりますが、 &pk; では要件に応じて特定のユーザやグループに対して必要な権限のみを与えることができます。権限は処理と権限内容を記した設定ファイル内に記述して、動的に対応することができます。</para>
+        <para>&pk; はグラフィカルな Linux デスクトップ環境で使用される認可フレームワークで、システムでの権限管理をより精密に行うための仕組みです。従来の Linux システムでは、最高位のシステム権限を持つユーザとして &rootuser; を規定し、それ以外のユーザやグループと分離していましたが、サウンドハードウエアにアクセスするための <literal>audio</literal> グループなどのように、 &rootuser; とは別の権限構成も存在していました。このような構成では、特定の状況下に対応できなくなってしまうほか、一時的に許可するようなことも実現できませんでした。</para>
+        <para>このような場合、通常は <command>sudo</command> コマンドなどで &rootuser; に成り代わり、特権を得て作業を行うことになりますが、 &pk; では要件に応じて特定のユーザやグループに対して、必要な権限のみを与えることができます。権限は処理と権限内容を記した設定ファイル内で動的に対応することができます。</para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -87,7 +87,7 @@
 
   <sect2 xml:id="sec-security-polkit-policies-implicit">
    <title>暗黙の認可</title>
-   <para>特定のアクションに対して専用の &pk; Java Script ルールが記述されていない場合、その結果は、 &pk; のポリシーファイルの各アクションに対して設定されている暗黙の認可設定に従って決定されます。この暗黙の認可設定には <literal>allow_active</literal> , <literal>allow_inactive</literal> , <literal>allow_any</literal> の 3 種類があります。 <literal>allow_active</literal> は動作中のセッション内にいるユーザに適用されるもので、テキストモードやグラフィカルユーザインターフェイスでログインしているユーザに適用されます。なお、ログイン中であっても、ユーザがコンソールを切り替えるなどして動作中でなくなると、 <literal>allow_inactive</literal> が適用されます。また、 <literal>allow_any</literal> は SSH や VNC などでログインしているリモートのユーザなど、それ以外の状況下で適用されます。これらそれぞれに対して、下記に示すいずれかの認可を割り当てることができます:</para>
+   <para>特定のアクションに対して専用の &pk; JavaScript ルールが記述されていない場合、その結果は、 &pk; のポリシーファイルの各アクションに対して設定されている暗黙の認可設定に従って決定されます。この暗黙の認可設定には <literal>allow_active</literal> , <literal>allow_inactive</literal> , <literal>allow_any</literal> の 3 種類があります。 <literal>allow_active</literal> は動作中のセッション内にいるユーザに適用されるもので、テキストモードやグラフィカルユーザインターフェイスでログインしているユーザに適用されます。なお、ログイン中であっても、ユーザがコンソールを切り替えるなどして動作中でなくなると、 <literal>allow_inactive</literal> が適用されます。また、 <literal>allow_any</literal> は SSH や VNC などでログインしているリモートのユーザなど、それ以外の状況下で適用されます。これらそれぞれに対して、下記に示すいずれかの認可を割り当てることができます:</para>
    <variablelist>
     <varlistentry>
      <term>no</term>
@@ -129,7 +129,7 @@
   </sect2>
 
   <sect2 xml:id="sec-security-polkit-policies-default">
-   <title>SUSE 既定の権限</title>
+   <title>&suse; 既定の権限</title>
    <para>ここまでに説明してきた &pk; のポリシーファイル内の暗黙の認可設定は、アプリケーションの開発者が規定した既定の暗黙ポリシーセットが元になっています。このようなポリシーは <quote>提供元の既定値</quote> と呼ばれます。提供元の既定値で設定された権限は、既定の &suse; システムで有効化されていない場合もあります。 &productname; では、提供元の既定値を上書きする独自の権限セットを用意していますが、これには 3 種類のセットが含まれています:</para>
    <variablelist>
     <varlistentry>
@@ -164,7 +164,7 @@
 
   <para>特定のポリシー (例: <literal>org.freedesktop.login1.reboot</literal>) に対して、必要な認可情報を表示したい場合は、 <command>pkaction</command> を下記のように実行します:</para>
 
-  <screen>&prompt.user;pkaction -v --action-id=org.freedesktop.login1.reboot
+  <screen>&prompt.user;<command>pkaction -v --action-id=org.freedesktop.login1.reboot</command>
 org.freedesktop.login1.reboot:
   description:       Reboot the system
   message:           Authentication is required to allow rebooting the system
@@ -233,7 +233,7 @@ org.freedesktop.login1.reboot:
   </sect2>
 
   <sect2 xml:id="sec-security-polkit-change-modify-config-authrules">
-   <title>Java Script 認可ルールの追加</title>
+   <title>JavaScript 認可ルールの追加</title>
    <para>独自の認可ルールを作成することで、暗黙の認可を上書きして動作させることができます。独自のルールを作成する場合は、 <filename>/etc/polkit-1/rules.d/</filename> ディレクトリ内にファイルを作成してください。</para>
    <para>このディレクトリにファイルを配置する場合、ファイル名は 2 桁の数字ではじめ、その後ろにわかりやすい名前を続けて、末尾は <filename>.rules</filename> で終わらせるようにしてください。これらのファイル内の関数は、並べ替えられた順に実行されます。たとえば <filename>00-foo.rules</filename> ファイルは <filename>60-bar.rules</filename> や <filename>90-default-privs.rules</filename> ファイルの前に実行されます。</para>
    <para>ルールファイル内はスクリプト形式で、まずアクション ID (<filename>.policy</filename> ファイルで定義されている値) が特定のものであるかどうかをチェックします。たとえば <command>gparted</command> というコマンドを <systemitem class="groupname">admin</systemitem> グループ内の任意のユーザに対して許可したい場合は、 <literal>org.opensuse.policykit.gparted</literal> のアクション ID に対して、下記のような処理を記述します:</para>
@@ -248,10 +248,10 @@ polkit.addRule(function(action, subject) {
   </sect2>
 
   <sect2 xml:id="sec-security-polkit-change-modify-config-implicit">
-   <title>SUSE 既定の権限設定の変更</title>
-   <para><xref linkend="sec-security-polkit-policies-default"/> で説明しているとおり、 SUSE では、提供元の開発者が設定した &pk; の暗黙の認可設定を上書きする設定を提供しています。それ以外の独自の権限については、 <filename>/etc/polkit-default-privs.local</filename> ファイル内に記述してください。ここで定義された権限は、その他の設定ファイル内に書かれているものよりも常に優先して適用されます。独自の権限セットを定義したい場合は、下記のようにして行います:</para>
+   <title>&suse; 既定の権限設定の変更</title>
+   <para><xref linkend="sec-security-polkit-policies-default"/> で説明しているとおり、 &suse; では、提供元の開発者が設定した &pk; の暗黙の認可設定を上書きする設定を提供しています。それ以外の独自の権限については、 <filename>/etc/polkit-default-privs.local</filename> ファイル内に記述してください。ここで定義された権限は、その他の設定ファイル内に書かれているものよりも常に優先して適用されます。独自の権限セットを定義したい場合は、下記のようにして行います:</para>
    <procedure xml:id="pro-custom-privileges">
-    <title>SUSE 既定の権限設定の変更</title>
+    <title>既定の権限設定の変更</title>
     <step>
      <para><filename>/etc/polkit-default-privs.local</filename> ファイルを編集します。権限を定義するには、下記のような形式で各アクション向けの行を記述します:</para>
 <screen><replaceable>&lt;アクション-ID&gt;</replaceable>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<replaceable>&lt;任意のセッションに対する認可指定&gt;</replaceable>:<replaceable>&lt;非動作中のセッションに対する認可指定&gt;</replaceable>:<replaceable>&lt;動作中のセッションに対する認可指定&gt;</replaceable></screen>
@@ -262,16 +262,16 @@ polkit.addRule(function(action, subject) {
     </step>
     <step>
      <para>あとは設定を反映させるため、 &rootuser; で下記を実行します:</para>
-     <screen># /sbin/set_polkit_default_privs</screen>
+     <screen>&prompt.root;<command>/sbin/set_polkit_default_privs</command></screen>
     </step>
    </procedure>
    <para>SUSE での &pk; 既定値に関する詳しいドキュメンテーションについては、 <command>man polkit-default-privs</command> をお読みください。</para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-security-polkit-change-defaults">
-  <title>SUSE 既定の権限設定の復元</title>
+  <title>&suse; 既定の権限設定の復元</title>
 
-  <para>認可設定を SUSE 提供の既定値に戻したい場合は、下記の手順を実施します:</para>
+  <para>認可設定を &suse; 提供の既定値に戻したい場合は、下記の手順を実施します:</para>
 
   <procedure xml:id="pro-restore-polkit-defaults">
    <title>&productname; の既定値の復元</title>
