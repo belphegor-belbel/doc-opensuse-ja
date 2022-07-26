@@ -685,75 +685,34 @@
  </sect1>
 
  <sect1 xml:id="sec-active-directory-certificate-auto-enrollment">
-  <title>&ad; certificate auto-enrollment</title>
-  <para>
-   Certificate auto-enrollment enables network devices to automatically
-   enroll certificates from Active Directory Certificate Services, including
-   &sles; devices, with no user intervention. This is managed by &ad;'s
-   Group Policy, using Samba's <command>samba-gpupdate</command> command.
-  </para>
+  <title>&ad; での証明書自動登録</title>
+  <para>証明書の自動登録機能は、ネットワークに接続されているデバイスが Active Directory の証明書サービスに対して証明書を自動登録する機能を指します。この機能は &sles; デバイスでも利用することができ、ユーザ側での操作無しに実施することができます。これは &ad; のグループポリシーで管理されている機能で、 Samba では <command>samba-gpupdate</command> コマンドで提供されています。</para>
   <sect2 xml:id="sec-active-directory-auto-enrollment-server-configuration">
-   <title>Configuring certificate auto-enrollment on the server</title>
-   <para>
-    The Windows server roles "Certification Authority", "Certificate
-    Enrollment Policy Web Service", "Certificate Enrollment Web Service",
-    "Certification Authority Web Enrollment", and "Network Device Enrollment
-    Service" all must be installed and configured on the &ad; server.
-   </para>
-   <para>
-    Configure Group Policy auto-enrollment as described in this Microsoft
-    documentation: <link xlink:href="https://docs.microsoft.com/en-us/windows-server/networking/core-network-guide/cncg/server-certs/configure-server-certificate-autoenrollment#configure-server-certificate-auto-enrollment"/>.
-   </para>
+   <title>サーバ側での証明書自動登録設定</title>
+   <para>&ad; サーバ側では、 "証明機関", "証明書の登録ポリシー Web サービス", "証明書の登録 Web サービス", "証明機関 Web 登録", "ネットワーク デバイス登録サービス" という各名称の Windows Server の役割サービス <!-- NOTE: not "role" but "role services"? --> 全てをインストールし、設定しておかなければなりません。</para>
+   <para>グループポリシーでの自動登録の設定は、下記に示す Microsoft 文書に説明があります: <link xlink:href="https://docs.microsoft.com/ja-jp/windows-server/networking/core-network-guide/cncg/server-certs/configure-server-certificate-autoenrollment#configure-server-certificate-auto-enrollment"/></para>
   </sect2>
   <sect2 xml:id="sec-active-directory-auto-enrollment-client-configuration">
-   <title>Enable certificate auto-enrollment on the client</title>
-   <para>
-    Follow the steps in the following procedure to enable certificate on
-    your clients.
-   </para>
+   <title>クライアント側での証明書自動登録の有効化</title>
+   <para>クライアント側で証明書自動登録を有効化するには、下記の手順を実施してください:</para>
    <procedure xml:id="pro-enable-certification-auto-enrollment-client">
     <step>
-    <para>
-     Install the <package>samba-gpupdate</package> package. This will
-     automatically install the <package>certmonger</package>,
-     <package>cepces</package>, and <package>sscep</package> dependencies.
-     Samba uses <command>sscep</command> to download the Certificate
-     Authority root chain, then uses the
-     <systemitem class="daemon">certmonger</systemitem>
-     paired with <systemitem>cepces</systemitem> to monitor the host
-     certificate templates.
-     </para>
+    <para>まずは <package>samba-gpupdate</package> パッケージをインストールします。これにより <package>certmonger</package> , <package>cepces</package> , <package>sscep</package> の各パッケージを依存関係としてインストールするはずです。 Samba では <command>sscep</command> コマンドを利用して証明機関のルートチェインをダウンロードし、 <systemitem class="daemon">certmonger</systemitem> と <systemitem>cepces</systemitem> を併用してホスト側の証明書テンプレートを監視します。</para>
     </step>
     <step>
-     <para>
-      Join to an Active Directory domain (one where the CA has been
-      previously configured as explained in <xref linkend="sec-active-directory-auto-enrollment-server-configuration"/>).
-     </para>
+     <para>次に Active Directory ドメインに参加します (<xref linkend="sec-active-directory-auto-enrollment-server-configuration"/> で説明している、証明機関の設定されたドメインに参加します) 。</para>
     </step>
     <step>
-     <para>
-      On Winbind-joined machines, set the <filename>smb.conf</filename>
-      global parameter by adding the line
-      <literal>apply group policies = yes</literal>.
-     </para>
+     <para>Winbind で参加したマシンの場合は、 <filename>smb.conf</filename> のグローバルパラメータ内に <literal>apply group policies = yes</literal> という行を追記します。</para>
     </step>
     <step>
-    <para>
-     For SSSD-joined machines, install <package>oddjob-gpupdate</package>
-     from <link xlink:href="https://github.com/openSUSE/oddjob-gpupdate"/>.
-    </para>
+    <para>SSSD で参加したマシンの場合は、 <link xlink:href="https://github.com/openSUSE/oddjob-gpupdate"/> から <package>oddjob-gpupdate</package> をインストールします。</para>
    </step>
    <step>
-    <para>
-     Then verify that certificate auto-enrollment is correctly configured by
-     running the following command on the client:
-    </para>
+    <para>あとは証明書の自動登録が正しく設定されていることを確認します。具体的には、クライアント側で下記を実行します:</para>
     <screen>&prompt.user;<command>/usr/sbin/samba-gpupdate --rsop</command>
     </screen>
-    <para>
-    If you see output like the following example, it is correctly
-    configured:
-   </para>
+    <para>正しく設定できていれば、下記のような出力が現れるはずです:</para>
    <screen>Resultant Set of Policy
 Computer Policy
 GPO: Default Domain Policy
@@ -770,9 +729,7 @@ Policy Type: Auto Enrollment Policy
 [ Auto Enrollment Server ] = &lt;<replaceable>DNS NAME</replaceable>&gt;</screen>
      </step>
      <step>
-      <para>
-       Use the following command to display installed certificates:
-      </para>
+      <para>さらに下記のコマンドを実行して、インストール済みの証明書を表示します:</para>
       <screen>&prompt.user;<command>getcert list</command>
  Number of certificates and requests being tracked: 1.
  Request ID 'Machine':
@@ -790,12 +747,8 @@ Policy Type: Auto Enrollment Policy
  certificate template/profile: Machine</screen>
     </step>
    </procedure>
-   <para>
-    Certificates are installed in <filename>/var/lib/samba/certs</filename>
-    and private keys are installed in
-    <filename>/var/lib/samba/private</filename>/certs.
-   </para>
-   <para>LDAP のプロバイダです。 LDAP に関する詳細は、 <command>man 5 sssd-ldap</command> をお読みください。</para>
+   <para>証明書は <filename>/var/lib/samba/certs</filename> に、機密鍵は <filename>/var/lib/samba/private/certs</filename> <!-- NOTE: "certs" should be inside "filename" tag --> にそれぞれインストールされます。</para>
+   <para>詳しくは <command>man samba-gpupdate</command> をお読みください。</para>
   </sect2>
  </sect1>
 </chapter>
