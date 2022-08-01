@@ -99,15 +99,8 @@
   <title>Linux 監査システムのコンポーネント紹介</title>
 
   <important>
-   <title>audispd merged into auditd</title>
-   <para>
-    In &sles;&nbsp;15&nbsp;SP4 the code for
-    <systemitem class="daemon">audispd</systemitem> has
-    been merged into <systemitem class="daemon">auditd</systemitem>.
-    All <systemitem class="daemon">audispd</systemitem> configurations
-    are now in <filename>/etc/audit/auditd.conf</filename> and
-    <filename>/etc/audit/plugins.d</filename>.
-   </para>
+   <title>audispd の auditd への併合について</title>
+   <para>&sles;&nbsp;15&nbsp;SP4 およびそれ以降のバージョンでは、 <systemitem class="daemon">audispd</systemitem> のソースコードが <systemitem class="daemon">auditd</systemitem> に併合されています。また、 <systemitem class="daemon">audispd</systemitem> の全ての設定は <filename>/etc/audit/auditd.conf</filename> および <filename>/etc/audit/plugins.d</filename> 内に移動しています。</para>
   </important>
 
   <para>下記の図には、監査システムでの様々なコンポーネントと、相互作用の関係を示しています:</para>
@@ -180,41 +173,47 @@
  <sect1 xml:id="sec-audit-auditd">
   <title>監査デーモンの設定</title>
 
-  <para>監査ログの生成やそのログの処理を行う前に、まずは監査デーモン自身の設定を行います。 <!-- fs 2016-11-17: bsc #918655 Not sure where this can be configured now (not in /etc/audit/auditd.conf); therefore keeping this as reference Configure how the Audit system functions in <filename>/etc/audit/auditd.conf</filename>. </para> <para> The most important configuration parameters in <filename>/etc/sysconfig/auditd</filename> are: </para><screen>AUDITD_LANG="en_US"AUDITD_DISABLE_CONTEXTS="no"</screen> <variablelist> <varlistentry> <term><envar>AUDITD_LANG</envar> </term> <listitem> <para> The locale information used by audit. The default setting is <literal>en_US</literal>. Setting it to <literal>none</literal> would remove all locale information from audit's environment. </para> </listitem> </varlistentry> <varlistentry> <term><envar>AUDITD_DISABLE_CONTEXTS</envar> </term> <listitem> <para> Disable system call auditing by default. Set to <literal>no</literal> for full audit functionality including file and directory watches and system call auditing. </para> </listitem> </varlistentry> </variablelist> <para>--> 設定ファイル <filename>/etc/audit/auditd.conf</filename> では、デーモンの起動時にどのようにして監査システムを動作させるのかを設定します。ほとんどの用途では、 &productname; に同梱されている既定の設定のままでかまいません。 CAPP 環境向けに使用する場合は、ほとんどのパラメータに調整が必要です。下記に利用可能なパラメータの主な概要を示します:</para>
+  <para>監査ログの生成やそのログの処理を行う前に、まずは監査デーモン自身の設定を行います。 <!-- fs 2016-11-17: bsc #918655 Not sure where this can be configured now (not in /etc/audit/auditd.conf); therefore keeping this as reference Configure how the Audit system functions in <filename>/etc/audit/auditd.conf</filename>. </para> <para> The most important configuration parameters in <filename>/etc/sysconfig/auditd</filename> are: </para><screen>AUDITD_LANG="en_US"AUDITD_DISABLE_CONTEXTS="no"</screen> <variablelist> <varlistentry> <term><envar>AUDITD_LANG</envar> </term> <listitem> <para> The locale information used by audit. The default setting is <literal>en_US</literal>. Setting it to <literal>none</literal> would remove all locale information from audit's environment. </para> </listitem> </varlistentry> <varlistentry> <term><envar>AUDITD_DISABLE_CONTEXTS</envar> </term> <listitem> <para> Disable system call auditing by default. Set to <literal>no</literal> for full audit functionality including file and directory watches and system call auditing. </para> </listitem> </varlistentry> </variablelist> <para>--> 設定ファイル <filename>/etc/audit/auditd.conf</filename> では、デーモンの起動時にどのようにして監査システムを動作させるのかを設定します。ほとんどの用途では、 &productname; に同梱されている既定の設定のままでかまいません。 CAPP 環境向けに使用する場合は、ほとんどのパラメータに調整が必要です。下記は既定の設定です:</para>
   <example>
-   <title>/etc/audisp/audispd.conf の例</title>
-<screen>log_file = /var/log/audit/audit.log
+   <title>/etc/audit/auditd.conf の既定値</title>
+<screen>
+local_events = yes
+write_logs = yes
+log_file = /var/log/audit/audit.log
+log_group = audit
 log_format = RAW
-log_group = root
-priority_boost = 4
-flush = INCREMENTAL
-freq = 20
+flush = INCREMENTAL_ASYNC
+freq = 50
+max_log_file = 8
 num_logs = 5
-disp_qos = lossy
-dispatcher = /sbin/audispd
+priority_boost = 4
 name_format = NONE
 ##name = mydomain
-max_log_file = 6
 max_log_file_action = ROTATE
 space_left = 75
 space_left_action = SYSLOG
+verify_email = yes
 action_mail_acct = root
 admin_space_left = 50
 admin_space_left_action = SUSPEND
 disk_full_action = SUSPEND
 disk_error_action = SUSPEND
-##tcp_listen_port =
+use_libwrap = yes
+##tcp_listen_port = 60
 tcp_listen_queue = 5
 tcp_max_per_addr = 1
 ##tcp_client_ports = 1024-65535
 tcp_client_max_idle = 0
-cp_client_max_idle = 0</screen>
+transport = TCP
+distribute_network = no
+q_depth = 1200
+overflow_action = SYSLOG
+max_restarts = 10
+plugin_dir = /etc/audit/plugins.d
+end_of_event_timeout = 2</screen>
 </example>
 
-  <para>
-   Refer to <command>man 5 auditd.conf</command> for an explanation of these
-   options.
-  </para>
+  <para>これらの設定値に関する詳細は、 <command>man 5 auditd.conf</command> で表示されるマニュアルページをお読みください。</para>
 
   <para>CAPP の要件を満たすよう環境を設定する必要があるかどうかによって異なりますが、必要である場合は監査デーモンの設定をより厳密に行う必要があります。 CAPP の要件を満たす場合は、 <quote>CAPP 環境について</quote> と書かれた注記に従って設定を行ってください。</para>
 
@@ -263,7 +262,7 @@ backlog_limit 64
 lost 0
 backlog 0
 backlog_wait_time 15000
-loginuid_immutable 0 unlocked    
+loginuid_immutable 0 unlocked
 </screen>
   </example>
 
@@ -515,9 +514,9 @@ Using x86_64 syscall table:
    <para>最初の例は単純な <command>less</command> コマンドを実行した場合の例、 2 番目の例は、監査を実施しているマシン内にユーザがリモートからログインしようとした場合、ログ内に PAM の動作に関わる大量のログが出力されている場合の例を示しています。</para>
    <example xml:id="ex-audit-aureport-logtrail">
     <title>シンプルな監査イベント例: 監査ログの表示</title>
-<screen>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2 
+<screen>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2
 success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid
-=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 
+=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0
 tty=pts1 ses=1164 comm="less" exe="/usr/bin/less" key="doc_log"
 type=CWD msg=audit(1234874638.599:5207):  cwd="/root"
 type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/
@@ -1279,7 +1278,7 @@ total  type
   <title>監査イベント通知の中継</title>
 
   <para>監査システムでは、リアルタイムに外部プログラムを呼び出して、 <systemitem class="daemon">auditd</systemitem> にアクセスしたり、使用したりすることができます。この機能は <emphasis>監査ディスパッチャ</emphasis> と呼ばれる仕組みで、たとえば侵入検知システムなどが <systemitem class="daemon">auditd</systemitem> を使用し、より詳しい検知情報を取得したりすることができます。</para>
-  <para>プラグインプログラムでは、自身の設定ファイルを <systemitem class="daemon">audispd</systemitem> プラグイン専用のディレクトリにインストールします。このディレクトリは既定では <filename>/etc/audisp/plugins.d</filename> になっています。プラグインの設定ファイルには、下記のようなオプションがあります:</para>
+  <para><systemitem class="daemon">auditd</systemitem> の設定ファイルは <filename>/etc/audit/auditd.conf</filename> に保存されています。このファイルには下記のようなオプションを記述することができます:</para>
 
   <variablelist>
    <varlistentry>
@@ -1291,7 +1290,7 @@ total  type
    <varlistentry>
     <term><literal>overflow_action</literal></term>
     <listitem>
-     <para>監査ディスパッチャの内部キューが溢れてしまった場合、監査デーモンがどのように対応するのかを指定します。指定可能な値は <option>ignore</option> (何もしない), <option>syslog</option> (syslog に警告を発する), <option>suspend</option> (audispd に対してイベントの処理を停止させる), <option>single</option> (コンピュータシステムをシングルユーザモードに移行させる), <option>halt</option> (システムをシャットダウンする) のいずれかです。</para>
+     <para>監査ディスパッチャの内部キューが溢れてしまった場合、監査デーモンがどのように対応するのかを指定します。指定可能な値は <option>ignore</option> (何もしない), <option>syslog</option> (syslog に警告を発する), <option>suspend</option> (イベントの処理を停止させる), <option>single</option> (コンピュータシステムをシングルユーザモードに移行させる), <option>halt</option> (システムをシャットダウンする) のいずれかです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -1309,7 +1308,7 @@ total  type
    <varlistentry>
     <term><literal>name</literal></term>
     <listitem>
-     <para>マシンを識別するためのユーザ定義の名前です。このオプションを動作させるには、 <option>name_format</option> オプションが <option>user</option> でなければなりません。それ以外の場合、このオプションは無視されます。</para>
+     <para>マシンを識別するためのユーザ定義の文字列です。このオプションを動作させるには、 <option>name_format</option> オプションが <option>user</option> でなければなりません。それ以外の場合、このオプションは無視されます。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -1321,7 +1320,7 @@ total  type
   </variablelist>
 
     <example>
-   <title>/etc/audisp/audispd.conf の例</title>
+   <title>/etc/audit/auditd.conf の例</title>
 <screen>
   q_depth = 250
   overflow_action = SYSLOG
@@ -1330,13 +1329,13 @@ total  type
   #name = mydomain</screen>
   </example>
 
-  <para>プラグインプログラムでは、自身の設定ファイルを <systemitem class="daemon">audispd</systemitem> プラグイン専用のディレクトリにインストールします。このディレクトリは既定では <filename>/etc/audisp/plugins.d</filename> になっています。プラグインの設定ファイルには、下記のようなオプションがあります:</para>
+  <para>プラグインプログラムでは、自身の設定ファイルを専用のディレクトリである <filename>/etc/audit/plugins.d</filename> にインストールします。プラグインの設定ファイルには、下記のようなオプションがあります:</para>
 
   <variablelist>
    <varlistentry>
     <term><literal>active</literal></term>
     <listitem>
-     <para>プログラムが <systemitem class="daemon">audispd</systemitem> を使用するかどうかを指定します。指定可能な値は <option>yes</option> (はい), <option>no</option> (いいえ) のいずれかです。</para>
+     <para>プログラムが <systemitem class="daemon">auditd</systemitem> を使用するかどうかを指定します。指定可能な値は <option>yes</option> (はい), <option>no</option> (いいえ) のいずれかです。</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -1372,11 +1371,11 @@ total  type
   </variablelist>
 
  <example>
-   <title>/etc/audisp/plugins.d/syslog.conf の例</title>
+   <title>/etc/audit/plugins.d/syslog.conf の例</title>
 <screen>
   active = no
   direction = out
-  path = builtin_syslog
+  path = /sbin/audisp-syslog
   type = builtin
   args = LOG_INFO
   format = string</screen>
