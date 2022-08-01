@@ -98,6 +98,18 @@
  <sect1 xml:id="sec-audit-bigpicture">
   <title>Linux 監査システムのコンポーネント紹介</title>
 
+  <important>
+   <title>audispd merged into auditd</title>
+   <para>
+    In &sles;&nbsp;15&nbsp;SP4 the code for
+    <systemitem class="daemon">audispd</systemitem> has
+    been merged into <systemitem class="daemon">auditd</systemitem>.
+    All <systemitem class="daemon">audispd</systemitem> configurations
+    are now in <filename>/etc/audit/auditd.conf</filename> and
+    <filename>/etc/audit/plugins.d</filename>.
+   </para>
+  </important>
+
   <para>下記の図には、監査システムでの様々なコンポーネントと、相互作用の関係を示しています:</para>
 
   <figure xml:id="fig-audit-components">
@@ -146,12 +158,6 @@
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>audispd</term>
-    <listitem>
-     <para>監査ディスパッチャデーモン ( <systemitem class="daemon">audispd</systemitem> ) は、監査ログをディスクに書き込む代わりに (もしくはディスクに書き込むのと並行して) 、他のアプリケーションにイベント通知を中継することのできるデーモンです。 <systemitem class="daemon">audispd</systemitem> に関する詳細は、 <xref linkend="sec-audit-audisp"/> をお読みください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
     <term>autrace</term>
     <listitem>
      <para><command>autrace</command> は <command>strace</command> のように、特定のプロセスを追跡するためのユーティリティです。 <command>autrace</command> の出力についても、監査ログに記録されるようになっています。 <command>autrace</command> に関する詳細は、 <xref linkend="sec-audit-autrace"/> をお読みください。</para>
@@ -175,7 +181,8 @@
   <title>監査デーモンの設定</title>
 
   <para>監査ログの生成やそのログの処理を行う前に、まずは監査デーモン自身の設定を行います。 <!-- fs 2016-11-17: bsc #918655 Not sure where this can be configured now (not in /etc/audit/auditd.conf); therefore keeping this as reference Configure how the Audit system functions in <filename>/etc/audit/auditd.conf</filename>. </para> <para> The most important configuration parameters in <filename>/etc/sysconfig/auditd</filename> are: </para><screen>AUDITD_LANG="en_US"AUDITD_DISABLE_CONTEXTS="no"</screen> <variablelist> <varlistentry> <term><envar>AUDITD_LANG</envar> </term> <listitem> <para> The locale information used by audit. The default setting is <literal>en_US</literal>. Setting it to <literal>none</literal> would remove all locale information from audit's environment. </para> </listitem> </varlistentry> <varlistentry> <term><envar>AUDITD_DISABLE_CONTEXTS</envar> </term> <listitem> <para> Disable system call auditing by default. Set to <literal>no</literal> for full audit functionality including file and directory watches and system call auditing. </para> </listitem> </varlistentry> </variablelist> <para>--> 設定ファイル <filename>/etc/audit/auditd.conf</filename> では、デーモンの起動時にどのようにして監査システムを動作させるのかを設定します。ほとんどの用途では、 &productname; に同梱されている既定の設定のままでかまいません。 CAPP 環境向けに使用する場合は、ほとんどのパラメータに調整が必要です。下記に利用可能なパラメータの主な概要を示します:</para>
-
+  <example>
+   <title>/etc/audisp/audispd.conf の例</title>
 <screen>log_file = /var/log/audit/audit.log
 log_format = RAW
 log_group = root
@@ -202,122 +209,14 @@ tcp_max_per_addr = 1
 ##tcp_client_ports = 1024-65535
 tcp_client_max_idle = 0
 cp_client_max_idle = 0</screen>
+</example>
+
+  <para>
+   Refer to <command>man 5 auditd.conf</command> for an explanation of these
+   options.
+  </para>
 
   <para>CAPP の要件を満たすよう環境を設定する必要があるかどうかによって異なりますが、必要である場合は監査デーモンの設定をより厳密に行う必要があります。 CAPP の要件を満たす場合は、 <quote>CAPP 環境について</quote> と書かれた注記に従って設定を行ってください。</para>
-
-  <variablelist>
-   <varlistentry>
-    <term><literal>log_file</literal> , <literal>log_format</literal> , <literal>log_group</literal></term>
-    <listitem>
-     <para><literal>log_file</literal> では、監査ログの保存先の場所を指定します。 <literal>log_format</literal> はディスクへの監査ログの書き込み方法を、 <literal>log_group</literal> は監査ログを所有するグループの指定をそれぞれ行います。 <literal>log_format</literal> では <literal>raw</literal> (カーネルが送信したメッセージをそのまま保存する) か <literal>nolog</literal> (メッセージを廃棄してディスクには書き込まない) のいずれかを指定します。なお、 <literal>nolog</literal> を指定しても、監査ディスパッチャへ送信されるデータには影響がありません。既定の設定は <literal>raw</literal> です。なお、 <command>aureport</command> や <command>ausearch</command> を使用して、監査ログからレポートを作成したり、監査ログに対して問い合わせを行ったりしたい場合は、監査ログを保存しておく必要があります。また、 <literal>log_group</literal> ではグループ名のほか、グループ ID で指定することもできます。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para>CAPP 環境では、監査ログは独自のパーティション内に保存しなければなりません。これを実現するには、まず監査デーモン向けの領域を確認して、他のプロセスからの書き込みが混在していないかどうかをお確かめください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>priority_boost</literal></term>
-    <listitem>
-     <para>監査デーモンが獲得する優先度ブースト (nice 値) を指定します。 0 から 20 までの範囲で指定することができます。 nice 値は優先度ブーストの値をマイナスにした値になります。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>flush</literal> および <literal>freq</literal></term>
-    <listitem>
-     <para>ディスクに対して監査ログを書き込む際のパラメータ指定を行います。 <literal>flush</literal> に設定可能な値は <literal>none</literal> , <literal>incremental</literal> , <literal>data</literal> , <literal>sync</literal> のいずれかです。 <literal>none</literal> を指定した場合、監査デーモンは監査データをディスクに書き込むにあたって、特に何の処理も行いません。 <literal>incremental</literal> を指定すると、監査デーモンはディスクに書き込む際、明示的にフラッシュ処理を行います。 <literal>incremental</literal> を指定した場合は、頻度 (<literal>freq</literal>) もあわせて設定しなければなりません。たとえば <literal>freq</literal> に <literal>20</literal> を指定すると、監査デーモンは 20 レコードごとにカーネルに対してディスクへのフラッシュを要求します。 <literal>flush</literal> に <literal>data</literal> を指定すると、データ部分のみのフラッシュを毎回実施し、 <literal>sync</literal> を指定すると、データとメタデータの両方に対して、フラッシュを毎回実施するようになります。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para>CAPP 環境では、監査証跡を常に最新に維持しておかなければなりません。そのため、 <literal>flush</literal> パラメータには <literal>sync</literal> もしくは <literal>data</literal> を指定します。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>num_logs</literal></term>
-    <listitem>
-     <para><literal>max_log_file_action</literal> で <literal>rotate</literal> を指定した場合、どれだけの数のログファイルを残しておくのかを指定します。設定可能な値は <literal>0</literal> から <literal>99</literal> までです。 <literal>2</literal> より小さい値を指定すると、ログファイルの切り替えを行わない意味になります。また、残すログの数を増やした場合は、その際に監査デーモンの処理が増えることになります。 <systemitem class="daemon">auditd</systemitem> がログファイルを切り替える際には、カーネルから届く新しいデータを即時に処理できなくなり、バックログ状態 (<systemitem class="daemon">auditd</systemitem> が失敗フラグに従って処理を行う状態。詳しくは <xref linkend="sec-audit-auditctl"/> を参照) になります。このような状況下では、バックログ制限を設定しておくことをお勧めします。バックログ制限は <filename>/etc/audit/audit.rules</filename> 内の <literal>-b</literal> の値を変更することで調整することができます。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>disp_qos</literal> および <literal>dispatcher</literal></term>
-    <listitem>
-     <para>ディスパッチャは監査デーモンの起動時に開始される仕組みです。監査デーモンは監査メッセージを中継して、 <literal>dispatcher</literal> 内で指定したアプリケーションにメッセージを渡します。ただし、アプリケーションは &rootuser; で動作しなければならないものであるため、セキュリティ上の信頼性の高いものでなければなりません。また <literal>disp_qos</literal> では、監査デーモンとディスパッチャの間の通信手段を指定することができます。 <literal>lossy</literal> (喪失を許容する) もしくは <literal>lossless</literal> (喪失を許容しない) のいずれかを指定します。</para>
-     <para><literal>lossy</literal> を選択した場合、監査デーモンはメッセージキューが一杯になると、監査メッセージを廃棄することがあります。これらのイベントは <literal>log_format</literal> が <literal>raw</literal> に設定されていればディスク内に書き込まれますが、ディスパッチャには届けられません。逆に <literal>lossless</literal> を指定すると、メッセージキューに空きがない場合、監査ログのディスクへの書き込みがブロックされるようになります。既定値は <literal>lossy</literal> です。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>name_format</literal> および <literal>name</literal></term>
-    <listitem>
-     <para><literal>name_format</literal> はコンピュータ名の解決方法を指定するパラメータです。設定可能な値は、 <literal>none</literal> (名前解決を行わない), <literal>hostname</literal> (<command>gethostname</command> で名前を解決する), <literal>fqd</literal> (DNS 参照を介して完全修飾ドメイン名を取得する), <literal>numeric</literal> (IP アドレス), <literal>user</literal> のいずれかです。 <literal>user</literal> は独自の名前を設定する指定で、その名前を <literal>name</literal> で指定します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>max_log_file</literal> および <literal>max_log_file_action</literal></term>
-    <listitem>
-     <para><literal>max_log_file</literal> は数値を指定するパラメータで、ログファイルの最大ファイルサイズをメガバイト単位で指定します。ここで指定した値に到達した場合に実行される処理を <literal>max_log_file_action</literal> で指定します。 <literal>max_log_file_action</literal> に指定可能な値は <literal>ignore</literal> , <literal>syslog</literal> , <literal>suspend</literal> , <literal>rotate</literal> , <literal>keep_logs</literal> のいずれかです。 <literal>ignore</literal> を指定した場合は、サイズ制限に到達しても何も行いません。 <literal>syslog</literal> は警告メッセージを syslog に対して送信し、 <literal>suspend</literal> は監査デーモンに対して、ログのディスクへの書き込みを停止させるが、監査デーモンはそのまま動作し続ける意味になります。 <literal>rotate</literal> を指定すると、 <literal>num_logs</literal> の設定に従ってログをローテーションします。 <literal>keep_logs</literal> でも同じようにログをローテーションしますが、この場合は <literal>num_log</literal> の設定を使用せず、すべてのログを保持する意味になります。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para>CAPP 環境で監査証跡を完全に残しておくには、 <literal>keep_logs</literal> を使用すべきです。監査ログ用の個別のパーティションを設定している場合は、 <literal>max_log_file</literal> と <literal>num_logs</literal> の設定を調整して、パーティション内の領域をすべて使用するよう設定してください。なお、ローテーションのファイル数が増えると、監査イベントの受信を再開するまでに時間を要することがあることに注意してください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry xml:id="var-audit-auditd-space-left">
-    <term><literal>space_left</literal> および <literal>space_left_action</literal></term>
-    <listitem>
-     <para><literal>space_left</literal> は数値を指定するパラメータで、監査デーモンが残り容量を監視する際の閾 (しきい) 値をメガバイト単位で指定します。閾値を超過した際に実行される処理を <literal>space_left_action</literal> で指定します。このパラメータに指定可能な値は、 <literal>ignore</literal> , <literal>syslog</literal> , <literal>email</literal> , <literal>exec</literal> , <literal>suspend</literal> , <literal>single</literal> , <literal>halt</literal> のいずれかです。 <literal>ignore</literal> を指定した場合は、閾値に到達しても何も行いません。 <literal>syslog</literal> は警告メッセージを syslog に対して送信し、 <literal>email</literal> は <literal>action_mail_acct</literal> で指定したアカウントに対して、電子メールを送信します。 <literal>exec</literal> は値の後ろにスクリプトのパスを指定することで、そのスクリプトを実行します。なお、スクリプトに対してはパラメータを指定することができませんので、注意してください。 <literal>suspend</literal> は監査デーモンに対して、ログのディスクへの書き込みを停止させるが、監査デーモンはそのまま動作し続ける意味になります。 <literal>single</literal> はシステムに対して、シングルユーザモードへの移行を指示します。 <literal>halt</literal> はシステムを完全にシャットダウンさせる意味になります。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para><literal>space_left</literal> の値を調整して、管理者に対して警告を処理するのに十分な時間を確保するとともに、監査デーモンがその間動作し続けるのに十分な容量を確保するようにしてください。ディスク領域の解放を行うには <command>aureport -t</command> コマンドを使用することができるほか、古いログを別途の書庫用パーティションやリソースにコピーしてもかまいません。 <literal>space_left</literal> に指定する値は、お使いの環境の用途によって大きく異なります。また、 <literal>space_left_action</literal> は <literal>email</literal> を指定してください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>action_mail_acct</literal></term>
-    <listitem>
-     <para>警告メッセージの送信先となる電子メールアドレス、もしくは別名を指定します。既定値は <literal>root</literal> ですが、その他のローカルアカウントを電子メールアドレスとして指定することができるほか、ネットワークが正しく設定されていて、 <filename>/usr/lib/sendmail</filename> が存在していれば、リモートのアカウントでもかまいません。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>admin_space_left</literal> および <literal>admin_space_left_action</literal></term>
-    <listitem>
-     <para><literal>admin_space_left</literal> は数値を指定するパラメータで、ディスク領域の残りをメガバイト単位で指定します。システムがこの制限よりも少ないディスク領域しか残されていない場合、管理者は最後のチャンスとして、この警告に応じて監査ログ向けの空きディスク領域を確保できるようになります。なお、 <literal>admin_space_left</literal> の値は <literal>space_left</literal> よりも小さい値であるべきです。 <literal>admin_space_left_action</literal> に指定可能な値は、 <literal>space_left_action</literal> と同じです。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para>管理者の作業内容を記録することができる程度の値を <literal>admin_space_left</literal> に指定してください。また、 <literal>admin_space_left_action </literal> は <literal>single</literal> にしてください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>disk_full_action</literal></term>
-    <listitem>
-     <para>監査ログ用のディスク領域を使い果たした場合に、システムが取るべきアクションを指定します。指定可能な値は <literal>ignore</literal> , <literal>syslog</literal> , <literal>rotate</literal> , <literal>exec</literal> , <literal>suspend</literal> , <literal>single</literal> , <literal>halt</literal> のいずれかです。値の詳しい意味については、 <xref linkend="var-audit-auditd-space-left"/> をお読みください。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para><literal>disk_full_action</literal> はディスクの空き容量が全く残っていない場合に発動するもので、これ以上の監査ログを書き込むことができない状態であることを示しています。そのため、システムをシングルユーザモードに移行させる ( <literal>single</literal> ) か、完全にシャットダウン ( <literal>halt</literal> ) してください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>disk_error_action</literal></term>
-    <listitem>
-     <para>監査デーモンがログをディスクに書き込む際、およびログをローテーションする際に、ディスクエラーを検知した場合、どのような処理を行うべきかを指定します。指定可能な値は <literal>space_left_action</literal> と同じです。</para>
-     <note>
-      <title>CAPP 環境について</title>
-      <para>何らかのハードウエア障害に関しては、ご自身のサイト内のポリシーに従って、 <literal>syslog</literal> , <literal>single</literal> , <literal>halt</literal> のいずれかを指定してください。</para>
-     </note>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>tcp_listen_port</literal> , <literal>tcp_listen_queue</literal> , <literal>tcp_client_ports</literal> , <literal>tcp_client_max_idle</literal> , <literal>tcp_max_per_addr</literal></term>
-    <listitem>
-     <para>監査デーモンは他の監査デーモンからのイベントを受け付けることもできます。 TCP パラメータは、そのようなイベント受信に関する設定を行います。 <literal>tcp_listen_port</literal> には、 1 から 65535 までの範囲で、 <systemitem class="daemon">auditd</systemitem> が接続を待ち受けるべきポートを指定します。 <literal>tcp_listen_queue</literal> は、待機中として保持すべき最大の接続数を指定します。あまりにも小さい値を指定してしまうと、たとえばサイト内の停電時など、一斉に監査イベントを受信するような場合に耐えられなくなってしまいます。 <literal>tcp_client_ports</literal> では、クライアント側で許可するポート範囲を指定します。ここでは単一のポート番号のほか、ハイフンで区切って複数のポートを指定することもできます (たとえば 1-1023 のように指定すると、いわゆる特権ポートからの接続のみを受け付けることになります) 。</para>
-     <para>なお、この設定で単一のポートだけを指定してしまうと、クライアント側の監査システムを再起動するのが難しくなってしまいます。なぜなら、同じアドレスの同じポート番号は、しばらくの間 TIME_WAIT 状態に遷移するため、再利用できなくなるためです。クライアント側の監査デーモンの応答がなくなってしまった場合は、 <systemitem class="daemon">auditd</systemitem> がその旨を警告します。また、サーバ側で通信のない状態を検知して自動切断したい場合は、 <literal>tcp_client_max_idle</literal> を指定してください。なお、この設定はすべてのクライアントに対して適用されるため、クライアント側のハートビート設定の 2 倍程度か、それより大きい値を指定してください。 <literal>tcp_max_per_addr</literal> では、同一の IP アドレスからの同時接続許可数を数値で指定します。</para>
-     <tip>
-      <para>監査デーモンへの接続の際、 root (CAP_NET_BIND_SERVICE) 以外からの接続を拒否する目的で、サーバもクライアントも特権ポートを使用することをお勧めします。</para>
-     </tip>
-    </listitem>
-   </varlistentry>
-  </variablelist>
 
   <para><filename>/etc/audit/auditd.conf</filename> でのデーモン設定が完了したら、次は監査デーモンが監査する範囲の制御と、デーモンが適切に動作するために必要な十分なリソースの割り当てと制限を行います。</para>
  </sect1>
@@ -1380,8 +1279,7 @@ total  type
   <title>監査イベント通知の中継</title>
 
   <para>監査システムでは、リアルタイムに外部プログラムを呼び出して、 <systemitem class="daemon">auditd</systemitem> にアクセスしたり、使用したりすることができます。この機能は <emphasis>監査ディスパッチャ</emphasis> と呼ばれる仕組みで、たとえば侵入検知システムなどが <systemitem class="daemon">auditd</systemitem> を使用し、より詳しい検知情報を取得したりすることができます。</para>
-
-  <para><systemitem class="daemon">audispd</systemitem> は監査ディスパッチャを制御するためのデーモンです。通常は <systemitem class="daemon">auditd</systemitem> から起動されます。 <systemitem class="daemon">audispd</systemitem> はリアルタイムに監査イベントを取得して、分析を行いたい各プログラムにそれらを配信する処理を行います。 <systemitem class="daemon"><!-- NOTE: not auditd? -->audispd</systemitem> の設定は <filename>/etc/audisp/audispd.conf</filename> になります。このファイルには下記のようなオプションを記述します:</para>
+  <para>プラグインプログラムでは、自身の設定ファイルを <systemitem class="daemon">audispd</systemitem> プラグイン専用のディレクトリにインストールします。このディレクトリは既定では <filename>/etc/audisp/plugins.d</filename> になっています。プラグインの設定ファイルには、下記のようなオプションがあります:</para>
 
   <variablelist>
    <varlistentry>
@@ -1422,7 +1320,7 @@ total  type
    </varlistentry>
   </variablelist>
 
-  <example>
+    <example>
    <title>/etc/audisp/audispd.conf の例</title>
 <screen>
   q_depth = 250
@@ -1473,7 +1371,7 @@ total  type
    </varlistentry>
   </variablelist>
 
-  <example>
+ <example>
    <title>/etc/audisp/plugins.d/syslog.conf の例</title>
 <screen>
   active = no
