@@ -11,18 +11,9 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
- <para>&systemdcd; はアプリケーションのクラッシュを解析するために、カーネルのコアダンプ情報を採取して表示できる仕組みです。特定のプロセス (もしくはアプリケーションに属する複数のプロセス) がクラッシュした場合、既定では &systemd; のジャーナル内に、可能であればバックトレースを含めてコアダンプを記録します。コアダンプの既定の出力先は <filename>/var/lib/systemd/coredump</filename> になっています。この出力されたコアダンプをもとに、 <command>gdb</command> や <command>crash</command> (詳しくは <xref linkend="cha-tuning-kdump-analyze"/> をお読みください) を利用して解析を行うことができます。このほか、コアダンプを保存せず、ジャーナル内にのみ記録を残す設定を行うこともできます。これは収集される情報を最小限に絞る目的や、機密情報をストレージ内に残さないようにする目的で使用します。</para>
- <para>
-  Core dumps stored in <filename>/var/lib/systemd/coredump</filename>
-  are deleted after three days (see the
-  <literal>d /var/lib/systemd/coredump</literal> line in
-  <filename>/usr/lib/tmpfiles.d/systemd.conf</filename>).
- </para>
- <para>
-  There is an option to not store core dumps, but to log only to the
-  journal, which may be useful to minimize the collection and storage of
-  sensitive information.
-  </para>
+ <para>&systemdcd; はアプリケーションのクラッシュを解析するため、コアダンプ情報を採取して表示できる仕組みです。コアダンプ内にはアプリケーションがクラッシュした時点でのメモリイメージが含まれています。また、プロセス (もしくはアプリケーションに属する複数のプロセス) がクラッシュした場合、既定では &systemd; のジャーナル内に、可能であればバックトレースを含めて <filename>/var/lib/systemd/coredump</filename> にコアダンプを記録します。この出力されたコアダンプをもとに、 <command>gdb</command> や <command>crash</command> (詳しくは <xref linkend="cha-tuning-kdump-analyze"/> をお読みください) を利用して解析を行うことができます。</para>
+ <para>なお、 <filename>/var/lib/systemd/coredump</filename> 内に保存されたコアダンプは、 3 日間が経過すると自動的に削除されます (詳しくは <filename>/usr/lib/tmpfiles.d/systemd.conf</filename> ファイル内の <literal>d /var/lib/systemd/coredump</literal> の行をお読みください) 。</para>
+ <para>また、コアダンプを全く保存せず、ジャーナルにのみ記録を行うように設定することもできます。これは、収集によるディスク容量の圧迫と機密情報の保存を防ぐ目的で有用です。</para>
  <sect1 xml:id="sect-sys-coredump-default">
   <title>使用と設定</title>
 
@@ -38,11 +29,7 @@
 #KeepFree=
 </screen>
 
-  <para>
-   Size units are B, K, M, G, T, P, and E. <literal>ExternalSizeMax</literal> also supports a value of <literal>infinity</literal>.
-   <!-- see https://github.com/systemd/systemd/pull/21371/files,
-   c schroder 2022-09-15 -->
-  </para>
+  <para>サイズを指定する箇所では、それぞれ B (バイト), K (キロバイト), M (メガバイト), G (ギガバイト), T (テラバイト), P (ペタバイト), E (エクサバイト) の接尾辞を設定することができるほか、 <literal>infinity</literal> (無制限) を指定することもできます。 <!-- see https://github.com/systemd/systemd/pull/21371/files, c schroder 2022-09-15 --></para>
 
   <para>下記の例では、 vim を利用して SEGFAULT を発生させ、ジャーナルとコアダンプを出力させるテスト方法を説明しています。</para>
 
@@ -60,8 +47,8 @@
    <step>
     <para>PID を取得して SEGFAULT を発生させます:</para>
 <screen>&prompt.user;ps ax | grep vim
-2345 pts/3    S+     0:00 vim testfile               
-                 
+2345 pts/3    S+     0:00 vim testfile
+
 &prompt.root;kill -s SIGSEGV 2345</screen>
 <para>vim は下記のようなエラーメッセージを出力するはずです:</para>
 <screen>Vim: Caught deadly signal SEGV
@@ -92,7 +79,7 @@ Control Group: /user.slice/user-1000.slice/session-1.scope
     Hostname: linux-uoch
     Coredump: /var/lib/systemd/coredump/core.vim.0.b5c251b86ab34674a2222cef102
     Message: Process 2345 (vim) of user 0 dumped core.
-                
+
          Stack trace of thread 2345:
          #0  0x00007f21dd87e2a7 kill (libc.so.6)
          #1  0x000000000050cb35 may_core_dump (vim)
@@ -100,7 +87,7 @@ Control Group: /user.slice/user-1000.slice/session-1.scope
          #3  0x00007f21dd92ea33 __select (libc.so.6)
          #4  0x000000000050b4e3 RealWaitForChar (vim)
          #5  0x000000000050b86b mch_inchar (vim)
-[...]                                             
+[...]
 </screen>
    </step>
   </procedure>
@@ -139,6 +126,6 @@ Control Group: /user.slice/user-1000.slice/session-1.scope
 
 <screen>&prompt.root;coredumpctl -o vim.dump dump 2345</screen>
 
-  <para>コマンドの詳しい説明やオプションの一覧について、詳しくは <command>man systemd-coredump</command> , <command>man coredumpctl</command> , <command>man coredump.conf</command> をそれぞれお読みください。</para>
+  <para>コマンドの詳しい説明やオプションの一覧について、詳しくは <command>man systemd-coredump</command> , <command>man coredumpctl</command> , <command>man core</command> , <command>man coredump.conf</command> をそれぞれお読みください。</para>
  </sect1>
 </chapter>
