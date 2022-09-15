@@ -21,7 +21,7 @@
   <title>OpenSSH の概要</title>
   <para>SSH はエンドツーエンドで通信を保護するためのネットワークプロトコルで、お使いのネットワーク内同士だけでなく、外部のネットワークとの通信も保護することができます。 SSH で他のコンピュータに接続するには、接続先でのユーザ名と適切な認証手段を設定する必要があります。</para>
   <para>SSH はクライアント／サーバ型のプロトコルです。他のホストからの接続を受け付けるには <systemitem class="daemon">sshd</systemitem> デーモンを動作させておく必要があります。また、各ホストで動作する <systemitem class="daemon">sshd</systemitem> にはそれぞれ独自の設定を行うことができますので、アクセス可能なユーザを制限したり、許可する認証方式を制限したりすることもできるようになっています。</para>
-  <para>認証と暗号化の機能は暗号鍵対によって行われます。それぞれの鍵対には公開鍵と機密鍵という 2 つの鍵が存在し、公開鍵は暗号化を、機密鍵は暗号の復号化を行うために使用します。また、機密鍵がきちんと保護されている限り、公開鍵は誰にでも配布してかまいません。機密鍵が漏洩してしまうと、機密鍵の元の所有者になりすまして暗号化した通信を行うことができるようになってしまいます。</para>
+   <para>認証と暗号化の機能は暗号鍵対によって行われます。それぞれの鍵対には公開鍵と機密鍵という 2 つの鍵が存在し、公開鍵は暗号化を、機密鍵は暗号の復号化を行うために使用します。また、機密鍵がきちんと保護されている限り、公開鍵は誰にでも配布してかまいません。機密鍵が漏洩してしまうと、機密鍵の元の所有者になりすまして暗号化した通信を行うことができるようになってしまいます。</para>
   <para>SSH ではサーバとクライアントの双方が互いに認証しなければならない仕組みになっていることから、非常に強力な保護を提供しています。クライアントが SSH での接続を開始すると、サーバは自身の持つ公開鍵を提示します。示された公開鍵が既知のものであった場合 (クライアント側の <filename>~/.ssh/known_hosts</filename> 内に保存されます) 、クライアントはサーバを信頼してそのまま処理を続行します。既知のものでなかった場合は、サーバを信頼して良いかどうか、下記のようにしてユーザに尋ねます:</para>
   <screen>The authenticity of host '192.168.22.219 (192.168.22.219)'
    can't be established. ECDSA key fingerprint is
@@ -173,7 +173,6 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
   <command>scp</command> (<xref linkend="sec-ssh-copy"/>), and
   <command>sftp</command> (<xref linkend="sec-ssh-sftp"/>).
   </para>
-
   <procedure xml:id="pro-ssh-restrict-logins">
    <title>Configuring remote login restrictions</title>
    <para>
@@ -248,10 +247,6 @@ ListenAddress <replaceable>192.168.10.100</replaceable></screen>
     <para>なお、ユーザ側で新しい SSH 鍵を作成すると、 <filename>/home/<replaceable>ユーザ名</replaceable>/.ssh</filename> ディレクトリが作成されます。</para>
    <para>また、ホスト鍵にはパスフレーズを設定してはいけません。</para>
    <para>ほとんどの場合、クライアント鍵には強力なパスフレーズを設定します。</para>
-   <important>
-    <title>SSH 鍵の保護について</title>
-    <para>ホスト鍵とクライアント鍵の両方をバックアップするものとし、バックアップは不正アクセスされないように保護を行ってください。</para>
-   </important>
 
    <sect2 xml:id="sec-create-ssh-key-client">
      <title>クライアント側の SSH 鍵の生成</title>
@@ -448,13 +443,359 @@ Have a lot of fun...</screen>
   <para>コンソールセッションの場合は <literal>ssh-agent</literal> を使用することができます (詳しくは <xref linkend="sec-ssh-ssh-agent"/> をお読みください) 。</para>
  </sect1>
 
- <sect1 xml:id="sec-ssh-keyrings">
-  <title>公開鍵ログインの自動化</title>
-  <para>多数の SSH セッションを扱う場合、特に強力なパスフレーズを設定しているような環境では非常に面倒です。このような問題を解決したい場合は、 <package>gnome-keyring</package> や <literal>ssh-agent</literal> を使用すると良いでしょう。いずれも鍵とパスフレーズを記憶して、必要なときに自動提供を行ってくれます。</para>
-  <para>GNOME デスクトップ環境を使用している場合、 <package>gnome-keyring</package> は自動的に起動されます。 GNOME 以外のデスクトップ環境を使用しているような場合や、コンソール (GUI 無し) を使用しているような場合は、 <literal>ssh-agent</literal> をお使いください。</para>
+  <sect1 xml:id="sec-ssh-certificate-auth">
+  <title>証明書認証</title>
+  <para>
+   OpenSSH introduced certificate authentication in OpenSSH 5.4.
+   Certificate authentication is similar to public key authentication,
+   except hosts and users authenticate to each other with digitally-signed
+   encryption certificates instead of encryption keys. Certificate
+   authentication provides central management for server and user
+   certificates, eliminating the need to manually copy user public keys to
+   multiple hosts. It increases security by giving more control to
+   administrators, and less to users.
+  </para>
+  <para>
+   Certificates consist of a public encryption key, a user-defined identity
+   string, zero or more user names or host names, and other options.
+   User and host public keys are signed by a Certificate Authority (CA)
+   private signing key to create an encryption certificate. Users and hosts
+   trust the public CA key, rather than trusting individual user and host
+   public encryption keys.
+  </para>
+  <para>
+   Traditional OpenSSH public key authentication requires copying user
+   public keys to every SSH server they need access to (to the appropriate
+   <filename>~/.ssh/authorized_keys</filename> files), and relying on
+   users to verify new SSH server host keys before accepting them (stored
+   in <filename>~/.ssh/known_hosts</filename>). This is
+   error-prone and complicated to manage. Another disadvantage is OpenSSH
+   keys never expire. When you need to revoke a particular public key, you
+   have to find and remove all of its copies on your network.
+  </para>
+  <para>
+   Automating the whole process (for example, with Ansible) is virtually a
+   necessity. Large organizations, such as Meta
+   (see <link xlink:href="https://engineering.fb.com/2016/09/12/security/scalable-and-secure-access-with-ssh/"/>),
+   automate the process completely, so they can revoke and replace
+   certificates, and even certificate authorities, as often as they want
+   without disrupting operations.
+  </para>
+  <para>
+   A prerequisite is the ability to open SSH sessions to all hosts on your
+   network, and perform tasks like editing configuration files and restarting <systemitem class="daemon">sshd</systemitem>.
+  </para>
+  <para>
+   Setting up an OpenSSH certificate authority involves the following steps:
+  </para>
+ <itemizedlist>
+  <listitem>
+  <para>
+   Set up a secure trusted server to host your certificate authority,
+   for signing host and user keys. Create a new key pair for signing
+   keys. The private key signs user and host keys, and the public key is
+   copied to all users who are allowed access to the server.
+  </para>
+  </listitem>
+  <listitem>
+  <para>
+   Receive and sign host public keys, then distribute the new host
+   certificates to their respective hosts. Host certificates go in
+   <filename>/etc/ssh</filename>, just like host keys.
+  </para>
+  </listitem>
+  <listitem>
+  <para>
+   Receive and sign user public keys, then distribute the new user
+   certificates to their owners. User certificates go in
+   <filename>~/.ssh</filename>, just like user keys.
+  </para>
+  </listitem>
+  <listitem>
+   <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
+  </listitem>
+  <listitem>
+  <para>
+   Revoke certificates as needed, for example when you suspect a certificate
+   has been compromised, a user has left your organization, or a server has
+   been retired. Revoking a certificate is considerably simpler than finding
+   and removing all relevant public key copies.
+  </para>
+  </listitem>
+ </itemizedlist>
+   <para>
+    Users and server admins create and protect their own OpenSSH keys. It is
+    safe to freely share public keys. It is safe to transfer the new
+    certificates by insecure methods, such as email, because they require
+    their private keys to validate.
+   </para>
+   <para>
+   Note that SSH certificates follow the OpenPGP standard, rather than
+   SSL/TLS, and that the certificate format is OpenPGP, not X.509.
+  </para>
 
-  <sect2 xml:id="sec-ssh-gnome-keyring">
-   <title>GNOME 内での gnome-keyring を利用した公開鍵ログインの自動化</title>
+ <sect2 xml:id="sec-ssh-certificate-create-signing-keys">
+  <title>Setting up a new certificate authority</title>
+  <para>
+   This section describes how to set up a new certificate
+   authority (CA). Give careful consideration to organizing
+   your CA, to keep it manageable and efficient.
+  </para>
+  <important>
+   <title>Protect your certificate authority</title>
+   <para>
+    It is extremely important to protect the machine that hosts
+    your certificate authority. Your CA is literally the key to
+    your entire network. Anyone who gains access to your CA can
+    create their own certificates and freely access your network
+    resources, or even compromise your servers and the CA itself.
+    A common practice is to use a dedicated machine that is started only
+    when you need to sign keys.
+   </para>
+  </important>
+   <para>
+    It is a best practice to create one signing key for servers,
+    and another signing key for clients. If you have a large number of
+    certificates to manage, it can be helpful to create your
+    CAs for hosts and clients on separate machines. If you prefer
+    using a single machine, give each CA its own directory.
+    The examples in this section use <filename>/ca-ssh-hosts</filename>
+    and <filename>/ca-ssh-users</filename>. The example machine is
+    <replaceable>ca.example.com</replaceable>.
+   </para>
+   <para>
+    If your security policy requires
+    keeping copies of users' and host's public keys, store them in their own
+    subdirectories, for easier tracking and avoiding key name collisions.
+   </para>
+   <important>
+    <title>RSA signing keys deprecated</title>
+    <para>
+     OpenSSH 8.2, released February 2020, deprecates RSA signing keys.
+     Use Ed25519 or ECDSA.
+    </para>
+   </important>
+   <para>
+    The following examples create two signing keys, one for signing
+    host keys, and one for user keys. Give them strong passphrases:
+  </para>
+  <screen>&prompt.user;<command>ssh-keygen</command>
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/tux/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in id_rsa
+Your public key has been saved in id_rsa.pub
+The key fingerprint is:
+SHA256:z0uJIuc7Doy07bFTe1ppZHLVrkD/bWWlBAF/PcHjblU user@host2
+The key's randomart image is:
++---[RSA 3072]----+
+|          ..o... |
+|           o . +E|
+|        . . o +.=|
+|       . o . o o+|
+|  .   . S . . o +|
+| . =  .= * + . = |
+|  o *.o.= * . +  |
+|   ..Bo+.. . .   |
+|    oo==  .      |
++----[SHA256]-----+</screen>
+
+  <screen>&prompt.user;<command>ssh-keygen</command>
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/tux/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in id_rsa
+Your public key has been saved in id_rsa.pub
+The key fingerprint is:
+SHA256:z0uJIuc7Doy07bFTe1ppZHLVrkD/bWWlBAF/PcHjblU user@host2
+The key's randomart image is:
++---[RSA 3072]----+
+|          ..o... |
+|           o . +E|
+|        . . o +.=|
+|       . o . o o+|
+|  .   . S . . o +|
+| . =  .= * + . = |
+|  o *.o.= * . +  |
+|   ..Bo+.. . .   |
+|    oo==  .      |
++----[SHA256]-----+</screen>
+ <para>
+  Copy your public user signing key (be sure you are copying the PUBLIC
+  key) to <filename>/etc/ssh</filename> on all hosts running SSH servers.
+  Then enter the full path of the public user signing key to
+  <filename>/etc/ssh/sshd_config</filename> on the hosts:
+ </para>
+ <screen>TrustedUserCAKeys <replaceable>/etc/ssh/ca-user-sign-key.pub</replaceable>
+</screen>
+ <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
+</sect2>
+
+ <sect2 xml:id="sec-ssh-certificate-create-host-certs">
+  <title>Creating host certificates</title>
+  <para>
+   The following example signs a host public key to create a host
+   certificate for a database server:
+  </para>
+  <screen>&prompt.sudo;<command>ssh-keygen -s <replaceable>/ca-ssh-hosts/ca-host-sign-key</replaceable></command> \
+   <command>-n <replaceable>&wsII;,&wsIIname;</replaceable> -I <replaceable>"db-server host cert"</replaceable></command> \
+   <command>-h -V +4w <replaceable>/etc/ssh/ssh_host_ed25519_key.pub</replaceable></command>
+Enter passphrase:
+Signed host key /etc/ssh/ssh_host_ed25519_key-cert.pub: id
+"db-server host cert" serial 0 for venus,venus.example.com
+valid from 2022-08-08T14:20:00 to 2022-09-05T15:21:19
+    </screen>
+      <para>
+       If there is more than one host key on a server, sign all of them.
+      </para>
+    <itemizedlist>
+     <listitem>
+      <para><option>-l</option> オプションについて</para>
+     </listitem>
+     <listitem>
+      <para>
+       <option>-n</option> is your list of principals. For host
+       certificates, the principals are the machine's host name
+       and fully-qualified domain name.
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       <option>-I</option> is the identity string. This is any
+       comment or description you want. The string is logged, to help you
+       quickly find relevant log entries.
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+       <option>-h</option> creates a host certificate.
+     </para>
+    </listitem>
+    <listitem>
+     <para>
+      <option>-V</option> sets the expiration date for the certificate. In
+      the example, the certificate expires in four weeks. (See
+      the "-V validity_interval" section of
+      <command>man 1 ssh-keygen</command> for allowed time formats.)
+     </para>
+    </listitem>
+   </itemizedlist>
+   <para>
+    Verify that your new certificate is built the way you want:
+   </para>
+   <screen>&prompt.user;<command>ssh-keygen -Lf /etc/ssh/ssh_host_ed25519_key-cert.pub</command>
+ /etc/ssh/ssh_host_ed25519_key-cert.pub:
+        Type: ssh-ed25519-cert-v01@openssh.com host certificate
+        Public key: ED25519-CERT SHA256:/
+         U7C+qABXYyuvueUuhFKzzVINq3d7IULRLwBstvVC+Q
+        Signing CA: ED25519 SHA256:
+         STuQ7HgDrPcEa7ybNIW0n6kPbj28X5HN8GgwllBbAt0 (using ssh-ed25519)
+        Key ID: "db-server host cert"
+        Serial: 0
+        Valid: from 2022-08-08T14:20:00 to 2022-09-05T15:21:19
+        Principals:
+                venus
+                venus.example.com
+        Critical Options: (none)
+        Extensions: (none)
+    </screen>
+   <para>新しい鍵のファイル名を <filename>/etc/ssh/sshd_config</filename> で指定します。既存の鍵はコメントアウトせず、そのまま設定しておいてください:</para>
+   <screen>HostCertificate <replaceable>/etc/ssh/ssh_host_ed25519_key-cert.pub</replaceable></screen>
+   <para>ファイルを保存したら、 <systemitem class="daemon">sshd</systemitem> を再起動します:</para>
+   <screen>&prompt.sudo;<command>systemctl reload sshd.server</command></screen>
+   <para>
+    See
+    <xref linkend="sec-ssh-certificate-user-config"/> to learn how to
+    configure clients to accept host certificates.
+   </para>
+  </sect2>
+
+  <sect2 xml:id="sec-ssh-certificate-user-config">
+   <title>CA configuration for users</title>
+   <para>
+    The following example shows how to configure clients to trust your CA
+    rather than individual keys. The example grants access to a single
+    server. This entry must be on a single unbroken  line in your users'
+    <filename>~/.ssh/known_hosts</filename> files. Move the original
+    <filename>~/.ssh/known_hosts</filename> file, and create a new
+    file that contains only the CA configuration. Or, create a global
+    configuration in <filename>/etc/ssh/ssh_known_hosts</filename>, which
+    has the advantage of being un-editable by unprivileged users:
+   </para>
+   <screen>@cert-authority db,db.example.com ssh-ed25519
+ AAAAC3NzaC1lZDI1NTE5AAAAIH1pF6DN4BdsfUKWuyiGt/leCvuZ/fPu
+ YxY7+4V68Fz0 signing key for user certificates
+   </screen>
+    <para>
+     List each server the user is allowed to access in a comma-delimited
+     list, for example
+     <literal><replaceable>&wsII;,&wsIIname;,&wsIII;,&wsIIIname;</replaceable></literal>. You may also
+     grant access to all servers in domains with wildcards, for example
+     <literal>*.example.com,*.example2.com</literal>.
+    </para>
+    <para>
+     Try connecting to the server. You should be prompted for the password
+     of the remote account, without being prompted to verify the host
+     certificate.
+    </para>
+  </sect2>
+
+  <sect2 xml:id="sec-ssh-certificate-user-certs">
+   <title>SSH サーバのホスト鍵作成</title>
+   <para>
+    Sign the user's public key:
+   </para>
+   <screen>&prompt.sudo;<command>ssh-keygen <replaceable>/ca-ssh-hosts/ca-user-sign-key -I "suzanne's cert" -n &exampleuserIII_plain; -V +52w user-key.pub</replaceable></command>
+ Signed user key .ssh/ed25519key-cert.pub: id "suzanne's cert" serial 0
+ for suzanne valid from 2022-09-14T12:57:00 to 2023-09-13T12:58:21
+</screen>
+   <para>
+    The principal on user certificates is always the username. Store the
+    user's certificate in <filename>~/.ssh</filename> on the user's machine.
+   </para>
+   <para>
+    User certificates replace the <filename>~/.ssh/authorized_keys</filename> files. Remove this file from a user account on the remote
+    machine, then try opening an SSH session to that account. You should be
+    able to log  in without being prompted for a password. (Remember, the
+    server should have a
+    <literal>TrustedUserCAKeys /etc/ssh/<replaceable>ca-user-sign-key.pub</replaceable></literal>
+    line in its
+    <filename>/etc/ssh/sshd_config</filename> file, so that the server
+    knows to trust your certificate authority.)
+   </para>
+   <para>
+    Additionally, look for <literal>Accepted publickey for
+     <replaceable>&exampleuserIII_plain;</replaceable></literal> messages in
+    your log files.
+    </para>
+  </sect2>
+
+  <sect2 xml:id="sec-ssh-certificate-revoke-host-keys">
+   <title>ホスト鍵の切り替え</title>
+   <para>
+    When you need to revoke a certificate because a server has been
+    compromised or retired, add the certificate's corresponding
+    public key to a file on every client, for example
+    <filename>/etc/ssh/revoked-host-key</filename>:
+   </para>
+   <screen>ssh-ed25519-cert-v01@openssh.com
+    AAAAIHNzaC1lZDI1NTE5LWNlcnQtdjAxQG9wZW5zc2guY29tAAAAIK6hyvFAhFI+0hkKehF/
+    506fD1VdcW29ykfFJn1CPK9lAAAAIAawaXbbEFiQOAe5LGclrCHSLWbEeUauK5+CAuhTJyz0
+    AAAAAAAAAAAAAAACAAAAE2RiLXNlcnZlciBob3N0IGNlcnQAAAAeAAAABXZlbnVzAAAAEXZl
+    bnVzLmV4YW1wbGUuY29tAAAAAGMabhQAAAAAYz9YgQAAAAAAAAAAAAAAAAAAADMAAAALc3No
+    LWVkMjU1MTkAAAAgfWkXoM3gF2x9Qpa7KIa3+V4K+5n98+5jFjv7hXrwXPQAAABTAAAAC3Nz
+    aC1lZDI1NTE5AAAAQI+mbJsQjt/9bLiURse8DF3yTa6Yk3HpoE2uf9FW/
+    KeLsw2wPeDv0d6jv49Wgr5T3xHYPf+VPJQW35ntFiHTlQg= root@db
+   </screen>
+   <para><filename>/etc/ssh/sshd_config</filename> ファイルを変更したあとは、下記のようにして文法チェックを行ってください:</para>
+   <screen>RevokedKeys /etc/ssh/revoked_keys</screen>
+  </sect2>
+ </sect1>
+
+ <sect1 xml:id="sec-ssh-gnome-keyring">
+  <title>GNOME 内での gnome-keyring を利用した公開鍵ログインの自動化</title>
   <para>GNOME デスクトップ環境をインストールすると、 <package>gnome-keyring</package> パッケージも自動的にインストールされ、有効化されます。 <package>gnome-keyring</package> はシステムのログインに統合され動作する仕組みであるため、ログイン時に自動的に機密記憶領域の保護が解除されます。ログイン時のパスワードを変更しても、 <literal>gnome-keyring</literal> はそれを自動的に認識して更新処理を行います。</para>
   <para><literal>gnome-keyring</literal> は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵対 (<filename>*.pub</filename> の形式の公開鍵があるもの) を自動的に読み込みます。その他のディレクトリ内にあるファイルを読み込みたい場合は、 <command>ssh-add</command> コマンドで読み込みを行ってください。たとえば下記のようになります:</para>
   <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
@@ -463,9 +804,9 @@ Have a lot of fun...</screen>
   <screen>&prompt.user;<command>ssh-add -l</command></screen>
   <para>システムを起動して SSH セッションを開くと、機密鍵のパスフレーズの入力を促されます。</para>
    <para><literal>gnome-keyring</literal> はセッションを終了するまでの間パスフレーズを記憶します。そのため、システムを再起動しない限り、パスフレーズを再度入力する必要がなくなります。</para>
- </sect2>
+ </sect1>
 
-  <sect2 xml:id="sec-ssh-ssh-agent">
+  <sect1 xml:id="sec-ssh-authentic-agent">
    <title>コンソール内での ssh-agent を利用した公開鍵ログインの自動化</title>
    <para><package>openssh</package> パッケージには <command>ssh-agent</command> というユーティリティが付属しています。このユーティリティは、コンソール (GUI 無し) を利用しているような場合や GNOME 以外のデスクトップ環境を利用しているような場合のユーティリティで、セッションが終了するまでの間だけ機密鍵とパスフレーズを記憶して、必要なときに自動的にそれを適用することができる仕組みです。</para>
    <para><command>ssh-agent</command> をログイン時に自動的に起動して鍵を読み込むように設定したい場合は、 <filename>~./profile</filename> ファイル内に下記のような行を記述します:</para>
@@ -473,8 +814,47 @@ Have a lot of fun...</screen>
 ssh-add</screen>
    <para>上記の行のうち、最初の行は <command>ssh-agent</command> を起動するコマンドで、次の行は <filename>~/.ssh</filename> ディレクトリ内にある全ての鍵を読み込むコマンドです。このように起動を行うことで、公開鍵認証が必要な SSH セッションを開始すると、最初の 1 回だけはパスフレーズの入力を求められます。その後はシステムを再起動するまでパスフレーズを記憶しますので、再入力を行う必要が無くなります。</para>
    <para>なお、特定の鍵のみを読み込むように設定したい場合は、下記のように <filename>~./profile</filename> 内で <filename>id_rsa</filename> や <filename>id_ed25519</filename> のファイルを指定してください:</para>
-   <screen>ssh-add id_rsa id_ed25519</screen>
-  </sect2>
+   <screen>&prompt.user;<command>ssh-add <replaceable>~/.otherkeys/my_key</replaceable></command>
+   </screen>
+
+   <sect2 xml:id="sec-ssh-authentic-agent-x">
+    <title><command>ssh-agent</command></title>
+    <para>
+     On &productname;, <command>ssh-agent</command> is automatically
+     started by the &gnome; display manager. To also invoke
+     <command>ssh-add</command> to add your keys to the agent at the
+     beginning of an X session, do the following:
+    </para>
+    <procedure>
+     <step>
+      <para>
+       Log in as the desired user and check whether the file
+       <filename>~/.xinitrc</filename> exists.
+      </para>
+     </step>
+     <step>
+      <para>
+       If it does not exist, use an existing template or copy it from
+       <filename>/etc/skel</filename>:
+      </para>
+<screen>if [ -f ~/.xinitrc.template ]; then mv ~/.xinitrc.template ~/.xinitrc; \
+else cp /etc/skel/.xinitrc.template ~/.xinitrc; fi</screen>
+     </step>
+     <step>
+      <para>
+       If you have copied the template, search for the following lines and
+       uncomment them. If <filename>~/.xinitrc</filename> already existed,
+       add the following lines (without comment signs).
+      </para>
+<screen># if test -S "$SSH_AUTH_SOCK" -a -x "$SSH_ASKPASS"; then
+#       ssh-add &lt; /dev/null
+# fi</screen>
+     </step>
+     <step>
+      <para>システムを起動して SSH セッションを開くと、機密鍵のパスフレーズの入力を促されます。</para>
+     </step>
+    </procedure>
+   </sect2>
  </sect1>
 
  <sect1 xml:id="sec-ssh-change-passphrase">
