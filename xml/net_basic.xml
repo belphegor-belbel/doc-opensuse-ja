@@ -53,6 +53,8 @@
    <imageobject role="html">
     <imagedata width="75%" fileref="net_basic_osi.png" format="PNG"/>
    </imageobject>
+   <textobject><phrase>OSI and TCP</phrase>
+   </textobject>
   </mediaobject>
  </figure>
  <para>上の図では、各レイヤに対して 1 つもしくは 2 つの例を示しています。レイヤは <emphasis>抽象レベル</emphasis> とも呼べる仕組みで、低いレイヤほどハードウエアに近く、高いレイヤほどハードウエアからは離れた、独立した存在になっています。また、それぞれのレイヤには、名前からおおよそ推測のできる独自の機能が用意されています。なお、データリンク層と物理層は、イーサネットなどの物理的なネットワークを表しています。</para>
@@ -220,7 +222,7 @@ IP アドレス (213.95.15.200): 11010101 10111111 00001111 11001000
       <para>現実的には、インターネット全体を一気に IPv4 から IPv6 に移行することは不可能です。そのため、インターネット内だけでなく、それぞれのシステムにも両方のプロトコルを共存させる仕組みが必須となります。このような要件から、互換アドレス (IPv4 アドレスを容易に IPv6 アドレスに変換できるアドレス) が用意され、トンネルを介してアクセスできる仕組みになっています。詳しくは <xref linkend="sec-network-ipv6-coexist"/> をお読みください。システム側では <emphasis>デュアルスタック IP</emphasis> と呼ばれる技術により、両方のプロトコルに対応し、どちらのプロトコルを経由してもインターネットにアクセスできる構造になっています。</para>
      </listitem>
     </varlistentry>
-    <varlistentry>
+    <varlistentry os="sles;sled;osuse">
      <term>マルチキャストを利用した独自サービス</term>
      <listitem>
       <para>IPv4 では、 SMB などのサービスでブロードキャストを利用し、ローカルネットワーク内の全てのホストにパケットを送信していました。 IPv6 では、より精密なアプローチである <emphasis>マルチキャスト</emphasis> を利用して、特定のグループ内の全体に情報を伝えることができるようになっています。これは全てのホストに通知する <emphasis>ブロードキャスト</emphasis> とも、特定の 1 台のホストのみに通信する <emphasis>ユニキャスト</emphasis> とも異なる仕組みです。どのホストがグループとして割り当てられるのかは、それぞれの用途によって異なります。あらかじめ決められたグループとしては、全てのネームサーバ (<emphasis>全ネームサーバ マルチキャストグループ</emphasis>) や全てのルータ (<emphasis>全ルータ マルチキャストグループ</emphasis>) などがあります。</para>
@@ -400,31 +402,30 @@ fe80 :                           : 10 : 1000 : 1a4</screen>
 
   <sect2 xml:id="sec-network-ipv6-config">
    <title>IPv6 の設定</title>
-<!--
--    To disable or enable IPv6 on an installed system, start &yast;, open the
--    <menuchoice><guimenu>System</guimenu><guimenu>Network
--      Settings</guimenu></menuchoice> dialog and in the <guimenu>Global
--     Options</guimenu> tab, check or uncheck <guimenu>Enable IPv6</guimenu>.
--    <remark>TODO: Find out what the "disable autoload of the kernel module for
--     ipv6" means - is this a required manual step to be done outside of network
--    configuration?</remark>
-+    To disable or enable IPv6 on an installed system, use &yast;
-+    <guimenu>Network Card</guimenu>. Do not change the method and click
-+    <guimenu>Next</guimenu>.
-+    Then select a card and click <menuchoice>
-+     <guimenu>Advanced</guimenu>
-+     <guimenu>IPv6</guimenu></menuchoice>
-+    in the <guimenu>Address</guimenu> tab.
-
--->
+   <!--
+    -    To disable or enable IPv6 on an installed system, start &yast;, open the
+    -    <menuchoice><guimenu>System</guimenu><guimenu>Network
+    -      Settings</guimenu></menuchoice> dialog and in the <guimenu>Global
+    -     Options</guimenu> tab, check or uncheck <guimenu>Enable IPv6</guimenu>.
+    -    <remark>TODO: Find out what the "disable autoload of the kernel module for
+    -     ipv6" means - is this a required manual step to be done outside of network
+    -    configuration?</remark>
+    +    To disable or enable IPv6 on an installed system, use &yast;
+    +    <guimenu>Network Card</guimenu>. Do not change the method and click
+    +    <guimenu>Next</guimenu>.
+    +    Then select a card and click <menuchoice>
+    +     <guimenu>Advanced</guimenu>
+    +     <guimenu>IPv6</guimenu></menuchoice>
+    +    in the <guimenu>Address</guimenu> tab.
+    -->
    <para>IPv6 を設定するには、通常は個別のコンピュータに対して作業を行う必要はありません。これは、 IPv6 は既定で有効化されているためです。インストール済みのシステムで IPv6 を有効化もしくは無効化するには、 &yast; を起動して <guimenu>ネットワークの設定</guimenu> モジュールを起動します。 <guimenu>グローバルオプション</guimenu> のタブ内に、 <guimenu>IPv6 を有効にする</guimenu> のチェックボックスがありますので、必要に応じてチェックを入れるか外すかしてください。 <!--To enable or disable IPv6 manually, edit <filename>/etc/modprobe.d/50-ipv6.conf</filename> and restart the system.--> また、再起動するまでの間、一時的に IPv6 を有効化するには、 <systemitem class="username">root</systemitem> で <command>modprobe</command> <option>-i ipv6</option> を実行します。なお、いったんモジュールを読み込んでしまうと、再起動以外の手段では読み込みを解除することができなくなりますので、ご注意ください。</para>
    <para>IPv6 の自動設定の考え方により、ネットワークカードには <emphasis>リンクローカル</emphasis> のアドレスが割り当てられます。また、通常はワークステーション内でのルーティングテーブル管理は行いません。 <emphasis>ルータアドバタイズメントプロトコル</emphasis> を利用することで、ワークステーション側からネットワークルータに問い合わせを行い、プレフィクスと使用すべきゲートウエイに関する情報を取得します。通常は radvd プログラムを利用することで、 IPv6 ルータを構築します。そのほか、 zebra や quagga などを利用して、アドレス設定とルーティングを行うこともできます。</para>
-<!-- 2014-04-15, ke: Karol will add this man page to the wicked
-   package as well -->
-   <para><filename>/etc/sysconfig/network</filename> ファイルを利用して様々な種類のトンネルを設定する方法について、詳しくは <literal>ifcfg-tunnel</literal> のマニュアルページ ( <command>man ifcfg-tunnel</command> ) をお読みください。</para>
+   <!-- 2014-04-15, ke: Karol will add this man page to the wicked
+    package as well -->
+   <para os="sles;sled;osuse"><filename>/etc/sysconfig/network</filename> ファイルを利用して様々な種類のトンネルを設定する方法について、詳しくは <literal>ifcfg-tunnel</literal> のマニュアルページ ( <command>man ifcfg-tunnel</command> ) をお読みください。</para>
   </sect2>
 
-  <sect2 xml:id="sec-network-ipv6-moreinfo">
+  <sect2 os="sles;sled;osuse" xml:id="sec-network-ipv6-moreinfo">
    <title>さらなる情報</title>
    <para>これまでの章での説明は、 IPv6 の一部のみをカバーしたものであって、全てを説明しているわけではありません。この新しいプロトコルに関するより詳しい情報をご希望の場合は、下記のオンライン文書やブックをご覧ください:</para>
    <variablelist>
@@ -484,9 +485,9 @@ fe80 :                           : 10 : 1000 : 1a4</screen>
 
   <para>お使いのマシンから IP アドレスを解決できるようにするためには、少なくとも 1 台のネームサーバの IP アドレスが必要となります。ネームサーバの設定を行うには、 &yast; をお使いください。 <phrase os="sles;osuse">&productnamereg; における具体的なネームサーバ設定については、 <xref linkend="sec-network-yast-change-host"/> をお読みください。また、独自のネームサーバを構築したい場合は、 <xref linkend="cha-dns"/> をお読みください。</phrase></para>
 
-  <para><literal>whois</literal> と呼ばれるプロトコルは、 DNS と密接な関係を持つプロトコルです。このプロトコルは、特定のドメインに対する管理情報などを問い合わせることができます。</para>
+  <para os="sles;sled;osuse"><literal>whois</literal> と呼ばれるプロトコルは、 DNS と密接な関係を持つプロトコルです。このプロトコルは、特定のドメインに対する管理情報などを問い合わせることができます。</para>
 
-<!-- bug 349467 -->
+  <!-- bug 349467 -->
 
   <note>
    <title>マルチキャスト DNS と .local ドメイン名について</title>
@@ -495,11 +496,11 @@ fe80 :                           : 10 : 1000 : 1a4</screen>
    <para>マルチキャスト DNS についての詳細は、 <link xlink:href="http://www.multicastdns.org"/> をお読みください。</para>
   </note>
  </sect1>
- <xi:include href="net_yast.xml"/>
+ <xi:include os="sles;sled;osuse" href="net_yast.xml"/>
  <xi:include os="sled;osuse" href="networkmanager.xml"/>
- <xi:include href="net_wicked.xml"/>
+ <xi:include os="sled;sles;osuse" href="net_wicked.xml"/>
  <xi:include os="sles;osuse" href="net_router.xml"/>
- <xi:include href="net_bonding.xml"/>
- <xi:include href="net_teaming.xml"/>
+ <xi:include os="sled;sles;osuse" href="net_bonding.xml"/>
+ <xi:include os="sles;sled;osuse" href="net_teaming.xml"/>
  <xi:include os="sles;osuse" href="net_sdn.xml"/>
 </chapter>
