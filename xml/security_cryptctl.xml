@@ -286,6 +286,359 @@ Used By      When                 UUID  Max.Users  Num.Users  Mount Point
     </listitem>
    </itemizedlist>
   </sect1>
+ <sect1 xml:id="sec-configure-cryptctl-ha">
+  <title>Setting up an HA environment for cryptctl-server service</title>
+  <para>
+   To avoid downtimes when the cryptctl-server needs to be stopped for
+   maintenance or suffers a damage, it is strongly recommended to set up the
+   cryptctl-server in an HA environment. You need at least a two-node &ha; cluster for
+   this.
+   The following setup shows how to create a two-node HA cluster for cryptctl-server using self-signed certificates.
+  </para>
+  <para>まずは下記の要件を全て満たしていることを確認します:</para>
+  <itemizedlist>
+   <listitem>
+    <para>
+     At least two servers which have &sles; and the &ha; extension installed
+     are available. All servers must also have the cryptctl package installed.
+     All servers can reach each other via SSH.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     If you set up a new cluster, you need an additional IP address for the
+     &haweb; of the cluster (<replaceable>AdminIP</replaceable>).
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     A separate IP address (<replaceable>CrypServerIP</replaceable>) is reserved for the cryptctl-server.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     A separate dns-name (<replaceable>CrypServerHostName</replaceable>) is reserved for the cryptctl-server and is resolved to the above IP address.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     An HA-enabled block device or NFS share is available to store the keys.
+    </para>
+    <para>
+     In our example, we will use an NFS share:
+     <filename>nfs-server.example.org/data/cryptctl-keys</filename>. It will be mounted to the standard location <filename>/var/lib/cryptctl/keydb</filename>.
+    </para>
+   </listitem>
+   <listitem>
+    <para>
+     It is strongly recommended to use an SBD device.
+    </para>
+   </listitem>
+  </itemizedlist>
+
+  <procedure>
+   <title><command>cryptctl</command> サーバの設定</title>
+   <step>
+    <para><systemitem class="username">root</systemitem> で下記を実行します:</para>
+   </step>
+   <step>
+    <para>
+     Set up a cryptctl-server as described in <xref linkend="sec-configure-cryptctl-server"/>. Use the following parameters:
+    </para>
+    <substeps>
+     <step>
+      <para>
+       To create the certificate, use the dedicated hostname
+       <replaceable>CrypServerHostName</replaceable> of the cryptctl server.
+       Do <emphasis>not</emphasis> use the host name of the host.
+      </para>
+     </step>
+     <step>
+      <para>
+       Use the dedicated IP address <replaceable>CrypServerIP</replaceable> of
+       the cryptctl server. Do <emphasis>not</emphasis> use the default IP address setting.
+      </para>
+     </step>
+     <step>
+      <para>
+       Do not configure a KMIP server.
+      </para>
+     </step>
+     <step>
+      <para><command>cryptctl</command> サーバの起動を行うかどうかを尋ねられた場合は、 <literal>y</literal> (はい) と入力してください。</para>
+     </step>
+    </substeps>
+   </step>
+   <step>
+    <para>
+     Set up a two-node HA cluster:
+    </para>
+    <substeps>
+     <step>
+      <important>
+       <para>
+        <replaceable>Node1</replaceable> must be the server where you have configured the cryptctl server.</para>
+      </important>
+      <para>On the machine where you have configured the cryptctl server, set up the first node as follows:</para>
+      <screen>&prompt.root;<command>crm cluster init -i <replaceable>NetDev</replaceable> -A <replaceable>AdminIP</replaceable> -n <replaceable>ClusterName</replaceable></command></screen>
+     </step>
+     <step>
+      <para>
+       Log in via SSH to <replaceable>Node2</replaceable> and join the cluster
+       from there:
+      </para>
+      <screen>&prompt.root;<command>ssh <replaceable>Node2</replaceable></command>
+&prompt.root;<command>crm cluster join -y <replaceable>Node1</replaceable></command></screen>
+     </step>
+     <step>
+      <para>さらに詳しい情報については、プロジェクトのホームページ <link xlink:href="https://github.com/SUSE/cryptctl/"/> をご覧ください。</para>
+     </step>
+    </substeps>
+   </step>
+   <step>
+    <para>
+     Set up the resource group for the cryptctl server:
+    </para>
+   </step>
+   <step>
+    <substeps>
+     <step>
+      <para>
+       You can set up all needed resource agents and copy all files to all
+       nodes with the cryptcl crm-shell-script in one step. It is strictly
+       recommended to verify the setup in the first step:
+      </para>
+      <screen>&prompt.root;<command>crm script verify cryptctl  \
+cert-path=/etc/cryptctl/servertls/<replaceable>CertificatFileName</replaceable> \
+cert-key-path=/etc/cryptctl/servertls/<replaceable>CertificatKeyFileName</replaceable> \
+virtual-ip:ip=<replaceable>CrypServerIP</replaceable> \
+filesystem:device=<replaceable>DevicePath</replaceable>
+filesystem:fstype=<replaceable>FileSystemType</replaceable></command></screen>
+     </step>
+     <step>
+      <para>
+       If the check was successful, set up the cluster group by running the
+       script as follows:
+      </para>
+      <screen>&prompt.root;<command>crm script verify cryptctl  \
+cert-path=/etc/cryptctl/servertls/<replaceable>CertificatFileName</replaceable> \
+cert-key-path=/etc/cryptctl/servertls/<replaceable>CertificatKeyFileName</replaceable> \
+virtual-ip:ip=<replaceable>CrypServerIP</replaceable> \
+filesystem:device=<replaceable>DevicePath</replaceable>
+filesystem:fstype=<replaceable>FileSystemType</replaceable></command></screen>
+     </step>
+    </substeps>
+   </step>
+   </procedure>
+   <table xml:id="tab-parameters">
+    <title>List of all parameters to define the resource group with the cryptctl crm script.</title>
+    <tgroup cols="4">
+      <colspec colname="name"/>
+      <colspec colname="obligytory"/>
+      <colspec colname="default"/>
+      <colspec colname="description"/>
+      <thead>
+        <row>
+          <entry>
+            <para>Name</para>
+          </entry>
+          <entry>
+            <para>Mandatory</para>
+          </entry>
+          <entry>
+            <para>Default Value</para>
+          </entry>
+          <entry>
+            <para>Description</para>
+          </entry>
+        </row>
+      </thead>
+      <tbody>
+        <row>
+          <entry>
+            id
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            cryptctl
+          </entry>
+          <entry>
+            Name of the resource group.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            cert-path
+          </entry>
+          <entry>
+            yes
+          </entry>
+          <entry>
+          </entry>
+          <entry>
+            The full path to the created certificate.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            cert-key-path
+          </entry>
+          <entry>
+            yes
+          </entry>
+          <entry>
+          </entry>
+          <entry>
+            The full path to the created certificate key.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            virtual-ip:id
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+           cryptctl-vip
+          </entry>
+          <entry>
+            The ID of the virtual IP resource for the cryptctl server.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            virtual-ip:ip
+          </entry>
+          <entry>
+            yes
+          </entry>
+          <entry>
+          </entry>
+          <entry>
+            The IP address of the cryptctl server.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            virtual-ip:nic
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            Will be detected by the virtual-ip resource agent.
+          </entry>
+          <entry>
+            The network device the cryptctl server should be listening on. Is only required if the device cannot be detected from the IP address.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            virtual-ip:cidr_netmask
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            Will be detected by the virtual-ip resource agent.
+          </entry>
+          <entry>
+            The numeric netmask of the IP address of the cryptctl server. Is only required if the netmask cannot be detected from the IP address.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            virtual-ip:broadcast
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            Will be detected by the virtual-ip resource agent.
+          </entry>
+          <entry>
+            The broadcast address of the IP address of the cryptctl server. Is only required if this cannot be detected from the IP address.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            filesystem:id
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+           cryptctl-filesystem
+          </entry>
+          <entry>
+            The ID of the filesystem resource containing the disk encryption keys and records.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            filesystem:device
+          </entry>
+          <entry>
+            yes
+          </entry>
+          <entry>
+          </entry>
+          <entry>
+            The device containing the filesystem. This can be a block device
+            like <filename>/dev/sda<replaceable>...</replaceable></filename> or an NFS share path
+           <filename>server:/path</filename>.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            filesystem:directory
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            /var/lib/cryptctl/keydb
+          </entry>
+          <entry>
+           The directory where the device containing the file system is located. This can be a block device
+           like <filename>/dev/sda<replaceable>...</replaceable></filename> or an NFS share path
+           <filename>server:/path</filename>.
+          </entry>
+        </row>
+        <row>
+          <entry>
+            filesystem:fstype
+          </entry>
+          <entry>
+            yes
+          </entry>
+          <entry>
+          </entry>
+          <entry>
+            The filesystem type (for example, NFS, XFS, EXT4).
+          </entry>
+        </row>
+        <row>
+          <entry>
+            filesystem:options
+          </entry>
+          <entry>
+            no
+          </entry>
+          <entry>
+            The default options of the selected file system.
+          </entry>
+          <entry>
+            Mount options for the file system.
+          </entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </table>
+ </sect1>
  <sect1 xml:id="sec-configure-cryptctl-more">
   <title>さらなる情報</title>
   <para>さらに詳しい情報については、プロジェクトのホームページ <link xlink:href="https://github.com/SUSE/cryptctl/"/> をご覧ください。</para>
