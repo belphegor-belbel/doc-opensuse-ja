@@ -287,127 +287,80 @@ Used By      When                 UUID  Max.Users  Num.Users  Mount Point
    </itemizedlist>
   </sect1>
  <sect1 xml:id="sec-configure-cryptctl-ha">
-  <title>Setting up an HA environment for cryptctl-server service</title>
-  <para>
-   To avoid downtimes when the cryptctl-server needs to be stopped for
-   maintenance or suffers a damage, it is strongly recommended to set up the
-   cryptctl-server in an HA environment. You need at least a two-node &ha; cluster for
-   this.
-   The following setup shows how to create a two-node HA cluster for cryptctl-server using self-signed certificates.
-  </para>
+  <title>cryptctl-server での HA 環境の構築</title>
+  <para>メンテナンスの際には cryptctl-server を停止しておかないと必要なデータが正しく保存されなくなってしまう一方、これによって暗号鍵を利用しているシステムが動作できなくなり、システムの停止が発生してしまいます。このような問題を避けるため、 cryptctl-server で HA (高可用性) 環境を構築しておくことを強くお勧めします。この場合、少なくとも 2 台のノードから構成される &ha; クラスタを構築することになります。下記では、自己署名型の証明書を利用して cryptctl-server 向けの HA クラスタを構築するための手順を説明しています。</para>
   <para>まずは下記の要件を全て満たしていることを確認します:</para>
   <itemizedlist>
    <listitem>
-    <para>
-     At least two servers which have &sles; and the &ha; extension installed
-     are available. All servers must also have the cryptctl package installed.
-     All servers can reach each other via SSH.
-    </para>
+    <para>少なくとも 2 台以上のサーバを用意します。これらは &sles; と &ha; 拡張の両方のほか、 cryptctl パッケージをインストールしておきます。また、全てのサーバは SSH を介して相互にアクセスできる必要があります。</para>
    </listitem>
    <listitem>
-    <para>
-     If you set up a new cluster, you need an additional IP address for the
-     &haweb; of the cluster (<replaceable>AdminIP</replaceable>).
-    </para>
+    <para>新しいクラスタを構築する場合は、クラスタの &haweb; 向けの追加 IP アドレス ( <replaceable>AdminIP</replaceable> ) を用意します。</para>
    </listitem>
    <listitem>
-    <para>
-     A separate IP address (<replaceable>CrypServerIP</replaceable>) is reserved for the cryptctl-server.
-    </para>
+    <para>また、 cryptctl-server 向けに別途の IP アドレス ( <replaceable>CrypServerIP</replaceable> ) も用意します。</para>
    </listitem>
    <listitem>
-    <para>
-     A separate dns-name (<replaceable>CrypServerHostName</replaceable>) is reserved for the cryptctl-server and is resolved to the above IP address.
-    </para>
+    <para>さらに cryptctl-server 向けの DNS ホスト名 ( <replaceable>CrypServerHostName</replaceable> ) を用意します。このホスト名は、上述の IP アドレスを指し示すものとします。</para>
    </listitem>
    <listitem>
-    <para>
-     An HA-enabled block device or NFS share is available to store the keys.
-    </para>
-    <para>
-     In our example, we will use an NFS share:
-     <filename>nfs-server.example.org/data/cryptctl-keys</filename>. It will be mounted to the standard location <filename>/var/lib/cryptctl/keydb</filename>.
-    </para>
+    <para>鍵を保存するための HA が有効化されたブロックデバイスか、 NFS 共有を用意します。</para>
+    <para>下記の例では、 <filename>nfs-server.example.org/data/cryptctl-keys</filename> という名前の NFS 共有を使用します。この共有は <filename>/var/lib/cryptctl/keydb</filename> という標準的なディレクトリにマウントします。</para>
    </listitem>
    <listitem>
-    <para>
-     It is strongly recommended to use an SBD device.
-    </para>
+    <para>このほか、 SBD デバイスを使用しておくことを強くお勧めします。</para>
    </listitem>
   </itemizedlist>
 
   <procedure>
-   <title><command>cryptctl</command> サーバの設定</title>
+   <title>2 ノードの cryptctl HA クラスタの構築</title>
    <step>
-    <para><systemitem class="username">root</systemitem> で下記を実行します:</para>
+    <para><replaceable>Node1</replaceable> (ノード#1) に <systemitem class="username">root</systemitem> でログインします。</para>
    </step>
    <step>
-    <para>
-     Set up a cryptctl-server as described in <xref linkend="sec-configure-cryptctl-server"/>. Use the following parameters:
-    </para>
+    <para><xref linkend="sec-configure-cryptctl-server"/> に書かれた手順で cryptctl-server を構築します。このとき、下記に注意してください:</para>
     <substeps>
      <step>
-      <para>
-       To create the certificate, use the dedicated hostname
-       <replaceable>CrypServerHostName</replaceable> of the cryptctl server.
-       Do <emphasis>not</emphasis> use the host name of the host.
-      </para>
+      <para>証明書を作成する場合は、 cryptctl サーバでの <replaceable>CrypServerHostName</replaceable> に対応する証明書を用意してください。ホスト名に対応する証明書 <emphasis>ではありません</emphasis> 。</para>
      </step>
      <step>
-      <para>
-       Use the dedicated IP address <replaceable>CrypServerIP</replaceable> of
-       the cryptctl server. Do <emphasis>not</emphasis> use the default IP address setting.
-      </para>
+      <para>cryptctl サーバに用意した個別の IP アドレス <replaceable>CrypServerIP</replaceable> を使用してください。既定の IP アドレス設定をそのまま使用しては <emphasis>なりません</emphasis> 。</para>
      </step>
      <step>
-      <para>
-       Do not configure a KMIP server.
-      </para>
+      <para>KMIP サーバを構築してはなりません。</para>
      </step>
      <step>
-      <para><command>cryptctl</command> サーバの起動を行うかどうかを尋ねられた場合は、 <literal>y</literal> (はい) と入力してください。</para>
+      <para><command>cryptctl</command> サーバの起動を行うかどうかを尋ねられた場合は、 <literal>n</literal> (いいえ) と入力してください。</para>
      </step>
     </substeps>
    </step>
    <step>
-    <para>
-     Set up a two-node HA cluster:
-    </para>
+    <para>2 ノードの HA クラスタを構築します:</para>
     <substeps>
      <step>
       <important>
-       <para>
-        <replaceable>Node1</replaceable> must be the server where you have configured the cryptctl server.</para>
+       <para>ここでは cryptctl サーバを構築したマシンを <replaceable>Node1</replaceable> というホスト名であるものとします。</para>
       </important>
-      <para>On the machine where you have configured the cryptctl server, set up the first node as follows:</para>
-      <screen>&prompt.root;<command>crm cluster init -i <replaceable>NetDev</replaceable> -A <replaceable>AdminIP</replaceable> -n <replaceable>ClusterName</replaceable></command></screen>
+      <para>cryptctl サーバを設定したマシンで、最初のノードを起動します:</para>
+      <screen>&prompt.root;<command>crm cluster init -i <replaceable>ネットワークデバイス名</replaceable> -A <replaceable>AdminIP</replaceable> -n <replaceable>ClusterName</replaceable></command></screen>
      </step>
      <step>
-      <para>
-       Log in via SSH to <replaceable>Node2</replaceable> and join the cluster
-       from there:
-      </para>
+      <para>あとは <replaceable>Node2</replaceable> にログインして、クラスタへの参加を実施します:</para>
       <screen>&prompt.root;<command>ssh <replaceable>Node2</replaceable></command>
 &prompt.root;<command>crm cluster join -y <replaceable>Node1</replaceable></command></screen>
      </step>
      <step>
-      <para>さらに詳しい情報については、プロジェクトのホームページ <link xlink:href="https://github.com/SUSE/cryptctl/"/> をご覧ください。</para>
+      <para>さらに詳しい情報については、 <link xlink:href="https://documentation.suse.com/sle-ha/html/SLE-HA-all/article-installation.html">&haquick;</link> をご覧ください。</para>
      </step>
     </substeps>
    </step>
    <step>
-    <para>
-     Set up the resource group for the cryptctl server:
-    </para>
+    <para>cryptctl サーバに対するリソースグループを設定します:</para>
    </step>
    <step>
     <substeps>
      <step>
-      <para>
-       You can set up all needed resource agents and copy all files to all
-       nodes with the cryptcl crm-shell-script in one step. It is strictly
-       recommended to verify the setup in the first step:
-      </para>
+      <para>cryptcl の crm-shell-script を利用することで、全てのノードにおいて必要な全てのリソースエージェントを設定してファイルをコピーすることができます。まずは適切に構築できているかどうかを確認します:</para>
       <screen>&prompt.root;<command>crm script verify cryptctl  \
 cert-path=/etc/cryptctl/servertls/<replaceable>CertificatFileName</replaceable> \
 cert-key-path=/etc/cryptctl/servertls/<replaceable>CertificatKeyFileName</replaceable> \
@@ -416,10 +369,7 @@ filesystem:device=<replaceable>DevicePath</replaceable>
 filesystem:fstype=<replaceable>FileSystemType</replaceable></command></screen>
      </step>
      <step>
-      <para>
-       If the check was successful, set up the cluster group by running the
-       script as follows:
-      </para>
+      <para>チェックが成功したら、下記のようにスクリプトを実行してクラスタグループの構築を行います:</para>
       <screen>&prompt.root;<command>crm script verify cryptctl  \
 cert-path=/etc/cryptctl/servertls/<replaceable>CertificatFileName</replaceable> \
 cert-key-path=/etc/cryptctl/servertls/<replaceable>CertificatKeyFileName</replaceable> \
@@ -431,7 +381,7 @@ filesystem:fstype=<replaceable>FileSystemType</replaceable></command></screen>
    </step>
    </procedure>
    <table xml:id="tab-parameters">
-    <title>List of all parameters to define the resource group with the cryptctl crm script.</title>
+    <title>cryptctl crm スクリプトでリソースグループを設定するためのパラメータ一覧</title>
     <tgroup cols="4">
       <colspec colname="name"/>
       <colspec colname="obligytory"/>
@@ -440,200 +390,102 @@ filesystem:fstype=<replaceable>FileSystemType</replaceable></command></screen>
       <thead>
         <row>
           <entry>
-            <para>Name</para>
+            <para>名前</para>
           </entry>
           <entry>
-            <para>Mandatory</para>
+            <para>必須かどうか</para>
           </entry>
           <entry>
-            <para>Default Value</para>
+            <para>既定値</para>
           </entry>
           <entry>
-            <para>Description</para>
+            <para>説明</para>
           </entry>
         </row>
       </thead>
       <tbody>
         <row>
-          <entry>
-            id
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            cryptctl
-          </entry>
-          <entry>
-            Name of the resource group.
-          </entry>
+          <entry>id</entry>
+          <entry>いいえ</entry>
+          <entry>cryptctl</entry>
+          <entry>リソースグループ名</entry>
         </row>
         <row>
-          <entry>
-            cert-path
-          </entry>
-          <entry>
-            yes
-          </entry>
+          <entry>cert-path</entry>
+          <entry>はい</entry>
           <entry>
           </entry>
-          <entry>
-            The full path to the created certificate.
-          </entry>
+          <entry>作成した証明書のフルパス</entry>
         </row>
         <row>
-          <entry>
-            cert-key-path
-          </entry>
-          <entry>
-            yes
-          </entry>
+          <entry>cert-key-path</entry>
+          <entry>はい</entry>
           <entry>
           </entry>
-          <entry>
-            The full path to the created certificate key.
-          </entry>
+          <entry>作成した証明書に対応する機密鍵のフルパス</entry>
         </row>
         <row>
-          <entry>
-            virtual-ip:id
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-           cryptctl-vip
-          </entry>
-          <entry>
-            The ID of the virtual IP resource for the cryptctl server.
-          </entry>
+          <entry>virtual-ip:id</entry>
+          <entry>いいえ</entry>
+          <entry>cryptctl-vip</entry>
+          <entry>cryptctl サーバの仮想 IP リソース ID</entry>
         </row>
         <row>
-          <entry>
-            virtual-ip:ip
-          </entry>
-          <entry>
-            yes
-          </entry>
+          <entry>virtual-ip:ip</entry>
+          <entry>はい</entry>
           <entry>
           </entry>
-          <entry>
-            The IP address of the cryptctl server.
-          </entry>
+          <entry>cryptctl サーバの仮想 IP アドレス</entry>
         </row>
         <row>
-          <entry>
-            virtual-ip:nic
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            Will be detected by the virtual-ip resource agent.
-          </entry>
-          <entry>
-            The network device the cryptctl server should be listening on. Is only required if the device cannot be detected from the IP address.
-          </entry>
+          <entry>virtual-ip:nic</entry>
+          <entry>いいえ</entry>
+          <entry>(virtual-ip リソースエージェントによって検出されます)</entry>
+          <entry>cryptctl が接続を待ち受けるべきネットワークデバイス名 (IP アドレスからデバイス名が検出できない場合にのみ必要)</entry>
         </row>
         <row>
-          <entry>
-            virtual-ip:cidr_netmask
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            Will be detected by the virtual-ip resource agent.
-          </entry>
-          <entry>
-            The numeric netmask of the IP address of the cryptctl server. Is only required if the netmask cannot be detected from the IP address.
-          </entry>
+          <entry>virtual-ip:cidr_netmask</entry>
+          <entry>いいえ</entry>
+          <entry>(virtual-ip リソースエージェントによって検出されます)</entry>
+          <entry>cryptctl の IP アドレスに対応するネットマスク (IP アドレスからネットマスクが検出できない場合にのみ必要)</entry>
         </row>
         <row>
-          <entry>
-            virtual-ip:broadcast
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            Will be detected by the virtual-ip resource agent.
-          </entry>
-          <entry>
-            The broadcast address of the IP address of the cryptctl server. Is only required if this cannot be detected from the IP address.
-          </entry>
+          <entry>virtual-ip:broadcast</entry>
+          <entry>いいえ</entry>
+          <entry>(virtual-ip リソースエージェントによって検出されます)</entry>
+          <entry>cryptctl サーバの IP アドレスに対応するブロードキャストアドレス (IP アドレスから検出できない場合にのみ必要)</entry>
         </row>
         <row>
-          <entry>
-            filesystem:id
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-           cryptctl-filesystem
-          </entry>
-          <entry>
-            The ID of the filesystem resource containing the disk encryption keys and records.
-          </entry>
+          <entry>filesystem:id</entry>
+          <entry>いいえ</entry>
+          <entry>cryptctl-filesystem</entry>
+          <entry>ディスクの暗号鍵とレコードを含むファイルシステムリソースの ID</entry>
         </row>
         <row>
-          <entry>
-            filesystem:device
-          </entry>
-          <entry>
-            yes
-          </entry>
+          <entry>filesystem:device</entry>
+          <entry>はい</entry>
           <entry>
           </entry>
-          <entry>
-            The device containing the filesystem. This can be a block device
-            like <filename>/dev/sda<replaceable>...</replaceable></filename> or an NFS share path
-           <filename>server:/path</filename>.
-          </entry>
+          <entry>ファイルシステムを含むデバイス名。 <filename>/dev/sda<replaceable>...</replaceable></filename> のようにブロックデバイス名のほか、 <filename>server:/path</filename> のように NFS 共有を指定することができます。</entry>
         </row>
         <row>
-          <entry>
-            filesystem:directory
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            /var/lib/cryptctl/keydb
-          </entry>
-          <entry>
-           The directory where the device containing the file system is located. This can be a block device
-           like <filename>/dev/sda<replaceable>...</replaceable></filename> or an NFS share path
-           <filename>server:/path</filename>.
-          </entry>
+          <entry>filesystem:directory</entry>
+          <entry>いいえ</entry>
+          <entry>/var/lib/cryptctl/keydb</entry>
+          <entry>ファイルシステムのマウント先ディレクトリ名。 <filename>/dev/sda<replaceable>...</replaceable></filename> のようにブロックデバイス名のほか、 <filename>server:/path</filename> のように NFS 共有を指定することができます。</entry>
         </row>
         <row>
-          <entry>
-            filesystem:fstype
-          </entry>
-          <entry>
-            yes
-          </entry>
+          <entry>filesystem:fstype</entry>
+          <entry>はい</entry>
           <entry>
           </entry>
-          <entry>
-            The filesystem type (for example, NFS, XFS, EXT4).
-          </entry>
+          <entry>ファイルシステムの種類 (NFS, XFS, EXT4 等)</entry>
         </row>
         <row>
-          <entry>
-            filesystem:options
-          </entry>
-          <entry>
-            no
-          </entry>
-          <entry>
-            The default options of the selected file system.
-          </entry>
-          <entry>
-            Mount options for the file system.
-          </entry>
+          <entry>filesystem:options</entry>
+          <entry>いいえ</entry>
+          <entry>(選択したファイルシステムに対応する既定値と同じです)</entry>
+          <entry>ファイルシステムのマウントオプション。</entry>
         </row>
       </tbody>
     </tgroup>
