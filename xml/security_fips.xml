@@ -14,17 +14,28 @@
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
+ <important>
+  <title>&sles; &productnumber; と FIPS 140-3 について</title>
+  <para>&sles; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
+  <para>
+   For further details, contact your &suse; sales representative.
+  </para>
+ </important>
 
 <sect1 xml:id="sec-fips-concept">
   <title>FIPS の概要</title>
   <para>組織や企業が暗号化アプリケーションを FIPS 準拠として認定を受けるには、 Cryptographic Module Validation Program (CMVP) (詳しくは <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/> を参照) への申請を行わなくてはなりません。</para>
-  <para>また、現時点では FIPS 暗号化標準として FIPS 140-2 と FIPS 140-3 の 2 種類が存在しています。 FIPS 140-2 標準は 2002 年に確定した標準で、 2026 年 9 月 22 日まで有効とされています。もう一方の FIPS 140-3 標準は 2019 年 3 月に承認された標準で、 140-2 を置き換えるものとして作られています。なお、現時点で CMVP は FIPS 140-2 テストへの受け付けは行っておらず、 FIPS 140-3 の受け付けのみを行っています。</para>
-  <important>
-   <title>&sles; &productnumber; と FIPS 140-3 について</title>
-  <para>&sles; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
- </important>
+  <para>
+    The latest FIPS 140-3 standard was approved in March 2019,
+    and is replacing 140-2.
+  </para>
 
-  <para>&suse; では認証済みモジュールの一覧を <link xlink:href="https://www.suse.com/support/security/certifications/"/> で公開しています。ここには様々な情報も提供されています。</para>
+  <!--taroth 2022-10-17: disabling the following link for now because it
+   still is based on FIPS 140-2-->
+  <!--<para>
+    &suse; maintains a list of certified modules at
+    <link xlink:href="https://www.suse.com/support/security/certifications/"/>, along with a lot of other useful information.
+  </para>-->
 </sect1>
 
 <sect1 xml:id="sec-fips-use-case">
@@ -59,32 +70,84 @@
 <sect1 xml:id="sec-fips-install">
   <title>FIPS のインストール</title>
   <para>新規にインストールしている場合は、 <package>patterns-server-enterprise-fips</package> という名称のパターンをインストールしてください。インストールが完了したあとは、 <xref linkend="sec-fips-enable"/> に示された手順に従って、 FIPS を有効化してください。</para>
+   <important>
+    <title>Unstable Packages </title>
+    <para>
+     While the relevant binaries are undergoing certification for FIPS 140-3,
+     the packages are not stable yet. If you need to enable FIPS mode
+     nevertheless, contact your &suse; sales representative.
+    </para>
+   </important>
+
   <para>お使いのシステムに <package>patterns-server-enterprise-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
 </sect1>
 
-<sect1 xml:id="sec-fips-enable">
-  <title>FIPS モードの有効化</title>
 
-<!-- The file paths for the two READMEs are different than in earlier
+ <!--<sect1 xml:id="sec-fips-enable">
+  <title>Enabling FIPS mode</title>
+
+ <para>
+  <remark>The file paths for the two READMEs are different than in earlier
   releases. In SLE 15 SP2 and older the path is /usr/share/doc/packages/openssh/
-  cschroder Jan 13, 2022 -->
-<para>FIPS の有効化を行うには、いくつかの作業が必要となります。まずは <package>openssh-common</package> パッケージに含まれる <filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename> と <filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename> のファイルをお読みください (いずれも英語) 。これらのファイルには、 &sle; における FIPS の重要な情報が書かれています。</para>
-  <para>FIPS が既に有効化されているかどうかを確認するには、下記のように実行します:</para>
+  cschroder Jan 13, 2022</remark>
+  Enabling FIPS takes a few steps. First, read the
+  <filename>/usr/share/doc/packages/openssh-common/README.FIPS</filename> and
+  <filename>/usr/share/doc/packages/openssh-common/README.SUSE</filename>
+  files, from the <package>openssh-common</package> package. These contain
+  important information about FIPS on &sle;.
+  </para>
+  <para>
+    Check if FIPS is already enabled:
+  </para>
   <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
 crypto.fips_enabled = 0</screen>
-  <para><literal>crypto.fips_enabled = 0</literal> が出力された場合、 FIPS は有効化されていません。有効化されていれば 1 になるはずです。</para>
-  <para>その後 <filename>/etc/default/grub</filename> ファイルを編集します。 <filename>/boot</filename> が個別のパーティションに存在していない場合であれば、 <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal> に <literal>fips=1</literal> を追加します・たとえば下記のようになります:</para>
+  <para>
+  <literal>crypto.fips_enabled = 0</literal> indicates that it is not enabled. A return value of 1 means that it is enabled.
+  </para>
+  <para>
+    Then edit <filename>/etc/default/grub</filename>. If
+    <filename>/boot</filename> is not on a separate partition, add
+    <literal>fips=1</literal> to
+    <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal>, like the following
+    example:
+  </para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1"</screen>
-  <para><filename>/boot</filename> が個別のパーティションとして存在する場合は、下記のようにしてそのパーティションを指定します。下記の例のうち、デバイス名をお使いの環境に合わせて指定してください:</para>
+  <para>
+    If <filename>/boot</filename> is on a separate partition, specify which
+    partition, like the following example, substituting the name of your boot
+    partition:
+  </para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1 boot=<replaceable>/dev/sda1"</replaceable></screen>
-  <para>あとは設定を保存して、 GRUB の設定と initramfs イメージを再構築します (<replaceable>名前</replaceable> には現在の initrd ファイルの名前を、 <replaceable>カーネルバージョン</replaceable> には現在実行しているカーネルのバージョンをそれぞれ入力します):</para>
+  <para>
+    Save your changes, and rebuild your GRUB configuration and initramfs
+    image (replace <replaceable>NAME</replaceable>
+      with the name of the current initrd and
+      <replaceable>KERNELVERSION</replaceable> with the currently running
+      kernel):
+  </para>
   <screen>&prompt.sudo;<command>grub2-mkconfig -o /boot/grub2/grub.cfg</command>
-&prompt.sudo;<command>/usr/bin/dracut --logfile /var/log/YaST2/mkinitrd.log --force /boot/$initrd-<replaceable>名前</replaceable> $<replaceable>カーネルバージョン</replaceable></command></screen>
-  <para>あとはシステムを再起動するだけです。再起動後に再度確認を行うと、下記のように FIPS が有効化されているはずです:</para>
+&prompt.sudo;<command>/usr/bin/dracut -/-logfile /var/log/YaST2/mkinitrd.log -/-force /boot/$initrd-<replaceable>NAME</replaceable> $<replaceable>KERNELVERSION</replaceable></command></screen>
+  <para>
+  <remark>
+  taroth 2022-10-17: remove the slashes for the options in the screen
+  above as soon as this section is enabled again - needed to insert slashes
+  temporarily to be able to comment the section
+  </remark>
+  Reboot, then verify your changes. The following example shows that
+  FIPS is enabled:
+  </para>
 <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
 crypto.fips_enabled = 1</screen>
-  <para>FIPS を有効化すると、システムがうまく起動しなくなってしまうことがあります。このような場合は、再起動時に GRUB メニューが表示された際、 <keycap>E</keycap> を押して編集モードに移行し、 <literal>linux</literal> の行内にある <literal>fips=1</literal> を削除したあと、 <keycap>F10</keycap> キーを押して起動してください。たいていは <filename>/etc/default/grub</filename> ファイルの記述ミスですので、この手順で一時的に FIPS を無効化して起動したあと、ファイルを修正して GRUB と initramfs を再構築し、起動し直してください。</para>
- </sect1>
+  <para>
+  After enabling FIPS it is possible that your system will not boot. If this
+  happens, reboot to bring up the GRUB menu. Press <keycap>E</keycap> to edit
+  your boot entry, and delete the <literal>fips</literal> entry from the
+  <literal>linux</literal> line. Press the <keycap>F10</keycap> key to boot.
+  This is a temporary change, and most likely the problem is an error in
+  <filename>/etc/default/grub</filename>. Correct it, rebuild GRUB and
+  initramfs, then reboot.
+  </para>
+ </sect1>-->
 
  <sect1 xml:id="sec-fips-samba-cifs">
   <title>Samba/CIFS での MD5 の使用禁止について</title>

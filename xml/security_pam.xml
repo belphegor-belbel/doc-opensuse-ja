@@ -44,9 +44,9 @@
  <sect1 xml:id="sec-pam-struc-files">
   <title>PAM 設定ファイルの構造</title>
 
-  <para>PAM は下記の 2 種類の方式で設定することができます:</para>
+  <para os="sles;sled;osuse">PAM は下記の 2 種類の方式で設定することができます:</para>
 
-  <variablelist>
+  <variablelist os="sles;sled;osuse">
    <varlistentry>
     <term>ファイルベースの設定 ( <filename>/etc/pam.conf</filename> )</term>
     <listitem>
@@ -60,6 +60,8 @@
     </listitem>
    </varlistentry>
   </variablelist>
+
+  <para os="slemicro">PAM の仕組みを利用する各サービス (もしくはプログラム) に対する設定を、 <filename>/etc/pam.d/</filename> ディレクトリ内のそれぞれの設定ファイルに保存する方式です。たとえば <systemitem class="daemon">sshd</systemitem> サービスに対する設定は、 <filename>/etc/pam.d/sshd</filename> ファイル内に書き込むことになります。</para>
 
   <para><filename>/etc/pam.d/</filename> ディレクトリ内のファイルでは、認証に使用する PAM モジュールを設定します。ファイル内の各行には最大で 4 つの値を指定します:</para>
 
@@ -159,7 +161,7 @@
 
   <para>このような PAM のグローバル設定ファイルは、 <command>pam-config</command> ツールを利用して管理します。このツールは設定ファイルに新しいモジュールを自動的に追加したり、既存の設定ファイルを変更したり、既存の設定ファイルからモジュール (もしくはオプション) を削除したりすることができます。このような仕組みにより、 PAM の設定ファイルを手作業で管理する手間が最小化できているばかりか、場合によっては全く不要にもなっています。</para>
 
-  <note>
+  <note os="sles;sled;osuse">
    <title>64 ビットアプリケーションと 32 ビットアプリケーションの混在する環境について</title>
    <para>64 ビットのオペレーティングシステムをお使いの場合、 32 ビットアプリケーション向けのランタイム環境をそろえることもできます。この場合、 32 ビット版の PAM モジュールを追加でインストールする必要があります。</para>
   </note>
@@ -231,7 +233,14 @@ auth  required  pam_unix.so  try_first_pass <co xml:id="co-security-pam-sshd-pam
 <screen>account  required  pam_unix.so  try_first_pass</screen>
   </example>
 
-  <example xml:id="dat-pam-common-password">
+  <example os="slemicro" xml:id="dat-pam-common-password-slemicro">
+   <title><literal>password</literal> セクションに対する既定の設定 ( <filename>common-password</filename> )</title>
+<screen>password  requisite  pam_cracklib.so
+password  optional   pam_gnome_keyring.so  use_authtok
+password  required   pam_unix.so  use_authtok nullok shadow try_first_pass</screen>
+  </example>
+
+  <example os="sles;sled;osuse" xml:id="dat-pam-common-password">
    <title><literal>password</literal> セクションに対する既定の設定 ( <filename>common-password</filename> )</title>
 <screen>password  requisite  pam_cracklib.so
 password  optional   pam_gnome_keyring.so  use_authtok
@@ -242,7 +251,17 @@ password  required   pam_unix.so  use_authtok nullok shadow try_first_pass</scre
 
   <para>パスワードなどの認証トークンを変更する際には、セキュリティチェックを必要とします。セキュリティチェックは <filename>pam_cracklib</filename> モジュールで行います。 <filename>pam_unix</filename> モジュールはその後に動作するモジュールで、 <filename>pam_cracklib</filename> から古いパスワードと新しいパスワードを受け取ります。これにより、パスワードの変更に際しても、ユーザ側で再度認証を行う必要が無いようにしています。また、このような仕組みにより、 <filename>pam_cracklib</filename> 側のチェックは回避できないようにもなっています。 <literal>account</literal> や <literal>auth</literal> の種類でパスワードの有効期限を確認するよう設定する場合は、 <literal>password</literal> モジュールも使用する必要があります。</para>
 
-  <example xml:id="dat-pam-common-session">
+  <example os="sles;sled;osuse" xml:id="dat-pam-common-session">
+   <title><literal>session</literal> セクションに対する既定の設定 ( <filename>common-session</filename> )</title>
+<screen>session  required  pam_limits.so
+session  required  pam_unix.so  try_first_pass
+session  optional  pam_umask.so
+session  optional  pam_systemd.so
+session  optional  pam_gnome_keyring.so auto_start only_if=gdm,gdm-password,lxdm,lightdm
+session  optional  pam_env.so</screen>
+  </example>
+
+  <example os="slemicro" xml:id="dat-pam-common-session-slemicro">
    <title><literal>session</literal> セクションに対する既定の設定 ( <filename>common-session</filename> )</title>
 <screen>session  required  pam_limits.so
 session  required  pam_unix.so  try_first_pass
@@ -296,7 +315,7 @@ DISPLAY     DEFAULT=${REMOTEHOST}:0.0  OVERRIDE=${DISPLAY}
 
 <!-- pam_mount is a stand-alone package -->
 
-  <sect2 xml:id="sec-pam-struc-conf-pammount">
+  <sect2 os="sles;sled;osuse" xml:id="sec-pam-struc-conf-pammount">
    <title>pam_mount.conf.xml</title>
    <para><systemitem>pam_mount</systemitem> は、ログインの処理中にユーザのホームディレクトリをマウントし、ログアウト時にマウントを解除するためのモジュールです。一般的には、中央のファイルサーバ内にユーザのホームディレクトリが存在しているような環境で使用するものです。この方式を使用することで、 <filename>/home</filename> 全体を共有してマウントする必要がなくなり、ログインしているユーザのホームディレクトリのみをマウントして使用できるようになります。</para>
    <para><systemitem>pam_mount</systemitem> をインストールすると、 <filename>/etc/security</filename> 内に <filename>pam_mount.conf.xml</filename> に対するテンプレートファイルが用意されるようになります。様々な要素の説明について、詳しくは <command>man 5 pam_mount.conf</command> で表示されるマニュアルページをお読みください。</para>
@@ -365,7 +384,7 @@ DISPLAY     DEFAULT=${REMOTEHOST}:0.0  OVERRIDE=${DISPLAY}
    <para>独自の PAM 設定を作成する場合は、 <literal>pam_systemd.so</literal> モジュールを<literal>session optional</literal> で指定するようにしてください。 <literal>pam_systemd.so</literal> を含めるように指定しないと、 &systemd; のタスク制限で問題が発生するようになります。詳しくは <literal>pam_systemd.so</literal> のマニュアルページをお読みください。</para>
   </warning>
  </sect1>
- <sect1 xml:id="sec-pam-info">
+ <sect1 os="sles;sled;osuse" xml:id="sec-pam-info">
   <title>さらなる情報</title>
 
   <para><systemitem>pam-doc</systemitem> パッケージをインストールすると、 <filename>/usr/share/doc/packages/pam</filename> ディレクトリ内に下記のような追加のドキュメンテーションが提供されるようになります:</para>
@@ -403,4 +422,6 @@ DISPLAY     DEFAULT=${REMOTEHOST}:0.0  OVERRIDE=${DISPLAY}
    </varlistentry>
   </variablelist>
  </sect1>
+
+ <xi:include os="slemicro" href="slemicro_pam_login.xml"/>
 </chapter>
