@@ -19,65 +19,129 @@
   <para>&sles; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
   <para>さらに詳しい情報をお求めの場合は、 &suse; の営業担当者にお尋ねください。</para>
  </important>
-
-<sect1 xml:id="sec-fips-concept">
+ <sect1 xml:id="sec-fips-concept">
   <title>FIPS の概要</title>
+
   <para>組織や企業が暗号化アプリケーションを FIPS 準拠として認定を受けるには、 Cryptographic Module Validation Program (CMVP) (詳しくは <link xlink:href="https://csrc.nist.gov/projects/cryptographic-module-validation-program"/> を参照) への申請を行わなくてはなりません。</para>
+
   <para>最新の FIPS 140-3 標準は 2019 年の 3 月に承認され、 FIPS 140-2 に置き換えられつつあります。</para>
 
   <!--taroth 2022-10-17: disabling the following link for now because it
    still is based on FIPS 140-2-->
-  <!--<para>
-    &suse; maintains a list of certified modules at
-    <link xlink:href="https://www.suse.com/support/security/certifications/"/>, along with a lot of other useful information.
-  </para>-->
-</sect1>
 
-<sect1 xml:id="sec-fips-use-case">
+  <!--<para>
+   &suse; maintains a list of certified modules at
+   <link xlink:href="https://www.suse.com/support/security/certifications/"/>, along with a lot of other useful information.
+   </para>-->
+ </sect1>
+ <sect1 xml:id="sec-fips-use-case">
   <title>FIPS モードを必要とする条件</title>
 
-    <warning>
-    <title>FIPS の使用には専門知識が必要となる件について</title>
-    <para>FIPS の管理は複雑で、専門的な知識が必要となります。適切な実装やテスト、トラブルシューティングの実施の全てにおいて、高度な知識が求められることに注意してください。</para>
+  <warning>
+   <title>FIPS の使用には専門知識が必要となる件について</title>
+   <para>FIPS の管理は複雑で、専門的な知識が必要となります。適切な実装やテスト、トラブルシューティングの実施の全てにおいて、高度な知識が求められることに注意してください。</para>
   </warning>
 
-  <para>&sle; で FIPS モードを有効化するのは簡単です。準拠が必要なサーバを FIPS モードで動作させるだけです。</para>
-  <para>FIPS 準拠を求められていない場合は、 FIPS モードの有効化を行わないほうが適切です。なぜなら、下記のような理由があるからです:</para>
-  <itemizedlist>
-    <listitem>
-      <para>FIPS では制限が強すぎます。特定の暗号化アルゴリズムの使用を強制するばかりか、そのアルゴリズムを適切に実装している認証済みバイナリのみを実行するようにしてしまいます。</para>
-    </listitem>
-    <listitem>
-      <para>アップグレードによって機能が制限されることもあります。</para>
-    </listitem>
-    <listitem>
-      <para>認証にかかる時間が非常に長く、認証された頃には古いリリースになってしまいます。</para>
-    </listitem>
-    <listitem>
-      <para>ssh, sshd, sftp-server などの認証済みバイナリは、その起動時に自分自身をチェックして、それが成功した場合にのみ動作するようになってしまいます。これによって、少ないながらも性能劣化を引き起こしてしまいます。</para>
-    </listitem>
-    <listitem>
-      <para>FIPS の管理は複雑で、比較的高度な知識が必要となります。</para>
-    </listitem>
-  </itemizedlist>
-</sect1>
+  <para>
+   Only run your &productnameshort; in FIPS mode when it is required to meet
+   compliance rules. Otherwise, we do not recommend running your systems in FIPS
+   mode.
+  </para>
 
-<sect1 xml:id="sec-fips-install">
+  <para>
+   Below are some reasons to <emphasis>not</emphasis> use FIPS mode (if not required explicitly):
+  </para>
+
+  <itemizedlist>
+   <listitem>
+    <para>FIPS では制限が強すぎます。特定の暗号化アルゴリズムの使用を強制するばかりか、そのアルゴリズムを適切に実装している認証済みバイナリのみを実行するようにしてしまいます。</para>
+   </listitem>
+   <listitem>
+    <para>アップグレードによって機能が制限されることもあります。</para>
+   </listitem>
+   <listitem>
+    <para>認証にかかる時間が非常に長く、認証された頃には古いリリースになってしまいます。</para>
+   </listitem>
+   <listitem>
+    <para>ssh, sshd, sftp-server などの認証済みバイナリは、その起動時に自分自身をチェックして、それが成功した場合にのみ動作するようになってしまいます。これによって、少ないながらも性能劣化を引き起こしてしまいます。</para>
+   </listitem>
+   <listitem>
+    <para>FIPS の管理は複雑で、比較的高度な知識が必要となります。</para>
+   </listitem>
+  </itemizedlist>
+ </sect1>
+ <sect1 os="slemicro" xml:id="sec-fips-slemicro-install">
   <title>FIPS のインストール</title>
+
+  <para>
+   To install the FIPS pattern on a running system, proceed as follows:
+  </para>
+
+  <procedure>
+   <step>
+    <para>
+     Install the <literal>patterns-microos-fips</literal> pattern:
+    </para>
+<screen>&prompt.root;transactional-update pkg install -t pattern microos-fips </screen>
+   </step>
+   <step>
+    <para>
+     Reboot your system.
+    </para>
+   </step>
+   <step>
+    <para>
+     Add the kernel command line parameter <literal>fips=1</literal> to the
+     boot loader configuration. To do so, edit the file
+     <filename>/etc/default/grub</filename> as follows:
+    </para>
+<screen>GRUB_CMDLINE_LINUX_DEFAULT="... <emphasis role="bold">fips=1</emphasis>...</screen>
+   </step>
+   <step>
+    <para>
+     After logging in to the system, run
+    </para>
+<screen>&prompt.root;transactional-update grub.cfg</screen>
+   </step>
+   <step>
+    <para>
+     Reboot your system.
+    </para>
+   </step>
+  </procedure>
+
+  <para>
+   Alternatively, you can install the pattern during the manual installation
+   under <guimenu>Software</guimenu> as described in <xref linkend="sec-settings"/>. Then
+   adjust the boot loader configuration as described in the procedure
+   above.
+  </para>
+
+  <important>
+   <title>パッケージの不安定性について</title>
+   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている期間は、パッケージは安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
+  </important>
+
+  <note>
+   <title>Installing and enabling FIPS on a running system</title>
+   <para>お使いのシステムに <package>patterns-base-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
+  </note>
+ </sect1>
+ <sect1 os="sles" xml:id="sec-fips-install">
+  <title>FIPS のインストール</title>
+
   <para>新規にインストールしている場合は、 <package>patterns-base-fips</package> という名称のパターンをインストールしてください。 <!-- インストールが完了したあとは、 <xref linkend="sec-fips-enable"/> に示された手順に従って、 FIPS を有効化してください。 --></para>
-   <important>
-    <title>パッケージの不安定性について</title>
-    <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている期間は、パッケージは安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
-   </important>
+
+  <important>
+   <title>パッケージの不安定性について</title>
+   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている期間は、パッケージは安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
+  </important>
 
   <para>お使いのシステムに <package>patterns-base-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
-</sect1>
-
-
+ </sect1>
  <!--<sect1 xml:id="sec-fips-enable">
   <title>Enabling FIPS mode</title>
-
- <para>
+  <para>
   <remark>The file paths for the two READMEs are different than in earlier
   releases. In SLE 15 SP2 and older the path is /usr/share/doc/packages/openssh/
   cschroder Jan 13, 2022</remark>
@@ -88,36 +152,36 @@
   important information about FIPS on &sle;.
   </para>
   <para>
-    Check if FIPS is already enabled:
+  Check if FIPS is already enabled:
   </para>
   <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
-crypto.fips_enabled = 0</screen>
+  crypto.fips_enabled = 0</screen>
   <para>
   <literal>crypto.fips_enabled = 0</literal> indicates that it is not enabled. A return value of 1 means that it is enabled.
   </para>
   <para>
-    Then edit <filename>/etc/default/grub</filename>. If
-    <filename>/boot</filename> is not on a separate partition, add
-    <literal>fips=1</literal> to
-    <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal>, like the following
-    example:
+  Then edit <filename>/etc/default/grub</filename>. If
+  <filename>/boot</filename> is not on a separate partition, add
+  <literal>fips=1</literal> to
+  <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal>, like the following
+  example:
   </para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1"</screen>
   <para>
-    If <filename>/boot</filename> is on a separate partition, specify which
-    partition, like the following example, substituting the name of your boot
-    partition:
+  If <filename>/boot</filename> is on a separate partition, specify which
+  partition, like the following example, substituting the name of your boot
+  partition:
   </para>
   <screen>GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet fips=1 boot=<replaceable>/dev/sda1"</replaceable></screen>
   <para>
-    Save your changes, and rebuild your GRUB configuration and initramfs
-    image (replace <replaceable>NAME</replaceable>
-      with the name of the current initrd and
-      <replaceable>KERNELVERSION</replaceable> with the currently running
-      kernel):
+  Save your changes, and rebuild your GRUB configuration and initramfs
+  image (replace <replaceable>NAME</replaceable>
+  with the name of the current initrd and
+  <replaceable>KERNELVERSION</replaceable> with the currently running
+  kernel):
   </para>
   <screen>&prompt.sudo;<command>grub2-mkconfig -o /boot/grub2/grub.cfg</command>
-&prompt.sudo;<command>/usr/bin/dracut -/-logfile /var/log/YaST2/mkinitrd.log -/-force /boot/$initrd-<replaceable>NAME</replaceable> $<replaceable>KERNELVERSION</replaceable></command></screen>
+  &prompt.sudo;<command>/usr/bin/dracut -/-logfile /var/log/YaST2/mkinitrd.log -/-force /boot/$initrd-<replaceable>NAME</replaceable> $<replaceable>KERNELVERSION</replaceable></command></screen>
   <para>
   <remark>
   taroth 2022-10-17: remove the slashes for the options in the screen
@@ -127,8 +191,8 @@ crypto.fips_enabled = 0</screen>
   Reboot, then verify your changes. The following example shows that
   FIPS is enabled:
   </para>
-<screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
-crypto.fips_enabled = 1</screen>
+  <screen>&prompt.sudo;<command>sysctl -a | grep fips</command>
+  crypto.fips_enabled = 1</screen>
   <para>
   After enabling FIPS it is possible that your system will not boot. If this
   happens, reboot to bring up the GRUB menu. Press <keycap>E</keycap> to edit
@@ -138,11 +202,12 @@ crypto.fips_enabled = 1</screen>
   <filename>/etc/default/grub</filename>. Correct it, rebuild GRUB and
   initramfs, then reboot.
   </para>
- </sect1>-->
-
+  </sect1>-->
  <sect1 xml:id="sec-fips-samba-cifs">
   <title>Samba/CIFS での MD5 の使用禁止について</title>
+
   <para>FIPS 標準において、 MD5 はハッシュアルゴリズムとしては不適切であり、ユーザ認証時に使用してはならないものとされています。 FIPS 準拠のネットワーク環境を運用している場合、クライアントもサーバも FIPS 準拠モードで動作させる必要がありますが、 Samba/CIFS ユーザの認証時には Kerberos サービスを使用しなければなりません。これは、他の全ての Samba 認証モードには MD5 が含まれてしまっているためです。</para>
-  <para>&samba; サーバの詳細については、 &storage_guide; の &samba; セクションをお読みください。</para>
+
+  <para os="sles">&samba; サーバの詳細については、 &storage_guide; の &samba; セクションをお読みください。</para>
  </sect1>
 </chapter>
