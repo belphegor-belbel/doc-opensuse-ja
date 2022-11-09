@@ -7,7 +7,7 @@
  <title>FIPS 140-3 準拠機能の有効化</title>
  <info>
   <abstract>
-   <para>アメリカ合衆国連邦政府向けの業務を行うような場合、暗号化アプリケーション (OpenSSL, GnuTLS, OpenJDK) の使用にあたっては Federal Information Processing Standards (FIPS) 140-3 に準拠するよう求められることがあります。 FIPS 140-3 は私企業が提供する暗号化モジュールに向けて作られたセキュリティ認定プログラムで、このプログラムへの準拠が求められた場合にのみ有効化すべき仕組みです (求められていない場合は、何もする必要はありません) 。本章では FIPS モードの有効化を行うための手順のほか、より詳しい情報のリンクも示しています。</para>
+   <para>アメリカ合衆国連邦政府向けの業務を行うような場合、暗号化アプリケーション (OpenSSL, GnuTLS, OpenJDK 等) の使用にあたっては Federal Information Processing Standards (FIPS) 140-3 に準拠するよう求められることがあります。 FIPS 140-3 は私企業が提供する暗号化モジュールに向けて作られたセキュリティ認定プログラムで、このプログラムへの準拠が求められた場合にのみ有効化すべき仕組みです (求められていない場合は、何もする必要はありません) 。本章では FIPS モードの有効化を行うための手順のほか、より詳しい情報のリンクも示しています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -15,8 +15,8 @@
   </dm:docmanager>
  </info>
  <important>
-  <title>&sles; &productnumber; と FIPS 140-3 について</title>
-  <para>&sles; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
+  <title>&productname; &productnumber; と FIPS 140-3 について</title>
+  <para>&productname; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
   <para>さらに詳しい情報をお求めの場合は、 &suse; の営業担当者にお尋ねください。</para>
  </important>
  <sect1 xml:id="sec-fips-concept">
@@ -42,15 +42,9 @@
    <para>FIPS の管理は複雑で、専門的な知識が必要となります。適切な実装やテスト、トラブルシューティングの実施の全てにおいて、高度な知識が求められることに注意してください。</para>
   </warning>
 
-  <para>
-   Only run your &productnameshort; in FIPS mode when it is required to meet
-   compliance rules. Otherwise, we do not recommend running your systems in FIPS
-   mode.
-  </para>
+  <para>準拠ルールによって明示的に指定された場合にのみ、 &productnameshort; を FIPS モードで動作させるようにしてください。明示的に指定されていない場合は、 FIPS モードを有効化しないことをお勧めします。</para>
 
-  <para>
-   Below are some reasons to <emphasis>not</emphasis> use FIPS mode (if not required explicitly):
-  </para>
+  <para>明示的に指定された場合を除いて FIPS モードを有効化 <emphasis>しない</emphasis> 理由としては、下記のようなものがあります:</para>
 
   <itemizedlist>
    <listitem>
@@ -73,58 +67,39 @@
  <sect1 os="slemicro" xml:id="sec-fips-slemicro-install">
   <title>FIPS のインストール</title>
 
-  <para>
-   To install the FIPS pattern on a running system, proceed as follows:
-  </para>
+  <para>動作中のシステムで FIPS パターンをインストールするには、下記の手順を実施してください:</para>
 
   <procedure>
    <step>
-    <para>
-     Install the <literal>patterns-microos-fips</literal> pattern:
-    </para>
-<screen>&prompt.root;transactional-update pkg install -t pattern microos-fips </screen>
+    <para>まずは <literal>patterns-microos-fips</literal> パターンをインストールします:</para>
+<screen>&prompt.root;transactional-update pkg install -t pattern microos-fips</screen>
    </step>
    <step>
-    <para>
-     Reboot your system.
-    </para>
+    <para>最後にシステムを再起動すれば完了です。</para>
    </step>
    <step>
-    <para>
-     Add the kernel command line parameter <literal>fips=1</literal> to the
-     boot loader configuration. To do so, edit the file
-     <filename>/etc/default/grub</filename> as follows:
-    </para>
+    <para>あとはブートローダの設定で、カーネルのコマンドラインパラメータに <literal>fips=1</literal> を追加します。これを行うには、 <filename>/etc/default/grub</filename> の下記の箇所を編集します:</para>
 <screen>GRUB_CMDLINE_LINUX_DEFAULT="... <emphasis role="bold">fips=1</emphasis>...</screen>
    </step>
    <step>
-    <para>
-     After logging in to the system, run
-    </para>
+    <para>システムにログインしたのち、下記を実行します:</para>
 <screen>&prompt.root;transactional-update grub.cfg</screen>
    </step>
    <step>
-    <para>
-     Reboot your system.
-    </para>
+    <para>最後にシステムを再起動すれば完了です。</para>
    </step>
   </procedure>
 
-  <para>
-   Alternatively, you can install the pattern during the manual installation
-   under <guimenu>Software</guimenu> as described in <xref linkend="sec-settings"/>. Then
-   adjust the boot loader configuration as described in the procedure
-   above.
-  </para>
+  <para>それ以外の方法として、 <xref linkend="sec-settings"/> で説明している <guimenu>ソフトウエア</guimenu> で手作業によるインストールを行う方法もあります。ブートローダの設定については、上述の通り実施してください。</para>
 
   <important>
    <title>パッケージの不安定性について</title>
-   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている期間は、パッケージは安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
+   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている間は、パッケージが安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
   </important>
 
   <note>
-   <title>Installing and enabling FIPS on a running system</title>
-   <para>お使いのシステムに <package>patterns-base-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
+   <title>動作中のシステムに対する FIPS パッケージのインストールと有効化</title>
+   <para>動作中のシステムに関連パッケージをインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
   </note>
  </sect1>
  <sect1 os="sles" xml:id="sec-fips-install">
@@ -134,7 +109,7 @@
 
   <important>
    <title>パッケージの不安定性について</title>
-   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている期間は、パッケージは安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
+   <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている間は、パッケージが安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
   </important>
 
   <para>お使いのシステムに <package>patterns-base-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
