@@ -150,33 +150,8 @@ system_u:object_r:var_t var</screen>
 
  <sect1 xml:id="sec-selinux-install">
   <title>&selnx; パッケージのインストール</title>
-  <para>zypper で &selnx; をインストールしている場合は、 <command>--search-descriptions</command> オプションで関連するパッケージを検索することができます。たとえば下記のような結果になります:</para>
-  <screen>&prompt.user;<command>zypper se --search-descriptions selinux</command>
-libselinux-devel
-libselinux1
-libselinux1-32bit
-libsemanage-devel
-libsemanage1
-libsepol-devel
-libsepol1
-mcstrans
-policycoreutils
-python3-policycoreutils
-python3-selinux
-python3-semanage
-python3-setools
-restorecond
-selinux-tools
-setools-console
-setools-devel
-setools-java
-setools-libs
-setools-tcl
-  </screen>
-  <para>これら全てのパッケージをインストールする必要はありません。下記のパッケージをインストールしてください:</para>
+  <para>下記のパッケージをインストールします:</para>
   <screen>&prompt.sudo;<command>zypper in restorecond policycoreutils setools-console</command></screen>
-  <para>&yast; を利用してインストールしたい場合は、ソフトウエア管理モジュールで "selinux" を検索し、 <package>restorecond</package> , <package>policycoreutils</package> , <package>setools-console</package> の各パッケージをインストールしてください。</para>
-
   <para>ただし、これではポリシーがインストールされません。テスト用に &opensuse; のポリシーをインストールしたい場合は、 <xref linkend="sec-selinux-getpolicy"/> を参照してください。</para>
 </sect1>
 
@@ -184,58 +159,55 @@ setools-tcl
   <title>&selnx; ポリシーのインストール</title>
   <para>ポリシーは &selnx; で必須の部品です。 &productname; &productnumber; では、既定のポリシーは同梱されておりませんので、お使いの環境に合わせてポリシーを構築しなければなりません。これは、 &selnx; が要件に合わせてカスタマイズしなければならない特性があるためです。詳しくは &suse; のサポートエンジニアにお問い合わせください。</para>
   <para>テスト用のポリシーは <link xlink:href="https://download.opensuse.org/repositories/security:/SELinux/"/> で公開されています。ここでは &slea; と &opensuse; に対応したポリシーが提供されています。お使いの &slea; バージョンに合ったリポジトリリンクをコピーして、 zypper に追加してください:</para>
-  <screen>&prompt.sudo;<command>zypper ar -f https://download.opensuse.org/repositories/security:/SELinux/&productnumber-leaprepo;/ Security-SELinux</command>
+  <procedure>
+   <step>
+    <para>
+    Copy the repository link that matches your &slea; version, and add it with Zypper:
+    </para>
+    <screen>&prompt.sudo;<command>zypper ar -f https://download.opensuse.org/repositories/security:/SELinux/&productnumber-leaprepo;/ Security-SELinux</command>
       </screen>
-  <para>&yast; を利用したい場合は、ソフトウエアリポジトリモジュールをお使いください。</para>
-  <para>このリポジトリには、ポリシーを含む様々な追加パッケージが含まれています。たとえば下記のようになります:</para>
-  <screen>
-selinux-autorelabel
-selinux-policy
-selinux-policy-devel
-selinux-policy-doc
-selinux-policy-minimum
-selinux-policy-mls
-selinux-policy-sandbox
-selinux-policy-targeted
-setools-gui
-setroubleshoot
-setroubleshoot-plugins
-setroubleshoot-server
-</screen>
-  <para>下記のパッケージをインストールします:</para>
- <screen>&prompt.sudo;<command>zypper in selinux-policy-targeted selinux-policy-devel selinux-autorelabel</command></screen>
- <para>次に実施すべきことは、 SELinux 自身や SELinux のモードを設定するための &grub; ブートローダの修正です ( <xref linkend="sec-selinux-grub"/> ) 。</para>
-</sect1>
+   </step>
+   <step>
+    <para>下記のパッケージをインストールします:</para>
+    <screen>&prompt.sudo;<command>zypper in selinux-policy-targeted selinux-policy-devel selinux-autorelabel</command></screen>
+   </step>
+  </procedure>
+ </sect1>
 
- <sect1 xml:id="sec-selinux-grub">
-   <title>&grub; ブートローダの修正</title>
-<para>&selnx; のパッケージをインストールしたあとは、 &grub; ブートローダの修正を行います。これは　<filename>/etc/default/grub</filename> ファイルを直接編集するか、もしくは &yast; で行うことができます。</para>
-  <para><filename>/etc/default/grub</filename> ファイルを直接編集する場合は、下記のような内容を <literal>GRUB_CMDLINE_LINUX_DEFAULT=</literal> 以下に追加します:</para>
-  <screen>security=selinux selinux=1 enforcing=0</screen>
+ <sect1 xml:id="sec-selinux-mode-permissive">
+   <title>Putting &selnx; into permissive mode</title>
+  <para>&selnx; のパッケージをインストールしたあとは、 &grub; ブートローダの修正を行います。これは　<filename>/etc/default/grub</filename> ファイルを直接編集するか、もしくは &yast; で行うことができます。</para>
+  <example xml:id="ex-sec-selinux-grubcfg">
+   <title>&grub; configuration file with &selnx;</title>
+   <para><filename>/etc/default/grub</filename> ファイルを直接編集する場合は、下記のような内容を <literal>GRUB_CMDLINE_LINUX_DEFAULT=</literal> 以下に追加します:</para>
+  <screen>security=selinux<co xml:id="co-security"/> selinux=1<co xml:id="co-selinux"/> enforcing=0<co xml:id="co-enforcing"/></screen>
+  <calloutlist>
+   <callout arearefs="co-security">
+    <para>このオプションを指定することにより、 &aa; ではなく &selnx; を使用することを宣言します。</para>
+   </callout>
+   <callout arearefs="co-selinux">
+    <para>
+     This parameter enables &selnx;.
+    </para>
+   </callout>
+   <callout arearefs="co-enforcing">
+    <para>
+     This parameter defines the mode in which to run &selnx;. Setting it
+     to <literal>0</literal> puts &selnx; in permissive mode. In this mode,
+     &selnx; is fully functional, but does not enforce any of the security settings in
+     the policy. In permissive mode, &selnx; does not protect your system but it still logs
+     everything that happens. Use this mode for testing and configuring your system.
+    </para>
+    <para>
+     After you have completed the &selnx; configuration, you can set the
+     parameter to <literal>1</literal> to run &selnx; in enforcing mode. In this mode,
+     it enforces the &selnx; policy and denies access based on policy rules.
+    </para>
+   </callout>
+  </calloutlist>
+  </example>
   <para>あとは <command>grub2-mkconfig -o /boot/grub2/grub.cfg</command> を実行して、 &grub; の設定を再生成してください。</para>
   <para>&yast; の場合は、 <menuchoice> <guimenu>システム</guimenu> <guimenu>ブートローダ</guimenu> <guimenu>カーネルのパラメータ</guimenu></menuchoice> を選択し、下記の内容を <guimenu>オプションのカーネルコマンドラインパラメータ</guimenu> に <literal>security=selinux selinux=1 enforcing=0</literal> を追加します。</para>
-  <para>それぞれのオプションの意味は下記のとおりです:</para>
-
-  <variablelist>
-   <varlistentry>
-    <term><literal>security=selinux</literal></term>
-    <listitem>
-     <para>このオプションを指定することにより、 &aa; ではなく &selnx; を使用することを宣言します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>selinux=1</literal></term>
-    <listitem>
-     <para>このオプションを指定することにより、 &selnx; を有効化します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><literal>enforcing=0</literal></term>
-    <listitem>
-     <para>このオプションを設定することにより、 permissive (許容) モードに設定します。このモードでは、 &selnx; が完全に動作するものの、ポリシー内に書かれたセキュリティ設定は、実際には強制されなくなります。このモードは &selnx; のテストや設定を行う際に使用します。システムの動作確認を終え、 &selnx; の保護を有効化したい場合は、このオプションを <literal>enforcing=1</literal> に設定し、 <filename>/etc/selinux/config</filename> 内で <literal>SELINUX=enforcing</literal> を設定してください。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
 
   <para>設定後に再起動を行うことで、 &selnx; がファイルシステム全体に対するラベルを再設定するようになります。ラベルの再設定が完了したあとは、  <command>sestatus -v</command> を実行して、正しく動作していることを確認してください。 <xref linkend="ex-selnx-sestatus" xrefstyle="select:label quotedtitle nopage"/> のような出力が現れるはずです。</para>
 
@@ -271,9 +243,53 @@ Controlling term:               root:object_r:user_devpts_t
   </example>
  </sect1>
 
+ <sect1 xml:id="sec-selinux-mode-enforcing">
+  <title>Putting &selnx; into enforcing mode</title>
+  <para>
+   At this point you have a completely functional &selnx; system, and it is
+   time to further configure it. In the current status, &selnx; is
+   operational but not in enforcing mode. This means that it does not limit
+   any activities and logs everything that it should be doing if it
+   were in enforcing mode. Review the log files to learn what activities
+   are not allowed.
+  </para>
+  <para>After running &selnx; in permissive mode first, you can try to
+   put &selnx; in enforcing mode and find out if you can still use
+   your server after doing so.
+  </para>
+  <warning>
+   <title>セキュリティコンテキストの表示</title>
+   <para>
+    When systems run &selnx; in permissive mode, users and processes
+    might label various file system objects incorrectly. This can cause
+    problems when switching to enforcing mode because &selnx; relies on
+    correct labels of file system objects.
+   </para>
+   <para>
+    Before switching into enforcing mode, make sure to first reset the
+    security context (extended attributes). Do so by executing
+    <command>restorecon -R /</command> and then reboot the system.
+    </para>
+  </warning>
+  <para>
+   To put &selnx; into enforcing mode, set the following parameter
+   in the &grub; configuration file: <parameter>enforcing=1</parameter>. For context,
+   see <xref linkend="ex-sec-selinux-grubcfg"/>.
+   Then edit <filename>/etc/selinux/config</filename> and make sure
+   <option>SELINUX=enforcing</option> is set.
+  </para>
+  <para>Now reboot your server and see if it still comes up the way you expect
+   it to and if you can still log in. If yes, leave it like
+   that and start <xref linkend="sec-selinux-configure" xrefstyle="select:title"/>.
+  </para>
+  <para>If you are not able to boot the server properly with &selnx;
+   in enforcing mode, switch back to permissive mode. Check the log files with
+   <command>less /var/log/audit/audit.log</command>. For more details, see
+   <xref linkend="sec-selinux-troubleshoot"/>.
+  </para>
+ </sect1>
  <sect1 xml:id="sec-selinux-configure">
   <title>&selnx; の設定</title>
-  <para>この時点では既に &selnx; システムを完全に動作できていますので、後は設定作業ということになります。現時点では &selnx; が動作しているものの、強制 (enforcing) モードにはなっていません。つまり、何をするにしても制限が加わっておらず、強制モードに移行した際に実施される制限がログに記録されるだけです。まずはログファイルを読んで、どのような処理が許可されていないのかを確認してください。ここでは、最初のテストとして &selnx; を強制モードに移行し、サーバを問題なく使用できるかどうかを確認します。これを行うには、 &grub; の設定ファイル内で <option>enforcing=1</option> を設定し、 <filename>/etc/selinux/config</filename> 内で <option>SELINUX=enforcing</option> を指定します。設定が終わったらサーバを再起動し、きちんと起動ができるかどうかを確認してください。問題なく動作した場合は、そのままサーバの残りの機能が一通り動作するよう、必要に応じて設定を変更していきます。サーバが起動できない状態になってしまった場合は、 &selnx; の強制モードを解除して、サーバの調整作業を行ってください。</para>
   <para>サーバの調整作業を行う場合、まずは &selnx; のインストールを確認します。既に <command>sestatus -v</command> というコマンドを使用していますので、ここに表示されている現在のモードとプロセス、ファイルコンテキストをそれぞれ確認します。あとは下記のように実行して、利用可能な可否設定を確認します:</para>
 <screen>&prompt.sudo;<command>semanage boolean -l</command></screen>
    <para>この可否設定の一覧を表示することで、ポリシーへのアクセスも同時に検証することができます。 <xref linkend="ex-selnx-ls-bool"/> には、このコマンドの出力例が示されています:</para>
