@@ -9,12 +9,12 @@
  also scoping, https://directory.fedoraproject.org/docs/389ds/design/memberof-scoping.html
  cjs, March 12 2022-->
  <info>
-  <title>モジュールの管理</title>
+  <title>プラグインの管理</title>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:translation>yes</dm:translation>
   </dm:docmanager>
  </info>
-  <para>下記のように入力して実行することで、有効化されているモジュールと無効化されているモジュールの両方を一覧表示することができます。ここでは &ds389; のインスタンス名ではなく、サーバのホスト名を指定することに注意してください。下記はホスト名が <replaceable>LDAPSERVER1</replaceable> である場合の例です:</para>
+  <para>下記のように入力して実行することで、有効化されているプラグインと無効化されているプラグインの両方を一覧表示することができます。ここでは &ds389; のインスタンス名ではなく、サーバのホスト名を指定することに注意してください。下記はホスト名が <replaceable>LDAPSERVER1</replaceable> である場合の例です:</para>
 <screen>
 &prompt.sudo;<command>dsconf -D "cn=Directory Manager" ldap://<replaceable>LDAPSERVER1</replaceable> plugin list</command>
 Enter password for cn=Directory Manager on ldap://<replaceable>LDAPSERVER1</replaceable>: <replaceable>PASSWORD</replaceable>
@@ -25,7 +25,7 @@ Account Usability Plugin
 ACL Plugin
 ACL preoperation
 [...]</screen>
-  <para>下記のコマンドは、 <xref linkend="sec-security-ldap-server-sssd"/> で利用している MemberOf プラグインを有効化するためのコマンドです。 MemberOf はユーザの検索を簡略化するための仕組みで、コマンドを 1 つ実行するだけで、ユーザが所属するグループの一覧を出力することができます。 MemberOf プラグインがないと、グループへの所属情報を検索するのに複数回のコマンド実行が必要になってしまいます。</para>
+  <para>下記のコマンドは、 <xref linkend="sec-security-ldap-server-sssd"/> で利用している <literal>MemberOf</literal> プラグインを有効化するためのコマンドです。 <literal>MemberOf</literal> はユーザの検索を簡略化するための仕組みで、コマンドを 1 つ実行するだけで、ユーザが所属するグループの一覧を出力することができます。 <literal>MemberOf</literal> プラグインがないと、グループへの所属情報を検索するのに複数回のコマンド実行が必要になってしまいます。</para>
   <screen>
 &prompt.sudo;<command>dsconf -D "cn=Directory Manager" ldap://<replaceable>LDAPSERVER1</replaceable> plugin memberof enable</command>
 </screen>
@@ -40,11 +40,11 @@ ACL preoperation
 &prompt.sudo;<command>systemctl restart dirsrv@<replaceable>LDAPSERVER1</replaceable>.service</command>
 </screen>
 
-<para>次にプラグインの設定を行います。下記の例では、 MemberOf プラグインを全ての項目に対して有効化します。なお、ここではサーバのホスト名ではなく、インスタンス名を指定してください:</para>
+<para>次にプラグインの設定を行います。下記の例では、 <literal>MemberOf</literal> プラグインを全ての項目に対して有効化します。なお、ここではサーバのホスト名ではなく、インスタンス名を指定してください:</para>
 <screen>&prompt.sudo;<command>dsconf <replaceable>LDAP1 plugin memberOf set --scope dc=example,dc=com</replaceable></command>
 Successfully changed the cn=MemberOf Plugin,cn=plugins,cn=config</screen>
 
-<para>MemberOf プラグインを有効化して設定を行うと、全ての新しいユーザやグループは自動的に MemberOf のターゲットとして設定されます。ただし、それまでに作成されたユーザやグループはそうではありません。そのため、手作業でそれらを設定する必要があります:</para>
+<para><literal>MemberOf</literal> プラグインを有効化して設定を行うと、全ての新しいユーザやグループは自動的に <literal>MemberOf</literal> のターゲットとして設定されます。ただし、それまでに作成されたユーザやグループはそうではありません。そのため、手作業でそれらを設定する必要があります:</para>
 <screen>&prompt.sudo;<command>dsidm LDAP1 user modify &exampleuserIII_plain; add:objectclass:nsmemberof</command>
 Successfully modified uid=&exampleuserIII_plain;,ou=people,dc=ldap1,dc=com</screen>
 
@@ -57,6 +57,6 @@ gidNumber: 102
 homeDirectory: /home/&exampleuserIII_plain;
 memberOf: cn=SERVER_ADMINS,ou=groups,dc=ldap1,dc=com</screen>
 
-<para>多数のユーザを修正する場合はそれなりの負荷がかかります。下記の例では、 1 つの fixup コマンドで既存の全てのユーザに対して MemberOf を設定しています:</para>
+<para>多数のユーザを修正する場合はそれなりの負荷がかかります。下記の例では、 1 つの <command>fixup</command> コマンドで既存の全ユーザに対して <literal>MemberOf</literal> を設定しています:</para>
 <screen>&prompt.sudo;<command>dsconf LDAP1 plugin memberof fixup -f '(objectClass=*)' dc=LDAP1,dc=COM</command></screen>
 </sect1>
