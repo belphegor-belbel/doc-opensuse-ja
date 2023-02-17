@@ -13,7 +13,7 @@ my @SkipNodes =
   "keycap", "co", "prompt", "varname", "citetitle", "tag", "superscript",
   "constant", "email", "trademark", "productname", "productnumber", "uri",
   "parameter", "indexterm", "primary", "secondary", "tertiary", "screen", "function",
-  "inlinemediaobject" );
+  "inlinemediaobject", "orgname" );
 my @literalNodes =
   ( "screen" );
 my @ignoreNodes =
