@@ -358,44 +358,6 @@ cio_ignore=all,!da5d,!f500-f502</screen>
     <para><literal>KDUMP_KEEP_OLD_DUMPS</literal> オプションは、カーネルダンプの保存数 (既定値: 5) を指定するためのものです。圧縮を行わない場合、ダンプのサイズは最大で物理メモリのサイズそのものになります。そのため、 <filename>/var</filename> のパーティションに対しては、十分な空き領域を用意しておいてください。</para>
    </important>
    <para>情報採取用のカーネルが起動して、クラッシュしたほうのカーネルのメモリ状態をファイルシステムに保存します。保存先は <literal>KDUMP_SAVEDIR</literal> オプションで設定します (既定値: <filename>/var/crash</filename>) 。 <literal>KDUMP_IMMEDIATE_REBOOT</literal> を <literal>yes</literal> に設定していると、本番用のカーネルを利用してシステムを自動的に再起動します。再起動が終わったらログインを行い、 <filename>/var/crash</filename> 内にダンプファイルが作成されていることを確認してください。</para>
-   <sect3 xml:id="sec-tuning-kdump-basic-manual-static-ip">
-    <title>&kdump; に対する固定 IP の設定</title>
-    <para>&kdump; でネットワークデバイスに対して固定 IP アドレスを設定する場合は、必要なネットワーク設定を <filename>/etc/sysconfig/kdump</filename> 内の <envar>KDUMP_COMMANDLINE_APPEND</envar> 変数に追加します。</para>
-    <important>
-     <title>&kdump; の設定ファイルの変更について</title>
-     <para><filename>/etc/sysconfig/kdump</filename> ファイルを変更した場合は、その変更点を反映させるため、必ず <command>systemctl restart kdump.service</command> を実行する必要があります。実行しておかないと、次にシステムを再起動するまで、変更が反映されなくなってしまいます。</para>
-    </important>
-    <example>
-     <title>&kdump;: 固定の IP アドレスを設定する場合の例</title>
-     <para>下記のように設定しているものとします:</para>
-     <itemizedlist>
-      <listitem>
-       <para>eth0 に対して <systemitem class="etheraddress">192.168.1.1/24</systemitem> という固定 IP アドレスを設定</para>
-      </listitem>
-      <listitem>
-       <para>eth1 に対して <systemitem class="etheraddress">10.50.50.100/20</systemitem> という固定 IP アドレスを設定</para>
-      </listitem>
-      <listitem>
-       <para><filename>/etc/sysconfig/kdump</filename> 内の &kdump; 設定は下記のようになっているものとします:</para>
-<screen>KDUMP_CPUS=1
-KDUMP_IMMEDIATE_REBOOT=yes
-KDUMP_SAVEDIR=ftp://anonymous@10.50.50.140/crashdump/
-KDUMP_KEEP_OLD_DUMPS=5
-KDUMP_FREE_DISK_SIZE=64
-KDUMP_VERBOSE=3
-KDUMP_DUMPLEVEL=31
-KDUMP_DUMPFORMAT=lzo
-KDUMP_CONTINUE_ON_ERROR=yes
-KDUMP_NETCONFIG=eth1:static
-KDUMP_NET_TIMEOUT=30</screen>
-      </listitem>
-     </itemizedlist>
-     <para>このような構成の場合、 &kdump; はダンプを FTP サーバに送信しようとする際、ネットワークに到達できないことになります。この問題を解決するには、 <filename>/etc/sysconfig/kdump</filename> 内の <envar>KDUMP_COMMANDLINE_APPEND</envar> にネットワーク設定を追加します。一般的な書式は下記のとおりです:</para>
-<screen>KDUMP_COMMANDLINE_APPEND='ip=<replaceable>クライアントの_IP</replaceable>:<replaceable>サーバの_IP</replaceable>:<replaceable>ゲートウエイの_IP</replaceable>:<replaceable>ネットマスク</replaceable>:<replaceable>クライアントのホスト名</replaceable>:<replaceable>デバイス名</replaceable>:<replaceable>プロトコル</replaceable>'</screen>
-     <para>上記の構成を当てはめると、下記のようになります:</para>
-<screen>KDUMP_COMMANDLINE_APPEND='ip=10.50.50.100:10.50.50.140:10.60.48.1:255.255.240.0:dump-client:eth1:none'</screen>
-    </example>
-   </sect3>
   </sect2>
 
   <sect2 xml:id="cha-tuning-kdump-basic-yast">
