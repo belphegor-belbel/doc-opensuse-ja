@@ -28,25 +28,14 @@ systemd-journald.service - Journal Service
   <title>ジャーナルの恒久化</title>
 
   <para>ジャーナルは既定では <filename>/run/log/journal/</filename> 内にデータを保存します。ただし、 <filename>/run/</filename> ディレクトリはメモリ内にのみ保持されるディレクトリであるため、システムを再起動するとログデータが失われてしまいます。ログデータを恒久的に保存するには、 <filename>/var/log/journal/</filename> を作成して適切な所有権とアクセス許可を設定し、 systemd-journald に対してデータを保存するように設定する必要があります。ただし &systemd; では、ログを恒久的に保存するように設定するだけで、自動的にこのディレクトリを作成して設定することができます。具体的には下記の手順を実施します:</para>
-
-  <procedure>
-   <step>
-    <para>&rootuser; で vi エディタを利用して、 <filename>/etc/systemd/journald.conf</filename> を開きます:</para>
-<screen>&prompt.root;vi /etc/systemd/journald.conf</screen>
-   </step>
-   <step>
-    <para><literal>Storage=</literal> を含む行のコメントを外して、下記のようにします:</para>
-<screen>[...]
-[Journal]
-Storage=persistent
-#Compress=yes
-[...]</screen>
-   </step>
-   <step>
-    <para>ファイルを保存して終了し、 systemd-journald を再起動します:</para>
-<screen>&prompt.root;systemctl restart systemd-journald</screen>
-   </step>
-  </procedure>
+<screen>&prompt.sudo; mkdir /var/log/journal
+&prompt.sudo; systemd-tmpfiles --create --prefix=/var/log/journal
+&prompt.sudo; journalctl --flush
+</screen>
+  <para>
+   Any log data stored in <filename>/run/log/journal/</filename> will be flushed into
+   <filename>/var/log/journal/</filename>.
+  </para>
  </sect1>
  <sect1 xml:id="sec-journalctl-switches">
   <title><command>journalctl</command> での便利なスイッチ</title>
