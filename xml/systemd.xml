@@ -4,661 +4,662 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-systemd">
- <title>&systemd; デーモン</title>
- <info>
-  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker/>
-   <dm:translation>yes</dm:translation>
-  </dm:docmanager>
- </info>
- <para>&systemd; はシステムの準備を担っているプロセスで、プロセス ID 1 のプロセスでもあります。 &systemd; はカーネルから直接起動され、通常であればプロセスを強制終了させるシグナル 9 を受けても耐えられる仕組みを備えています。 &systemd; 以外のプログラムは &systemd; から直接起動されるか、直接起動されたプロセスの子プロセスとして起動されます。また、 &systemd; は System V init デーモンの代替として提供され、 System V init との完全な互換性もあります (init スクリプトを動作させることができます) 。</para>
- <para>&systemd; を使用する主なメリットとして、サービスの起動を同時並行で行うことができることによる起動時間の短縮があげられます。これに加えて、 &systemd; では必要な場合にのみサービスを開始する仕組みも存在しています。これにより、システムの起動時には必要のないサービスの起動を省略することができるようになっています。また、 &systemd; ではカーネルコントロールグループ (cgroups) にも対応しているほか、スナップショットやシステムの状態の保存と復元なども行うことができます。詳しくは <link xlink:href="http://www.freedesktop.org/wiki/Software/systemd/"/> をお読みください。</para>
-   
- <sect1 xml:id="sec-boot-systemd-concept">
-  <title>&systemd; の考え方</title>
-  <para>本章では、 &systemd; の裏側にある考え方について説明しています。</para>
-  <para>&systemd; は Linux 向けのシステムとセッションのマネージャです。 System V および LSB の init スクリプトとの互換性があります。主な機能は下記のとおりです:</para>
+  <title>&systemd; デーモン</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>&systemd; はシステムの準備を担っているプロセスで、プロセス ID 1 のプロセスでもあります。 &systemd; はカーネルから直接起動され、通常であればプロセスを強制終了させるシグナル 9 を受けても耐えられる仕組みを備えています。 &systemd; 以外のプログラムは &systemd; から直接起動されるか、直接起動されたプロセスの子プロセスとして起動されます。また、 &systemd; は System V init デーモンの代替として提供され、 System V init との完全な互換性もあります (init スクリプトを動作させることができます) 。</para>
+  <para>&systemd; を使用する主なメリットとして、サービスの起動を同時並行で行うことができることによる起動時間の短縮があげられます。これに加えて、 &systemd; では必要な場合にのみサービスを開始する仕組みも存在しています。これにより、システムの起動時には必要のないサービスの起動を省略することができるようになっています。また、 &systemd; ではカーネルコントロールグループ (cgroups) にも対応しているほか、スナップショットやシステムの状態の保存と復元なども行うことができます。詳しくは <link xlink:href="http://www.freedesktop.org/wiki/Software/systemd/"/> をお読みください。</para>
+  <sect1 xml:id="sec-boot-systemd-concept">
+    <title>&systemd; の考え方</title>
+
+    <para>本章では、 &systemd; の裏側にある考え方について説明しています。</para>
+
+    <para>&systemd; は Linux 向けのシステムとセッションのマネージャです。 System V および LSB の init スクリプトとの互換性があります。主な機能は下記のとおりです:</para>
+
     <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para>並行動作機能の提供</para>
-    </listitem>
-    <listitem>
-     <para>サービス開始のためのソケットや D-Bus 機能</para>
-    </listitem>
-    <listitem>
-     <para>必要に応じたデーモンの起動</para>
-    </listitem>
-    <listitem>
-     <para>Linux cgroups を利用したプロセスの追跡</para>
-    </listitem>
-    <listitem>
-     <para>システム状態のスナップショット採取と復元</para>
-    </listitem>
-    <listitem>
-     <para>マウント／自動マウントのポイント管理</para>
-    </listitem>
-    <listitem>
-     <para>入念な依存関係ベースのサービス制御ロジックの実装</para>
-    </listitem>
-   </itemizedlist>
+      <listitem>
+        <para>並行動作機能の提供</para>
+      </listitem>
+      <listitem>
+        <para>サービス開始のためのソケットや D-Bus 機能</para>
+      </listitem>
+      <listitem>
+        <para>必要に応じたデーモンの起動</para>
+      </listitem>
+      <listitem>
+        <para>Linux cgroups を利用したプロセスの追跡</para>
+      </listitem>
+      <listitem>
+        <para>システム状態のスナップショット採取と復元</para>
+      </listitem>
+      <listitem>
+        <para>マウント／自動マウントのポイント管理</para>
+      </listitem>
+      <listitem>
+        <para>入念な依存関係ベースのサービス制御ロジックの実装</para>
+      </listitem>
+    </itemizedlist>
 
-   <sect2 xml:id="sec-boot-systemd-unitfile">
-   <title>ユニットファイル</title>
-   <para>ユニットファイルには、サービスやソケット、デバイスやマウントポイント、自動マウントポイントやスワップファイル／パーティション、起動ターゲットや監視対象のファイルシステムパス、タイマー制御や systemd による監督制御、一時的なシステム状態のスナップショットやリソース管理スライス、外部生成されたプロセスのグループなど、様々なものに対する情報が含まれています:</para>
-   <para>&systemd; では <quote>ユニットファイル</quote> という用語が多く現れますが、下記のような意味があります:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <formalpara>
-      <title>サービス</title>
-      <para>プロセス (たとえばデーモン) に関する情報が含まれています。ファイル名は <filename>.service</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>ターゲット</title>
-      <para>ユニットのグループ化や起動時の同期ポイントで使用されます。ファイル名は <filename>.target</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>ソケット</title>
-      <para><systemitem class="daemon">inetd</systemitem> のように、ソケットベースの有効化を行うための IPC やネットワークソケット、ファイルシステム FIFO などの情報が含まれています。ファイル名は <filename>.socket</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>パス</title>
-      <para>たとえばファイルが変更されたときにサービスを開始するなど、他のユニットのトリガーとして使用するものが含まれています。ファイル名は <filename>.path</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>タイマー</title>
-      <para>タイマー制御の情報やタイマーベースの有効化に関する情報が含まれています。ファイル名は <filename>.timer</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>マウントポイント</title>
-      <para>通常は fstab 生成器で自動生成されるものです。ファイル名は <filename>.mount</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>自動マウントポイント</title>
-      <para>ファイルシステムの自動マウントポイントに関する情報が含まれています。ファイル名は <filename>.automount</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>スワップ</title>
-      <para>スワップデバイスやメモリページングのためのファイルに関する情報が含まれています。ファイル名は <filename>.swap</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>デバイス</title>
-      <para>sysfs/udev(7) のデバイスツリーで開示されるデバイスユニットに関する情報が含まれています。ファイル名は <filename>.device</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-    <listitem>
-     <formalpara>
-      <title>スコープ／スライス</title>
-      <para>プロセスのグループを階層構造的にリソース管理するための考え方です。ファイル名は <filename>.scope</filename> または <filename>.slice</filename> で終わります。</para>
-     </formalpara>
-    </listitem>
-   </itemizedlist>
-     
-   <para>&systemd; のユニットファイルについて、さらに詳しく知るには、 <link xlink:href="http://www.freedesktop.org/software/systemd/man/systemd.unit.html"/> をお読みください。</para>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-basics">
-  <title>基本的な使い方</title>
+    <sect2 xml:id="sec-boot-systemd-unitfile">
+      <title>ユニットファイル</title>
+      <para>ユニットファイルには、サービスやソケット、デバイスやマウントポイント、自動マウントポイントやスワップファイル／パーティション、起動ターゲットや監視対象のファイルシステムパス、タイマー制御や systemd による監督制御、一時的なシステム状態のスナップショットやリソース管理スライス、外部生成されたプロセスのグループなど、様々なものに対する情報が含まれています:</para>
+      <para>&systemd; では <quote>ユニットファイル</quote> という用語が多く現れますが、下記のような意味があります:</para>
+      <itemizedlist mark="bullet" spacing="normal">
+        <listitem>
+          <formalpara>
+            <title>サービス</title>
+            <para>プロセス (たとえばデーモン) に関する情報が含まれています。ファイル名は <filename>.service</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>ターゲット</title>
+            <para>ユニットのグループ化や起動時の同期ポイントで使用されます。ファイル名は <filename>.target</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>ソケット</title>
+            <para><systemitem class="daemon">inetd</systemitem> のように、ソケットベースの有効化を行うための IPC やネットワークソケット、ファイルシステム FIFO などの情報が含まれています。ファイル名は <filename>.socket</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>パス</title>
+            <para>たとえばファイルが変更されたときにサービスを開始するなど、他のユニットのトリガーとして使用するものが含まれています。ファイル名は <filename>.path</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>タイマー</title>
+            <para>タイマー制御の情報やタイマーベースの有効化に関する情報が含まれています。ファイル名は <filename>.timer</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>マウントポイント</title>
+            <para>通常は fstab 生成器で自動生成されるものです。ファイル名は <filename>.mount</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>自動マウントポイント</title>
+            <para>ファイルシステムの自動マウントポイントに関する情報が含まれています。ファイル名は <filename>.automount</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>スワップ</title>
+            <para>スワップデバイスやメモリページングのためのファイルに関する情報が含まれています。ファイル名は <filename>.swap</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>デバイス</title>
+            <para>sysfs/udev(7) のデバイスツリーで開示されるデバイスユニットに関する情報が含まれています。ファイル名は <filename>.device</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+        <listitem>
+          <formalpara>
+            <title>スコープ／スライス</title>
+            <para>プロセスのグループを階層構造的にリソース管理するための考え方です。ファイル名は <filename>.scope</filename> または <filename>.slice</filename> で終わります。</para>
+          </formalpara>
+        </listitem>
+      </itemizedlist>
+      <para>&systemd; のユニットファイルについて、さらに詳しく知るには、 <link xlink:href="http://www.freedesktop.org/software/systemd/man/systemd.unit.html"/> をお読みください。</para>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-basics">
+    <title>基本的な使い方</title>
 
-  <para>System V init システムには、サービスを管理するためのいくつかのコマンドが用意されていました。 <command>insserv</command> , <command>telinit</command> などがそれにあたります。 &systemd; ではサービスの管理を簡単にするために、これらの機能を <command>systemctl</command> という 1 つのコマンドにまとめて、覚えやすくしています。このコマンドは、 <command>git</command> や <command>zypper</command> のように、 <quote>サブコマンド</quote> を指定して各種の処理を行います。</para>
+    <para>System V init システムには、サービスを管理するためのいくつかのコマンドが用意されていました。 <command>insserv</command> , <command>telinit</command> などがそれにあたります。 &systemd; ではサービスの管理を簡単にするために、これらの機能を <command>systemctl</command> という 1 つのコマンドにまとめて、覚えやすくしています。このコマンドは、 <command>git</command> や <command>zypper</command> のように、 <quote>サブコマンド</quote> を指定して各種の処理を行います。</para>
 
 <screen>systemctl <replaceable>一般オプション</replaceable> <replaceable>サブコマンド</replaceable> <replaceable>サブコマンドのオプション</replaceable></screen>
 
-  <para>詳しい説明をご希望の場合は、 <command>man 1 systemctl</command> をお読みください。</para>
+    <para>詳しい説明をご希望の場合は、 <command>man 1 systemctl</command> をお読みください。</para>
 
-  <tip>
-   <title>端末への出力と bash 補完</title>
-   <para>出力先が端末であり、パイプやファイルなどではない場合、 &systemd; が長い出力を行う際には既定でページ制御機能を起動する仕組みを備えています。ページ制御機能を無効化するには、 <option>--no-pager</option> オプションを指定します。</para>
-   <para>&systemd; では bash の補完機能も用意されています。これにより、サブコマンドの冒頭部分だけを入力して <keycap function="tab"/> を押すと、自動的に残りを補完することができます。この機能は <systemitem>bash</systemitem> シェル内でのみ利用可能な機能で、 <systemitem class="resource">bash-completion</systemitem> パッケージをインストールする必要があります。</para>
-  </tip>
+    <tip>
+      <title>端末への出力と bash 補完</title>
+      <para>出力先が端末であり、パイプやファイルなどではない場合、 &systemd; が長い出力を行う際には既定でページ制御機能を起動する仕組みを備えています。ページ制御機能を無効化するには、 <option>--no-pager</option> オプションを指定します。</para>
+      <para>&systemd; では bash の補完機能も用意されています。これにより、サブコマンドの冒頭部分だけを入力して <keycap function="tab"/> を押すと、自動的に残りを補完することができます。この機能は <systemitem>bash</systemitem> シェル内でのみ利用可能な機能で、 <systemitem class="resource">bash-completion</systemitem> パッケージをインストールする必要があります。</para>
+    </tip>
 
-  <sect2 xml:id="sec-boot-systemd-basics-services">
-   <title>動作中のシステムにおけるサービスの管理</title>
-   <para>サービスを管理するためのサブコマンドは、 System V init でサービスを管理するためのサブコマンドとほぼ同じです (<command>start</command> , <command>stop</command> , ...) 。サービス管理コマンドの書式は下記のとおりです:</para>
-   <variablelist>
-    <varlistentry>
-     <term>&systemd;</term>
-     <listitem><screen>systemctl reload|restart|start|status|stop|<replaceable>...</replaceable> <replaceable>サービス名_(複数可)</replaceable></screen></listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>System V init</term>
-     <listitem><screen>rc<replaceable>サービス名</replaceable> reload|restart|start|status|stop|<replaceable>...</replaceable></screen></listitem>
-    </varlistentry>
-   </variablelist>
-   <para>&systemd; では、複数のサービスを一括で管理することができます。 System V init ではそれぞれの init スクリプトを別々に動作させる必要がありましたが、 systemd では下記のように実行するだけです:</para>
+    <sect2 xml:id="sec-boot-systemd-basics-services">
+      <title>動作中のシステムにおけるサービスの管理</title>
+      <para>サービスを管理するためのサブコマンドは、 System V init でサービスを管理するためのサブコマンドとほぼ同じです (<command>start</command> , <command>stop</command> , ...) 。サービス管理コマンドの書式は下記のとおりです:</para>
+      <variablelist>
+        <varlistentry>
+          <term>&systemd;</term>
+          <listitem><screen>systemctl reload|restart|start|status|stop|<replaceable>...</replaceable> <replaceable>サービス名_(複数可)</replaceable></screen></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>System V init</term>
+          <listitem><screen>rc<replaceable>サービス名</replaceable> reload|restart|start|status|stop|<replaceable>...</replaceable></screen></listitem>
+        </varlistentry>
+      </variablelist>
+      <para>&systemd; では、複数のサービスを一括で管理することができます。 System V init ではそれぞれの init スクリプトを別々に動作させる必要がありましたが、 systemd では下記のように実行するだけです:</para>
 <screen>&prompt.sudo;systemctl start <replaceable>1_つめのサービス名</replaceable> <replaceable>2_つめのサービス名</replaceable></screen>
-   <para>システムで利用可能な全てのサービスを一覧表示するには、下記のように実行します:</para>
+      <para>システムで利用可能な全てのサービスを一覧表示するには、下記のように実行します:</para>
 <screen>&prompt.sudo;systemctl list-unit-files --type=service</screen>
-   <para>下記の表では、 &systemd; と System V init における主要なサービス管理コマンドについて、その比較を行っています:</para>
-   <table rowsep="1">
-    <title>サービス管理のコマンド</title>
-    <tgroup cols="3">
-     <colspec colnum="1" colname="1" colwidth="50*"/>
-     <colspec colnum="2" colname="2" colwidth="30*"/>
-     <colspec colnum="3" colname="3" colwidth="20*"/>
-     <thead>
-      <row>
-       <entry colname="1">
-        <para>処理</para>
-       </entry>
-       <entry colname="2">
-        <para>&systemd; のコマンド</para>
-       </entry>
-       <entry colname="3">
-        <para>System V init のコマンド</para>
-       </entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>開始</title>
-         <para/>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>start</screen></entry>
-       <entry colname="3"><screen>start</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>停止</title>
-         <para/>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>stop</screen></entry>
-       <entry colname="3"><screen>stop</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>再起動</title>
-         <para>サービスを一旦停止し、その後起動し直します。その時点でサービスが動作していない場合は、単純に起動します。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>restart</screen></entry>
-       <entry colname="3"><screen>restart</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>条件付き再起動</title>
-         <para>現在動作中の場合にのみサービスを再起動します。その時点でサービスが動作していない場合は、何も行いません。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>try-restart</screen></entry>
-       <entry colname="3"><screen>try-restart</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>再読み込み</title>
-         <para>サービスの運用を止めることなく、サービスに対して設定ファイルを読み込み直すように指示します。使用例: Apache に対して修正された <filename>httpd.conf</filename> 設定ファイルを読み込み直すなど。ただし全てのサービスが再読み込みに対応しているわけではありません。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>reload</screen></entry>
-       <entry colname="3"><screen>reload</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>再読み込みまたは再起動</title>
-         <para>再読み込みに対応するサービスの場合は、再読み込みを行います。対応していない場合は再起動を行います。サービスが動作していない場合は、起動を行います。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>reload-or-restart</screen></entry>
-       <entry colname="3"><screen>無し</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>条件付き再読み込みまたは再起動</title>
-         <para>再読み込みに対応するサービスの場合は、再読み込みを行います。対応していない場合は、サービスが動作している場合に限って再起動を行います。サービスが動作していない場合は、何も行いません。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>reload-or-try-restart</screen></entry>
-       <entry colname="3"><screen>無し</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>状態に関する詳細な情報の取得</title>
-         <para>サービスの状態に関する情報を一覧表示します。 &systemd; では、説明や実行ファイル、状態や cgroup のほか、サービスが直近に発したメッセージ (詳しくは <xref linkend="sec-boot-systemd-basics-services-debugging"/> をお読みください) も表示します。 System V init との詳細度の違いは、サービスによって異なります。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>status</screen></entry>
-       <entry colname="3"><screen>status</screen></entry>
-      </row>
-      <row>
-       <entry colname="1">
-        <formalpara>
-         <title>状態に関する簡潔な情報の取得</title>
-         <para>サービスが動作中かどうかを表示します。</para>
-        </formalpara>
-       </entry>
-       <entry colname="2"><screen>is-active</screen></entry>
-       <entry colname="3"><screen>status</screen></entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </table>
-  </sect2>
+      <para>下記の表では、 &systemd; と System V init における主要なサービス管理コマンドについて、その比較を行っています:</para>
+      <table rowsep="1">
+        <title>サービス管理のコマンド</title>
+        <tgroup cols="3">
+          <colspec colnum="1" colname="1" colwidth="50*"/>
+          <colspec colnum="2" colname="2" colwidth="30*"/>
+          <colspec colnum="3" colname="3" colwidth="20*"/>
+          <thead>
+            <row>
+              <entry colname="1">
+                <para>処理</para>
+              </entry>
+              <entry colname="2">
+                <para>&systemd; のコマンド</para>
+              </entry>
+              <entry colname="3">
+                <para>System V init のコマンド</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>開始</title>
+                  <para/>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>start</screen></entry>
+              <entry colname="3"><screen>start</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>停止</title>
+                  <para/>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>stop</screen></entry>
+              <entry colname="3"><screen>stop</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>再起動</title>
+                  <para>サービスを一旦停止し、その後起動し直します。その時点でサービスが動作していない場合は、単純に起動します。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>restart</screen></entry>
+              <entry colname="3"><screen>restart</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>条件付き再起動</title>
+                  <para>現在動作中の場合にのみサービスを再起動します。その時点でサービスが動作していない場合は、何も行いません。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>try-restart</screen></entry>
+              <entry colname="3"><screen>try-restart</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>再読み込み</title>
+                  <para>サービスの運用を止めることなく、サービスに対して設定ファイルを読み込み直すように指示します。使用例: Apache に対して修正された <filename>httpd.conf</filename> 設定ファイルを読み込み直すなど。ただし全てのサービスが再読み込みに対応しているわけではありません。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>reload</screen></entry>
+              <entry colname="3"><screen>reload</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>再読み込みまたは再起動</title>
+                  <para>再読み込みに対応するサービスの場合は、再読み込みを行います。対応していない場合は再起動を行います。サービスが動作していない場合は、起動を行います。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>reload-or-restart</screen></entry>
+              <entry colname="3"><screen>無し</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>条件付き再読み込みまたは再起動</title>
+                  <para>再読み込みに対応するサービスの場合は、再読み込みを行います。対応していない場合は、サービスが動作している場合に限って再起動を行います。サービスが動作していない場合は、何も行いません。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>reload-or-try-restart</screen></entry>
+              <entry colname="3"><screen>無し</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>状態に関する詳細な情報の取得</title>
+                  <para>サービスの状態に関する情報を一覧表示します。 &systemd; では、説明や実行ファイル、状態や cgroup のほか、サービスが直近に発したメッセージ (詳しくは <xref linkend="sec-boot-systemd-basics-services-debugging"/> をお読みください) も表示します。 System V init との詳細度の違いは、サービスによって異なります。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>status</screen></entry>
+              <entry colname="3"><screen>status</screen></entry>
+            </row>
+            <row>
+              <entry colname="1">
+                <formalpara>
+                  <title>状態に関する簡潔な情報の取得</title>
+                  <para>サービスが動作中かどうかを表示します。</para>
+                </formalpara>
+              </entry>
+              <entry colname="2"><screen>is-active</screen></entry>
+              <entry colname="3"><screen>status</screen></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-basics-services-enabling">
-   <title>サービスの恒久的な有効化／無効化</title>
-   <para>前のセクション内で説明しているサービス管理コマンドを利用することで、現在のセッションに対してサービスを制御することができます。 &systemd; ではサービスを恒久的に有効化したり無効化したりすることで、必要に応じて起動したり、もしくは常に利用できないようにしたりすることができます。これは &yast; で行うことができるほか、コマンドラインでも実施することができます。</para>
-   <sect3 xml:id="sec-boot-systemd-basics-services-enabling-cmd">
-    <title>コマンドラインからのサービスの有効化／無効化</title>
-    <para>下記の表には、それぞれ &systemd; と System V init で有効化したり無効化したりするためのコマンドを示しています。</para>
-    <important>
-     <title>サービスの起動</title>
-     <para>コマンドラインからサービスを有効化しても、サービスは自動では起動しません。時間のシステムの起動時や、ランレベル／ターゲットの変更時に起動されるよう設定されるだけです。有効化したあとにサービスを起動するには、 <command>systemctl start <replaceable>サービス名</replaceable></command> や <command>rc <replaceable>サービス名</replaceable> start</command> を明示的に実行する必要があります。</para>
-    </important>
-    <table rowsep="1">
-     <title>サービスの有効化と無効化のコマンド</title>
-     <tgroup cols="3">
-      <colspec colnum="1" colname="1" colwidth="32*"/>
-      <colspec colnum="2" colname="2" colwidth="40*"/>
-      <colspec colnum="3" colname="3" colwidth="28*"/>
-      <thead>
-       <row>
-        <entry colname="1">
-         <para>処理</para>
-        </entry>
-        <entry colname="2">
-         <para>&systemd; のコマンド</para>
-        </entry>
-        <entry colname="3">
-         <para>System V init のコマンド</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>有効化</title>
-          <para/>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl enable <replaceable>サービス名_(複数可)</replaceable></command></para>
-        </entry>
-        <entry colname="3">
-         <para><command>insserv <replaceable>サービス名_(複数可)</replaceable></command> , <command>chkconfig -a <replaceable>サービス名_(複数可)</replaceable></command></para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>無効化</title>
-          <para/>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl disable <replaceable>サービス名_(複数可)</replaceable>.service</command></para>
-        </entry>
-        <entry colname="3">
-         <para><command>insserv -r <replaceable>サービス名_(複数可)</replaceable></command> , <command>chkconfig -d <replaceable>サービス名_(複数可)</replaceable></command></para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>確認</title>
-          <para>サービスを有効化しているかどうかを表示します。</para>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl is-enabled <replaceable>サービス名</replaceable></command></para>
-        </entry>
-        <entry colname="3">
-         <para><command>chkconfig <replaceable>サービス名</replaceable></command></para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>再有効化</title>
-          <para>このコマンドは、サービスを再起動するのと同様に、いったんサービスを無効化して有効化し直します。サービスを既定値に戻したい場合に便利です。</para>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl reenable <replaceable>サービス名</replaceable></command></para>
-        </entry>
-        <entry colname="3">
-         <para>(無し)</para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>マスク</title>
-          <para>サービスを <quote>無効化</quote> したあとでも、手作業でサービスを開始することができます。マスクを実施すると、サービスを完全に無効化することができます。注意してお使いください。</para>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl mask <replaceable>サービス名</replaceable></command></para>
-        </entry>
-        <entry colname="3">
-         <para>(無し)</para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <formalpara>
-          <title>マスク解除</title>
-          <para>マスクを設定したサービスは、マスクを解除しないと再度使用することができなくなります。</para>
-         </formalpara>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl unmask <replaceable>サービス名</replaceable></command></para>
-        </entry>
-        <entry colname="3">
-         <para>(無し)</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </table>
-   </sect3>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-boot">
-  <title>システムの起動とターゲットの管理</title>
+    <sect2 xml:id="sec-boot-systemd-basics-services-enabling">
+      <title>サービスの恒久的な有効化／無効化</title>
+      <para>前のセクション内で説明しているサービス管理コマンドを利用することで、現在のセッションに対してサービスを制御することができます。 &systemd; ではサービスを恒久的に有効化したり無効化したりすることで、必要に応じて起動したり、もしくは常に利用できないようにしたりすることができます。これは &yast; で行うことができるほか、コマンドラインでも実施することができます。</para>
+      <sect3 xml:id="sec-boot-systemd-basics-services-enabling-cmd">
+        <title>コマンドラインからのサービスの有効化／無効化</title>
+        <para>下記の表には、それぞれ &systemd; と System V init で有効化したり無効化したりするためのコマンドを示しています。</para>
+        <important>
+          <title>サービスの起動</title>
+          <para>コマンドラインからサービスを有効化しても、サービスは自動では起動しません。時間のシステムの起動時や、ランレベル／ターゲットの変更時に起動されるよう設定されるだけです。有効化したあとにサービスを起動するには、 <command>systemctl start <replaceable>サービス名</replaceable></command> や <command>rc <replaceable>サービス名</replaceable> start</command> を明示的に実行する必要があります。</para>
+        </important>
+        <table rowsep="1">
+          <title>サービスの有効化と無効化のコマンド</title>
+          <tgroup cols="3">
+            <colspec colnum="1" colname="1" colwidth="32*"/>
+            <colspec colnum="2" colname="2" colwidth="40*"/>
+            <colspec colnum="3" colname="3" colwidth="28*"/>
+            <thead>
+              <row>
+                <entry colname="1">
+                  <para>処理</para>
+                </entry>
+                <entry colname="2">
+                  <para>&systemd; のコマンド</para>
+                </entry>
+                <entry colname="3">
+                  <para>System V init のコマンド</para>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>有効化</title>
+                    <para/>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl enable <replaceable>サービス名_(複数可)</replaceable></command></para>
+                </entry>
+                <entry colname="3">
+                  <para><command>insserv <replaceable>サービス名_(複数可)</replaceable></command> , <command>chkconfig -a <replaceable>サービス名_(複数可)</replaceable></command></para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>無効化</title>
+                    <para/>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl disable <replaceable>サービス名_(複数可)</replaceable>.service</command></para>
+                </entry>
+                <entry colname="3">
+                  <para><command>insserv -r <replaceable>サービス名_(複数可)</replaceable></command> , <command>chkconfig -d <replaceable>サービス名_(複数可)</replaceable></command></para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>確認</title>
+                    <para>サービスを有効化しているかどうかを表示します。</para>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl is-enabled <replaceable>サービス名</replaceable></command></para>
+                </entry>
+                <entry colname="3">
+                  <para><command>chkconfig <replaceable>サービス名</replaceable></command></para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>再有効化</title>
+                    <para>このコマンドは、サービスを再起動するのと同様に、いったんサービスを無効化して有効化し直します。サービスを既定値に戻したい場合に便利です。</para>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl reenable <replaceable>サービス名</replaceable></command></para>
+                </entry>
+                <entry colname="3">
+                  <para>(無し)</para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>マスク</title>
+                    <para>サービスを <quote>無効化</quote> したあとでも、手作業でサービスを開始することができます。マスクを実施すると、サービスを完全に無効化することができます。注意してお使いください。</para>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl mask <replaceable>サービス名</replaceable></command></para>
+                </entry>
+                <entry colname="3">
+                  <para>(無し)</para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <formalpara>
+                    <title>マスク解除</title>
+                    <para>マスクを設定したサービスは、マスクを解除しないと再度使用することができなくなります。</para>
+                  </formalpara>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl unmask <replaceable>サービス名</replaceable></command></para>
+                </entry>
+                <entry colname="3">
+                  <para>(無し)</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect3>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-boot">
+    <title>システムの起動とターゲットの管理</title>
 
-  <para>システムの起動やシャットダウンは、いずれも &systemd; が管理しています。この観点からすると、カーネルは裏で動作するバックグラウンド (背景) プロセスであり、 CPU 時間と他のプログラムからのハードウエアアクセス要求を処理する存在であると言えます。</para>
+    <para>システムの起動やシャットダウンは、いずれも &systemd; が管理しています。この観点からすると、カーネルは裏で動作するバックグラウンド (背景) プロセスであり、 CPU 時間と他のプログラムからのハードウエアアクセス要求を処理する存在であると言えます。</para>
 
-  <sect2 xml:id="sec-boot-systemd-targets">
-   <title>ターゲットとランレベルの違い</title>
-   <para>System V init では、システムは <quote>ランレベル</quote> と呼ばれる状態に対して起動を行います。ランレベルは、どのようにシステムを起動するのかと、どのサービスを起動するのかを定義するものです。ランレベルは番号で設定されていて、よく知られているものは <literal>0</literal> (システムのシャットダウン), <literal>3</literal> (ネットワーク付きのマルチユーザ環境), <literal>5</literal> (ネットワークとディスプレイマネージャ付きのマルチユーザ環境) の 3 種類です。</para>
-   <para>&systemd; では <quote>ターゲットユニット</quote> と呼ばれる新しい考え方が導入されています。しかしながら、従来のランレベルの考え方と完全な互換性をもっています。ターゲットユニットには、番号ではなく名前が設定され、特定の用途ごとに用意されています。たとえば <systemitem>local-fs.target</systemitem> や <systemitem>swap.target</systemitem> などでは、ローカルのファイルシステムやスワップ領域をマウントします。</para>
-   <para>また、ターゲット <systemitem>graphical.target</systemitem> はネットワークとディスプレイマネージャ機能付きのマルチユーザ環境を表すターゲットで、これがランレベルで言うところの 5 に相当します。 <systemitem>graphical.target</systemitem> などは複雑なターゲットとして扱われていて、これは複数の他のターゲットを組み合わせた <quote>メタ</quote> ターゲットとして動作します。このように、既存の複数のターゲットを組み合わせることで、独自のターゲットを作成するだけの柔軟性を提供しています。</para>
-   <para>下記の一覧には、最も重要な &systemd; のターゲットユニットを一覧で示しています。完全な一覧は、 <command>man 7 systemd.special</command> をご覧ください。</para>
-   <variablelist>
-    <title>主な &systemd; ターゲットユニット</title>
-    <varlistentry>
-     <term><systemitem>default.target</systemitem></term>
-     <listitem>
-      <para>既定で起動されるターゲットです。 <quote>実際の</quote> ターゲットではなく、 <systemitem>graphic.target</systemitem> などの他のターゲットに対するシンボリックリンクになっています。これは &yast; を利用して恒久的な変更を行うことができます (詳しくは <xref linkend="sec-boot-runlevel-edit"/> をお読みください) 。一時的に変更したい場合は、起動プロンプトのカーネルのパラメータに <literal>systemd.unit=<replaceable>ターゲット名.target</replaceable></literal> のように指定してください。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>emergency.target</systemitem></term>
-     <listitem>
-      <para>コンソール上に緊急用のシェルを起動するターゲットです。起動プロンプトで <literal>systemd.unit=emergency.target</literal> のように指定して使用します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>graphical.target</systemitem></term>
-     <listitem>
-      <para>ネットワーク機能付きでマルチユーザ対応、そしてディスプレイマネージャが有効化されるターゲットです。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>halt.target</systemitem></term>
-     <listitem>
-      <para>システムをシャットダウンします。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>mail-transfer-agent.target</systemitem></term>
-     <listitem>
-      <para>電子メールを送受信するのに必要な全てのサービスを開始するターゲットです。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>multi-user.target</systemitem></term>
-     <listitem>
-      <para>ネットワーク機能付きのマルチユーザ環境を開始するターゲットです。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>reboot.target</systemitem></term>
-     <listitem>
-      <para>システムを再起動します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><systemitem>rescue.target</systemitem></term>
-     <listitem>
-      <para>ネットワーク機能のないシングルユーザ環境を開始するターゲットです。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-   <para>System V init のランレベルシステムとの互換性を維持するため、 &systemd; には <literal>runlevel<replaceable>X</replaceable>.target</literal> という名前の特殊なターゲットが用意されています。ここで、 <replaceable>X</replaceable> には対応するランレベルの番号が入ります。</para>
-   <para>現在のターゲットを知りたい場合は、下記のコマンドを実行します: <command>systemctl get-default</command></para>
-   <table rowsep="1">
-    <title>System V ランレベルと &systemd; のターゲットユニット</title>
-    <tgroup cols="3">
-     <colspec colnum="1" colname="1" colwidth="20*"/>
-     <colspec colnum="2" colname="2" colwidth="40*"/>
-     <colspec colnum="3" colname="3" colwidth="40*"/>
-     <thead>
-      <row>
-       <entry>
-        <para>System V ランレベル</para>
-       </entry>
-       <entry>
-        <para>&systemd; ターゲット</para>
-       </entry>
-       <entry>
-        <para>目的</para>
-       </entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry>
-        <para>0</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel0.target</systemitem> , <systemitem>halt.target</systemitem> , <systemitem>poweroff.target</systemitem></para>
-       </entry>
-       <entry>
-        <para>システムのシャットダウン</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>1, S</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel1.target</systemitem> , <systemitem>rescue.target</systemitem> ,</para>
-       </entry>
-       <entry>
-        <para>シングルユーザモード</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>2</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel2.target</systemitem> , <systemitem>multi-user.target</systemitem> ,</para>
-       </entry>
-       <entry>
-        <para>リモートネットワーク無しでのローカルマルチユーザ環境</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>3</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel3.target</systemitem> , <systemitem>multi-user.target</systemitem> ,</para>
-       </entry>
-       <entry>
-        <para>ネットワーク機能付きの完全マルチユーザ環境</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>4</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel4.target</systemitem></para>
-       </entry>
-       <entry>
-        <para>未使用もしくはユーザ定義</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>5</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel5.target</systemitem> , <systemitem>graphical.target</systemitem> ,</para>
-       </entry>
-       <entry>
-        <para>ネットワークとディスプレイマネージャを起動する完全マルチユーザ環境</para>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        <para>6</para>
-       </entry>
-       <entry>
-        <para><systemitem>runlevel6.target</systemitem> , <systemitem>reboot.target</systemitem> ,</para>
-       </entry>
-       <entry>
-        <para>システムの再起動</para>
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </table>
-   <important>
-    <title>&systemd; は <filename>/etc/inittab</filename> を無視する問題について</title>
-    <para>System V init システムでは、ランレベルを <filename>/etc/inittab</filename> で管理してきましたが、 &systemd; ではこの設定ファイルを <emphasis>使用していません</emphasis> 。独自の起動可能なターゲットを作成する方法について、詳しくは <xref linkend="sec-boot-systemd-custom-targets"/> をお読みください。</para>
-   </important>
-   <sect3 xml:id="sec-boot-systemd-targets-commands">
-    <title>ターゲットを変更するためのコマンド</title>
-    <para>ターゲットユニットの運用には、下記のコマンドを使用します:</para>
-    <informaltable rowsep="1">
-     <tgroup cols="3">
-      <colspec colnum="1" colname="1" colwidth="20*"/>
-      <colspec colnum="2" colname="2" colwidth="50*"/>
-      <colspec colnum="3" colname="3" colwidth="30*"/>
-      <thead>
-       <row>
-        <entry colname="1">
-         <para>処理</para>
-        </entry>
-        <entry colname="2">
-         <para>&systemd; のコマンド</para>
-        </entry>
-        <entry colname="3">
-         <para>System V init のコマンド</para>
-        </entry>
-       </row>
-      </thead>
-      <tbody>
-       <row>
-        <entry colname="1">
-         <para>現在のターゲット／ランレベルの変更</para>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl isolate</command> <replaceable>ターゲット名</replaceable>.target</para>
-        </entry>
-        <entry colname="3">
-         <para><command>telinit</command> <replaceable>X</replaceable></para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <para>既定のターゲット／ランレベルの変更</para>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl default</command></para>
-        </entry>
-        <entry colname="3">
-         <para>(無し)</para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <para>現在のターゲット／ランレベルの取得</para>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl list-units --type=target</command></para>
-         <para>&systemd; の場合、有効なターゲットが複数存在するのが一般的です。このコマンドは、現在有効なターゲットを全て表示します。</para>
-        </entry>
-        <entry colname="3">
-         <para><command>who -r</command></para>
-         <para>もしくは</para>
-         <para><command>runlevel</command></para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <para>既定のランレベルの恒久的な変更</para>
-        </entry>
-        <entry colname="2">
-         <para>&ycc_runlevel; を使用するか、下記のコマンドを実行します:</para>
-         <para><command>ln -sf /usr/lib/systemd/system/</command> <replaceable>ターゲット名</replaceable>.target /etc/systemd/system/default.target</para>
-        </entry>
-        <entry colname="3">
-         <para>&ycc_runlevel; を使用するか、 <filename>/etc/inittab</filename> 内の下記の行を変更します:</para>
-         <para><command>id:</command> <replaceable>X</replaceable> :initdefault:</para>
-         <para>"\n  <!-- No translations required; this expression is written in previous paragraph. -->\n"</para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <para>現在の起動処理に対する既定のランレベルの変更</para>
-        </entry>
-        <entry colname="2">
-         <para>起動プロンプトで下記のオプションを指定します:</para>
-         <para><command>systemd.unit=</command> <replaceable>ターゲット名</replaceable>.target</para>
-        </entry>
-        <entry colname="3">
-         <para>起動プロンプトで設定したいランレベル番号を入力します。</para>
-        </entry>
-       </row>
-       <row>
-        <entry colname="1">
-         <para>ターゲット／ランレベルの依存関係の表示</para>
-        </entry>
-        <entry colname="2">
-         <para><command>systemctl show -p "Requires"</command> <replaceable>ターゲット名</replaceable>.target</para>
-         <para><command>systemctl show -p "Wants"</command> <replaceable>ターゲット名</replaceable>.target</para>
-         <para><quote>Requires</quote> ではハード依存関係 (解決しなければならないもの) を一覧表示します。<quote>Wants</quote> ではソフト依存関係 (可能であれば解決すべきもの) を一覧表示します。</para>
-        </entry>
-        <entry colname="3">
-         <para>(無し)</para>
-        </entry>
-       </row>
-      </tbody>
-     </tgroup>
-    </informaltable>
-   </sect3>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-targets">
+      <title>ターゲットとランレベルの違い</title>
+      <para>System V init では、システムは <quote>ランレベル</quote> と呼ばれる状態に対して起動を行います。ランレベルは、どのようにシステムを起動するのかと、どのサービスを起動するのかを定義するものです。ランレベルは番号で設定されていて、よく知られているものは <literal>0</literal> (システムのシャットダウン), <literal>3</literal> (ネットワーク付きのマルチユーザ環境), <literal>5</literal> (ネットワークとディスプレイマネージャ付きのマルチユーザ環境) の 3 種類です。</para>
+      <para>&systemd; では <quote>ターゲットユニット</quote> と呼ばれる新しい考え方が導入されています。しかしながら、従来のランレベルの考え方と完全な互換性をもっています。ターゲットユニットには、番号ではなく名前が設定され、特定の用途ごとに用意されています。たとえば <systemitem>local-fs.target</systemitem> や <systemitem>swap.target</systemitem> などでは、ローカルのファイルシステムやスワップ領域をマウントします。</para>
+      <para>また、ターゲット <systemitem>graphical.target</systemitem> はネットワークとディスプレイマネージャ機能付きのマルチユーザ環境を表すターゲットで、これがランレベルで言うところの 5 に相当します。 <systemitem>graphical.target</systemitem> などは複雑なターゲットとして扱われていて、これは複数の他のターゲットを組み合わせた <quote>メタ</quote> ターゲットとして動作します。このように、既存の複数のターゲットを組み合わせることで、独自のターゲットを作成するだけの柔軟性を提供しています。</para>
+      <para>下記の一覧には、最も重要な &systemd; のターゲットユニットを一覧で示しています。完全な一覧は、 <command>man 7 systemd.special</command> をご覧ください。</para>
+      <variablelist>
+        <title>主な &systemd; ターゲットユニット</title>
+        <varlistentry>
+          <term><systemitem>default.target</systemitem></term>
+          <listitem>
+            <para>既定で起動されるターゲットです。 <quote>実際の</quote> ターゲットではなく、 <systemitem>graphic.target</systemitem> などの他のターゲットに対するシンボリックリンクになっています。これは &yast; を利用して恒久的な変更を行うことができます (詳しくは <xref linkend="sec-boot-runlevel-edit"/> をお読みください) 。一時的に変更したい場合は、起動プロンプトのカーネルのパラメータに <literal>systemd.unit=<replaceable>ターゲット名.target</replaceable></literal> のように指定してください。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>emergency.target</systemitem></term>
+          <listitem>
+            <para>コンソール上に緊急用のシェルを起動するターゲットです。起動プロンプトで <literal>systemd.unit=emergency.target</literal> のように指定して使用します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>graphical.target</systemitem></term>
+          <listitem>
+            <para>ネットワーク機能付きでマルチユーザ対応、そしてディスプレイマネージャが有効化されるターゲットです。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>halt.target</systemitem></term>
+          <listitem>
+            <para>システムをシャットダウンします。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>mail-transfer-agent.target</systemitem></term>
+          <listitem>
+            <para>電子メールを送受信するのに必要な全てのサービスを開始するターゲットです。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>multi-user.target</systemitem></term>
+          <listitem>
+            <para>ネットワーク機能付きのマルチユーザ環境を開始するターゲットです。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>reboot.target</systemitem></term>
+          <listitem>
+            <para>システムを再起動します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><systemitem>rescue.target</systemitem></term>
+          <listitem>
+            <para>ネットワーク機能のないシングルユーザ環境を開始するターゲットです。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>System V init のランレベルシステムとの互換性を維持するため、 &systemd; には <literal>runlevel<replaceable>X</replaceable>.target</literal> という名前の特殊なターゲットが用意されています。ここで、 <replaceable>X</replaceable> には対応するランレベルの番号が入ります。</para>
+      <para>現在のターゲットを知りたい場合は、下記のコマンドを実行します: <command>systemctl get-default</command></para>
+      <table rowsep="1">
+        <title>System V ランレベルと &systemd; のターゲットユニット</title>
+        <tgroup cols="3">
+          <colspec colnum="1" colname="1" colwidth="20*"/>
+          <colspec colnum="2" colname="2" colwidth="40*"/>
+          <colspec colnum="3" colname="3" colwidth="40*"/>
+          <thead>
+            <row>
+              <entry>
+                <para>System V ランレベル</para>
+              </entry>
+              <entry>
+                <para>&systemd; ターゲット</para>
+              </entry>
+              <entry>
+                <para>目的</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>0</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel0.target</systemitem> , <systemitem>halt.target</systemitem> , <systemitem>poweroff.target</systemitem></para>
+              </entry>
+              <entry>
+                <para>システムのシャットダウン</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>1, S</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel1.target</systemitem> , <systemitem>rescue.target</systemitem> ,</para>
+              </entry>
+              <entry>
+                <para>シングルユーザモード</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>2</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel2.target</systemitem> , <systemitem>multi-user.target</systemitem> ,</para>
+              </entry>
+              <entry>
+                <para>リモートネットワーク無しでのローカルマルチユーザ環境</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>3</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel3.target</systemitem> , <systemitem>multi-user.target</systemitem> ,</para>
+              </entry>
+              <entry>
+                <para>ネットワーク機能付きの完全マルチユーザ環境</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>4</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel4.target</systemitem></para>
+              </entry>
+              <entry>
+                <para>未使用もしくはユーザ定義</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>5</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel5.target</systemitem> , <systemitem>graphical.target</systemitem> ,</para>
+              </entry>
+              <entry>
+                <para>ネットワークとディスプレイマネージャを起動する完全マルチユーザ環境</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>6</para>
+              </entry>
+              <entry>
+                <para><systemitem>runlevel6.target</systemitem> , <systemitem>reboot.target</systemitem> ,</para>
+              </entry>
+              <entry>
+                <para>システムの再起動</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <important>
+        <title>&systemd; は <filename>/etc/inittab</filename> を無視する問題について</title>
+        <para>System V init システムでは、ランレベルを <filename>/etc/inittab</filename> で管理してきましたが、 &systemd; ではこの設定ファイルを <emphasis>使用していません</emphasis> 。独自の起動可能なターゲットを作成する方法について、詳しくは <xref linkend="sec-boot-systemd-custom-targets"/> をお読みください。</para>
+      </important>
+      <sect3 xml:id="sec-boot-systemd-targets-commands">
+        <title>ターゲットを変更するためのコマンド</title>
+        <para>ターゲットユニットの運用には、下記のコマンドを使用します:</para>
+        <informaltable rowsep="1">
+          <tgroup cols="3">
+            <colspec colnum="1" colname="1" colwidth="20*"/>
+            <colspec colnum="2" colname="2" colwidth="50*"/>
+            <colspec colnum="3" colname="3" colwidth="30*"/>
+            <thead>
+              <row>
+                <entry colname="1">
+                  <para>処理</para>
+                </entry>
+                <entry colname="2">
+                  <para>&systemd; のコマンド</para>
+                </entry>
+                <entry colname="3">
+                  <para>System V init のコマンド</para>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry colname="1">
+                  <para>現在のターゲット／ランレベルの変更</para>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl isolate</command> <replaceable>ターゲット名</replaceable>.target</para>
+                </entry>
+                <entry colname="3">
+                  <para><command>telinit</command> <replaceable>X</replaceable></para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <para>既定のターゲット／ランレベルの変更</para>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl default</command></para>
+                </entry>
+                <entry colname="3">
+                  <para>(無し)</para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <para>現在のターゲット／ランレベルの取得</para>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl list-units --type=target</command></para>
+                  <para>&systemd; の場合、有効なターゲットが複数存在するのが一般的です。このコマンドは、現在有効なターゲットを全て表示します。</para>
+                </entry>
+                <entry colname="3">
+                  <para><command>who -r</command></para>
+                  <para>もしくは</para>
+                  <para><command>runlevel</command></para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <para>既定のランレベルの恒久的な変更</para>
+                </entry>
+                <entry colname="2">
+                  <para>&ycc_runlevel; を使用するか、下記のコマンドを実行します:</para>
+                  <para><command>ln -sf /usr/lib/systemd/system/</command> <replaceable>ターゲット名</replaceable>.target /etc/systemd/system/default.target</para>
+                </entry>
+                <entry colname="3">
+                  <para>&ycc_runlevel; を使用するか、 <filename>/etc/inittab</filename> 内の下記の行を変更します:</para>
+                  <para><command>id:</command> <replaceable>X</replaceable> :initdefault:</para>
+                  <para>"\n  <!-- No translations required; this expression is written in previous paragraph. -->\n"</para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <para>現在の起動処理に対する既定のランレベルの変更</para>
+                </entry>
+                <entry colname="2">
+                  <para>起動プロンプトで下記のオプションを指定します:</para>
+                  <para><command>systemd.unit=</command> <replaceable>ターゲット名</replaceable>.target</para>
+                </entry>
+                <entry colname="3">
+                  <para>起動プロンプトで設定したいランレベル番号を入力します。</para>
+                </entry>
+              </row>
+              <row>
+                <entry colname="1">
+                  <para>ターゲット／ランレベルの依存関係の表示</para>
+                </entry>
+                <entry colname="2">
+                  <para><command>systemctl show -p "Requires"</command> <replaceable>ターゲット名</replaceable>.target</para>
+                  <para><command>systemctl show -p "Wants"</command> <replaceable>ターゲット名</replaceable>.target</para>
+                  <para><quote>Requires</quote> ではハード依存関係 (解決しなければならないもの) を一覧表示します。<quote>Wants</quote> ではソフト依存関係 (可能であれば解決すべきもの) を一覧表示します。</para>
+                </entry>
+                <entry colname="3">
+                  <para>(無し)</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect3>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-debug">
-   <title>システム起動時のデバッグ</title>
-   <para>&systemd; では、システムの起動処理を分析する機能を提供しています。全てのサービスの一覧とその状態を (<filename>/var/log/</filename> などを処理することなく) 確認することができます。また systemd では、起動処理で時間のかかっている箇所を検出することもできます。</para>
-   <sect3 xml:id="sec-boot-systemd-debug-review">
-    <title>サービスの起動確認</title>
-    <para>システム起動以降に開始されたサービスの完全な一覧を表示するには、 <command>systemctl</command> と入力して実行します。このコマンドを実行すると、下記のような出力が現れます (ただし、下記では多くの行を省略しています) 。特定のサービスに対して、より詳しい状態を取得したい場合は、 <command>systemctl status <replaceable>サービス名</replaceable></command> と入力して実行します。</para>
-    <example>
-     <title>有効なサービスの一覧表示</title>
+    <sect2 xml:id="sec-boot-systemd-debug">
+      <title>システム起動時のデバッグ</title>
+      <para>&systemd; では、システムの起動処理を分析する機能を提供しています。全てのサービスの一覧とその状態を (<filename>/var/log/</filename> などを処理することなく) 確認することができます。また systemd では、起動処理で時間のかかっている箇所を検出することもできます。</para>
+      <sect3 xml:id="sec-boot-systemd-debug-review">
+        <title>サービスの起動確認</title>
+        <para>システム起動以降に開始されたサービスの完全な一覧を表示するには、 <command>systemctl</command> と入力して実行します。このコマンドを実行すると、下記のような出力が現れます (ただし、下記では多くの行を省略しています) 。特定のサービスに対して、より詳しい状態を取得したい場合は、 <command>systemctl status <replaceable>サービス名</replaceable></command> と入力して実行します。</para>
+        <example>
+          <title>有効なサービスの一覧表示</title>
 <screen>&prompt.root;systemctl
 UNIT                        LOAD   ACTIVE SUB       JOB DESCRIPTION
 [...]
@@ -678,10 +679,10 @@ SUB    = The low-level unit activation state, values depend on unit type.
 
 161 loaded units listed. Pass --all to see loaded but inactive units, too.
 To show all installed unit files use 'systemctl list-unit-files'.</screen>
-    </example>
-    <para>開始に失敗したサービスのみを出力したい場合は、 <option>--failed</option> オプションを追加します:</para>
-    <example>
-     <title>失敗したサービスの一覧表示</title>
+        </example>
+        <para>開始に失敗したサービスのみを出力したい場合は、 <option>--failed</option> オプションを追加します:</para>
+        <example>
+          <title>失敗したサービスの一覧表示</title>
 <screen>&prompt.root;systemctl --failed
 UNIT                   LOAD   ACTIVE SUB    JOB DESCRIPTION
 apache2.service        loaded failed failed     apache
@@ -689,22 +690,22 @@ NetworkManager.service loaded failed failed     Network Manager
 plymouth-start.service loaded failed failed     Show Plymouth Boot Screen
 
 [...]</screen>
-    </example>
-   </sect3>
-   <sect3 xml:id="sec-boot-systemd-debug-time">
-    <title>起動時間のデバッグ</title>
-    <para>システムの起動にかかった時間をデバッグするために、 &systemd; では <command>systemd-analyze</command> というコマンドが用意されています。これは起動にかかった時間の合計のほか、起動にかかった時間順で並べたサービス一覧を表示することができます。また、必要であれば SVG の画像を生成して、起動にかかった時間とサービス同士の関係性を表示することもできます。</para>
-    <variablelist>
-     <varlistentry>
-      <term>システムの起動時間の一覧表示</term>
-      <listitem>
+        </example>
+      </sect3>
+      <sect3 xml:id="sec-boot-systemd-debug-time">
+        <title>起動時間のデバッグ</title>
+        <para>システムの起動にかかった時間をデバッグするために、 &systemd; では <command>systemd-analyze</command> というコマンドが用意されています。これは起動にかかった時間の合計のほか、起動にかかった時間順で並べたサービス一覧を表示することができます。また、必要であれば SVG の画像を生成して、起動にかかった時間とサービス同士の関係性を表示することもできます。</para>
+        <variablelist>
+          <varlistentry>
+            <term>システムの起動時間の一覧表示</term>
+            <listitem>
 <screen>&prompt.root;systemd-analyze
 Startup finished in 2666ms (kernel) + 21961ms (userspace) = 24628ms</screen>
-      </listitem>
-     </varlistentry>
-     <varlistentry>
-      <term>サービスの起動時間の一覧表示</term>
-      <listitem>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>サービスの起動時間の一覧表示</term>
+            <listitem>
 <screen>&prompt.root;systemd-analyze blame
     15.000s backup-rpmdb.service
     14.879s mandb.service
@@ -723,42 +724,42 @@ Startup finished in 2666ms (kernel) + 21961ms (userspace) = 24628ms</screen>
      1.378s apparmor.service
     [...]
 </screen>
-      </listitem>
-     </varlistentry>
-     <varlistentry>
-      <term>サービスの起動時間のグラフィック出力</term>
-      <listitem>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>サービスの起動時間のグラフィック出力</term>
+            <listitem>
 <screen>&prompt.root;systemd-analyze plot &gt; &wsIname;-startup.svg</screen>
-       <informalfigure>
-        <mediaobject>
-         <imageobject role="fo">
-          <imagedata fileref="systemd_startup.svg" width="75%"/>
-         </imageobject>
-         <imageobject role="html">
-          <imagedata fileref="systemd_startup.png" width="75%"/>
-         </imageobject>
-        </mediaobject>
-       </informalfigure>
-      </listitem>
-     </varlistentry>
-    </variablelist>
-   </sect3>
-   <sect3 xml:id="sec-boot-systemd-debug-complete">
-    <title>起動処理の詳細な確認</title>
-    <para>上述のコマンドを実行することで、起動されたサービスとそれらにかかった時間を一覧表示することができます。より詳しい状況を知りたい場合は、起動プロンプトのパラメータに下記を追加することで、 &systemd; に対して完全な起動処理のログを出力させることができます:</para>
+              <informalfigure>
+                <mediaobject>
+                  <imageobject role="fo">
+                    <imagedata fileref="systemd_startup.svg" width="75%"/>
+                  </imageobject>
+                  <imageobject role="html">
+                    <imagedata fileref="systemd_startup.png" width="75%"/>
+                  </imageobject>
+                </mediaobject>
+              </informalfigure>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </sect3>
+      <sect3 xml:id="sec-boot-systemd-debug-complete">
+        <title>起動処理の詳細な確認</title>
+        <para>上述のコマンドを実行することで、起動されたサービスとそれらにかかった時間を一覧表示することができます。より詳しい状況を知りたい場合は、起動プロンプトのパラメータに下記を追加することで、 &systemd; に対して完全な起動処理のログを出力させることができます:</para>
 <screen>systemd.log_level=debug systemd.log_target=kmsg</screen>
-    <para>上記のパラメータ指定により、 &systemd; はカーネルのリングバッファにログメッセージを出力するようになります。リングバッファを表示するには、 <command>dmesg</command> を使用します:</para>
+        <para>上記のパラメータ指定により、 &systemd; はカーネルのリングバッファにログメッセージを出力するようになります。リングバッファを表示するには、 <command>dmesg</command> を使用します:</para>
 <screen>&prompt.user;dmesg -T | less</screen>
-   </sect3>
-  </sect2>
+      </sect3>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-sysv-compatibility">
-   <title>System V との互換性</title>
-   <para>&systemd; は System V との互換性があるため、既に System V init スクリプトがある場合は、それらを使用することができます。ただし、 1 つだけ大きな問題があります。それは、 System V init スクリプトをそのまま &systemd; で動作させようとしても、動作しない場合があるという問題です。 init スクリプト内で <command>su</command> や <command>sudo</command> を利用してユーザを切り替えてサービスを起動している場合、スクリプトの実行が失敗して <quote>Access denied</quote> (アクセスが拒否されました) というエラーを発生させてしまいます。</para>
-   <para><command>su</command> や <command>sudo</command> を利用してユーザを切り替える場合、 PAM のセッションが起動されることになります。このセッションは init スクリプトが完了したときに終了されますので、 init スクリプトから開始されたサービスについても、終了してしまいます。このエラーを回避するには、下記のようにしてください:</para>
-   <procedure>
-    <step>
-     <para>init スクリプトと同じ名前で、ファイル名の拡張子が <filename>.service</filename> になっているサービスラッパーファイルを作成します:</para>
+    <sect2 xml:id="sec-boot-systemd-sysv-compatibility">
+      <title>System V との互換性</title>
+      <para>&systemd; は System V との互換性があるため、既に System V init スクリプトがある場合は、それらを使用することができます。ただし、 1 つだけ大きな問題があります。それは、 System V init スクリプトをそのまま &systemd; で動作させようとしても、動作しない場合があるという問題です。 init スクリプト内で <command>su</command> や <command>sudo</command> を利用してユーザを切り替えてサービスを起動している場合、スクリプトの実行が失敗して <quote>Access denied</quote> (アクセスが拒否されました) というエラーを発生させてしまいます。</para>
+      <para><command>su</command> や <command>sudo</command> を利用してユーザを切り替える場合、 PAM のセッションが起動されることになります。このセッションは init スクリプトが完了したときに終了されますので、 init スクリプトから開始されたサービスについても、終了してしまいます。このエラーを回避するには、下記のようにしてください:</para>
+      <procedure>
+        <step>
+          <para>init スクリプトと同じ名前で、ファイル名の拡張子が <filename>.service</filename> になっているサービスラッパーファイルを作成します:</para>
 <screen>[Unit]
 Description=<replaceable>説明</replaceable>
 After=network.target
@@ -773,83 +774,83 @@ ExecStopPost=/usr/bin/rm -f <replaceable>PID_ファイルのパス</replaceable>
 
 [Install]
 WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
-     <para>それぞれ <replaceable>日本語</replaceable> で書かれた箇所に必要な値を記入します。</para>
-     <calloutlist>
-      <callout arearefs="co-service-wrapper-type">
-       <para>init スクリプトがデーモンを起動する場合にのみ設定します。</para>
-      </callout>
-      <callout arearefs="co-service-wrapper-target">
-       <para><literal>graphical.target</literal> で起動する場合、 <literal>multi-user.target</literal> で init スクリプトを起動します。ディスプレイマネージャを起動する場合にのみ init スクリプトを起動したい場合は、ここを <literal>graphical.target</literal> にします。</para>
-      </callout>
-     </calloutlist>
-    </step>
-    <step>
-     <para>あとは <command>systemctl start <replaceable>アプリケーション</replaceable></command> でデーモンを開始するだけです。</para>
-    </step>
-   </procedure>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-runlevel-edit">
-  <title>&yast; を利用したサービスの管理</title>
+          <para>それぞれ <replaceable>日本語</replaceable> で書かれた箇所に必要な値を記入します。</para>
+          <calloutlist>
+            <callout arearefs="co-service-wrapper-type">
+              <para>init スクリプトがデーモンを起動する場合にのみ設定します。</para>
+            </callout>
+            <callout arearefs="co-service-wrapper-target">
+              <para><literal>graphical.target</literal> で起動する場合、 <literal>multi-user.target</literal> で init スクリプトを起動します。ディスプレイマネージャを起動する場合にのみ init スクリプトを起動したい場合は、ここを <literal>graphical.target</literal> にします。</para>
+            </callout>
+          </calloutlist>
+        </step>
+        <step>
+          <para>あとは <command>systemctl start <replaceable>アプリケーション</replaceable></command> でデーモンを開始するだけです。</para>
+        </step>
+      </procedure>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-runlevel-edit">
+    <title>&yast; を利用したサービスの管理</title>
 
-  <para>基本的なサービス管理機能は、 &yast; &ycc_runlevel; モジュールでも実施することができます。サービスの開始や停止のほか、有効化や無効化も設定することができます。また、サービスの状態を表示したり、既定のターゲットを変更したりすることもできます。この &yast; モジュールは、 <menuchoice> <guimenu>&yast;</guimenu> <guimenu>システム</guimenu> <guimenu>&ycc_runlevel;</guimenu> </menuchoice> で起動することができます。</para>
+    <para>基本的なサービス管理機能は、 &yast; &ycc_runlevel; モジュールでも実施することができます。サービスの開始や停止のほか、有効化や無効化も設定することができます。また、サービスの状態を表示したり、既定のターゲットを変更したりすることもできます。この &yast; モジュールは、 <menuchoice> <guimenu>&yast;</guimenu> <guimenu>システム</guimenu> <guimenu>&ycc_runlevel;</guimenu> </menuchoice> で起動することができます。</para>
 
-  <figure xml:id="fig-yast2-runlevel">
-   <title>&ycc_runlevel;</title>
-   <mediaobject>
-    <imageobject role="fo">
-     <imagedata fileref="yast2_runlevel.png" width="75%"/>
-    </imageobject>
-    <imageobject role="html">
-     <imagedata fileref="yast2_runlevel.png" width="75%"/>
-    </imageobject>
-   </mediaobject>
-  </figure>
+    <figure xml:id="fig-yast2-runlevel">
+      <title>&ycc_runlevel;</title>
+      <mediaobject>
+        <imageobject role="fo">
+          <imagedata fileref="yast2_runlevel.png" width="75%"/>
+        </imageobject>
+        <imageobject role="html">
+          <imagedata fileref="yast2_runlevel.png" width="75%"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
 
-  <variablelist>
-   <varlistentry>
-    <term><guimenu>既定のシステムターゲット</guimenu> の変更</term>
-    <listitem>
-     <para>システムを起動する際のターゲットを変更するには、 <guimenu>既定のシステムターゲット</guimenu> のプロップダウンボックスで、ターゲットを選択します。最もよく使用するのは <guimenu>グラフィカルインターフェイス</guimenu> (グラフィカルなログイン画面を表示するターゲット) と <guimenu>マルチユーザシステム</guimenu> (コマンドラインモードでのシステムの開始) です。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>サービスの開始と停止</term>
-    <listitem>
-     <para>一覧からサービスを選択します。このとき、 <guimenu>状態</guimenu> の列には、現在動作中かどうかが表示されます ( <guimenu>実行中</guimenu> であれば動作中、 <guimenu>停止</guimenu> であれば停止していることを表します) 。開始または停止を行うには、サービスを選択したあと <guimenu>開始</guimenu> または <guimenu>停止</guimenu> ボタンを押します。</para>
-     <para>サービスの開始または停止は、現時点での変更のみに影響します。システムを再起動した際に開始または停止を行いたい場合は、有効化または無効化を実施してください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>サービスの起動動作の設定</term>
-    <listitem>
-     <para>サービスはシステムの起動時に開始させることができるほか、手動で開始させるように設定することもできます。一覧内の <guimenu>開始</guimenu> の列には、 <guimenu>手動</guimenu> または <guimenu>起動時</guimenu> として起動動作が示されています。起動動作を変更するには、 <guimenu>開始モード</guimenu> を押してください。</para>
-     <para>現時点での起動状態を変更したい場合は、上述の開始もしくは停止の手順を行ってください。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>状態メッセージの表示</term>
-    <listitem>
-     <para>サービスの状態メッセージを表示するには、一覧からサービスを選んで <guimenu>詳細の表示</guimenu> を押します。表示される内容は、 <command>systemctl</command> <option>-l</option> status <replaceable>サービス名</replaceable> と同じ内容になります。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-custom">
-  <title><systemitem>systemd</systemitem> のカスタマイズ</title>
+    <variablelist>
+      <varlistentry>
+        <term><guimenu>既定のシステムターゲット</guimenu> の変更</term>
+        <listitem>
+          <para>システムを起動する際のターゲットを変更するには、 <guimenu>既定のシステムターゲット</guimenu> のプロップダウンボックスで、ターゲットを選択します。最もよく使用するのは <guimenu>グラフィカルインターフェイス</guimenu> (グラフィカルなログイン画面を表示するターゲット) と <guimenu>マルチユーザシステム</guimenu> (コマンドラインモードでのシステムの開始) です。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>サービスの開始と停止</term>
+        <listitem>
+          <para>一覧からサービスを選択します。このとき、 <guimenu>状態</guimenu> の列には、現在動作中かどうかが表示されます ( <guimenu>実行中</guimenu> であれば動作中、 <guimenu>停止</guimenu> であれば停止していることを表します) 。開始または停止を行うには、サービスを選択したあと <guimenu>開始</guimenu> または <guimenu>停止</guimenu> ボタンを押します。</para>
+          <para>サービスの開始または停止は、現時点での変更のみに影響します。システムを再起動した際に開始または停止を行いたい場合は、有効化または無効化を実施してください。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>サービスの起動動作の設定</term>
+        <listitem>
+          <para>サービスはシステムの起動時に開始させることができるほか、手動で開始させるように設定することもできます。一覧内の <guimenu>開始</guimenu> の列には、 <guimenu>手動</guimenu> または <guimenu>起動時</guimenu> として起動動作が示されています。起動動作を変更するには、 <guimenu>開始モード</guimenu> を押してください。</para>
+          <para>現時点での起動状態を変更したい場合は、上述の開始もしくは停止の手順を行ってください。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>状態メッセージの表示</term>
+        <listitem>
+          <para>サービスの状態メッセージを表示するには、一覧からサービスを選んで <guimenu>詳細の表示</guimenu> を押します。表示される内容は、 <command>systemctl</command> <option>-l</option> status <replaceable>サービス名</replaceable> と同じ内容になります。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-custom">
+    <title><systemitem>systemd</systemitem> のカスタマイズ</title>
 
-  <para>下記の章では、 <systemitem>systemd</systemitem> のカスタマイズを行うにあたっての例をいくつか示しています。</para>
+    <para>下記の章では、 <systemitem>systemd</systemitem> のカスタマイズを行うにあたっての例をいくつか示しています。</para>
 
-  <warning>
-   <title>カスタマイズを行う際の注意事項</title>
-   <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
-  </warning>
+    <warning>
+      <title>カスタマイズを行う際の注意事項</title>
+      <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
+    </warning>
 
-  <sect2 xml:id="sec-boot-systemd-custom-service">
-   <title>ユニットファイルのカスタマイズ</title>
-   <para>ユニットファイルのカスタマイズを行う場合は、 <command>systemctl edit <replaceable>サービス名</replaceable></command> コマンドを使用するのがお勧めです。このコマンドは <filename>/etc/systemd/system/<replaceable>名前</replaceable>.service.d/</filename> ディレクトリを作成し、そのディレクトリ内に <filename>override.conf</filename> ファイルを作成したあと、既定のテキストエディタを起動します。また、このコマンドは動作中の &systemd; プロセスに対して、変更が行われたことを通知する機能も備えています。</para>
-   <para>このほか、 <command>systemctl edit --full <replaceable>名前</replaceable></command> コマンドを実行すると、元のファイルをコピーしてから編集することもできます。この場合は、既存のセクションを削除しないように注意してください。</para>
-   <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 root で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
+    <sect2 xml:id="sec-boot-systemd-custom-service">
+      <title>ユニットファイルのカスタマイズ</title>
+      <para>ユニットファイルのカスタマイズを行う場合は、 <command>systemctl edit <replaceable>サービス名</replaceable></command> コマンドを使用するのがお勧めです。このコマンドは <filename>/etc/systemd/system/<replaceable>名前</replaceable>.service.d/</filename> ディレクトリを作成し、そのディレクトリ内に <filename>override.conf</filename> ファイルを作成したあと、既定のテキストエディタを起動します。また、このコマンドは動作中の &systemd; プロセスに対して、変更が行われたことを通知する機能も備えています。</para>
+      <para>このほか、 <command>systemctl edit --full <replaceable>名前</replaceable></command> コマンドを実行すると、元のファイルをコピーしてから編集することもできます。この場合は、既存のセクションを削除しないように注意してください。</para>
+      <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 root で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
 <screen>
 [Unit]
 Description=MySQL server
@@ -878,56 +879,56 @@ ProtectSystem=full
 ProtectHome=true
 
 UMask=007</screen>
-   <para>あとは <literal>TimeoutSec</literal> 以下の内容を修正して保存を行います。変更をシステムに適用するには、同じく root で <command>systemctl daemon-reload</command> コマンドを実行します。</para>
-   <para>詳しくは <command>man 1 systemctl</command> コマンドで表示されるマニュアルページを参照してください。</para>
-  </sect2>
+      <para>あとは <literal>TimeoutSec</literal> 以下の内容を修正して保存を行います。変更をシステムに適用するには、同じく root で <command>systemctl daemon-reload</command> コマンドを実行します。</para>
+      <para>詳しくは <command>man 1 systemctl</command> コマンドで表示されるマニュアルページを参照してください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-custom-drop-in">
-   <title>ドロップ・インファイルの作成</title>
-   <para>設定ファイルの一部分だけを変更したい場合は、ドロップ・インファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。</para>
-   <para>たとえば <filename>/usr/lib/systemd/system/<replaceable>FOOBAR.SERVICE</replaceable></filename> というファイル名の <replaceable>FOOBAR</replaceable> サービスのうち、 1 つの値だけを変更したい場合は、下記のようにして行います:</para>
-   <procedure>
-    <step>
-     <para><filename>/etc/systemd/system/<replaceable>FOOBAR</replaceable>.service.d/</filename> というディレクトリを作成します。</para>
-     <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行う旨を宣言します。</para>
-    </step>
-    <step>
-     <para>上記のディレクトリ内に <filename><replaceable>your_modification</replaceable>.conf</filename> というファイルを作成します。</para>
-     <para>上記のファイルに、変更したい値の行を記述します。</para>
-    </step>
-    <step>
-     <para>あとはファイルを保存して終了するだけです。</para>
-    </step>
-   </procedure>
-   <!--  bsc#1182491 -->
-   <note>
-    <title>名前の衝突回避について</title>
-    <para>ドロップ・インファイルと &suse; が提供するファイルとの間で名前の衝突が起こらないように注意してください。一般的には、全てのドロップ・インファイルのファイル名を 2 桁の数値とハイフンで始めてください。たとえば <filename>80-override.conf</filename> のようになります。</para>
-    <para>なお、下記の数値範囲が予約されています:</para>
-    <itemizedlist>
-     <listitem>
-      <para><literal>0-19</literal>: &systemd; の提供元が使用します</para>
-     </listitem>
-     <listitem>
-      <para><literal>20-25</literal>: &systemd; のうち &suse; が独自に使用します</para>
-     </listitem>
-     <listitem>
-      <para><literal>26-29</literal>: その他の (systemd 以外の) &suse; パッケージが使用します</para>
-     </listitem>
-     <listitem>
-      <para><literal>50</literal>: <command>systemctl set-property</command> で作成されるドロップ・インファイルが使用します。</para>
-     </listitem>
-    </itemizedlist>
-    <para>上記に示した範囲よりも大きい 2 桁の数値を指定することで、 &suse; や &systemd; の提供元が設定する値を上書きできるようになります。</para>
-    <para>なお、ドロップ・インファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
-   </note>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-custom-drop-in">
+      <title>ドロップ・インファイルの作成</title>
+      <para>設定ファイルの一部分だけを変更したい場合は、ドロップ・インファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。</para>
+      <para>たとえば <filename>/usr/lib/systemd/system/<replaceable>FOOBAR.SERVICE</replaceable></filename> というファイル名の <replaceable>FOOBAR</replaceable> サービスのうち、 1 つの値だけを変更したい場合は、下記のようにして行います:</para>
+      <procedure>
+        <step>
+          <para><filename>/etc/systemd/system/<replaceable>FOOBAR</replaceable>.service.d/</filename> というディレクトリを作成します。</para>
+          <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行う旨を宣言します。</para>
+        </step>
+        <step>
+          <para>上記のディレクトリ内に <filename><replaceable>your_modification</replaceable>.conf</filename> というファイルを作成します。</para>
+          <para>上記のファイルに、変更したい値の行を記述します。</para>
+        </step>
+        <step>
+          <para>あとはファイルを保存して終了するだけです。</para>
+        </step>
+      </procedure>
+      <!--  bsc#1182491 -->
+      <note>
+        <title>名前の衝突回避について</title>
+        <para>ドロップ・インファイルと &suse; が提供するファイルとの間で名前の衝突が起こらないように注意してください。一般的には、全てのドロップ・インファイルのファイル名を 2 桁の数値とハイフンで始めてください。たとえば <filename>80-override.conf</filename> のようになります。</para>
+        <para>なお、下記の数値範囲が予約されています:</para>
+        <itemizedlist>
+          <listitem>
+            <para><literal>0-19</literal>: &systemd; の提供元が使用します</para>
+          </listitem>
+          <listitem>
+            <para><literal>20-25</literal>: &systemd; のうち &suse; が独自に使用します</para>
+          </listitem>
+          <listitem>
+            <para><literal>26-29</literal>: その他の (systemd 以外の) &suse; パッケージが使用します</para>
+          </listitem>
+          <listitem>
+            <para><literal>50</literal>: <command>systemctl set-property</command> で作成されるドロップ・インファイルが使用します。</para>
+          </listitem>
+        </itemizedlist>
+        <para>上記に示した範囲よりも大きい 2 桁の数値を指定することで、 &suse; や &systemd; の提供元が設定する値を上書きできるようになります。</para>
+        <para>なお、ドロップ・インファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
+      </note>
+    </sect2>
 
-  <sect2 xml:id="systemd-xinetd-conversion">
-   <title><systemitem>xinetd</systemitem> から &systemd; へのサービス変換</title>
-   <para>&productname; 15 のリリース以降では、 <systemitem>xinetd</systemitem> のインフラストラクチャが削除されています。この章では、独自の <systemitem>xinetd</systemitem> サービスファイルを &systemd; のソケットファイルに変換する方法を説明しています。</para>
-   <para>それぞれの <systemitem>xinetd</systemitem> サービスファイルに対して、 2 つの&systemd; ユニットファイルが必要になります。 1 つはソケットファイル ( <filename>*.socket</filename> ) で、もう 1 つはサービスファイル ( <filename>*.service</filename> ) になります。ソケットファイルでは &systemd; に対して、作成すべきソケットを指示し、サービスファイルでは起動すべきプログラムを指定しています。</para>
-   <para>たとえば下記のような <systemitem>xinetd</systemitem> サービスファイルがあるものとします:</para>
+    <sect2 xml:id="systemd-xinetd-conversion">
+      <title><systemitem>xinetd</systemitem> から &systemd; へのサービス変換</title>
+      <para>&productname; 15 のリリース以降では、 <systemitem>xinetd</systemitem> のインフラストラクチャが削除されています。この章では、独自の <systemitem>xinetd</systemitem> サービスファイルを &systemd; のソケットファイルに変換する方法を説明しています。</para>
+      <para>それぞれの <systemitem>xinetd</systemitem> サービスファイルに対して、 2 つの&systemd; ユニットファイルが必要になります。 1 つはソケットファイル ( <filename>*.socket</filename> ) で、もう 1 つはサービスファイル ( <filename>*.service</filename> ) になります。ソケットファイルでは &systemd; に対して、作成すべきソケットを指示し、サービスファイルでは起動すべきプログラムを指定しています。</para>
+      <para>たとえば下記のような <systemitem>xinetd</systemitem> サービスファイルがあるものとします:</para>
 <screen>&prompt.root;cat /etc/xinetd.d/example
 service example
 {
@@ -942,7 +943,7 @@ service example
   server_args = -auth=bsdtcp exampledump
   disable = no
 }</screen>
-   <para>&systemd; に変換するには、下記の 2 つのファイルを作成します:</para>
+      <para>&systemd; に変換するには、下記の 2 つのファイルを作成します:</para>
 <screen>&prompt.root;cat /usr/lib/systemd/system/example.socket
 [Socket]
 ListenStream=0.0.0.0:10085
@@ -960,41 +961,41 @@ User=user
 Group=users
 StandardInput=socket
 </screen>
-   <para>&systemd; の 'ソケット' および 'サービス' ファイルの完全なオプションを知りたい場合は、それぞれ systemd.socket と systemd.service のマニュアルページをお読みください (<command>man 5 systemd.socket</command> , <command>man 5 systemd.service</command>) 。</para>
-  </sect2>
+      <para>&systemd; の 'ソケット' および 'サービス' ファイルの完全なオプションを知りたい場合は、それぞれ systemd.socket と systemd.service のマニュアルページをお読みください (<command>man 5 systemd.socket</command> , <command>man 5 systemd.service</command>) 。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-custom-targets">
-   <title>独自のターゲットの作成</title>
-   <para>System V init の &suse; システムでは、ランレベル 4 は未使用で、管理者が独自のランレベル設定を作成できるようになっていました。 &systemd; では、必要に応じて任意の数のターゲットを作成することができます。作成するにあたっては、 <systemitem>graphical.target</systemitem> などの既存のターゲットから始めることをお勧めします。</para>
-   <procedure>
-    <step>
-     <para>まずは設定ファイル <filename>/usr/lib/systemd/system/graphical.target</filename> を <filename>/etc/systemd/system/<replaceable>ターゲット名</replaceable>.target</filename> にコピーして、必要な編集を施します。</para>
-    </step>
-    <step>
-     <para>上記の手順でコピーしたファイルには、ターゲットに対する必須の ( <quote>ハード</quote> ) 依存関係が既に設定されています。 <quote>ソフト</quote> 依存関係を設定したい場合は、まず <filename>/etc/systemd/system/<replaceable>ターゲット名</replaceable>.target.wants</filename> ディレクトリを作成してください。</para>
-    </step>
-    <step>
-     <para>ソフト依存関係を設定するには、 <filename>/usr/lib/systemd/system</filename> 内から <filename>/etc/systemd/system/<replaceable>MY_TARGET</replaceable>.target.wants</filename> にシンボリックリンクを作成します。</para>
-    </step>
-    <step>
-     <para>ターゲットの設定が終わったら、 &systemd; の設定を再読み込みし、新しいターゲットが利用できるようにします:</para>
+    <sect2 xml:id="sec-boot-systemd-custom-targets">
+      <title>独自のターゲットの作成</title>
+      <para>System V init の &suse; システムでは、ランレベル 4 は未使用で、管理者が独自のランレベル設定を作成できるようになっていました。 &systemd; では、必要に応じて任意の数のターゲットを作成することができます。作成するにあたっては、 <systemitem>graphical.target</systemitem> などの既存のターゲットから始めることをお勧めします。</para>
+      <procedure>
+        <step>
+          <para>まずは設定ファイル <filename>/usr/lib/systemd/system/graphical.target</filename> を <filename>/etc/systemd/system/<replaceable>ターゲット名</replaceable>.target</filename> にコピーして、必要な編集を施します。</para>
+        </step>
+        <step>
+          <para>上記の手順でコピーしたファイルには、ターゲットに対する必須の ( <quote>ハード</quote> ) 依存関係が既に設定されています。 <quote>ソフト</quote> 依存関係を設定したい場合は、まず <filename>/etc/systemd/system/<replaceable>ターゲット名</replaceable>.target.wants</filename> ディレクトリを作成してください。</para>
+        </step>
+        <step>
+          <para>ソフト依存関係を設定するには、 <filename>/usr/lib/systemd/system</filename> 内から <filename>/etc/systemd/system/<replaceable>MY_TARGET</replaceable>.target.wants</filename> にシンボリックリンクを作成します。</para>
+        </step>
+        <step>
+          <para>ターゲットの設定が終わったら、 &systemd; の設定を再読み込みし、新しいターゲットが利用できるようにします:</para>
 <screen>&prompt.sudo;systemctl daemon-reload</screen>
-    </step>
-   </procedure>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-advanced">
-  <title>高度な使い方</title>
+        </step>
+      </procedure>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-advanced">
+    <title>高度な使い方</title>
 
-  <para>下記の章では、システム管理者向けの高度な使い方を説明しています。さらに高度な &systemd; のドキュメンテーションについては、 Lennart Pöttering 氏による管理者向けドキュメンテーション <link xlink:href="http://0pointer.de/blog/projects"/> をお読みください。</para>
+    <para>下記の章では、システム管理者向けの高度な使い方を説明しています。さらに高度な &systemd; のドキュメンテーションについては、 Lennart Pöttering 氏による管理者向けドキュメンテーション <link xlink:href="http://0pointer.de/blog/projects"/> をお読みください。</para>
 
-  <sect2 xml:id="sec-boot-systemd-advanced-tmp">
-   <title>一時ディレクトリのクリーニング</title>
-   <para>&systemd; では、一時 (テンポラリ) ディレクトリを定期的にクリーニングする機能が用意されています。また、以前のバージョンのシステムに存在していた設定は、自動的に移行され有効化されます。 <literal>tmpfiles.d</literal> という一時ディレクトリの管理用ファイル、具体的には <filename>/etc/tmpfiles.d/*.conf</filename> , <filename>/run/tmpfiles.d/*.conf</filename> , <filename>/usr/lib/tmpfiles.d/*.conf</filename> の各設定ファイルを利用しています。 <filename>/etc/tmpfiles.d/*.conf</filename> 内にある設定は、残りの 2 つのディレクトリの設定を上書きするために用意されているディレクトリです (通常は <filename>/usr/lib/tmpfiles.d/*.conf</filename> 内にパッケージ側の設定ファイルが配置されます) 。</para>
-   <para>設定の書式は 1 行に 1 つずつアクションとパスを指定する形式で、必要であればモードや所有者、世代やアクションに応じたその他のパラメータなどを指定します。下記の例では、 X11 のロック (施錠) ファイルを削除しています:</para>
+    <sect2 xml:id="sec-boot-systemd-advanced-tmp">
+      <title>一時ディレクトリのクリーニング</title>
+      <para>&systemd; では、一時 (テンポラリ) ディレクトリを定期的にクリーニングする機能が用意されています。また、以前のバージョンのシステムに存在していた設定は、自動的に移行され有効化されます。 <literal>tmpfiles.d</literal> という一時ディレクトリの管理用ファイル、具体的には <filename>/etc/tmpfiles.d/*.conf</filename> , <filename>/run/tmpfiles.d/*.conf</filename> , <filename>/usr/lib/tmpfiles.d/*.conf</filename> の各設定ファイルを利用しています。 <filename>/etc/tmpfiles.d/*.conf</filename> 内にある設定は、残りの 2 つのディレクトリの設定を上書きするために用意されているディレクトリです (通常は <filename>/usr/lib/tmpfiles.d/*.conf</filename> 内にパッケージ側の設定ファイルが配置されます) 。</para>
+      <para>設定の書式は 1 行に 1 つずつアクションとパスを指定する形式で、必要であればモードや所有者、世代やアクションに応じたその他のパラメータなどを指定します。下記の例では、 X11 のロック (施錠) ファイルを削除しています:</para>
 <screen>Type Path               Mode UID  GID  Age Argument
 r    /tmp/.X[0-9]*-lock</screen>
-   <para>tmpfile タイマーの状態を取得するには、下記のように実行します:</para>
+      <para>tmpfile タイマーの状態を取得するには、下記のように実行します:</para>
 <screen>&prompt.sudo;systemctl status systemd-tmpfiles-clean.timer
 systemd-tmpfiles-clean.timer - Daily Cleanup of Temporary Directories
  Loaded: loaded (/usr/lib/systemd/system/systemd-tmpfiles-clean.timer; static)
@@ -1004,72 +1005,72 @@ systemd-tmpfiles-clean.timer - Daily Cleanup of Temporary Directories
 
 Apr 09 15:30:36 &wsI; systemd[1]: Starting Daily Cleanup of Temporary Directories.
 Apr 09 15:30:36 &wsI; systemd[1]: Started Daily Cleanup of Temporary Directories.</screen>
-   <para>一時ファイルの処理方法について、より詳しく知るには <command>man 5 tmpfiles.d</command> をお読みください。</para>
-  </sect2>
+      <para>一時ファイルの処理方法について、より詳しく知るには <command>man 5 tmpfiles.d</command> をお読みください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-advanced-logging">
-   <title>システムログ</title>
-   <para><xref linkend="sec-boot-systemd-basics-services-debugging"/> では、特定のサービスに対してログメッセージを閲覧する方法を説明しています。しかしながら、ログメッセージはサービスに限ったものではありません。 &systemd; 自身が生成した完全なログメッセージにアクセスしたり、それを検索したりすることもできます。 &systemd; では、ログメッセージを総称して <quote>ジャーナル</quote> と読んでいます。 <command>journalctl</command> コマンドを使用すると、最も古い記録から順に完全なログメッセージを表示することができます。フィルタの適用や出力形式の変更など、様々なオプションについては、 <command>man 1 journalctl</command> をお読みください。</para>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-advanced-logging">
+      <title>システムログ</title>
+      <para><xref linkend="sec-boot-systemd-basics-services-debugging"/> では、特定のサービスに対してログメッセージを閲覧する方法を説明しています。しかしながら、ログメッセージはサービスに限ったものではありません。 &systemd; 自身が生成した完全なログメッセージにアクセスしたり、それを検索したりすることもできます。 &systemd; では、ログメッセージを総称して <quote>ジャーナル</quote> と読んでいます。 <command>journalctl</command> コマンドを使用すると、最も古い記録から順に完全なログメッセージを表示することができます。フィルタの適用や出力形式の変更など、様々なオプションについては、 <command>man 1 journalctl</command> をお読みください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-advanced-snapshots">
-   <title>スナップショット</title>
-   <para>&systemd; では、現在の状態を名前付きのスナップショットとして保存し、後から <command>isolate</command> サブコマンドで復元できる機能が用意されています。これは、任意の時点の状態にいつでも戻れるという機能から、サービスや独自のターゲットをテストする際に便利な機能です。ただし、スナップショットは現在のセッションに対してのみ有効で、システムを再起動すると自動的に削除されます。また、スナップショットの名前は <filename>.snapshot</filename> で終わらなければなりません。</para>
-   <variablelist>
-    <varlistentry>
-     <term>スナップショットの作成</term>
-     <listitem><screen>&prompt.sudo;systemctl snapshot <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>スナップショットの削除</term>
-     <listitem><screen>&prompt.sudo;systemctl delete <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>スナップショットの表示</term>
-     <listitem><screen>&prompt.sudo;systemctl show <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>スナップショットの適用</term>
-     <listitem><screen>&prompt.sudo;systemctl isolate <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-advanced-snapshots">
+      <title>スナップショット</title>
+      <para>&systemd; では、現在の状態を名前付きのスナップショットとして保存し、後から <command>isolate</command> サブコマンドで復元できる機能が用意されています。これは、任意の時点の状態にいつでも戻れるという機能から、サービスや独自のターゲットをテストする際に便利な機能です。ただし、スナップショットは現在のセッションに対してのみ有効で、システムを再起動すると自動的に削除されます。また、スナップショットの名前は <filename>.snapshot</filename> で終わらなければなりません。</para>
+      <variablelist>
+        <varlistentry>
+          <term>スナップショットの作成</term>
+          <listitem><screen>&prompt.sudo;systemctl snapshot <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>スナップショットの削除</term>
+          <listitem><screen>&prompt.sudo;systemctl delete <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>スナップショットの表示</term>
+          <listitem><screen>&prompt.sudo;systemctl show <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>スナップショットの適用</term>
+          <listitem><screen>&prompt.sudo;systemctl isolate <replaceable>スナップショット名</replaceable>.snapshot</screen></listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
 
-  <!-- ================================================================== -->
+    <!-- ================================================================== -->
 
-  <!-- bnc#892349 -->
+    <!-- bnc#892349 -->
 
-  <sect2 xml:id="sec-boot-systemd-advanced-kernel-modules">
-   <title>カーネルモジュールの読み込み</title>
-   <para>&systemd; では、 <filename>/etc/modules-load.d</filename> 内に存在する設定ファイルに従って、システムの起動時に自動的にカーネルモジュールを読み込みます。ファイル名は <replaceable>モジュール名</replaceable>.conf という名前でなければならず、下記のような内容を記述します:</para>
+    <sect2 xml:id="sec-boot-systemd-advanced-kernel-modules">
+      <title>カーネルモジュールの読み込み</title>
+      <para>&systemd; では、 <filename>/etc/modules-load.d</filename> 内に存在する設定ファイルに従って、システムの起動時に自動的にカーネルモジュールを読み込みます。ファイル名は <replaceable>モジュール名</replaceable>.conf という名前でなければならず、下記のような内容を記述します:</para>
 <screen># <replaceable>モジュール</replaceable> を起動時に読み込む
 <replaceable>モジュール名</replaceable></screen>
-   <para>特定のパッケージが、カーネルモジュールを読み込ませるために設定ファイルをインストールすると、そのファイルは <filename>/usr/lib/modules-load.d</filename> 内に保存されます。また、同じ名前の設定ファイルが <filename>/etc/modules-load.d</filename> 内にも存在すると、 <filename>/etc/modules-load.d</filename> 内に存在するもののほうが優先的に処理されます。</para>
-   <para>詳しくは <systemitem>modules-load.d(5)</systemitem> のマニュアルページをお読みください。</para>
-  </sect2>
+      <para>特定のパッケージが、カーネルモジュールを読み込ませるために設定ファイルをインストールすると、そのファイルは <filename>/usr/lib/modules-load.d</filename> 内に保存されます。また、同じ名前の設定ファイルが <filename>/etc/modules-load.d</filename> 内にも存在すると、 <filename>/etc/modules-load.d</filename> 内に存在するもののほうが優先的に処理されます。</para>
+      <para>詳しくは <systemitem>modules-load.d(5)</systemitem> のマニュアルページをお読みください。</para>
+    </sect2>
 
-  <!-- fate #316631 -->
+    <!-- fate #316631 -->
 
-  <sect2 xml:id="sec-boot-systemd-advanced-before-local">
-   <title>サービス読み込み前の処理の実行</title>
-   <para>System V init では、サービスを読み込む際に何らかの処理を行う必要がある場合、<filename>/etc/init.d/before.local</filename> 内に記述を行っていました。 &systemd; ではこのようなファイルには対応していませんが、サービスの開始前に何らかの処理をする必要がある場合は、下記のようにして行います:</para>
-   <variablelist>
-    <varlistentry>
-     <term>カーネルモジュールの読み込み</term>
-     <listitem>
-      <para><filename>/etc/modules-load.d</filename> ディレクトリ内にドロップ・インファイルを作成します (書式については <command>man modules-load.d</command> をお読みください) 。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>ファイルやディレクトリの作成／ディレクトリのクリーンアップ／所有者の変更</term>
-     <listitem>
-      <para><filename>/etc/tmpfiles.d</filename> ディレクトリ内にドロップ・インファイルを作成します (書式については <command>man tmpfiles.d</command> をお読みください) 。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>その他の処理</term>
-     <listitem>
-      <para>下記のようにしてシステムサービスファイルを作成します (たとえば <filename>/etc/systemd/system/before.service</filename> という名前で作成します):</para>
+    <sect2 xml:id="sec-boot-systemd-advanced-before-local">
+      <title>サービス読み込み前の処理の実行</title>
+      <para>System V init では、サービスを読み込む際に何らかの処理を行う必要がある場合、<filename>/etc/init.d/before.local</filename> 内に記述を行っていました。 &systemd; ではこのようなファイルには対応していませんが、サービスの開始前に何らかの処理をする必要がある場合は、下記のようにして行います:</para>
+      <variablelist>
+        <varlistentry>
+          <term>カーネルモジュールの読み込み</term>
+          <listitem>
+            <para><filename>/etc/modules-load.d</filename> ディレクトリ内にドロップ・インファイルを作成します (書式については <command>man modules-load.d</command> をお読みください) 。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>ファイルやディレクトリの作成／ディレクトリのクリーンアップ／所有者の変更</term>
+          <listitem>
+            <para><filename>/etc/tmpfiles.d</filename> ディレクトリ内にドロップ・インファイルを作成します (書式については <command>man tmpfiles.d</command> をお読みください) 。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>その他の処理</term>
+          <listitem>
+            <para>下記のようにしてシステムサービスファイルを作成します (たとえば <filename>/etc/systemd/system/before.service</filename> という名前で作成します):</para>
 <screen>[Unit]
 Before=<replaceable>あらかじめ開始しておくべきサービスの名前</replaceable>
 [Service]
@@ -1082,25 +1083,25 @@ ExecStart=<replaceable>コマンド</replaceable>
 # サービスを開始するターゲット
 WantedBy=multi-user.target
 #WantedBy=graphical.target</screen>
-      <para>サービスファイルを作成したら、後は下記のコマンドを実行します (&rootuser; で実行します):</para>
+            <para>サービスファイルを作成したら、後は下記のコマンドを実行します (&rootuser; で実行します):</para>
 <screen>&prompt.sudo;systemctl daemon-reload
 &prompt.sudo;systemctl enable before</screen>
-      <para>なお、サービスファイルを変更したあとは、下記を実行してください:</para>
+            <para>なお、サービスファイルを変更したあとは、下記を実行してください:</para>
 <screen>&prompt.sudo;systemctl daemon-reload</screen>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
 
-  <!-- ================================================================== -->
+    <!-- ================================================================== -->
 
-  <sect2 xml:id="sec-boot-systemd-advanced-cgroups">
-   <title>カーネルコントロールグループ (cgroups)</title>
-   <para>従来の System V init システムでは、サービスとして起動したプロセスを明示的には管理していませんでした。ただし、 Apache のようなサービスでは、 Apache 自身が必要な多数のプロセス (CGI や Java プロセスなど) を起動して管理していました。このような方法では、プロセスからサービスを探るのが難しくなってしまうか、場合によっては全く不可能になってしまっていました。これに加えて、サービスが正しく終了しなかった場合、子プロセスが残ったままになってしまう場合もありました。</para>
-   <para>&systemd; では、このような問題を cgroup で解決しています。 cgroup はカーネルの機能で、プロセスをまとめ、生成された子プロセスを階層構造型のグループとして管理する仕組みです。 &systemd; では、それぞれのサービスを別々の名前付き cgroup として管理しています。なお、非特権プロセスに対しては cgroup からの <quote>脱退</quote> は認められていませんので、サービスが起動した全てのプロセスを、効率的に名前で管理できるようになっています。</para>
-   <para>サービスに属する全てのプロセスを一覧表示するには、 <command>systemd-cgls</command> コマンドを使用します。実行結果は、たとえば下記のようになります (一部省略しています):</para>
-   <example>
-    <title>サービスに属する全プロセスの一覧表示</title>
+    <sect2 xml:id="sec-boot-systemd-advanced-cgroups">
+      <title>カーネルコントロールグループ (cgroups)</title>
+      <para>従来の System V init システムでは、サービスとして起動したプロセスを明示的には管理していませんでした。ただし、 Apache のようなサービスでは、 Apache 自身が必要な多数のプロセス (CGI や Java プロセスなど) を起動して管理していました。このような方法では、プロセスからサービスを探るのが難しくなってしまうか、場合によっては全く不可能になってしまっていました。これに加えて、サービスが正しく終了しなかった場合、子プロセスが残ったままになってしまう場合もありました。</para>
+      <para>&systemd; では、このような問題を cgroup で解決しています。 cgroup はカーネルの機能で、プロセスをまとめ、生成された子プロセスを階層構造型のグループとして管理する仕組みです。 &systemd; では、それぞれのサービスを別々の名前付き cgroup として管理しています。なお、非特権プロセスに対しては cgroup からの <quote>脱退</quote> は認められていませんので、サービスが起動した全てのプロセスを、効率的に名前で管理できるようになっています。</para>
+      <para>サービスに属する全てのプロセスを一覧表示するには、 <command>systemd-cgls</command> コマンドを使用します。実行結果は、たとえば下記のようになります (一部省略しています):</para>
+      <example>
+        <title>サービスに属する全プロセスの一覧表示</title>
 <screen>&prompt.root;systemd-cgls --no-pager
 ├─1 /usr/lib/systemd/systemd --switched-root --system --deserialize 20
 ├─user.slice
@@ -1126,59 +1127,59 @@ WantedBy=multi-user.target
   │ └─1436 /usr/sbin/sshd -D
 
 [...]</screen>
-   </example>
-   <para>cgroup についての詳細は、 <xref linkend="cha-tuning-cgroups"/> をお読みください。</para>
-  </sect2>
+      </example>
+      <para>cgroup についての詳細は、 <xref linkend="cha-tuning-cgroups"/> をお読みください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-advanced-kill">
-   <title>サービスの終了 (シグナルの送信)</title>
-   <para><xref linkend="sec-boot-systemd-advanced-cgroups"/> でも説明しているとおり、 System V init のシステムでは、プロセスとサービスとの関係性の管理が必ずできるという保証がありませんでした。これにより、サービスを終了させて全ての子プロセスを確実に終了させるということも難しくなっていました。サービスが正しく終了できない場合、子プロセスがゾンビとして残ってしまうこともありました。</para>
-   <para>それぞれのサービスを cgroup に閉じこめる、という &systemd; の考え方により、サービスの全ての子プロセスを明確に管理できるようになるほか、これによってこれらのプロセスそれぞれに対して、シグナルを送信できる仕組みも提供できるようになっています。サービスに対してシグナルを送信するには、 <command>systemctl kill</command> コマンドを使用します。利用可能なシグナルの一覧については、 <command>man 7 signals</command> をお読みください。</para>
-   <variablelist>
-    <varlistentry>
-     <term>サービスに対する <systemitem>SIGTERM</systemitem> の送信</term>
-     <listitem>
-      <para><systemitem>SIGTERM</systemitem> は既定のシグナルです。</para>
+    <sect2 xml:id="sec-boot-systemd-advanced-kill">
+      <title>サービスの終了 (シグナルの送信)</title>
+      <para><xref linkend="sec-boot-systemd-advanced-cgroups"/> でも説明しているとおり、 System V init のシステムでは、プロセスとサービスとの関係性の管理が必ずできるという保証がありませんでした。これにより、サービスを終了させて全ての子プロセスを確実に終了させるということも難しくなっていました。サービスが正しく終了できない場合、子プロセスがゾンビとして残ってしまうこともありました。</para>
+      <para>それぞれのサービスを cgroup に閉じこめる、という &systemd; の考え方により、サービスの全ての子プロセスを明確に管理できるようになるほか、これによってこれらのプロセスそれぞれに対して、シグナルを送信できる仕組みも提供できるようになっています。サービスに対してシグナルを送信するには、 <command>systemctl kill</command> コマンドを使用します。利用可能なシグナルの一覧については、 <command>man 7 signals</command> をお読みください。</para>
+      <variablelist>
+        <varlistentry>
+          <term>サービスに対する <systemitem>SIGTERM</systemitem> の送信</term>
+          <listitem>
+            <para><systemitem>SIGTERM</systemitem> は既定のシグナルです。</para>
 <screen>&prompt.sudo;systemctl kill <replaceable>サービス名</replaceable></screen>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>サービスに対するその他の <replaceable>シグナル</replaceable> の送信</term>
-     <listitem>
-      <para><option>-s</option> オプションを使用して、送信すべきシグナルを指定します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>サービスに対するその他の <replaceable>シグナル</replaceable> の送信</term>
+          <listitem>
+            <para><option>-s</option> オプションを使用して、送信すべきシグナルを指定します。</para>
 <screen>&prompt.sudo;systemctl kill -s <replaceable>シグナル名</replaceable> <replaceable>サービス名</replaceable></screen>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>プロセスの選択</term>
-     <listitem>
-      <para>既定では、 <command>kill</command> サブコマンドは指定した cgroup 内の <quote>全ての</quote> プロセスに対してシグナルを送信しますが、 <option>control</option> (制御プロセスのみ) または <option>main</option> (メインプロセスのみ) のオプションを指定して、特定のプロセスのみに送信することもできます。 <option>main</option> は特に、 <systemitem>SIGHUP</systemitem> を送信して設定ファイルを再読み込みさせるような場合に便利です:</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>プロセスの選択</term>
+          <listitem>
+            <para>既定では、 <command>kill</command> サブコマンドは指定した cgroup 内の <quote>全ての</quote> プロセスに対してシグナルを送信しますが、 <option>control</option> (制御プロセスのみ) または <option>main</option> (メインプロセスのみ) のオプションを指定して、特定のプロセスのみに送信することもできます。 <option>main</option> は特に、 <systemitem>SIGHUP</systemitem> を送信して設定ファイルを再読み込みさせるような場合に便利です:</para>
 <screen>&prompt.sudo;systemctl kill -s SIGHUP --kill-who=main <replaceable>サービス名</replaceable></screen>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-dbus">
-   <title>D-Bus サービスに対する重要な情報</title>
-   <para>D-Bus サービスは &systemd; クライアントと systemd マネージャ (プロセス ID=1) との間のメッセージバスとなるサービスです。 <systemitem class="daemon">dbus</systemitem> は単独のデーモンではありますが、初期化インフラストラクチャでは必須の構成部品です。</para>
-   <para>動作中のシステムで <systemitem class="daemon">dbus</systemitem> を終了したり再起動したりする行為は、 PID 1 の終了や再起動と同様であり、 &systemd; のクライアント／サーバ間通信を破壊してしまい、 &systemd; が正しく動作しなくなってしまいます。</para>
-   <para>そのため、 <systemitem class="daemon">dbus</systemitem> の終了や再起動は非推奨であるほか、サポートの対象外となっています。</para>
-   <para><systemitem>dbus</systemitem> それ自身や <systemitem>dbus</systemitem> に関連するパッケージを更新した場合、システムの再起動が必要となります。システムの再起動が必要となっているかどうかを調べたい場合は、 <command>sudo zypper ps -s</command> と入力して実行してください。表示されているサービスの中に <literal>dbus</literal> が存在する場合、システムの再起動が必要となります。</para>
-   <para>なお自動更新の設定で、システムの再起動を必要とするパッケージの更新を行わないようにしている場合でも、 <systemitem>dbus</systemitem> は更新されてしまうことに注意してください。</para>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-dbus">
+      <title>D-Bus サービスに対する重要な情報</title>
+      <para>D-Bus サービスは &systemd; クライアントと systemd マネージャ (プロセス ID=1) との間のメッセージバスとなるサービスです。 <systemitem class="daemon">dbus</systemitem> は単独のデーモンではありますが、初期化インフラストラクチャでは必須の構成部品です。</para>
+      <para>動作中のシステムで <systemitem class="daemon">dbus</systemitem> を終了したり再起動したりする行為は、 PID 1 の終了や再起動と同様であり、 &systemd; のクライアント／サーバ間通信を破壊してしまい、 &systemd; が正しく動作しなくなってしまいます。</para>
+      <para>そのため、 <systemitem class="daemon">dbus</systemitem> の終了や再起動は非推奨であるほか、サポートの対象外となっています。</para>
+      <para><systemitem>dbus</systemitem> それ自身や <systemitem>dbus</systemitem> に関連するパッケージを更新した場合、システムの再起動が必要となります。システムの再起動が必要となっているかどうかを調べたい場合は、 <command>sudo zypper ps -s</command> と入力して実行してください。表示されているサービスの中に <literal>dbus</literal> が存在する場合、システムの再起動が必要となります。</para>
+      <para>なお自動更新の設定で、システムの再起動を必要とするパッケージの更新を行わないようにしている場合でも、 <systemitem>dbus</systemitem> は更新されてしまうことに注意してください。</para>
+    </sect2>
 
-  <!-- debug section should be at the end to be more positive -->
+    <!-- debug section should be at the end to be more positive -->
 
-  <sect2 xml:id="sec-boot-systemd-basics-services-debugging">
-   <title>サービスのデバッグ</title>
-   <para>既定では、 &systemd; はそれほど多くの出力を行いません。サービスが問題なく起動できた場合は、全く出力を返しません。失敗した場合にのみ、短いエラーメッセージを表示します。しかしながら、 <command>systemctl status</command> コマンドを使用すると、サービスの起動や動作に関して様々なデバッグメッセージを取得することができます。</para>
-   <para>&systemd; には独自のログ記録機構 (<quote>ジャーナル</quote> と呼びます) が備えられています。これにより、サービスのメッセージと状態に関するメッセージの両方を取得することができます。 <command>status</command> サブコマンドは <command>tail</command> コマンドに似た仕組みであるほか、異なる形式でログメッセージを表示することができるなど、パワフルなデバッグツールとして便利な存在になっています。</para>
-   <variablelist>
-    <varlistentry>
-     <term>サービスの起動失敗の表示</term>
-     <listitem>
-      <para>サービスの起動に失敗した場合は、 <command>systemctl status <replaceable>サービス名</replaceable></command> を実行することで、詳細なエラーメッセージを取得することができます:</para>
+    <sect2 xml:id="sec-boot-systemd-basics-services-debugging">
+      <title>サービスのデバッグ</title>
+      <para>既定では、 &systemd; はそれほど多くの出力を行いません。サービスが問題なく起動できた場合は、全く出力を返しません。失敗した場合にのみ、短いエラーメッセージを表示します。しかしながら、 <command>systemctl status</command> コマンドを使用すると、サービスの起動や動作に関して様々なデバッグメッセージを取得することができます。</para>
+      <para>&systemd; には独自のログ記録機構 (<quote>ジャーナル</quote> と呼びます) が備えられています。これにより、サービスのメッセージと状態に関するメッセージの両方を取得することができます。 <command>status</command> サブコマンドは <command>tail</command> コマンドに似た仕組みであるほか、異なる形式でログメッセージを表示することができるなど、パワフルなデバッグツールとして便利な存在になっています。</para>
+      <variablelist>
+        <varlistentry>
+          <term>サービスの起動失敗の表示</term>
+          <listitem>
+            <para>サービスの起動に失敗した場合は、 <command>systemctl status <replaceable>サービス名</replaceable></command> を実行することで、詳細なエラーメッセージを取得することができます:</para>
 <screen>&prompt.root;systemctl start apache2
 Job failed. See system journal and 'systemctl status' for details.
 &prompt.root;systemctl status apache2
@@ -1189,103 +1190,103 @@ Job failed. See system journal and 'systemctl status' for details.
 
 Apr 04 16:52:26 g144 start_apache2[3088]: httpd2-prefork: Syntax error on line
 205 of /etc/apache2/httpd.conf: Syntax error on li...alHost&gt;</screen>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>最新の <replaceable>N</replaceable> 件のサービスメッセージの表示</term>
-     <listitem>
-      <para><command>status</command> サブコマンドは、既定では最新の 10 件のメッセージのみを表示します。表示する件数を変更したい場合は、 <option>--lines=<replaceable>N</replaceable></option> パラメータを指定します:</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>最新の <replaceable>N</replaceable> 件のサービスメッセージの表示</term>
+          <listitem>
+            <para><command>status</command> サブコマンドは、既定では最新の 10 件のメッセージのみを表示します。表示する件数を変更したい場合は、 <option>--lines=<replaceable>N</replaceable></option> パラメータを指定します:</para>
 <screen>&prompt.sudo;systemctl status chronyd
 &prompt.sudo;systemctl --lines=20 status chronyd</screen>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>サービスメッセージの追記モードでの表示</term>
-     <listitem>
-      <para>サービスメッセージを <quote>リアルタイムに</quote> 表示したい場合は、 <option>--follow</option> オプションを指定します。これは <command>tail</command> <option>-f</option> に似た動作になります:</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>サービスメッセージの追記モードでの表示</term>
+          <listitem>
+            <para>サービスメッセージを <quote>リアルタイムに</quote> 表示したい場合は、 <option>--follow</option> オプションを指定します。これは <command>tail</command> <option>-f</option> に似た動作になります:</para>
 <screen>&prompt.sudo;systemctl --follow status chronyd</screen>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>メッセージの出力形式</term>
-     <listitem>
-      <para><option>--output=<replaceable>モード</replaceable></option> オプションを指定すると、サービスメッセージの出力形式を変更することができます。最もよく使用するモードは下記のとおりです:</para>
-      <variablelist>
-       <varlistentry>
-        <term><option>short</option></term>
-        <listitem>
-         <para>既定の出力形式です。ログメッセージを読みやすいタイムスタンプ表示と共に出力します。</para>
-        </listitem>
-       </varlistentry>
-       <varlistentry>
-        <term><option>verbose</option></term>
-        <listitem>
-         <para>全ての項目を出力する形式です。</para>
-        </listitem>
-       </varlistentry>
-       <varlistentry>
-        <term><option>cat</option></term>
-        <listitem>
-         <para>タイムスタンプ表示のない簡潔な出力形式です。</para>
-        </listitem>
-       </varlistentry>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>メッセージの出力形式</term>
+          <listitem>
+            <para><option>--output=<replaceable>モード</replaceable></option> オプションを指定すると、サービスメッセージの出力形式を変更することができます。最もよく使用するモードは下記のとおりです:</para>
+            <variablelist>
+              <varlistentry>
+                <term><option>short</option></term>
+                <listitem>
+                  <para>既定の出力形式です。ログメッセージを読みやすいタイムスタンプ表示と共に出力します。</para>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><option>verbose</option></term>
+                <listitem>
+                  <para>全ての項目を出力する形式です。</para>
+                </listitem>
+              </varlistentry>
+              <varlistentry>
+                <term><option>cat</option></term>
+                <listitem>
+                  <para>タイムスタンプ表示のない簡潔な出力形式です。</para>
+                </listitem>
+              </varlistentry>
+            </variablelist>
+          </listitem>
+        </varlistentry>
       </variablelist>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-timer-units">
-  <title>&systemd; タイマーユニット</title>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-timer-units">
+    <title>&systemd; タイマーユニット</title>
 
-  <para>&systemd; のタイマーユニットは cron と同等の機能を提供するもので、 Linux でジョブのスケジュールを行うことができる仕組みです。 &systemd; のタイマーユニットは cron と同じ目的で提供されるものですが、いくつかの追加機能があります。</para>
+    <para>&systemd; のタイマーユニットは cron と同等の機能を提供するもので、 Linux でジョブのスケジュールを行うことができる仕組みです。 &systemd; のタイマーユニットは cron と同じ目的で提供されるものですが、いくつかの追加機能があります。</para>
 
-  <itemizedlist>
-   <listitem>
-    <para>別の &systemd; サービスに依存する形でジョブをスケジュールすることができます。</para>
-   </listitem>
-   <listitem>
-    <para>タイマーユニットの取り扱いが &systemd; のサービスと同じであるため、 <command>systemctl</command> を利用して管理することができます。</para>
-   </listitem>
-   <listitem>
-    <para>タイマーはリアルタイムタイマーと単調タイマーのいずれか、もしくは両方を指定することができます。</para>
-   </listitem>
-   <listitem>
-    <para>タイマーユニットは &systemd; のジャーナル内に記録されるため、監視やトラブルシューティングが容易です。</para>
-   </listitem>
-  </itemizedlist>
+    <itemizedlist>
+      <listitem>
+        <para>別の &systemd; サービスに依存する形でジョブをスケジュールすることができます。</para>
+      </listitem>
+      <listitem>
+        <para>タイマーユニットの取り扱いが &systemd; のサービスと同じであるため、 <command>systemctl</command> を利用して管理することができます。</para>
+      </listitem>
+      <listitem>
+        <para>タイマーはリアルタイムタイマーと単調タイマーのいずれか、もしくは両方を指定することができます。</para>
+      </listitem>
+      <listitem>
+        <para>タイマーユニットは &systemd; のジャーナル内に記録されるため、監視やトラブルシューティングが容易です。</para>
+      </listitem>
+    </itemizedlist>
 
-  <para>&systemd; のタイマーユニットのファイル名は、拡張子が <literal>.timer</literal> になっているため、簡単に識別することができます。</para>
+    <para>&systemd; のタイマーユニットのファイル名は、拡張子が <literal>.timer</literal> になっているため、簡単に識別することができます。</para>
 
-  <sect2 xml:id="sec-boot-systemd-timer-types">
-   <title>&systemd; タイマーの種類</title>
-   <para>タイマーユニットでは、間隔の指定だけでなく、具体的な日時を指定することもできます。</para>
-   <itemizedlist>
-    <listitem>
-     <para>cron のジョブと同様に、リアルタイムタイマーは特定の日時に到達することで実行するタイマーです。リアルタイムタイマーは、 <option>OnCalendar</option> と呼ばれるオプションで指定します。</para>
-    </listitem>
-    <listitem>
-     <para>単調タイマーは、起動してからの経過時間を元に実行します。起動はシステムの起動のほか、ユニットの有効化が基準となります。単調タイマーの場合には複数のオプションが提供されていて、それぞれ <option>OnBootSec</option> , <option>OnUnitActiveSec</option> , <option>OnTypeSec</option> を使用します。単調タイマーはシステムの再起動が発生するとリセットされ、間隔が維持されなくなります。</para>
-    </listitem>
-   </itemizedlist>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-timer-types">
+      <title>&systemd; タイマーの種類</title>
+      <para>タイマーユニットでは、間隔の指定だけでなく、具体的な日時を指定することもできます。</para>
+      <itemizedlist>
+        <listitem>
+          <para>cron のジョブと同様に、リアルタイムタイマーは特定の日時に到達することで実行するタイマーです。リアルタイムタイマーは、 <option>OnCalendar</option> と呼ばれるオプションで指定します。</para>
+        </listitem>
+        <listitem>
+          <para>単調タイマーは、起動してからの経過時間を元に実行します。起動はシステムの起動のほか、ユニットの有効化が基準となります。単調タイマーの場合には複数のオプションが提供されていて、それぞれ <option>OnBootSec</option> , <option>OnUnitActiveSec</option> , <option>OnTypeSec</option> を使用します。単調タイマーはシステムの再起動が発生するとリセットされ、間隔が維持されなくなります。</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-timer-service-units">
-   <title>&systemd; とサービスユニット</title>
-   <para>&systemd; のタイマーユニットにはそれぞれ対応するユニットファイルが存在しています。言い換えると、 <filename>.timer</filename> ファイルは、対応する <filename>.service</filename> ファイルを有効化し、管理する役割を担っていることになります。タイマーとしてユニットファイルを使用する場合は、 <filename>.service</filename> ファイル内に <literal>[Install]</literal> セクションを指定する必要はありません。これは、タイマー側で管理するためです。</para>
-  </sect2>
+    <sect2 xml:id="sec-boot-systemd-timer-service-units">
+      <title>&systemd; とサービスユニット</title>
+      <para>&systemd; のタイマーユニットにはそれぞれ対応するユニットファイルが存在しています。言い換えると、 <filename>.timer</filename> ファイルは、対応する <filename>.service</filename> ファイルを有効化し、管理する役割を担っていることになります。タイマーとしてユニットファイルを使用する場合は、 <filename>.service</filename> ファイル内に <literal>[Install]</literal> セクションを指定する必要はありません。これは、タイマー側で管理するためです。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-timer-example">
-   <title>具体的な例</title>
-   <para>&systemd; のタイマーユニットの基本を理解するため、例として <filename>foo.sh</filename> というシェルスクリプトをタイマーユニットで起動する場合を想定してみます。</para>
-   <para>最初に &systemd; のサービスユニットファイルを作成します。このファイルがシェルスクリプトの制御を行うことになります。テキストエディタを起動して、下記のような内容でサービスユニットファイルの設定を作成してください:</para>
+    <sect2 xml:id="sec-boot-systemd-timer-example">
+      <title>具体的な例</title>
+      <para>&systemd; のタイマーユニットの基本を理解するため、例として <filename>foo.sh</filename> というシェルスクリプトをタイマーユニットで起動する場合を想定してみます。</para>
+      <para>最初に &systemd; のサービスユニットファイルを作成します。このファイルがシェルスクリプトの制御を行うことになります。テキストエディタを起動して、下記のような内容でサービスユニットファイルの設定を作成してください:</para>
 <screen>[Unit]
 Description="Foo shell script"
 
 [Service]
 ExecStart=/usr/local/bin/foo.sh</screen>
-   <para>このファイルを、 <filename>/etc/systemd/system/</filename> ディレクトリ内の <filename>foo.service</filename> という名前で保存します。</para>
-   <para>次にタイマーユニットを作成します。テキストエディタで下記のような内容を記述します:</para>
+      <para>このファイルを、 <filename>/etc/systemd/system/</filename> ディレクトリ内の <filename>foo.service</filename> という名前で保存します。</para>
+      <para>次にタイマーユニットを作成します。テキストエディタで下記のような内容を記述します:</para>
 <screen>[Unit]
 Description="Run foo shell script"
 
@@ -1296,49 +1297,49 @@ Unit=foo.service
 
 [Install]
 WantedBy=multi-user.target</screen>
-   <para>上記の例では、 <literal>[Timer]</literal> セクションで対応するサービスユニットファイルを指定 ( <literal>foo.service</literal> ) し、起動間隔を指定しています。この例では <option>OnBootSec</option> を指定していますので、まずはシステムの起動後を基準として 5 分間隔でシェルスクリプトを起動することになります。また、 <option>OnUnitActiveSec</option> の指定も存在することから、ユニットの有効化から 24 時間が経過するタイミングでも起動することになります (つまり 1 日 1 回) 。また、 <option>WantedBy</option> の指定では、システムがマルチユーザターゲットに到達している場合にタイマーを開始すべきである旨を示しています。</para>
-   <para>単調タイマーの代わりに、 <option>OnCalendar</option> でリアルタイムタイマーを指定することもできます。たとえば下記のように指定すると、月曜日の 12:00 を開始時点として、週 1 回の間隔で対応するサービスを起動することができます。</para>
+      <para>上記の例では、 <literal>[Timer]</literal> セクションで対応するサービスユニットファイルを指定 ( <literal>foo.service</literal> ) し、起動間隔を指定しています。この例では <option>OnBootSec</option> を指定していますので、まずはシステムの起動後を基準として 5 分間隔でシェルスクリプトを起動することになります。また、 <option>OnUnitActiveSec</option> の指定も存在することから、ユニットの有効化から 24 時間が経過するタイミングでも起動することになります (つまり 1 日 1 回) 。また、 <option>WantedBy</option> の指定では、システムがマルチユーザターゲットに到達している場合にタイマーを開始すべきである旨を示しています。</para>
+      <para>単調タイマーの代わりに、 <option>OnCalendar</option> でリアルタイムタイマーを指定することもできます。たとえば下記のように指定すると、月曜日の 12:00 を開始時点として、週 1 回の間隔で対応するサービスを起動することができます。</para>
 <screen>[Timer]
 OnCalendar=weekly
 Persistent=true</screen>
-   <para>ここでは <option>Persistent=true</option> を指定していますが、これはシステムが直前の起動時間を判断できない場合 (たとえばシステムの電源を落としていた場合) に、タイマーを即時に起動することを示しています。</para>
-   <para>このほか、 <option>OnCalendar</option> では <literal>曜日 年-月-日 時:分:秒</literal> のような書式で指定することで、特定の日時に起動を行うこともできます。たとえば下記のように指定すると、毎日 AM5:00 にサービスを起動することになります:</para>
+      <para>ここでは <option>Persistent=true</option> を指定していますが、これはシステムが直前の起動時間を判断できない場合 (たとえばシステムの電源を落としていた場合) に、タイマーを即時に起動することを示しています。</para>
+      <para>このほか、 <option>OnCalendar</option> では <literal>曜日 年-月-日 時:分:秒</literal> のような書式で指定することで、特定の日時に起動を行うこともできます。たとえば下記のように指定すると、毎日 AM5:00 にサービスを起動することになります:</para>
 <screen>OnCalendar=*-*-* 5:00:00</screen>
-   <para>cron と同様にアスタリスク記号で任意の数値を、カンマ区切りで複数の数値を指定することもできます。また、 2 つの値の間に .. を入れることで、連続した値を指定することもできます。たとえば下記の例は、毎月最初の金曜日の PM6:00 に起動する意味になります:</para>
+      <para>cron と同様にアスタリスク記号で任意の数値を、カンマ区切りで複数の数値を指定することもできます。また、 2 つの値の間に .. を入れることで、連続した値を指定することもできます。たとえば下記の例は、毎月最初の金曜日の PM6:00 に起動する意味になります:</para>
 <screen>OnCalendar=Fri *-*-1..7 18:00:00</screen>
-   <para>複数の日時を指定したい場合は、 <option>OnCalendar</option> の項目を複数に分割してください:</para>
+      <para>複数の日時を指定したい場合は、 <option>OnCalendar</option> の項目を複数に分割してください:</para>
 <screen>OnCalendar=Mon..Fri 10:00
 OnCalendar=Sat,Sun 22:00</screen>
-   <para>上記の例では、月曜日から金曜日までの AM10:00 と、週末の PM10:00 にそれぞれ起動する意味になります。</para>
-   <para>タイマーユニットファイルを作成したら、 <filename>/etc/systemd/system/</filename> ディレクトリ内に <filename>foo.timer</filename> というファイル名で保存してください。ユニットファイルが正しく設定できているかどうかを確認するには、下記のようなコマンドを実行します:</para>
+      <para>上記の例では、月曜日から金曜日までの AM10:00 と、週末の PM10:00 にそれぞれ起動する意味になります。</para>
+      <para>タイマーユニットファイルを作成したら、 <filename>/etc/systemd/system/</filename> ディレクトリ内に <filename>foo.timer</filename> というファイル名で保存してください。ユニットファイルが正しく設定できているかどうかを確認するには、下記のようなコマンドを実行します:</para>
 <screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
-   <para>上記のコマンドを実行しても何も出力されなければ、問題なくユニットファイルが設定できていることを示しています。</para>
-   <para>タイマーを開始するには <command>sudo systemctl start foo.timer</command> を、システムの起動時にタイマーを有効化するには <command>sudo systemctl enable foo.timer</command> をそれぞれ実行してください。</para>
-  </sect2>
+      <para>上記のコマンドを実行しても何も出力されなければ、問題なくユニットファイルが設定できていることを示しています。</para>
+      <para>タイマーを開始するには <command>sudo systemctl start foo.timer</command> を、システムの起動時にタイマーを有効化するには <command>sudo systemctl enable foo.timer</command> をそれぞれ実行してください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-boot-systemd-timer-manage">
-   <title>&systemd; タイマーの管理</title>
-   <para>タイマーは &systemd; のユニットとして扱われるため、管理も <command>systemctl</command> コマンドで行います。タイマーを起動するには <command>systemctl start</command> を、タイマーを有効化するには <command>systemctl enable</command> をそれぞれ実行してください。これに加えて、 <command>systemctl list-timers</command> を実行すると、現在有効なタイマーの一覧を表示することができます。有効になっていないタイマーも含めたい場合は、 <command>systemctl list-timers --all</command> を実行してください。</para>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-boot-systemd-info">
-  <title>さらなる情報</title>
+    <sect2 xml:id="sec-boot-systemd-timer-manage">
+      <title>&systemd; タイマーの管理</title>
+      <para>タイマーは &systemd; のユニットとして扱われるため、管理も <command>systemctl</command> コマンドで行います。タイマーを起動するには <command>systemctl start</command> を、タイマーを有効化するには <command>systemctl enable</command> をそれぞれ実行してください。これに加えて、 <command>systemctl list-timers</command> を実行すると、現在有効なタイマーの一覧を表示することができます。有効になっていないタイマーも含めたい場合は、 <command>systemctl list-timers --all</command> を実行してください。</para>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-boot-systemd-info">
+    <title>さらなる情報</title>
 
-  <para>&systemd; について、より詳しく知りたい場合は、下記のオンラインリソースをお読みください:</para>
+    <para>&systemd; について、より詳しく知りたい場合は、下記のオンラインリソースをお読みください:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term>Web ページ</term>
-    <listitem>
-     <para><link xlink:href="http://www.freedesktop.org/wiki/Software/systemd"/></para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>&systemd; for administrators</term>
-    <listitem>
-     <para>&systemd; の作者のうちの 1 人である Lennart Pöttering 氏が投稿したブログ記事 (本章記述時点で 13 個): <link xlink:href="http://0pointer.de/blog/projects"/></para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
+    <variablelist>
+      <varlistentry>
+        <term>Web ページ</term>
+        <listitem>
+          <para><link xlink:href="http://www.freedesktop.org/wiki/Software/systemd"/></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>&systemd; for administrators</term>
+        <listitem>
+          <para>&systemd; の作者のうちの 1 人である Lennart Pöttering 氏が投稿したブログ記事 (本章記述時点で 13 個): <link xlink:href="http://0pointer.de/blog/projects"/></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
 </chapter>
