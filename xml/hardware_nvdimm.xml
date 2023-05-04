@@ -35,7 +35,7 @@
 
   <itemizedlist>
    <listitem>
-    <para>現在の技術では、システムのメモリ全体を永続型メモリに置き換えることはできず、完全な永続性は提供できません。通常型の RAM と NVDIMM の両方を組み合わせて使用することになります。オペレーティングシステムやアプリケーションは通常型の RAM 内で実行し、 NVDIMM は高速な補助型ストレージとして使用することになります。</para>
+    <para>現在の技術では、永続型メモリのみでシステムを動作させることはできないため、完全な永続性は提供できません。通常型の RAM と NVDIMM の両方を組み合わせて使用することになります。オペレーティングシステムやアプリケーションは通常型の RAM 内で実行し、 NVDIMM は高速な補助型ストレージとして使用することになります。</para>
    </listitem>
    <listitem>
     <para>永続型メモリは販売元によって様々な性能の差異や特徴があることから、プログラマ側はサーバ内の NVDIMM のハードウエア特性を知っておく必要があります。これには NVDIMM の容量のほか、使用しているメモリスロットの場所も含まれます。これによってハイパーバイザ用途での使用やホストマシン間のソフトウエア移行など、様々な箇所の性能に影響があるためです。</para>
@@ -83,7 +83,7 @@
    <varlistentry>
     <term>モード</term>
     <listitem>
-     <para>それぞれのネームスペースには <emphasis>モード</emphasis> が設定されます。これはネームスペース内で有効化する NVDIMM の機能を意味するもので、同じ親リージョンを共有する兄弟姉妹間のネームスペースでは同じ型になるものの、異なるモードを設定することができます。ネームスペースのモードには下記のようなものがあります:</para>
+     <para>それぞれのネームスペースには <emphasis>モード</emphasis> が設定されます。これはネームスペース内で有効化する NVDIMM の機能を意味するもので、同じ親リージョンを持つ兄弟姉妹間のネームスペースでは同じ型になるものの、異なるモードを設定することができます。ネームスペースのモードには下記のようなものがあります:</para>
      <variablelist>
       <varlistentry>
        <term>devdax</term>
@@ -185,7 +185,7 @@
 
   <sect2 xml:id="sec-nvdimm-uses-pmem">
    <title>DAX を使用する PMEM</title>
-   <para>この形態でのメモリアクセスを使用した場合、トランザクション処理に対して <emphasis>安全ではない</emphasis> ことに注意する必要があります。電源障害やその他のシステム障害が発生した場合、ストレージ内に全てのデータが書き込まれていることを保証できない仕組みであるため、アプリケーション側でそれを保証できる場合にのみ使用してください。</para>
+   <para>この形態でのメモリアクセスはトランザクション処理に対して <emphasis>安全ではありません</emphasis> 。電源障害やその他のシステム障害が発生した場合、ストレージ内に全てのデータが書き込まれていることを保証できない仕組みであるため、アプリケーション側でそれを保証できる場合にのみ使用してください。</para>
    <sect3>
     <title>1 バイト単位でアクセス可能な巨大ストレージとしての使用</title>
     <para>高速な巨大ストレージにバイト単位で直接アクセスできるアプリケーションを使用する場合は、プログラム側で <literal>mmap</literal> システムコールを利用して永続型メモリをアプリケーションのメモリ領域に展開して使用することができます。この場合、追加のシステムメモリは不要となります。</para>
@@ -198,8 +198,8 @@
 
   <sect2>
    <title>BTT を使用する PMEM</title>
-   <para>こちらは永続型メモリを非常に高速なディスクプールとして構成する場合に便利な仕組みです。たとえば BTT を指定した PMEM 内にファイルシステムのジャーナルを配置すると、電源やその他の障害が発生した場合に信頼性を向上させることができます (詳しくは <xref linkend="sec-nvdimm-setup-btt"/> をお読みください) 。</para>
-   <para>アプリケーション側からは非常に高速な SSD デバイスに見えますので、通常のストレージデバイスと同じように扱うことができます。たとえば永続型メモリ内に LVM を構成したりすることもできます。</para>
+   <para>こちらは永続型メモリを高速なディスクプールとして構成する場合に便利な仕組みです。たとえば BTT を指定した PMEM 内にファイルシステムのジャーナルを配置すると、電源やその他の障害が発生した場合に信頼性を向上させることができます (詳しくは <xref linkend="sec-nvdimm-setup-btt"/> をお読みください) 。</para>
+   <para>アプリケーション側からは高速な SSD デバイスに見えますので、通常のストレージデバイスと同じように扱うことができます。たとえば永続型メモリ内に LVM を構成したりすることもできます。</para>
    <para>また BTT はセクタ単位での書き込みを行いますので、常に一貫性が保たれる利点もあります。アプリケーション側ではデータの信頼性確保に力を注ぐことなく処理することができます。メディアエラーが発生したような場合でも、標準のエラー報告チャンネルを介して通知が行われます。</para>
   </sect2>
  </sect1>
@@ -401,7 +401,7 @@ realtime =none            extsz=4096   blocks=0, rtextents=0</screen>
 <screen>&prompt.root;<command>mount | grep dax</command>
 /dev/pmem3 on /mnt/pmem3 type xfs (rw,relatime,attr2,dax,inode64,noquota)</screen>
    <para>上記までの作業で、 PMEM ネームスペースを XFS ファイルシステムでフォーマットし、 DAX でマウントすることができます。</para>
-   <para>このファイルシステム内のファイルに対して <literal>mmap()</literal> システムコールを使用することで、 NVDIMM 内の永続型メモリに直接辿り着くことのできる仮想アドレスを取得することができます。もちろんページキャッシュは完全に迂回する形になります。</para>
+   <para>このファイルシステム内のファイルに対して <literal>mmap()</literal> システムコールを使用することで、 NVDIMM 内の永続型メモリに直接辿り着くことのできる仮想アドレスを取得することができます。もちろんページキャッシュは迂回する形になります。</para>
    <para>このファイルシステム内のファイルに対して <literal>fsync</literal> や <literal>msync</literal> コールを実行すると、 NVDIMM 内に変更されたデータ全てを書き込んでいることが保証されます。これらのコールは、ユーザスペース側で <literal>mmap</literal> した内容のページを、プロセッサキャッシュからも排除して書き込みを保証します。</para>
    <sect3 xml:id="sec-nvdimm-setup-deldax">
     <title>ネームスペースの削除</title>
@@ -475,7 +475,7 @@ I/O size (minimum/optimal): 4096 bytes / 4096 bytes</screen>
    </listitem>
    <listitem>
     <para><link xlink:href="https://www.kernel.org/doc/Documentation/nvdimm/nvdimm.txt"> LIBNVDIMM: Non-Volatile Devices</link></para>
-    <para>カーネル開発者向けの資料で、最新の Linux カーネルツリー内の Documentation ディレクトリ以下にある文書です。 NVDIMM の有効化に関わるさまざまなカーネルモジュールに関する説明のほか、カーネル内の実装に関する技術詳細や <command>ndctl</command> ツールが使用する <filename>sysfs</filename> カーネルインターフェイスに関する情報などが提供されています。</para>
+    <para>カーネル開発者向けの資料で、最新の Linux カーネルツリー内の Documentation ディレクトリ以下にある文書です。 NVDIMM の有効化に関わるカーネルモジュールに関する説明のほか、カーネル内の実装に関する技術詳細や <command>ndctl</command> ツールが使用する <filename>sysfs</filename> カーネルインターフェイスに関する情報などが提供されています。</para>
    </listitem>
    <listitem>
     <para><link xlink:href="https://github.com/pmem/ndctl">GitHub: pmem/ndctl</link></para>
