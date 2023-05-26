@@ -6,7 +6,7 @@
 <!-- Only include this file in openSUSE documentation. For SLE, there are
 better supported methods. -->
 <sect2 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-update-zypper">
- <title>zypper を利用したディストリビューションのアップグレード</title>
+ <title>&zypper; を利用したディストリビューションのアップグレード</title>
  <info>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -15,7 +15,7 @@ better supported methods. -->
  <para><command>zypper</command> コマンドラインユーティリティを利用することで、お使いのシステムを次のバージョンにアップグレードすることができます。それだけではなく、 <command>zypper</command> ではシステムを実行しながらアップグレードを行うことができます。</para>
  <para>このような機能は、リモートからのアップグレードを行いたい高度なユーザや、似たような設定のシステムを多数管理しているようなユーザにとって、便利な仕組みとなります。</para>
  <sect3 xml:id="sec-update-zypper-prep">
-  <title>zypper を利用したアップグレードの準備</title>
+  <title>&zypper; を利用したアップグレードの準備</title>
   <para><command>zypper</command> を利用してアップグレード処理を行う場合、不用意なエラーを発生されないようにするため、リスクの原因をできる限り取り除いておくことをお勧めします。</para>
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
@@ -39,15 +39,15 @@ better supported methods. -->
 <screen>&prompt.sudo;zypper patch</screen>
    </step>
    <step>
-    <para>更新に利用したいリポジトリを設定します。このリポジトリの設定は、間違えることなく正しく設定することが重要です。リポジトリは &yast; (詳しくは <xref linkend="sec-yast-software-instsource"/> をお読みください) のほか、 <command>zypper</command> でも設定することができます (詳しくは <xref linkend="sec-zypper"/> をお読みください) 。なお、下記の手順内で説明しているリポジトリの名前は、ご利用の環境で自由にカスタマイズできるものですので、実際のものとは異なる場合があります。</para>
+    <para>更新に利用したいリポジトリを設定します。このリポジトリの設定は、間違えることなく正しく設定することが重要です。なお、下記の手順で <replaceable>リポジトリ名</replaceable> として示している箇所は、ご利用の OS のカスタマイズ状況によって異なることに注意してください。詳しくは <xref linkend="sec-zypper-instrepo"/> をお読みください。</para>
     <para>現在設定されているリポジトリを一覧表示するには、下記のコマンドを実行します:</para>
-<screen>&prompt.user;zypper --releasever=15.3 lr -u</screen>
+<screen>&prompt.user;zypper --releasever=&productnumber-leaprepo; lr -u</screen>
    </step>
    <step>
-    <para>上記のコマンドの出力結果のうち、右端の列 ( <guimenu>URL</guimenu> ) をお読みください。この中のバージョン番号が、 <literal>15.3</literal> や <literal>openSUSE_Leap_15.3</literal> のような形式になっているはずです。そうなっていない場合は、下記の手順を実施してください:</para>
+    <para>上記のコマンドの出力結果のうち、右端の列 ( <guimenu>URL</guimenu> ) をお読みください。この中のバージョン番号に <literal>&productnumber-leaprepo;</literal> のようなバージョン番号が含まれているはずです。そうなっていない場合は、下記の手順を実施してください:</para>
     <substeps>
      <step>
-      <para>まずは対象のリポジトリが今も必要かどうかを判断します。不要な場合は下記のコマンドで削除してください:</para>
+      <para>まずは対象のリポジトリが今も必要かどうかを判断します。不要な場合は下記のコマンドで削除します:</para>
 <screen>&prompt.sudo;zypper rr <replaceable>リポジトリ名</replaceable></screen>
       <para>ほかにも不要なリポジトリがあれば、それらも削除してください。</para>
      </step>
@@ -55,35 +55,27 @@ better supported methods. -->
       <para>サードパーティ製のリポジトリで、バージョン番号を含まないものの場合は、まずリポジトリが &productname; &productnumber; に対応しているかどうかを確認してください。この情報はリポジトリの提供元が公開しているはずです。対応している場合は何もする必要はありません。対応していない場合は、上述の手順でリポジトリを削除してください。</para>
      </step>
      <step>
-      <para>
-       All remaining repositories you want to keep need to be updated to the new version. To allow
-       for future updates without repository modifications, replace the hard-coded version number
-       with the variable <varname>$releasever</varname>. If <literal>15.3</literal> is hard-coded,
-       run:
-      </para>
+      <para>次に URL 内にバージョン番号を含むものに対して、 URL を新しいバージョンに書き換えます。なお、次回以降のバージョンアップでいちいちこの作業を繰り返したりする必要が無いようにするため、 <varname>$releasever</varname> という変数を設定しておくことをお勧めします。たとえば <literal>15.3</literal> が書かれている場合は、下記のようなコマンドを実行します:</para>
 <screen>&prompt.sudo;sed -i 's/15.3/$releasever/' /etc/zypp/repos.d/*.repo</screen>
-      <para>ほかにも切り替える必要があるリポジトリがあれば、上記を繰り返し実行してください。</para>
-      <para>新しいリポジトリの追加に失敗した場合は、まず Web ブラウザを利用して URL を開いて、その URL が正しいことを確認してください。また、まだ新しいバージョンに対応していないリポジトリであった場合は、今の時点ではいったん無効化しておき、対応するようになってから有効化することもできます。この場合は、下記のようにして無効化しておいてください。</para>
+      <para>ほかにもバージョン番号を含む箇所があれば、上記を繰り返してください。</para>
+      <para>なお、新しく設定したリポジトリの URL が正しいかどうかを、 Web ブラウザを利用して確認しておいてください。また、まだ新しいバージョンに対応していないリポジトリであった場合は、今の時点ではいったん無効化しておき、対応するようになってから有効化することもできます。この場合は、下記のようにして無効化しておいてください。</para>
 <screen>&prompt.sudo;zypper mr -d <replaceable>リポジトリ名</replaceable></screen>
-      <para>
-       Packages from deactivated repositories will not be removed if all dependencies are still
-       fulfilled.
-      </para>
+      <para>上記のようにリポジトリを無効化した場合でも、依存関係に問題がなければ、インストール済みのパッケージは削除されず維持されます。</para>
      </step>
     </substeps>
    </step>
    <step>
     <para>完了したら、下記のコマンドを実行してリポジトリの一覧を再確認します:</para>
-<screen>&prompt.sudo;zypper --releasever=15.3 lr -u</screen>
-    <para>上記を実行すると、サードパーティ製のリポジトリでバージョン番号を含まないものと、無効化されているもの (<guimenu>Enabled</guimenu> が <literal>いいえ (n)</literal> になっているもの) を除いて、全てのリポジトリが <literal>15.3</literal> を指し示すようになっているはずです。</para>
+<screen>&prompt.sudo;zypper --releasever=&productnumber-leaprepo; lr -u</screen>
+    <para>上記を実行すると、サードパーティ製のリポジトリでバージョン番号を含まないものと、無効化されているもの (<guimenu>Enabled</guimenu> が <literal>いいえ (n)</literal> になっているもの) を除いて、全てのリポジトリが <literal>&productnumber-leaprepo;</literal> を指し示すようになっているはずです。</para>
    </step>
    <step>
     <para>あとはリポジトリのメタデータを更新します:</para>
-<screen>&prompt.sudo;zypper --releasever=15.3 ref</screen>
+<screen>&prompt.sudo;zypper --releasever=&productnumber-leaprepo; ref</screen>
    </step>
    <step>
     <para>後は全てのパッケージを新しいバージョンに更新するため、ディストリビューションアップグレードを実施します:</para>
-<screen>&prompt.sudo;zypper --releasever=15.3 dup</screen>
+<screen>&prompt.sudo;zypper --releasever=&productnumber-leaprepo; dup</screen>
     <para>選択したソフトウエアによっては、 1 つまたは複数のライセンスに合意する必要がある場合があります。また、コマンドの出力結果はよくご確認ください。全てが問題ないことを確認したら、 <guimenu>y</guimenu> で処理を進めてください。</para>
    </step>
    <step>
