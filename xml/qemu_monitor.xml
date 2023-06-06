@@ -4,287 +4,288 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-qemu-monitor">
- <title>&qemu; モニタを利用した仮想マシンの管理</title>
- <info>
-   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-     <dm:bugtracker/>
-     <dm:translation>yes</dm:translation>
-   </dm:docmanager>
- </info>
- <para>&qemusystemarch; (たとえば <command>qemu-system-x86_64</command>) で仮想マシンを起動した場合、ユーザ側からの操作を受け付けるためのモニタコンソールが起動されます。モニタコンソール内ではコマンドを入力して実行することができますので、ここからリムーバブルメディアの変更やスクリーンショットの採取、オーディオのキャプチャなど、仮想マシンに対するさまざまな制御を行うことができます。</para>
- <note>
-  <para>下記の章では、便利な &qemu; のモニタコマンドとその用途を説明しています。全てのコマンドを一覧で表示したい場合は、 &qemu; モニタのコマンドラインで <command>help</command> と入力して実行してください。</para>
- </note>
- <sect1 xml:id="sec-qemu-monitor-access">
-  <title>モニタコンソールへのアクセス</title>
-  <tip>
-   <title>&libvirt; 向けにはモニタコンソールが提供されない件について</title>
-   <para>モニタコンソールにアクセスするには、仮想マシンを &qemusystemarch; コマンドで直接起動し、グラフィカルな出力としてネイティブな &qemu; ウインドウを表示させる必要があります。</para>
-   <para>仮想マシンを &libvirt; (たとえば <command>virt-manager</command>) で起動している場合で、 VNC や Spice セッション経由で出力を表示させている場合は、モニタコンソールに直接アクセスすることはできません。ただし、 &virsh; で下記のように入力して実行することで、モニタコマンドを送信することができます:</para>
+  <title>&qemu; モニタを利用した仮想マシンの管理</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>&qemusystemarch; (たとえば <command>qemu-system-x86_64</command>) で仮想マシンを起動した場合、ユーザ側からの操作を受け付けるためのモニタコンソールが起動されます。モニタコンソール内ではコマンドを入力して実行することができますので、ここからリムーバブルメディアの変更やスクリーンショットの採取、オーディオのキャプチャなど、仮想マシンに対するさまざまな制御を行うことができます。</para>
+  <note>
+    <para>下記の章では、便利な &qemu; のモニタコマンドとその用途を説明しています。全てのコマンドを一覧で表示したい場合は、 &qemu; モニタのコマンドラインで <command>help</command> と入力して実行してください。</para>
+  </note>
+  <sect1 xml:id="sec-qemu-monitor-access">
+    <title>モニタコンソールへのアクセス</title>
+
+    <tip>
+      <title>&libvirt; 向けにはモニタコンソールが提供されない件について</title>
+      <para>モニタコンソールにアクセスするには、仮想マシンを &qemusystemarch; コマンドで直接起動し、グラフィカルな出力としてネイティブな &qemu; ウインドウを表示させる必要があります。</para>
+      <para>仮想マシンを &libvirt; (たとえば <command>virt-manager</command>) で起動している場合で、 VNC や Spice セッション経由で出力を表示させている場合は、モニタコンソールに直接アクセスすることはできません。ただし、 &virsh; で下記のように入力して実行することで、モニタコマンドを送信することができます:</para>
 <screen>&prompt.root;virsh qemu-monitor-command <replaceable>コマンド</replaceable></screen>
-  </tip>
+    </tip>
 
-  <para>モニタコンソールへのアクセス方法は、仮想マシンの出力に使用しているディスプレイデバイスの種類によって異なります。ディスプレイに関する詳細は、 <xref linkend="cha-qemu-running-devices-graphic-display"/> をお読みください。たとえば <option>-display gtk</option> オプションを利用してモニタを表示させている場合、 <keycombo><keycap function="control"/> <keycap function="alt"/><keycap>2</keycap></keycombo> を押すことでモニタコンソールを表示させることができます。同様に <option>-nographic</option> オプションを利用している場合は、 <keycombo><keycap function="control"/><keycap>A</keycap></keycombo> <keycap>C</keycap> を押すことでモニタコンソールに切り替えることができます。</para>
+    <para>モニタコンソールへのアクセス方法は、仮想マシンの出力に使用しているディスプレイデバイスの種類によって異なります。ディスプレイに関する詳細は、 <xref linkend="cha-qemu-running-devices-graphic-display"/> をお読みください。たとえば <option>-display gtk</option> オプションを利用してモニタを表示させている場合、 <keycombo><keycap function="control"/> <keycap function="alt"/><keycap>2</keycap></keycombo> を押すことでモニタコンソールを表示させることができます。同様に <option>-nographic</option> オプションを利用している場合は、 <keycombo><keycap function="control"/><keycap>A</keycap></keycombo> <keycap>C</keycap> を押すことでモニタコンソールに切り替えることができます。</para>
 
-  <para>コンソールの使用方法についてヘルプを表示したい場合は、 <command>help</command> もしくは <command>?</command> と入力して実行します。特定のコマンドに対するヘルプを表示したい場合は、 <command>help</command> <replaceable>コマンド</replaceable> のように入力して実行してください。</para>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-get">
-  <title>ゲストシステムに関する情報の取得</title>
+    <para>コンソールの使用方法についてヘルプを表示したい場合は、 <command>help</command> もしくは <command>?</command> と入力して実行します。特定のコマンドに対するヘルプを表示したい場合は、 <command>help</command> <replaceable>コマンド</replaceable> のように入力して実行してください。</para>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-get">
+    <title>ゲストシステムに関する情報の取得</title>
 
-  <para>ゲストシステムに関する情報を取得したい場合は、 <command>info</command> を使用します。オプションを何も指定しないで実行すると、指定可能なオプションの一覧が表示されます。オプションでは、表示したい情報を指定します:</para>
+    <para>ゲストシステムに関する情報を取得したい場合は、 <command>info</command> を使用します。オプションを何も指定しないで実行すると、指定可能なオプションの一覧が表示されます。オプションでは、表示したい情報を指定します:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term><command>info version</command></term>
-    <listitem>
-     <para>&qemu; のバージョンを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info commands</command></term>
-    <listitem>
-     <para>利用可能な QMP コマンドの一覧を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info network</command></term>
-    <listitem>
-     <para>ネットワークの状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info chardev</command></term>
-    <listitem>
-     <para>キャラクタデバイスを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info block</command></term>
-    <listitem>
-     <para>ハードディスクやフロッピィディスク、 CD-ROM ドライブなどのブロックデバイスに関する情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info blockstats</command></term>
-    <listitem>
-     <para>ブロックデバイスに関する読み書きの統計情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info registers</command></term>
-    <listitem>
-     <para>CPU レジスタを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info cpus</command></term>
-    <listitem>
-     <para>利用可能な CPU に関する情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info history</command></term>
-    <listitem>
-     <para>コマンドラインの履歴を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info irq</command></term>
-    <listitem>
-     <para>輪の込みに関する統計情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info pic</command></term>
-    <listitem>
-     <para>i8259 (PIC) の状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info pci</command></term>
-    <listitem>
-     <para>PCI の情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info tlb</command></term>
-    <listitem>
-     <para>仮想メモリから物理メモリへのマッピング情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info mem</command></term>
-    <listitem>
-     <para>有効な仮想メモリマッピングを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info jit</command></term>
-    <listitem>
-     <para>動的なコンパイラの情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info kvm</command></term>
-    <listitem>
-     <para>KVM の情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info numa</command></term>
-    <listitem>
-     <para>NUMA の情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info usb</command></term>
-    <listitem>
-     <para>ゲスト USB デバイスの情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info usbhost</command></term>
-    <listitem>
-     <para>ホスト USB デバイスの情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info profile</command></term>
-    <listitem>
-     <para>プロファイル情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info capture</command></term>
-    <listitem>
-     <para>キャプチャ (オーディオ採取) 情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info snapshots</command></term>
-    <listitem>
-     <para>現時点で保存されている仮想マシンのスナップショットを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info status</command></term>
-    <listitem>
-     <para>現在の仮想マシンの状態に関する情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info mice</command></term>
-    <listitem>
-     <para>どのマウスがイベントを受信しているのかを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info vnc</command></term>
-    <listitem>
-     <para>VNC サーバの状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info name</command></term>
-    <listitem>
-     <para>現在の仮想マシンの名前を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info uuid</command></term>
-    <listitem>
-     <para>現在の仮想マシンの UUID を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info usernet</command></term>
-    <listitem>
-     <para>ユーザネットワークスタックの接続情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info migrate</command></term>
-    <listitem>
-     <para>移行の状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info balloon</command></term>
-    <listitem>
-     <para>バルーンデバイスの情報を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info qtree</command></term>
-    <listitem>
-     <para>デバイスツリーを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info qdm</command></term>
-    <listitem>
-     <para>qdev デバイスモデルリストを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info roms</command></term>
-    <listitem>
-     <para>ROM を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info migrate_cache_size</command></term>
-    <listitem>
-     <para>現時点での移行 xbzrle ( <quote>Xor Based Zero Run Length Encoding</quote> ) のキャッシュサイズを表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info migrate_capabilities</command></term>
-    <listitem>
-     <para>xbzrle などのさまざまな移行機能の状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info mtree</command></term>
-    <listitem>
-     <para>&vmguest; のメモリ階層構造を表示します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info trace-events</command></term>
-    <listitem>
-     <para>利用可能なトレースイベントとその状態を表示します。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-vnc-pw">
-  <title>VNC パスワードの変更</title>
+    <variablelist>
+      <varlistentry>
+        <term><command>info version</command></term>
+        <listitem>
+          <para>&qemu; のバージョンを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info commands</command></term>
+        <listitem>
+          <para>利用可能な QMP コマンドの一覧を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info network</command></term>
+        <listitem>
+          <para>ネットワークの状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info chardev</command></term>
+        <listitem>
+          <para>キャラクタデバイスを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info block</command></term>
+        <listitem>
+          <para>ハードディスクやフロッピィディスク、 CD-ROM ドライブなどのブロックデバイスに関する情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info blockstats</command></term>
+        <listitem>
+          <para>ブロックデバイスに関する読み書きの統計情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info registers</command></term>
+        <listitem>
+          <para>CPU レジスタを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info cpus</command></term>
+        <listitem>
+          <para>利用可能な CPU に関する情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info history</command></term>
+        <listitem>
+          <para>コマンドラインの履歴を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info irq</command></term>
+        <listitem>
+          <para>輪の込みに関する統計情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info pic</command></term>
+        <listitem>
+          <para>i8259 (PIC) の状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info pci</command></term>
+        <listitem>
+          <para>PCI の情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info tlb</command></term>
+        <listitem>
+          <para>仮想メモリから物理メモリへのマッピング情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info mem</command></term>
+        <listitem>
+          <para>有効な仮想メモリマッピングを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info jit</command></term>
+        <listitem>
+          <para>動的なコンパイラの情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info kvm</command></term>
+        <listitem>
+          <para>KVM の情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info numa</command></term>
+        <listitem>
+          <para>NUMA の情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info usb</command></term>
+        <listitem>
+          <para>ゲスト USB デバイスの情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info usbhost</command></term>
+        <listitem>
+          <para>ホスト USB デバイスの情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info profile</command></term>
+        <listitem>
+          <para>プロファイル情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info capture</command></term>
+        <listitem>
+          <para>キャプチャ (オーディオ採取) 情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info snapshots</command></term>
+        <listitem>
+          <para>現時点で保存されている仮想マシンのスナップショットを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info status</command></term>
+        <listitem>
+          <para>現在の仮想マシンの状態に関する情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info mice</command></term>
+        <listitem>
+          <para>どのマウスがイベントを受信しているのかを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info vnc</command></term>
+        <listitem>
+          <para>VNC サーバの状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info name</command></term>
+        <listitem>
+          <para>現在の仮想マシンの名前を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info uuid</command></term>
+        <listitem>
+          <para>現在の仮想マシンの UUID を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info usernet</command></term>
+        <listitem>
+          <para>ユーザネットワークスタックの接続情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info migrate</command></term>
+        <listitem>
+          <para>移行の状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info balloon</command></term>
+        <listitem>
+          <para>バルーンデバイスの情報を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info qtree</command></term>
+        <listitem>
+          <para>デバイスツリーを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info qdm</command></term>
+        <listitem>
+          <para>qdev デバイスモデルリストを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info roms</command></term>
+        <listitem>
+          <para>ROM を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info migrate_cache_size</command></term>
+        <listitem>
+          <para>現時点での移行 xbzrle ( <quote>Xor Based Zero Run Length Encoding</quote> ) のキャッシュサイズを表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info migrate_capabilities</command></term>
+        <listitem>
+          <para>xbzrle などのさまざまな移行機能の状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info mtree</command></term>
+        <listitem>
+          <para>&vmguest; のメモリ階層構造を表示します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info trace-events</command></term>
+        <listitem>
+          <para>利用可能なトレースイベントとその状態を表示します。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-vnc-pw">
+    <title>VNC パスワードの変更</title>
 
-  <para>VNC のパスワードを変更するには、 <command>change vnc password</command> と入力して実行し、新しいパスワードを入力します:</para>
+    <para>VNC のパスワードを変更するには、 <command>change vnc password</command> と入力して実行し、新しいパスワードを入力します:</para>
 
 <screen>
 (qemu) change vnc password
 Password: ********
 (qemu)
     </screen>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-manage-dev">
-  <title>デバイスの管理</title>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-manage-dev">
+    <title>デバイスの管理</title>
 
-  <para>ゲストの動作中に新しいディスクを接続 (ホットプラグ) したい場合は、 <command>drive_add</command> と <command>device_add</command> の各コマンドを使用します。まずは新しいドライブを定義し、それをバス (この例では 0) に接続する流れになります:</para>
+    <para>ゲストの動作中に新しいディスクを接続 (ホットプラグ) したい場合は、 <command>drive_add</command> と <command>device_add</command> の各コマンドを使用します。まずは新しいドライブを定義し、それをバス (この例では 0) に接続する流れになります:</para>
 
 <screen>(qemu) drive_add 0 if=none,file=/tmp/test.img,format=raw,id=disk1
 OK</screen>
 
-  <para>ブロックサブシステムへの問い合わせを行うことで、新しいデバイスが追加されていることを確認することができます:</para>
+    <para>ブロックサブシステムへの問い合わせを行うことで、新しいデバイスが追加されていることを確認することができます:</para>
 
 <screen>(qemu) info block
 [...]
 disk1: removable=1 locked=0 tray-open=0 file=/tmp/test.img ro=0 drv=raw \
 encrypted=0 bps=0 bps_rd=0 bps_wr=0 iops=0 iops_rd=0 iops_wr=0</screen>
 
-  <para>新しいドライブを定義したら、あとはゲスト側からアクセスすることができるようにするため、接続を行います。通常のデバイスであれば <literal>virtio-blk-pci</literal> もしくは <literal>scsi-disk</literal> のいずれかをドライバとして使用します。指定可能な値の一覧を表示するには、下記のように入力して実行します:</para>
+    <para>新しいドライブを定義したら、あとはゲスト側からアクセスすることができるようにするため、接続を行います。通常のデバイスであれば <literal>virtio-blk-pci</literal> もしくは <literal>scsi-disk</literal> のいずれかをドライバとして使用します。指定可能な値の一覧を表示するには、下記のように入力して実行します:</para>
 
 <screen>(qemu) device_add ?
 name "VGA", bus PCI
@@ -292,11 +293,11 @@ name "usb-storage", bus usb-bus
 [...]
 name "virtio-blk-pci", bus virtio-bus</screen>
 
-  <para>後は下記のようにしてデバイスを追加するだけです:</para>
+    <para>後は下記のようにしてデバイスを追加するだけです:</para>
 
 <screen>(qemu) device_add virtio-blk-pci,drive=disk1,id=myvirtio1</screen>
 
-  <para>下記のように入力して実行すると、接続されたことを確認することができます:</para>
+    <para>下記のように入力して実行すると、接続されたことを確認することができます:</para>
 
 <screen>(qemu) info pci
 [...]
@@ -307,137 +308,137 @@ Bus  0, device   4, function 0:
       BAR1: 32 bit memory at 0xffffffffffffffff [0x00000ffe].
       id "myvirtio1"</screen>
 
-  <tip>
-   <para><command>device_add</command> で追加したデバイスは、 <command>device_del</command> で削除を行うことができます。詳しくは &qemu; のモニタコマンドラインから <command>help device_del</command> と入力して実行することで表示される、ヘルプをお読みください。</para>
-  </tip>
+    <tip>
+      <para><command>device_add</command> で追加したデバイスは、 <command>device_del</command> で削除を行うことができます。詳しくは &qemu; のモニタコマンドラインから <command>help device_del</command> と入力して実行することで表示される、ヘルプをお読みください。</para>
+    </tip>
 
-  <para>リムーバブルデバイスのメディアを取り出すには、 <command>eject</command> <replaceable>デバイス名</replaceable> コマンドを使用します。必要であれば <option>-f</option> オプションを追加して、強制的に取り出すこともできます。</para>
+    <para>リムーバブルデバイスのメディアを取り出すには、 <command>eject</command> <replaceable>デバイス名</replaceable> コマンドを使用します。必要であれば <option>-f</option> オプションを追加して、強制的に取り出すこともできます。</para>
 
-  <para>リムーバブルメディア (たとえば CD-ROM) のメディアを交換したい場合は、 <command>change</command> <replaceable>デバイス名</replaceable> コマンドを使用します。リムーバブルメディアの名前は、 <command>info block</command> コマンドで確認することができます:</para>
+    <para>リムーバブルメディア (たとえば CD-ROM) のメディアを交換したい場合は、 <command>change</command> <replaceable>デバイス名</replaceable> コマンドを使用します。リムーバブルメディアの名前は、 <command>info block</command> コマンドで確認することができます:</para>
 
 <screen>
 <prompt>(qemu) </prompt><command>info block</command>
 ide1-cd0: type=cdrom removable=1 locked=0 file=/dev/sr0 ro=1 drv=host_device
 <prompt>(qemu) </prompt><command>change ide1-cd0 /path/to/image</command>
      </screen>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-keyboard">
-  <title>キーボードとマウスの制御</title>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-keyboard">
+    <title>キーボードとマウスの制御</title>
 
-  <para>モニタコンソールを使用することで、キーボードやマウスの入力を擬似することができます。たとえば、お使いのグラフィカルユーザインターフェイス側で認識されてしまうようなキー入力、たとえば X Window であれば <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> を &vmguest; に送信したい場合、 <command>sendkey</command> <replaceable>キー入力</replaceable> のように入力して実行することで、擬似的にキー入力を送信することができます:</para>
+    <para>モニタコンソールを使用することで、キーボードやマウスの入力を擬似することができます。たとえば、お使いのグラフィカルユーザインターフェイス側で認識されてしまうようなキー入力、たとえば X Window であれば <keycombo><keycap function="control"/><keycap function="alt"/><keycap>F1</keycap></keycombo> を &vmguest; に送信したい場合、 <command>sendkey</command> <replaceable>キー入力</replaceable> のように入力して実行することで、擬似的にキー入力を送信することができます:</para>
 
 <screen>sendkey ctrl-alt-f1</screen>
 
-  <para><replaceable>キー入力</replaceable> の箇所で指定可能なキー名の一覧を表示するには、 <command>sendkey</command> と入力して <keycap function="tab"/> を押します。</para>
+    <para><replaceable>キー入力</replaceable> の箇所で指定可能なキー名の一覧を表示するには、 <command>sendkey</command> と入力して <keycap function="tab"/> を押します。</para>
 
-  <para>マウスを制御したい場合は、下記のようなコマンドを使用することができます:</para>
+    <para>マウスを制御したい場合は、下記のようなコマンドを使用することができます:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term><command>mouse_move</command> <replaceable>DX</replaceable> <replaceable>dy</replaceable> [ <replaceable>DZ</replaceable> ]</term>
-    <listitem>
-     <para>dx, dy (およびホイールスクロール dz) の分だけ、有効なマウスポインタを移動します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>mouse_button</command> <replaceable>値</replaceable></term>
-    <listitem>
-     <para>マウスボタンの押下状態を変更します (1=左, 2=中央, 4=右) 。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>mouse_set</command> <replaceable>インデックス</replaceable></term>
-    <listitem>
-     <para>イベントを受信するマウスを選択します。デバイスのインデックス番号は、 <command>info mice</command> コマンドで取得することができます。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-memory">
-  <title>利用可能なメモリの変更</title>
+    <variablelist>
+      <varlistentry>
+        <term><command>mouse_move</command> <replaceable>DX</replaceable> <replaceable>dy</replaceable> [ <replaceable>DZ</replaceable> ]</term>
+        <listitem>
+          <para>dx, dy (およびホイールスクロール dz) の分だけ、有効なマウスポインタを移動します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>mouse_button</command> <replaceable>値</replaceable></term>
+        <listitem>
+          <para>マウスボタンの押下状態を変更します (1=左, 2=中央, 4=右) 。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>mouse_set</command> <replaceable>インデックス</replaceable></term>
+        <listitem>
+          <para>イベントを受信するマウスを選択します。デバイスのインデックス番号は、 <command>info mice</command> コマンドで取得することができます。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-memory">
+    <title>利用可能なメモリの変更</title>
 
-  <para>仮想マシンを <option>-balloon virtio</option> オプション付きで起動している場合 (準仮想化デバイスが有効化されている場合) 、利用可能なメモリを動的に変更することができるようになります。バルーンデバイスの有効化に関する詳細については、 <xref linkend="cha-qemu-guest-inst-qemu-kvm"/> をお読みください。</para>
+    <para>仮想マシンを <option>-balloon virtio</option> オプション付きで起動している場合 (準仮想化デバイスが有効化されている場合) 、利用可能なメモリを動的に変更することができるようになります。バルーンデバイスの有効化に関する詳細については、 <xref linkend="cha-qemu-guest-inst-qemu-kvm"/> をお読みください。</para>
 
-  <para>モニタコンソール内でバルーンデバイスに関する情報を取得したり、バルーンデバイスが有効化されているかどうかを調べたりしたい場合は、 <command>info balloon</command> コマンドを実行します:</para>
+    <para>モニタコンソール内でバルーンデバイスに関する情報を取得したり、バルーンデバイスが有効化されているかどうかを調べたりしたい場合は、 <command>info balloon</command> コマンドを実行します:</para>
 
 <screen>(qemu) info balloon</screen>
 
-  <para>バルーンデバイスが有効化されていれば、 <command>balloon</command> <replaceable>メモリ量 (MB 単位)</replaceable> を入力して実行することで、メモリ量を変更することができます:</para>
+    <para>バルーンデバイスが有効化されていれば、 <command>balloon</command> <replaceable>メモリ量 (MB 単位)</replaceable> を入力して実行することで、メモリ量を変更することができます:</para>
 
 <screen>(qemu) balloon 400</screen>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-virt-memory">
-  <title>仮想マシンのメモリダンプ</title>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-virt-memory">
+    <title>仮想マシンのメモリダンプ</title>
 
-  <para>仮想マシンのメモリをディスクやコンソール出力に保存したい場合は、下記のコマンドをお使いください:</para>
+    <para>仮想マシンのメモリをディスクやコンソール出力に保存したい場合は、下記のコマンドをお使いください:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term><command>memsave</command> <replaceable>アドレス</replaceable> <replaceable>サイズ</replaceable> <replaceable>ファイル名</replaceable></term>
-    <listitem>
-     <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>サイズ</replaceable> で指定したサイズ分の仮想メモリダンプを <replaceable>ファイル名</replaceable> のファイルに保存します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>pmemsave</command> <replaceable>アドレス</replaceable> <replaceable>サイズ</replaceable> <replaceable>ファイル名</replaceable></term>
-    <listitem>
-     <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>サイズ</replaceable> で指定したサイズ分の物理メモリダンプを <replaceable>ファイル名</replaceable> のファイルに保存します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>x / <replaceable>書式</replaceable> <replaceable>アドレス</replaceable></term>
-    <listitem>
-     <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>書式</replaceable> 文字列に従って仮想メモリダンプを出力します。このとき、 <replaceable>書式</replaceable> には <replaceable>カウント</replaceable>, <replaceable>形式</replaceable>, <replaceable>サイズ</replaceable> をそれぞれ指定します:</para>
-     <para><replaceable>カウント</replaceable> パラメータには表示すべき項目数を指定します。</para>
-     <para><replaceable>形式</replaceable> には <literal>x</literal> (16 進数), <literal>d</literal> (符号付き 10 進数), <literal>u</literal> (符号無し 10 進数), <literal>o</literal> (8 進数), <literal>c</literal> (char 型) or <literal>i</literal> (アセンブラインストラクション) のいずれかを指定します。</para>
-     <para><replaceable>サイズ</replaceable> パラメータには <literal>b</literal> (8 ビット), <literal>h</literal> (16 ビット), <literal>w</literal> (32 ビット) ,<literal>g</literal> (64 ビット) のいずれかを指定します。 x86 の場合、 <literal>i</literal> で <literal>h</literal> や <literal>w</literal> を指定することで、 16 ビットと 32 ビットのインストラクションサイズを選択することができます。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>xp / <replaceable>書式</replaceable> <replaceable>アドレス</replaceable></term>
-    <listitem>
-     <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>書式</replaceable> 文字列に従って物理メモリダンプを出力します。このとき、 <replaceable>書式</replaceable> には <replaceable>カウント</replaceable>, <replaceable>形式</replaceable>, <replaceable>サイズ</replaceable> をそれぞれ指定します:</para>
-     <para><replaceable>カウント</replaceable> パラメータには表示すべき項目数を指定します。</para>
-     <para><replaceable>形式</replaceable> には <literal>x</literal> (16 進数), <literal>d</literal> (符号付き 10 進数), <literal>u</literal> (符号無し 10 進数), <literal>o</literal> (8 進数), <literal>c</literal> (char 型) or <literal>i</literal> (アセンブラインストラクション) のいずれかを指定します。</para>
-     <para><replaceable>サイズ</replaceable> パラメータには <literal>b</literal> (8 ビット), <literal>h</literal> (16 ビット), <literal>w</literal> (32 ビット) ,<literal>g</literal> (64 ビット) のいずれかを指定します。 x86 の場合、 <literal>i</literal> で <literal>h</literal> や <literal>w</literal> を指定することで、 16 ビットと 32 ビットのインストラクションサイズを選択することができます。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-snapshots">
-  <title>仮想コンソールのスナップショットの管理</title>
+    <variablelist>
+      <varlistentry>
+        <term><command>memsave</command> <replaceable>アドレス</replaceable> <replaceable>サイズ</replaceable> <replaceable>ファイル名</replaceable></term>
+        <listitem>
+          <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>サイズ</replaceable> で指定したサイズ分の仮想メモリダンプを <replaceable>ファイル名</replaceable> のファイルに保存します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>pmemsave</command> <replaceable>アドレス</replaceable> <replaceable>サイズ</replaceable> <replaceable>ファイル名</replaceable></term>
+        <listitem>
+          <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>サイズ</replaceable> で指定したサイズ分の物理メモリダンプを <replaceable>ファイル名</replaceable> のファイルに保存します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>x / <replaceable>書式</replaceable> <replaceable>アドレス</replaceable></term>
+        <listitem>
+          <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>書式</replaceable> 文字列に従って仮想メモリダンプを出力します。このとき、 <replaceable>書式</replaceable> には <replaceable>カウント</replaceable>, <replaceable>形式</replaceable>, <replaceable>サイズ</replaceable> をそれぞれ指定します:</para>
+          <para><replaceable>カウント</replaceable> パラメータには表示すべき項目数を指定します。</para>
+          <para><replaceable>形式</replaceable> には <literal>x</literal> (16 進数), <literal>d</literal> (符号付き 10 進数), <literal>u</literal> (符号無し 10 進数), <literal>o</literal> (8 進数), <literal>c</literal> (char 型) or <literal>i</literal> (アセンブラインストラクション) のいずれかを指定します。</para>
+          <para><replaceable>サイズ</replaceable> パラメータには <literal>b</literal> (8 ビット), <literal>h</literal> (16 ビット), <literal>w</literal> (32 ビット) ,<literal>g</literal> (64 ビット) のいずれかを指定します。 x86 の場合、 <literal>i</literal> で <literal>h</literal> や <literal>w</literal> を指定することで、 16 ビットと 32 ビットのインストラクションサイズを選択することができます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>xp / <replaceable>書式</replaceable> <replaceable>アドレス</replaceable></term>
+        <listitem>
+          <para><replaceable>アドレス</replaceable> で指定したアドレスを開始点として、 <replaceable>書式</replaceable> 文字列に従って物理メモリダンプを出力します。このとき、 <replaceable>書式</replaceable> には <replaceable>カウント</replaceable>, <replaceable>形式</replaceable>, <replaceable>サイズ</replaceable> をそれぞれ指定します:</para>
+          <para><replaceable>カウント</replaceable> パラメータには表示すべき項目数を指定します。</para>
+          <para><replaceable>形式</replaceable> には <literal>x</literal> (16 進数), <literal>d</literal> (符号付き 10 進数), <literal>u</literal> (符号無し 10 進数), <literal>o</literal> (8 進数), <literal>c</literal> (char 型) or <literal>i</literal> (アセンブラインストラクション) のいずれかを指定します。</para>
+          <para><replaceable>サイズ</replaceable> パラメータには <literal>b</literal> (8 ビット), <literal>h</literal> (16 ビット), <literal>w</literal> (32 ビット) ,<literal>g</literal> (64 ビット) のいずれかを指定します。 x86 の場合、 <literal>i</literal> で <literal>h</literal> や <literal>w</literal> を指定することで、 16 ビットと 32 ビットのインストラクションサイズを選択することができます。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-snapshots">
+    <title>仮想コンソールのスナップショットの管理</title>
 
-  <para>QEMU モニタ内でのスナップショット管理機能は、 &suse; では公式にはサポートしていません。本章内での情報は、特定の用途で役に立つものです。</para>
+    <para>QEMU モニタ内でのスナップショット管理機能は、 &suse; では公式にはサポートしていません。本章内での情報は、特定の用途で役に立つものです。</para>
 
-  <para><xref linkend="gloss-vt-vm"/> のスナップショット機能は、 CPU やメモリ、書き込み可能な全てのディスクの内容を含む、仮想マシン内の全情報のスナップショットです。仮想マシンのスナップショット機能を使用するには、少なくとも 1 台以上のリムーバブルでない書き込み可能メディアが存在し、かつそれが <literal>qcow2</literal> ディスク形式を使用していなければなりません。</para>
+    <para><xref linkend="gloss-vt-vm"/> のスナップショット機能は、 CPU やメモリ、書き込み可能な全てのディスクの内容を含む、仮想マシン内の全情報のスナップショットです。仮想マシンのスナップショット機能を使用するには、少なくとも 1 台以上のリムーバブルでない書き込み可能メディアが存在し、かつそれが <literal>qcow2</literal> ディスク形式を使用していなければなりません。</para>
 
-  <para>スナップショット機能は、お使いの仮想マシンの状態を保存したい場合に便利な機能です。たとえば仮想サーバ内のネットワークサービスを設定していて、何か実験やテストなどを行ってサーバを不安定にしてしまうようなことを行いたい場合、あとから元の状態にすぐに安定状態に戻す用途で使用したりすることができます。また、仮想マシンの電源を落としてスナップショットを採取することで、バックアップとして使用することもできます。本章では前者について説明しています。後者については <xref linkend="cha-qemu-guest-inst-qemu-img-snapshots"/> で説明しています。</para>
+    <para>スナップショット機能は、お使いの仮想マシンの状態を保存したい場合に便利な機能です。たとえば仮想サーバ内のネットワークサービスを設定していて、何か実験やテストなどを行ってサーバを不安定にしてしまうようなことを行いたい場合、あとから元の状態にすぐに安定状態に戻す用途で使用したりすることができます。また、仮想マシンの電源を落としてスナップショットを採取することで、バックアップとして使用することもできます。本章では前者について説明しています。後者については <xref linkend="cha-qemu-guest-inst-qemu-img-snapshots"/> で説明しています。</para>
 
-  <para>&qemu; モニタ内でスナップショットを管理するコマンドとして、下記のようなものが用意されています:</para>
+    <para>&qemu; モニタ内でスナップショットを管理するコマンドとして、下記のようなものが用意されています:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term><command>savevm</command> <replaceable>名前</replaceable></term>
-    <listitem>
-     <para>新しい仮想マシンのスナップショットを採取し、 <replaceable>名前</replaceable> で指定した名前で保存します。既に同名のスナップショットが存在している場合は、上書きされます。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>loadvm</command> <replaceable>名前</replaceable></term>
-    <listitem>
-     <para><replaceable>名前</replaceable> で指定した名前の仮想マシンスナップショットを読み込みます。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>delvm</command></term>
-    <listitem>
-     <para>仮想マシンのスナップショットを削除します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>info snapshots</command></term>
-    <listitem>
-     <para>利用可能なスナップショットについて情報を表示します。</para>
+    <variablelist>
+      <varlistentry>
+        <term><command>savevm</command> <replaceable>名前</replaceable></term>
+        <listitem>
+          <para>新しい仮想マシンのスナップショットを採取し、 <replaceable>名前</replaceable> で指定した名前で保存します。既に同名のスナップショットが存在している場合は、上書きされます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>loadvm</command> <replaceable>名前</replaceable></term>
+        <listitem>
+          <para><replaceable>名前</replaceable> で指定した名前の仮想マシンスナップショットを読み込みます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>delvm</command></term>
+        <listitem>
+          <para>仮想マシンのスナップショットを削除します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>info snapshots</command></term>
+        <listitem>
+          <para>利用可能なスナップショットについて情報を表示します。</para>
 <screen>(qemu) info snapshots
 Snapshot list:
 ID<co xml:id="co-qemu-monitor-snapshot-l-id"/>      TAG<co xml:id="co-qemu-monitor-snapshot-l-tag"/>                 VM SIZE<co xml:id="co-qemu-monitor-snapshot-l-size"/>   DATE<co xml:id="co-qemu-monitor-snapshot-l-date"/>          VM CLOCK<co xml:id="co-qemu-monitor-snapshot-l-clock"/>
@@ -445,132 +446,131 @@ ID<co xml:id="co-qemu-monitor-snapshot-l-id"/>      TAG<co xml:id="co-qemu-monit
 2         booted                 184M 2013-11-22 10:53:03   00:02:05.394
 3         logged_in              273M 2013-11-22 11:00:25   00:04:34.843
 4         ff_and_term_running    372M 2013-11-22 11:12:27   00:08:44.965</screen>
-     <calloutlist>
-      <callout arearefs="co-qemu-monitor-snapshot-l-id">
-       <para>スナップショットに対して自動的に割り当てられる識別番号です。通常は 1 ずつ加算されます。</para>
-      </callout>
-      <callout arearefs="co-qemu-monitor-snapshot-l-tag">
-       <para>スナップショットの説明文字列です。 ID を分かりやすく説明したものと言えます。</para>
-      </callout>
-      <callout arearefs="co-qemu-monitor-snapshot-l-size">
-       <para>スナップショットが占有しているディスク領域のサイズです。動作中のアプリケーションが多くのメモリを確保しているほど、スナップショットのサイズも大きくなります。</para>
-      </callout>
-      <callout arearefs="co-qemu-monitor-snapshot-l-date">
-       <para>スナップショットを採取した日時を表します。</para>
-      </callout>
-      <callout arearefs="co-qemu-monitor-snapshot-l-clock">
-       <para>その時点での仮想マシンのクロック状態を表しています。</para>
-      </callout>
-     </calloutlist>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-suspend">
-  <title>仮想マシンの一時停止と再開</title>
+          <calloutlist>
+            <callout arearefs="co-qemu-monitor-snapshot-l-id">
+              <para>スナップショットに対して自動的に割り当てられる識別番号です。通常は 1 ずつ加算されます。</para>
+            </callout>
+            <callout arearefs="co-qemu-monitor-snapshot-l-tag">
+              <para>スナップショットの説明文字列です。 ID を分かりやすく説明したものと言えます。</para>
+            </callout>
+            <callout arearefs="co-qemu-monitor-snapshot-l-size">
+              <para>スナップショットが占有しているディスク領域のサイズです。動作中のアプリケーションが多くのメモリを確保しているほど、スナップショットのサイズも大きくなります。</para>
+            </callout>
+            <callout arearefs="co-qemu-monitor-snapshot-l-date">
+              <para>スナップショットを採取した日時を表します。</para>
+            </callout>
+            <callout arearefs="co-qemu-monitor-snapshot-l-clock">
+              <para>その時点での仮想マシンのクロック状態を表しています。</para>
+            </callout>
+          </calloutlist>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-suspend">
+    <title>仮想マシンの一時停止と再開</title>
 
-  <para>仮想マシンの一時停止や再開を行いたい場合は、下記のようなコマンドを使用します:</para>
+    <para>仮想マシンの一時停止や再開を行いたい場合は、下記のようなコマンドを使用します:</para>
 
-  <variablelist>
-   <varlistentry>
-    <term><command>stop</command></term>
-    <listitem>
-     <para>仮想マシンの動作を一時的に停止します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>cont</command></term>
-    <listitem>
-     <para>一時停止していた仮想マシンを再開します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>system_reset</command></term>
-    <listitem>
-     <para>仮想マシンをリセットします。物理マシンでリセットボタンを押した場合と同じ動作になります。これにより、ファイルシステムが不安定な状態になる可能性があります。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>system_powerdown</command></term>
-    <listitem>
-     <para>マシンに対して <xref linkend="gloss-vt-acpi"/> のシャットダウン要求を送信します。物理マシンで電源ボタンを押した場合と同じ動作になります。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><command>q</command> または <command>quit</command></term>
-    <listitem>
-     <para>&qemu; を即時に終了します。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect1>
- <sect1 xml:id="sec-qemu-monitor-migrate">
-  <title>ライブマイグレーション</title>
+    <variablelist>
+      <varlistentry>
+        <term><command>stop</command></term>
+        <listitem>
+          <para>仮想マシンの動作を一時的に停止します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>cont</command></term>
+        <listitem>
+          <para>一時停止していた仮想マシンを再開します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>system_reset</command></term>
+        <listitem>
+          <para>仮想マシンをリセットします。物理マシンでリセットボタンを押した場合と同じ動作になります。これにより、ファイルシステムが不安定な状態になる可能性があります。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>system_powerdown</command></term>
+        <listitem>
+          <para>マシンに対して <xref linkend="gloss-vt-acpi"/> のシャットダウン要求を送信します。物理マシンで電源ボタンを押した場合と同じ動作になります。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>q</command> または <command>quit</command></term>
+        <listitem>
+          <para>&qemu; を即時に終了します。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect1>
+  <sect1 xml:id="sec-qemu-monitor-migrate">
+    <title>ライブマイグレーション</title>
 
-  <para>ライブマイグレーションを行うことで、一方のホストシステムから他方のホストシステムに対して、仮想マシンを動作させた状態のまま移動することができます。恒久的にホストを移動することができるほか、メンテナンスなどで一時的に移動することもできます。</para>
+    <para>ライブマイグレーションを行うことで、一方のホストシステムから他方のホストシステムに対して、仮想マシンを動作させた状態のまま移動することができます。恒久的にホストを移動することができるほか、メンテナンスなどで一時的に移動することもできます。</para>
 
-  <para>ライブマイグレーションを行う際の要件は下記のとおりです:</para>
+    <para>ライブマイグレーションを行う際の要件は下記のとおりです:</para>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para><xref linkend="libvirt-admin-live-migration-requirements"/> に示されている全ての要件が満たされていること。</para>
-   </listitem>
-   <listitem>
-    <para>移行元と移行先の &vmhost; で、同じ CPU 機能を有していること。</para>
-   </listitem>
-   <listitem>
-    <para><xref linkend="gloss-vt-storage-ahci"/> インターフェイスや <xref linkend="gloss-vt-virtfs"/> 機能、 <option>-mem-path</option> コマンドラインオプションを指定していないこと (いずれもライブマイグレーションとは互換性がありません) 。</para>
-   </listitem>
-   <listitem>
-    <para>移行元と移行先のホストが同じ方法で起動していること。</para>
-   </listitem>
-   <listitem>
-    <para>&qemu; のコマンドラインオプション <option>-snapshot</option> は移行に際して使用すべきではありません (サポート対象外でもあります) 。</para>
-   </listitem>
-  </itemizedlist>
+    <itemizedlist mark="bullet" spacing="normal">
+      <listitem>
+        <para><xref linkend="libvirt-admin-live-migration-requirements"/> に示されている全ての要件が満たされていること。</para>
+      </listitem>
+      <listitem>
+        <para>移行元と移行先の &vmhost; で、同じ CPU 機能を有していること。</para>
+      </listitem>
+      <listitem>
+        <para><xref linkend="gloss-vt-storage-ahci"/> インターフェイスや <xref linkend="gloss-vt-virtfs"/> 機能、 <option>-mem-path</option> コマンドラインオプションを指定していないこと (いずれもライブマイグレーションとは互換性がありません) 。</para>
+      </listitem>
+      <listitem>
+        <para>移行元と移行先のホストが同じ方法で起動していること。</para>
+      </listitem>
+      <listitem>
+        <para>&qemu; のコマンドラインオプション <option>-snapshot</option> は移行に際して使用すべきではありません (サポート対象外でもあります) 。</para>
+      </listitem>
+    </itemizedlist>
 
-  <important>
-   <title>サポート状態について</title>
-   <para>&productname; では <literal>postcopy</literal> モードはサポートしていません。これは技術プレビューとしてのみ提供されているものです。 <literal>postcopy</literal> モードに関する詳細は、 <link xlink:href="http://wiki.qemu.org/Features/PostCopyLiveMigration"/> (英語) をお読みください。</para>
-  </important>
+    <important>
+      <title>サポート状態について</title>
+      <para>&productname; では <literal>postcopy</literal> モードはサポートしていません。これは技術プレビューとしてのみ提供されているものです。 <literal>postcopy</literal> モードに関する詳細は、 <link xlink:href="http://wiki.qemu.org/Features/PostCopyLiveMigration"/> (英語) をお読みください。</para>
+    </important>
 
+    <para>さらに詳しい推奨条件が <link xlink:href="http://www.linux-kvm.org/page/Migration"/> に書かれています。</para>
 
-  <para>さらに詳しい推奨条件が <link xlink:href="http://www.linux-kvm.org/page/Migration"/> に書かれています。</para>
+    <para>ライブマイグレーションは下記の手順で行います:</para>
 
-  <para>ライブマイグレーションは下記の手順で行います:</para>
+    <procedure>
+      <step>
+        <para>移行元のホストで仮想マシンのインスタンスが動作していることを確認します。</para>
+      </step>
+      <step>
+        <para>移行先のホストで、仮想マシンを frozen listening (凍結待ち受け) モードで起動します。具体的には移行元のホストのコマンドラインパラメータに加えて、 <option>-incoming tcp:<replaceable>IP</replaceable>:<replaceable>ポート</replaceable></option> のパラメータを追加します。ここで、 <replaceable>IP</replaceable> には IP アドレスを、 <replaceable>ポート</replaceable> には移行を待ち受けるポートをそれぞれ指定します。なお、 IP アドレスに 0 を指定した場合、全てのインターフェイスで待ち受けることになります。</para>
+      </step>
+      <step>
+        <para>移行元のホストでモニタコンソールを表示させ、 <command>migrate -d tcp:</command><replaceable>移行先_IP</replaceable> : <replaceable>ポート</replaceable> のように入力して実行し、ライブマイグレーションを開始します。</para>
+      </step>
+      <step>
+        <para>ライブマイグレーションの状態を確認したい場合は、移行元のホストのモニタコンソールで <command>info migrate</command> コマンドを実行します。</para>
+      </step>
+      <step>
+        <para>ライブマイグレーションをキャンセルするには、移行元のホストのモニタコンソールで <command>migrate_cancel</command> コマンドを実行します。</para>
+      </step>
+      <step>
+        <para>ライブマイグレーションで許容できる最大限のダウンタイムを秒単位で指定したい場合は、 <command>migrate_set_downtime</command> <replaceable>秒数</replaceable> のように入力して実行します。</para>
+      </step>
+      <step>
+        <para>ライブマイグレーションの最大速度をバイト毎秒単位で指定したい場合は、 <command>migrate_set_speed</command> <replaceable>バイト毎秒</replaceable> のように入力して実行します。</para>
+      </step>
+    </procedure>
+  </sect1>
+  <sect1 xml:id="qemu-monitor-qmp">
+    <title>QMP - &qemu; マシンプロトコル</title>
 
-  <procedure>
-   <step>
-    <para>移行元のホストで仮想マシンのインスタンスが動作していることを確認します。</para>
-   </step>
-   <step>
-    <para>移行先のホストで、仮想マシンを frozen listening (凍結待ち受け) モードで起動します。具体的には移行元のホストのコマンドラインパラメータに加えて、 <option>-incoming tcp:<replaceable>IP</replaceable>:<replaceable>ポート</replaceable></option> のパラメータを追加します。ここで、 <replaceable>IP</replaceable> には IP アドレスを、 <replaceable>ポート</replaceable> には移行を待ち受けるポートをそれぞれ指定します。なお、 IP アドレスに 0 を指定した場合、全てのインターフェイスで待ち受けることになります。</para>
-   </step>
-   <step>
-    <para>移行元のホストでモニタコンソールを表示させ、 <command>migrate -d tcp:</command><replaceable>移行先_IP</replaceable> : <replaceable>ポート</replaceable> のように入力して実行し、ライブマイグレーションを開始します。</para>
-   </step>
-   <step>
-    <para>ライブマイグレーションの状態を確認したい場合は、移行元のホストのモニタコンソールで <command>info migrate</command> コマンドを実行します。</para>
-   </step>
-   <step>
-    <para>ライブマイグレーションをキャンセルするには、移行元のホストのモニタコンソールで <command>migrate_cancel</command> コマンドを実行します。</para>
-   </step>
-   <step>
-    <para>ライブマイグレーションで許容できる最大限のダウンタイムを秒単位で指定したい場合は、 <command>migrate_set_downtime</command> <replaceable>秒数</replaceable> のように入力して実行します。</para>
-   </step>
-   <step>
-    <para>ライブマイグレーションの最大速度をバイト毎秒単位で指定したい場合は、 <command>migrate_set_speed</command> <replaceable>バイト毎秒</replaceable> のように入力して実行します。</para>
-   </step>
-  </procedure>
- </sect1>
- <sect1 xml:id="qemu-monitor-qmp">
-  <title>QMP - &qemu; マシンプロトコル</title>
+    <para>QMP は JSON ベースのプロトコルで、 &libvirt; のようなアプリケーションと動作中の &qemu; インスタンスの間で通信を行うことができるプロトコルです。 QMP プロトコルを使用することで、 &qemu; モニタにさまざまな方法でアクセスすることができるようになります。</para>
 
-  <para>QMP は JSON ベースのプロトコルで、 &libvirt; のようなアプリケーションと動作中の &qemu; インスタンスの間で通信を行うことができるプロトコルです。 QMP プロトコルを使用することで、 &qemu; モニタにさまざまな方法でアクセスすることができるようになります。</para>
-
-  <sect2 xml:id="sec-qemu-monitor-qmp-io">
-   <title>標準入出力経由での QMP アクセス</title>
-   <para>QMP を使用する際の最も柔軟な方法は、 <option>-mon</option> オプションを指定する方法です。下記の例では、標準入出力を利用して QMP のインスタンスを作成しています。ただし、下記の例では <literal>-&gt;</literal> がクライアントから &qemu; のインスタンス宛のデータを、 <literal>&lt;-</literal> が &qemu; から返された出力をそれぞれ表しています。</para>
+    <sect2 xml:id="sec-qemu-monitor-qmp-io">
+      <title>標準入出力経由での QMP アクセス</title>
+      <para>QMP を使用する際の最も柔軟な方法は、 <option>-mon</option> オプションを指定する方法です。下記の例では、標準入出力を利用して QMP のインスタンスを作成しています。ただし、下記の例では <literal>-&gt;</literal> がクライアントから &qemu; のインスタンス宛のデータを、 <literal>&lt;-</literal> が &qemu; から返された出力をそれぞれ表しています。</para>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -chardev stdio,id=mon0 \
 -mon chardev=mon0,mode=control,pretty=on
@@ -589,14 +589,14 @@ ID<co xml:id="co-qemu-monitor-snapshot-l-id"/>      TAG<co xml:id="co-qemu-monit
         ]
     }
 }</screen>
-   <para>QMP の接続が確立すると、 QMP は "ようこそ" メッセージを送信し、機能ネゴシエーションモードに移行します。このモードでは、 <command>qmp_capabilities</command> コマンドのみを動作させることができます。機能ネゴシエーションモードを終了して通常のコマンドモードに移行したい場合は、まず <command>qmp_capabilities</command> コマンドを送信しなければなりません:</para>
+      <para>QMP の接続が確立すると、 QMP は "ようこそ" メッセージを送信し、機能ネゴシエーションモードに移行します。このモードでは、 <command>qmp_capabilities</command> コマンドのみを動作させることができます。機能ネゴシエーションモードを終了して通常のコマンドモードに移行したい場合は、まず <command>qmp_capabilities</command> コマンドを送信しなければなりません:</para>
 <screen>-&gt; { "execute": "qmp_capabilities" }
 &lt;- {
     "return": {
     }
 }</screen>
-   <para>なお、 <literal>"return": {}</literal> は QMP の成功応答を意味します。</para>
-   <para>QMP ではコマンドにパラメータを指定することができます。たとえば CD-ROM ドライブのメディアを取り出したい場合は、下記のように入力して送信します:</para>
+      <para>なお、 <literal>"return": {}</literal> は QMP の成功応答を意味します。</para>
+      <para>QMP ではコマンドにパラメータを指定することができます。たとえば CD-ROM ドライブのメディアを取り出したい場合は、下記のように入力して送信します:</para>
 <screen>-&gt;{ "execute": "eject", "arguments": { "device": "ide1-cd0" } }
 &lt;- {
     "timestamp": {
@@ -613,15 +613,15 @@ ID<co xml:id="co-qemu-monitor-snapshot-l-id"/>      TAG<co xml:id="co-qemu-monit
     "return": {
     }
 }</screen>
-  </sect2>
+    </sect2>
 
-  <sect2 xml:id="sec-qemu-monitor-qmp-telnet">
-   <title>Telnet 経由での QMP アクセス</title>
-   <para>標準入出力を使用する代わりに、 QMP インターフェイスをネットワークソケットに接続して使用することもできます:</para>
+    <sect2 xml:id="sec-qemu-monitor-qmp-telnet">
+      <title>Telnet 経由での QMP アクセス</title>
+      <para>標準入出力を使用する代わりに、 QMP インターフェイスをネットワークソケットに接続して使用することもできます:</para>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -chardev socket,id=mon0,host=localhost,port=4444,server,nowait \
 -mon chardev=mon0,mode=control,pretty=on</screen>
-   <para>あとは telnet を起動してポート 4444 に接続します:</para>
+      <para>あとは telnet を起動してポート 4444 に接続します:</para>
 <screen>&prompt.user;telnet localhost 4444
 Trying ::1...
 Connected to localhost.
@@ -640,28 +640,28 @@ Escape character is '^]'.
         ]
     }
 }</screen>
-   <para>必要であれば、複数のモニタインターフェイスを同時に作成することもできます。下記の例では '通常の' &qemu; モニタコマンドを解釈する HMP インスタンスを標準入出力に作成し、追加でローカルホストのポート 4444 に QMP インスタンスを作成しています:</para>
+      <para>必要であれば、複数のモニタインターフェイスを同時に作成することもできます。下記の例では '通常の' &qemu; モニタコマンドを解釈する HMP インスタンスを標準入出力に作成し、追加でローカルホストのポート 4444 に QMP インスタンスを作成しています:</para>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -chardev stdio,id=mon0 -mon chardev=mon0,mode=readline \
 -chardev socket,id=mon1,host=localhost,port=4444,server,nowait \
   -mon chardev=mon1,mode=control,pretty=on</screen>
-  </sect2>
+    </sect2>
 
-  <sect2 xml:id="sec-qemu-monitor-qmp-socket">
-   <title>Unix ソケット経由での QMP アクセス</title>
-   <para>&qemu; を起動する際に <option>-qmp</option> オプションを指定することで、 Unix ソケットを作成することができます:</para>
+    <sect2 xml:id="sec-qemu-monitor-qmp-socket">
+      <title>Unix ソケット経由での QMP アクセス</title>
+      <para>&qemu; を起動する際に <option>-qmp</option> オプションを指定することで、 Unix ソケットを作成することができます:</para>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -qmp unix:/tmp/qmp-sock,server --monitor stdio
 
 QEMU waiting for connection on: unix:./qmp-sock,server</screen>
-   <para>上記の例で作成した <literal>/tmp/qmp-sock</literal> を介して &qemu; インスタンスと通信を行うには、同じホスト内でもう 1 つの端末を開いて、 <command>nc</command> コマンド (詳しくは <command>man 1 nc</command> をお読みください) を使用します:</para>
+      <para>上記の例で作成した <literal>/tmp/qmp-sock</literal> を介して &qemu; インスタンスと通信を行うには、同じホスト内でもう 1 つの端末を開いて、 <command>nc</command> コマンド (詳しくは <command>man 1 nc</command> をお読みください) を使用します:</para>
 <screen>&prompt.sudo;nc -U /tmp/qmp-sock
 &lt;- {"QMP": {"version": {"qemu": {"micro": 0, "minor": 0, "major": 2} [...]</screen>
-  </sect2>
+    </sect2>
 
-  <sect2 xml:id="sec-qemu-monitor-qmp-virsh">
-   <title>&libvirt; の <command>virsh</command> コマンド経由での QMP アクセス</title>
-   <para>&libvirt; (詳しくは <xref linkend="part-virt-libvirt"/> をお読みください) 内で仮想マシンを動作させている場合は、 <command>virsh qemu-monitor-command</command> を実行することで、動作中のゲストと通信を行うことができます:</para>
+    <sect2 xml:id="sec-qemu-monitor-qmp-virsh">
+      <title>&libvirt; の <command>virsh</command> コマンド経由での QMP アクセス</title>
+      <para>&libvirt; (詳しくは <xref linkend="part-virt-libvirt"/> をお読みください) 内で仮想マシンを動作させている場合は、 <command>virsh qemu-monitor-command</command> を実行することで、動作中のゲストと通信を行うことができます:</para>
 <screen>&prompt.sudo;virsh qemu-monitor-command vm_guest1 \
 --pretty '{"execute":"query-kvm"}'
 &lt;- {
@@ -671,12 +671,12 @@ QEMU waiting for connection on: unix:./qmp-sock,server</screen>
     },
     "id": "libvirt-8"
 }</screen>
-   <para>上記の例では、ホスト側に &kvm; を動作させる機能が存在しているかどうかと、 &kvm; が有効化されているかどうかを調べる、シンプルな <command>query-kvm</command> コマンドを実行しています。</para>
-   <tip>
-    <title>読みやすい出力の生成方法について</title>
-    <para>JSON 形式ではなく分かりやすい &qemu; 出力を使用したい場合は、 <option>--hmp</option> オプションを指定して実行してください:</para>
+      <para>上記の例では、ホスト側に &kvm; を動作させる機能が存在しているかどうかと、 &kvm; が有効化されているかどうかを調べる、シンプルな <command>query-kvm</command> コマンドを実行しています。</para>
+      <tip>
+        <title>読みやすい出力の生成方法について</title>
+        <para>JSON 形式ではなく分かりやすい &qemu; 出力を使用したい場合は、 <option>--hmp</option> オプションを指定して実行してください:</para>
 <screen>&prompt.sudo;virsh qemu-monitor-command vm_guest1 --hmp "query-kvm"</screen>
-   </tip>
-  </sect2>
- </sect1>
+      </tip>
+    </sect2>
+  </sect1>
 </chapter>

@@ -4,205 +4,205 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="xen2kvm-migration">
- <info>
-  <title>&xen; から &kvm; への移行ガイド</title>
-  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:translation>yes</dm:translation>
-  </dm:docmanager>
- </info>
- <para>&kvm; の仮想化ソリューションはサーバ管理者の間でも非常に知られた存在となっており、既存の &xen; ベースの環境を &kvm; に移行する要望も多くなっています。ですが、現時点では &xen; の VM を &kvm; に自動変換してくれるような成熟したツールは提供されていません。その代わり、 &xen; の仮想マシンを &kvm; に移行する作業を支援する技術ソリューションは用意されています。下記の章では、このような移行を行うための情報と手順を説明しています。</para>
- <important>
-  <title>移行手順はサポート対象外である件について</title>
-  <para>この文書内で説明している移行手順は、 &suse; では完全にはサポートしていません。ガイダンスとしてのみ提供しているものです。</para>
- </important>
- <sect1 xml:id="x2k-v2v">
-  <title><command>virt-v2v</command> を使用した &kvm; への移行</title>
+  <info>
+    <title>&xen; から &kvm; への移行ガイド</title>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>&kvm; の仮想化ソリューションはサーバ管理者の間でも非常に知られた存在となっており、既存の &xen; ベースの環境を &kvm; に移行する要望も多くなっています。ですが、現時点では &xen; の VM を &kvm; に自動変換してくれるような成熟したツールは提供されていません。その代わり、 &xen; の仮想マシンを &kvm; に移行する作業を支援する技術ソリューションは用意されています。下記の章では、このような移行を行うための情報と手順を説明しています。</para>
+  <important>
+    <title>移行手順はサポート対象外である件について</title>
+    <para>この文書内で説明している移行手順は、 &suse; では完全にはサポートしていません。ガイダンスとしてのみ提供しているものです。</para>
+  </important>
+  <sect1 xml:id="x2k-v2v">
+    <title><command>virt-v2v</command> を使用した &kvm; への移行</title>
 
-  <para>本章では、 &kvm; 以外のハイパーバイザ (たとえば &xen;) から &libvirt; が管理する &kvm; への仮想マシンの取り込み方法について説明しています。</para>
+    <para>本章では、 &kvm; 以外のハイパーバイザ (たとえば &xen;) から &libvirt; が管理する &kvm; への仮想マシンの取り込み方法について説明しています。</para>
 
-  <tip>
-   <title>Microsoft Windows のゲストについて</title>
-   <para>本章では Linux ゲストに主眼を置いて説明しています。 <command>virt-v2v</command> を利用して Microsoft Windows のゲストを移行する手順は Linux ゲストの場合とほとんど同じですが、仮想マシンドライバパック (VMDP) の部分のみ違いがあります。 VMDP を利用した Windows ゲストの変換方法について、詳しくは <link xlink:href="https://documentation.suse.com/sle-vmdp/">Virtual Machine Driver Pack documentation</link> をご覧ください。</para>
-  </tip>
+    <tip>
+      <title>Microsoft Windows のゲストについて</title>
+      <para>本章では Linux ゲストに主眼を置いて説明しています。 <command>virt-v2v</command> を利用して Microsoft Windows のゲストを移行する手順は Linux ゲストの場合とほとんど同じですが、仮想マシンドライバパック (VMDP) の部分のみ違いがあります。 VMDP を利用した Windows ゲストの変換方法について、詳しくは <link xlink:href="https://documentation.suse.com/sle-vmdp/">Virtual Machine Driver Pack documentation</link> をご覧ください。</para>
+    </tip>
 
-  <sect2 xml:id="x2k-v2v-intro">
-   <title><command>virt-v2v</command> の紹介</title>
-   <para><command>virt-v2v</command> は &kvm; 以外のハイパーバイザで動作する &vmguest; を、 &libvirt; が管理する &kvm; 上で実行できるようにするコマンドラインツールです。可能であれば、変換後の仮想マシンで準仮想化型の virtio ドライバを使用するように設定することもできます。サポート対象となるオペレーティングシステムと、ハイパーバイザの一覧は下記のとおりです:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <title>サポート対象のゲスト側オペレーティングシステム</title>
-    <listitem>
-     <para>&sls;</para>
-    </listitem>
-    <listitem>
-     <para>&opensuse;</para>
-    </listitem>
-    <listitem>
-     <para>&rhel;</para>
-    </listitem>
-    <listitem>
-     <para>Fedora</para>
-    </listitem>
-    <listitem>
-<!-- FIXME -->
-<!-- XXX There surely are other windows versions to add here -->
-     <para>Microsoft Windows Server 2003 または 2008</para>
-    </listitem>
-   </itemizedlist>
-   <itemizedlist mark="bullet" spacing="normal">
-    <title>サポート対象の移行元ハイパーバイザ</title>
-    <listitem>
-     <para>&xen;</para>
-    </listitem>
-   </itemizedlist>
-   <itemizedlist mark="bullet" spacing="normal">
-    <title>サポート対象の移行先ハイパーバイザ</title>
-    <listitem>
-     <para>&kvm; (&libvirt; での管理となります)</para>
-    </listitem>
-   </itemizedlist>
-  </sect2>
+    <sect2 xml:id="x2k-v2v-intro">
+      <title><command>virt-v2v</command> の紹介</title>
+      <para><command>virt-v2v</command> は &kvm; 以外のハイパーバイザで動作する &vmguest; を、 &libvirt; が管理する &kvm; 上で実行できるようにするコマンドラインツールです。可能であれば、変換後の仮想マシンで準仮想化型の virtio ドライバを使用するように設定することもできます。サポート対象となるオペレーティングシステムと、ハイパーバイザの一覧は下記のとおりです:</para>
+      <itemizedlist mark="bullet" spacing="normal">
+        <title>サポート対象のゲスト側オペレーティングシステム</title>
+        <listitem>
+          <para>&sls;</para>
+        </listitem>
+        <listitem>
+          <para>&opensuse;</para>
+        </listitem>
+        <listitem>
+          <para>&rhel;</para>
+        </listitem>
+        <listitem>
+          <para>Fedora</para>
+        </listitem>
+        <listitem>
+          <!-- FIXME -->
+          <!-- XXX There surely are other windows versions to add here -->
+          <para>Microsoft Windows Server 2003 または 2008</para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist mark="bullet" spacing="normal">
+        <title>サポート対象の移行元ハイパーバイザ</title>
+        <listitem>
+          <para>&xen;</para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist mark="bullet" spacing="normal">
+        <title>サポート対象の移行先ハイパーバイザ</title>
+        <listitem>
+          <para>&kvm; (&libvirt; での管理となります)</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
 
-  <sect2 xml:id="x2k-v2v-install">
-   <title><command>virt-v2v</command> のインストール</title>
-   <para><command>virt-v2v</command> のインストールは簡単です:</para>
+    <sect2 xml:id="x2k-v2v-install">
+      <title><command>virt-v2v</command> のインストール</title>
+      <para><command>virt-v2v</command> のインストールは簡単です:</para>
 <screen>&prompt.sudo;zypper install virt-v2v</screen>
-   <para>なお、 <command>virt-v2v</command> コマンドを実行するには &rootuser; の権限が必要となります。 &rootuser; で実行するか、もしくは <command>sudo</command> を介して実行してください。</para>
-  </sect2>
+      <para>なお、 <command>virt-v2v</command> コマンドを実行するには &rootuser; の権限が必要となります。 &rootuser; で実行するか、もしくは <command>sudo</command> を介して実行してください。</para>
+    </sect2>
 
-  <sect2 xml:id="x2k-v2v-prepare">
-   <title>仮想マシンの準備</title>
-   <note>
-    <title>この手順を飛ばしてよい場合について</title>
-    <para><command>virt-v2v</command> を &slsa; 12 SP1 もしくはそれ以前で動作させている場合、ここでの手順は行わずに飛ばしてかまいません。それ以外にも、仮想マシンを完全仮想化で実行しているような場合や、 &slsa; 12 SP2 もしくはそれ以降で動作させているような場合は、無視してかまいません。</para>
-   </note>
-   <para>&xen; 仮想マシンには既定のカーネルをインストールしておかなければなりません。既定のカーネルをインストールしておくには、仮想マシン内で <command>zypper in kernel-default</command> を実行します。</para>
-  </sect2>
+    <sect2 xml:id="x2k-v2v-prepare">
+      <title>仮想マシンの準備</title>
+      <note>
+        <title>この手順を飛ばしてよい場合について</title>
+        <para><command>virt-v2v</command> を &slsa; 12 SP1 もしくはそれ以前で動作させている場合、ここでの手順は行わずに飛ばしてかまいません。それ以外にも、仮想マシンを完全仮想化で実行しているような場合や、 &slsa; 12 SP2 もしくはそれ以降で動作させているような場合は、無視してかまいません。</para>
+      </note>
+      <para>&xen; 仮想マシンには既定のカーネルをインストールしておかなければなりません。既定のカーネルをインストールしておくには、仮想マシン内で <command>zypper in kernel-default</command> を実行します。</para>
+    </sect2>
 
-  <sect2 xml:id="x2k-v2v-convert">
-   <title>&libvirt; 管理下の &kvm; 仮想マシンへの変換</title>
-   <para><command>virt-v2v</command> は、 &xen; ハイパーバイザで動作している仮想マシンを &libvirt; 管理下の &kvm; に変換することができるツールです。 &libvirt; や <command>virsh</command> コマンドに関する詳細については、 <xref linkend="part-virt-libvirt"/> をお読みください。そのほか、 <command>virt-v2v</command> のコマンドラインオプションについては、 <command>virt-v2v</command> のマニュアルページ ( <command>man 1 virt-v2v</command> ) をお読みください。</para>
-   <para>仮想マシンを変換する前に、まずは下記の手順を実行しておきます:</para>
-   <procedure>
-    <title>移行のための環境準備</title>
-    <step>
-     <para>新しいローカルストレージプールを作成します。</para>
-     <para><command>virt-v2v</command> は、移行元の仮想マシンのストレージを &libvirt; の管理下にあるローカルのストレージプールにコピーします (移行元のディスクイメージはそのまま保持されます) 。プールを作成するには &vmm; を使用するか、もしくは <command>virsh</command> を使用してください。詳しくは <xref linkend="sec-libvirt-storage-vmm"/> および <xref linkend="sec-libvirt-storage-virsh"/> をお読みください。</para>
-    </step>
-    <step>
-     <para>ローカルのネットワークインターフェイスを準備します。</para>
-     <para>変換後の仮想マシンが &vmhost; のローカルネットワークインターフェイスを使用できるかどうかを確認します。通常はネットワークブリッジを使用しますが、ネットワークブリッジを作成していない場合は、 <menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu><guimenu>追加</guimenu><guimenu>ブリッジ</guimenu></menuchoice> で作成してください。</para>
-     <note>
-      <title>ネットワークデバイスのマッピングについて</title>
-      <para>移行元で &xen; ホスト内のネットワークデバイスを使用している場合は、変換処理内で移行先の &kvm; ホスト内のネットワークデバイスを使用するようにすることができます。たとえば &xen; のネットワークブリッジが <literal>br0</literal> であれば、そのまま KVM でも使用することができます。 <filename>/etc/virt-v2v.conf</filename> ファイル内では、そのような変換ルールを設定することができます。この変換機能を有効化するには、 <literal>&lt;!--</literal> と <literal>--&gt;</literal> でコメントアウトされた箇所のコメントを外してください。たとえば下記のようになります:</para>
+    <sect2 xml:id="x2k-v2v-convert">
+      <title>&libvirt; 管理下の &kvm; 仮想マシンへの変換</title>
+      <para><command>virt-v2v</command> は、 &xen; ハイパーバイザで動作している仮想マシンを &libvirt; 管理下の &kvm; に変換することができるツールです。 &libvirt; や <command>virsh</command> コマンドに関する詳細については、 <xref linkend="part-virt-libvirt"/> をお読みください。そのほか、 <command>virt-v2v</command> のコマンドラインオプションについては、 <command>virt-v2v</command> のマニュアルページ ( <command>man 1 virt-v2v</command> ) をお読みください。</para>
+      <para>仮想マシンを変換する前に、まずは下記の手順を実行しておきます:</para>
+      <procedure>
+        <title>移行のための環境準備</title>
+        <step>
+          <para>新しいローカルストレージプールを作成します。</para>
+          <para><command>virt-v2v</command> は、移行元の仮想マシンのストレージを &libvirt; の管理下にあるローカルのストレージプールにコピーします (移行元のディスクイメージはそのまま保持されます) 。プールを作成するには &vmm; を使用するか、もしくは <command>virsh</command> を使用してください。詳しくは <xref linkend="sec-libvirt-storage-vmm"/> および <xref linkend="sec-libvirt-storage-virsh"/> をお読みください。</para>
+        </step>
+        <step>
+          <para>ローカルのネットワークインターフェイスを準備します。</para>
+          <para>変換後の仮想マシンが &vmhost; のローカルネットワークインターフェイスを使用できるかどうかを確認します。通常はネットワークブリッジを使用しますが、ネットワークブリッジを作成していない場合は、 <menuchoice><guimenu>&yast;</guimenu><guimenu>システム</guimenu><guimenu>ネットワークの設定</guimenu><guimenu>追加</guimenu><guimenu>ブリッジ</guimenu></menuchoice> で作成してください。</para>
+          <note>
+            <title>ネットワークデバイスのマッピングについて</title>
+            <para>移行元で &xen; ホスト内のネットワークデバイスを使用している場合は、変換処理内で移行先の &kvm; ホスト内のネットワークデバイスを使用するようにすることができます。たとえば &xen; のネットワークブリッジが <literal>br0</literal> であれば、そのまま KVM でも使用することができます。 <filename>/etc/virt-v2v.conf</filename> ファイル内では、そのような変換ルールを設定することができます。この変換機能を有効化するには、 <literal>&lt;!--</literal> と <literal>--&gt;</literal> でコメントアウトされた箇所のコメントを外してください。たとえば下記のようになります:</para>
 <screen>
  &lt;network type='bridge' name='br0'&gt;
    &lt;network type='network' name='default'/&gt;
  &lt;/network&gt;
 </screen>
-     </note>
-     <tip>
-      <title>ネットワークブリッジが無い場合について</title>
-      <para>ネットワークブリッジが無い場合、必要であれば &vmm; で作成することもできます。</para>
-     </tip>
-    </step>
-   </procedure>
-   <para><command>virt-v2v</command> は下記のような書式で実行することができます:</para>
+          </note>
+          <tip>
+            <title>ネットワークブリッジが無い場合について</title>
+            <para>ネットワークブリッジが無い場合、必要であれば &vmm; で作成することもできます。</para>
+          </tip>
+        </step>
+      </procedure>
+      <para><command>virt-v2v</command> は下記のような書式で実行することができます:</para>
 <screen>virt-v2v -i <replaceable>入力方式</replaceable> -os <replaceable>ストレージプール</replaceable> <replaceable>移行元_VM</replaceable></screen>
-   <variablelist>
-    <varlistentry>
-     <term>入力方式</term>
-     <listitem>
-      <para>入力方式を指定します。 <literal>libvirt</literal> または <literal>libvirtxml</literal> のいずれかを指定してください。詳しくは <replaceable>移行元_VM</replaceable> の説明をお読みください。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>ストレージプール</term>
-     <listitem>
-      <para>移行先の仮想マシン向けに用意したストレージプールを指定します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>移行元_VM</term>
-     <listitem>
-      <para>移行元の仮想マシンを指定します。ここで指定すべき値は <replaceable>入力方式</replaceable> の指定によって異なります。 <literal>libvirt</literal> を指定した場合は移行元のドメイン名を、 <literal>libvirtxml</literal> を指定した場合は移行元のドメインの XML 設定ファイルのパスを指定します。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-   <note>
-    <title>変換にかかる時間について</title>
-    <para>仮想マシンの変換には、主にディスクイメージ全体をコピーする処理として、多くのシステム資源が必要となります。 1 台の仮想マシンあたり最大でも 10 分程度が必要になりますが、ディスクイメージが大きい場合はより多く時間がかかる場合もあります。</para>
-   </note>
-   <sect3 xml:id="x2k-v2v-convert-xml">
-    <title>&libvirt; の XML 設定ファイルをベースにした変換</title>
-    <para>本章では、 &libvirt; の XML 設定ファイルを利用してローカルの &xen; 仮想マシンを変換する方法について説明しています。この方式は、既に &kvm; ハイパーバイザが動作している環境に適切な仕組みです。なお、移行元の &libvirt; の XML ファイルと &libvirt; のストレージプールが、それぞれローカルホスト内に存在していることを確認しておいてください。</para>
-    <procedure>
-     <step>
-      <para>まずは移行元の仮想マシンに対する &libvirt; の XML 設定ファイルを取得します。</para>
-      <tip>
-       <title>XML ファイルの取得について</title>
-       <para>移行元の仮想マシンの &libvirt; XML ファイルを取得するには、まず &xen; カーネルを利用してホスト側の OS を動作させなければなりません。既に &kvm; が有効化された環境を起動している場合は、まず &xen; カーネルに戻してから &libvirt; の XML ファイルを取得し、その後再度 &kvm; 環境にしてください。</para>
-      </tip>
-      <para>まずは移行元の仮想マシンを virsh で識別します:</para>
+      <variablelist>
+        <varlistentry>
+          <term>入力方式</term>
+          <listitem>
+            <para>入力方式を指定します。 <literal>libvirt</literal> または <literal>libvirtxml</literal> のいずれかを指定してください。詳しくは <replaceable>移行元_VM</replaceable> の説明をお読みください。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>ストレージプール</term>
+          <listitem>
+            <para>移行先の仮想マシン向けに用意したストレージプールを指定します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>移行元_VM</term>
+          <listitem>
+            <para>移行元の仮想マシンを指定します。ここで指定すべき値は <replaceable>入力方式</replaceable> の指定によって異なります。 <literal>libvirt</literal> を指定した場合は移行元のドメイン名を、 <literal>libvirtxml</literal> を指定した場合は移行元のドメインの XML 設定ファイルのパスを指定します。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <note>
+        <title>変換にかかる時間について</title>
+        <para>仮想マシンの変換には、主にディスクイメージ全体をコピーする処理として、多くのシステム資源が必要となります。 1 台の仮想マシンあたり最大でも 10 分程度が必要になりますが、ディスクイメージが大きい場合はより多く時間がかかる場合もあります。</para>
+      </note>
+      <sect3 xml:id="x2k-v2v-convert-xml">
+        <title>&libvirt; の XML 設定ファイルをベースにした変換</title>
+        <para>本章では、 &libvirt; の XML 設定ファイルを利用してローカルの &xen; 仮想マシンを変換する方法について説明しています。この方式は、既に &kvm; ハイパーバイザが動作している環境に適切な仕組みです。なお、移行元の &libvirt; の XML ファイルと &libvirt; のストレージプールが、それぞれローカルホスト内に存在していることを確認しておいてください。</para>
+        <procedure>
+          <step>
+            <para>まずは移行元の仮想マシンに対する &libvirt; の XML 設定ファイルを取得します。</para>
+            <tip>
+              <title>XML ファイルの取得について</title>
+              <para>移行元の仮想マシンの &libvirt; XML ファイルを取得するには、まず &xen; カーネルを利用してホスト側の OS を動作させなければなりません。既に &kvm; が有効化された環境を起動している場合は、まず &xen; カーネルに戻してから &libvirt; の XML ファイルを取得し、その後再度 &kvm; 環境にしてください。</para>
+            </tip>
+            <para>まずは移行元の仮想マシンを virsh で識別します:</para>
 <screen>&prompt.root;virsh list
  Id    名前                           状態
 ----------------------------------------------------
 [...]
   2     sles12_xen                     実行中
 [...]</screen>
-      <para>変換元の仮想マシンが <literal>sles12_xen</literal> である場合は、これを XML 形式のファイル <filename>sles12_xen.xml</filename> に保存するには、下記のようなコマンドを実行します:</para>
+            <para>変換元の仮想マシンが <literal>sles12_xen</literal> である場合は、これを XML 形式のファイル <filename>sles12_xen.xml</filename> に保存するには、下記のようなコマンドを実行します:</para>
 <screen>&prompt.root;virsh dumpxml sles12_xen &gt; sles12_xen.xml</screen>
-     </step>
-     <step>
-      <para>出力された XML ファイルの内容を表示させて、 &kvm; ホストの観点からもアクセス可能なパスであることを確認してください。 1 台のマシン内でローカル移行するだけであれば問題はありませんが、他のホストに移行させるような場合は、パスを変更する必要があるかもしれません。</para>
+          </step>
+          <step>
+            <para>出力された XML ファイルの内容を表示させて、 &kvm; ホストの観点からもアクセス可能なパスであることを確認してください。 1 台のマシン内でローカル移行するだけであれば問題はありませんが、他のホストに移行させるような場合は、パスを変更する必要があるかもしれません。</para>
 <screen>&lt;source file='/var/lib/libvirt/images/XenPool/SLES.qcow2'/&gt;</screen>
-      <tip>
-       <title>イメージのコピーについて</title>
-       <para>イメージを何度もコピーしてしまわないようにするため、ディスクイメージを &libvirt; のストレージプールに直接コピーしておくことをお勧めします。この場合は、 XML ファイル内の source file の内容を合わせて変更する必要があります。なお、 <command>virt-v2v</command> を使用すると、既存のディスクを検出してその場で変換を行うようになります。</para>
-      </tip>
-     </step>
-     <step>
-      <para><command>virt-v2v</command> コマンドを実行して &kvm; 仮想マシンに変換します:</para>
+            <tip>
+              <title>イメージのコピーについて</title>
+              <para>イメージを何度もコピーしてしまわないようにするため、ディスクイメージを &libvirt; のストレージプールに直接コピーしておくことをお勧めします。この場合は、 XML ファイル内の source file の内容を合わせて変更する必要があります。なお、 <command>virt-v2v</command> を使用すると、既存のディスクを検出してその場で変換を行うようになります。</para>
+            </tip>
+          </step>
+          <step>
+            <para><command>virt-v2v</command> コマンドを実行して &kvm; 仮想マシンに変換します:</para>
 <screen>&prompt.root;virt-v2v sles12_xen.xml<co xml:id="v2v-xml"/> \
 -i <replaceable>XML_ファイル</replaceable><co xml:id="v2v-method"/> \
 -os <replaceable>移行先のホスト:/エクスポートされたディレクトリ</replaceable><co xml:id="v2v-pool"/> \
 --bridge <replaceable>br0</replaceable><co xml:id="v2v-bridge"/> \
 -on <replaceable>sles12_kvm</replaceable><co xml:id="v2v-name"/></screen>
-      <calloutlist>
-       <callout arearefs="v2v-xml">
-        <para>移行元の &xen; ベースの仮想マシンの XML ファイルを指定します。</para>
-       </callout>
-       <callout arearefs="v2v-method">
-        <para><command>virt-v2v</command> は移行元の仮想マシンに関する情報を、 &libvirt; の XML ファイルから読み込みます。</para>
-       </callout>
-       <callout arearefs="v2v-pool">
-        <para>移行先の仮想マシンのディスクイメージを配置するストレージプールを指定します。この例では、 <replaceable>移行先のホスト</replaceable> 内にある <replaceable>/エクスポートされたディレクトリ</replaceable> 内にイメージを配置することになります。</para>
-       </callout>
-       <callout arearefs="v2v-bridge">
-        <para>移行先の &kvm; ベースの仮想マシンで使用するネットワークブリッジを指定します。ここではホスト内の <literal>br0</literal> を使用する意味になります。</para>
-       </callout>
-       <callout arearefs="v2v-name">
-        <para>移行先の仮想マシンを <literal>sles12_kvm</literal> という名前に変更して、名前が重複しないように指定しています。</para>
-       </callout>
-      </calloutlist>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="x2k-v2v-convert-domain">
-    <title>&libvirt; のドメイン名をベースにした変換</title>
-    <para>この方式は既に &libvirt; で &xen; を使用していて、移行後に同じマシンを &kvm; ハイパーバイザに移行するような場合に有用です。</para>
-    <procedure>
-     <step>
-      <para>まずは移行対象の仮想マシンの &libvirt; ドメイン名を確認します。</para>
+            <calloutlist>
+              <callout arearefs="v2v-xml">
+                <para>移行元の &xen; ベースの仮想マシンの XML ファイルを指定します。</para>
+              </callout>
+              <callout arearefs="v2v-method">
+                <para><command>virt-v2v</command> は移行元の仮想マシンに関する情報を、 &libvirt; の XML ファイルから読み込みます。</para>
+              </callout>
+              <callout arearefs="v2v-pool">
+                <para>移行先の仮想マシンのディスクイメージを配置するストレージプールを指定します。この例では、 <replaceable>移行先のホスト</replaceable> 内にある <replaceable>/エクスポートされたディレクトリ</replaceable> 内にイメージを配置することになります。</para>
+              </callout>
+              <callout arearefs="v2v-bridge">
+                <para>移行先の &kvm; ベースの仮想マシンで使用するネットワークブリッジを指定します。ここではホスト内の <literal>br0</literal> を使用する意味になります。</para>
+              </callout>
+              <callout arearefs="v2v-name">
+                <para>移行先の仮想マシンを <literal>sles12_kvm</literal> という名前に変更して、名前が重複しないように指定しています。</para>
+              </callout>
+            </calloutlist>
+          </step>
+        </procedure>
+      </sect3>
+      <sect3 xml:id="x2k-v2v-convert-domain">
+        <title>&libvirt; のドメイン名をベースにした変換</title>
+        <para>この方式は既に &libvirt; で &xen; を使用していて、移行後に同じマシンを &kvm; ハイパーバイザに移行するような場合に有用です。</para>
+        <procedure>
+          <step>
+            <para>まずは移行対象の仮想マシンの &libvirt; ドメイン名を確認します。</para>
 <screen>&prompt.root;virsh list
  Id    名前                           状態
 ----------------------------------------------------
 [...]
   2     sles12_xen                     実行中
 [...]</screen>
-      <para>上記の出力から、 <literal>sles12_xen</literal> が移行対象であるものとします。</para>
-     </step>
-     <step>
-      <para><command>virt-v2v</command> コマンドを実行して &kvm; 仮想マシンに変換します:</para>
+            <para>上記の出力から、 <literal>sles12_xen</literal> が移行対象であるものとします。</para>
+          </step>
+          <step>
+            <para><command>virt-v2v</command> コマンドを実行して &kvm; 仮想マシンに変換します:</para>
 <screen>&prompt.root;virt-v2v sles12_xen<co xml:id="v2v-domain"/> \
 -i <replaceable>libvirt</replaceable><co xml:id="v2v-method1"/> \
 -os <replaceable>ストレージプール</replaceable><co xml:id="v2v-pool1"/> \
@@ -210,226 +210,226 @@
 -of qcow2<co xml:id="v2v-qcow"/> \
 -oa sparse<co xml:id="v2v-sparse"/> \
 -on <replaceable>sles12_kvm</replaceable></screen>
-      <calloutlist>
-       <callout arearefs="v2v-domain">
-        <para>&xen; ベースの仮想マシンのドメイン名を指定します。</para>
-       </callout>
-       <callout arearefs="v2v-method1">
-        <para><command>virt-v2v</command> は &libvirt; との接続を介して仮想マシンの情報を直接取得します。</para>
-       </callout>
-       <callout arearefs="v2v-pool1">
-        <para>移行先のディスクイメージをローカルの &libvirt; ストレージプールに配置します。</para>
-       </callout>
-       <callout arearefs="v2v-net">
-        <para>全てのゲストブリッジ (もしくはネットワーク) は、ローカルで管理するネットワークに接続します。</para>
-       </callout>
-       <callout arearefs="v2v-qcow">
-        <para>移行先の仮想マシンで使用するディスクイメージの形式を指定します。 <option>raw</option> もしくは <option>qcow2</option> のいずれかがサポートされています。</para>
-       </callout>
-       <callout arearefs="v2v-sparse">
-        <para>変換後のディスク領域の割り当て方法を指定します。 <option>sparse</option> (スパースファイルとして割り当てる) もしくは <option>preallocated</option> (事前に割り当てる) のいずれかを指定します。</para>
-       </callout>
-      </calloutlist>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="x2k-v2v-convert-remote">
-    <title>リモートの &xen; 仮想マシンの変換</title>
-    <para>この方式は、移行元となる &xen; の仮想マシンがリモートに存在するような場合に有用です。 <command>virt-v2v</command> ではリモートのホストとの間を <command>ssh</command> 経由で接続しますので、移行元のホストで SSH サービスが動作していることを確認しておいてください。</para>
-    <note>
-     <title>パスワード無しの SSH アクセスについて</title>
-     <para>&slsa; 12 SP2 およびそれ以降では、 <command>virt-v2v</command> を動作させるのにパスワード無しの SSH 接続が必要となるようになります。これはつまり、 ssh-agent を利用して SSH 鍵を追加しておく必要があることを意味します。詳しくは <command>man ssh-keygen</command> および <command>man ssh-add</command> でそれぞれ表示されるマニュアルページをお読みください。 <xref linkend="cha-ssh"/> にも詳しい説明があります。</para>
-    </note>
-    <para>リモートのホストとの間で &libvirt; 接続を行うには、まずリモート側のホストを表す URI を組み立てる必要があります。下記の例は、接続先のホスト名が <literal>remote_host.example.com</literal> で、接続に使用するユーザ名が &rootuser; である場合の例です:</para>
+            <calloutlist>
+              <callout arearefs="v2v-domain">
+                <para>&xen; ベースの仮想マシンのドメイン名を指定します。</para>
+              </callout>
+              <callout arearefs="v2v-method1">
+                <para><command>virt-v2v</command> は &libvirt; との接続を介して仮想マシンの情報を直接取得します。</para>
+              </callout>
+              <callout arearefs="v2v-pool1">
+                <para>移行先のディスクイメージをローカルの &libvirt; ストレージプールに配置します。</para>
+              </callout>
+              <callout arearefs="v2v-net">
+                <para>全てのゲストブリッジ (もしくはネットワーク) は、ローカルで管理するネットワークに接続します。</para>
+              </callout>
+              <callout arearefs="v2v-qcow">
+                <para>移行先の仮想マシンで使用するディスクイメージの形式を指定します。 <option>raw</option> もしくは <option>qcow2</option> のいずれかがサポートされています。</para>
+              </callout>
+              <callout arearefs="v2v-sparse">
+                <para>変換後のディスク領域の割り当て方法を指定します。 <option>sparse</option> (スパースファイルとして割り当てる) もしくは <option>preallocated</option> (事前に割り当てる) のいずれかを指定します。</para>
+              </callout>
+            </calloutlist>
+          </step>
+        </procedure>
+      </sect3>
+      <sect3 xml:id="x2k-v2v-convert-remote">
+        <title>リモートの &xen; 仮想マシンの変換</title>
+        <para>この方式は、移行元となる &xen; の仮想マシンがリモートに存在するような場合に有用です。 <command>virt-v2v</command> ではリモートのホストとの間を <command>ssh</command> 経由で接続しますので、移行元のホストで SSH サービスが動作していることを確認しておいてください。</para>
+        <note>
+          <title>パスワード無しの SSH アクセスについて</title>
+          <para>&slsa; 12 SP2 およびそれ以降では、 <command>virt-v2v</command> を動作させるのにパスワード無しの SSH 接続が必要となるようになります。これはつまり、 ssh-agent を利用して SSH 鍵を追加しておく必要があることを意味します。詳しくは <command>man ssh-keygen</command> および <command>man ssh-add</command> でそれぞれ表示されるマニュアルページをお読みください。 <xref linkend="cha-ssh"/> にも詳しい説明があります。</para>
+        </note>
+        <para>リモートのホストとの間で &libvirt; 接続を行うには、まずリモート側のホストを表す URI を組み立てる必要があります。下記の例は、接続先のホスト名が <literal>remote_host.example.com</literal> で、接続に使用するユーザ名が &rootuser; である場合の例です:</para>
 <screen>xen+ssh://root@remote_host.example.com/</screen>
-    <para>&libvirt; の接続 URI に関する詳細は、 <link xlink:href="https://libvirt.org/uri.html"/> をお読みください。</para>
-    <procedure>
-     <step>
-      <para>出力された内容から、移行対象の仮想マシンの &libvirt; ドメイン名を探します。</para>
+        <para>&libvirt; の接続 URI に関する詳細は、 <link xlink:href="https://libvirt.org/uri.html"/> をお読みください。</para>
+        <procedure>
+          <step>
+            <para>出力された内容から、移行対象の仮想マシンの &libvirt; ドメイン名を探します。</para>
 <screen>&prompt.root;virsh -c xen+ssh://root@remote_host.example.com/ list
  Id    名前                           状態
 ----------------------------------------------------
   1     sles12_xen                     実行中
 [...]</screen>
-      <para>上記の出力から、 <literal>sles12_xen</literal> が移行対象であるものとします。</para>
-     </step>
-     <step>
-      <para>リモート接続で <command>virt-v2v</command> コマンドを使用する場合、下記のようなコマンドラインになります:</para>
+            <para>上記の出力から、 <literal>sles12_xen</literal> が移行対象であるものとします。</para>
+          </step>
+          <step>
+            <para>リモート接続で <command>virt-v2v</command> コマンドを使用する場合、下記のようなコマンドラインになります:</para>
 <screen>&prompt.root;virt-v2v sles12_xen \
 -i <replaceable>libvirt</replaceable> \
 -ic <replaceable>xen+ssh://root@remote_host.example.com/</replaceable> \
 -os <replaceable>ローカルストレージプール</replaceable> \
 --bridge <replaceable>br0</replaceable></screen>
-     </step>
-    </procedure>
-   </sect3>
-  </sect2>
+          </step>
+        </procedure>
+      </sect3>
+    </sect2>
 
-  <sect2 xml:id="x2k-v2v-run">
-   <title>変換した仮想マシンの起動</title>
-   <para><command>virt-v2v</command> が完了すると、 <option>-on</option> オプションで指定した名前で &libvirt; 内に新しいドメインが作成されます。 <option>-on</option> を指定しない場合、移行元と同じ名前の仮想マシンになります。新しいゲストは標準的な &libvirt; ツール、たとえば <command>virsh</command> や &vmm; などで管理することができます。</para>
-   <tip>
-    <title>マシンの再起動について</title>
-    <para><xref linkend="x2k-v2v-convert-domain"/> の手順で &xen; の仮想マシンを変換したあとは、ホストマシンを再起動して非 &xen; カーネルを起動することができます。</para>
-   </tip>
-  </sect2>
- </sect1>
- <sect1>
-  <title>&xen; から &kvm; への手動移行</title>
+    <sect2 xml:id="x2k-v2v-run">
+      <title>変換した仮想マシンの起動</title>
+      <para><command>virt-v2v</command> が完了すると、 <option>-on</option> オプションで指定した名前で &libvirt; 内に新しいドメインが作成されます。 <option>-on</option> を指定しない場合、移行元と同じ名前の仮想マシンになります。新しいゲストは標準的な &libvirt; ツール、たとえば <command>virsh</command> や &vmm; などで管理することができます。</para>
+      <tip>
+        <title>マシンの再起動について</title>
+        <para><xref linkend="x2k-v2v-convert-domain"/> の手順で &xen; の仮想マシンを変換したあとは、ホストマシンを再起動して非 &xen; カーネルを起動することができます。</para>
+      </tip>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>&xen; から &kvm; への手動移行</title>
 
-  <para/>
+    <para/>
 
-  <sect2>
-   <title>概要</title>
-   <para>仮想マシンを管理する際の推奨される方式は &libvirt; です (詳しくは <link xlink:href="https://libvirt.org/"/> をお読みください) 。 &libvirt; は仮想マシンを手作業で作成して動作させるよりも手間のかからない方式で、クロスプラットフォームに対応するほか、多数のハイパーバイザにも対応しています。そのほか、リモート接続に際しても機密を保持することができるほか、仮想ネットワークにも対応し、仮想マシンを管理する際の抽象化レイヤとしても使用することができます。そのため、この記事での説明は &libvirt; の方式をベースにしています。</para>
-   <para>一般的に、 &xen; から &kvm; への移行は下記の手順で行います:</para>
-   <procedure>
-    <step>
-     <para>移行元の &xen; &vmguest; に対するバックアップコピーを作成する。</para>
-    </step>
-    <step>
-     <para>任意: 準仮想化ゲストに固有の変更を適用する。</para>
-    </step>
-    <step>
-     <para>移行元の &xen; &vmguest; に関する情報を取得し、 &kvm; 環境で等価な設定を作成する。</para>
-    </step>
-    <step>
-     <para>&xen; ホスト内の移行元ゲストをシャットダウンし、 &kvm; ハイパーバイザ内で移行先のゲストを起動する。</para>
-    </step>
-   </procedure>
-   <warning>
-    <title>ライブマイグレーションに対応しない件について</title>
-    <para>&xen; から &kvm; への移行はライブマイグレーションに対応していません。そのため、 &vmguest; を動作させたままでは移行を行うことができません。移行先の &kvm; の &vmguest; を動作させる前に、移行元の &xen; の &vmguest; をシャットダウンしてください。</para>
-   </warning>
-  </sect2>
+    <sect2>
+      <title>概要</title>
+      <para>仮想マシンを管理する際の推奨される方式は &libvirt; です (詳しくは <link xlink:href="https://libvirt.org/"/> をお読みください) 。 &libvirt; は仮想マシンを手作業で作成して動作させるよりも手間のかからない方式で、クロスプラットフォームに対応するほか、多数のハイパーバイザにも対応しています。そのほか、リモート接続に際しても機密を保持することができるほか、仮想ネットワークにも対応し、仮想マシンを管理する際の抽象化レイヤとしても使用することができます。そのため、この記事での説明は &libvirt; の方式をベースにしています。</para>
+      <para>一般的に、 &xen; から &kvm; への移行は下記の手順で行います:</para>
+      <procedure>
+        <step>
+          <para>移行元の &xen; &vmguest; に対するバックアップコピーを作成する。</para>
+        </step>
+        <step>
+          <para>任意: 準仮想化ゲストに固有の変更を適用する。</para>
+        </step>
+        <step>
+          <para>移行元の &xen; &vmguest; に関する情報を取得し、 &kvm; 環境で等価な設定を作成する。</para>
+        </step>
+        <step>
+          <para>&xen; ホスト内の移行元ゲストをシャットダウンし、 &kvm; ハイパーバイザ内で移行先のゲストを起動する。</para>
+        </step>
+      </procedure>
+      <warning>
+        <title>ライブマイグレーションに対応しない件について</title>
+        <para>&xen; から &kvm; への移行はライブマイグレーションに対応していません。そのため、 &vmguest; を動作させたままでは移行を行うことができません。移行先の &kvm; の &vmguest; を動作させる前に、移行元の &xen; の &vmguest; をシャットダウンしてください。</para>
+      </warning>
+    </sect2>
 
-  <sect2>
-   <title>&xen; &vmguest; のバックアップ</title>
-   <para>お使いの &xen; &vmguest; をバックアップするには、下記の手順を実施します:</para>
-   <procedure>
-    <step>
-     <para>まずは移行元の &xen; ゲストを識別します。下記のようにして ID と名前 (Name) を記憶しておきます。</para>
+    <sect2>
+      <title>&xen; &vmguest; のバックアップ</title>
+      <para>お使いの &xen; &vmguest; をバックアップするには、下記の手順を実施します:</para>
+      <procedure>
+        <step>
+          <para>まずは移行元の &xen; ゲストを識別します。下記のようにして ID と名前 (Name) を記憶しておきます。</para>
 <screen>&prompt.sudo;virsh list --all
 Id 名前                 状態
 ----------------------------------
  0 Domain-0             実行中
  1 SLES11SP3            実行中
 [...]</screen>
-    </step>
-    <step>
-     <para>ゲストをシャットダウンします。シャットダウンはゲスト OS 内から実行することが できるほか、下記のようにして <command>virsh</command> を利用しても実行できます:</para>
+        </step>
+        <step>
+          <para>ゲストをシャットダウンします。シャットダウンはゲスト OS 内から実行することが できるほか、下記のようにして <command>virsh</command> を利用しても実行できます:</para>
 <screen>&prompt.sudo;virsh shutdown SLES11SP3</screen>
-    </step>
-    <step>
-     <para>まずは設定を XML ファイルにバックアップします。</para>
+        </step>
+        <step>
+          <para>まずは設定を XML ファイルにバックアップします。</para>
 <screen>&prompt.sudo;virsh dumpxml SLES11SP3 &gt; sles11sp3.xml</screen>
-    </step>
-    <step>
-     <para>次にディスクイメージファイルをバックアップします。 <command>cp</command> や <command>rsync</command> などのコマンドを利用してバックアップコピーを作成してください。このとき、 <command>md5sum</command> コマンドでコピーのチェックサムを作成しておくとよいでしょう。</para>
-    </step>
-    <step>
-     <para>ディスクイメージファイルをバックアップしたら、再度ゲストを起動します:</para>
+        </step>
+        <step>
+          <para>次にディスクイメージファイルをバックアップします。 <command>cp</command> や <command>rsync</command> などのコマンドを利用してバックアップコピーを作成してください。このとき、 <command>md5sum</command> コマンドでコピーのチェックサムを作成しておくとよいでしょう。</para>
+        </step>
+        <step>
+          <para>ディスクイメージファイルをバックアップしたら、再度ゲストを起動します:</para>
 <screen>&prompt.sudo;virsh start SLES11SP3</screen>
-    </step>
-   </procedure>
-  </sect2>
+        </step>
+      </procedure>
+    </sect2>
 
-  <sect2>
-   <title>準仮想化ゲストに固有の変更</title>
-   <para>準仮想化 &xen; ゲストから移行する場合は、下記のような変更を適用します。下記の変更はゲストを動作させて適用してもかまいませんし、 <literal>guestfs-tools</literal> を使用すれば停止済みのゲストでも適用することができます。</para>
-   <important>
-    <para>本章で示した変更を適用してしまうと、移行元の &vmguest; は &xen; 内で動作しなくなってしまいますのでご注意ください。</para>
-   </important>
-   <sect3>
-    <title>既定のカーネルのインストール</title>
-    <warning>
-     <title>起動してはならない件について</title>
-     <para>既定のカーネルをインストールした後は &xen; からゲストを起動しようとしないでください。起動しようとしても動作しないためです。</para>
-    </warning>
-    <para>&xen; ゲストのディスクイメージを &kvm; ハイパーバイザ内で使用するためにコピーする場合、 &xen; ハイパーバイザを <emphasis>使用せずに</emphasis> 起動できるものであることを確認してください。準仮想化 &xen; ゲストの場合、通常は &xen; 向けの特殊なカーネルが動作しているほか、 &grub; などのブートローダもインストールされていないためです。</para>
-    <orderedlist spacing="normal">
-     <listitem>
-      <para>&slsa; 11 の場合は <filename>/etc/sysconfig/kernel</filename> ファイルを更新します。 <literal>INITRD_MODULES</literal> パラメータ内にある全ての &xen; ドライバを削除し、 virtio ドライバに置き換えます。たとえば下記前者のような設定になっている場合:</para>
+    <sect2>
+      <title>準仮想化ゲストに固有の変更</title>
+      <para>準仮想化 &xen; ゲストから移行する場合は、下記のような変更を適用します。下記の変更はゲストを動作させて適用してもかまいませんし、 <literal>guestfs-tools</literal> を使用すれば停止済みのゲストでも適用することができます。</para>
+      <important>
+        <para>本章で示した変更を適用してしまうと、移行元の &vmguest; は &xen; 内で動作しなくなってしまいますのでご注意ください。</para>
+      </important>
+      <sect3>
+        <title>既定のカーネルのインストール</title>
+        <warning>
+          <title>起動してはならない件について</title>
+          <para>既定のカーネルをインストールした後は &xen; からゲストを起動しようとしないでください。起動しようとしても動作しないためです。</para>
+        </warning>
+        <para>&xen; ゲストのディスクイメージを &kvm; ハイパーバイザ内で使用するためにコピーする場合、 &xen; ハイパーバイザを <emphasis>使用せずに</emphasis> 起動できるものであることを確認してください。準仮想化 &xen; ゲストの場合、通常は &xen; 向けの特殊なカーネルが動作しているほか、 &grub; などのブートローダもインストールされていないためです。</para>
+        <orderedlist spacing="normal">
+          <listitem>
+            <para>&slsa; 11 の場合は <filename>/etc/sysconfig/kernel</filename> ファイルを更新します。 <literal>INITRD_MODULES</literal> パラメータ内にある全ての &xen; ドライバを削除し、 virtio ドライバに置き換えます。たとえば下記前者のような設定になっている場合:</para>
 <screen>INITRD_MODULES="xenblk xennet"</screen>
-      <para>上記を下記のように変更します:</para>
+            <para>上記を下記のように変更します:</para>
 <screen>INITRD_MODULES="virtio_blk virtio_pci virtio_net virtio_balloon"</screen>
-      <para>&slsa; 12 の場合は <filename>/etc/dracut.conf.d/*.conf</filename> ファイル内を検索し、 <literal>xenblk xennet</literal> を <literal>virtio_blk virtio_pci virtio_net virtio_balloon</literal> に置き換えます。</para>
-     </listitem>
-     <listitem>
-      <para>準仮想化 &xen; ゲストの場合、固有の &xen; カーネルを動作させています。 &kvm; で動作できるようにするには、既定のカーネルをインストールする必要があります。</para>
-      <note>
-       <title>既に既定のカーネルがインストールされている場合がある件について</title>
-       <para>完全仮想化ゲストの場合は既に既定のカーネルがインストールされていますので、ここで敢えてインストールし直す必要はありません。</para>
-      </note>
-      <para><command>rpm -q kernel-default</command> コマンドを &xen; ゲスト内で実行すると、既定のカーネルがインストールされているかどうかを確認することができます。インストールされていない場合は  <command>zypper in kernel-default</command> コマンドでインストールしてください。</para>
-      <para>なお、 &kvm; でゲストを動作させるには、 <emphasis>virtio</emphasis> (準仮想化) ドライバをインストールしておかなければなりません。下記のようなコマンドを実行して確認してください。なお、 <literal>5.3.18-8</literal> の箇所をお使いのカーネルのバージョンを置き換えて実行してください:</para>
+            <para>&slsa; 12 の場合は <filename>/etc/dracut.conf.d/*.conf</filename> ファイル内を検索し、 <literal>xenblk xennet</literal> を <literal>virtio_blk virtio_pci virtio_net virtio_balloon</literal> に置き換えます。</para>
+          </listitem>
+          <listitem>
+            <para>準仮想化 &xen; ゲストの場合、固有の &xen; カーネルを動作させています。 &kvm; で動作できるようにするには、既定のカーネルをインストールする必要があります。</para>
+            <note>
+              <title>既に既定のカーネルがインストールされている場合がある件について</title>
+              <para>完全仮想化ゲストの場合は既に既定のカーネルがインストールされていますので、ここで敢えてインストールし直す必要はありません。</para>
+            </note>
+            <para><command>rpm -q kernel-default</command> コマンドを &xen; ゲスト内で実行すると、既定のカーネルがインストールされているかどうかを確認することができます。インストールされていない場合は  <command>zypper in kernel-default</command> コマンドでインストールしてください。</para>
+            <para>なお、 &kvm; でゲストを動作させるには、 <emphasis>virtio</emphasis> (準仮想化) ドライバをインストールしておかなければなりません。下記のようなコマンドを実行して確認してください。なお、 <literal>5.3.18-8</literal> の箇所をお使いのカーネルのバージョンを置き換えて実行してください:</para>
 <screen>&prompt.sudo;sudo find /lib/modules/5.3.18-8-default/kernel/drivers/ -name virtio*
 /lib/modules/5.3.18-8-default/kernel/drivers/block/virtio_blk.ko
 /lib/modules/5.3.18-8-default/kernel/drivers/char/hw_random/virtio-rng.ko
 /lib/modules/5.3.18-8-default/kernel/drivers/char/virtio_console.ko
 /lib/modules/5.3.18-8-default/kernel/drivers/crypto/virtio
 ...</screen>
-     </listitem>
-     <listitem>
-      <para>次に <filename>/etc/fstab</filename> ファイルを更新します。<literal>xvda</literal> デバイスを <literal>vda</literal> デバイスに変更します。</para>
-     </listitem>
-     <listitem>
-      <para>さらにブートローダの設定を更新します。まずは &xen; ゲスト内で <command>rpm -q grub2</command> を実行して、 &grub; がインストールされているかどうかを確認します。インストールされていない場合は <command>zypper in grub2</command> を実行してインストールしてください。</para>
-      <para>OS の起動時に新しくインストールした既定のカーネルを使用するように設定します。なお、 &xen; 固有のデバイスを使用している場合は、対応するカーネルのコマンドラインオプションを削除もしくは更新してください。この作業は &yast; ( <menuchoice><guimenu>システム</guimenu><guimenu>ブートローダ</guimenu></menuchoice> ) のほか、手作業でも行うことができます:</para>
-      <itemizedlist mark="bullet" spacing="normal">
-       <listitem>
-        <para>まずはメニュー内の Linux の起動項目のうち、変更したい箇所を識別します:</para>
+          </listitem>
+          <listitem>
+            <para>次に <filename>/etc/fstab</filename> ファイルを更新します。<literal>xvda</literal> デバイスを <literal>vda</literal> デバイスに変更します。</para>
+          </listitem>
+          <listitem>
+            <para>さらにブートローダの設定を更新します。まずは &xen; ゲスト内で <command>rpm -q grub2</command> を実行して、 &grub; がインストールされているかどうかを確認します。インストールされていない場合は <command>zypper in grub2</command> を実行してインストールしてください。</para>
+            <para>OS の起動時に新しくインストールした既定のカーネルを使用するように設定します。なお、 &xen; 固有のデバイスを使用している場合は、対応するカーネルのコマンドラインオプションを削除もしくは更新してください。この作業は &yast; ( <menuchoice><guimenu>システム</guimenu><guimenu>ブートローダ</guimenu></menuchoice> ) のほか、手作業でも行うことができます:</para>
+            <itemizedlist mark="bullet" spacing="normal">
+              <listitem>
+                <para>まずはメニュー内の Linux の起動項目のうち、変更したい箇所を識別します:</para>
 <screen>&prompt.user;cat /boot/grub2/grub.cfg | grep 'menuentry '</screen>
-        <para>新しくインストールしたものがどれなのかを番号で覚えておきます (上から順に 0 から数えてください) 。</para>
-       </listitem>
-       <listitem>
-        <para>新しくインストールしたカーネルを既定の起動項目に設定します:</para>
+                <para>新しくインストールしたものがどれなのかを番号で覚えておきます (上から順に 0 から数えてください) 。</para>
+              </listitem>
+              <listitem>
+                <para>新しくインストールしたカーネルを既定の起動項目に設定します:</para>
 <screen>&prompt.sudo;grub2-set-default <replaceable>N</replaceable></screen>
-        <para>ここで、 <replaceable>N</replaceable> の箇所には新しくインストールしたカーネルの順序番号を指定します。</para>
-       </listitem>
-       <listitem>
-        <para><filename>/etc/default/grub</filename> ファイルをエディタなどで開き、 <option>GRUB_CMDLINE_LINUX_DEFAULT</option> および <option>GRUB_CMDLINE_LINUX_RECOVERY</option> のオプションを探します。それらの値のうち、 &xen; 固有のデバイス指定があれば、それらを削除もしくは更新してください。たとえば下記前者のような指定があった場合:</para>
+                <para>ここで、 <replaceable>N</replaceable> の箇所には新しくインストールしたカーネルの順序番号を指定します。</para>
+              </listitem>
+              <listitem>
+                <para><filename>/etc/default/grub</filename> ファイルをエディタなどで開き、 <option>GRUB_CMDLINE_LINUX_DEFAULT</option> および <option>GRUB_CMDLINE_LINUX_RECOVERY</option> のオプションを探します。それらの値のうち、 &xen; 固有のデバイス指定があれば、それらを削除もしくは更新してください。たとえば下記前者のような指定があった場合:</para>
 <screen>root=/dev/xvda1 disk=/dev/xvda console=xvc</screen>
-        <para>上記を下記のように変更します:</para>
+                <para>上記を下記のように変更します:</para>
 <screen>root=/dev/vda1 disk=/dev/vda</screen>
-        <para>なお、 <literal>xvc</literal> のようなコンソール指定があった場合は、それら全て (<literal>xvc0</literal> など) を削除する必要があります。</para>
-       </listitem>
-      </itemizedlist>
-     </listitem>
-     <listitem>
-      <para><filename>/boot/grub2</filename> もしくは <filename>/boot/grub2-efi</filename> ディレクトリ内にある <filename>device.map</filename> ファイルを更新します。ここでは <literal>xvda</literal> のストレージデバイスを <literal>vda</literal> に変更してください。</para>
-     </listitem>
-     <listitem>
-      <para>新しい既定値を取り込むため、下記のように実行します:</para>
+                <para>なお、 <literal>xvc</literal> のようなコンソール指定があった場合は、それら全て (<literal>xvc0</literal> など) を削除する必要があります。</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para><filename>/boot/grub2</filename> もしくは <filename>/boot/grub2-efi</filename> ディレクトリ内にある <filename>device.map</filename> ファイルを更新します。ここでは <literal>xvda</literal> のストレージデバイスを <literal>vda</literal> に変更してください。</para>
+          </listitem>
+          <listitem>
+            <para>新しい既定値を取り込むため、下記のように実行します:</para>
 <screen>grub2-mkconfig -o /boot/grub2/grub.cfg</screen>
-     </listitem>
-    </orderedlist>
-   </sect3>
-   <sect3>
-    <title>&kvm; で起動できるようにするためのゲストの更新</title>
-    <orderedlist spacing="normal">
-     <listitem>
-      <para>さらにシステムを更新して、既定のシリアルコンソールを使用するようにします。まずは設定済みのコンソールを一覧表示して、 <literal>xvc?</literal> へのシンボリックリンクを削除してください。</para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+      <sect3>
+        <title>&kvm; で起動できるようにするためのゲストの更新</title>
+        <orderedlist spacing="normal">
+          <listitem>
+            <para>さらにシステムを更新して、既定のシリアルコンソールを使用するようにします。まずは設定済みのコンソールを一覧表示して、 <literal>xvc?</literal> へのシンボリックリンクを削除してください。</para>
 <screen>&prompt.sudo;ls -l /etc/systemd/system/getty.target.wants/
 getty@tty1.service -&gt; /usr/lib/systemd/system/getty@.service
 getty@xvc0.service -&gt; /usr/lib/systemd/system/getty@xvc0.service
 getty@xvc1.service -&gt; /usr/lib/systemd/system/getty@xvc1.service
 
 # rm /etc/systemd/system/getty.target.wants/getty@xvc?.service</screen>
-     </listitem>
-     <listitem>
-      <para>さらに <filename>/etc/securetty</filename> ファイルを更新します。 <literal>xvc0</literal> を <literal>ttyS0</literal> に置き換えてください。</para>
-     </listitem>
-    </orderedlist>
-   </sect3>
-  </sect2>
+          </listitem>
+          <listitem>
+            <para>さらに <filename>/etc/securetty</filename> ファイルを更新します。 <literal>xvc0</literal> を <literal>ttyS0</literal> に置き換えてください。</para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+    </sect2>
 
-  <sect2>
-   <title>&xen; &vmguest; 設定の更新</title>
-   <para>本章では移行元の &xen; &vmguest; の設定をエクスポートする方法、および &libvirt; の管理下の &kvm; ゲストとして取り込む際の変更すべき項目について説明しています。</para>
-   <sect3>
-    <title>&xen; &vmguest; 設定のエクスポート</title>
-    <para>まずはゲストの設定をエクスポートしてファイルに保存します。保存された内容は、たとえば下記のようになります:</para>
+    <sect2>
+      <title>&xen; &vmguest; 設定の更新</title>
+      <para>本章では移行元の &xen; &vmguest; の設定をエクスポートする方法、および &libvirt; の管理下の &kvm; ゲストとして取り込む際の変更すべき項目について説明しています。</para>
+      <sect3>
+        <title>&xen; &vmguest; 設定のエクスポート</title>
+        <para>まずはゲストの設定をエクスポートしてファイルに保存します。保存された内容は、たとえば下記のようになります:</para>
 <screen>&prompt.sudo;virsh dumpxml SLES11SP3
 &lt;domain type='xen'&gt;
   &lt;name&gt;SLES11SP3&lt;/name&gt;
@@ -465,98 +465,98 @@ getty@xvc1.service -&gt; /usr/lib/systemd/system/getty@xvc1.service
   &lt;/devices&gt;
 &lt;/domain&gt;
 </screen>
-    <para>libvirt での &vmguest; の XML 書式に関する詳細は、 <link xlink:href="https://libvirt.org/formatdomain.html"/> で説明されています。</para>
-   </sect3>
-   <sect3>
-    <title>ゲストの設定に対する一般的な変更</title>
-    <para>出力した &xen; ゲストの XML 設定ファイルは、 &kvm; ハイパーバイザで動作させる際にいくつか修正する必要があります。下記の手順は完全仮想化と準仮想化の両方に対応しています。ただし、下記の XML 要素全てが存在するとは限りません。存在しているもののみを修正してください。</para>
-    <tip>
-     <title>使用する用語について</title>
-     <para>XML 設定ファイル内での項目位置を示すため、本文書では XPath 文法を使用しています。たとえば下記のような XML ファイル内で、 <literal>&lt;domain&gt;</literal> タグ内の <literal>&lt;name&gt;</literal> を表す場合:</para>
+        <para>libvirt での &vmguest; の XML 書式に関する詳細は、 <link xlink:href="https://libvirt.org/formatdomain.html"/> で説明されています。</para>
+      </sect3>
+      <sect3>
+        <title>ゲストの設定に対する一般的な変更</title>
+        <para>出力した &xen; ゲストの XML 設定ファイルは、 &kvm; ハイパーバイザで動作させる際にいくつか修正する必要があります。下記の手順は完全仮想化と準仮想化の両方に対応しています。ただし、下記の XML 要素全てが存在するとは限りません。存在しているもののみを修正してください。</para>
+        <tip>
+          <title>使用する用語について</title>
+          <para>XML 設定ファイル内での項目位置を示すため、本文書では XPath 文法を使用しています。たとえば下記のような XML ファイル内で、 <literal>&lt;domain&gt;</literal> タグ内の <literal>&lt;name&gt;</literal> を表す場合:</para>
 <screen>&lt;domain&gt;
   &lt;name&gt;sles11sp3&lt;/name&gt;
 &lt;/domain&gt;</screen>
-     <para>XPath では <literal>/domain/name</literal> と表記します。</para>
-    </tip>
-    <orderedlist spacing="normal">
-     <listitem>
-      <para>まずは <literal>/domain</literal> 要素内の <literal>type</literal> 属性を、 <literal>xen</literal> から <literal>kvm</literal> に変更します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/bootloader</literal> 要素を削除します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/bootloader_args</literal> 要素を削除します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/os/type</literal> 要素の値を、 <literal>linux</literal> から <literal>hvm</literal> に変更します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/os</literal> 要素内に <literal>&lt;boot dev="hd"/&gt;</literal> を追加します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/os/type</literal> 要素内に <literal>arch</literal> 属性を追加します。設定可能な値は <literal>arch=”x86_64”</literal> もしくは <literal>arch=”i686”</literal> のいずれかです。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/devices/emulator</literal> 要素内の値を、 <literal>/usr/lib/xen/bin/qemu-dm'</literal> から <literal>/usr/bin/qemu-kvm</literal> に変更します。</para>
-     </listitem>
-     <listitem>
-      <para>準仮想化 (PV) ゲストに関連づけられたディスクに対して、下記の設定変更を行います:</para>
-      <itemizedlist mark="bullet" spacing="normal">
-       <listitem>
-        <para><literal>/domain/devices/disk/driver</literal> 要素内にある <literal>name</literal> 属性を <literal>file</literal> から <literal>qemu</literal> に変更し、 <literal>type</literal> 属性を追加します。 <literal>type</literal> 属性には <literal>raw</literal> もしくは <literal>qcow2</literal> のいずれかの値を指定します。</para>
-       </listitem>
-       <listitem>
-        <para><literal>/domain/devices/disk/target</literal> 要素内の <literal>dev</literal> 属性を、 <literal>xvda</literal> から <literal>vda</literal> に変更します。</para>
-       </listitem>
-       <listitem>
-        <para><literal>/domain/devices/disk/target</literal> 要素内の <literal>bus</literal> 属性を、 <literal>xen</literal> から <literal>virtio</literal> に変更します。</para>
-       </listitem>
-      </itemizedlist>
-     </listitem>
-     <listitem>
-      <para>それぞれのネットワークカードに対して、下記の変更を行います:</para>
-      <itemizedlist mark="bullet" spacing="normal">
-       <listitem>
-        <para><literal>/domain/devices/interface</literal> 内に <literal>model</literal> 要素が存在している場合は、その <literal>type</literal> 属性を <literal>virtio</literal> に変更します:</para>
+          <para>XPath では <literal>/domain/name</literal> と表記します。</para>
+        </tip>
+        <orderedlist spacing="normal">
+          <listitem>
+            <para>まずは <literal>/domain</literal> 要素内の <literal>type</literal> 属性を、 <literal>xen</literal> から <literal>kvm</literal> に変更します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/bootloader</literal> 要素を削除します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/bootloader_args</literal> 要素を削除します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/os/type</literal> 要素の値を、 <literal>linux</literal> から <literal>hvm</literal> に変更します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/os</literal> 要素内に <literal>&lt;boot dev="hd"/&gt;</literal> を追加します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/os/type</literal> 要素内に <literal>arch</literal> 属性を追加します。設定可能な値は <literal>arch=”x86_64”</literal> もしくは <literal>arch=”i686”</literal> のいずれかです。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/devices/emulator</literal> 要素内の値を、 <literal>/usr/lib/xen/bin/qemu-dm'</literal> から <literal>/usr/bin/qemu-kvm</literal> に変更します。</para>
+          </listitem>
+          <listitem>
+            <para>準仮想化 (PV) ゲストに関連づけられたディスクに対して、下記の設定変更を行います:</para>
+            <itemizedlist mark="bullet" spacing="normal">
+              <listitem>
+                <para><literal>/domain/devices/disk/driver</literal> 要素内にある <literal>name</literal> 属性を <literal>file</literal> から <literal>qemu</literal> に変更し、 <literal>type</literal> 属性を追加します。 <literal>type</literal> 属性には <literal>raw</literal> もしくは <literal>qcow2</literal> のいずれかの値を指定します。</para>
+              </listitem>
+              <listitem>
+                <para><literal>/domain/devices/disk/target</literal> 要素内の <literal>dev</literal> 属性を、 <literal>xvda</literal> から <literal>vda</literal> に変更します。</para>
+              </listitem>
+              <listitem>
+                <para><literal>/domain/devices/disk/target</literal> 要素内の <literal>bus</literal> 属性を、 <literal>xen</literal> から <literal>virtio</literal> に変更します。</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para>それぞれのネットワークカードに対して、下記の変更を行います:</para>
+            <itemizedlist mark="bullet" spacing="normal">
+              <listitem>
+                <para><literal>/domain/devices/interface</literal> 内に <literal>model</literal> 要素が存在している場合は、その <literal>type</literal> 属性を <literal>virtio</literal> に変更します:</para>
 <screen>&lt;model type=”virtio”&gt;</screen>
-       </listitem>
-       <listitem>
-        <para><literal>/domain/devices/interface/script</literal> 要素があれば、それらの要素全てを削除します。</para>
-       </listitem>
-       <listitem>
-        <para><literal>/domain/devices/interface/target</literal> 要素内に <literal>dev</literal> 属性が存在していて、その値が <literal>vif</literal>, <literal>vnet</literal>, <literal>veth</literal> のいずれかで始まるものであった場合は、それらの要素全てを削除します。独自のネットワークを使用している場合は、 <literal>dev</literal> の値を変更します。</para>
-       </listitem>
-      </itemizedlist>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/devices/console</literal> 要素があれば、それらの要素全てを削除します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/devices/serial</literal> 要素があれば、それらの要素全てを削除します。</para>
-     </listitem>
-     <listitem>
-      <para><literal>/domain/devices/input</literal> 要素内の <literal>bus</literal> 属性を、 <literal>xen</literal> から <literal>ps2</literal> に変更します。</para>
-     </listitem>
-     <listitem>
-      <para>メモリバルーン機能を使用する場合は、 <literal>/domain/devices</literal> 要素内に下記の要素を追加します。</para>
+              </listitem>
+              <listitem>
+                <para><literal>/domain/devices/interface/script</literal> 要素があれば、それらの要素全てを削除します。</para>
+              </listitem>
+              <listitem>
+                <para><literal>/domain/devices/interface/target</literal> 要素内に <literal>dev</literal> 属性が存在していて、その値が <literal>vif</literal>, <literal>vnet</literal>, <literal>veth</literal> のいずれかで始まるものであった場合は、それらの要素全てを削除します。独自のネットワークを使用している場合は、 <literal>dev</literal> の値を変更します。</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/devices/console</literal> 要素があれば、それらの要素全てを削除します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/devices/serial</literal> 要素があれば、それらの要素全てを削除します。</para>
+          </listitem>
+          <listitem>
+            <para><literal>/domain/devices/input</literal> 要素内の <literal>bus</literal> 属性を、 <literal>xen</literal> から <literal>ps2</literal> に変更します。</para>
+          </listitem>
+          <listitem>
+            <para>メモリバルーン機能を使用する場合は、 <literal>/domain/devices</literal> 要素内に下記の要素を追加します。</para>
 <screen>&lt;memballoon model="virtio"/&gt;</screen>
-     </listitem>
-    </orderedlist>
-    <tip>
-     <title>デバイス名について</title>
-     <para><literal>&lt;target dev='hda' bus='ide'/&gt;</literal> 要素はゲスト OS 側に対してどのようにディスクを提示するのかを制御する項目です。 <literal>dev</literal> 属性では "論理" デバイス名を指定しますが、この値とゲスト OS 内でのデバイス名は、必ずしも一致しているとは限りません。そのため、ブートローダのコマンドラインで、ディスクのマッピングを変更する必要があるかもしれません。たとえばブートローダ側の設定では <literal>hda2</literal> にルートディスクが存在しているように記述されているものの、 &kvm; では <literal>sda2</literal> に現れるような場合、下記のようにブートローダのコマンドラインを変更する必要があります:</para>
+          </listitem>
+        </orderedlist>
+        <tip>
+          <title>デバイス名について</title>
+          <para><literal>&lt;target dev='hda' bus='ide'/&gt;</literal> 要素はゲスト OS 側に対してどのようにディスクを提示するのかを制御する項目です。 <literal>dev</literal> 属性では "論理" デバイス名を指定しますが、この値とゲスト OS 内でのデバイス名は、必ずしも一致しているとは限りません。そのため、ブートローダのコマンドラインで、ディスクのマッピングを変更する必要があるかもしれません。たとえばブートローダ側の設定では <literal>hda2</literal> にルートディスクが存在しているように記述されているものの、 &kvm; では <literal>sda2</literal> に現れるような場合、下記のようにブートローダのコマンドラインを変更する必要があります:</para>
 <screen>[...] root=/dev/hda2 resume=/dev/hda1 [...]</screen>
-     <para>上記を下記のように変更します:</para>
+          <para>上記を下記のように変更します:</para>
 <screen>[...] root=/dev/sda2 resume=/dev/sda1 [...]</screen>
-     <para>準仮想化型の <literal>xvda</literal> デバイスを使用している場合は、下記のようにします:</para>
+          <para>準仮想化型の <literal>xvda</literal> デバイスを使用している場合は、下記のようにします:</para>
 <screen>[...] root=/dev/vda2 resume=/dev/vda1 [...]</screen>
-     <para>上記の変更を行わないと、 &vmguest; を &kvm; 環境で起動することができなくなります。</para>
-    </tip>
-   </sect3>
-   <sect3>
-    <title>移行先での &kvm; ゲスト設定</title>
-    <para>上述の変更点を全て適用すると、 &kvm; ゲストの設定は下記の例のようになります:</para>
+          <para>上記の変更を行わないと、 &vmguest; を &kvm; 環境で起動することができなくなります。</para>
+        </tip>
+      </sect3>
+      <sect3>
+        <title>移行先での &kvm; ゲスト設定</title>
+        <para>上述の変更点を全て適用すると、 &kvm; ゲストの設定は下記の例のようになります:</para>
 <screen>
 &lt;domain type='kvm'&gt;
   &lt;name&gt;SLES11SP3&lt;/name&gt;
@@ -590,44 +590,44 @@ getty@xvc1.service -&gt; /usr/lib/systemd/system/getty@xvc1.service
 &lt;/domain&gt;
 
 </screen>
-    <para>変更後の設定は、ホームディレクトリ内に <filename>SLES11SP3.xml</filename> のようなファイル名で保存してください。取り込みを行うと、設定は <filename>/etc/libvirt/qemu</filename> ディレクトリ内にコピーされます。</para>
-   </sect3>
-  </sect2>
+        <para>変更後の設定は、ホームディレクトリ内に <filename>SLES11SP3.xml</filename> のようなファイル名で保存してください。取り込みを行うと、設定は <filename>/etc/libvirt/qemu</filename> ディレクトリ内にコピーされます。</para>
+      </sect3>
+    </sect2>
 
-  <sect2>
-   <title>&vmguest; の移行</title>
-   <para>&vmguest; の設定とゲスト OS 内での設定を変更したら、移行元の &xen; ゲストをシャットダウンして、 &kvm; ハイパーバイザで移行先を起動してください。</para>
-   <procedure>
-    <step>
-     <para>&xen; ホスト内で動作するゲストをシャットダウンするには、コンソールから &rootuser; で <command>shutdown -h now</command> を実行します。</para>
-    </step>
-    <step>
-     <para>必要であれば、 &vmguest; に結びつけられているディスクファイルをコピーします。既定の設定では、 &xen; のディスクイメージは <filename>/var/lib/xen/images</filename> にありますので、これを <filename>/var/lib/kvm/images</filename> にコピーしてください。なお、 &kvm; 側にゲストがまだ存在していない場合、 <filename>/var/lib/kvm/images</filename> ディレクトリは存在しませんので、 (&rootuser; で) 作成してからコピーしてください。</para>
-    </step>
-    <step>
-     <para>新しいドメインを作成して &libvirt; に登録します:</para>
+    <sect2>
+      <title>&vmguest; の移行</title>
+      <para>&vmguest; の設定とゲスト OS 内での設定を変更したら、移行元の &xen; ゲストをシャットダウンして、 &kvm; ハイパーバイザで移行先を起動してください。</para>
+      <procedure>
+        <step>
+          <para>&xen; ホスト内で動作するゲストをシャットダウンするには、コンソールから &rootuser; で <command>shutdown -h now</command> を実行します。</para>
+        </step>
+        <step>
+          <para>必要であれば、 &vmguest; に結びつけられているディスクファイルをコピーします。既定の設定では、 &xen; のディスクイメージは <filename>/var/lib/xen/images</filename> にありますので、これを <filename>/var/lib/kvm/images</filename> にコピーしてください。なお、 &kvm; 側にゲストがまだ存在していない場合、 <filename>/var/lib/kvm/images</filename> ディレクトリは存在しませんので、 (&rootuser; で) 作成してからコピーしてください。</para>
+        </step>
+        <step>
+          <para>新しいドメインを作成して &libvirt; に登録します:</para>
 <screen>&prompt.sudo;virsh define SLES11SP3.xml
  ドメイン SLES11SP3 が SLES11SP3.xml から定義されました</screen>
-    </step>
-    <step>
-     <para>作成したドメインが &kvm; の設定内に存在していることを確認します:</para>
+        </step>
+        <step>
+          <para>作成したドメインが &kvm; の設定内に存在していることを確認します:</para>
 <screen>&prompt.user;virsh list –all</screen>
-    </step>
-    <step>
-     <para>ドメインを作成したら、あとは起動するだけです:</para>
+        </step>
+        <step>
+          <para>ドメインを作成したら、あとは起動するだけです:</para>
 <screen>&prompt.sudo;virsh start SLES11SP3
  ドメイン SLES11SP3 が起動されました</screen>
-    </step>
-   </procedure>
-  </sect2>
- </sect1>
- <sect1>
-  <title>さらなる情報</title>
+        </step>
+      </procedure>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>さらなる情報</title>
 
-  <para>libvirt に関する詳細は、 <link xlink:href="https://libvirt.org"/> をお読みください。</para>
+    <para>libvirt に関する詳細は、 <link xlink:href="https://libvirt.org"/> をお読みください。</para>
 
-  <para>&libvirt; の XML 書式に関する詳細については、 <link xlink:href="https://libvirt.org/formatdomain.html"/> をお読みください。</para>
+    <para>&libvirt; の XML 書式に関する詳細については、 <link xlink:href="https://libvirt.org/formatdomain.html"/> をお読みください。</para>
 
-  <para>&xen; や &kvm; を利用した仮想化に関する詳細については、 <link xlink:href="https://documentation.suse.com/"/> にある &productname; のドキュメンテーションをお読みください。</para>
- </sect1>
+    <para>&xen; や &kvm; を利用した仮想化に関する詳細については、 <link xlink:href="https://documentation.suse.com/"/> にある &productname; のドキュメンテーションをお読みください。</para>
+  </sect1>
 </chapter>

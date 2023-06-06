@@ -4,326 +4,323 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-xen-network">
-<!-- TODO: remove next when done with previous two sections -->
- <title>仮想ネットワーク</title>
- <info>
-      <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-        <dm:bugtracker>
-        </dm:bugtracker>
-	<dm:translation>yes</dm:translation>
-      </dm:docmanager>
-    </info>
-    <para>一方の &vmguest; システムから他の &vmguest; システムやその他のネットワークと通信を行う必要がしばしば発生します。 &vmguest; 側でのネットワークインターフェイスは独立したデバイスドライバで動作しているものであり、 &dom0; 側にそれらの仮想イーサネットデバイスに対応するネットワークインターフェイスが存在していることになります。このインターフェイスは &dom0; 内で動作する仮想ネットワークにアクセスするために作られています。このようなブリッジ型の仮想ネットワークは &productname; のシステム設定内に完全に統合されていて、 &yast; からも設定を行うことができるようになっています。</para>
- <para>&xen; の &vmhost; をインストールすると、通常のネットワーク設定の際にブリッジ型のネットワーク設定を行うよう提案が表示されます。ユーザ側ではインストール時に設定を変更することができるほか、必要に応じてカスタマイズを行うこともできます。</para>
- <para>また、システムのインストールを行った後からでも、 &yast; 内に用意された <systemitem>ハイパーバイザとツールのインストール</systemitem> を使用することで、必要に応じて &xen; &vmhost; をインストールすることができます。このモジュールは仮想マシンを動作させるためのシステム側の準備を行う仕組みで、既定のネットワークブリッジの構築も行うことができます。</para>
- <para><systemitem>rpm</systemitem> や <systemitem>zypper</systemitem> などを利用して手作業で &xen; &vmhost; に必要なパッケージをインストールした場合、残りのシステム設定は管理者が手作業で行うか、 &yast; を利用して行う必要があります。</para>
- <para>&xen; 側で提供されているネットワークスクリプトは、 &productname; の既定では使用されません。これらは念のため用意されているだけであり、無効化されています。 &productname; の &xen; で使用するネットワークの設定は、通常のネットワークインターフェイス設定と同様に、 &yast; のシステム設定で行います。</para>
- <para>ネットワークブリッジの管理方法に関する一般的な情報については、 <xref linkend="libvirt-networks-bridged"/> をお読みください。</para>
+  <!-- TODO: remove next when done with previous two sections -->
+  <title>仮想ネットワーク</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>一方の &vmguest; システムから他の &vmguest; システムやその他のネットワークと通信を行う必要がしばしば発生します。 &vmguest; 側でのネットワークインターフェイスは独立したデバイスドライバで動作しているものであり、 &dom0; 側にそれらの仮想イーサネットデバイスに対応するネットワークインターフェイスが存在していることになります。このインターフェイスは &dom0; 内で動作する仮想ネットワークにアクセスするために作られています。このようなブリッジ型の仮想ネットワークは &productname; のシステム設定内に完全に統合されていて、 &yast; からも設定を行うことができるようになっています。</para>
+  <para>&xen; の &vmhost; をインストールすると、通常のネットワーク設定の際にブリッジ型のネットワーク設定を行うよう提案が表示されます。ユーザ側ではインストール時に設定を変更することができるほか、必要に応じてカスタマイズを行うこともできます。</para>
+  <para>また、システムのインストールを行った後からでも、 &yast; 内に用意された <systemitem>ハイパーバイザとツールのインストール</systemitem> を使用することで、必要に応じて &xen; &vmhost; をインストールすることができます。このモジュールは仮想マシンを動作させるためのシステム側の準備を行う仕組みで、既定のネットワークブリッジの構築も行うことができます。</para>
+  <para><systemitem>rpm</systemitem> や <systemitem>zypper</systemitem> などを利用して手作業で &xen; &vmhost; に必要なパッケージをインストールした場合、残りのシステム設定は管理者が手作業で行うか、 &yast; を利用して行う必要があります。</para>
+  <para>&xen; 側で提供されているネットワークスクリプトは、 &productname; の既定では使用されません。これらは念のため用意されているだけであり、無効化されています。 &productname; の &xen; で使用するネットワークの設定は、通常のネットワークインターフェイス設定と同様に、 &yast; のシステム設定で行います。</para>
+  <para>ネットワークブリッジの管理方法に関する一般的な情報については、 <xref linkend="libvirt-networks-bridged"/> をお読みください。</para>
+  <sect1 xml:id="sec-xen-vdevices">
+    <title>ゲストシステム向けのネットワークデバイス</title>
 
- <sect1 xml:id="sec-xen-vdevices">
-  <title>ゲストシステム向けのネットワークデバイス</title>
+    <!--Jim: I did not find the qemu-ifup script used to create HVM vif bridges.
+      could you give me a hint how ioemu devices are set up? -->
 
-<!--Jim: I did not find the qemu-ifup script used to create HVM vif bridges.
-  could you give me a hint how ioemu devices are set up? -->
+    <!-- answer:
+      There is a question to me at beginning of this section.  Answer:
+      /etc/xen/qemu-ifup is the script used to configure vif devices for hvm
+      guests.  Essentially it just hooks the qemu tap device to the bridge.
+      -->
 
-<!-- answer:
-  There is a question to me at beginning of this section.  Answer:
-  /etc/xen/qemu-ifup is the script used to configure vif devices for hvm
-  guests.  Essentially it just hooks the qemu tap device to the bridge.
-  -->
+    <para>&xen; ハイパーバイザでは、 &vmguest; 側に提供することのできるネットワークインターフェイスの種類が複数用意されています。可能であれば準仮想化ネットワークインターフェイスを使用するのが推奨されます。これにより、最低限のシステム要件で最大の伝送速度を得ることができます。また、それぞれの &vmguest; に対して最大で 8 個までのネットワークインターフェイスを設定することができます。</para>
 
-  <para>&xen; ハイパーバイザでは、 &vmguest; 側に提供することのできるネットワークインターフェイスの種類が複数用意されています。可能であれば準仮想化ネットワークインターフェイスを使用するのが推奨されます。これにより、最低限のシステム要件で最大の伝送速度を得ることができます。また、それぞれの &vmguest; に対して最大で 8 個までのネットワークインターフェイスを設定することができます。</para>
+    <para>準仮想化ハードウエアに対応していないシステムの場合、準仮想化ネットワークインターフェイスを使用することができません。この場合、システムをネットワークに接続するには、完全仮想化環境での擬似ネットワークインターフェイスを使用します。下記の擬似ネットワークインターフェイスを使用することができます:</para>
 
-  <para>準仮想化ハードウエアに対応していないシステムの場合、準仮想化ネットワークインターフェイスを使用することができません。この場合、システムをネットワークに接続するには、完全仮想化環境での擬似ネットワークインターフェイスを使用します。下記の擬似ネットワークインターフェイスを使用することができます:</para>
+    <itemizedlist mark="bullet" spacing="normal">
+      <listitem>
+        <para>Realtek 8139 (PCI) (既定の擬似ネットワークカードです)</para>
+      </listitem>
+      <listitem>
+        <para>AMD PCnet32 (PCI)</para>
+      </listitem>
+      <listitem>
+        <para>NE2000 (PCI)</para>
+      </listitem>
+      <listitem>
+        <para>NE2000 (ISA)</para>
+      </listitem>
+      <listitem>
+        <para>Intel e100 (PCI)</para>
+      </listitem>
+      <listitem>
+        <para>Intel e1000 およびその派生ハードウエア (e1000-82540em, e1000-82544gc, e1000-82545em) (PCI)</para>
+      </listitem>
+    </itemizedlist>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para>Realtek 8139 (PCI) (既定の擬似ネットワークカードです)</para>
-   </listitem>
-   <listitem>
-    <para>AMD PCnet32 (PCI)</para>
-   </listitem>
-   <listitem>
-    <para>NE2000 (PCI)</para>
-   </listitem>
-   <listitem>
-    <para>NE2000 (ISA)</para>
-   </listitem>
-   <listitem>
-    <para>Intel e100 (PCI)</para>
-   </listitem>
-   <listitem>
-    <para>Intel e1000 およびその派生ハードウエア (e1000-82540em, e1000-82544gc, e1000-82545em) (PCI)</para>
-   </listitem>
-  </itemizedlist>
+    <para>これらのネットワークインターフェイスはいずれも、ソフトウエアインターフェイスです。それぞれのネットワークインターフェイスには、他のものと重複しないユニークな MAC アドレスを設定しなければなりませんが、 Xensource に割り当てられた MAC アドレスの中から使用することになります。</para>
 
-  <para>これらのネットワークインターフェイスはいずれも、ソフトウエアインターフェイスです。それぞれのネットワークインターフェイスには、他のものと重複しないユニークな MAC アドレスを設定しなければなりませんが、 Xensource に割り当てられた MAC アドレスの中から使用することになります。</para>
+    <tip>
+      <title>仮想ネットワークインターフェイスと MAC アドレスについて</title>
+      <para>仮想環境内の MAC アドレスの設定は、既定で乱数を使用して設定され、 00:16:3E:xx:xx:xx のような値になります。通常は MAC アドレスの範囲はそれなりに大きいため、重複する可能性はほとんどありませんが、非常に大量のマシンを配置するような場合や、乱数による MAC アドレスの割り当てで発生しうる問題を完全に回避したい場合は、手作業で MAC アドレスを設定してください。</para>
+    </tip>
 
-  <tip>
-   <title>仮想ネットワークインターフェイスと MAC アドレスについて</title>
-   <para>仮想環境内の MAC アドレスの設定は、既定で乱数を使用して設定され、 00:16:3E:xx:xx:xx のような値になります。通常は MAC アドレスの範囲はそれなりに大きいため、重複する可能性はほとんどありませんが、非常に大量のマシンを配置するような場合や、乱数による MAC アドレスの割り当てで発生しうる問題を完全に回避したい場合は、手作業で MAC アドレスを設定してください。</para>
-  </tip>
+    <para>デバッグやシステム管理を行う目的で、ゲスト内で動作しているイーサネットデバイスが &dom0; 内の仮想インターフェイスのどれに接続されているのかを知っておくと便利です。この情報は &dom0; 内の名前付けルールから判別することができます。仮想インターフェイスの名前は、 <literal>vif<replaceable>&lt;ドメイン番号&gt;</replaceable>.<replaceable>&lt;インターフェイス番号&gt;</replaceable></literal> の形式になります。</para>
 
-  <para>デバッグやシステム管理を行う目的で、ゲスト内で動作しているイーサネットデバイスが &dom0; 内の仮想インターフェイスのどれに接続されているのかを知っておくと便利です。この情報は &dom0; 内の名前付けルールから判別することができます。仮想インターフェイスの名前は、 <literal>vif<replaceable>&lt;ドメイン番号&gt;</replaceable>.<replaceable>&lt;インターフェイス番号&gt;</replaceable></literal> の形式になります。</para>
+    <para>たとえば ID=5 の &vmguest; の 3 番目のインターフェイス (eth2) の &dom0; でのデバイス名は、 <literal>vif5.2</literal> になります。利用可能な全てのインターフェイスを表示したい場合は、 <command>ip a</command> コマンドを実行してください。</para>
 
-  <para>たとえば ID=5 の &vmguest; の 3 番目のインターフェイス (eth2) の &dom0; でのデバイス名は、 <literal>vif5.2</literal> になります。利用可能な全てのインターフェイスを表示したい場合は、 <command>ip a</command> コマンドを実行してください。</para>
-
-  <para>デバイスの命名では、そのインターフェイスがどのブリッジに接続されているのかを知ることができません。しかしながら、この情報は &dom0; 内で管理されています。ブリッジに接続されているインターフェイスを知りたい場合は、 <command>bridge link</command> コマンドを実行してください。出力は下記のようになります:</para>
+    <para>デバイスの命名では、そのインターフェイスがどのブリッジに接続されているのかを知ることができません。しかしながら、この情報は &dom0; 内で管理されています。ブリッジに接続されているインターフェイスを知りたい場合は、 <command>bridge link</command> コマンドを実行してください。出力は下記のようになります:</para>
 
 <screen>&prompt.sudo;bridge link
 2: eth0 state DOWN : &lt;NO-CARRIER,BROADCAST,MULTICAST,SLAVE,UP&gt; mtu 1500 master br0
 3: eth1 state UP : &lt;BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&gt; mtu 1500 master br1
 </screen>
 
-  <para>上記の例では <literal>br0</literal> , <literal>br1</literal> , <literal>br2</literal> の 3 つのブリッジが設定されていて、そのうち <literal>br0</literal> と <literal>br1</literal> には実際のイーサネットデバイス (<literal>eth0</literal> と <literal>eth1</literal>) が接続されていることになります。</para>
- </sect1>
- <sect1 xml:id="sec-xen-net-host-route">
-  <title>&xen; でのホストベースルーティング</title>
+    <para>上記の例では <literal>br0</literal> , <literal>br1</literal> , <literal>br2</literal> の 3 つのブリッジが設定されていて、そのうち <literal>br0</literal> と <literal>br1</literal> には実際のイーサネットデバイス (<literal>eth0</literal> と <literal>eth1</literal>) が接続されていることになります。</para>
+  </sect1>
+  <sect1 xml:id="sec-xen-net-host-route">
+    <title>&xen; でのホストベースルーティング</title>
 
-  <para>&xen; では &dom0; での制御によってホストベースのルーティングを設定することができます。ですが、残念なことに &yast; では十分にサポートされておらず、設定ファイルを多数手作業で編集する必要があります。そのため、この設定は知識のあるシステム管理者が行う必要があります。</para>
+    <para>&xen; では &dom0; での制御によってホストベースのルーティングを設定することができます。ですが、残念なことに &yast; では十分にサポートされておらず、設定ファイルを多数手作業で編集する必要があります。そのため、この設定は知識のあるシステム管理者が行う必要があります。</para>
 
-  <para>下記の設定では、固定の IP アドレスを利用した設定を行っています。この設定では &vmguest; と &vmhost; との間で互いに IP アドレスを知っておく必要があることから、 DHCP 環境での使用には対応していません。</para>
+    <para>下記の設定では、固定の IP アドレスを利用した設定を行っています。この設定では &vmguest; と &vmhost; との間で互いに IP アドレスを知っておく必要があることから、 DHCP 環境での使用には対応していません。</para>
 
-  <para>ルーティング型のゲストを構築するのに最も簡単な方法は、ブリッジ型のネットワークをルーティング型のネットワークに変更することです。下記の手順でも、 &vmguest; に対してあらかじめブリッジ型のネットワークが構成されているものとしています。また下記の説明では、 &vmhost; が &xenhost; という名前で &xenhostip; というアドレス、そして &vmguest; が &xenguest; という名前で &xenguestip; というアドレスであるものとします。</para>
+    <para>ルーティング型のゲストを構築するのに最も簡単な方法は、ブリッジ型のネットワークをルーティング型のネットワークに変更することです。下記の手順でも、 &vmguest; に対してあらかじめブリッジ型のネットワークが構成されているものとしています。また下記の説明では、 &vmhost; が &xenhost; という名前で &xenhostip; というアドレス、そして &vmguest; が &xenguest; という名前で &xenguestip; というアドレスであるものとします。</para>
 
-  <procedure xml:id="proc-xen-network-route-ipv4">
-   <title>ルーティング型 IPv4 &vmguest; の設定</title>
-   <step>
-    <para>&xenguest; がシャットダウンされていることを確認します。 <systemitem>xl</systemitem> コマンドを実行してシャットダウンとその確認を行ってください。</para>
-   </step>
-   <step>
-    <para>&vmhost; &xenhost; のネットワーク設定を準備します:</para>
-    <substeps performance="required">
-     <step>
-      <para>トラフィックをルーティングするためのホットプラグ型インターフェイスを作成します。これを実現するには、 <filename>/etc/sysconfig/network/ifcfg-&xenguest;.0</filename> ファイルを作成して、下記の内容を記述します:</para>
+    <procedure xml:id="proc-xen-network-route-ipv4">
+      <title>ルーティング型 IPv4 &vmguest; の設定</title>
+      <step>
+        <para>&xenguest; がシャットダウンされていることを確認します。 <systemitem>xl</systemitem> コマンドを実行してシャットダウンとその確認を行ってください。</para>
+      </step>
+      <step>
+        <para>&vmhost; &xenhost; のネットワーク設定を準備します:</para>
+        <substeps performance="required">
+          <step>
+            <para>トラフィックをルーティングするためのホットプラグ型インターフェイスを作成します。これを実現するには、 <filename>/etc/sysconfig/network/ifcfg-&xenguest;.0</filename> ファイルを作成して、下記の内容を記述します:</para>
 <screen>NAME="&xen; guest &xenguest;"
 BOOTPROTO="static"
 STARTMODE="hotplug"
      </screen>
-     </step>
-     <step>
-      <para>IP 転送を有効化します:</para>
-      <substeps>
-       <step>
-        <para>&yast; を起動して、 <menuchoice><guimenu>ネットワークの設定</guimenu><guimenu>ルーティング</guimenu></menuchoice> を開きます。</para>
-       </step>
-       <step>
-        <para><guimenu>ルーティング</guimenu> タブ内にある <guimenu>IPv4 転送を有効にする</guimenu> と <guimenu>IPv6 転送を有効にする</guimenu> をそれぞれ選択します。</para>
-       </step>
-       <step>
-        <para>設定を適用して &yast; を終了します。</para>
-       </step>
-      </substeps>
-     </step>
-     <step>
-      <para>&firewalld; に対して下記のとおり設定を適用します:</para>
-      <itemizedlist mark="bullet" spacing="normal">
-       <listitem>
-        <para>public ゾーン内のデバイスに &xenguest;.0 を追加します:</para>
+          </step>
+          <step>
+            <para>IP 転送を有効化します:</para>
+            <substeps>
+              <step>
+                <para>&yast; を起動して、 <menuchoice><guimenu>ネットワークの設定</guimenu><guimenu>ルーティング</guimenu></menuchoice> を開きます。</para>
+              </step>
+              <step>
+                <para><guimenu>ルーティング</guimenu> タブ内にある <guimenu>IPv4 転送を有効にする</guimenu> と <guimenu>IPv6 転送を有効にする</guimenu> をそれぞれ選択します。</para>
+              </step>
+              <step>
+                <para>設定を適用して &yast; を終了します。</para>
+              </step>
+            </substeps>
+          </step>
+          <step>
+            <para>&firewalld; に対して下記のとおり設定を適用します:</para>
+            <itemizedlist mark="bullet" spacing="normal">
+              <listitem>
+                <para>public ゾーン内のデバイスに &xenguest;.0 を追加します:</para>
 <screen>&prompt.sudo;firewall-cmd --zone=public --add-interface=&xenguest;.0</screen>
-       </listitem>
-       <listitem>
-        <para>転送すべきアドレスをファイアウオールに設定します:</para>
+              </listitem>
+              <listitem>
+                <para>転送すべきアドレスをファイアウオールに設定します:</para>
 <screen>&prompt.sudo;firewall-cmd --zone=public \
 --add-forward-port=port=80:proto=tcp:toport=80:toaddr="&xenguestip;/32,0/0"</screen>
-       </listitem>
-       <listitem>
-        <para>設定を恒久的に保存します:</para>
+              </listitem>
+              <listitem>
+                <para>設定を恒久的に保存します:</para>
 <screen>&prompt.sudo;firewall-cmd --runtime-to-permanent</screen>
-       </listitem>
-      </itemizedlist>
-     </step>
-     <step>
-      <para>&xenguest; のインターフェイスに対してスタティックルートを追加します。これを行うには、下記の内容を <filename>/etc/sysconfig/network/routes</filename> の末尾に追加します:</para>
+              </listitem>
+            </itemizedlist>
+          </step>
+          <step>
+            <para>&xenguest; のインターフェイスに対してスタティックルートを追加します。これを行うには、下記の内容を <filename>/etc/sysconfig/network/routes</filename> の末尾に追加します:</para>
 <screen>&xenguestip;  -  -  &xenguest;.0</screen>
-     </step>
-     <step>
-      <para>&vmhost; が接続しているスイッチやルータに対して、ルーティングインターフェイスであることを認識させるため、 &xenhost; 側で <literal>proxy_arp</literal> を有効化します。下記の内容を <filename>/etc/sysctl.conf</filename> に追加します:</para>
+          </step>
+          <step>
+            <para>&vmhost; が接続しているスイッチやルータに対して、ルーティングインターフェイスであることを認識させるため、 &xenhost; 側で <literal>proxy_arp</literal> を有効化します。下記の内容を <filename>/etc/sysctl.conf</filename> に追加します:</para>
 <screen>net.ipv4.conf.default.proxy_arp = 1
 net.ipv4.conf.all.proxy_arp = 1</screen>
-     </step>
-     <step>
-      <para>下記のコマンドを実行して変更点を適用します:</para>
+          </step>
+          <step>
+            <para>下記のコマンドを実行して変更点を適用します:</para>
 <screen>&prompt.sudo;systemctl restart systemd-sysctl wicked</screen>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>あとは <xref linkend="sec-xen-manage-xl"/> で説明している内容に従って &xenguest; 向けの vif インターフェイス設定を変更し、 &vmguest; の &xen; 設定を行います。処理中に生成したテキストファイルに対して、下記の変更を行います:</para>
-    <substeps performance="required">
-     <step>
-      <para>下記の内容を削除します:</para>
-      <screen>bridge=br0</screen>
-     </step>
-     <step>
-      <para>下記の内容を追加します:</para>
-      <screen>vifname=vif&xenguest;.0</screen>
-      <para>もしくは</para>
-      <screen>vifname=vif&xenguest;.0=emu</screen>
-      <para>(完全仮想化ゲストの場合)</para>
-     </step>
-     <step>
-      <para>インターフェイスを設定する際のスクリプトを下記のように変更します:</para>
-      <screen>script=/etc/xen/scripts/vif-route-ifup</screen>
-     </step>
-     <step>
-      <para>新しい設定を適用し、 &vmguest; を起動します。</para>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>残りの設定作業は &vmguest; 内から実施します。</para>
-    <substeps performance="required">
-     <step>
-      <para><command>xl console</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; のコンソールを開いてログインします。</para>
-     </step>
-     <step>
-      <para>ゲスト側の IP アドレスが &xenguestip; になっていることを確認します。</para>
-     </step>
-     <step>
-      <para>&vmhost; に対して &vmguest; へのホストルートとデフォルトゲートウエイを設定します。具体的には、下記の内容を <filename>/etc/sysconfig/network/routes</filename> に追加します:</para>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>あとは <xref linkend="sec-xen-manage-xl"/> で説明している内容に従って &xenguest; 向けの vif インターフェイス設定を変更し、 &vmguest; の &xen; 設定を行います。処理中に生成したテキストファイルに対して、下記の変更を行います:</para>
+        <substeps performance="required">
+          <step>
+            <para>下記の内容を削除します:</para>
+<screen>bridge=br0</screen>
+          </step>
+          <step>
+            <para>下記の内容を追加します:</para>
+<screen>vifname=vif&xenguest;.0</screen>
+            <para>もしくは</para>
+<screen>vifname=vif&xenguest;.0=emu</screen>
+            <para>(完全仮想化ゲストの場合)</para>
+          </step>
+          <step>
+            <para>インターフェイスを設定する際のスクリプトを下記のように変更します:</para>
+<screen>script=/etc/xen/scripts/vif-route-ifup</screen>
+          </step>
+          <step>
+            <para>新しい設定を適用し、 &vmguest; を起動します。</para>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>残りの設定作業は &vmguest; 内から実施します。</para>
+        <substeps performance="required">
+          <step>
+            <para><command>xl console</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; のコンソールを開いてログインします。</para>
+          </step>
+          <step>
+            <para>ゲスト側の IP アドレスが &xenguestip; になっていることを確認します。</para>
+          </step>
+          <step>
+            <para>&vmhost; に対して &vmguest; へのホストルートとデフォルトゲートウエイを設定します。具体的には、下記の内容を <filename>/etc/sysconfig/network/routes</filename> に追加します:</para>
 <screen>&xenhostip; - - eth0
 default &xenhostip; - -
      </screen>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>最後に &vmguest; からインターネット側へのアクセスを確認するとともに、ネットワーク側から &vmguest; 側へのアクセスも確認します。</para>
-   </step>
-  </procedure>
- </sect1>
- <sect1 xml:id="sec-xen-net-masquerade">
-  <title>マスカレード型ネットワーク設定</title>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>最後に &vmguest; からインターネット側へのアクセスを確認するとともに、ネットワーク側から &vmguest; 側へのアクセスも確認します。</para>
+      </step>
+    </procedure>
+  </sect1>
+  <sect1 xml:id="sec-xen-net-masquerade">
+    <title>マスカレード型ネットワーク設定</title>
 
-  <para>マスカレード型のネットワークの設定はルーティング型の設定に似ていますが、 proxy_arp の設定が不要となるほか、いくつかのファイアウオールルールの設定が異なります。 &xennatguest; という名前のゲストが &xennatip; というアドレスで存在し、外部インターフェイスと接続されているブリッジが <literal>br0</literal> である場合、下記のように実施します。設定を簡単にするため、インストール済みのゲストに対してマスカレード型ネットワークを設定するものとします:</para>
+    <para>マスカレード型のネットワークの設定はルーティング型の設定に似ていますが、 proxy_arp の設定が不要となるほか、いくつかのファイアウオールルールの設定が異なります。 &xennatguest; という名前のゲストが &xennatip; というアドレスで存在し、外部インターフェイスと接続されているブリッジが <literal>br0</literal> である場合、下記のように実施します。設定を簡単にするため、インストール済みのゲストに対してマスカレード型ネットワークを設定するものとします:</para>
 
-  <procedure>
-   <title>マスカレード型 IPv4 VM ゲストの設定</title>
-   <step>
-    <para><command>xl shutdown</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; をシャットダウンします。</para>
-   </step>
-   <step>
-    <para>&vmhost; 側でのネットワーク設定を行います:</para>
-    <substeps performance="required">
-     <step>
-      <para>トラフィックをルーティングするためのホットプラグ型インターフェイスを作成します。これを実現するには、 <filename>/etc/sysconfig/network/ifcfg-&xennatguest;.0</filename> ファイルを作成して、下記の内容を記述します:</para>
+    <procedure>
+      <title>マスカレード型 IPv4 VM ゲストの設定</title>
+      <step>
+        <para><command>xl shutdown</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; をシャットダウンします。</para>
+      </step>
+      <step>
+        <para>&vmhost; 側でのネットワーク設定を行います:</para>
+        <substeps performance="required">
+          <step>
+            <para>トラフィックをルーティングするためのホットプラグ型インターフェイスを作成します。これを実現するには、 <filename>/etc/sysconfig/network/ifcfg-&xennatguest;.0</filename> ファイルを作成して、下記の内容を記述します:</para>
 <screen>NAME="&xen; guest &xennatguest;"
 BOOTPROTO="static"
 STARTMODE="hotplug"
      </screen>
-     </step>
-     <step>
-      <para><filename>/etc/sysconfig/&susefirewallfiles;</filename> ファイルを編集し、下記の設定を追加します:</para>
-      <itemizedlist mark="bullet" spacing="normal">
-       <listitem>
-        <para>FW_DEV_DMZ のデバイス内に &xennatguest;.0 を追加します:</para>
+          </step>
+          <step>
+            <para><filename>/etc/sysconfig/&susefirewallfiles;</filename> ファイルを編集し、下記の設定を追加します:</para>
+            <itemizedlist mark="bullet" spacing="normal">
+              <listitem>
+                <para>FW_DEV_DMZ のデバイス内に &xennatguest;.0 を追加します:</para>
 <screen>FW_DEV_DMZ="&xennatguest;.0"</screen>
-       </listitem>
-       <listitem>
-        <para>ファイアウオールでルーティングを有効化します:</para>
+              </listitem>
+              <listitem>
+                <para>ファイアウオールでルーティングを有効化します:</para>
 <screen>FW_ROUTE="yes"</screen>
-       </listitem>
-       <listitem>
-        <para>ファイアウオールでマスカレードを有効化します:</para>
+              </listitem>
+              <listitem>
+                <para>ファイアウオールでマスカレードを有効化します:</para>
 <screen>FW_MASQUERADE="yes"</screen>
-       </listitem>
-       <listitem>
-        <para>ファイアウオールに対して、マスカレード処理を行うように指定します:</para>
+              </listitem>
+              <listitem>
+                <para>ファイアウオールに対して、マスカレード処理を行うように指定します:</para>
 <screen>FW_MASQ_NETS="&xennatip;/32"</screen>
-       </listitem>
-       <listitem>
-        <para>マスカレードの例外からネットワークを削除します:</para>
+              </listitem>
+              <listitem>
+                <para>マスカレードの例外からネットワークを削除します:</para>
 <screen>FW_NOMASQ_NETS=""</screen>
-       </listitem>
-       <listitem>
-        <para>最後にファイアウオールを再起動します:</para>
+              </listitem>
+              <listitem>
+                <para>最後にファイアウオールを再起動します:</para>
 <screen>&prompt.sudo;systemctl restart &susefirewallfiles;</screen>
-       </listitem>
-      </itemizedlist>
-     </step>
-     <step>
-      <para>&xennatguest; のインターフェイスに対してスタティックルートを追加します。これを行うには、下記の内容を <filename>/etc/sysconfig/network/routes</filename> の末尾に追加します:</para>
+              </listitem>
+            </itemizedlist>
+          </step>
+          <step>
+            <para>&xennatguest; のインターフェイスに対してスタティックルートを追加します。これを行うには、下記の内容を <filename>/etc/sysconfig/network/routes</filename> の末尾に追加します:</para>
 <screen>&xennatip; - - &xennatguest;.0</screen>
-     </step>
-     <step>
-      <para>これまでに行った変更を反映させます:</para>
+          </step>
+          <step>
+            <para>これまでに行った変更を反映させます:</para>
 <screen>&prompt.sudo;systemctl restart wicked</screen>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>あとは &vmguest; の &xen; 設定を行います。</para>
-    <substeps performance="required">
-     <step>
-      <para>あとは <xref linkend="sec-xen-manage-xl"/> で説明している内容に従って &xenguest; 向けの vif インターフェイス設定を変更します。</para>
-     </step>
-     <step>
-      <para>下記の内容を削除します:</para>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>あとは &vmguest; の &xen; 設定を行います。</para>
+        <substeps performance="required">
+          <step>
+            <para>あとは <xref linkend="sec-xen-manage-xl"/> で説明している内容に従って &xenguest; 向けの vif インターフェイス設定を変更します。</para>
+          </step>
+          <step>
+            <para>下記の内容を削除します:</para>
 <screen>bridge=br0</screen>
-     </step>
-     <step>
-      <para>下記の内容を追加します:</para>
+          </step>
+          <step>
+            <para>下記の内容を追加します:</para>
 <screen>vifname=vif&xennatguest;.0</screen>
-     </step>
-     <step>
-      <para>インターフェイスを設定する際のスクリプトを下記のように変更します:</para>
+          </step>
+          <step>
+            <para>インターフェイスを設定する際のスクリプトを下記のように変更します:</para>
 <screen>script=/etc/xen/scripts/vif-route-ifup</screen>
-     </step>
-     <step>
-      <para>新しい設定を適用し、 &vmguest; を起動します。</para>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>残りの設定作業は &vmguest; 内から行います:</para>
-    <substeps performance="required">
-     <step>
-      <para><command>xl console</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; のコンソールを開いてログインします。</para>
-     </step>
-     <step>
-      <para>ゲスト側の IP アドレスが &xennatip; に設定されていることを確認します。</para>
-     </step>
-     <step>
-      <para>&vmhost; に対して &vmguest; へのホストルートとデフォルトゲートウエイを設定します。具体的には、下記の内容を <filename>/etc/sysconfig/network/routes</filename> に追加します:</para>
+          </step>
+          <step>
+            <para>新しい設定を適用し、 &vmguest; を起動します。</para>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>残りの設定作業は &vmguest; 内から行います:</para>
+        <substeps performance="required">
+          <step>
+            <para><command>xl console</command> <replaceable>仮想マシン名</replaceable> のように入力して実行し、 &vmguest; のコンソールを開いてログインします。</para>
+          </step>
+          <step>
+            <para>ゲスト側の IP アドレスが &xennatip; に設定されていることを確認します。</para>
+          </step>
+          <step>
+            <para>&vmhost; に対して &vmguest; へのホストルートとデフォルトゲートウエイを設定します。具体的には、下記の内容を <filename>/etc/sysconfig/network/routes</filename> に追加します:</para>
 <screen>&xenhostip; - - eth0
 default &xenhostip; - -
      </screen>
-     </step>
-    </substeps>
-   </step>
-   <step>
-    <para>最後に &vmguest; からインターネット側へのアクセスを確認します。</para>
-   </step>
-  </procedure>
- </sect1>
-<!-- TODO: remove next when done with previous two sections -->
- <sect1 xml:id="sec-xen-net-special">
-  <title>特殊な設定</title>
+          </step>
+        </substeps>
+      </step>
+      <step>
+        <para>最後に &vmguest; からインターネット側へのアクセスを確認します。</para>
+      </step>
+    </procedure>
+  </sect1>
+  <!-- TODO: remove next when done with previous two sections -->
+  <sect1 xml:id="sec-xen-net-special">
+    <title>特殊な設定</title>
 
-  <para>&xen; ではさまざまなネットワーク設定を行うことができます。下記の設定はいずれも、既定では有効化されていないものです:</para>
+    <para>&xen; ではさまざまなネットワーク設定を行うことができます。下記の設定はいずれも、既定では有効化されていないものです:</para>
 
-  <sect2 xml:id="sec-xen-net-throttle">
-   <title>仮想ネットワーク内での帯域制限</title>
-   <para>&xen; では仮想化ゲストに対して、ブリッジにアクセスする際の許可帯域を設定することができます。この設定を行うには、まず <xref linkend="sec-xen-manage-xl"/> に示している手順に従って、 &vmguest; の設定を変更する必要があります。</para>
-   <para>設定ファイル内で、仮想ブリッジに接続されているデバイスを探します。設定は下記のようになっているはずです:</para>
+    <sect2 xml:id="sec-xen-net-throttle">
+      <title>仮想ネットワーク内での帯域制限</title>
+      <para>&xen; では仮想化ゲストに対して、ブリッジにアクセスする際の許可帯域を設定することができます。この設定を行うには、まず <xref linkend="sec-xen-manage-xl"/> に示している手順に従って、 &vmguest; の設定を変更する必要があります。</para>
+      <para>設定ファイル内で、仮想ブリッジに接続されているデバイスを探します。設定は下記のようになっているはずです:</para>
 <screen>vif = [ 'mac=00:16:3e:4f:94:a9,bridge=br0' ]</screen>
-   <para>最大帯域を設定するには、この設定の中に <systemitem>rate</systemitem> という項目を追加します。たとえば下記のようになります:</para>
+      <para>最大帯域を設定するには、この設定の中に <systemitem>rate</systemitem> という項目を追加します。たとえば下記のようになります:</para>
 <screen>vif = [ 'mac=00:16:3e:4f:94:a9,bridge=br0,rate=100Mb/s' ]</screen>
-   <para>なお、帯域の指定は <literal>Mb/s</literal> (メガビット毎秒) もしくは <literal>MB/s</literal> (メガバイト毎秒) の単位で指定することができます。上記の例では、仮想インターフェイスに対する最大帯域を 100 メガビット毎秒に指定しています。既定では仮想ブリッジに対するゲストの帯域制限はありません。</para>
-   <para>また、帯域計算の粒度として時間を指定して調整を図ることもできます。たとえば下記のようになります:</para>
+      <para>なお、帯域の指定は <literal>Mb/s</literal> (メガビット毎秒) もしくは <literal>MB/s</literal> (メガバイト毎秒) の単位で指定することができます。上記の例では、仮想インターフェイスに対する最大帯域を 100 メガビット毎秒に指定しています。既定では仮想ブリッジに対するゲストの帯域制限はありません。</para>
+      <para>また、帯域計算の粒度として時間を指定して調整を図ることもできます。たとえば下記のようになります:</para>
 <screen>vif = [ 'mac=00:16:3e:4f:94:a9,bridge=br0,rate=100Mb/s@20ms' ]</screen>
-  </sect2>
+    </sect2>
 
-  <sect2 xml:id="sec-xen-net-monitor">
-   <title>ネットワークトラフィックの監視</title>
-   <para>特定のインターフェイスに対してトラフィックを監視するには、 <systemitem>iftop</systemitem> というプログラムを利用して、端末内でトラフィックの監視を行うとよいでしょう。</para>
-   <para>&xen; の &vmhost; を動作させている場合、監視対象のインターフェイスを指定して動作させる必要があります。ここで指定するインターフェイスは、物理ネットワークが接続されているブリッジデバイスとなります (例: <systemitem>br0</systemitem>) 。そのため、インターフェイス名はシステムによって異なることになります。全ての物理インターフェイスを監視したい場合は、 &rootuser; で端末を起動して、下記のコマンドを実行してください:</para>
+    <sect2 xml:id="sec-xen-net-monitor">
+      <title>ネットワークトラフィックの監視</title>
+      <para>特定のインターフェイスに対してトラフィックを監視するには、 <systemitem>iftop</systemitem> というプログラムを利用して、端末内でトラフィックの監視を行うとよいでしょう。</para>
+      <para>&xen; の &vmhost; を動作させている場合、監視対象のインターフェイスを指定して動作させる必要があります。ここで指定するインターフェイスは、物理ネットワークが接続されているブリッジデバイスとなります (例: <systemitem>br0</systemitem>) 。そのため、インターフェイス名はシステムによって異なることになります。全ての物理インターフェイスを監視したい場合は、 &rootuser; で端末を起動して、下記のコマンドを実行してください:</para>
 <screen>iftop -i br0</screen>
-   <para>特定の &vmguest; のインターフェイスのトラフィックのみを監視したい場合は、仮想インターフェイスを指定して実行します。たとえばドメイン ID が 5 の 1 つめのイーサネットデバイスを監視したい場合は、下記のようなコマンドになります:</para>
+      <para>特定の &vmguest; のインターフェイスのトラフィックのみを監視したい場合は、仮想インターフェイスを指定して実行します。たとえばドメイン ID が 5 の 1 つめのイーサネットデバイスを監視したい場合は、下記のようなコマンドになります:</para>
 <screen>ftop -i vif5.0</screen>
-   <para><command>iftop</command> を終了させるには <keycap>Q</keycap> キーを押します。オプションや用途に関する詳細は、 <command>man 8 iftop</command> で表示されるマニュアルページをお読みください。</para>
-  </sect2>
-
- </sect1>
+      <para><command>iftop</command> を終了させるには <keycap>Q</keycap> キーを押します。オプションや用途に関する詳細は、 <command>man 8 iftop</command> で表示されるマニュアルページをお読みください。</para>
+    </sect2>
+  </sect1>
 </chapter>

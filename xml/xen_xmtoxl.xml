@@ -4,106 +4,105 @@
 %entities;
 ]>
 <appendix xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-xmtoxl">
-<!-- xen2libvirt -->
-<!-- xm vs xl -->
-<!-- external ref -->
-<!-- savin xen to xm -->
- <title>XM, XL ツールスタックと &libvirt; フレームワーク</title>
- <info>
-      <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-        <dm:bugtracker>
-        </dm:bugtracker>
-	<dm:translation>yes</dm:translation>
-      </dm:docmanager>
-    </info>
-    <sect1 xml:id="sec-xmtoxl-intro">
-  <title>&xen; ツールスタック</title>
+  <!-- xen2libvirt -->
+  <!-- xm vs xl -->
+  <!-- external ref -->
+  <!-- savin xen to xm -->
+  <title>XM, XL ツールスタックと &libvirt; フレームワーク</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <sect1 xml:id="sec-xmtoxl-intro">
+    <title>&xen; ツールスタック</title>
 
-  <para>&xen; のバージョン 2.x のリリースの早いうちから、 <command>xend</command> は &xen; のインストールを管理するための実質的な標準ツールスタックとして使われてきました。ところが &xen; のバージョン 4.1 では、新しく libxenlight (libxl としても知られています) と呼ばれるツールスタックが技術プレビューとして提供されるようになりました。libxl は C 言語で書かれた、小さくて低レベルなライブラリです。また、全てのクライアントツールスタック ( <link xlink:href="http://wiki.xen.org/wiki/XAPI">XAPI</link> , &libvirt;, xl) に対して、シンプルな API を提供するよう設計されています。 &xen; のバージョン 4.2 では libxl が公式サポートを提供するようになり、 <command>xend</command> は廃止予定としてマークされるようになりました。 <command>xend</command> は &xen; 4.3 や 4.4 のバージョンでも、使用しているツール類を移行するための期間を確保するために提供され続けていましたが、現在は提供元の &xen; プロジェクトからは削除され、 &xen; バージョン 4.5 シリーズ (&productname; <phrase os="sles;sled">12 SP1</phrase> <phrase os="osuse">42.1</phrase> もしくはそれ以降) では提供されなくなっています。</para>
+    <para>&xen; のバージョン 2.x のリリースの早いうちから、 <command>xend</command> は &xen; のインストールを管理するための実質的な標準ツールスタックとして使われてきました。ところが &xen; のバージョン 4.1 では、新しく libxenlight (libxl としても知られています) と呼ばれるツールスタックが技術プレビューとして提供されるようになりました。libxl は C 言語で書かれた、小さくて低レベルなライブラリです。また、全てのクライアントツールスタック ( <link xlink:href="http://wiki.xen.org/wiki/XAPI">XAPI</link> , &libvirt;, xl) に対して、シンプルな API を提供するよう設計されています。 &xen; のバージョン 4.2 では libxl が公式サポートを提供するようになり、 <command>xend</command> は廃止予定としてマークされるようになりました。 <command>xend</command> は &xen; 4.3 や 4.4 のバージョンでも、使用しているツール類を移行するための期間を確保するために提供され続けていましたが、現在は提供元の &xen; プロジェクトからは削除され、 &xen; バージョン 4.5 シリーズ (&productname; <phrase os="sles;sled">12 SP1</phrase> <phrase os="osuse">42.1</phrase> もしくはそれ以降) では提供されなくなっています。</para>
 
-  <para><phrase os="sles;sled">&slsa; 11 SP3 には &xen; バージョン 4.2 が含まれていますが、 SP 無しの &slsa; 11 を使用しているユーザに対して大きな影響がないようにする目的で、 <command>xend</command> が従来通り提供され続けるようになりました。しかしながら、 &slsa; 12 では新しい libxl ツールスタックへ移行するために、 <command>xend</command> が廃止され、メンテナンスが停止されています。 </phrase> &productname; <phrase os="sles;sled">12 SP1</phrase> <phrase os="osuse">42.1</phrase> では <command>xend</command> のサポートが行われなくなっています。</para>
+    <para><phrase os="sles;sled">&slsa; 11 SP3 には &xen; バージョン 4.2 が含まれていますが、 SP 無しの &slsa; 11 を使用しているユーザに対して大きな影響がないようにする目的で、 <command>xend</command> が従来通り提供され続けるようになりました。しかしながら、 &slsa; 12 では新しい libxl ツールスタックへ移行するために、 <command>xend</command> が廃止され、メンテナンスが停止されています。 </phrase> &productname; <phrase os="sles;sled">12 SP1</phrase> <phrase os="osuse">42.1</phrase> では <command>xend</command> のサポートが行われなくなっています。</para>
 
-  <para><command>xend</command> と libxl の大きな違いとして、状態管理を行うかどうかの違いがあげられます。 <command>xend</command> では、 <command>xm</command> や &libvirt; などのクライアントアプリケーションでは、いずれも同じシステム状態が表示されます。これは、 <command>xend</command> が &xen; ホストに対する状態を管理しているためです。 libxl では、 <command>xl</command> や &libvirt; などのクライアントアプリケーションが状態を管理しなければなりません。そのため、 <command>xl</command> で作成したドメインは &libvirt; などの他の libxl アプリケーションからは確認することができません。また、一般に &xen; ホストを管理するにあたって、複数の libxl アプリケーションを混在させることはお勧めできません。 &productname; では、 &libvirt; を利用して &xen; ホストを管理することをお勧めします。これにより、 <command>virt-manager</command> , <command>virt-install</command> , <command>virt-viewer</command> , libguestfs などの &libvirt; アプリケーションを介して、 &xen; システムを管理できることになります。また &xen; ホストを管理する際に <command>xl</command> を使用する場合は、これで管理している全ての仮想マシンは、 &libvirt; やそのアプリケーションから確認できないことにも注意してください。</para>
+    <para><command>xend</command> と libxl の大きな違いとして、状態管理を行うかどうかの違いがあげられます。 <command>xend</command> では、 <command>xm</command> や &libvirt; などのクライアントアプリケーションでは、いずれも同じシステム状態が表示されます。これは、 <command>xend</command> が &xen; ホストに対する状態を管理しているためです。 libxl では、 <command>xl</command> や &libvirt; などのクライアントアプリケーションが状態を管理しなければなりません。そのため、 <command>xl</command> で作成したドメインは &libvirt; などの他の libxl アプリケーションからは確認することができません。また、一般に &xen; ホストを管理するにあたって、複数の libxl アプリケーションを混在させることはお勧めできません。 &productname; では、 &libvirt; を利用して &xen; ホストを管理することをお勧めします。これにより、 <command>virt-manager</command> , <command>virt-install</command> , <command>virt-viewer</command> , libguestfs などの &libvirt; アプリケーションを介して、 &xen; システムを管理できることになります。また &xen; ホストを管理する際に <command>xl</command> を使用する場合は、これで管理している全ての仮想マシンは、 &libvirt; やそのアプリケーションから確認できないことにも注意してください。</para>
 
-  <sect2 xml:id="sec-xmtoxl-upgrade">
-   <title>xend/xm から xl/libxl へのアップグレード</title>
-   <para><command>xl</command> アプリケーションとその設定ファイル形式 (詳しくは <command>man xl.cfg</command> をお読みください) は、 <command>xm</command> アプリケーションとその設定ファイル形式 (詳しくは <command>man xm.cfg</command> をお読みください) に対して後方互換性があるように設計されています。既存の <command>xm</command> 側の設定は <command>xl</command> でも使用できるはずです。 libxl は状態を管理しない仕組みであるため、 <command>xl</command> でも管理対象のドメインという概念に対応していません。 &suse; では &libvirt; を利用して &xen; ホストを管理することをお勧めします。また、 &suse; では <command>xen2libvirt</command> と呼ばれるツールを提供し、これを使用することで <command>xend</command> で管理していたドメインを &libvirt; に移行できるようにしています。 <command>xen2libvirt</command> に関する詳細は、 <xref linkend="xen-xen2libvirt"/> をお読みください。</para>
-  </sect2>
+    <sect2 xml:id="sec-xmtoxl-upgrade">
+      <title>xend/xm から xl/libxl へのアップグレード</title>
+      <para><command>xl</command> アプリケーションとその設定ファイル形式 (詳しくは <command>man xl.cfg</command> をお読みください) は、 <command>xm</command> アプリケーションとその設定ファイル形式 (詳しくは <command>man xm.cfg</command> をお読みください) に対して後方互換性があるように設計されています。既存の <command>xm</command> 側の設定は <command>xl</command> でも使用できるはずです。 libxl は状態を管理しない仕組みであるため、 <command>xl</command> でも管理対象のドメインという概念に対応していません。 &suse; では &libvirt; を利用して &xen; ホストを管理することをお勧めします。また、 &suse; では <command>xen2libvirt</command> と呼ばれるツールを提供し、これを使用することで <command>xend</command> で管理していたドメインを &libvirt; に移行できるようにしています。 <command>xen2libvirt</command> に関する詳細は、 <xref linkend="xen-xen2libvirt"/> をお読みください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-xmltoxl-design">
-   <title>XL の仕様</title>
-   <para><command>xl</command> コマンドの基本的な構造は下記のとおりです:</para>
+    <sect2 xml:id="sec-xmltoxl-design">
+      <title>XL の仕様</title>
+      <para><command>xl</command> コマンドの基本的な構造は下記のとおりです:</para>
 <screen><command>xl <replaceable>サブコマンド</replaceable></command> <option>オプション</option> <replaceable>ドメイン</replaceable></screen>
-   <para><replaceable>ドメイン</replaceable> はドメインの数値 ID か、ドメインの名前 (内部で数値 ID に変換されます) を指定します。また <option>オプション</option> にはサブコマンド固有のオプションを指定します。</para>
-   <para>xl/libxl は xm/xend との後方互換性がありますが、いくつかの違いが存在していることに注意してください:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para>マネージドドメインや固定ドメインの考え方。 &libvirt; ではこのような機能が用意されています。</para>
-    </listitem>
-    <listitem>
-     <para>xl/libxl ではドメインの設定ファイル内に Python コードを埋め込むことができません。</para>
-    </listitem>
-    <listitem>
-     <para>xl/libxl では SXP 形式の設定ファイル ( <command>xm</command> <option>create</option> -F) からドメインを作成することができません。</para>
-    </listitem>
-    <listitem>
-     <para>xl/libxl は、ドメインの設定ファイル内に <command>w!</command> を記述することで実現できる、 DomU 間のストレージ共有には対応していません。</para>
-    </listitem>
-   </itemizedlist>
-   <para>xl/libxl は比較的新しいもので開発途上であるため、 xm/xend ツールスタックに存在していたいくつかの機能が提供されていません:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para>SCSI LUN/ホストのパススルー (PVSCSI)</para>
-    </listitem>
-    <listitem>
-     <para>USB パススルー (PVUSB)</para>
-    </listitem>
-    <listitem>
-     <para>&xen; の完全仮想化 Linux ゲストでの直接カーネル起動</para>
-    </listitem>
-   </itemizedlist>
-  </sect2>
+      <para><replaceable>ドメイン</replaceable> はドメインの数値 ID か、ドメインの名前 (内部で数値 ID に変換されます) を指定します。また <option>オプション</option> にはサブコマンド固有のオプションを指定します。</para>
+      <para>xl/libxl は xm/xend との後方互換性がありますが、いくつかの違いが存在していることに注意してください:</para>
+      <itemizedlist mark="bullet" spacing="normal">
+        <listitem>
+          <para>マネージドドメインや固定ドメインの考え方。 &libvirt; ではこのような機能が用意されています。</para>
+        </listitem>
+        <listitem>
+          <para>xl/libxl ではドメインの設定ファイル内に Python コードを埋め込むことができません。</para>
+        </listitem>
+        <listitem>
+          <para>xl/libxl では SXP 形式の設定ファイル ( <command>xm</command> <option>create</option> -F) からドメインを作成することができません。</para>
+        </listitem>
+        <listitem>
+          <para>xl/libxl は、ドメインの設定ファイル内に <command>w!</command> を記述することで実現できる、 DomU 間のストレージ共有には対応していません。</para>
+        </listitem>
+      </itemizedlist>
+      <para>xl/libxl は比較的新しいもので開発途上であるため、 xm/xend ツールスタックに存在していたいくつかの機能が提供されていません:</para>
+      <itemizedlist mark="bullet" spacing="normal">
+        <listitem>
+          <para>SCSI LUN/ホストのパススルー (PVSCSI)</para>
+        </listitem>
+        <listitem>
+          <para>USB パススルー (PVUSB)</para>
+        </listitem>
+        <listitem>
+          <para>&xen; の完全仮想化 Linux ゲストでの直接カーネル起動</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
 
-  <sect2 xml:id="sec-xmtoxl-checklist">
-   <title>アップグレード前のチェックリスト</title>
-   <para><phrase os="sles;sled">&slsa; 11 SP4 の Xen ホストを &slsa; 15</phrase> <phrase os="osuse">Leap 42.1 の Xen ホストを Leap 15</phrase>にアップグレードする場合、下記の点をチェックしておくことをお勧めします:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para>xm ドメイン設定ファイル内に Python コードが存在している場合、それらは全て削除しなければなりません。</para>
-    </listitem>
-    <listitem>
-     <para>全ての既存の仮想マシンに対して、 <command>virsh</command> <option>dumpxml</option> <replaceable>ドメイン名</replaceable> <replaceable>ドメイン名.xml</replaceable> を実行して、ドメインの XML ファイルを採取しておくことをお勧めします。</para>
-    </listitem>
-    <listitem>
-     <para>従来の &xen; 環境で使用されていたパラメータを残しておく目的で、 <filename>/etc/xen/xend-config.sxp</filename> や <filename>/boot/grub/menu.lst</filename> のファイルをバックアップしておくことをお勧めします。</para>
-    </listitem>
-   </itemizedlist>
-   <note>
-    <para>現時点では、 <phrase os="sles;sled">&slsa; 11 SP4</phrase><phrase os="osuse">Leap 42.1</phrase> の &xen; ホスト内で動作している仮想マシンを、ライブマイグレーションで <phrase os="sles;sled">&slsa; 15</phrase><phrase os="osuse">Leap 15</phrase> の &xen; ホスト内に移行させることはサポートしていません。 <command>xend</command> と libxl のツールスタックはランタイムの互換性が無いためです。これらの間で移行を行う場合は、ダウンタイムを設けて移行する必要があります。</para>
-   </note>
-  </sect2>
- </sect1>
-<!-- xen2libvirt -->
- <xi:include href="xm_vs_xl_xen2libvirt.xml"/>
-<!-- xm vs xl -->
- <xi:include href="xm_vs_xl.xml"/>
-<!-- external ref -->
- <xi:include href="xm_vs_xl_links.xml"/>
-<!-- savin xen to xm -->
- <sect1 xml:id="sec-libvirt-managing-export-Xen-xm">
-  <title><command>xm</command> 互換形式での &xen; ゲスト設定の保存</title>
+    <sect2 xml:id="sec-xmtoxl-checklist">
+      <title>アップグレード前のチェックリスト</title>
+      <para><phrase os="sles;sled">&slsa; 11 SP4 の Xen ホストを &slsa; 15</phrase> <phrase os="osuse">Leap 42.1 の Xen ホストを Leap 15</phrase>にアップグレードする場合、下記の点をチェックしておくことをお勧めします:</para>
+      <itemizedlist mark="bullet" spacing="normal">
+        <listitem>
+          <para>xm ドメイン設定ファイル内に Python コードが存在している場合、それらは全て削除しなければなりません。</para>
+        </listitem>
+        <listitem>
+          <para>全ての既存の仮想マシンに対して、 <command>virsh</command> <option>dumpxml</option> <replaceable>ドメイン名</replaceable> <replaceable>ドメイン名.xml</replaceable> を実行して、ドメインの XML ファイルを採取しておくことをお勧めします。</para>
+        </listitem>
+        <listitem>
+          <para>従来の &xen; 環境で使用されていたパラメータを残しておく目的で、 <filename>/etc/xen/xend-config.sxp</filename> や <filename>/boot/grub/menu.lst</filename> のファイルをバックアップしておくことをお勧めします。</para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <para>現時点では、 <phrase os="sles;sled">&slsa; 11 SP4</phrase><phrase os="osuse">Leap 42.1</phrase> の &xen; ホスト内で動作している仮想マシンを、ライブマイグレーションで <phrase os="sles;sled">&slsa; 15</phrase><phrase os="osuse">Leap 15</phrase> の &xen; ホスト内に移行させることはサポートしていません。 <command>xend</command> と libxl のツールスタックはランタイムの互換性が無いためです。これらの間で移行を行う場合は、ダウンタイムを設けて移行する必要があります。</para>
+      </note>
+    </sect2>
+  </sect1>
+  <!-- xen2libvirt -->
+  <xi:include href="xm_vs_xl_xen2libvirt.xml"/>
+  <!-- xm vs xl -->
+  <xi:include href="xm_vs_xl.xml"/>
+  <!-- external ref -->
+  <xi:include href="xm_vs_xl_links.xml"/>
+  <!-- savin xen to xm -->
+  <sect1 xml:id="sec-libvirt-managing-export-Xen-xm">
+    <title><command>xm</command> 互換形式での &xen; ゲスト設定の保存</title>
 
-  <para><command>xl</command> は &xen; ゲストを管理するための最新のツールキットではあります (もちろん &libvirt; のほうが適切であることに変わりはありません) が、従来 <command>xm</command> で使用していたゲストの形式にエクスポートすることもできます。これを行うには、下記の手順を実施します:</para>
+    <para><command>xl</command> は &xen; ゲストを管理するための最新のツールキットではあります (もちろん &libvirt; のほうが適切であることに変わりはありません) が、従来 <command>xm</command> で使用していたゲストの形式にエクスポートすることもできます。これを行うには、下記の手順を実施します:</para>
 
-  <procedure>
-   <step>
-    <para>まずはゲストの設定をファイルにエクスポートします:</para>
+    <procedure>
+      <step>
+        <para>まずはゲストの設定をファイルにエクスポートします:</para>
 <screen>&prompt.user;virsh dumpxml guest_id &gt; guest_cfg.xml</screen>
-   </step>
-   <step>
-    <para>あとは設定ファイルを <command>xm</command> 形式に変換します:</para>
+      </step>
+      <step>
+        <para>あとは設定ファイルを <command>xm</command> 形式に変換します:</para>
 <screen>&prompt.user;virsh domxml-to-native xen-xm guest_cfg.xml &gt; guest_xm_cfg</screen>
-   </step>
-  </procedure>
- </sect1>
+      </step>
+    </procedure>
+  </sect1>
 </appendix>

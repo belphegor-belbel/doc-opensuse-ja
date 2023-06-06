@@ -4,105 +4,104 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-xen-xenstore">
- <title>&xenstore;: ドメイン間で共有される設定データベース</title>
- <info>
-      <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-        <dm:bugtracker>
-        </dm:bugtracker>
-	<dm:translation>yes</dm:translation>
-      </dm:docmanager>
-    </info>
-    <para>本章では、 &xenstore; に関する基本的な情報のほか、 &xen; 環境内での役割、 &xenstore; で使用されるファイルのディレクトリ構造、そして &xenstore; のコマンドに関する説明をそれぞれ行っています。</para>
- <sect1 xml:id="sec-xenstore-intro">
-  <title>概要</title>
+  <title>&xenstore;: ドメイン間で共有される設定データベース</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>本章では、 &xenstore; に関する基本的な情報のほか、 &xen; 環境内での役割、 &xenstore; で使用されるファイルのディレクトリ構造、そして &xenstore; のコマンドに関する説明をそれぞれ行っています。</para>
+  <sect1 xml:id="sec-xenstore-intro">
+    <title>概要</title>
 
-  <para>&xenstore; は設定や状態の情報を含むデータベースで、 &vmguest; と &dom0; 内で動作する管理ツールとの間で共有される仕組みでもあります。 &vmguest; と管理ツールは、 &xenstore; との間で情報を読み書きし、設定情報の伝達や状態の更新／変更などを行うことができます。 &xenstore; データベースは &dom0; が管理するものであり、キーをベースにした読み書きなどのシンプルな構成になっています。 &vmguest; と管理ツール側では、 &xenstore; 内での項目を監視することで、変更の通知を受けることもできます。なお、 <systemitem>xenstored</systemitem> デーモンは <systemitem>xencommons</systemitem> サービスで管理されます。</para>
+    <para>&xenstore; は設定や状態の情報を含むデータベースで、 &vmguest; と &dom0; 内で動作する管理ツールとの間で共有される仕組みでもあります。 &vmguest; と管理ツールは、 &xenstore; との間で情報を読み書きし、設定情報の伝達や状態の更新／変更などを行うことができます。 &xenstore; データベースは &dom0; が管理するものであり、キーをベースにした読み書きなどのシンプルな構成になっています。 &vmguest; と管理ツール側では、 &xenstore; 内での項目を監視することで、変更の通知を受けることもできます。なお、 <systemitem>xenstored</systemitem> デーモンは <systemitem>xencommons</systemitem> サービスで管理されます。</para>
 
-  <para>&xenstore; は &dom0; 内で単一のデータベースファイル <filename>/var/lib/xenstored/tdb</filename> ( <literal>tdb</literal> は <emphasis>Tree DataBase (ツリー構造型データベース)</emphasis> の略) として存在しています。</para>
- </sect1>
- <sect1 xml:id="sec-xenstore-fsi">
-  <title>ファイルシステムインターフェイス</title>
+    <para>&xenstore; は &dom0; 内で単一のデータベースファイル <filename>/var/lib/xenstored/tdb</filename> ( <literal>tdb</literal> は <emphasis>Tree DataBase (ツリー構造型データベース)</emphasis> の略) として存在しています。</para>
+  </sect1>
+  <sect1 xml:id="sec-xenstore-fsi">
+    <title>ファイルシステムインターフェイス</title>
 
-  <para>&xenstore; のデータベースの内容は <filename>/proc</filename> に似た仮想的なファイルシステム構造になっています (<filename>/proc</filename> に関する詳細は <xref linkend="sec-util-proc"/> をお読みください) 。このファイルシステムのツリーには、 <filename>/vm</filename> , <filename>/local/domain</filename> ,<filename>/tool</filename> の 3 つの種類から構成されています。</para>
+    <para>&xenstore; のデータベースの内容は <filename>/proc</filename> に似た仮想的なファイルシステム構造になっています (<filename>/proc</filename> に関する詳細は <xref linkend="sec-util-proc"/> をお読みください) 。このファイルシステムのツリーには、 <filename>/vm</filename> , <filename>/local/domain</filename> ,<filename>/tool</filename> の 3 つの種類から構成されています。</para>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para><filename>/vm</filename>: &vmguest; の設定に関する情報が保存されています。</para>
-   </listitem>
-   <listitem>
-    <para><filename>/local/domain</filename>: ローカルノード内の &vmguest; に関する情報が保存されています。</para>
-   </listitem>
-   <listitem>
-    <para><filename>/tool</filename>: さまざまなツールに関する一般的な情報が保存されています。</para>
-   </listitem>
-  </itemizedlist>
+    <itemizedlist mark="bullet" spacing="normal">
+      <listitem>
+        <para><filename>/vm</filename>: &vmguest; の設定に関する情報が保存されています。</para>
+      </listitem>
+      <listitem>
+        <para><filename>/local/domain</filename>: ローカルノード内の &vmguest; に関する情報が保存されています。</para>
+      </listitem>
+      <listitem>
+        <para><filename>/tool</filename>: さまざまなツールに関する一般的な情報が保存されています。</para>
+      </listitem>
+    </itemizedlist>
 
-  <tip>
-   <para>それぞれの &vmguest; には 2 種類の ID 番号が設定されます。一方の <emphasis>Universal Unique IDntifier</emphasis> (UUID) は、 &vmguest; を他のマシンに移行しても変更されることの無い値、もう一方の <emphasis>DOMain IDentifier</emphasis> (DOMID) は、動作中のインスタンスを一位に識別する番号で、こちらは一方から他方に移行を行うと、通常は値が変化することになります。</para>
-  </tip>
+    <tip>
+      <para>それぞれの &vmguest; には 2 種類の ID 番号が設定されます。一方の <emphasis>Universal Unique IDntifier</emphasis> (UUID) は、 &vmguest; を他のマシンに移行しても変更されることの無い値、もう一方の <emphasis>DOMain IDentifier</emphasis> (DOMID) は、動作中のインスタンスを一位に識別する番号で、こちらは一方から他方に移行を行うと、通常は値が変化することになります。</para>
+    </tip>
 
-  <sect2>
-   <title>&xenstore; のコマンド</title>
-   <para>&xenstore; データベースのファイルシステム構造は、下記のコマンドを使用してアクセスすることができます:</para>
-   <variablelist>
-    <varlistentry>
-     <term><command>xenstore-ls</command></term>
-     <listitem>
-      <para>&xenstore; データベースのダンプを表示します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-read</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; の項目の値を読み取ります。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-exists</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; のパスが存在しているかどうかを報告します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-list</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; パス以下の全ての子項目を表示します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-write</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; の項目の値を更新します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-rm</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; の項目またはディレクトリを削除します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-chmod</command> <option><replaceable>&xenstore;_のパス</replaceable></option> <option><replaceable>モード</replaceable></option></term>
-     <listitem>
-      <para>指定した &xenstore; パスの読み込み／書き込み権限を更新します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><command>xenstore-control</command></term>
-     <listitem>
-      <para>たとえば一貫性のチェックなど、 <systemitem>xenstored</systemitem> バックエンドに対してコマンドを送信します。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
+    <sect2>
+      <title>&xenstore; のコマンド</title>
+      <para>&xenstore; データベースのファイルシステム構造は、下記のコマンドを使用してアクセスすることができます:</para>
+      <variablelist>
+        <varlistentry>
+          <term><command>xenstore-ls</command></term>
+          <listitem>
+            <para>&xenstore; データベースのダンプを表示します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-read</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; の項目の値を読み取ります。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-exists</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; のパスが存在しているかどうかを報告します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-list</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; パス以下の全ての子項目を表示します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-write</command> <option><replaceable>&xenstore;_エントリへのパス</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; の項目の値を更新します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-rm</command> <option><replaceable>&xenstore;_のパス</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; の項目またはディレクトリを削除します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-chmod</command> <option><replaceable>&xenstore;_のパス</replaceable></option> <option><replaceable>モード</replaceable></option></term>
+          <listitem>
+            <para>指定した &xenstore; パスの読み込み／書き込み権限を更新します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>xenstore-control</command></term>
+          <listitem>
+            <para>たとえば一貫性のチェックなど、 <systemitem>xenstored</systemitem> バックエンドに対してコマンドを送信します。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
 
-  <sect2 xml:id="xenstore-vm">
-   <title><filename>/vm</filename></title>
-   <para><filename>/vm</filename> パスにはそれぞれの &vmguest; の UUID が順に並べられ、その中には仮想 CPU 数や割り当てられているメモリ量などの設定情報が保存されています。つまり、それぞれの &vmguest; に対して <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> というディレクトリが存在することになります。ディレクトリの内容を表示したい場合は、 <command>xenstore-list</command> コマンドをお使いください。</para>
+    <sect2 xml:id="xenstore-vm">
+      <title><filename>/vm</filename></title>
+      <para><filename>/vm</filename> パスにはそれぞれの &vmguest; の UUID が順に並べられ、その中には仮想 CPU 数や割り当てられているメモリ量などの設定情報が保存されています。つまり、それぞれの &vmguest; に対して <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> というディレクトリが存在することになります。ディレクトリの内容を表示したい場合は、 <command>xenstore-list</command> コマンドをお使いください。</para>
 <screen>&prompt.sudo;xenstore-list /vm
 00000000-0000-0000-0000-000000000000
 9b30841b-43bc-2af9-2ed3-5a649f466d79-1</screen>
-   <para>出力の冒頭は &dom0; そのもので、 2 行目が実際の &vmguest; になります。下記のように実行することで、 &vmguest; 内の項目を表示することができます:</para>
+      <para>出力の冒頭は &dom0; そのもので、 2 行目が実際の &vmguest; になります。下記のように実行することで、 &vmguest; 内の項目を表示することができます:</para>
 <screen>&prompt.sudo;xenstore-list /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1
 image
 rtc
@@ -119,55 +118,55 @@ vcpus
 vcpu_avail
 bootloader
 name</screen>
-   <para>たとえば &vmguest; に割り当てられている仮想 CPU 数など、項目の値を読み取りたい場合は、 <command>xenstore-read</command> コマンドを使用します:</para>
+      <para>たとえば &vmguest; に割り当てられている仮想 CPU 数など、項目の値を読み取りたい場合は、 <command>xenstore-read</command> コマンドを使用します:</para>
 <screen>&prompt.sudo;xenstore-read /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1/vcpus
 1</screen>
-   <para><filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> 以下の主な項目は下記のとおりです:</para>
-   <variablelist>
-    <varlistentry>
-     <term><literal>uuid</literal></term>
-     <listitem>
-      <para>&vmguest; の UUID です。移行処理を行っても、この値は変更されません。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>on_reboot</literal></term>
-     <listitem>
-      <para>&vmguest; が再起動要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>on_poweroff</literal></term>
-     <listitem>
-      <para>&vmguest; が停止要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>on_crash</literal></term>
-     <listitem>
-      <para>&vmguest; がクラッシュした場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>vcpus</literal></term>
-     <listitem>
-      <para>&vmguest; に割り当てられた仮想 CPU 数を表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>vcpu_avail</literal></term>
-     <listitem>
-      <para>&vmguest; に対して提供されている仮想 CPU のビットマスクです。このビットマスクには <literal>vcpus</literal> の値と同じ数だけビットが設定されています。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>name</literal></term>
-     <listitem>
-      <para>&vmguest; の名前を表します。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-   <para>通常の &vmguest; (&dom0; 以外) であれば、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image</filename> のようなパスも存在します:</para>
+      <para><filename>/vm/<replaceable>&lt;UUID&gt;</replaceable></filename> 以下の主な項目は下記のとおりです:</para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>uuid</literal></term>
+          <listitem>
+            <para>&vmguest; の UUID です。移行処理を行っても、この値は変更されません。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>on_reboot</literal></term>
+          <listitem>
+            <para>&vmguest; が再起動要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>on_poweroff</literal></term>
+          <listitem>
+            <para>&vmguest; が停止要求を受け取った場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>on_crash</literal></term>
+          <listitem>
+            <para>&vmguest; がクラッシュした場合、 &vmguest; のシャットダウンや再起動など、何を行うのかを指定する項目です。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>vcpus</literal></term>
+          <listitem>
+            <para>&vmguest; に割り当てられた仮想 CPU 数を表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>vcpu_avail</literal></term>
+          <listitem>
+            <para>&vmguest; に対して提供されている仮想 CPU のビットマスクです。このビットマスクには <literal>vcpus</literal> の値と同じ数だけビットが設定されています。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>name</literal></term>
+          <listitem>
+            <para>&vmguest; の名前を表します。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>通常の &vmguest; (&dom0; 以外) であれば、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image</filename> のようなパスも存在します:</para>
 <screen>&prompt.sudo;xenstore-list /vm/9b30841b-43bc-2af9-2ed3-5a649f466d79-1/image
 ostype
 kernel
@@ -176,115 +175,115 @@ ramdisk
 dmargs
 device-model
 display</screen>
-   <para>それぞれの項目の意味は下記のとおりです:</para>
-   <variablelist>
-    <varlistentry>
-     <term><literal>ostype</literal></term>
-     <listitem>
-      <para>&vmguest; の OS の種類を表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>kernel</literal></term>
-     <listitem>
-      <para>&vmguest; で使用するカーネルの &dom0; 内でのパスを表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>cmdline</literal></term>
-     <listitem>
-      <para>&vmguest; の起動時に使用するカーネルのコマンドラインを表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>ramdisk</literal></term>
-     <listitem>
-      <para>&vmguest; で使用する RAM ディスクの &dom0; 内でのパスを表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>dmargs</literal></term>
-     <listitem>
-      <para>&qemu; プロセスに対して渡されるパラメータを表します。 <command>ps</command> コマンドで &qemu; のプロセスを参照すると、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image/dmargs</filename> と同じ内容が現れるはずです。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
+      <para>それぞれの項目の意味は下記のとおりです:</para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>ostype</literal></term>
+          <listitem>
+            <para>&vmguest; の OS の種類を表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>kernel</literal></term>
+          <listitem>
+            <para>&vmguest; で使用するカーネルの &dom0; 内でのパスを表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>cmdline</literal></term>
+          <listitem>
+            <para>&vmguest; の起動時に使用するカーネルのコマンドラインを表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>ramdisk</literal></term>
+          <listitem>
+            <para>&vmguest; で使用する RAM ディスクの &dom0; 内でのパスを表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>dmargs</literal></term>
+          <listitem>
+            <para>&qemu; プロセスに対して渡されるパラメータを表します。 <command>ps</command> コマンドで &qemu; のプロセスを参照すると、 <filename>/vm/<replaceable>&lt;UUID&gt;</replaceable>/image/dmargs</filename> と同じ内容が現れるはずです。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
 
-  <sect2>
-   <title><filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename></title>
-   <para>ここでのパスは動作中のドメイン (&vmguest;) の ID を使用し、動作中の &vmguest; に対する情報を提供しています。なお、 &vmguest; の移行を行った場合、ドメイン ID は変化することに注意してください。下記のような項目が提供されます:</para>
-   <variablelist>
-    <varlistentry>
-     <term><literal>vm</literal></term>
-     <listitem>
-      <para>この &vmguest; に対応する <filename>/vm</filename> ディレクトリのパスを表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>on_reboot, on_poweroff, on_crash, name</literal></term>
-     <listitem>
-      <para><xref linkend="xenstore-vm"/> での同名の項目と同じ意味を持ちます。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>domid</literal></term>
-     <listitem>
-      <para>&vmguest; のドメイン ID を表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>cpu</literal></term>
-     <listitem>
-      <para>&vmguest; 側でピン設定を行っている現在の CPU を表します。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>cpu_weight</literal></term>
-     <listitem>
-      <para>スケジューリングの目的で割り当てられた、 &vmguest; に対する重み値を表します。この値が大きければ大きいほど、物理 CPU が頻繁に割り当てられるようになります。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-   <para>上述の項目以外にも、 <filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename> 内にはいくつかのサブディレクトリが存在しています。利用可能な全ての項目の意味を知りたい場合は、 <link xlink:href="http://wiki.xen.org/wiki/XenStore_Reference">&xenstore; Reference</link> (英語) をお読みください。</para>
-   <variablelist>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory</literal></term>
-     <listitem>
-      <para>メモリに関する情報が含まれています。なお、 <literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory/target</literal> には、 &vmguest; に対するターゲットのメモリサイズ (キロバイト単位) が含まれています。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/console</literal></term>
-     <listitem>
-      <para>&vmguest; が使用しているコンソールに関する情報が含まれています。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/backend</literal></term>
-     <listitem>
-      <para>&vmguest; が使用している全てのバックエンドデバイスの情報が含まれています。ここにはさらにサブディレクトリが存在する場合があります。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device</literal></term>
-     <listitem>
-      <para>&vmguest; のフロントエンドデバイスに関する情報が含まれています。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device-misc</literal></term>
-     <listitem>
-      <para>デバイスに関するその他の情報が含まれています。</para>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/store</literal></term>
-     <listitem>
-      <para>&vmguest; のストア情報が含まれています。</para>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-  </sect2>
- </sect1>
+    <sect2>
+      <title><filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename></title>
+      <para>ここでのパスは動作中のドメイン (&vmguest;) の ID を使用し、動作中の &vmguest; に対する情報を提供しています。なお、 &vmguest; の移行を行った場合、ドメイン ID は変化することに注意してください。下記のような項目が提供されます:</para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>vm</literal></term>
+          <listitem>
+            <para>この &vmguest; に対応する <filename>/vm</filename> ディレクトリのパスを表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>on_reboot, on_poweroff, on_crash, name</literal></term>
+          <listitem>
+            <para><xref linkend="xenstore-vm"/> での同名の項目と同じ意味を持ちます。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>domid</literal></term>
+          <listitem>
+            <para>&vmguest; のドメイン ID を表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>cpu</literal></term>
+          <listitem>
+            <para>&vmguest; 側でピン設定を行っている現在の CPU を表します。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>cpu_weight</literal></term>
+          <listitem>
+            <para>スケジューリングの目的で割り当てられた、 &vmguest; に対する重み値を表します。この値が大きければ大きいほど、物理 CPU が頻繁に割り当てられるようになります。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>上述の項目以外にも、 <filename>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable></filename> 内にはいくつかのサブディレクトリが存在しています。利用可能な全ての項目の意味を知りたい場合は、 <link xlink:href="http://wiki.xen.org/wiki/XenStore_Reference">&xenstore; Reference</link> (英語) をお読みください。</para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory</literal></term>
+          <listitem>
+            <para>メモリに関する情報が含まれています。なお、 <literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/memory/target</literal> には、 &vmguest; に対するターゲットのメモリサイズ (キロバイト単位) が含まれています。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/console</literal></term>
+          <listitem>
+            <para>&vmguest; が使用しているコンソールに関する情報が含まれています。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/backend</literal></term>
+          <listitem>
+            <para>&vmguest; が使用している全てのバックエンドデバイスの情報が含まれています。ここにはさらにサブディレクトリが存在する場合があります。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device</literal></term>
+          <listitem>
+            <para>&vmguest; のフロントエンドデバイスに関する情報が含まれています。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/device-misc</literal></term>
+          <listitem>
+            <para>デバイスに関するその他の情報が含まれています。</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>/local/domain/<replaceable>&lt;ドメイン_ID&gt;</replaceable>/store</literal></term>
+          <listitem>
+            <para>&vmguest; のストア情報が含まれています。</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+  </sect1>
 </chapter>

@@ -4,643 +4,627 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-libvirt-connect">
- <title>接続と認可</title>
- <info>
-  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker>
-   </dm:bugtracker>
-   <dm:translation>yes</dm:translation>
-  </dm:docmanager>
- </info>
- <para>多くの &vmguest; が存在する複数の &vmhost; を扱うようになると、管理に手間がかかるようになってしまいます。 &libvirt; では、複数の &vmhost; に対して一括で接続し、単一のインターフェイスから全ての &vmguest; を管理することができるほか、それらのグラフィカルインターフェイスにも簡単に接続できるようになっています。</para>
- <para>不正な接続をされないようにする目的で、 &libvirt; ではさまざまな種類の接続 (TLS, SSH, Unix ソケット, TCP) に対応しています。これらでは、さまざまな認可メカニズム (ソケット, &pk;, SASL, Kerberos) を組み合わせて使用することができます。</para>
- <sect1 xml:id="sec-libvirt-connect-auth">
-  <title>認証</title>
+  <title>接続と認可</title>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <para>多くの &vmguest; が存在する複数の &vmhost; を扱うようになると、管理に手間がかかるようになってしまいます。 &libvirt; では、複数の &vmhost; に対して一括で接続し、単一のインターフェイスから全ての &vmguest; を管理することができるほか、それらのグラフィカルインターフェイスにも簡単に接続できるようになっています。</para>
+  <para>不正な接続をされないようにする目的で、 &libvirt; ではさまざまな種類の接続 (TLS, SSH, Unix ソケット, TCP) に対応しています。これらでは、さまざまな認可メカニズム (ソケット, &pk;, SASL, Kerberos) を組み合わせて使用することができます。</para>
+  <sect1 xml:id="sec-libvirt-connect-auth">
+    <title>認証</title>
 
-  <para>&vmguest; の管理やそれらのグラフィカルコンソールへのアクセスは、正当なユーザからのアクセスのみを受け入れるように設定する必要があります。このような目的を達成するため、 &vmhost; 側では下記のような認証技術を使用することができます:</para>
+    <para>&vmguest; の管理やそれらのグラフィカルコンソールへのアクセスは、正当なユーザからのアクセスのみを受け入れるように設定する必要があります。このような目的を達成するため、 &vmhost; 側では下記のような認証技術を使用することができます:</para>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para>パーミッションやグループの所有権を利用した、 Unix ソケット向けのアクセス制御。この方式は、 &libvirtd; の接続にのみ適用することができます。</para>
-   </listitem>
-   <listitem>
-    <para>&pk; を利用した Unix ソケット向けのアクセス制御。この方式は、ローカルの &libvirtd; 接続にのみ適用することができます。</para>
-   </listitem>
-   <listitem>
-    <para>SASL (Simple Authentication and Security Layer) を利用したユーザ名とパスワードによる認証。この方式は &libvirtd; と VNC のどちらの接続でも利用することができます。 SASL での認証は、システムとは異なるユーザデータベースを利用して管理を行うことから、サーバ内にユーザを作成する必要はありません。また、 SASL への認証接続は暗号化されます。</para>
-   </listitem>
-   <listitem>
-    <para>Kerberos 認証。この方式は、 &libvirtd; の接続にのみ適用することができます。また、本マニュアルでは説明していません。詳しくは <link xlink:href="https://libvirt.org/auth.html#ACL_server_kerberos"/> をお読みください。</para>
-   </listitem>
-   <listitem>
-    <para>単独パスワード認証。この方式は、 VNC 接続にのみ適用することができます。</para>
-   </listitem>
-  </itemizedlist>
+    <itemizedlist mark="bullet" spacing="normal">
+      <listitem>
+        <para>パーミッションやグループの所有権を利用した、 Unix ソケット向けのアクセス制御。この方式は、 &libvirtd; の接続にのみ適用することができます。</para>
+      </listitem>
+      <listitem>
+        <para>&pk; を利用した Unix ソケット向けのアクセス制御。この方式は、ローカルの &libvirtd; 接続にのみ適用することができます。</para>
+      </listitem>
+      <listitem>
+        <para>SASL (Simple Authentication and Security Layer) を利用したユーザ名とパスワードによる認証。この方式は &libvirtd; と VNC のどちらの接続でも利用することができます。 SASL での認証は、システムとは異なるユーザデータベースを利用して管理を行うことから、サーバ内にユーザを作成する必要はありません。また、 SASL への認証接続は暗号化されます。</para>
+      </listitem>
+      <listitem>
+        <para>Kerberos 認証。この方式は、 &libvirtd; の接続にのみ適用することができます。また、本マニュアルでは説明していません。詳しくは <link xlink:href="https://libvirt.org/auth.html#ACL_server_kerberos"/> をお読みください。</para>
+      </listitem>
+      <listitem>
+        <para>単独パスワード認証。この方式は、 VNC 接続にのみ適用することができます。</para>
+      </listitem>
+    </itemizedlist>
 
-  <important>
-   <title>&libvirtd; への認証と VNC への認証は個別に設定する必要がある件について</title>
-   <para>&vmguest; の管理機能 (&libvirtd; 経由) へのアクセスとグラフィカルコンソールへのアクセスは、それぞれ別々に設定する必要があります。管理ツールへのアクセスを制限しても、その設定は VNC 接続への設定に自動的に適用されることは <emphasis>ありません</emphasis> 。</para>
-  </important>
+    <important>
+      <title>&libvirtd; への認証と VNC への認証は個別に設定する必要がある件について</title>
+      <para>&vmguest; の管理機能 (&libvirtd; 経由) へのアクセスとグラフィカルコンソールへのアクセスは、それぞれ別々に設定する必要があります。管理ツールへのアクセスを制限しても、その設定は VNC 接続への設定に自動的に適用されることは <emphasis>ありません</emphasis> 。</para>
+    </important>
 
-  <para>TLS/SSL 接続を介してリモートから &vmguest; にアクセスする場合、クライアント側で使用する証明書の鍵ファイルの読み込み権限を特定のグループに限定することで、間接的にアクセスを制御することができます。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-security"/> をお読みください。</para>
+    <para>TLS/SSL 接続を介してリモートから &vmguest; にアクセスする場合、クライアント側で使用する証明書の鍵ファイルの読み込み権限を特定のグループに限定することで、間接的にアクセスを制御することができます。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-security"/> をお読みください。</para>
 
-  <sect2 xml:id="sec-libvirt-connect-auth-libvirt">
-   <title>&libvirtd; の認証</title>
-   <para>&libvirtd; の認証は <filename>/etc/libvirt/libvirtd.conf</filename> で設定します。ここでの設定は、 &vmm; や <command>virsh</command> など、全ての &libvirt; ツールに適用されます。</para>
-   <para>&libvirt; では 2 種類のソケットを提供しています。 1 つは監視用の読み込み専用ソケット、もう 1 つは管理操作に使用するための読み書き可能なソケットです。それぞれのソケットに対する設定は、個別に行うことができます。既定のアクセス許可設定では、読み書き可能なソケットが &rootuser; にのみ許可されるように制限 ( <literal>0700</literal> ) され、読み込み専用のソケットは誰にでもアクセスできるように公開 ( <literal>0777</literal> ) されています。</para>
-   <para>下記の手順では、読み書き可能なソケットに対するアクセス許可設定方法を示しています。読み込み専用ソケットに対しても同じような手順で実施することができます。また、設定作業は &vmhost; 内で行います。</para>
-   <note>
-    <title>&productname; における既定の認証設定について</title>
-    <para>&productname; での既定の認証方式は、 Unix ソケットに対するアクセス制御です。 &rootuser; のみに対してアクセスを許可しています。 &vmhost; で root 以外のユーザが &libvirt; ツールを使用しようとすると、 &pk; を介して &rootuser; のパスワード入力を求められます。パスワードを正しく入力することで、現在および将来使用できるようにアクセスが許可されます。</para>
-    <para>それ以外の方法としては、非特権ユーザに対して &libvirt; の <quote>システム</quote> アクセスを許可する方法があります。詳しくは <xref linkend="sec-libvirt-connect-connecting-dac"/> をお読みください。</para>
-   </note>
-   <variablelist>
-    <title>推奨される認可方式</title>
-    <varlistentry>
-     <term>ローカル接続</term>
-     <listitem>
-      <simplelist>
-       <member><xref linkend="sec-libvirt-connect-auth-libvirt-pk"/></member>
-       <member><xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/></member>
-      </simplelist>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>SSH 経由でのリモートトンネル</term>
-     <listitem>
-      <simplelist>
-       <member><xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/></member>
-      </simplelist>
-     </listitem>
-    </varlistentry>
-    <varlistentry>
-     <term>リモート TLS/SSL 接続</term>
-     <listitem>
-      <simplelist>
-       <member><xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/></member>
-       <member>無し (証明書へのアクセスを制限することで、クライアント側でアクセス制御)</member>
-      </simplelist>
-     </listitem>
-    </varlistentry>
-   </variablelist>
-   <sect3 xml:id="sec-libvirt-connect-auth-libvirt-traditional">
-    <title>パーミッションとグループの所有権を利用した Unix ソケット向けのアクセス制御</title>
-    <para>&rootuser; 以外のユーザに対してアクセスを許可するには、特定のグループがソケットを所有し、アクセスできるように設定する必要があります (下記の例では、 <systemitem class="groupname">libvirt</systemitem> グループに対して許可する例を示しています) 。この認証方式は、ローカルとリモートの SSH 接続で使用することができます。</para>
-    <procedure>
-     <step>
-      <para>グループが存在していない場合は、下記を実行してソケットを所有すべきグループを作成します:</para>
+    <sect2 xml:id="sec-libvirt-connect-auth-libvirt">
+      <title>&libvirtd; の認証</title>
+      <para>&libvirtd; の認証は <filename>/etc/libvirt/libvirtd.conf</filename> で設定します。ここでの設定は、 &vmm; や <command>virsh</command> など、全ての &libvirt; ツールに適用されます。</para>
+      <para>&libvirt; では 2 種類のソケットを提供しています。 1 つは監視用の読み込み専用ソケット、もう 1 つは管理操作に使用するための読み書き可能なソケットです。それぞれのソケットに対する設定は、個別に行うことができます。既定のアクセス許可設定では、読み書き可能なソケットが &rootuser; にのみ許可されるように制限 ( <literal>0700</literal> ) され、読み込み専用のソケットは誰にでもアクセスできるように公開 ( <literal>0777</literal> ) されています。</para>
+      <para>下記の手順では、読み書き可能なソケットに対するアクセス許可設定方法を示しています。読み込み専用ソケットに対しても同じような手順で実施することができます。また、設定作業は &vmhost; 内で行います。</para>
+      <note>
+        <title>&productname; における既定の認証設定について</title>
+        <para>&productname; での既定の認証方式は、 Unix ソケットに対するアクセス制御です。 &rootuser; のみに対してアクセスを許可しています。 &vmhost; で root 以外のユーザが &libvirt; ツールを使用しようとすると、 &pk; を介して &rootuser; のパスワード入力を求められます。パスワードを正しく入力することで、現在および将来使用できるようにアクセスが許可されます。</para>
+        <para>それ以外の方法としては、非特権ユーザに対して &libvirt; の <quote>システム</quote> アクセスを許可する方法があります。詳しくは <xref linkend="sec-libvirt-connect-connecting-dac"/> をお読みください。</para>
+      </note>
+      <variablelist>
+        <title>推奨される認可方式</title>
+        <varlistentry>
+          <term>ローカル接続</term>
+          <listitem>
+            <simplelist><member><xref linkend="sec-libvirt-connect-auth-libvirt-pk"/></member><member><xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/></member>
+            </simplelist>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>SSH 経由でのリモートトンネル</term>
+          <listitem>
+            <simplelist><member><xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/></member>
+            </simplelist>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>リモート TLS/SSL 接続</term>
+          <listitem>
+            <simplelist><member><xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/></member><member>無し (証明書へのアクセスを制限することで、クライアント側でアクセス制御)</member>
+            </simplelist>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <sect3 xml:id="sec-libvirt-connect-auth-libvirt-traditional">
+        <title>パーミッションとグループの所有権を利用した Unix ソケット向けのアクセス制御</title>
+        <para>&rootuser; 以外のユーザに対してアクセスを許可するには、特定のグループがソケットを所有し、アクセスできるように設定する必要があります (下記の例では、 <systemitem class="groupname">libvirt</systemitem> グループに対して許可する例を示しています) 。この認証方式は、ローカルとリモートの SSH 接続で使用することができます。</para>
+        <procedure>
+          <step>
+            <para>グループが存在していない場合は、下記を実行してソケットを所有すべきグループを作成します:</para>
 <screen>&prompt.sudo;groupadd libvirt</screen>
-      <important>
-       <title>グループの存在について</title>
-       <para>このグループは、 &libvirtd; の再起動を行うまでに存在していなければなりません。存在していない場合、再起動が失敗します。</para>
-      </important>
-     </step>
-     <step>
-      <para>あとはグループに対してユーザを追加していきます:</para>
+            <important>
+              <title>グループの存在について</title>
+              <para>このグループは、 &libvirtd; の再起動を行うまでに存在していなければなりません。存在していない場合、再起動が失敗します。</para>
+            </important>
+          </step>
+          <step>
+            <para>あとはグループに対してユーザを追加していきます:</para>
 <screen>&prompt.sudo;usermod --append --groups libvirt &exampleuser_plain;</screen>
-     </step>
-     <step>
-      <para><filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の設定を下記のように変更します:</para>
+          </step>
+          <step>
+            <para><filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の設定を下記のように変更します:</para>
 <screen>unix_sock_group = "libvirt"<co xml:id="co-libvirt-connect-ssh-group"/>
 unix_sock_rw_perms = "0770"<co xml:id="co-libvirt-connect-ssh-perms"/>
 auth_unix_rw = "none"<co xml:id="co-libvirt-connect-ssh-enable"/></screen>
-      <calloutlist>
-       <callout arearefs="co-libvirt-connect-ssh-group">
-        <para>所有グループを指定しています <literal>libvirt</literal> 。</para>
-       </callout>
-       <callout arearefs="co-libvirt-connect-ssh-perms">
-        <para>ソケットに対するアクセス許可を指定しています ( <literal>srwxrwx---</literal> ) 。</para>
-       </callout>
-       <callout arearefs="co-libvirt-connect-ssh-enable">
-        <para>その他の認証方式 (&pk; や SASL) を無効化しています。アクセスはソケットのパーミッションのみで処理されることになります。</para>
-       </callout>
-      </calloutlist>
-     </step>
-     <step>
-      <para>&libvirtd; を再起動します:</para>
+            <calloutlist>
+              <callout arearefs="co-libvirt-connect-ssh-group">
+                <para>所有グループを指定しています <literal>libvirt</literal> 。</para>
+              </callout>
+              <callout arearefs="co-libvirt-connect-ssh-perms">
+                <para>ソケットに対するアクセス許可を指定しています ( <literal>srwxrwx---</literal> ) 。</para>
+              </callout>
+              <callout arearefs="co-libvirt-connect-ssh-enable">
+                <para>その他の認証方式 (&pk; や SASL) を無効化しています。アクセスはソケットのパーミッションのみで処理されることになります。</para>
+              </callout>
+            </calloutlist>
+          </step>
+          <step>
+            <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl start libvirtd</screen>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-auth-libvirt-pk">
-    <title>&pk; を利用した Unix ソケット向けのローカルアクセス制御</title>
-    <para>&pk; を利用した Unix ソケット向けのアクセス制御は、ローカルからの接続における &productname; の既定の認証方式です。そのため、 &libvirt; 側の設定は不要です。 &pk; の認証方式を有効化していれば、両方のソケットに対するパーミッションは <literal>0777</literal> に設定され、ソケットにアクセスしようとするそれぞれのアプリケーション側で、 &pk; による認証が必要になります。</para>
-    <important>
-     <title>&pk; の認証はローカル接続にのみ対応する件について</title>
-     <para>&pk; はリモートに対する認証には対応していませんので、 &vmhost; 自身からのローカル接続にのみ使用することができます <!-- http://bugzilla.suse.com/show_bug.cgi?id=652371 --> 。</para>
-    </important>
-    <para>&libvirt; のソケットへのアクセスに対しては、 2 種類のポリシーが存在しています:</para>
-    <itemizedlist mark="bullet" spacing="normal">
-     <listitem>
-      <para><emphasis>org.libvirt.unix.monitor</emphasis> : 読み込み専用ソケットに対するアクセス制御</para>
-     </listitem>
-     <listitem>
-      <para><emphasis>org.libvirt.unix.manage</emphasis> : 読み書き可能なソケットに対するアクセス制御</para>
-     </listitem>
-    </itemizedlist>
-    <para>既定では、読み書き可能なソケットに対するアクセスのポリシーは、 &rootuser; のパスワード入力を一度だけ求め、その時点およびその後のセッションでは、そのまま権限を許可する設定になっています。</para>
-    <para>&rootuser; のパスワードを入力させることなく、一般ユーザからソケットにアクセスできるようにするには、 <filename>/etc/polkit-1/rules.d</filename> 内にルールを作成する必要があります。たとえば <filename>/etc/polkit-1/rules.d/10-grant-libvirt</filename> ファイルを下記の内容で作成すると、 <systemitem class="groupname">libvirt</systemitem> グループに所属する全てのメンバーに対して、ソケットへのアクセスを許可するようになります:</para>
+          </step>
+        </procedure>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-auth-libvirt-pk">
+        <title>&pk; を利用した Unix ソケット向けのローカルアクセス制御</title>
+        <para>&pk; を利用した Unix ソケット向けのアクセス制御は、ローカルからの接続における &productname; の既定の認証方式です。そのため、 &libvirt; 側の設定は不要です。 &pk; の認証方式を有効化していれば、両方のソケットに対するパーミッションは <literal>0777</literal> に設定され、ソケットにアクセスしようとするそれぞれのアプリケーション側で、 &pk; による認証が必要になります。</para>
+        <important>
+          <title>&pk; の認証はローカル接続にのみ対応する件について</title>
+          <para>&pk; はリモートに対する認証には対応していませんので、 &vmhost; 自身からのローカル接続にのみ使用することができます <!-- http://bugzilla.suse.com/show_bug.cgi?id=652371 --> 。</para>
+        </important>
+        <para>&libvirt; のソケットへのアクセスに対しては、 2 種類のポリシーが存在しています:</para>
+        <itemizedlist mark="bullet" spacing="normal">
+          <listitem>
+            <para><emphasis>org.libvirt.unix.monitor</emphasis> : 読み込み専用ソケットに対するアクセス制御</para>
+          </listitem>
+          <listitem>
+            <para><emphasis>org.libvirt.unix.manage</emphasis> : 読み書き可能なソケットに対するアクセス制御</para>
+          </listitem>
+        </itemizedlist>
+        <para>既定では、読み書き可能なソケットに対するアクセスのポリシーは、 &rootuser; のパスワード入力を一度だけ求め、その時点およびその後のセッションでは、そのまま権限を許可する設定になっています。</para>
+        <para>&rootuser; のパスワードを入力させることなく、一般ユーザからソケットにアクセスできるようにするには、 <filename>/etc/polkit-1/rules.d</filename> 内にルールを作成する必要があります。たとえば <filename>/etc/polkit-1/rules.d/10-grant-libvirt</filename> ファイルを下記の内容で作成すると、 <systemitem class="groupname">libvirt</systemitem> グループに所属する全てのメンバーに対して、ソケットへのアクセスを許可するようになります:</para>
 <screen>polkit.addRule(function(action, subject) {
   if (action.id == "org.libvirt.unix.manage" &amp;&amp; subject.isInGroup("libvirt")) {
     return polkit.Result.YES;
   }
 });</screen>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-auth-libvirt-sasl">
-    <title>SASL を利用したユーザ名とパスワードによる認証</title>
-    <para>SASL はユーザ名とパスワードによる認証を提供する仕組みで、データの暗号化 (既定では digest-md5) にも対応しています。 SASL は独自のユーザデータベースを利用して認証を行う仕組みであるため、 &vmhost; 内にユーザを作成する必要はありません。また、 SASL は TCP 接続を利用し、 TLS/SSL にも対応しています。</para>
-    <important>
-     <title>digest-md5 暗号化による純粋な TCP と SASL による認証について</title>
-     <para>他の方法で TCP の接続が暗号化されていない限り、 digest-md5 暗号化による認証を行っても、本番環境では十分なセキュリティであるとは言えません。このような構成は、テスト環境でのみ使用することをお勧めします。</para>
-    </important>
-    <tip>
-     <title>TLS/SSL を利用した SASL 認証について</title>
-     <para>TLS/SSL によるリモートからのアクセスを許可する場合、クライアント側で使用する証明書の鍵ファイルのアクセスを制限することで、間接的にアクセスを制御することができます。ただし、多くのクライアントを設定する場合、設定ミスを引き起こしやすい構成でもあります。 TLS による認証を行う際は、 SASL による認証も同時に行うものとして、サーバ側でも追加の制御を行うようにしてください。</para>
-    </tip>
-    <para>SASL 認証を設定するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para><filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の設定を下記のように変更します:</para>
-      <substeps performance="required">
-       <step>
-        <para>TCP 接続による SASL を使用したい場合:</para>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-auth-libvirt-sasl">
+        <title>SASL を利用したユーザ名とパスワードによる認証</title>
+        <para>SASL はユーザ名とパスワードによる認証を提供する仕組みで、データの暗号化 (既定では digest-md5) にも対応しています。 SASL は独自のユーザデータベースを利用して認証を行う仕組みであるため、 &vmhost; 内にユーザを作成する必要はありません。また、 SASL は TCP 接続を利用し、 TLS/SSL にも対応しています。</para>
+        <important>
+          <title>digest-md5 暗号化による純粋な TCP と SASL による認証について</title>
+          <para>他の方法で TCP の接続が暗号化されていない限り、 digest-md5 暗号化による認証を行っても、本番環境では十分なセキュリティであるとは言えません。このような構成は、テスト環境でのみ使用することをお勧めします。</para>
+        </important>
+        <tip>
+          <title>TLS/SSL を利用した SASL 認証について</title>
+          <para>TLS/SSL によるリモートからのアクセスを許可する場合、クライアント側で使用する証明書の鍵ファイルのアクセスを制限することで、間接的にアクセスを制御することができます。ただし、多くのクライアントを設定する場合、設定ミスを引き起こしやすい構成でもあります。 TLS による認証を行う際は、 SASL による認証も同時に行うものとして、サーバ側でも追加の制御を行うようにしてください。</para>
+        </tip>
+        <para>SASL 認証を設定するには、下記の手順を実施します:</para>
+        <procedure>
+          <step>
+            <para><filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の設定を下記のように変更します:</para>
+            <substeps performance="required">
+              <step>
+                <para>TCP 接続による SASL を使用したい場合:</para>
 <screen>auth_tcp = "sasl"</screen>
-       </step>
-       <step>
-        <para>TLS/SSL 接続による SASL を使用したい場合:</para>
+              </step>
+              <step>
+                <para>TLS/SSL 接続による SASL を使用したい場合:</para>
 <screen>auth_tls = "sasl"</screen>
-       </step>
-      </substeps>
-     </step>
-     <step>
-      <para>&libvirtd; を再起動します:</para>
+              </step>
+            </substeps>
+          </step>
+          <step>
+            <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-     </step>
-     <step>
-      <para>libvirt の SASL 設定は <filename>/etc/sasl2/libvirtd.conf</filename> ファイル内に書かれています。通常は既定で設定されている内容を変更する必要はありませんが、 TLS と SASL を併用する場合、不要なオーバーヘッドを削減するため、セッション暗号化を無効化 (TLS の時点で既に暗号化されているため) することができます。これは、 <literal>mech_list</literal> の行をコメントアウトすることで実現することができます。ただし、下記の設定は TLS/SASL を併用する場合にのみ設定するものし、通常の TCP 接続では digest-md5 のままにしなければなりません。</para>
+          </step>
+          <step>
+            <para>libvirt の SASL 設定は <filename>/etc/sasl2/libvirtd.conf</filename> ファイル内に書かれています。通常は既定で設定されている内容を変更する必要はありませんが、 TLS と SASL を併用する場合、不要なオーバーヘッドを削減するため、セッション暗号化を無効化 (TLS の時点で既に暗号化されているため) することができます。これは、 <literal>mech_list</literal> の行をコメントアウトすることで実現することができます。ただし、下記の設定は TLS/SASL を併用する場合にのみ設定するものし、通常の TCP 接続では digest-md5 のままにしなければなりません。</para>
 <screen>#mech_list: digest-md5</screen>
-     </step>
-     <step>
-      <para>既定では SASL ユーザは何も設定されていませんので、誰もログインできない状態になります。下記のコマンドを利用して、ユーザを管理してください:</para>
-      <variablelist>
-       <varlistentry>
-        <term>&exampleuser; というユーザを追加:</term>
-        <listitem><screen>saslpasswd2 -a libvirt &exampleuser_plain;</screen></listitem>
-       </varlistentry>
-       <varlistentry>
-        <term>&exampleuser; というユーザを削除:</term>
-        <listitem><screen>saslpasswd2 -a libvirt -d &exampleuser_plain;</screen></listitem>
-       </varlistentry>
-       <varlistentry>
-        <term>ユーザ一覧の表示:</term>
-        <listitem><screen>sasldblistusers2 -f /etc/libvirt/passwd.db</screen></listitem>
-       </varlistentry>
-      </variablelist>
-     </step>
-    </procedure>
-    <tip>
-     <title><command>virsh</command> と SASL の認証の関係について</title>
-     <para>SASL 認証を使用している場合、 <command>virsh</command> コマンドで接続を行うと、毎回ユーザ名とパスワードを尋ねられるようになります。 <command>virsh</command> をシェルモードで動作させると、この手間を省くことができます。</para>
-    </tip>
-   </sect3>
-  </sect2>
+          </step>
+          <step>
+            <para>既定では SASL ユーザは何も設定されていませんので、誰もログインできない状態になります。下記のコマンドを利用して、ユーザを管理してください:</para>
+            <variablelist>
+              <varlistentry>
+                <term>&exampleuser; というユーザを追加:</term>
+                <listitem><screen>saslpasswd2 -a libvirt &exampleuser_plain;</screen></listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&exampleuser; というユーザを削除:</term>
+                <listitem><screen>saslpasswd2 -a libvirt -d &exampleuser_plain;</screen></listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>ユーザ一覧の表示:</term>
+                <listitem><screen>sasldblistusers2 -f /etc/libvirt/passwd.db</screen></listitem>
+              </varlistentry>
+            </variablelist>
+          </step>
+        </procedure>
+        <tip>
+          <title><command>virsh</command> と SASL の認証の関係について</title>
+          <para>SASL 認証を使用している場合、 <command>virsh</command> コマンドで接続を行うと、毎回ユーザ名とパスワードを尋ねられるようになります。 <command>virsh</command> をシェルモードで動作させると、この手間を省くことができます。</para>
+        </tip>
+      </sect3>
+    </sect2>
 
-  <sect2 xml:id="sec-libvirt-connect-auth-vnc">
-   <title>VNC 認証</title>
-   <para>&vmguest; のグラフィカルコンソールへのアクセスは &libvirt; の管理範囲外であり、ハイパーバイザ側で管理されているものであることから、 VNC 認証については必ず設定しておく必要があります。メインとなる設定ファイルは <filename>/etc/libvirt/&lt;<replaceable>ハイパーバイザ名</replaceable>&gt;.conf</filename> です。本章では &qemu;/&kvm; ハイパーバイザを説明していますので、設定ファイルは <filename>/etc/libvirt/qemu.conf</filename> になります。</para>
-   <note>
-    <title>&xen; 向けの VNC 認証について</title>
-    <para>&kvm; とは異なり、 &xen; の VM にはパスワードによる認証しか設定できません。詳しくは下記にある &libvirt; の設定オプションのうち、 <literal>&lt;graphics type='vnc'...</literal> の箇所をご覧ください。</para>
-   </note>
-   <para>VNC の認証は 2 種類の認証方式 (SASL, 単独パスワード認証) に対応しています。 &libvirt; 側で SASL 認証を使用している場合、 VNC 認証でも同じものを使用することをお勧めします。もちろん同じデータベースを使用するように設定することができます。</para>
-   <para>3 種類目のアクセス制限方式として、 VNC サーバでの TLS 暗号化の使用という方式もあります。この場合、 VNC クライアント側に x509 クライアント証明書を配置することになります。これらの証明書へのアクセスを制限することで、クライアント側で間接的にアクセスを制限することになります。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-vnc-client"/> をお読みください。</para>
-   <sect3 xml:id="sec-libvirt-connect-auth-vnc-tls">
-    <title>SASL を利用したユーザ名とパスワードによる認証</title>
-    <para>SASL はユーザ名とパスワードによる認証を提供するだけでなく、データの暗号化の機能も提供します。また、 SASL は独自のデータベースを使用する方式であるため、 &vmhost; 内にユーザを作成しておく必要もありません。 &libvirt; に対して SASL の認証を設定する場合、 TLS/SSL 接続を利用することもできます。これらの接続の設定方法について、詳しくは <xref linkend="sec-libvirt-connect-remote-tls-vnc-client"/> をお読みください。</para>
-    <para>VNC 向けに SASL 認証を設定するには、下記の手順を実施します:</para>
-    <procedure>
-     <step>
-      <para>まずは SASL の設定ファイルを作成します。作成にあたっては、 &libvirt; 向けのファイルを使用することをお勧めします。既に &libvirt; 向けに SASL を設定してある環境で、ユーザ名とパスワードを含む全ての設定を共通で使用したい場合は、下記のようにしてシンボリックリンクを作成するだけでかまいません:</para>
+    <sect2 xml:id="sec-libvirt-connect-auth-vnc">
+      <title>VNC 認証</title>
+      <para>&vmguest; のグラフィカルコンソールへのアクセスは &libvirt; の管理範囲外であり、ハイパーバイザ側で管理されているものであることから、 VNC 認証については必ず設定しておく必要があります。メインとなる設定ファイルは <filename>/etc/libvirt/&lt;<replaceable>ハイパーバイザ名</replaceable>&gt;.conf</filename> です。本章では &qemu;/&kvm; ハイパーバイザを説明していますので、設定ファイルは <filename>/etc/libvirt/qemu.conf</filename> になります。</para>
+      <note>
+        <title>&xen; 向けの VNC 認証について</title>
+        <para>&kvm; とは異なり、 &xen; の VM にはパスワードによる認証しか設定できません。詳しくは下記にある &libvirt; の設定オプションのうち、 <literal>&lt;graphics type='vnc'...</literal> の箇所をご覧ください。</para>
+      </note>
+      <para>VNC の認証は 2 種類の認証方式 (SASL, 単独パスワード認証) に対応しています。 &libvirt; 側で SASL 認証を使用している場合、 VNC 認証でも同じものを使用することをお勧めします。もちろん同じデータベースを使用するように設定することができます。</para>
+      <para>3 種類目のアクセス制限方式として、 VNC サーバでの TLS 暗号化の使用という方式もあります。この場合、 VNC クライアント側に x509 クライアント証明書を配置することになります。これらの証明書へのアクセスを制限することで、クライアント側で間接的にアクセスを制限することになります。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-vnc-client"/> をお読みください。</para>
+      <sect3 xml:id="sec-libvirt-connect-auth-vnc-tls">
+        <title>SASL を利用したユーザ名とパスワードによる認証</title>
+        <para>SASL はユーザ名とパスワードによる認証を提供するだけでなく、データの暗号化の機能も提供します。また、 SASL は独自のデータベースを使用する方式であるため、 &vmhost; 内にユーザを作成しておく必要もありません。 &libvirt; に対して SASL の認証を設定する場合、 TLS/SSL 接続を利用することもできます。これらの接続の設定方法について、詳しくは <xref linkend="sec-libvirt-connect-remote-tls-vnc-client"/> をお読みください。</para>
+        <para>VNC 向けに SASL 認証を設定するには、下記の手順を実施します:</para>
+        <procedure>
+          <step>
+            <para>まずは SASL の設定ファイルを作成します。作成にあたっては、 &libvirt; 向けのファイルを使用することをお勧めします。既に &libvirt; 向けに SASL を設定してある環境で、ユーザ名とパスワードを含む全ての設定を共通で使用したい場合は、下記のようにしてシンボリックリンクを作成するだけでかまいません:</para>
 <screen>&prompt.sudo;ln -s /etc/sasl2/libvirt.conf /etc/sasl2/qemu.conf</screen>
-      <para>VNC にのみ SASL を設定する場合や、 VNC 専用に個別の設定を作成したい場合は、既存のファイルをコピーして雛形として使用することをお勧めします:</para>
+            <para>VNC にのみ SASL を設定する場合や、 VNC 専用に個別の設定を作成したい場合は、既存のファイルをコピーして雛形として使用することをお勧めします:</para>
 <screen>&prompt.sudo;cp /etc/sasl2/libvirt.conf /etc/sasl2/qemu.conf</screen>
-      <para>あとは必要に応じて内容を修正してください。</para>
-     </step>
-     <step>
-      <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを、下記のように修正します:</para>
+            <para>あとは必要に応じて内容を修正してください。</para>
+          </step>
+          <step>
+            <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを、下記のように修正します:</para>
 <screen>vnc_listen = "0.0.0.0"
 vnc_sasl = 1
 sasldb_path: /etc/libvirt/qemu_passwd.db</screen>
-      <para>最初のパラメータは、 VNC サービスが待ち受けるべきアドレスを指定するものです。この場合、ローカルホストだけでなく、全てのアドレスから接続できる設定になります。 2 つ目のパラメータは、 SASL 認証を有効化するための設定です。</para>
-     </step>
-     <step>
-      <para>既定では SASL ユーザは何も設定されていませんので、誰もログインできない状態になります。下記のコマンドを利用して、ユーザを管理してください:</para>
-      <variablelist>
-       <varlistentry>
-        <term>&exampleuser; というユーザを追加:</term>
-        <listitem><screen>&prompt.user;saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu &exampleuser_plain;</screen></listitem>
-       </varlistentry>
-       <varlistentry>
-        <term>&exampleuser; というユーザを削除:</term>
-        <listitem><screen>&prompt.user;saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu -d &exampleuser_plain;</screen></listitem>
-       </varlistentry>
-       <varlistentry>
-        <term>ユーザ一覧の表示:</term>
-        <listitem><screen>&prompt.user;sasldblistusers2 -f /etc/libvirt/qemu_passwd.db</screen></listitem>
-       </varlistentry>
-      </variablelist>
-     </step>
-     <step>
-      <para>&libvirtd; を再起動します:</para>
+            <para>最初のパラメータは、 VNC サービスが待ち受けるべきアドレスを指定するものです。この場合、ローカルホストだけでなく、全てのアドレスから接続できる設定になります。 2 つ目のパラメータは、 SASL 認証を有効化するための設定です。</para>
+          </step>
+          <step>
+            <para>既定では SASL ユーザは何も設定されていませんので、誰もログインできない状態になります。下記のコマンドを利用して、ユーザを管理してください:</para>
+            <variablelist>
+              <varlistentry>
+                <term>&exampleuser; というユーザを追加:</term>
+                <listitem><screen>&prompt.user;saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu &exampleuser_plain;</screen></listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>&exampleuser; というユーザを削除:</term>
+                <listitem><screen>&prompt.user;saslpasswd2 -f /etc/libvirt/qemu_passwd.db -a qemu -d &exampleuser_plain;</screen></listitem>
+              </varlistentry>
+              <varlistentry>
+                <term>ユーザ一覧の表示:</term>
+                <listitem><screen>&prompt.user;sasldblistusers2 -f /etc/libvirt/qemu_passwd.db</screen></listitem>
+              </varlistentry>
+            </variablelist>
+          </step>
+          <step>
+            <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-     </step>
-     <step>
-      <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC では SASL を使用することができません。</para>
-     </step>
-    </procedure>
-    <note>
-     <title>対応する VNC ビューアについて</title>
-     <para>現時点では、 SASL 認証は &vmm; と <command>virt-viewer</command> でのみ対応しています。これらのビューアは、 TLS/SSL 接続にも対応しています。</para>
-    </note>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-auth-vnc-pw">
-    <title>パスワード単独認証</title>
-    <para>VNC サーバへのアクセスは、パスワード単独での認証で制限することもできます。この場合、全ての &vmguest; に対してグローバルパスワードを設定するか、それぞれのゲストに対して個別にパスワードを設定することができます。なお、後者は &vmguest; の設定ファイル内に記述します。</para>
-    <note>
-     <title>グローバルパスワードの設定について</title>
-     <para>パスワード単独で認証を設定する場合、それぞれの &vmguest; に対してパスワードを設定している場合でも、グローバルパスワードを設定しておくことをお勧めします。これにより、マシンごとのパスワードを設定し忘れた場合でも、代替となるパスワードが設定されることになりますので、最低限の保護は実現することができます。なお、グローバルパスワードは、マシンに対してそれ以外のパスワードが設定されていない場合にのみ適用されます。</para>
-    </note>
-    <procedure>
-     <title>グローバル VNC パスワードの設定</title>
-     <step>
-      <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを、下記のように修正します:</para>
+          </step>
+          <step>
+            <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC では SASL を使用することができません。</para>
+          </step>
+        </procedure>
+        <note>
+          <title>対応する VNC ビューアについて</title>
+          <para>現時点では、 SASL 認証は &vmm; と <command>virt-viewer</command> でのみ対応しています。これらのビューアは、 TLS/SSL 接続にも対応しています。</para>
+        </note>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-auth-vnc-pw">
+        <title>パスワード単独認証</title>
+        <para>VNC サーバへのアクセスは、パスワード単独での認証で制限することもできます。この場合、全ての &vmguest; に対してグローバルパスワードを設定するか、それぞれのゲストに対して個別にパスワードを設定することができます。なお、後者は &vmguest; の設定ファイル内に記述します。</para>
+        <note>
+          <title>グローバルパスワードの設定について</title>
+          <para>パスワード単独で認証を設定する場合、それぞれの &vmguest; に対してパスワードを設定している場合でも、グローバルパスワードを設定しておくことをお勧めします。これにより、マシンごとのパスワードを設定し忘れた場合でも、代替となるパスワードが設定されることになりますので、最低限の保護は実現することができます。なお、グローバルパスワードは、マシンに対してそれ以外のパスワードが設定されていない場合にのみ適用されます。</para>
+        </note>
+        <procedure>
+          <title>グローバル VNC パスワードの設定</title>
+          <step>
+            <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを、下記のように修正します:</para>
 <screen>vnc_listen = "0.0.0.0"
 vnc_password = "<replaceable>パスワード</replaceable>"</screen>
-      <para>最初のパラメータは、 VNC サービスが待ち受けるべきアドレスを指定するものです。この場合、ローカルホストだけでなく、全てのアドレスから接続できる設定になります。 2 つ目のパラメータはパスワードです。パスワードは最大で 8 文字まで設定することができます。</para>
-     </step>
-     <step>
-      <para>&libvirtd; を再起動します:</para>
+            <para>最初のパラメータは、 VNC サービスが待ち受けるべきアドレスを指定するものです。この場合、ローカルホストだけでなく、全てのアドレスから接続できる設定になります。 2 つ目のパラメータはパスワードです。パスワードは最大で 8 文字まで設定することができます。</para>
+          </step>
+          <step>
+            <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-     </step>
-     <step>
-      <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC ではパスワード認証を使用することができません。</para>
-     </step>
-    </procedure>
-    <procedure>
-     <title>&vmguest; 固有の VNC パスワードの設定</title>
-     <step>
-      <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを下記のように修正し、ローカルホストだけでなく、全てのアドレスから接続できるようにします:</para>
+          </step>
+          <step>
+            <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC ではパスワード認証を使用することができません。</para>
+          </step>
+        </procedure>
+        <procedure>
+          <title>&vmguest; 固有の VNC パスワードの設定</title>
+          <step>
+            <para><filename>/etc/libvirt/qemu.conf</filename> にある設定ファイルを下記のように修正し、ローカルホストだけでなく、全てのアドレスから接続できるようにします:</para>
 <screen>vnc_listen = "0.0.0.0"</screen>
-     </step>
-     <step>
-      <para>次にエディタを利用して、 &vmguest; の XML 設定ファイルを開きます。下記の <replaceable>VM_名</replaceable> には、実際の &vmguest; の名前を入れてください。また、起動されるエディタは <envar>$EDITOR</envar> で指定されたエディタになります。何も値を設定していない場合、 <command>vi</command> エディタを使用します。</para>
+          </step>
+          <step>
+            <para>次にエディタを利用して、 &vmguest; の XML 設定ファイルを開きます。下記の <replaceable>VM_名</replaceable> には、実際の &vmguest; の名前を入れてください。また、起動されるエディタは <envar>$EDITOR</envar> で指定されたエディタになります。何も値を設定していない場合、 <command>vi</command> エディタを使用します。</para>
 <screen>&prompt.user;virsh edit <replaceable>VM_名</replaceable></screen>
-     </step>
-     <step>
-      <para><literal>type='vnc'</literal> という属性が書かれた <literal>&lt;graphics&gt;</literal> タグを探します。たとえば下記のように書かれているはずです:</para>
+          </step>
+          <step>
+            <para><literal>type='vnc'</literal> という属性が書かれた <literal>&lt;graphics&gt;</literal> タグを探します。たとえば下記のように書かれているはずです:</para>
 <screen>&lt;graphics type='vnc' port='-1' autoport='yes'/&gt;</screen>
-     </step>
-     <step>
-      <para>この箇所に <literal>passwd=<replaceable>パスワード</replaceable></literal> の形式で属性を追加して、ファイルを保存したあとエディタを終了します。なお、パスワードは最大 8 文字まで設定することができます。</para>
+          </step>
+          <step>
+            <para>この箇所に <literal>passwd=<replaceable>パスワード</replaceable></literal> の形式で属性を追加して、ファイルを保存したあとエディタを終了します。なお、パスワードは最大 8 文字まで設定することができます。</para>
 <screen>&lt;graphics type='vnc' port='-1' autoport='yes' passwd='PASSWORD'/&gt;</screen>
-     </step>
-     <step>
-      <para>&libvirtd; を再起動します:</para>
+          </step>
+          <step>
+            <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-     </step>
-     <step>
-      <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC ではパスワード認証を使用することができません。</para>
-     </step>
-    </procedure>
-    <warning>
-     <title>VNC プロトコルのセキュリティについて</title>
-     <para>VNC プロトコルは安全なプロトコルであるとは考えられていません。パスワードは暗号化されて送信されるものの、暗号鍵と暗号化されたパスワードの両方を傍受することができてしまえば、解読できてしまう危険性があるためです。そのため、 TLS/SSL で別途暗号化を行って VNC 接続するか、 SSH の暗号化トンネルを介して接続することをお勧めします。 <command>virt-viewer</command> や &vmm;, Remmina (詳しくは <xref linkend="vnc-remmina"/> をお読みください) では、いずれの方式にも対応しています。</para>
-    </warning>
-   </sect3>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-libvirt-connect-connecting">
-  <title>&vmhost; への接続</title>
+          </step>
+          <step>
+            <para>設定を変更する前から &vmguest; を動作させていた場合は、それら全てを再起動します。再起動を行わない場合、 VNC ではパスワード認証を使用することができません。</para>
+          </step>
+        </procedure>
+        <warning>
+          <title>VNC プロトコルのセキュリティについて</title>
+          <para>VNC プロトコルは安全なプロトコルであるとは考えられていません。パスワードは暗号化されて送信されるものの、暗号鍵と暗号化されたパスワードの両方を傍受することができてしまえば、解読できてしまう危険性があるためです。そのため、 TLS/SSL で別途暗号化を行って VNC 接続するか、 SSH の暗号化トンネルを介して接続することをお勧めします。 <command>virt-viewer</command> や &vmm;, Remmina (詳しくは <xref linkend="vnc-remmina"/> をお読みください) では、いずれの方式にも対応しています。</para>
+        </warning>
+      </sect3>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-libvirt-connect-connecting">
+    <title>&vmhost; への接続</title>
 
-  <para>&libvirt; を利用してハイパーバイザに接続するには、まず Uniform Resource Identifier (URI) を指定する必要があります。この URI は <command>virsh</command> や <command>virt-viewer</command> (&vmhost; 内で &rootuser; から接続する場合を除きます) で必要となるほか、 &vmm; でも任意で指定することができます。 &vmm; では URI ではなく、接続パラメータ (例: <command>virt-manager -c qemu:///system</command>) と呼ばれることもあるほか、 URI をグラフィカルなインターフェイスで作成することもできます。詳しくは <xref linkend="sec-libvirt-connect-connecting-vmm"/> をお読みください。</para>
+    <para>&libvirt; を利用してハイパーバイザに接続するには、まず Uniform Resource Identifier (URI) を指定する必要があります。この URI は <command>virsh</command> や <command>virt-viewer</command> (&vmhost; 内で &rootuser; から接続する場合を除きます) で必要となるほか、 &vmm; でも任意で指定することができます。 &vmm; では URI ではなく、接続パラメータ (例: <command>virt-manager -c qemu:///system</command>) と呼ばれることもあるほか、 URI をグラフィカルなインターフェイスで作成することもできます。詳しくは <xref linkend="sec-libvirt-connect-connecting-vmm"/> をお読みください。</para>
 
 <screen><replaceable>ハイパーバイザ</replaceable><co xml:id="co-libvirt-connect-hyperv"/><replaceable>+プロトコル</replaceable><co xml:id="co-libvirt-connect-protocol"/>://<replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable><co xml:id="co-libvirt-connect-remote"/>/<replaceable>接続の種類</replaceable><co xml:id="co-libvirt-connect-type"/></screen>
 
-  <calloutlist>
-   <callout arearefs="co-libvirt-connect-hyperv">
-    <para>ハイパーバイザを指定します。 &productname; では <option>test</option> (テスト用のダミー), <option>qemu</option> (&kvm;), <option>xen</option> (&xen;) のいずれかを指定します。このパラメータは必須です。</para>
-   </callout>
-   <callout arearefs="co-libvirt-connect-protocol">
-    <para>リモートのホストに接続する場合、ここでプロトコルを指定します。 <option>ssh</option> (SSH トンネル経由で接続), <option>tcp</option> (SASL/Kerberos 認証付きの TCP 接続), <option>tls</option> (x509 証明書による認証を行う TLS/SSL 接続) のいずれかを指定します。</para>
-   </callout>
-   <callout arearefs="co-libvirt-connect-remote">
-    <para>リモートのホストに接続する際のユーザ名とリモートホスト名を入力します。ユーザ名を指定しない場合、このコマンドを呼び出したユーザの名前 ( <envar>$USER</envar> ) を使用します。詳しくは下記をお読みください。 TLS 接続の場合、ホスト名は x509 証明書内に書かれているものと正確に一致している必要があります。</para>
-   </callout>
-   <callout arearefs="co-libvirt-connect-type">
-    <para><literal>&qemu;/&kvm;</literal> ハイパーバイザに接続する場合、 2 種類の接続方法があります。 <option>system</option> を指定すると完全なアクセス権限を、 <option>session</option> を指定すると制限されたアクセスを取得することができます。 <option>session</option> アクセスは &productname; ではサポート対象外となりますので、このドキュメンテーションでは <option>system</option> のみを使用しています。</para>
-   </callout>
-  </calloutlist>
+    <calloutlist>
+      <callout arearefs="co-libvirt-connect-hyperv">
+        <para>ハイパーバイザを指定します。 &productname; では <option>test</option> (テスト用のダミー), <option>qemu</option> (&kvm;), <option>xen</option> (&xen;) のいずれかを指定します。このパラメータは必須です。</para>
+      </callout>
+      <callout arearefs="co-libvirt-connect-protocol">
+        <para>リモートのホストに接続する場合、ここでプロトコルを指定します。 <option>ssh</option> (SSH トンネル経由で接続), <option>tcp</option> (SASL/Kerberos 認証付きの TCP 接続), <option>tls</option> (x509 証明書による認証を行う TLS/SSL 接続) のいずれかを指定します。</para>
+      </callout>
+      <callout arearefs="co-libvirt-connect-remote">
+        <para>リモートのホストに接続する際のユーザ名とリモートホスト名を入力します。ユーザ名を指定しない場合、このコマンドを呼び出したユーザの名前 ( <envar>$USER</envar> ) を使用します。詳しくは下記をお読みください。 TLS 接続の場合、ホスト名は x509 証明書内に書かれているものと正確に一致している必要があります。</para>
+      </callout>
+      <callout arearefs="co-libvirt-connect-type">
+        <para><literal>&qemu;/&kvm;</literal> ハイパーバイザに接続する場合、 2 種類の接続方法があります。 <option>system</option> を指定すると完全なアクセス権限を、 <option>session</option> を指定すると制限されたアクセスを取得することができます。 <option>session</option> アクセスは &productname; ではサポート対象外となりますので、このドキュメンテーションでは <option>system</option> のみを使用しています。</para>
+      </callout>
+    </calloutlist>
 
-  <variablelist>
-   <title>ハイパーバイザ接続 URI の例</title>
-   <varlistentry>
-    <term><option>test:///default</option></term>
-    <listitem>
-     <para>ローカルのダミーハイパーバイザへの接続を行います。テスト用に有用です。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><option>qemu:///system</option> もしくは <option>xen:///system</option></term>
-    <listitem>
-     <para>ローカルホストにある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、完全なアクセス権限 (system) を取得します。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><option>qemu+ssh://&exampleuser_plain;@&wsIVname;/system</option> もしくは <option>xen+ssh://&exampleuser_plain;@&wsIVname;/system</option></term>
-    <listitem>
-     <para>リモートのホスト &wsIVname; にある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、接続は SSH トンネル経由で行います。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term><option>qemu+tls://&wsIIIname;/system</option> もしくは <option>xen+tls://&wsIIIname;/system</option></term>
-    <listitem>
-     <para>リモートのホスト &wsIVname; にある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、接続は TLS/SSL トンネル経由で行います。</para>
-    </listitem>
-   </varlistentry>
-  </variablelist>
+    <variablelist>
+      <title>ハイパーバイザ接続 URI の例</title>
+      <varlistentry>
+        <term><option>test:///default</option></term>
+        <listitem>
+          <para>ローカルのダミーハイパーバイザへの接続を行います。テスト用に有用です。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>qemu:///system</option> もしくは <option>xen:///system</option></term>
+        <listitem>
+          <para>ローカルホストにある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、完全なアクセス権限 (system) を取得します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>qemu+ssh://&exampleuser_plain;@&wsIVname;/system</option> もしくは <option>xen+ssh://&exampleuser_plain;@&wsIVname;/system</option></term>
+        <listitem>
+          <para>リモートのホスト &wsIVname; にある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、接続は SSH トンネル経由で行います。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>qemu+tls://&wsIIIname;/system</option> もしくは <option>xen+tls://&wsIIIname;/system</option></term>
+        <listitem>
+          <para>リモートのホスト &wsIVname; にある &qemu; ハイパーバイザや &xen; ハイパーバイザに接続します。このとき、接続は TLS/SSL トンネル経由で行います。</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
 
-  <para>さらに詳しい情報や例について、詳しくは <link xlink:href="https://libvirt.org/uri.html"/> にある &libvirt; のドキュメンテーション (英語) をお読みください。</para>
+    <para>さらに詳しい情報や例について、詳しくは <link xlink:href="https://libvirt.org/uri.html"/> にある &libvirt; のドキュメンテーション (英語) をお読みください。</para>
 
-  <note>
-   <title>URI 内でのユーザ名について</title>
-   <para>Unix ソケット認証を利用する場合、それがユーザ名／パスワード認証であっても、 &pk; による認証であっても、ユーザ名は必ず指定しておく必要があります。これは全ての SSH 接続やローカル接続にも当てはまります。</para>
-   <para>SASL 認証 (TCP もしくは TLS 接続) を使用する場合や、 TLS 接続で追加のサーバ側認証を行わない場合は、ユーザ名を指定する必要はありません。 SASL の場合、ユーザ名は処理されません。ここでユーザ名を指定していても、 SASL のユーザ名とパスワードの入力を求めるプロンプトが別途表示されます。</para>
-  </note>
+    <note>
+      <title>URI 内でのユーザ名について</title>
+      <para>Unix ソケット認証を利用する場合、それがユーザ名／パスワード認証であっても、 &pk; による認証であっても、ユーザ名は必ず指定しておく必要があります。これは全ての SSH 接続やローカル接続にも当てはまります。</para>
+      <para>SASL 認証 (TCP もしくは TLS 接続) を使用する場合や、 TLS 接続で追加のサーバ側認証を行わない場合は、ユーザ名を指定する必要はありません。 SASL の場合、ユーザ名は処理されません。ここでユーザ名を指定していても、 SASL のユーザ名とパスワードの入力を求めるプロンプトが別途表示されます。</para>
+    </note>
 
-<!-- tbazant 2014-09-26: note from jfehlig -> postponing to SLE12SP1 please
+    <!-- tbazant 2014-09-26: note from jfehlig -> postponing to SLE12SP1 please
+      Section "11.3.1 “system” Access for Non-Privileged Users" is not right.
+      Changing 'user=' and 'group=' in /etc/libvirt/qemu.conf changes the user
+      and group each VM runs as (i.e, the user:group used to launch the VM's
+      associated qemu process).  This improves host security, ensuring a rouge
+      VM Guest is not running as root.  (BTW, this is an improvement wrt
+      SLES11, where libvirt launches qemu processes as user:group root:root.)
+      -->
 
-  Section "11.3.1 “system” Access for Non-Privileged Users" is not right.
-  Changing 'user=' and 'group=' in /etc/libvirt/qemu.conf changes the user
-  and group each VM runs as (i.e, the user:group used to launch the VM's
-  associated qemu process).  This improves host security, ensuring a rouge
-  VM Guest is not running as root.  (BTW, this is an improvement wrt
-  SLES11, where libvirt launches qemu processes as user:group root:root.)
-  -->
-
-  <sect2 xml:id="sec-libvirt-connect-connecting-dac">
-   <title>非特権ユーザに対する <quote>システム</quote> アクセス</title>
-   <para>上述のとおり、 &qemu; ハイパーバイザへの接続は 2 種類のプロトコル (<literal>session</literal> と <literal>system</literal>) を利用することができます。 <quote>session</quote> を指定した場合、クライアント側のプログラムと同じ権限で動作することになります。この種類の接続は、さまざまな機能 (たとえば USB/PCI のデバイス割り当てや仮想ネットワークの設定、 &libvirtd; へのリモートアクセスなど) が制限されていることから、デスクトップ仮想化向けに用意されている仕組みです。</para>
-   <para><quote>system</quote> の接続はサーバの仮想化のために用意されている接続で、機能面の制限が無い代わりに、既定では &rootuser; のみに対してアクセスを許可しています。しかしながら、 &libvirt; に対する DAC (Discretionary Access Controll; 任意アクセス制御) ドライバの追加により、非特権ユーザに対しても <quote>system</quote> 接続を許可することができるようになっています。たとえば &exampleuser; に対して <quote>system</quote> 接続を許可するには、下記のようにします:</para>
-   <procedure>
-    <title>一般ユーザに対する <quote>システム</quote> アクセスの許可</title>
-    <step>
-     <para>Unix ソケット経由でのアクセス許可を、 <xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/> に書かれている手順で有効化します。左記の例では、 libvirt を <systemitem class="groupname">libvirt</systemitem> というグループの全てのメンバーに対して許可し、このグループのメンバーに &exampleuser; を追加しています。これにより、 &exampleuser; は <command>virsh</command> や &vmm; を利用して接続することができるようになっています。</para>
-    </step>
-    <step>
-     <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを編集して、下記の設定を変更します:</para>
+    <sect2 xml:id="sec-libvirt-connect-connecting-dac">
+      <title>非特権ユーザに対する <quote>システム</quote> アクセス</title>
+      <para>上述のとおり、 &qemu; ハイパーバイザへの接続は 2 種類のプロトコル (<literal>session</literal> と <literal>system</literal>) を利用することができます。 <quote>session</quote> を指定した場合、クライアント側のプログラムと同じ権限で動作することになります。この種類の接続は、さまざまな機能 (たとえば USB/PCI のデバイス割り当てや仮想ネットワークの設定、 &libvirtd; へのリモートアクセスなど) が制限されていることから、デスクトップ仮想化向けに用意されている仕組みです。</para>
+      <para><quote>system</quote> の接続はサーバの仮想化のために用意されている接続で、機能面の制限が無い代わりに、既定では &rootuser; のみに対してアクセスを許可しています。しかしながら、 &libvirt; に対する DAC (Discretionary Access Controll; 任意アクセス制御) ドライバの追加により、非特権ユーザに対しても <quote>system</quote> 接続を許可することができるようになっています。たとえば &exampleuser; に対して <quote>system</quote> 接続を許可するには、下記のようにします:</para>
+      <procedure>
+        <title>一般ユーザに対する <quote>システム</quote> アクセスの許可</title>
+        <step>
+          <para>Unix ソケット経由でのアクセス許可を、 <xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/> に書かれている手順で有効化します。左記の例では、 libvirt を <systemitem class="groupname">libvirt</systemitem> というグループの全てのメンバーに対して許可し、このグループのメンバーに &exampleuser; を追加しています。これにより、 &exampleuser; は <command>virsh</command> や &vmm; を利用して接続することができるようになっています。</para>
+        </step>
+        <step>
+          <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを編集して、下記の設定を変更します:</para>
 <screen>user = "tux"
 group = "libvirt"
 dynamic_ownership = 1</screen>
-     <para>これにより、 &vmguest; を &exampleuser; から開始することができるようになるとともに、ゲストに対するリソース (仮想ディスクなど) の割り当てについても、 &exampleuser; からアクセスおよび変更できるようになります。</para>
-    </step>
-    <step>
-     <para>&exampleuser; をグループ <systemitem class="groupname">kvm</systemitem> のメンバーに追加します:</para>
+          <para>これにより、 &vmguest; を &exampleuser; から開始することができるようになるとともに、ゲストに対するリソース (仮想ディスクなど) の割り当てについても、 &exampleuser; からアクセスおよび変更できるようになります。</para>
+        </step>
+        <step>
+          <para>&exampleuser; をグループ <systemitem class="groupname">kvm</systemitem> のメンバーに追加します:</para>
 <screen>&prompt.sudo;usermod --append --groups kvm &exampleuser_plain;</screen>
-     <para>この手順は &vmguest; を開始する際に使用する <filename>/dev/kvm</filename> へのアクセスを許可するために必要となるものです。</para>
-    </step>
-    <step>
-     <para>&libvirtd; を再起動します:</para>
+          <para>この手順は &vmguest; を開始する際に使用する <filename>/dev/kvm</filename> へのアクセスを許可するために必要となるものです。</para>
+        </step>
+        <step>
+          <para>&libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-    </step>
-   </procedure>
-  </sect2>
+        </step>
+      </procedure>
+    </sect2>
 
-  <sect2 xml:id="sec-libvirt-connect-connecting-vmm">
-   <title>&vmm; による接続の管理</title>
-   <para>&vmm; では管理対象となるそれぞれの &vmhost; に対して <literal>接続</literal> を設定します。この接続には、対応するホスト内にある全ての &vmguest; が含まれています。既定では、ローカルホストへの接続は設定済みで、接続も行われた状態になります。</para>
-   <para>全ての設定済みの接続は &vmm; のメインウインドウ内に表示されます。接続済みのものには小さな三角形が描かれ、これを押すことで接続先の &vmguest; の一覧を展開したり、折りたたんだりすることができます。</para>
-   <para>接続されていないものは灰色で描かれ、 <literal>未接続</literal> と表示されます。ダブルクリックを行うか、マウスの右ボタンを押して、表示されたコンテキストメニューから <guimenu>接続</guimenu> を選択すると、接続を行うことができます。また、同じコンテキストメニューから <guimenu>削除</guimenu> を押すことで、接続を削除することもできます。</para>
-   <note>
-    <title>既存の接続の編集について</title>
-    <para>既存の接続を編集することはできません。接続を変更したい場合は、必要なパラメータで新しい接続を作成したあと、古いほうを削除してください。</para>
-   </note>
-   <para>&vmm; 内に新しい接続を追加するには、下記の手順を実施します:</para>
-   <procedure>
-    <step>
-     <para><menuchoice> <guimenu>ファイル</guimenu> <guimenu>接続を追加</guimenu> </menuchoice> を選択します。</para>
-    </step>
-    <step>
-     <para>ホストの <guimenu>ハイパーバイザー</guimenu> ( <guimenu>&xen;</guimenu> もしくは <guimenu>&qemu;/KVM</guimenu> ) を選択します。</para>
-    </step>
-    <step performance="optional">
-     <para>リモート接続を設定する場合は、 <guimenu>リモートホストに接続</guimenu> を選択します。詳しくは <xref linkend="sec-libvirt-connect-remote"/> をお読みください。</para>
-     <para>リモート接続の場合、 <literal><replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable></literal> の形式で、 <guimenu>ホスト名</guimenu> に接続先を入力します。</para>
-     <important>
-      <title>ユーザ名の指定</title>
-      <para>TCP や TLS の接続の場合は、ユーザ名を指定する必要はありません。これらのプロトコルの場合は、ユーザ名は無視されます。しかしながら SSH 接続の場合、 <systemitem class="username">root</systemitem> 以外のユーザで接続する際には、ユーザ名の指定が必要となります。</para>
-     </important>
-    </step>
-    <step>
-     <para>&vmm; の起動時に自動的に接続したくない場合は、 <guimenu>自動接続</guimenu> のチェックを外してください。</para>
-    </step>
-    <step>
-     <para>最後に <guimenu>接続</guimenu> を押すと、設定を保存することができます。</para>
-    </step>
-   </procedure>
-  </sect2>
- </sect1>
- <sect1 xml:id="sec-libvirt-connect-remote">
-  <title>リモート接続の設定</title>
+    <sect2 xml:id="sec-libvirt-connect-connecting-vmm">
+      <title>&vmm; による接続の管理</title>
+      <para>&vmm; では管理対象となるそれぞれの &vmhost; に対して <literal>接続</literal> を設定します。この接続には、対応するホスト内にある全ての &vmguest; が含まれています。既定では、ローカルホストへの接続は設定済みで、接続も行われた状態になります。</para>
+      <para>全ての設定済みの接続は &vmm; のメインウインドウ内に表示されます。接続済みのものには小さな三角形が描かれ、これを押すことで接続先の &vmguest; の一覧を展開したり、折りたたんだりすることができます。</para>
+      <para>接続されていないものは灰色で描かれ、 <literal>未接続</literal> と表示されます。ダブルクリックを行うか、マウスの右ボタンを押して、表示されたコンテキストメニューから <guimenu>接続</guimenu> を選択すると、接続を行うことができます。また、同じコンテキストメニューから <guimenu>削除</guimenu> を押すことで、接続を削除することもできます。</para>
+      <note>
+        <title>既存の接続の編集について</title>
+        <para>既存の接続を編集することはできません。接続を変更したい場合は、必要なパラメータで新しい接続を作成したあと、古いほうを削除してください。</para>
+      </note>
+      <para>&vmm; 内に新しい接続を追加するには、下記の手順を実施します:</para>
+      <procedure>
+        <step>
+          <para><menuchoice> <guimenu>ファイル</guimenu> <guimenu>接続を追加</guimenu> </menuchoice> を選択します。</para>
+        </step>
+        <step>
+          <para>ホストの <guimenu>ハイパーバイザー</guimenu> ( <guimenu>&xen;</guimenu> もしくは <guimenu>&qemu;/KVM</guimenu> ) を選択します。</para>
+        </step>
+        <step performance="optional">
+          <para>リモート接続を設定する場合は、 <guimenu>リモートホストに接続</guimenu> を選択します。詳しくは <xref linkend="sec-libvirt-connect-remote"/> をお読みください。</para>
+          <para>リモート接続の場合、 <literal><replaceable>ユーザ名</replaceable>@<replaceable>ホスト名</replaceable></literal> の形式で、 <guimenu>ホスト名</guimenu> に接続先を入力します。</para>
+          <important>
+            <title>ユーザ名の指定</title>
+            <para>TCP や TLS の接続の場合は、ユーザ名を指定する必要はありません。これらのプロトコルの場合は、ユーザ名は無視されます。しかしながら SSH 接続の場合、 <systemitem class="username">root</systemitem> 以外のユーザで接続する際には、ユーザ名の指定が必要となります。</para>
+          </important>
+        </step>
+        <step>
+          <para>&vmm; の起動時に自動的に接続したくない場合は、 <guimenu>自動接続</guimenu> のチェックを外してください。</para>
+        </step>
+        <step>
+          <para>最後に <guimenu>接続</guimenu> を押すと、設定を保存することができます。</para>
+        </step>
+      </procedure>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-libvirt-connect-remote">
+    <title>リモート接続の設定</title>
 
-  <para>&libvirt; の大きな利点の 1 つとして、 1 箇所から複数のホスト内にある &vmguest; を管理することができる、という点があります。本章では、リモート接続を行う際のサーバ側およびクライアント側の設定方法について説明しています。</para>
+    <para>&libvirt; の大きな利点の 1 つとして、 1 箇所から複数のホスト内にある &vmguest; を管理することができる、という点があります。本章では、リモート接続を行う際のサーバ側およびクライアント側の設定方法について説明しています。</para>
 
-  <sect2 xml:id="sec-libvirt-connect-remote-ssh">
-   <title>SSH によるリモートトンネル ( <literal>qemu+ssh</literal> もしくは <literal>xen+ssh</literal> )</title>
-   <para>&vmhost; に対して SSH 経由でリモート接続を行う場合、必要な接続は SSH 接続だけとなります。それぞれ SSH デーモンが動作しているかどうか ( <command>systemctl status sshd</command> ) と、ファイアウオールで <systemitem class="service">SSH</systemitem> のポートが開いていることを確認しておいてください。</para>
-   <para>SSH 接続の場合のユーザ認証は、従来型のファイルのユーザおよびグループの所有権、およびパーミッションでの制御 (<xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/> で説明しています) で行います。ユーザ &exampleuser_plain; ( <literal>qemu+ssh://&exampleuser_plain;@&wsIVname;/system</literal> もしくは <literal>xen+ssh://&exampleuser_plain;@&wsIVname;/system</literal> ) での接続は何も設定することなく行うことができますので、 &libvirt; 側で特に設定を行う必要はありません。</para>
-   <para>SSH 経由での接続 (<literal>qemu+ssh://<replaceable>ユーザ名</replaceable>@<replaceable>システム</replaceable></literal> もしくは <literal>xen+ssh://<replaceable>ユーザ名</replaceable>@<replaceable>システム</replaceable></literal>) を行う場合、 <replaceable>ユーザ名</replaceable> に対するパスワードを入力する必要があります。これは <xref linkend="sec-ssh-public-key-auth"/> の手順に従って公開鍵認証を設定することで、回避することができます。また、接続元のマシンで <command>gnome-keyring</command> を使用すると、さらに便利になります。詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください。</para>
-  </sect2>
+    <sect2 xml:id="sec-libvirt-connect-remote-ssh">
+      <title>SSH によるリモートトンネル ( <literal>qemu+ssh</literal> もしくは <literal>xen+ssh</literal> )</title>
+      <para>&vmhost; に対して SSH 経由でリモート接続を行う場合、必要な接続は SSH 接続だけとなります。それぞれ SSH デーモンが動作しているかどうか ( <command>systemctl status sshd</command> ) と、ファイアウオールで <systemitem class="service">SSH</systemitem> のポートが開いていることを確認しておいてください。</para>
+      <para>SSH 接続の場合のユーザ認証は、従来型のファイルのユーザおよびグループの所有権、およびパーミッションでの制御 (<xref linkend="sec-libvirt-connect-auth-libvirt-traditional"/> で説明しています) で行います。ユーザ &exampleuser_plain; ( <literal>qemu+ssh://&exampleuser_plain;@&wsIVname;/system</literal> もしくは <literal>xen+ssh://&exampleuser_plain;@&wsIVname;/system</literal> ) での接続は何も設定することなく行うことができますので、 &libvirt; 側で特に設定を行う必要はありません。</para>
+      <para>SSH 経由での接続 (<literal>qemu+ssh://<replaceable>ユーザ名</replaceable>@<replaceable>システム</replaceable></literal> もしくは <literal>xen+ssh://<replaceable>ユーザ名</replaceable>@<replaceable>システム</replaceable></literal>) を行う場合、 <replaceable>ユーザ名</replaceable> に対するパスワードを入力する必要があります。これは <xref linkend="sec-ssh-public-key-auth"/> の手順に従って公開鍵認証を設定することで、回避することができます。また、接続元のマシンで <command>gnome-keyring</command> を使用すると、さらに便利になります。詳しくは <xref linkend="sec-ssh-gnome-keyring"/> をお読みください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-libvirt-connect-remote-tls">
-   <title>x509 証明書を利用したリモート TLS/SSL 接続 ( <literal>qemu+tls</literal> もしくは <literal>xen+tls</literal> )</title>
-   <para>TLS/SSL による暗号化で TCP 接続を行い、 x509 証明書を利用して認証を行う環境の構築は SSH よりずっと複雑になりますが、拡張性をずっと高めることができます。この方式は、管理者の人数がしばしば変化するような &vmhost; を管理する必要がある場合にお使いください。</para>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-concept">
-    <title>基本的な考え方</title>
-    <para>TLS (Transport Layer Security) では証明書を利用することで、 2 台のコンピュータ間の通信を暗号化します。接続を開始する側のコンピュータが常に <quote>クライアント</quote> となり、 <quote>クライアント証明書</quote> を利用して接続を行います。また、接続を受け付ける側のコンピュータが常に <quote>サーバ</quote> となり、こちらも <quote>サーバ証明書</quote> を利用することになります。このような方式により、 &vmhost; を中央のデスクトップから一括管理することができるようになっています。</para>
-    <para>どちらのコンピュータからも接続を行うような場合、双方がクライアント証明書とサーバ証明書の両方を持つ必要があります。これはたとえば、 &vmguest; を一方のホストから他方のホストに移行させるような場合に当てはまります。</para>
-    <para>また、それぞれの x509 証明書には、対応する機密鍵ファイルが存在しています。証明書ファイルと機密鍵ファイルは一対で使用します。また、正しく証明書が認識されるようにするため、証明機関 (CA) と呼ばれる機関で署名され、発行された証明書を使用することをお勧めします。また、クライアントの証明書もサーバの証明書も、同じ CA から発行されているものでなければなりません。</para>
-    <important>
-     <title>ユーザ認証について</title>
-     <para>TLS/SSL によるリモート接続は、 2 台のコンピュータ間で特定の方向で認証を行い、通信を確立する処理を行うためのものです。特定のユーザにのみアクセスを許可したい場合は、クライアント側で証明書にアクセスすることのできるユーザを制限してください。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-security"/> をお読みください。</para>
-     <para>&libvirt; では SASL を利用してサーバ側でユーザ認証を行うこともできます。こちらについては <xref linkend="sec-libvirt-connect-remote-tls-sasl"/> をお読みください。</para>
-    </important>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-server">
-    <title>&vmhost; の設定</title>
-    <para>&vmhost; が接続を受け付ける側になります。そのため、 &vmhost; には <emphasis>サーバ</emphasis> 証明書をインストールする必要があります。 CA の証明書もインストールする必要があります。証明書の準備を整えたら、 &libvirt; 側で TLS サポートを有効化することができます。</para>
-    <procedure>
-     <step>
-      <para>サーバ証明書を作成し、対応する CA の証明書とともにエクスポートします。</para>
-     </step>
-     <step>
-      <para>&vmhost; 側で下記のとおりディレクトリを作成します:</para>
+    <sect2 xml:id="sec-libvirt-connect-remote-tls">
+      <title>x509 証明書を利用したリモート TLS/SSL 接続 ( <literal>qemu+tls</literal> もしくは <literal>xen+tls</literal> )</title>
+      <para>TLS/SSL による暗号化で TCP 接続を行い、 x509 証明書を利用して認証を行う環境の構築は SSH よりずっと複雑になりますが、拡張性をずっと高めることができます。この方式は、管理者の人数がしばしば変化するような &vmhost; を管理する必要がある場合にお使いください。</para>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-concept">
+        <title>基本的な考え方</title>
+        <para>TLS (Transport Layer Security) では証明書を利用することで、 2 台のコンピュータ間の通信を暗号化します。接続を開始する側のコンピュータが常に <quote>クライアント</quote> となり、 <quote>クライアント証明書</quote> を利用して接続を行います。また、接続を受け付ける側のコンピュータが常に <quote>サーバ</quote> となり、こちらも <quote>サーバ証明書</quote> を利用することになります。このような方式により、 &vmhost; を中央のデスクトップから一括管理することができるようになっています。</para>
+        <para>どちらのコンピュータからも接続を行うような場合、双方がクライアント証明書とサーバ証明書の両方を持つ必要があります。これはたとえば、 &vmguest; を一方のホストから他方のホストに移行させるような場合に当てはまります。</para>
+        <para>また、それぞれの x509 証明書には、対応する機密鍵ファイルが存在しています。証明書ファイルと機密鍵ファイルは一対で使用します。また、正しく証明書が認識されるようにするため、証明機関 (CA) と呼ばれる機関で署名され、発行された証明書を使用することをお勧めします。また、クライアントの証明書もサーバの証明書も、同じ CA から発行されているものでなければなりません。</para>
+        <important>
+          <title>ユーザ認証について</title>
+          <para>TLS/SSL によるリモート接続は、 2 台のコンピュータ間で特定の方向で認証を行い、通信を確立する処理を行うためのものです。特定のユーザにのみアクセスを許可したい場合は、クライアント側で証明書にアクセスすることのできるユーザを制限してください。詳しくは <xref linkend="sec-libvirt-connect-remote-tls-security"/> をお読みください。</para>
+          <para>&libvirt; では SASL を利用してサーバ側でユーザ認証を行うこともできます。こちらについては <xref linkend="sec-libvirt-connect-remote-tls-sasl"/> をお読みください。</para>
+        </important>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-server">
+        <title>&vmhost; の設定</title>
+        <para>&vmhost; が接続を受け付ける側になります。そのため、 &vmhost; には <emphasis>サーバ</emphasis> 証明書をインストールする必要があります。 CA の証明書もインストールする必要があります。証明書の準備を整えたら、 &libvirt; 側で TLS サポートを有効化することができます。</para>
+        <procedure>
+          <step>
+            <para>サーバ証明書を作成し、対応する CA の証明書とともにエクスポートします。</para>
+          </step>
+          <step>
+            <para>&vmhost; 側で下記のとおりディレクトリを作成します:</para>
 <screen>&prompt.sudo;mkdir -p /etc/pki/CA/ /etc/pki/libvirt/private/</screen>
-      <para>下記のようにして証明書をインストールします:</para>
+            <para>下記のようにして証明書をインストールします:</para>
 <screen>&prompt.sudo;/etc/pki/CA/cacert.pem
 &prompt.sudo;/etc/pki/libvirt/servercert.pem
 &prompt.sudo;/etc/pki/libvirt/private/serverkey.pem</screen>
-      <important>
-       <title>証明書へのアクセス制限について</title>
-       <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
-      </important>
-     </step>
-     <step>
-      <para>対応するソケットに対して TLS のサポートを有効化し、 &libvirtd; を再起動します:</para>
+            <important>
+              <title>証明書へのアクセス制限について</title>
+              <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
+            </important>
+          </step>
+          <step>
+            <para>対応するソケットに対して TLS のサポートを有効化し、 &libvirtd; を再起動します:</para>
 <screen>
 &prompt.sudo;systemctl stop libvirtd.service
 &prompt.sudo;systemctl enable --now libvirtd-tls.socket
 &prompt.sudo;systemctl start libvirtd.service
 </screen>
-     </step>
-     <step>
-      <para>既定では、 &libvirt; は TCP ポート 16514 で TLS 接続を受け付けます。ファイアウオール側でこのポートを開いておいてください。</para>
-     </step>
-    </procedure>
-    <important>
-     <title>TLS を有効化して &libvirtd; を再起動する場合の注意事項</title>
-     <para>&libvirt; で TLS を有効化した場合は、必ずサーバの証明書も設定しておいてください。証明書が設定されていないと、 &libvirtd; の再起動が失敗します。また、証明書を変更した場合も、 &libvirtd; の再起動が必要となります。</para>
-    </important>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-client">
-    <title>クライアントの設定とテスト</title>
-    <para>クライアントとは、接続を行うのことを指します。そのため、 <emphasis>クライアント</emphasis> 証明書をインストールする必要があります。また、 CA の証明書についてもインストールを行う必要があります。</para>
-    <procedure>
-     <step>
-      <para>クライアント証明書を作成し、対応する CA の証明書とともにエクスポートします。</para>
-     </step>
-     <step>
-      <para>クライアント側では下記のディレクトリを作成します:</para>
+          </step>
+          <step>
+            <para>既定では、 &libvirt; は TCP ポート 16514 で TLS 接続を受け付けます。ファイアウオール側でこのポートを開いておいてください。</para>
+          </step>
+        </procedure>
+        <important>
+          <title>TLS を有効化して &libvirtd; を再起動する場合の注意事項</title>
+          <para>&libvirt; で TLS を有効化した場合は、必ずサーバの証明書も設定しておいてください。証明書が設定されていないと、 &libvirtd; の再起動が失敗します。また、証明書を変更した場合も、 &libvirtd; の再起動が必要となります。</para>
+        </important>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-client">
+        <title>クライアントの設定とテスト</title>
+        <para>クライアントとは、接続を行うのことを指します。そのため、 <emphasis>クライアント</emphasis> 証明書をインストールする必要があります。また、 CA の証明書についてもインストールを行う必要があります。</para>
+        <procedure>
+          <step>
+            <para>クライアント証明書を作成し、対応する CA の証明書とともにエクスポートします。</para>
+          </step>
+          <step>
+            <para>クライアント側では下記のディレクトリを作成します:</para>
 <screen>&prompt.sudo;mkdir -p /etc/pki/CA/ /etc/pki/libvirt/private/</screen>
-      <para>下記のようにして証明書をインストールします:</para>
+            <para>下記のようにして証明書をインストールします:</para>
 <screen>&prompt.sudo;/etc/pki/CA/cacert.pem
 &prompt.sudo;/etc/pki/libvirt/clientcert.pem
 &prompt.sudo;/etc/pki/libvirt/private/clientkey.pem</screen>
-      <important>
-       <title>証明書へのアクセス制限について</title>
-       <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
-      </important>
-     </step>
-     <step>
-      <para>下記のコマンドを実行して、クライアントとサーバの設定をテストします。下記では、 <replaceable>&wsIVname;</replaceable> の箇所に &vmhost; の名前を指定してください。なお、サーバ側の証明書を作成した際に使用したものと同じ、完全修飾ドメイン名を指定する必要があります。</para>
+            <important>
+              <title>証明書へのアクセス制限について</title>
+              <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
+            </important>
+          </step>
+          <step>
+            <para>下記のコマンドを実行して、クライアントとサーバの設定をテストします。下記では、 <replaceable>&wsIVname;</replaceable> の箇所に &vmhost; の名前を指定してください。なお、サーバ側の証明書を作成した際に使用したものと同じ、完全修飾ドメイン名を指定する必要があります。</para>
 <screen>#&qemu;/&kvm;
 virsh -c qemu+tls://<replaceable>&wsIVname;</replaceable>/system list --all
 
 #&xen;
 virsh -c xen+tls://<replaceable>&wsIVname;</replaceable>/system list --all</screen>
-      <para>設定が正しく行われていれば、 &vmhost; 内の &libvirt; に登録されている、全ての &vmguest; の一覧が表示されるはずです。</para>
-     </step>
-    </procedure>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-vnc">
-    <title>TLS/SSL 接続向けの VNC の有効化</title>
-    <para>現時点では、 TLS を利用した VNC 接続の暗号化は、少数のツールでしかサポートしていません。 <command>tightvnc</command> や <command>tigervnc</command> などの一般的な VNC ビューアは、 TLS/SSL に対応していません。 &vmm; と <command>virt-viewer</command> を除くと、 TLS/SSL に対応しているビューアは <command>remmina</command> のみとなります (詳しくは <xref linkend="vnc-remmina"/> をお読みください) 。</para>
-    <sect4 xml:id="sec-libvirt-connect-remote-tls-vnc-server">
-     <title>VNC over TLS/SSL: &vmhost; の設定</title>
-     <para>TLS/SSL を利用して VNC 経由でグラフィカルコンソールにアクセスするには、 &vmhost; を下記のように設定する必要があります:</para>
-     <procedure>
-      <step>
-       <para>まずはファイアウオールの設定を行い、サービス <systemitem class="service">VNC</systemitem> 向けのポートを開きます。</para>
-      </step>
-      <step>
-       <para><filename>/etc/pki/libvirt-vnc</filename> ディレクトリを作成し、このディレクトリ内に証明書へのリンクを作成します:</para>
+            <para>設定が正しく行われていれば、 &vmhost; 内の &libvirt; に登録されている、全ての &vmguest; の一覧が表示されるはずです。</para>
+          </step>
+        </procedure>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-vnc">
+        <title>TLS/SSL 接続向けの VNC の有効化</title>
+        <para>現時点では、 TLS を利用した VNC 接続の暗号化は、少数のツールでしかサポートしていません。 <command>tightvnc</command> や <command>tigervnc</command> などの一般的な VNC ビューアは、 TLS/SSL に対応していません。 &vmm; と <command>virt-viewer</command> を除くと、 TLS/SSL に対応しているビューアは <command>remmina</command> のみとなります (詳しくは <xref linkend="vnc-remmina"/> をお読みください) 。</para>
+        <sect4 xml:id="sec-libvirt-connect-remote-tls-vnc-server">
+          <title>VNC over TLS/SSL: &vmhost; の設定</title>
+          <para>TLS/SSL を利用して VNC 経由でグラフィカルコンソールにアクセスするには、 &vmhost; を下記のように設定する必要があります:</para>
+          <procedure>
+            <step>
+              <para>まずはファイアウオールの設定を行い、サービス <systemitem class="service">VNC</systemitem> 向けのポートを開きます。</para>
+            </step>
+            <step>
+              <para><filename>/etc/pki/libvirt-vnc</filename> ディレクトリを作成し、このディレクトリ内に証明書へのリンクを作成します:</para>
 <screen>&prompt.sudo;mkdir -p /etc/pki/libvirt-vnc &amp;&amp; cd /etc/pki/libvirt-vnc
 &prompt.sudo;ln -s /etc/pki/CA/cacert.pem ca-cert.pem
 &prompt.sudo;ln -s /etc/pki/libvirt/servercert.pem server-cert.pem
 &prompt.sudo;ln -s /etc/pki/libvirt/private/serverkey.pem server-key.pem</screen>
-      </step>
-      <step>
-       <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを編集して、下記のパラメータを設定します:</para>
+            </step>
+            <step>
+              <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを編集して、下記のパラメータを設定します:</para>
 <screen>vnc_listen = "0.0.0.0"
         vnc_tls = 1
         vnc_tls_x509_verify = 1</screen>
-      </step>
-      <step>
-       <para>最後に &libvirtd; を再起動します:</para>
+            </step>
+            <step>
+              <para>最後に &libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-       <important>
-        <title>&vmguest; を再起動する必要がある件について</title>
-        <para>VNC の TLS 設定は、 &vmguest; の起動時にのみ設定することができます。そのため、設定変更を行う前から起動している &vmguest; が存在した場合、それらを再起動する必要があります。</para>
-       </important>
-      </step>
-     </procedure>
-    </sect4>
-    <sect4 xml:id="sec-libvirt-connect-remote-tls-vnc-client">
-     <title>VNC over TLS/SSL: クライアント設定</title>
-     <para>クライアント側でやるべきことは、選択したクライアントで認識される場所に、 x509 の証明書を配置するだけです。ただ残念なことに、 &vmm; と <command>virt-viewer</command> は、それぞれ別々の場所に証明書を配置する仕組みになっています。 &vmm; は全てのユーザに反映できるシステム全体の場所のほか、ユーザごとの個別の場所も用意されています。 Remmina (詳しくは <xref linkend="vnc-remmina"/> をお読みください) では、リモートの VNC セッションの接続を開始する際に証明書の場所を尋ねます。</para>
-     <variablelist>
-      <varlistentry>
-       <term><emphasis role="bold"> &vmm; (<command>virt-manager</command>) </emphasis></term>
-       <listitem>
-        <para>リモートのホストに接続するには、まず &vmm; を <xref linkend="sec-libvirt-connect-remote-tls-client"/> で説明している手順に従って設定する必要があります。 VNC で接続できるようにするには、クライアントの証明書をそれぞれ下記の場所に配置します:</para>
+              <important>
+                <title>&vmguest; を再起動する必要がある件について</title>
+                <para>VNC の TLS 設定は、 &vmguest; の起動時にのみ設定することができます。そのため、設定変更を行う前から起動している &vmguest; が存在した場合、それらを再起動する必要があります。</para>
+              </important>
+            </step>
+          </procedure>
+        </sect4>
+        <sect4 xml:id="sec-libvirt-connect-remote-tls-vnc-client">
+          <title>VNC over TLS/SSL: クライアント設定</title>
+          <para>クライアント側でやるべきことは、選択したクライアントで認識される場所に、 x509 の証明書を配置するだけです。ただ残念なことに、 &vmm; と <command>virt-viewer</command> は、それぞれ別々の場所に証明書を配置する仕組みになっています。 &vmm; は全てのユーザに反映できるシステム全体の場所のほか、ユーザごとの個別の場所も用意されています。 Remmina (詳しくは <xref linkend="vnc-remmina"/> をお読みください) では、リモートの VNC セッションの接続を開始する際に証明書の場所を尋ねます。</para>
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold"> &vmm; (<command>virt-manager</command>) </emphasis></term>
+              <listitem>
+                <para>リモートのホストに接続するには、まず &vmm; を <xref linkend="sec-libvirt-connect-remote-tls-client"/> で説明している手順に従って設定する必要があります。 VNC で接続できるようにするには、クライアントの証明書をそれぞれ下記の場所に配置します:</para>
+                <variablelist>
+                  <varlistentry>
+                    <term>システム全体に適用する場合の場所</term>
+                    <listitem>
+                      <simplelist><member><filename>/etc/pki/CA/cacert.pem</filename></member><member><filename>/etc/pki/libvirt-vnc/clientcert.pem</filename></member><member><filename>/etc/pki/libvirt-vnc/private/clientkey.pem</filename></member>
+                      </simplelist>
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                    <term>ユーザ単体で使用する場合の場所</term>
+                    <listitem>
+                      <simplelist><member><filename>/etc/pki/CA/cacert.pem</filename></member><member><filename>~/.pki/libvirt-vnc/clientcert.pem</filename></member><member><filename>~/.pki/libvirt-vnc/private/clientkey.pem</filename></member>
+                      </simplelist>
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis role="bold"><command>virt-viewer</command></emphasis></term>
+              <listitem>
+                <para><command>virt-viewer</command> では、下記の場所にあるシステム全体の設定のみを読み込みます:</para>
+                <simplelist><member><filename>/etc/pki/CA/cacert.pem</filename></member><member><filename>/etc/pki/libvirt-vnc/clientcert.pem</filename></member><member><filename>/etc/pki/libvirt-vnc/private/clientkey.pem</filename></member>
+                </simplelist>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <important>
+            <title>証明書へのアクセス制限について</title>
+            <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
+          </important>
+        </sect4>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-security">
+        <title>アクセス制限 (セキュリティ面の考慮事項)</title>
+        <para>x509 証明書は 2 つのものから作られています。 1 つは一般に公開する証明書そのもの、そしてそれに対応する機密鍵です。これらの両方を使用することで認証を行うことができる仕組みです。そのため、クライアント証明書と機密鍵にアクセスができてしまえば、あとは自由に &vmhost; にアクセスできることになってしまいます。サーバ証明書の場合、証明書と機密鍵にアクセスできてしまえば、誰でも &vmhost; になりすますことができてしまいます。このようなことが発生しないようにするため、少なくとも機密鍵については、できる限りアクセス制限を厳しく設定する必要があります。これを実現するのに最も簡単な方法は、アクセスパーミッションを利用してアクセスを制限する方法です。</para>
         <variablelist>
-         <varlistentry>
-          <term>システム全体に適用する場合の場所</term>
-          <listitem>
-           <simplelist>
-            <member><filename>/etc/pki/CA/cacert.pem</filename></member>
-            <member><filename>/etc/pki/libvirt-vnc/clientcert.pem</filename></member>
-            <member><filename>/etc/pki/libvirt-vnc/private/clientkey.pem</filename></member>
-           </simplelist>
-          </listitem>
-         </varlistentry>
-         <varlistentry>
-          <term>ユーザ単体で使用する場合の場所</term>
-          <listitem>
-           <simplelist>
-            <member><filename>/etc/pki/CA/cacert.pem</filename></member>
-            <member><filename>~/.pki/libvirt-vnc/clientcert.pem</filename></member>
-            <member><filename>~/.pki/libvirt-vnc/private/clientkey.pem</filename></member>
-           </simplelist>
-          </listitem>
-         </varlistentry>
-        </variablelist>
-       </listitem>
-      </varlistentry>
-      <varlistentry>
-       <term><emphasis role="bold"><command>virt-viewer</command></emphasis></term>
-       <listitem>
-        <para><command>virt-viewer</command> では、下記の場所にあるシステム全体の設定のみを読み込みます:</para>
-        <simplelist>
-         <member><filename>/etc/pki/CA/cacert.pem</filename></member>
-         <member><filename>/etc/pki/libvirt-vnc/clientcert.pem</filename></member>
-         <member><filename>/etc/pki/libvirt-vnc/private/clientkey.pem</filename></member>
-        </simplelist>
-       </listitem>
-      </varlistentry>
-     </variablelist>
-     <important>
-      <title>証明書へのアクセス制限について</title>
-      <para><xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している内容に従って、証明書へのアクセスを制限するようにしてください。</para>
-     </important>
-    </sect4>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-security">
-    <title>アクセス制限 (セキュリティ面の考慮事項)</title>
-    <para>x509 証明書は 2 つのものから作られています。 1 つは一般に公開する証明書そのもの、そしてそれに対応する機密鍵です。これらの両方を使用することで認証を行うことができる仕組みです。そのため、クライアント証明書と機密鍵にアクセスができてしまえば、あとは自由に &vmhost; にアクセスできることになってしまいます。サーバ証明書の場合、証明書と機密鍵にアクセスできてしまえば、誰でも &vmhost; になりすますことができてしまいます。このようなことが発生しないようにするため、少なくとも機密鍵については、できる限りアクセス制限を厳しく設定する必要があります。これを実現するのに最も簡単な方法は、アクセスパーミッションを利用してアクセスを制限する方法です。</para>
-    <variablelist>
-     <varlistentry>
-      <term><emphasis role="bold">サーバ証明書</emphasis></term>
-      <listitem>
-       <para>サーバ証明書は &qemu; のプロセスが読み込むことができる必要があります。 &productname; の &qemu; では、 &libvirt; ツールが起動するプロセスは &rootuser; が所有者となりますので、 &rootuser; が証明書を読み込むことができれば十分となります:</para>
+          <varlistentry>
+            <term><emphasis role="bold">サーバ証明書</emphasis></term>
+            <listitem>
+              <para>サーバ証明書は &qemu; のプロセスが読み込むことができる必要があります。 &productname; の &qemu; では、 &libvirt; ツールが起動するプロセスは &rootuser; が所有者となりますので、 &rootuser; が証明書を読み込むことができれば十分となります:</para>
 <screen>&prompt.user;chmod 700 /etc/pki/libvirt/private/
 &prompt.user;chmod 600 /etc/pki/libvirt/private/serverkey.pem</screen>
-       <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを設定して &qemu; のプロセスに対する所有権を変更している場合は、これらのファイルの所有権についても、あわせて設定を変更してください。</para>
-      </listitem>
-     </varlistentry>
-     <varlistentry>
-      <term><emphasis role="bold">システム全体のクライアント証明書</emphasis></term>
-      <listitem>
-       <para>システム全体で使用する機密鍵ファイルへのアクセスを制限するには、読み込みアクセスを特定のグループにのみ許可し、グループ内のメンバーのみが機密鍵ファイルを読み込めるようにしてください。下記の例では <systemitem class="groupname">libvirt</systemitem> グループを作成し、 <filename>clientkey.pem</filename> ファイルとその親ディレクトリの所有グループを <systemitem class="groupname">libvirt</systemitem> に設定しています。あとはパーミッションを設定して、所有者と所有グループのみにアクセス権を与えます。最後に &exampleuser; ユーザを <systemitem class="groupname">libvirt</systemitem> グループのメンバーとして追加すると、機密鍵ファイルにアクセスできるようになります。</para>
+              <para><filename>/etc/libvirt/qemu.conf</filename> ファイルを設定して &qemu; のプロセスに対する所有権を変更している場合は、これらのファイルの所有権についても、あわせて設定を変更してください。</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">システム全体のクライアント証明書</emphasis></term>
+            <listitem>
+              <para>システム全体で使用する機密鍵ファイルへのアクセスを制限するには、読み込みアクセスを特定のグループにのみ許可し、グループ内のメンバーのみが機密鍵ファイルを読み込めるようにしてください。下記の例では <systemitem class="groupname">libvirt</systemitem> グループを作成し、 <filename>clientkey.pem</filename> ファイルとその親ディレクトリの所有グループを <systemitem class="groupname">libvirt</systemitem> に設定しています。あとはパーミッションを設定して、所有者と所有グループのみにアクセス権を与えます。最後に &exampleuser; ユーザを <systemitem class="groupname">libvirt</systemitem> グループのメンバーとして追加すると、機密鍵ファイルにアクセスできるようになります。</para>
 <screen>CERTPATH="/etc/pki/libvirt/"
 # libvirt グループの作成
 groupadd libvirt
@@ -651,58 +635,53 @@ chmod 750 $CERTPATH/private
 chmod 640 $CERTPATH/private/clientkey.pem
 # ユーザ tux をグループ libvirt に追加
 usermod --append --groups libvirt tux</screen>
-      </listitem>
-     </varlistentry>
-     <varlistentry>
-      <term><emphasis role="bold">ユーザごとの証明書</emphasis></term>
-      <listitem>
-       <para>VNC 経由で &vmguest; のグラフィカルコンソールにアクセスするために使用する、ユーザごとのクライアント証明書は、ユーザのホームディレクトリ以下の <filename>~/.pki</filename> 内に配置します。 SSH 等とは異なり、これらの証明書を使用する VNC ビューアは、機密鍵ファイルのパーミッションを確認しません。そのため、ユーザごとの証明書は、単純に自分自身が読み込めるようにパーミッションを設定するだけで十分となります。</para>
-      </listitem>
-     </varlistentry>
-    </variablelist>
-    <sect4 xml:id="sec-libvirt-connect-remote-tls-server-restrict">
-     <title>サーバ側からのアクセス制限</title>
-     <para>既定では、対応する証明書を設定しているクライアントであれば、 &vmhost; はどのクライアントからでも接続を受け付けます。このような理由から、 SASL によるサーバ側での認証を追加で設定できるようになっています (詳しくは <xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/> をお読みください) 。</para>
-     <para>上記の方法以外にも、 DN (Distinguished Name; 識別名) のホワイトリストを設定して、アクセスを制限する方法もあります。この場合、対応する DN の証明書を持つクライアントのみが接続できることになります。</para>
-     <para>具体的には、 <filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の <literal>tls_allowed_dn_list</literal> に、許可する DN の一覧を記述してください。この一覧にはワイルドカードを設定することもできます。ただし、空のリストを指定してはなりません。この場合、全ての接続を拒否することになってしまいます。</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><emphasis role="bold">ユーザごとの証明書</emphasis></term>
+            <listitem>
+              <para>VNC 経由で &vmguest; のグラフィカルコンソールにアクセスするために使用する、ユーザごとのクライアント証明書は、ユーザのホームディレクトリ以下の <filename>~/.pki</filename> 内に配置します。 SSH 等とは異なり、これらの証明書を使用する VNC ビューアは、機密鍵ファイルのパーミッションを確認しません。そのため、ユーザごとの証明書は、単純に自分自身が読み込めるようにパーミッションを設定するだけで十分となります。</para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <sect4 xml:id="sec-libvirt-connect-remote-tls-server-restrict">
+          <title>サーバ側からのアクセス制限</title>
+          <para>既定では、対応する証明書を設定しているクライアントであれば、 &vmhost; はどのクライアントからでも接続を受け付けます。このような理由から、 SASL によるサーバ側での認証を追加で設定できるようになっています (詳しくは <xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/> をお読みください) 。</para>
+          <para>上記の方法以外にも、 DN (Distinguished Name; 識別名) のホワイトリストを設定して、アクセスを制限する方法もあります。この場合、対応する DN の証明書を持つクライアントのみが接続できることになります。</para>
+          <para>具体的には、 <filename>/etc/libvirt/libvirtd.conf</filename> ファイル内の <literal>tls_allowed_dn_list</literal> に、許可する DN の一覧を記述してください。この一覧にはワイルドカードを設定することもできます。ただし、空のリストを指定してはなりません。この場合、全ての接続を拒否することになってしまいます。</para>
 <screen>tls_allowed_dn_list = [
    "C=US,L=Provo,O=SUSE Linux Products GmbH,OU=*,CN=&wsIIname;,EMAIL=*",
    "C=DE,L=Nuremberg,O=SUSE Linux Products GmbH,OU=Documentation,CN=*"]</screen>
-     <para>証明書の識別名 (DN) を取得するには、下記のコマンドを使用します:</para>
+          <para>証明書の識別名 (DN) を取得するには、下記のコマンドを使用します:</para>
 <screen>&prompt.user;certtool -i --infile /etc/pki/libvirt/clientcert.pem | grep "Subject:"</screen>
-     <para>設定を変更したあとは、 &libvirtd; を再起動します:</para>
+          <para>設定を変更したあとは、 &libvirtd; を再起動します:</para>
 <screen>&prompt.sudo;systemctl restart libvirtd</screen>
-    </sect4>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-sasl">
-    <title>TLS ソケット向けの SASL を利用した中央管理型ユーザ認証</title>
-<!-- fs 2010-11-11:
-     SASL for VNC: http://bugzilla.suse.com/show_bug.cgi?id=652927
--->
-    <para>TLS では、直接的なユーザ認証を行うことはできません。実現するとすれば、 <xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している手順に従って、クライアント側で証明書に対する読み込みアクセス権 (パーミッション) を設定することができるくらいです。ただし、中央管理型でサーバベースのユーザ認証が必要となる場合、 &libvirt; では TLS 上で SASL (Simple Authentication and Security Layer) を使用するようにして、ユーザ認証を行うことができます。設定方法に関する詳細は、 <xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/> をお読みください。</para>
-   </sect3>
-   <sect3 xml:id="sec-libvirt-connect-remote-tls-troubleshoot">
-    <title>トラブルシューティング</title>
-    <para/>
-    <sect4 xml:id="sec-libvirt-connect-remote-tls-troubleshoot-no-connect">
-     <title>&vmm;/ <command>virsh</command> がサーバに接続できない</title>
-     <para>下記の順序で確認を行ってください:</para>
-     <simplelist>
-      <member>ファイアウオール側の問題 (TCP ポート 16514 がサーバ側で開く必要がある) ではありませんか？</member>
-      <member>クライアント証明書 (証明書そのものと機密鍵) が、 &vmm;/ <command>virsh</command> を起動したユーザから読み込むことができますか？</member>
-      <member>接続時にサーバ証明書と同じ完全修飾ドメイン名を指定していますか？</member>
-      <member>サーバ側で TLS が有効化されています ( <literal>listen_tls = 1</literal> ) か？</member>
-      <member>サーバ側で &libvirtd; を再起動していますか？</member>
-     </simplelist>
-    </sect4>
-    <sect4 xml:id="sec-libvirt-connect-remote-tls-troubleshoot-vnc">
-     <title>VNC の接続が失敗する</title>
-     <para>まずは &vmm; を利用して、リモートのサーバに接続できることを確認します。問題なく接続ができていることを確認したら、仮想マシンが TLS サポート付きで開始されているかどうかを確認します。下記の例では、 <literal>sles</literal> という名前の仮想マシンに対して確認を行っています。</para>
+        </sect4>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-sasl">
+        <title>TLS ソケット向けの SASL を利用した中央管理型ユーザ認証</title>
+        <!-- fs 2010-11-11:
+          SASL for VNC: http://bugzilla.suse.com/show_bug.cgi?id=652927
+          -->
+        <para>TLS では、直接的なユーザ認証を行うことはできません。実現するとすれば、 <xref linkend="sec-libvirt-connect-remote-tls-security"/> で説明している手順に従って、クライアント側で証明書に対する読み込みアクセス権 (パーミッション) を設定することができるくらいです。ただし、中央管理型でサーバベースのユーザ認証が必要となる場合、 &libvirt; では TLS 上で SASL (Simple Authentication and Security Layer) を使用するようにして、ユーザ認証を行うことができます。設定方法に関する詳細は、 <xref linkend="sec-libvirt-connect-auth-libvirt-sasl"/> をお読みください。</para>
+      </sect3>
+      <sect3 xml:id="sec-libvirt-connect-remote-tls-troubleshoot">
+        <title>トラブルシューティング</title>
+        <para/>
+        <sect4 xml:id="sec-libvirt-connect-remote-tls-troubleshoot-no-connect">
+          <title>&vmm;/ <command>virsh</command> がサーバに接続できない</title>
+          <para>下記の順序で確認を行ってください:</para>
+          <simplelist><member>ファイアウオール側の問題 (TCP ポート 16514 がサーバ側で開く必要がある) ではありませんか？</member><member>クライアント証明書 (証明書そのものと機密鍵) が、 &vmm;/ <command>virsh</command> を起動したユーザから読み込むことができますか？</member><member>接続時にサーバ証明書と同じ完全修飾ドメイン名を指定していますか？</member><member>サーバ側で TLS が有効化されています ( <literal>listen_tls = 1</literal> ) か？</member><member>サーバ側で &libvirtd; を再起動していますか？</member>
+          </simplelist>
+        </sect4>
+        <sect4 xml:id="sec-libvirt-connect-remote-tls-troubleshoot-vnc">
+          <title>VNC の接続が失敗する</title>
+          <para>まずは &vmm; を利用して、リモートのサーバに接続できることを確認します。問題なく接続ができていることを確認したら、仮想マシンが TLS サポート付きで開始されているかどうかを確認します。下記の例では、 <literal>sles</literal> という名前の仮想マシンに対して確認を行っています。</para>
 <screen>&prompt.user;ps ax | grep qemu | grep "\-name sles" | awk -F" -vnc " '{ print FS $2 }'</screen>
-     <para>上記のコマンドの出力に下記のような内容が含まれていない場合は、 TLS サポート付きで起動されていないことになりますので、設定を行って仮想マシンの再起動を行ってください。</para>
+          <para>上記のコマンドの出力に下記のような内容が含まれていない場合は、 TLS サポート付きで起動されていないことになりますので、設定を行って仮想マシンの再起動を行ってください。</para>
 <screen>-vnc 0.0.0.0:0,tls,x509verify=/etc/pki/libvirt</screen>
-    </sect4>
-   </sect3>
-  </sect2>
- </sect1>
+        </sect4>
+      </sect3>
+    </sect2>
+  </sect1>
 </chapter>
