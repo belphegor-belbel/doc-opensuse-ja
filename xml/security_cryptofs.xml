@@ -28,9 +28,9 @@
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>GPG を利用したファイル単独での暗号化</term>
+   <term>Rage を利用したファイル単独での暗号化</term>
    <listitem>
-    <para>1 つまたは複数のファイルを単純に暗号化したいだけであれば、 GPG ツールをお使いになるとよいでしょう。詳しくは <xref linkend="sec-security-cryptofs-gpg"/> をお読みください。</para>
+    <para>1 つまたは複数のファイルを単純に暗号化したいだけであれば、 Rage 暗号化ツールをお使いいただくこともできます。詳しくは <xref linkend="sec-security-cryptofs-rage"/> をお読みください。</para>
    </listitem>
   </varlistentry>
  </variablelist>
@@ -124,31 +124,23 @@
   <para>ただし、この手順でファイルの暗号化を行った場合、暗号化で使用したものと同じ鍵を使用しないと、復号できないことに注意してください。他のユーザに対して暗号化したファイルを送りたい場合は、その相手の公開鍵を取得して、この公開鍵で暗号化を行わなければなりません。</para>
  </sect1>
  <sect1 xml:id="sec-security-cryptofs-rage">
-  <title>GPG を利用したファイルの暗号化</title>
-  <para>
-   Rage is a secure file encryption software to encrypt files. It has
-   keys that are easy to exchange with other people, and has secure defaults
-   to prevent accidental misuse or leaks of sensitive data. We recommend Rage to encrypt files.
-  </para>
-  <para>You can install Rage with:</para>
+  <title>Rage によるファイルの暗号化</title>
+  <para>Rage はファイルを暗号化するための暗号化ソフトウエアです。他のユーザとの間で容易に鍵を交換できる仕組みのほか、不用意な操作ミスや機密データの漏洩の防止機能を備えています。ファイルの暗号化を行う場合は、 Rage の使用をお勧めします。</para>
+  <para>Rage のインストールは下記の手順で行います:</para>
    <screen>&prompt.sudo;<command>zypper install rage-encryption</command></screen>
-  <para> The recipient must first generate a key pair to encrypt a file with Rage:
-   </para>
+  <para>暗号化したファイルを受信する側のユーザは、まず Rage で鍵対を生成しなければなりません:</para>
    <screen>&prompt.user;rage-keygen -o ~/rage.key 2 ~/rage.pub</screen>
-   <para>Two files are created; <emphasis>rage.pub</emphasis> and <emphasis>rage.key</emphasis>.
-   </para>
+   <para>上記で 2 つのファイルが作成されます; 上記の例では、それぞれ <emphasis>rage.pub</emphasis> と <emphasis>rage.key</emphasis> というファイル名になっています。</para>
    <variablelist>
    <varlistentry>
-    <term><literal>rage.pub example</literal>
-    </term>
+    <term><literal>rage.pub の例</literal></term>
     <listitem>
     <screen>&prompt.user;cat file.pub
     Public key: age17e4g67cs07jk3lmylyq6gduv26uf7tz7nm9jrsaxn8xxx9uc9amsdg4a5e </screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>rage.key example</literal>
-    </term>
+    <term><literal>rage.key の例</literal></term>
     <listitem>
      <screen>&prompt.user; cat file.key
     # created: 2023-05-30T16:29:20+05:30
@@ -156,84 +148,77 @@
     </listitem>
    </varlistentry>
      </variablelist>
-    <important><para><emphasis>file.key</emphasis> is a private key and should be kept confidential.</para></important>
+    <important><para><emphasis>file.key</emphasis> は機密鍵であるため、他者に開示してはなりません。</para></important>
    <variablelist>
   <varlistentry>
-   <term>Encrypt</term>
+   <term>暗号化</term>
    <listitem>
-    <para> To encrypt a file, you need the generated public key:</para>
-   <screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-  <para>For example:</para>
-   <screen>&prompt.user;rage -e -r age17e4g67cs07jk3lmylyq6gduv26uf7tz7nm9jrsaxn8xxx9uc9amsdg4a5e -o test.txt.age test.txt </screen>
+    <para>ファイルを暗号化するには、コマンドラインで公開鍵を指定して実行します:</para>
+   <screen>&prompt.user;rage -e -r <replaceable>公開鍵</replaceable> -o <replaceable>暗号化されたファイル</replaceable> <replaceable>元の_(暗号化前の)_ファイル</replaceable></screen>
+  <para>たとえば下記のようになります:</para>
+   <screen>&prompt.user;rage -e -r age17e4g67cs07jk3lmylyq6gduv26uf7tz7nm9jrsaxn8xxx9uc9amsdg4a5e -o test.txt.age test.txt</screen>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>Decrypt</term>
+   <term>復号化</term>
    <listitem>
-    <para>ただし、この手順でファイルの暗号化を行った場合、暗号化で使用したものと同じ鍵を使用しないと、復号できないことに注意してください。他のユーザに対して暗号化したファイルを送りたい場合は、その相手の公開鍵を取得して、この公開鍵で暗号化を行わなければなりません。</para>
-<screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-   <para>For example:</para>
-   <screen>&prompt.user;rage -d -i ~/rage.key -o test.txt.decrypted test.txt.age </screen>
+    <para>暗号化したファイルは、公開鍵に対応する機密鍵を持つユーザのみが復号化できます。つまり、他者と暗号化したファイルをやりとりしたい場合は、相手側の公開鍵を指定して暗号化する必要があります。</para>
+<screen>&prompt.user;rage -d -i ~/rage.key -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable> <replaceable>ファイル</replaceable></screen>
+   <para>たとえば下記のようになります:</para>
+   <screen>&prompt.user;rage -d -i ~/rage.key -o test.txt.decrypted test.txt.age</screen>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>Passphrases</term>
+   <term>パスフレーズ</term>
    <listitem>
-    <para> You can encrypt files with passphrases with the <envar>-p</envar> or <envar>--passphrase</envar> arguments.
-   By default, Rage automatically generates a secure passphrase, but you also have the option to enter a passphrase.  </para>
-  <screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-   <para>For example:</para>
-   <screen>&prompt.user;rage -e -p -o test.txt.age test.txt </screen>
+    <para><envar>-p</envar> や <envar>--passphrase</envar> のパラメータを指定することで、暗号化したファイルにさらにパスフレーズを設定することもできます。既定では Rage は独自にパスフレーズを設定しますが、パスフレーズを指定しておくこともできます。</para>
+  <screen>&prompt.user;rage -e -p -o <replaceable>暗号化されたファイル</replaceable> <replaceable>ファイル</replaceable></screen>
+   <para>たとえば下記のようになります:</para>
+   <screen>&prompt.user;rage -e -p -o test.txt.age test.txt</screen>
    </listitem>
   </varlistentry>
 <varlistentry>
    <term>SSH</term>
    <listitem>
-    <para> You can encrypt files with SSH (Secure Socket Shell) keys instead of Rage keys. Rage supports <emphasis>ssh-rsa</emphasis> and <emphasis>ssh-ed25519</emphasis>  public keys,and decrypting with the respective private key file. <emphasis>ssh-agent</emphasis> and <emphasis>ssh-sk(FIDO)</emphasis> are not supported. </para>
-  <screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-   <para>For example:</para>
-   <screen>&prompt.user;rage -e -p -o test.txt.age test.txt </screen>
-<para>For example:</para>
+    <para>Rage では、暗号化を行う際、 Rage の鍵対ではなく SSH (Secure Socket Shell) の鍵対を使用することもできます。 Rage ではそれぞれ <emphasis>ssh-rsa</emphasis> と <emphasis>ssh-ed25519</emphasis> の公開鍵に対応し、復号化もそれに対応する機密鍵で実施することができます。なお、 <emphasis>ssh-agent</emphasis> と <emphasis>ssh-sk(FIDO)</emphasis> には対応していません。</para>
+  <screen>&prompt.user;rage -e -p -o <replaceable>暗号化されたファイル</replaceable> <replaceable>ファイル</replaceable></screen>
+   <para>たとえば下記のようになります:</para>
+   <screen>&prompt.user;rage -e -p -o test.txt.age test.txt</screen>
+<para>たとえば下記のようになります:</para>
    <screen>&prompt.user; ssh-keygen -t ed25519</screen>
-    <para>To encrypt:</para>
-   <screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-    <para>For example:</para>
+    <para>暗号化するには、下記のようなコマンドを実行します:</para>
+   <screen>&prompt.user; rage -e -a -R <replaceable>公開鍵ファイル</replaceable> -o <replaceable>暗号化されたファイル</replaceable> <replaceable>ファイル</replaceable></screen>
+    <para>たとえば下記のようになります:</para>
     <screen>&prompt.user; rage -e -a -R id_ed25519.pub -o test.txt.age test.txt</screen>
-    <para>To decrypt:</para>
-    <screen>&prompt.user;gpg -d -o <replaceable>復号化したファイル</replaceable> <replaceable>暗号化されたファイル</replaceable></screen>
-    <para>For example:</para>
+    <para>復号化するには、下記のようなコマンドを実行します:</para>
+    <screen>&prompt.user; rage -d -i <replaceable>SSH_機密鍵ファイル</replaceable> -o <replaceable>復号化したファイル</replaceable><replaceable>暗号化されたファイル</replaceable></screen>
+    <para>たとえば下記のようになります:</para>
     <screen>&prompt.user; rage -d -i id_ed25519 -o test.txt.decrypted test.txt.age</screen>
-     <important><para>You must enter the path to the key and files.</para></important>
+     <important><para>なお、鍵とファイルはそれぞれパスで指定しなければなりません。</para></important>
    </listitem>
   </varlistentry>
 <varlistentry>
-   <term>Multiple identities</term>
+   <term>複数の宛先への対応</term>
    <listitem>
-    <para> Rage can encrypt to multiple identities at the same time. Any of the recipient's private keys can be used to decrypt the file.</para>
-    <screen>rage -e -a -R <replaceable>FIRST_SSH_PUBLIC_KEY</replaceable>-r <replaceable>FIRST_RAGE_PUBLIC_KEY</replaceable>... -o <replaceable>ENCRYPTED_FILE</replaceable> <replaceable>FILE</replaceable></screen>
-    <para>For example:</para>
+    <para>Rage は同時に複数の宛先で復号化できる暗号ファイルを作成することもできます。この場合、指定した複数の公開鍵のうち、いずれかの機密鍵を利用して復号化することができます。</para>
+    <screen>rage -e -a -R <replaceable>最初の_SSH_公開鍵</replaceable>-r <replaceable>最初の_Rage_公開鍵</replaceable>... -o <replaceable>暗号化されたファイル</replaceable> <replaceable>ファイル</replaceable></screen>
+    <para>たとえば下記のようになります:</para>
     <screen>rage -e -a -R id_ed25519.pub -r age1h8equ4vs5pyp8ykw0z8m9n8m3psy6swme52ztth0v66frgu65ussm8gq0t -o -r age1y2lc7x59jcqvrpf3ppmnj3f93ytaegfkdnl5vrdyv83l8ekcae4sexgwkg test.txt.age test.txt</screen>
     </listitem>
   </varlistentry>
    </variablelist>
    <tip>
-   <para>
-   You can use the <envar>-h</envar> or <envar>--help</envar> argument to list all the Rage command arguments.
-   </para>
+   <para>Rage のコマンドラインパラメータの一覧を取得したい場合は、 <envar>-h</envar> または <envar>--help</envar> を指定して実行してください。</para>
     </tip>
 
        <sect2 xml:id="sec-security-cryptofs-rage-additional-resources">
-      <title>追加のソフトウエアが必要となる件について</title>
+      <title>その他の情報</title>
    <itemizedlist>
       <listitem>
-        <para>
-          <link xlink:href="https://github.com/str4d/rage"/> Rage Encryption GitHub repository
-        </para>
+        <para><link xlink:href="https://github.com/str4d/rage"/> Rage 暗号化の GitHub リポジトリ</para>
         </listitem>
         <listitem>
-        <para>
-          <link xlink:href="https://github.com/C2SP/C2SP/blob/main/age.md"/> Age Encryption GitHub repository
-        </para>
+        <para><link xlink:href="https://github.com/C2SP/C2SP/blob/main/age.md"/> Age 暗号化の GitHub リポジトリ</para>
         </listitem>
     </itemizedlist> </sect2>
       </sect1>
