@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2023-04-24 22:09+0000\n"
+"POT-Creation-Date: 2023-07-13 22:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -39,65 +39,89 @@ msgid "For production environments, it is a best practice to use a third-party c
 msgstr ""
 
 #. Tag: para
-#: security_ldap_ca.xml:37
+#: security_ldap_ca.xml:38
 #, no-c-format
-msgid "Before you can import an existing private key and certificate into the NSS database, you need to create a bundle of the private key and the server certificate. This results in a <filename>*.p12</filename> file."
+msgid "The Mozilla NSS (Network Security Services ) toolkit uses nicknames for certificates in the certificate store. The server certificate uses the nickname <emphasis>Server-Cert</emphasis> ."
 msgstr ""
 
-#. Tag: title
+#. Tag: para
 #: security_ldap_ca.xml:44
 #, no-c-format
-msgid "<filename>*.p12</filename> file and friendly name"
+msgid "Use the following commands to remove the Self-Signed-CA and Server-Cert from the instance:"
+msgstr ""
+
+#. Tag: screen
+#: security_ldap_ca.xml:47
+#, no-c-format
+msgid "&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> tls remove-cert Self-Signed-CA</command>\n"
+      "&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> tls remove-cert Server-Cert\n"
+      "</command>\n"
+      ""
 msgstr ""
 
 #. Tag: para
-#: security_ldap_ca.xml:45
+#: security_ldap_ca.xml:52
 #, no-c-format
-msgid "When creating the PKCS12 bundle, you must encode <literal>Server-Cert</literal> as the friendly name in the <filename>*.p12</filename> file. Otherwise the TLS connection will fail, because the &ds389; searches for this exact string."
-msgstr ""
-
-#. Tag: para
-#: security_ldap_ca.xml:51
-#, no-c-format
-msgid "The friendly name cannot be changed after you import the <filename>*.p12</filename> file into the NSS database."
+msgid "Replace <replaceable>INSTANCE_NAME</replaceable> with the instance name of the directory server. This is LDAP1 in the previous sections."
 msgstr ""
 
 #. Tag: para
 #: security_ldap_ca.xml:58
 #, no-c-format
-msgid "Use the following command to create the PKCS12 bundle with the required friendly name:"
+msgid "Import the CA that has signed your certificate."
 msgstr ""
 
 #. Tag: screen
 #: security_ldap_ca.xml:61
 #, no-c-format
-msgid "&prompt.sudo;<command>openssl pkcs12 -export -in <replaceable>SERVER.crt</replaceable></command> \\\n"
-      "<command>-inkey <replaceable>SERVER.key</replaceable></command> \\\n"
-      "<command>-out <replaceable>SERVER.p12</replaceable> -name Server-Cert</command>"
+msgid "&prompt.sudo;<command>sudo dsctl <replaceable>INSTANCE_NAME</replaceable> tls import-ca\n"
+      "   /path/to/CA/in/PEM/format/CA.pem  <replaceable>NICKNAME_FOR_CA</replaceable>\n"
+      "</command>\n"
+      ""
 msgstr ""
 
 #. Tag: para
-#: security_ldap_ca.xml:64
+#: security_ldap_ca.xml:65
 #, no-c-format
-msgid "Replace <replaceable>SERVER.crt</replaceable> with the server certificate and <replaceable>SERVER.key</replaceable> with the private key to be bundled. Use <option>-out</option> to specify the name of the <filename>*.p12</filename> file. Use <option>-name</option> to set the friendly name, which must be <literal>Server-Cert</literal> ."
+msgid "Replace <literal>INSTANCE_NAME</literal> with the instance name of the directory server.Replace <literal>/path/to/CA/in/PEM/format/CA.pem</literal> with the full path to the CA certificate file in the PEM format.Replace <literal>NICKNAME_FOR_CA </literal> with a nickname for the CA."
 msgstr ""
 
 #. Tag: para
+#: security_ldap_ca.xml:70
+#, no-c-format
+msgid "Import the server certificate and the key for the certificate."
+msgstr ""
+
+#. Tag: screen
 #: security_ldap_ca.xml:73
 #, no-c-format
-msgid "Before you can import the file into the NSS database, you need to obtain its password. The password is stored in the <filename>pwdfile.txt</filename> file in the <filename>/etc/dirsrv/slapd-<replaceable>INSTANCE-NAME/</replaceable></filename> directory."
+msgid "&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> tls import-server-key-cert\n"
+      "  <replaceable>/path/to/SERVER.pem</replaceable> <replaceable>/path/to/SERVER.key</replaceable></command>\n"
+      "  "
 msgstr ""
 
 #. Tag: para
-#: security_ldap_ca.xml:81
+#: security_ldap_ca.xml:76
 #, no-c-format
-msgid "Now import the <replaceable>SERVER.p12</replaceable> file into your &ds389a; NSS database:"
+msgid "Replace <literal>INSTANCE_NAME</literal> with the instance name of the directory server.Replace <literal>/path/to/SERVER.pem</literal> with the full path to the server certificate in PEM format.Replace <literal>/path/to/SERVER.key</literal> with the full path to the server certificate key file in the PEM format."
+msgstr ""
+
+#. Tag: para
+#: security_ldap_ca.xml:82
+#, no-c-format
+msgid "Restart the instance so that the new certificates are used."
 msgstr ""
 
 #. Tag: screen
 #: security_ldap_ca.xml:85
 #, no-c-format
-msgid "&prompt.sudo;<command>dsctl <replaceable>INSTANCE_NAME</replaceable> tls remove-cert Self-Signed-CA</command>\n"
-      "&prompt.sudo;<command>pk12util -i <replaceable>SERVER.p12</replaceable> -d /etc/dirsrv/slapd-<replaceable>INSTANCE-NAME</replaceable>/cert9.db</command>"
+msgid "&prompt.sudo;<command>systemctl restart dirsrv@<replaceable>INSTANCE-NAME.</replaceable>.service\n"
+      "</command> "
+msgstr ""
+
+#. Tag: para
+#: security_ldap_ca.xml:87
+#, no-c-format
+msgid "Replace <literal>INSTANCE_NAME</literal> with the instance name of the directory server."
 msgstr ""
 
