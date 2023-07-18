@@ -40,7 +40,7 @@
     <para>統合型: コントローラを含めて v2 階層構造を使用する構成</para>
    </listitem>
   </itemizedlist>
-  <para>現時点での既定のモードはハイブリッド型 (&slea;&nbsp;SP3 時点) です。これにより、必要なアプリケーションに後方互換性を提供することになります。なお、統合型 v2 階層構造の場合のみ、下記の機能が追加で提供されます:</para>
+  <para>現時点での既定のモードはハイブリッド型です。これにより、必要なアプリケーションに後方互換性を提供することになります。なお、統合型 v2 階層構造の場合のみ、下記の機能が追加で提供されます:</para>
   <itemizedlist>
    <listitem>
     <para>メモリコントローラ: リクレーム保護 (memory.low としても知られています), memory.high, PSI (pressure stall information)</para>
@@ -92,16 +92,16 @@
  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
   <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
 
-  <para>&systemd; では、ユニットごとやスライスごとにタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値が設定されています (カーネル全体での制限 (詳しくは <command>/usr/sbin/sysctl kernel.pid_max</command> を参照) に対して 15% に設定しています) 。また、各ユーザのスライスはカーネル全体での制限の 33% になっています。ただし、 &slea; では異なる設定になっています。</para>
+  <para>&systemd; では、ユニットごとやスライスごとにタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値が設定されています (カーネル全体での制限 (詳しくは <command>/usr/sbin/sysctl kernel.pid_max</command> を参照) に対して 15% に設定しています) 。また、各ユーザのスライスはカーネル全体での制限の 33% になっています。ただし、 &productname; では異なる設定になっています。</para>
 
   <sect2 xml:id="sec-tasksmax-defaults">
    <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
-   <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename>/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf </filename> には、下記のような設定が書かれています:</para>
+   <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename os="sles;sled;slemicro">/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf</filename> <filename os="osuse">/usr/lib/systemd/system.conf.d/__20-defaults-SUSE.conf</filename> には、下記のような設定が書かれています:</para>
 <screen>
 [Manager]
 DefaultTasksMax=infinity
 </screen>
-   <para>もう 1 つの存在である <filename>/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf </filename> には、下記のような設定が書かれています:</para>
+   <para>もう 1 つの存在である <filename os="sles;sled;slemicro">/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf </filename> <filename os="osuse">/usr/lib/systemd/system/user-.slice.d/10-defaults.conf </filename> には、下記のような設定が書かれています:</para>
 <screen>[Slice]
 TasksMax=infinity
 </screen>
@@ -167,7 +167,7 @@ TasksMax=16284
 </screen>
    <note>
     <title>ファイル名の冒頭に付与する数値について</title>
-    <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <link xlink:href="https://documentation.suse.com/sles/15-SP3/html/SLES-all/cha-systemd.html#sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
+    <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <xref linkend="sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
    </note>
    <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
 <screen>&prompt.sudo;<command>systemctl daemon-reload</command>
@@ -190,7 +190,7 @@ TasksMax=16284
 
 <sect3 xml:id="sec-cgroups-filesystems">
 <title>ファイルシステム</title>
-<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 SLES では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
+<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 &productname; では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
    <itemizedlist mark="bullet" spacing="normal">
            <listitem>
      <para>Btrfs (v4.3)</para>
@@ -202,12 +202,12 @@ TasksMax=16284
      <para>XFS (v5.3)</para>
       </listitem>
    </itemizedlist>
-<para>&productname;&nbsp;15&nbsp;SP3 の時点では、上記のファイルシステムのいずれかを使用することができます。</para>
+<para>&productname;&nbsp;15 <phrase os="sles;sled">&nbsp;SP3</phrase> <phrase os="osuse">.3</phrase> の時点では、上記のファイルシステムのいずれかを使用することができます。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-unified-hierarchy">
 <title>統合型 cgroup 階層構造</title>
-<para>I/O の書き戻し処理を適切に集計できるようにするため、 I/O とメモリコントローラの cgroup 階層構造を同じに設定するほか、 cgroup v2 I/O コントローラを使用する必要もあります。これらを組み合わせることで、 <emphasis>統合型の</emphasis> cgroup 階層構造を持つことになります。 SLES の場合、 <option>systemd.unified_cgroup_hierarchy=1</option> をカーネルのコマンドラインオプションに指定することで、明示的に設定を行うことができます。</para>
+<para>I/O の書き戻し処理を適切に集計できるようにするため、 I/O とメモリコントローラの cgroup 階層構造を同じに設定するほか、 cgroup v2 I/O コントローラを使用する必要もあります。これらを組み合わせることで、 <emphasis>統合型の</emphasis> cgroup 階層構造を持つことになります。 &productname; の場合、 <option>systemd.unified_cgroup_hierarchy=1</option> をカーネルのコマンドラインオプションに指定することで、明示的に設定を行うことができます。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-block-io-scheduler">
@@ -221,7 +221,7 @@ mq-deadline kyber bfq [none]
 <screen>
  &prompt.root;<command>echo bfq &gt; /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 </screen>
-<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに最も適切な方法は、 udev のルール設定です (ただし &slsa; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください) 。</para>
+<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに最も適切な方法は、 udev のルール設定です (ただし &productname; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください) 。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-hierarchy">
