@@ -57,7 +57,11 @@
  </sect1>
  <sect1 xml:id="cha-tuning-kexec-internals">
   <title>&kexec; の内部構造</title>
-
+  <remark> ssarkar 07-25-2023:
+   We can reinforce the existing content with material from https://wiki.archlinux.org/title/kexec,
+   especially from the systemd-boot and troubleshooting sections. Perhaps it is better to take it up
+   when writing smart docs on these topics.
+  </remark>
   <para>&kexec; で最も重要なコンポーネントは <filename>/sbin/kexec</filename> です。 &kexec; でカーネルを読み込む際、 2 種類の方法で行うことができます:</para>
 
   <itemizedlist mark="bullet" spacing="normal">
@@ -84,6 +88,14 @@
   <para>情報採取用のカーネルを読み込むには、カーネルの起動パラメータを含める必要があります。通常は初期 RAM ファイルシステムを起動時に使用します。初期 RAM ファイルシステムを指定するには、 <option>--initrd</option> <literal>=</literal> <replaceable>ファイル名</replaceable> のようなオプションを指定します。なお、 <option>--append</option> <literal>=</literal> <replaceable>コマンドライン</replaceable> のように指定すると、起動するほうのカーネルのコマンドラインを設定することができます。</para>
 
   <para>本番用のカーネルで指定していたコマンドラインを起動するカーネル側に含めておく必要があります。このような場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline)"</replaceable> のように入力して実行することで、既存のコマンドラインをそのまま受け渡すことができます。また、オプションを追加したい場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline) オプション"</replaceable> のようにして追加のオプションを指定してもかまいません。</para>
+
+  <para>
+   For example, to load the <filename>/boot/vmlinuz-5.14.21-150500.53-default</filename> kernel image
+   with the command line of the currently running production kernel and the
+   <filename>/boot/initrd</filename> file, run the following command:
+  </para>
+<screen>&prompt.root; kexec -l /boot/vmlinuz-5.14.21-150500.53-default \
+ --append="$(cat /proc/cmdline)" --initrd=/boot/initrd</screen>
 
   <para>読み込んでおいたカーネルはいつでも解放することができます。 <option>-l</option> オプションで読み込んでおいたカーネルを解放したい場合は、 <command>kexec</command> <option>-u</option> コマンドを実行してください。また、 <option>-p</option> オプションで読み込んでおいたカーネルの場合は、 <command>kexec</command> <option>-p</option> <option>-u</option> コマンドを実行してください。</para>
  </sect1>
@@ -138,6 +150,7 @@ MaxHigh: 45824 </screen>
        <title>LUNs</title>
        <para>お使いのコンピュータで作成する予定の LUN カーネルパス数の最大値を指定します。マルチパスデバイスについては無視されるため、数から除外してください。</para>
       </formalpara>
+<screen>&prompt.user; cat /proc/scsi/scsi | grep Lun | wc -l</screen>
      </listitem>
     </itemizedlist>
    </step>
