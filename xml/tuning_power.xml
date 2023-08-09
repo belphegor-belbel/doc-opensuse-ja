@@ -327,7 +327,7 @@ CPU | C0   | Cx   | Freq || POLL | C1   | C2   | C3
      </calloutlist>
      <para>上述の (一般的な) 監視機能とは別に、アーキテクチャ依存の監視機能も使用することができます。詳しい説明については、 <command>cpupower-monitor</command> のマニュアルページをお読みください。</para>
     </example>
-    <para>個別のモニタで出力された値を比較することで関係性や依存性を見つけることができるほか、特定の処理に対してどれだけ省電力機能が正しく働いたのかを確認することもできます。たとえば <xref linkend="ex-cpupower-monitor" xrefstyle="select:label"/> では CPU <literal>0</literal> がほぼアイドル状態 (つまり <literal>Cx</literal> がほぼ 100%) になっていますが、それにも関わらず非常に高い動作周波数になってしまっています。これは CPU <literal>0</literal> と <literal>1</literal> が同じ周波数しか設定できないことによるもので、これを依存性と称しています。</para>
+    <para>個別のモニタで出力された値を比較することで関係性や依存性を見つけることができるほか、特定の処理に対してどれだけ省電力機能が正しく働いたのかを確認することもできます。たとえば <xref linkend="ex-cpupower-monitor" xrefstyle="select:label"/> では CPU <literal>0</literal> がほぼアイドル状態 (つまり <literal>Cx</literal> がほぼ 100%) になっていますが、それにも関わらず高い動作周波数になってしまっています。これは CPU <literal>0</literal> と <literal>1</literal> が同じ周波数しか設定できないことによるもので、これを依存性と称しています。</para>
    </sect2>
    <sect2 xml:id="sec-tuning-power-tools-cpupower-freq-set">
     <title><command>cpupower</command> による設定の変更</title>
@@ -522,7 +522,7 @@ powerreport-20200108-104431.html
   <screen>&prompt.sudo;<command>powertop --auto-tune</command></screen>
   <para>なお、これらの設定はシステムを再起動すると失われてしまいます。これらの設定を常に適用しておきたい場合は、 <command>sysctl</command> や <command>udev</command> を使用するか、もしくは &systemd; を利用して、起動時に必要なコマンドを実行するように設定してください。なお、 &powertop; には <filename>/usr/lib/systemd/system/powertop.service</filename> というファイルが提供されていて、これを有効化することで、システムの起動時に &powertop; の <command>--auto-tune</command> を自動的に実行することができます:</para>
   <screen>ExecStart=/usr/sbin/powertop --auto-tune</screen>
-  <para>なお、 &systemd; のサービスを有効化する場合は、期待通りの結果になるのかをよくご確認ください。たとえば USB キーボードやマウスを接続している場合、それらを省電力モードにしてしまうとキーボードやマウスが動作しなくなってしまい、面倒なことになってしまうこともあります。そのため、下記のように実行して HTML レポートからコマンドラインを抽出して、各コマンドラインを個別に試してみることをお勧めします:</para>
+  <para>なお、 &systemd; のサービスを有効化する場合は、期待通りの結果になるのかをよくご確認ください。たとえば USB キーボードやマウスを接続している場合、これらは省電力モードに設定してもすぐに復帰してしまうため、省電力が適切に働かなくなってしまいます。また、テストや設定の編集を簡単に実施するため、 <command>awk</command> を利用して HTML レポートからコマンドを抽出するとよいでしょう:</para>
   <screen>&prompt.user;awk -F '&lt;/?td ?&gt;' '/tune/ { print $4 }' <replaceable>POWERREPORT.HTML</replaceable></screen>
   <para>また、 &powertop; にはキャリブレーション (較正) モードも用意されています。このモードはバックライトや CPU 、 Wi-Fi や USB デバイス、ディスクなどに対して異なる設定を施して、バッテリー消費が最適な状態になるようにします:</para>
   <screen>&prompt.sudo;<command>powertop --calibrate</command></screen>

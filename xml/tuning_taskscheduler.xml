@@ -17,11 +17,11 @@
  <sect1 xml:id="sec-tuning-taskscheduler-intro">
   <title>概要</title>
 
-  <para>Linux カーネルは、システム内で管理されているタスク (もしくはプロセス) の管理方法を制御します。タスクスケジューラは <emphasis>プロセススケジューラ</emphasis> と呼ばれることもありますが、これは次に動作させるタスクを決定するカーネル内の構成部品を指します。複数のタスクが同時に実行できることを保証するため、システムのリソースを最大限に使用する責任を負っています。このような構造により、タスクスケジューラはマルチタスク型のオペレーティングシステムの中枢を成しています。</para>
+  <para>Linux カーネルは、システム内で管理されているタスク (もしくはプロセス) の管理方法を制御します。タスクスケジューラは <emphasis>プロセススケジューラ</emphasis> と呼ばれることもありますが、これは次に動作させるタスクを決定するカーネル内の構成部品を指します。複数のタスクが同時に実行できることを保証するため、システムのリソースを最適に使用する責任を負っています。このような構造により、タスクスケジューラはマルチタスク型のオペレーティングシステムの中枢を成しています。</para>
 
   <sect2 xml:id="sec-tuning-taskscheduler-intro-preemption">
    <title>プリエンプション</title>
-   <para>タスクスケジューリングでの考え方は非常にシンプルです。システム内に動作可能なプロセスが存在すれば、それらのうちの少なくとも 1 つを動作させます。また、システム内にプロセッサの数よりも多くの動作可能なプロセスが存在した場合、同時にそれら全てを動作させることはできません。</para>
+   <para>タスクスケジューリングでの考え方はシンプルです。システム内に動作可能なプロセスが存在すれば、それらのうちの少なくとも 1 つを動作させます。また、システム内にプロセッサの数よりも多くの動作可能なプロセスが存在した場合、同時にそれら全てを動作させることはできません。</para>
    <para>そのため、プロセスによっては一時的に停止させる (<emphasis>サスペンドさせる</emphasis>) 必要があることになり、後で実行させる必要があることになります。タスクスケジューラは、キュー内にあるどのプロセスを次に実行させるのかを決定します。</para>
    <para>上述のとおり、他の Unix 系オペレーティングシステムと同様に、 Linux は <emphasis>マルチタスク型の</emphasis> (複数のタスクを同時に動作させることのできる) オペレーティングシステムです。 Linux は <emphasis>プリエンプティブ</emphasis> マルチタスクと呼ばれる構造で、スケジューラ側でプロセスの一時停止を決定します。このような強制的な一時停止を <emphasis>プリエンプション</emphasis> (横取り等の意味) と呼びます。全ての Unix 系オペレーティングシステムは、その登場当初からプリエンプティブマルチタスクを提供しています。</para>
   </sect2>
@@ -39,7 +39,7 @@
  <sect1 xml:id="sec-tuning-taskscheduler-policy-class">
   <title>プロセスの分類</title>
 
-  <para>プロセスは通常、目的や振る舞いに応じた分類付けが行われます。明確な区切りがあるとは限りませんが、一般的には 2 種類の分類が行われます。これらの基準はそれぞれ個別に判断されるべきもので、お互いに排他関係にあるわけではありません。</para>
+  <para>プロセスは目的や振る舞いに応じて分類されます。明確な区切りがあるとは限りませんが、一般的には 2 種類の分類が行われます。これらの基準はそれぞれ個別に判断されるべきもので、お互いに排他関係にあるわけではありません。</para>
 
   <para>1 つの考え方として、 <emphasis>I/O バウンド</emphasis> と <emphasis>プロセッサバウンド</emphasis> に分類するやり方があります。</para>
 
@@ -53,7 +53,7 @@
    <varlistentry>
     <term>プロセッサバウンド</term>
     <listitem>
-     <para>その一方、 <emphasis>プロセッサバウンド</emphasis> のタスクでは、コードの実行に多くの時間を費やし、スケジューラによって一時停止させられるまで動き続けるようなものを指します。 I/O 要求を待機しているようなプロセスの動作を妨害することはありませんが、より長い時間にわたって動作し続ける特徴があります。</para>
+     <para><emphasis>プロセッサバウンド</emphasis> のタスクでは、コードの実行に多くの時間を費やし、スケジューラによって一時停止させられるまで動き続けるようなものを指します。 I/O 要求を待機しているようなプロセスの動作を妨害することはありませんが、より長い時間にわたって動作し続ける特徴があります。</para>
     </listitem>
    </varlistentry>
   </variablelist>
@@ -298,7 +298,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
     <varlistentry>
      <term><systemitem>sched_compat_yield</systemitem></term>
      <listitem>
-      <para>古い <emphasis>O(1)</emphasis> スケジューラに存在していた、放棄タスクを実行可能キューの末尾 (赤黒木で一番右側) に移動させる積極的な CPU の yielding 動作を有効にするかどうかを設定します。 <option>sched_yield(2)</option> システムコールの動作に依存するアプリケーションでは、競合の激しいリソース (たとえばロックなど) が存在するような場合、他のプロセスに対して実行のチャンスを与えることになることから、性能面での改善をもたらす場合があります。その一方、このシステムコールはコンテキストスイッチによって発生するものであるため、誤って使用してしまうと逆に性能が落ちてしまう場合があります。そのため、性能面での改善が確実である場合にのみ設定してください。既定値は <literal>0</literal> です。</para>
+      <para>古い <emphasis>O(1)</emphasis> スケジューラに存在していた、放棄タスクを実行可能キューの末尾 (赤黒木で一番右側) に移動させる積極的な CPU の yielding 動作を有効にするかどうかを設定します。 <option>sched_yield(2)</option> システムコールの動作に依存するアプリケーションでは、競合の激しいリソース (たとえばロックなど) が存在するような場合、他のプロセスに対して実行のチャンスを与えることになることから、性能面での改善をもたらす場合があります。ただし、このシステムコールはコンテキストスイッチによって発生するものであるため、誤って使用してしまうと逆に性能が落ちてしまう場合があります。そのため、性能面での改善が確実である場合にのみ設定してください。既定値は <literal>0</literal> です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -314,7 +314,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
       <para>CPU バウンドのタスクに対して、ターゲットとするプリエンプション遅延を指定します。この値を増やすと、 CPU バウンドのタスクのタイムスライスが長くなります。タスクのタイムスライスは、スケジューリングの間隔と重み付けの設定から、下記のように公平な共有が行われます:</para>
       <para><replaceable>タイムスライス</replaceable> = <replaceable>スケジュール間隔</replaceable> * (<replaceable>タスクの重み</replaceable> / <replaceable>実行キュー内にあるタスクの重みの合計</replaceable>)</para>
       <para>タスクの重みはタスクの nice レベルとスケジューリングポリシーによって決まります。 SCHED_OTHER の場合、最小のタスクの重みは 15 で、これは nice 値 19 に対応します。最大のタスクの重みは 88761 で、これは nice 値 -20 に対応します。</para>
-      <para>タイムスライスは負荷が増えるほど小さくなります。実行可能なタスクの数が <systemitem>sched_latency_ns</systemitem> / <systemitem>sched_min_granularity_ns</systemitem>  を越えると、タイムスライスは <replaceable>実行可能なタスクの数</replaceable> * <systemitem>sched_min_granularity_ns</systemitem> になります。それより前に、タイムスライスは <systemitem>sched_latency_ns</systemitem> に等しくなります。</para>
+      <para>タイムスライスは負荷が増えるほど小さくなります。実行可能なタスクの数が <systemitem>sched_latency_ns</systemitem> / <systemitem>sched_min_granularity_ns</systemitem> を越えると、タイムスライスは <replaceable>実行可能なタスクの数</replaceable> * <systemitem>sched_min_granularity_ns</systemitem> になります。それより前に、タイムスライスは <systemitem>sched_latency_ns</systemitem> に等しくなります。</para>
       <para>この値は、実行権情報の計算のために、休眠中のタスクが実行中であると見なされる最大の時間幅を指定することにもなります。また、この値を増やすことで、動作中のタスクが消費する可能性のある時間を増やすことになります。そのため、 CPU バウンドのタスクに対しては、スケジューラによる遅延を増やすことになります。既定値は <literal>6000000</literal> [ナノ秒] です。</para>
      </listitem>
     </varlistentry>
@@ -349,7 +349,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
     <varlistentry>
      <term><systemitem>sched_rt_runtime_us</systemitem></term>
      <listitem>
-      <para>sched_rt_period_us の間にリアルタイムタスクに割り当てられる時間単位です。 -1 を設定すると、リアルタイムタスクの帯域強制を行わなくなります。既定では、リアルタイムタスクは 95 [%CPU/sec] を消費するため、 5 [%CPU/sec] もしくは 0.05s が SCHED_OTHER のタスクに残されることになります。既定値は <literal>950000</literal> [マイクロ秒] です。</para>
+      <para>sched_rt_period_us の間にリアルタイムタスクに割り当てられる時間単位です。 -1 を設定すると、リアルタイムタスクの帯域強制を行わなくなります。既定では、リアルタイムタスクは 95 [%CPU/sec] を消費するため、 5 [%CPU/sec] もしくは 0.05 [s] が SCHED_OTHER のタスクに残されることになります。既定値は <literal>950000</literal> [マイクロ秒] です。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -497,7 +497,7 @@ numa_faults_memory, 1, 0, 0, 0, -1
     <para>Linux のプロセススケジューリングに関する概要については、 Robert Love 氏による <citetitle>Linux Kernel Development</citetitle> (ISBN-10: 0-672-32512-8) (英語) がよいでしょう。詳しくは <link xlink:href="https://www.informit.com/articles/article.aspx?p=101760"/> をご覧ください。</para>
    </listitem>
    <listitem>
-    <para>Linux カーネルの内部に関する非常に広範囲な概要を知りたい場合は、 Daniel P. Bovet 氏と Marco Cesati 氏による <citetitle>Understanding the Linux Kernel</citetitle> (ISBN 978-0-596-00565-8) (英語) がよいでしょう。</para>
+    <para>Linux カーネルの内部に関する広範囲な概要を知りたい場合は、 Daniel P. Bovet 氏と Marco Cesati 氏による <citetitle>Understanding the Linux Kernel</citetitle> (ISBN 978-0-596-00565-8) (英語) がよいでしょう。</para>
    </listitem>
    <listitem>
     <para>タスクスケジューラに関する技術的な情報については、 <filename>/usr/src/linux/Documentation/scheduler</filename> 内にあるファイルをお読みください。</para>

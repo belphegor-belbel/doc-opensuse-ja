@@ -85,7 +85,7 @@
 
   <para>情報採取用のカーネルは専用の領域に読み込まれ、カーネルがクラッシュするのを待ちます。いったんクラッシュが発生すると、 &kdump; は情報採取用のカーネルに制御を移します。これは、クラッシュした時点で、元のカーネルは信頼できる状態ではなくなるためです。これはつまり、 &kdump; 自身も失敗する可能性があることを示しています。</para>
 
-  <para>情報採取用のカーネルを読み込むには、カーネルの起動パラメータを含める必要があります。通常は初期 RAM ファイルシステムを起動時に使用します。初期 RAM ファイルシステムを指定するには、 <option>--initrd</option> <literal>=</literal> <replaceable>ファイル名</replaceable> のようなオプションを指定します。なお、 <option>--append</option> <literal>=</literal> <replaceable>コマンドライン</replaceable> のように指定すると、起動するほうのカーネルのコマンドラインを設定することができます。</para>
+  <para>情報採取用のカーネルを読み込むには、カーネルの起動パラメータを含める必要があります。ほとんどの場合、初期 RAM ファイルシステムを起動時に使用します。初期 RAM ファイルシステムを指定するには、 <option>--initrd</option> <literal>=</literal> <replaceable>ファイル名</replaceable> のようなオプションを指定します。なお、 <option>--append</option> <literal>=</literal> <replaceable>コマンドライン</replaceable> のように指定すると、起動するほうのカーネルのコマンドラインを設定することができます。</para>
 
   <para>なお、本番用のカーネルで指定していたコマンドラインを含めておく必要があります。このような場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline)"</replaceable> のように入力して実行することで、既存のコマンドラインをそのまま受け渡すことができます。また、オプションを追加したい場合は、 <option>--append</option> <literal>=</literal> <replaceable>"$(cat /proc/cmdline) オプション"</replaceable> のようにして追加のオプションを指定してもかまいません。</para>
 
@@ -120,7 +120,7 @@ MaxHigh: 45824 </screen>
     <para>上記の <literal>Low</literal> および <literal>High</literal> の値を記録しておきます。</para>
     <note>
      <title><literal>Low</literal> と <literal>High</literal> の値の意味について</title>
-     <para>&x86-64; コンピュータの場合、 <literal>High</literal> は利用可能な全てのメモリを予約する意味になり、 <literal>Low</literal> は DMA32 ゾーン内のメモリ (つまり 4 GB 以下の領域) を予約する意味になります。 <remark> Petr Tesarik says in bsc#948565 that High means "all memory". This is not completely true in SLE 12 SP1 RC1, but fixed for SLE 12 SP1 RC2. - sknorr, 2015-10-05 </remark></para>
+     <para>&x86-64; コンピュータの場合、 <literal>High</literal> は利用可能な全てのメモリを予約する意味になり、 <literal>Low</literal> は DMA32 ゾーン内のメモリ (つまり 4 GB 以下の領域) を予約する意味になります。 <remark> Petr Tesarik says in bsc#948565 that High means "all memory". This is not true in SLE 12 SP1 RC1, but fixed for SLE 12 SP1 RC2. - sknorr, 2015-10-05 </remark></para>
      <para><remark>The following is confusing, but probably true ( https://bugzilla.suse.com/show_bug.cgi?id=948565#c6 ). - sknorr, 2015-10-05 </remark> SIZE_LOW は 32 ビットのみに対応したデバイスで必要なメモリ量を表します。カーネルは DMA32 のバウンスバッファに対して 64M を割り当てますが、お使いのサーバ内に 32 ビットのみに対応したデバイスが存在しない場合は、 <literal>SIZE_LOW</literal> の値は既定の 72M で問題なく動作するはずです。ただし、 NUMA マシンの場合は例外で、より多くの <literal>Low</literal> が必要となる場合があります。そのため、通常のカーネルの割り当てで <literal>Low</literal> メモリを使用しないようにするため、 &kdump; カーネルのパラメータに <literal>numa=off</literal> を設定してもかまいません。</para>
     </note>
    </step>
@@ -246,7 +246,7 @@ MaxHigh: 45824 </screen>
 
   <tip>
    <title>&zseries; における未使用および無効化された CCW デバイスの除外について</title>
-   <para>利用可能なデバイスの数にもよりますが、 <option>crashkernel</option> カーネルパラメータで指定したメモリ量が不足する場合があります。不足した場合は、メモリを増やす代わりに、カーネル側で見えるデバイスの量を制限することができます。これにより、 "crashkernel" の設定で必要なメモリ量を減らすことができます。</para>
+   <para>利用可能なデバイスの数にもよりますが、 <option>crashkernel</option> カーネルパラメータで指定したメモリ量が不足する場合があります。不足した場合は、メモリを増やす代わりに、カーネル側で見えるデバイスの量を制限することができます。これにより、 <emphasis>crashkernel</emphasis> の設定で必要なメモリ量を減らすことができます。</para>
    <orderedlist>
     <listitem>
      <para>デバイスを無視したい場合は、 <command>cio_ignore</command> ツールを利用することで、現時点で有効化されているデバイスや使用しているデバイスを除き、それ以外の全てのデバイスを無視する設定を生成することができます。</para>
@@ -364,7 +364,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
    </procedure>
    <important>
     <title>カーネルダンプのサイズについて</title>
-    <para><literal>KDUMP_KEEP_OLD_DUMPS</literal> オプションは、カーネルダンプの保存数 (既定値: 5) を指定するためのものです。圧縮を行わない場合、ダンプのサイズは最大で物理メモリのサイズそのものになります。そのため、 <filename>/var</filename> のパーティションに対しては、十分な空き領域を用意しておいてください。</para>
+    <para><literal>KDUMP_KEEP_OLD_DUMPS</literal> オプションは、カーネルダンプの保存数 (既定値: 5) を指定するためのものです。圧縮を行わない場合、ダンプのサイズは最大で物理メモリ (RAM) のサイズそのものになります。そのため、 <filename>/var</filename> のパーティションに対しては、十分な空き領域を用意しておいてください。</para>
    </important>
    <para>情報採取用のカーネルが起動して、クラッシュしたほうのカーネルのメモリ状態をファイルシステムに保存します。保存先は <literal>KDUMP_SAVEDIR</literal> オプションで設定します (既定値: <filename>/var/crash</filename>) 。 <literal>KDUMP_IMMEDIATE_REBOOT</literal> を <literal>yes</literal> に設定していると、本番用のカーネルを利用してシステムを自動的に再起動します。再起動が終わったらログインを行い、 <filename>/var/crash</filename> 内にダンプファイルが作成されていることを確認してください。</para>
   </sect2>
@@ -409,7 +409,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
    <para><guimenu>ダンプ先</guimenu> ウインドウでは、ダンプの保存先の種類を選択したあと、保存先の場所を指定します。 FTP や SSH などのネットワークプロトコルを指定した場合は、必要なアクセス情報についても指定する必要があります。</para>
    <tip>
     <title>他のアプリケーションとのダンプディレクトリ共有について</title>
-    <para>&kdump; のダンプの保存先と他のアプリケーションのダンプ保存先を同じパスに設定することもできます。この場合、古いダンプファイルの削除処理では、他のアプリケーションのダンプが除外され、削除されなくなります。</para>
+    <para>&kdump; のダンプの保存先と他のアプリケーションのダンプ保存先を同じパスに設定することもできます。この場合、古いダンプファイルの削除処理では、他のアプリケーションのダンプが除外され、削除は行われません。</para>
    </tip>
    <para>&kdump; に対して、そのイベントが発生した際に電子メールで通知を行いたい場合は、 <guimenu>電子メール通知</guimenu> のウインドウ内で設定を行います。また、必要であれば <guimenu>熟練者向け設定</guimenu> で必要な設定を行います。設定が完了したら <guimenu>OK</guimenu> を押すことで、設定が完了します。</para>
   </sect2>
@@ -483,7 +483,7 @@ cio_ignore=all,!da5d,!f500-f502</screen>
 
   <para>上記のような理由から、 <command>crash</command> ユーティリティが作成されました。このユーティリティはクラッシュダンプを解析するだけでなく、動作中のシステムもデバッグすることができます。また、 Linux カーネルのデバッグ専用の機能が用意され、高度なデバッグを行いたい場合に最適な仕組みです。</para>
 
-  <para>Linux カーネルをデバッグするには、まずデバッグ情報パッケージをインストールしておく必要があります。お使いのシステムにインストールされているかどうかを確認するには、下記のコマンドを入力して実行します:</para>
+  <para>Linux カーネルをデバッグするには、まずデバッグ情報パッケージをもインストールしておく必要があります。お使いのシステムにインストールされているかどうかを確認するには、下記のコマンドを入力して実行します:</para>
 
 <screen>&prompt.user;<command>zypper</command> se kernel | <command>grep</command> debug</screen>
 
@@ -612,7 +612,7 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
 <prompt>crash&gt; </prompt>
 </screen>
     <para>これで何が起こったのかを知ることができます。 bash シェルの内蔵コマンドである <command>echo</command> が、 <filename>/proc/sysrq-trigger</filename> に文字を送信したために、クラッシュが発生していることになります。その文字に対応するハンドラが検出されると、 <literal>crash_kexec()</literal> を実行しています。この関数は <literal>panic()</literal> と呼ばれ、ここで &kdump; がダンプを保存しています。</para>
-    <para>GDB の基本的なコマンドと <command>bt</command> の拡張版に加えて、 crash ユーティリティには Linux カーネルの構造に関連したその他のコマンドも用意されています。これらのコマンドは Linux カーネルの内部データ構造を理解し、それを人間にとって読みやすい形式で表示します。たとえばクラッシュが発生した時点でのタスクの一覧は、 <command>ps</command> で表示することができます。また <command>sym</command> コマンドは、全てのカーネルシンボルの一覧とアドレスを表示したり、指定したシンボルに対して値を取得したりすることもできます。さらに <command>files</command> コマンドでは、プロセスが開いている全てのファイルディスクリプタを表示することができます。 <command>kmem</command> では、カーネルのメモリ使用率に関する詳細を表示することができます。 <command>vm</command> では、個別のページマッピングのレベルに至るまで、プロセスの仮想メモリを調査することができます。分かりやすいコマンドの一覧は非常に多く用意されているほか、様々なオプションを受け付けるようになっています。</para>
+    <para>GDB の基本的なコマンドと <command>bt</command> の拡張版に加えて、 crash ユーティリティには Linux カーネルの構造に関連したその他のコマンドも用意されています。これらのコマンドは Linux カーネルの内部データ構造を理解し、それを人間にとって読みやすい形式で表示します。たとえばクラッシュが発生した時点でのタスクの一覧は、 <command>ps</command> で表示することができます。また <command>sym</command> コマンドは、全てのカーネルシンボルの一覧とアドレスを表示したり、指定したシンボルに対して値を取得したりすることもできます。さらに <command>files</command> コマンドでは、プロセスが開いている全てのファイルディスクリプタを表示することができます。 <command>kmem</command> では、カーネルのメモリ使用率に関する詳細を表示することができます。 <command>vm</command> では、個別のページマッピングのレベルに至るまで、プロセスの仮想メモリを調査することができます。分かりやすいコマンドの一覧は多く用意されているほか、様々なオプションを受け付けるようになっています。</para>
     <para>上述のコマンドは、一般的な Linux コマンドである <command>ps</command> や <command>lsof</command> の機能に対応しているものです。なお、デバッガでイベントの正確な順序を確認したい場合は、 GDB の使用方法について知る必要があるほか、強固なデバッグスキルを必要とします。この種類の話題は本文書の範疇外にあたるものであるため、本書では説明していません。これに加えて、 Linux カーネルそのものの知識も必要となります。こちらについては、本文書の末尾にある参照情報をご確認ください。</para>
    </sect3>
   </sect2>
@@ -622,9 +622,9 @@ PID: 9446   TASK: ffff88003a57c3c0  CPU: 1   COMMAND: "bash"
 
   <para>&kdump; の設定は <filename>/etc/sysconfig/kdump</filename> 内に保存されています。設定は &yast; を利用しても行うことができます。 &kdump; の設定オプションは、 &yastcc; 内の <menuchoice><guimenu>システム</guimenu> <guimenu>カーネル Kdump</guimenu></menuchoice> 内に存在しています。下記の &kdump; オプションが用意されています。</para>
 
-  <para>カーネルダンプの保存先は、 <option>KDUMP_SAVEDIR</option> オプションで指定します。ただし、カーネルダンプのサイズは非常に大きくなることに注意してください。ディスクの空き容量から予想されるダンプファイルのサイズを引いた値が、 <option>KDUMP_FREE_DISK_SIZE</option> よりも少ない場合、 &kdump; はダンプの保存を行わなくなります。また、 <option>KDUMP_SAVEDIR</option> では、 URL 形式にも対応しています。 URL 形式は <replaceable>プロトコル</replaceable>://<replaceable>仕様</replaceable> の形式で指定し、 <replaceable>プロトコル</replaceable> は <option>file</option> , <option>ftp</option> , <option>sftp</option> , <option>nfs</option> , <option>cifs</option> のいずれかを指定します。 <replaceable>仕様</replaceable> はそれぞれのプロトコルに従った値を指定します。たとえばカーネルダンプを FTP サーバ内に保存したい場合は、 <option>ftp://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@ftp.example.com:123/var/crash</option> のように指定します。</para>
+  <para>カーネルダンプの保存先は、 <option>KDUMP_SAVEDIR</option> オプションで指定します。ただし、カーネルダンプのサイズは大きくなることに注意してください。ディスクの空き容量から予想されるダンプファイルのサイズを引いた値が、 <option>KDUMP_FREE_DISK_SIZE</option> よりも少ない場合、 &kdump; はダンプの保存を行わなくなります。また、 <option>KDUMP_SAVEDIR</option> では、 URL 形式にも対応しています。 URL 形式は <replaceable>プロトコル</replaceable>://<replaceable>仕様</replaceable> の形式で指定し、 <replaceable>プロトコル</replaceable> は <option>file</option> , <option>ftp</option> , <option>sftp</option> , <option>nfs</option> , <option>cifs</option> のいずれかを指定します。 <replaceable>仕様</replaceable> はそれぞれのプロトコルに従った値を指定します。たとえばカーネルダンプを FTP サーバ内に保存したい場合は、 <option>ftp://<replaceable>ユーザ名</replaceable>:<replaceable>パスワード</replaceable>@ftp.example.com:123/var/crash</option> のように指定します。</para>
 
-  <para>カーネルダンプは一般に巨大なものであり、解析には必要のない多数のページをも含んでしまっています。 <option>KDUMP_DUMPLEVEL</option> オプションを指定することで、これらの不要なページを省略することができます。設定可能な値は 0 から 31 までで、 <replaceable>0</replaceable> を指定すると最も巨大なダンプファイルに、 <replaceable>31</replaceable> を指定すると最も小さなダンプファイルになります。設定可能な値について、詳しくは <command>kdump</command> のマニュアルページ ( <command>man 7 kdump</command> ) をお読みください。</para>
+  <para>カーネルダンプは巨大なものであり、解析には必要のない多数のページをも含んでしまっています。 <option>KDUMP_DUMPLEVEL</option> オプションを指定することで、これらの不要なページを省略することができます。設定可能な値は 0 から 31 までで、 <replaceable>0</replaceable> を指定すると最も巨大なダンプファイルに、 <replaceable>31</replaceable> を指定すると最も小さなダンプファイルになります。設定可能な値について、詳しくは <command>kdump</command> のマニュアルページ ( <command>man 7 kdump</command> ) をお読みください。</para>
 
   <para>場合によっては、カーネルダンプのサイズを小さくしておいたほうが都合のよい場合があります。たとえばネットワーク経由でダンプを転送するような場合や、ダンプディレクトリのディスク領域を節約したい場合などがそれにあたります。この場合は、 <option>KDUMP_DUMPFORMAT</option> の値を <literal>compressed</literal> に設定してください。なお、 <command>crash</command> ユーティリティでは、圧縮されたダンプを動的に展開して使用することができます。</para>
 

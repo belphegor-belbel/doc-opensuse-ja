@@ -31,7 +31,7 @@
 
   <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
 
-  <para>カーネルが提供する cgroup の API には 2 種類のものが存在します。それに加えて、異なる API を提供する複数の cgroup 階層構造が存在しています。これらの組み合わせのうち、一般的に使用される組み合わせは下記の 2 種類になります:</para>
+  <para>カーネルが提供する cgroup の API には v1 と v2 と呼ばれる 2 種類のものが存在しています。それに加えて、異なる API を提供する複数の cgroup 階層構造が存在しています。これらの組み合わせのうち、一般的に使用される組み合わせは下記の 2 種類になります:</para>
   <itemizedlist>
    <listitem>
     <para>ハイブリッド型: コントローラ以外は v2, コントローラは v1 の階層構造を使用する構成</para>
@@ -59,7 +59,7 @@
   </listitem>
  </itemizedlist>
    <para>いずれかのモードのみを設定できます。</para>
-   <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください (&grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください) 。</para>
+   <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。 &grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
  </sect1>
 
  <sect1 xml:id="sec-tuning-cgroups-accounting">
@@ -108,7 +108,7 @@ TasksMax=infinity
    <para>DefaultTasksMax の値を確認するには、 <command>systemctl</command> を下記のように入力して実行します:</para>
 <screen>&prompt.user;<command>systemctl show --property DefaultTasksMax</command>
 DefaultTasksMax=infinity</screen>
-   <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、必要であれば設定を変更してください。</para>
+   <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、システムのクラッシュを防ぐために必要であれば設定を変更してください。</para>
   </sect2>
 
   <sect2 xml:id="sec-edit-taskmax-default">
@@ -160,7 +160,7 @@ DefaultTasksMax=256
 
   <sect2>
    <title>ユーザに対する既定の <literal>TasksMax</literal> 制限</title>
-   <para>ユーザに対する既定の制限値は十分に高く設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
+   <para>ユーザに対する既定の制限値は高めに設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
 <screen>
 [Slice]
 TasksMax=16284
@@ -221,7 +221,7 @@ mq-deadline kyber bfq [none]
 <screen>
  &prompt.root;<command>echo bfq &gt; /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 </screen>
-<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに最も適切な方法は、 udev のルール設定です (ただし &productname; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください) 。</para>
+<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに適切な方法は、 udev のルール設定です。ただし &productname; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください。</para>
 </sect3>
 
 <sect3 xml:id="sec-cgroups-hierarchy">
@@ -258,7 +258,7 @@ r
 
 <sect2 xml:id="sec-cgroups-control-behavior">
 <title>I/O 制御の動作説明</title>
-<para>下記は I/O 制御の動作と、様々な状況下において何を期待すべきかについて説明しています。</para>
+<para>下記は I/O 制御の動作と、異なる状況下において何を期待すべきかについて説明しています。</para>
 <itemizedlist>
 <listitem>
 <para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>

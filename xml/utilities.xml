@@ -122,7 +122,7 @@ procs -----------memory----------- ---swap-- -----io---- -system-- -----cpu-----
     <varlistentry>
      <term><guimenu>si / so</guimenu></term>
      <listitem>
-      <para>スワップ領域からメモリ ( <literal>si</literal> ) 、もしくはメモリからスワップ領域 ( <literal>so</literal> ) に移動されたメモリ量を、キロバイト毎秒で表した値です。 <literal>so</literal> の値が長時間にわたって高いままである場合、アプリケーション側でメモリリーク (漏洩) が発生している可能性があり、そのメモリリークによってメモリがスワップ領域内に書き込まれている可能性があります。また <literal>si</literal> の値が長時間にわたって高いままである場合、非常に長い時間アプリケーションが休眠状態にあって、後から活動状態に戻ったことを表しています。 <literal>si</literal> と <literal>so</literal> の値が両方とも長時間にわたって高いままである場合は、スワップ領域が多用されていることになりますので、アプリケーションの作業に必要なメモリのほうが実際のメモリ量よりも大きいことを示しています。</para>
+      <para>スワップ領域からメモリ ( <literal>si</literal> ) 、もしくはメモリからスワップ領域 ( <literal>so</literal> ) に移動されたメモリ量を、キロバイト毎秒で表した値です。 <literal>so</literal> の値が長時間にわたって高いままである場合、アプリケーション側でメモリリーク (漏洩) が発生している可能性があり、そのメモリリークによってメモリがスワップ領域内に書き込まれている可能性があります。また <literal>si</literal> の値が長時間にわたって高いままである場合は、長い時間アプリケーションが休眠状態にあって、後から活動状態に戻ったことを表しています。 <literal>si</literal> と <literal>so</literal> の値が両方とも長時間にわたって高いままである場合は、スワップ領域が多用されていることになりますので、アプリケーションの作業に必要なメモリのほうが実際のメモリ量よりも大きいことを示しています。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -197,7 +197,7 @@ procs -----------memory----------- ---swap-- -----io---- -system-- -----cpu-----
 
    <sect3 xml:id="sec-util-multi-sar-report">
     <title><command>sar</command> によるレポートの生成</title>
-    <para>リアルタイムなレポートを生成したい場合は、 <command>sar</command> コマンドに間隔 (秒単位) と回数を指定してください。また、指定したファイルからレポートを生成したい場合は、間隔と回数の代わりに <option>-f</option> でファイル名を指定してください。ファイル名も間隔と回数も指定しない場合、 <command>sar</command> は <filename>/var/log/sa/sa<replaceable>DD</replaceable></filename> からレポートを生成しようとします。ここで、 <replaceable>DD</replaceable> は今日の月内日を表します。これは <command>sadc</command> (System Activity Data Collector) コマンドがデータを書き込む際の既定の場所として決められているものです。複数のファイルを使用したい場合は、 -f オプションを複数回指定してください。</para>
+    <para>リアルタイムなレポートを生成したい場合は、 <command>sar</command> コマンドに間隔 (秒単位) と回数を指定してください。また、指定したファイルからレポートを生成したい場合は、間隔と回数の代わりに <option>-f</option> でファイル名を指定してください。ファイル名も間隔と回数も指定しない場合、 <command>sar</command> は <filename>/var/log/sa/sa<replaceable>DD</replaceable></filename> からレポートを生成しようとします。ここで、 <replaceable>DD</replaceable> は今日の月内日を表します。これは <command>sadc</command> (System Activity Data Collector) コマンドがデータを書き込む際の既定の場所として決められているものです。複数のファイルを使用したい場合は、 <option>-f</option> オプションを複数回指定してください。</para>
 <screen>sar 2 10                         # リアルタイムなレポートを生成 (2 秒間隔で 10 回)
 sar -f ~/reports/sar_2014_07_17  # sar_2014_07_17 ファイルからレポートを生成
 sar                              # /var/log/sa/ 内にある本日分のデータからレポートを生成
@@ -357,16 +357,9 @@ sdc               0.02         0.14         0.00      13641         37</screen>
     </listitem>
    </itemizedlist>
    <note>
-    <title><command>sar</command> データの可視化</title>
-    <para>
-      The <command>iostat</command> command might not show all controllers
-      that are listed by <command>nvme list-subsys</command>. By default,
-      <command>iostat</command> filters out all block devices with no I/O.
-      To make <command>iostat</command> show <emphasis>all</emphasis>
-      devices, use the following command:
-    </para>
-<screen>&prompt.user;nice
-0</screen>
+    <title>マルチパス環境での <command>iostat</command> の使用について</title>
+    <para><command>iostat</command> を利用しても、 <command>nvme list-subsys</command> で一覧表示されるコントローラを全て表示するわけではありません。既定では <command>iostat</command> は、 I/O の発生していないブロックデバイスを表示しないためです。 <command>iostat</command> で <emphasis>全て</emphasis> のデバイスを表示するようにしたい場合は、下記のようなコマンドを実行してください:</para>
+<screen>&prompt.user; iostat -p ALL</screen>
   </note>
   </sect2>
 
@@ -777,7 +770,7 @@ cpuid     cpu visual
      <para><keycap>Q</keycap> を押すと <command>iotop</command> を終了することができます。</para>
     </listitem>
     <listitem>
-     <para>上記以外のキーを押すと、更新処理を行います。</para>
+     <para>上記以外のキーを押すと、強制的な更新処理を行います。</para>
     </listitem>
    </itemizedlist>
    <para>下記は <command>iotop --only</command> の出力例で、ここでは <command>find</command> と <command>emacs</command> が動作しています:</para>
@@ -913,7 +906,7 @@ DirectMap2M:     2017280 kB</screen>
     <varlistentry>
      <term><guimenu>Active</guimenu> , <guimenu>Active(anon)</guimenu> , <guimenu>Active(file)</guimenu></term>
      <listitem>
-      <para>必要とされたり明示的に指定されたりしない限り回収されることのない、使用中のメモリ量。 <guimenu>Active</guimenu> は <guimenu>Active(anon)</guimenu> と <guimenu>Active(file)</guimenu> の合計値です:</para>
+      <para>どうしても必要な場合や明示的に指定されたりした場合以外には回収されることのない、使用中のメモリ量。 <guimenu>Active</guimenu> は <guimenu>Active(anon)</guimenu> と <guimenu>Active(file)</guimenu> の合計値です:</para>
       <itemizedlist>
        <listitem>
         <para><guimenu>Active(anon)</guimenu> はスワップ領域に結びつけられているメモリ量です。この量には、コピーオンライト後のプライベート, 共有匿名マッピング, プライベートファイルページが含まれています。</para>
@@ -1413,7 +1406,7 @@ b7f76000-b7f78000 rw-p 00013000 03:03 8828       /lib/ld-2.3.6.so
 bfd61000-bfd76000 rw-p bfd61000 00:00 0          [stack]
 ffffe000-fffff000 ---p 00000000 00:00 0          [vdso]</screen>
 
-  <para>/proc ファイルシステムを利用することで、数多くの情報を取得することができます。主なファイルとその内容を下記に示します:</para>
+  <para><filename>/proc</filename> ファイルシステムを利用することで、数多くの情報を取得することができます。主なファイルとその内容を下記に示します:</para>
 
   <variablelist>
    <varlistentry>
@@ -2059,7 +2052,7 @@ LINE2:free_memory#FF0000 \
 
   <sect2 xml:id="sec-util-rrdtool-moreinfo">
    <title>さらなる情報</title>
-   <para>RRDtool は非常に複雑なツールであり、多数のサブコマンドやコマンドラインオプションが用意されています。それらの中には分かりやすいものもある一方、期待するような出力を行おうとすると、いろいろ試行錯誤を行って調整する必要に迫られることもあります。</para>
+   <para>RRDtool は複雑なツールであり、多数のサブコマンドやコマンドラインオプションが用意されています。それらの中には分かりやすいものもある一方、期待するような出力を行おうとすると、いろいろ試行錯誤を行って調整する必要に迫られることもあります。</para>
    <para>基本的な情報のみを提供している RRDtool のマニュアルページ ( <command>man 1 rrdtool</command> ) とは別に、 <link xlink:href="https://oss.oetiker.ch/rrdtool/">RRDtool home page</link> (英語のみ) をご覧になることをお勧めします。ここには <command>rrdtool</command> コマンドやそのサブコマンドに対する詳細な <link xlink:href="https://oss.oetiker.ch/rrdtool/doc/index.en.html">ドキュメンテーション</link> <!-- NOTE: translation link --> (日本語訳が <link xlink:href="http://agj.at/~fors/sysworks/data/rrdtool/">RRDtool マニュアル訳</link> などにあります) が用意されています。また <link xlink:href="https://oss.oetiker.ch/rrdtool/tut/index.en.html">チュートリアル</link> (英語) には、一般的な RRDtool の作業手順が示されています。</para>
    <para>ネットワークトラフィックの監視を行いたい場合は、 <link xlink:href="https://oss.oetiker.ch/mrtg/">MRTG (Multi Router Traffic Grapher)</link> (英語) プロジェクトをご覧になるとよいでしょう。 MRTG は、様々なネットワークデバイスから収集した情報をグラフ化することができます。この中でも RRDtool を使用しています。</para>
   </sect2>
