@@ -212,7 +212,9 @@
 SLE-12:         vm.dirty_ratio = 20</screen>
    <para>&sle; 12 で低い割合が設定されていることの利点は、メモリが枯渇した場合のページ回収と割り当てをできる限り素早く処理し、古い dirty ページを素早く見つけて廃棄することができる点にあります。もう 1 つの利点としては、システム内の全てのデータは同期しておかなければならず、既定では &sle; 11 SP3 よりも &sle; 12 のほうがより早く終わることになる点です。ほとんどの処理では、アプリケーション側から <literal>fsync()</literal> が呼ばれたり、その制限に引っかかるほど素早く dirty になることがありませんので、このような変更が行われていることに気がつくことはありません。</para>
    <para>もしも例外的なアプリケーションをお使いの場合で、個の変更による影響を受けてしまっているような場合、書き込み時に予期せずアプリケーションの動きが遅くなってしまうことがあります。この場合、 dirty なデータの速度が制限されていることを確認するため、 <literal>/proc/<replaceable>アプリケーションのプロセス_ID</replaceable>/stack</literal> を監視しておき、アプリケーションが <literal>balance_dirty_pages_ratelimited</literal> 内で時間を費やしていることを確認してください。このような現象に当てはまる場合で、かつそれが問題となっている場合、 <literal>vm.dirty_ratio</literal> を 40 に戻すことで、従来の &sle; 11 SP3 の動作に戻すことをお勧めします。</para>
-   <para>ただし、全体としての I/O スループットはこの設定とは無関係であることに注意してください。違いは I/O がキュー内に存在するタイミングだけです。</para>
+   <important>
+    <para>ただし、全体としての I/O スループットはこの設定とは無関係であることに注意してください。違いは I/O がキュー内に存在するタイミングだけです。</para>
+   </important>
    <para>下記の例は <command>dd</command> コマンドを利用して、メモリの 30% 分をディスクに書き込むことで、 <literal>vm.dirty_ratio</literal> の変更による影響を受けられるようにした場合の例です:</para>
 <screen>&prompt.root;MEMTOTAL_MBYTES=`free -m | grep Mem: | awk '{print $2}'`
 &prompt.root;sysctl vm.dirty_ratio=40
