@@ -942,51 +942,31 @@ cd path                            Change remote directory to 'path'
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-security-ssh-fail2ban">
-  <title>Stopping SSH Brute Force Attacks with Fail2Ban</title>
-  <para> An SSH brute force attack involves repeat trials of user name and
-    password combinations until the attacker gains access to the remote server.
-    The attacker uses automated tools that test various user name and password combinations
-    to compromise a server.
- </para>
- <para>You can use Fail2Ban software to limit intrusion attempts.
-  Fail2Ban scans the system logs to detect attacks and trigger an action,
-  such as blocking the IPs via the firewall. Fail2Ban is used only to protect
-  services that require a user name and password authentication.</para>
+  <title>fail2ban による SSH ブルートフォース攻撃の抑止</title>
+  <para>SSH ブルートフォース攻撃とは、様々なユーザ名とパスワードの組み合わせでログインを試すことにより、ネットワーク経由でサーバへの不正侵入を試みるものです。攻撃者は自動化されたツールを利用して侵入を試みるため、膨大な数のユーザ名とパスワードの組み合わせを試すことができてしまいます。</para>
+ <para>このような不正侵入を防ぐには、 fail2ban と呼ばれるソフトウエアを使用します。 fail2ban は定期的にシステムログを検索して攻撃を検知し、ファイアウオールで接続元の IP アドレスからのアクセスを禁止するなど、その攻撃内容に応じた処理を実施します。なお fail2ban は、ユーザ名とパスワードを使用するサービスを保護するためだけに使用することができます。</para>
   <sect2 xml:id="sec-ssh-what-fail2ban">
-  <title>What is Fail2Ban?</title>
-  <para>Fail2Ban scans the log files in <filename>/var/log/apache/error_log</filename>
-    and bans the IPs that indicate malicious signs, such as too many password attempts etc.
-    You can then use Fail2Ban to update firewall rules to reject the IP addresses
-    for a specified amount of time.</para>
-    <para>Fail2Ban comes with filters for various services, such as Apache,SSH,Courier etc.
-    You can use Fail2Ban to minimize the rate of incorrect authentication attempts.</para>
+  <title>fail2ban とは？</title>
+  <para>fail2ban は <filename>/var/log/apache/error_log</filename> 等のログファイルを定期的に検索し、繰り返し何度もログインを試しているような不正アクセスの端緒を検出し、 IP アドレス単位でのアクセス禁止を設定することができます。 fail2ban ではファイアウオールルールを設定して、一定時間のアクセス禁止を実現しています。</para>
+    <para>fail2ban は Apache, SSH, Courier など、様々なサービスに対応するフィルタが提供されています。 fail2ban を利用することで、不正アクセスを未然に減らすことができるようになります。</para>
   </sect2>
   <sect2 xml:id="sec-security-ssh-fail2ban-use">
-    <title>Using Fail2Ban to stop an SSH brute force attack</title>
-    <para>You can install and configure Fail2Ban to protect
-      the server against SSH brute force attacks.
-    </para>
+    <title>SSH ブルートフォース攻撃を抑止するための fail2ban の使用</title>
+    <para>fail2ban をインストールして設定しておくことで、 SSH ブルートフォース攻撃からサーバを保護することができます。</para>
     <procedure>
-      <title>Using Fail2Ban to stop an SSH brute force attack</title>
-      <step><para>To install Fail2Ban, execute: </para>
-        <screen>&prompt.root;sudo zypper -n in fail2ban firewalld </screen>
+      <title>SSH ブルートフォース攻撃を抑止するための fail2ban の使用</title>
+      <step><para>fail2ban をインストールするには、下記のようなコマンドを入力して実行します:</para>
+        <screen>&prompt.root;sudo zypper -n in fail2ban firewalld</screen>
       </step>
-      <step><para>When you install Fail2Ban, a default configuration file
-        <filename>jail.conf</filename> is also installed. This file gets overwritten
-        when you upgrade Fail2Ban. To retain any customizations you make to the file,
-        you can add the modifications to a file called <emphasis>jail.local</emphasis>.
-        Fail2Ban automatically reads both files.
-        </para>
+      <step><para>fail2ban をインストールすると、既定の設定ファイルである <filename>jail.conf</filename> がインストールされますが、このファイルは fail2ban パッケージの更新で上書きされてしまう仕組みであることから、このファイルに直接設定を記述してはなりません。その代わりに、 <emphasis>jail.local</emphasis> というファイルを作成して設定してください。 fail2ban では両方のファイルを読み込むようになっています。</para>
       <screen>&prompt.root;cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local</screen>
     </step>
-    <step><para> Open the file in your editor.
-    </para>
+    <step><para>まずはエディタでファイルを開きます。</para>
     <screen>vi /etc/fail2ban/jail.local</screen>
   </step>
-<step><para> Take a look at the four settings that you need to know about.
-</para>
+<step><para>設定項目のうち、知っておかなければならない項目は 4 種類になります。</para>
 <figure xml:id="fig-fail2ban-jail-local">
-  <title><emphasis>jail.local </emphasis>file settings</title>
+  <title><emphasis>jail.local </emphasis> ファイルの設定</title>
   <mediaobject>
    <imageobject role="fo">
     <imagedata width="75%" fileref="fail2ban.png"/>
@@ -994,54 +974,39 @@ cd path                            Change remote directory to 'path'
    <imageobject role="html">
     <imagedata fileref="fail2ban.png"/>
       </imageobject>
-      <textobject role="description"><phrase>Fail2Ban settings</phrase>
-    </textobject>
+      <textobject role="description"><phrase>fail2ban の設定</phrase></textobject>
   </mediaobject>
  </figure>
  <variablelist>
   <varlistentry><term><emphasis>ignoreip</emphasis></term>
-<listitem><para>A list of whitelisted IPs that will never be banned.
-  The local host IP address <emphasis>127.0.0.1</emphasis> is in the list by default,
-  along with the IPv6 equivalent <emphasis>::1</emphasis>. You can use this setting
-  to add a list of IP addresses that you know should not be banned. </para>
+<listitem><para>アクセスを禁止したくない IP アドレスの一覧を指定します。既定では IPv4 アドレスの <emphasis>127.0.0.1</emphasis> と IPv6 アドレスの <emphasis>::1</emphasis> (いずれも自分自身を表すアドレスです) が設定されています。それ以外にもアクセスを禁止したくないアドレスがある場合は、ここに追加してください。</para>
 </listitem>
 </varlistentry>
 <varlistentry><term><emphasis>bantime</emphasis></term>
-  <listitem><para>The duration in minutes for which an IP address is banned. When you do not
-    enter a value ending in <emphasis>m</emphasis> or <emphasis>h</emphasis>, it is treated as seconds.
-    If you enter a value of <emphasis>-1</emphasis>, an IP address is permanently banned.</para>
+  <listitem><para>特定の IP アドレスからのアクセスを禁止する際、その禁止期間を指定します。設定値が <emphasis>m</emphasis> (分) または <emphasis>h</emphasis> (時間) で終わっていない場合、禁止期間は秒単位であるものとして解釈されます。また、 <emphasis>-1</emphasis> を設定すると、恒久的にアクセスを禁止することになります。</para>
   </listitem>
   </varlistentry>
   <varlistentry><term><emphasis>findtime</emphasis></term>
-    <listitem><para>The duration of time where too many failed connection attempts result in an IP being banned.
-      </para>
+    <listitem><para>特定の IP アドレスからのアクセスを禁止するにあたっての持続時間を指定します。</para>
     </listitem>
     </varlistentry>
     <varlistentry><term><emphasis>maxretry</emphasis></term>
-      <listitem><para> The limit for the number of failed attempts.
-        </para>
+      <listitem><para>試行失敗の上限回数を指定します。</para>
              </listitem>
       </varlistentry>
 </variablelist>
-<note><para>If a connection from the same IP address makes <emphasis>maxretry</emphasis>
-  failed connection attempts within the <emphasis>findtime</emphasis> period, they are banned
-  for the duration of the <emphasis>bantime</emphasis>. The only exceptions are the IP addresses
-  in the <emphasis>ignoreip</emphasis> list.</para></note>
+<note><para>同じ IP アドレスからのアクセスが <emphasis>findtime</emphasis> で指定した時間内に <emphasis>maxretry</emphasis> で指定した回数以上実施された場合、 <emphasis>bantime</emphasis> で指定した時間だけアクセスを禁止することになります。なお、 <emphasis>ignoreip</emphasis> に含まれる IP アドレスについては除外されます。</para></note>
 
-<para> Fail2Ban supports different types of jails and each jail has
-  different settings for the connection types.</para>
+<para>fail2ban では様々な種類の jail に対応しています。 jail とは設定の単位で、それぞれが様々な種類の接続に対応しています。</para>
 </step>
-<step><para> You can use the Fail2Ban service with the following:</para>
-  <para>To enable:</para>
+<step><para>fail2ban サービスを有効化や起動は、下記のようにして行います:</para>
+  <para>サービスを有効化するには:</para>
   <screen>&prompt.root; systemctl enable fail2ban</screen>
-  <para>To start:</para>
-  <screen>&prompt.root;<command>systemctl restart sshd.service</command>
-    </screen>
-  <para>To check the service status:</para>
-  <screen>&prompt.root;<command>systemctl restart sshd.service</command>
-    </screen>
-  <important><para>You must restart Fail2Ban each time you make a configuration change.
-  </para></important>
+  <para>起動するには:</para>
+  <screen>&prompt.root; systemctl start fail2ban</screen>
+  <para>サービスの状態を確認するには:</para>
+  <screen>&prompt.root; systemctl status fail2ban.service</screen>
+  <important><para>なお、設定を変更した場合は fail2ban の再起動を実施しなければならないことに注意してください。</para></important>
   </step>
 
     </procedure>
