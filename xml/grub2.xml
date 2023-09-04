@@ -56,7 +56,7 @@
       <varlistentry>
         <term><filename>/boot/grub2/custom.cfg</filename></term>
         <listitem>
-          <para>このファイルは存在してもいなくてもかまわないファイルで、システムの起動時に <filename>grub.cfg</filename> から参照され、起動メニューに独自の項目を追加するためのファイルです。 &productname; <phrase os="sles;sled">12 SP2</phrase> <phrase os="osuse">Leap 42.2</phrase> 以降では、 <command>grub-once</command> を使用する際にもこれらの項目が処理されます。</para>
+          <para>このファイルは存在していなくてもかまわないファイルで、システムの起動時に <filename>grub.cfg</filename> から参照され、起動メニューに独自の項目を追加するためのファイルです。 &productname; <phrase os="sles;sled">12 SP2</phrase> <phrase os="osuse">Leap 42.2</phrase> 以降では、 <command>grub-once</command> を使用する際にもこれらの項目が処理されます。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -103,7 +103,7 @@
       <title><filename>/etc/default/grub</filename> ファイル</title>
       <para>&grub; に関するより一般的なオプションが用意されています。たとえばメニューを表示する時間や起動する既定の OS などです。利用可能な全てのオプションを表示するには、下記のコマンドの出力をお使いください:</para>
 <screen>&prompt.user;grep "export GRUB_DEFAULT" -A50 /usr/sbin/grub2-mkconfig | grep GRUB_</screen>
-      <para>既に定義されている変数に加えて、 <filename>/etc/grub.d</filename> 内のスクリプトから参照するための、独自のユーザ変数を設定することもできます。</para>
+      <para>なお、 <filename>/etc/grub.d</filename> 内のスクリプトから参照するため、独自のユーザ変数を設定することもできます。</para>
       <para><filename>/etc/default/grub</filename> を編集したあとは、 <command>grub2-mkconfig -o /boot/grub2/grub.cfg</command> を実行してメインの設定ファイルを更新してください。</para>
       <note>
         <title>スコープについて</title>
@@ -352,7 +352,7 @@ password_pbkdf2 root grub.pbkdf2.sha512.10000.9CA4611006FE96BC77A...</screen>
 <screen>&prompt.sudo;grub2-mkconfig -o /boot/grub2/grub.cfg</screen>
         </step>
       </procedure>
-      <para>システムを再起動すると、起動メニューの項目を選択する際にユーザ名とパスワードの入力を求められるようになります。それぞれユーザ名には <literal>root</literal> を、パスワードには <command>grub2-mkpasswd-pbkdf2</command> で入力したパスワードを入力してください。両方の項目が正しく入力されると、システムは選択した項目を起動するようになります。</para>
+      <para>システムを再起動すると、 &grub; は起動メニューの項目を選択する際にユーザ名とパスワードの入力を求めるようになります。それぞれユーザ名には <literal>root</literal> を、パスワードには <command>grub2-mkpasswd-pbkdf2</command> で入力したパスワードを入力してください。両方の項目が正しく入力されると、システムは選択した項目を起動するようになります。</para>
       <para>詳しくは <link xlink:href="https://www.gnu.org/software/grub/manual/grub.html#Security"/> をお読みください。</para>
     </sect2>
 
@@ -833,60 +833,33 @@ menuentry 'Maintenance mode' --users maintainer {
   </sect1>
 
   <sect1 xml:id="grub-rescue-target">
-    <title>Rescue mode</title>
+    <title>レスキューモード</title>
 
-    <para>
-      <emphasis>Rescue mode</emphasis> is a specific &rootuser; user session
-      for troubleshooting and repairing systems where the booting process
-      fails. It offers a single-user environment with local file systems and
-      core system services active. Network interfaces are not activated. To
-      enter the rescue mode, follow these steps.
-    </para>
+    <para><emphasis>レスキューモード</emphasis> とは &rootuser; 専用のユーザセッションで、システムの起動が失敗してしまうような場合に、その調査と修復を行うモードです。このモードはシングルユーザモードで、ローカルのファイルシステムと一部のシステムサービスのみが起動され、ネットワークインターフェイスは有効化されません。レスキューモードを開始したい場合は、下記の手順を実施してください。</para>
 
     <procedure xml:id="proc-rescue-mode">
-     <title>Entering rescue mode</title>
+     <title>レスキューモードへの突入</title>
       <step>
-        <para>
-          Reboot the system. The boot screen appears, offering the &grub; boot
-          menu.
-        </para>
+        <para>まずはシステムを再起動します。 &grub; の起動メニューが表示されるまで待ちます。</para>
       </step>
       <step>
-        <para>
-          Select the menu entry to boot
-          and press <keycap>e</keycap> to edit the boot line.
-        </para>
+        <para>&grub; の起動メニューが表示されたら <keycap>e</keycap> を押し、起動コマンドラインの編集モードに入ります。</para>
       </step>
       <step>
-        <para>
-          Append the following parameter to the line containing the kernel
-          parameters:
-        </para>
+        <para>カーネルパラメータを含む行に、下記のような内容を追記します:</para>
 <screen>systemd.unit=rescue.target</screen>
       </step>
       <step>
-        <para>
-          Press <keycap function="control"/>+<keycap>X</keycap> to boot with
-          these settings.
-        </para>
+        <para>あとは <keycap function="control"/> + <keycap>X</keycap> を押して、システムの起動を行います。</para>
       </step>
       <step>
-        <para>
-          Enter the password for &rootuser;.
-        </para>
+        <para>あとは &rootuser; のパスワードを入力します。</para>
       </step>
       <step>
-        <para>
-          Make all the necessary changes.
-        </para>
+        <para>必要な調査や修復作業を実施します。</para>
       </step>
       <step>
-        <para>
-          Enter normal operating target again by entering
-          <command>systemctl isolate multi-user.target</command> or
-          <command>systemctl isolate graphical.target</command> at the command
-          line.
-        </para>
+        <para>作業が終わったら <command>systemctl isolate multi-user.target</command> または <command>systemctl isolate graphical.target</command> を実行することで、通常の起動モードに戻すことができます。</para>
       </step>
     </procedure>
   </sect1>
