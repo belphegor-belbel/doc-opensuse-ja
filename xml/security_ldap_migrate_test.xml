@@ -156,13 +156,13 @@ You should now review your instance configuration and data:
     <para>設定が正しいことを確認したり、そこから先のトラブルシューティングを実施したりする場合は、下記のような情報が必要となります:</para>
     <itemizedlist>
       <listitem>
-        <para>OpenLDAP では、 <literal>userPassword</literal> 属性に <literal>userPassword: {SASL}<replaceable>ユーザ名@レルム</replaceable></literal> の形式が書かれていることを検出すると、そのユーザがパススルー認証を使用していると判断します。なお、パススルー認証を使用するには、 OpenLDAP サーバの構築時に <literal>--enable-spasswd</literal> オプションを指定しておく必要があります。</para>
+        <para>OpenLDAP は、ユーザの <literal>userPassword</literal> 属性が <literal>userPassword:{SASL}<replaceable>ユーザ名@レルム</replaceable></literal> の形式になっていることを検出すると、パススルー認証を使用するユーザであると判断します。なお、パススルー認証を使用するには、 OpenLDAP サーバの構築時に <literal>--enable-spasswd</literal> オプションを指定しておく必要があります。</para>
       </listitem>
       <listitem>
         <para>OpenLDAP では、 <literal>saslauthd</literal> との接続に関する設定を <filename>/usr/lib/sasl2/slapd.conf</filename> から取得します。</para>
       </listitem>
       <listitem>
-        <para><literal>saslauthd</literal> は <literal>/etc/sysconfig/saslauthd</literal> 内に設定された関連モジュールを、コマンドラインパラメータを利用して検出します。</para>
+        <para><literal>saslauthd</literal> は、 <literal>/etc/sysconfig/saslauthd</literal> 内に設定されたコマンドラインパラメータを利用して、関連するモジュールを検出します。</para>
       </listitem>
       <listitem>
         <para><literal>saslauthd</literal> のバックエンドモジュールは、 <command>man saslauthd</command> に書かれているとおり、独自の設定ファイルを使用します。</para>
@@ -176,7 +176,7 @@ You should now review your instance configuration and data:
         <step>
           <para>まずは移行前に、 OpenLDAP サーバ内で <command>testsaslauthd</command> を実行し、問題が発生しないことを確認しておきます。</para>
 <screen>&prompt.sudo;<command>testsaslauthd -u <replaceable>ユーザ名@レルム</replaceable> -p <replaceable>パスワード</replaceable></command></screen>
-          <para>レルムの指定により、 <literal>saslauthd</literal> は使用すべき認証バックエンドを判断し、ユーザ名はそのまま識別子として使用します。</para>
+          <para><literal>saslauthd</literal> は、レルムの指定から使用すべき認証バックエンドを判断し、ユーザ名は識別子として認証を行います。</para>
         </step>
         <step>
           <para>&ds389; から <literal>saslauthd</literal> に接続できるようにするため、 <package>pam_saslauthd</package> パッケージをインストールします。</para>
@@ -185,7 +185,7 @@ You should now review your instance configuration and data:
         <step>
           <para><command>openldap_to_ds</command> コマンドを実行して、 OpenLDAP から &ds389; への移行処理を行います。移行処理に関する詳細は、 <xref linkend="sec-security-ldap-migrate-test"/> をお読みください。</para>
           <note>
-            <para>なお、 <command>openldap_to_ds</command> の実行の際、ユーザの <literal>userPassword</literal> 属性が <literal>userPassword: {SASL}<replaceable>ユーザ名@レルム</replaceable></literal> 形式になっていることを検出すると、この属性は削除され、 <literal>nsSaslauthId</literal> 属性に <literal>nsSaslauthId: <replaceable>ユーザ名@レルム</replaceable></literal> が設定されます。これに加えて、この属性に対応するよう、 <literal>objectClass: nsSaslauthAccount</literal> が自動的に追加されます。</para>
+            <para>なお、 <command>openldap_to_ds</command> を実行すると、ユーザの <literal>userPassword</literal> 属性が <literal>userPassword: {SASL}<replaceable>ユーザ名@レルム</replaceable></literal> 形式になっていることを検出すると、この属性は削除され、 <literal>nsSaslauthId</literal> 属性に <literal>nsSaslauthId: <replaceable>ユーザ名@レルム</replaceable></literal> が設定されます。これに加えて、この属性に対応するよう、 <literal>objectClass: nsSaslauthAccount</literal> が自動的に追加されます。</para>
           </note>
         </step>
         <step>
