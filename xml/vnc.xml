@@ -308,65 +308,7 @@ role='description'><phrase>Add new session</phrase></textobject><imageobject rol
    <title>永続 VNC セッションへの接続</title>
    <para>永続 VNC セッションに接続するには、まず VNC ビューアをインストールしておかなければなりません。インストールに関する詳細は <xref linkend="sec-vnc-viewer"/> をお読みください。なお、 JavaScript に対応した Web ブラウザを利用して、 VNC のセッションに接続することもできます。この場合は、 <literal>http://&wsIname;:5801</literal> のような URL を指定して接続してください。</para>
   </tip>
-
-  <para>永続 VNC セッションには 2 種類の仕組みが用意されています:</para>
-
-  <itemizedlist>
-   <listitem>
-    <para><xref linkend="vnc-persistent-vncserver" xrefstyle="select:title"/></para>
-   </listitem>
-   <listitem>
-    <para><xref linkend="vnc-persistent-vncmanager" xrefstyle="select:title"/></para>
-   </listitem>
-  </itemizedlist>
-
-  <sect2 xml:id="vnc-persistent-vncserver">
-   <title><systemitem>vncserver</systemitem> を利用した VNC セッションの起動</title>
-   <para>この種類の永続 VNC セッションの場合、サーバ内で起動を行います。セッションとそのセッション内で起動したアプリケーションは、セッションを終了しない限り、クライアントの接続が切れてもそのまま動作し続けます。永続セッションへの接続は、 2 種類のパスワードで保護することができます:</para>
-   <itemizedlist mark="bullet" spacing="normal">
-    <listitem>
-     <para>完全なアクセスを許可する通常のパスワード</para>
-    </listitem>
-    <listitem>
-     <para>非対話型 (表示のみ) のアクセスを許可するパスワード</para>
-    </listitem>
-   </itemizedlist>
-   <para>なお、 1 つのセッションに対して複数のクライアントが同時に接続することができます。</para>
-   <procedure xml:id="pro-vnc-persistent-activate">
-    <title><command>vncserver</command> を利用した永続 VNC セッションの開始</title>
-    <step>
-     <para>まずはシェルを開いて、 VNC セッションの所有者となるべきユーザでログインしていることを確認します。 <!-- max: should we add some more words here to explain that the shell session could either be a local one or a ssh session, or can we assume this to be known by the customer? --></para>
-    </step>
-    <step>
-     <para>VNC セッションを提供するネットワークインターフェイスがファイアウオールで保護されている場合は、セッションで開くポートを許可するように設定する必要があります。また、複数のセッションを開始する場合は、ポートの範囲を指定して許可することもできます。ファイアウオールの設定について、詳しくは <xref linkend="cha-security-firewall"/> をお読みください。</para>
-     <para><command>vncserver</command> はディスプレイ <literal>:1</literal> に対してはポート <systemitem class="resource">5901</systemitem> を、ディスプレイ <literal>:2</literal> に対しては <systemitem class="resource">5902</systemitem> などをそれぞれ使用します。永続セッションの場合は、 VNC のディスプレイ番号と X のディスプレイ番号は通常同じになります。</para>
-    </step>
-    <step>
-     <para>1024x768 ピクセルで 16 ビットの色数でセッションを開始するには、下記のコマンドを実行します:</para>
-<screen>vncserver -alwaysshared -geometry 1024x768 -depth 16</screen>
-     <para><command>vncserver</command> でディスプレイ番号を指定しない場合は、空いているディスプレイ番号を自動的に探して使用し、その番号を表示します。詳しくは <command>man 1 vncserver</command> をお読みください。</para>
-    </step>
-   </procedure>
-   <para><command>vncserver</command> を初めて実行した場合は、完全なアクセスを許可するためのパスワードを入力するよう求められます。また、必要であれば表示のみを許可するパスワードを設定することもできます。</para>
-   <para>同じユーザが次回以降にセッションを開始しようとすると、ここで入力したパスワードを使用して開始する動作になります。パスワードを変更したい場合は、 <command>vncpasswd</command> コマンドをお使いください。</para>
-   <important>
-    <title>セキュリティに対して考慮すべき事項</title>
-    <para>十分な長さ (8 文字以上) で、かつ強いパスワードを設定してください。パスワードは不用意に開示してはなりません。</para>
-   </important>
-   <para>セッションを終了するには、一般的なログアウト処理と同様に、 VNC セッションを起動したデスクトップ環境を終了することで行います。</para>
-   <para>手作業でセッションを終了したい場合は、 VNC サーバ内でシェルを開いて、終了したい VNC セッションの所有者であることを確認し、 <command>vncserver -kill :1</command> のように実行します。このとき、　<literal>:1</literal> には実際のディスプレイ番号を指定します。</para>
-   <sect3 xml:id="sec-vnc-persistent-configure">
-    <title>永続 VNC セッションの設定</title>
-    <para>永続 VNC セッションは、 <filename>$HOME/.vnc/xstartup</filename> ファイルを編集することで設定を行うことができます。既定では、このシェルスクリプトは同じ GUI/ウインドウマネージャを利用するようになっています (&productname; の場合、 &gnome; もしくは IceWM のいずれかです) 。ウインドウマネージャを選択してセッションを開始したい場合は、下記のようにして <envar>WINDOWMANAGER</envar> を設定します:</para>
-<screen>WINDOWMANAGER=gnome vncserver -geometry 1024x768
-WINDOWMANAGER=icewm vncserver -geometry 1024x768</screen>
-    <note>
-     <title>ユーザごとの設定であることについて</title>
-     <para>永続 VNC セッションはユーザごとに設定を行います。同じユーザで複数のセッションを開始した場合、同じ起動ファイルとパスワードファイルを使用することになります。</para>
-    </note>
-   </sect3>
-  </sect2>
-
+  
   <sect2 xml:id="vnc-persistent-vncmanager">
    <title><systemitem>vncmanager</systemitem> を利用した VNC セッションの起動</title>
    <para/>
