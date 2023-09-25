@@ -328,7 +328,7 @@
         <para><literal>luks1</literal> : 通常の LUKS1 形式での暗号化を行います。</para>
        </listitem>
        <listitem>
-        <para><literal>luks1</literal> : 通常の LUKS1 形式での暗号化を行います。</para>
+        <para><literal>luks2</literal> : 通常の LUKS2 形式での暗号化を行います。</para>
        </listitem>
        <listitem>
         <para><literal>pervasive_luks2</literal> : 普及型のボリュームの暗号化を行います。</para>
@@ -346,15 +346,7 @@
 <screen>&lt;crypt_method config:type="symbol"&gt;luks1&lt;/crypt_method&gt;</screen>
       <para os="sles;sled;osuse">暗号化方式の選択機能は &productname; <phrase os="sles;sled">15 SP2</phrase> <phrase os="osuse">15.2</phrase> もしくはそれ以降のバージョンで使用することができます。以前のバージョンと同じ動作にしたい場合は、 <literal>luks1</literal> を指定してください。</para>
       <para>暗号化パスワードの指定方法については、 <literal>crypt_key</literal> 要素の説明をお読みください。</para>
-      <para>
-       When using regular LUKS encryption, it is possible to customize several aspects
-       of the encryption using <literal>crypt_pbkdf</literal>, <literal>crypt_cipher</literal>
-       or <literal>crypt_key_size</literal>, depending on the exact variant of LUKS that
-       is used. Bear in mind that the encryption method and its corresponding settings may
-       dramatically affect the amount of RAM needed to complete the installation process.
-       Using regular LUKS2 with default parameters typically implies the need of having
-       several gigabytes of RAM in the system in order to encrypt the devices.
-      </para>
+      <para>通常の LUKS 暗号化を使用する場合、 LUKS 内で指定する暗号化の種類に応じて <literal>crypt_pbkdf</literal> , <literal>crypt_cipher</literal> , <literal>crypt_key_size</literal> 等の設定を行って細かい調整を行うことができます。なお、使用する暗号化方式とその設定内容によっては、インストール処理を完了するのに必要なメモリ量を劇的に変化させる場合があることに注意してください。特に細かいパラメータを指定せずに LUKS2 を使用する場合でも、デバイスの暗号化を実施するのに数ギガバイト程度のメモリが必要となります。</para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -367,63 +359,36 @@
     <varlistentry>
      <term>crypt_key</term>
      <listitem>
-      <para><literal>crypt_method</literal> でパスワードを設定する必要のある方式 (<literal>luks1</literal> もしくは <literal>pervasive_luks2</literal>) を選択した場合に必要となります。</para>
+      <para><literal>crypt_method</literal> でパスワードを設定する必要のある方式 (<literal>luks1</literal> , <literal>luks2</literal> , <literal>pervasive_luks2</literal> のいずれか) を選択した場合に必要となります。</para>
 <screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>crypt_key</term>
+     <term>crypt_cipher</term>
      <listitem>
-      <para>
-       Cipher used for LUKS encryption. This value is only honored if the
-       value of <literal>crypt_method</literal> is <literal>luks1</literal>
-       or <literal>luks2</literal>. The format and value of the string must
-       be compatible with the <literal>--cipher</literal> argument of the
-       command <command>cryptsetup</command>.
-      </para>
-<screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>
+      <para>LUKS で使用する暗号化方式を指定します。この値は <literal>crypt_method</literal> の値が <literal>luks1</literal> または <literal>luks2</literal> である場合にのみ意味を持ちます。設定可能な値とその書式は、 <command>cryptsetup</command> コマンドの <literal>--cipher</literal> パラメータの値と同じです。</para>
+<screen>&lt;crypt_cipher&gt;aes-xts-plain64&lt;/crypt_cipher&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>crypt_key</term>
+     <term>crypt_key_size</term>
      <listitem>
-      <para>
-       Key size, in bits, used for LUKS encryption. This value is only
-       honored if the value of <literal>crypt_method</literal> is
-       <literal>luks1</literal> or <literal>luks2</literal>. The value
-       has to be a multiple of 8. The possible key sizes are limited by
-       the used cipher.
-      </para>
-<screen>&lt;stripesize config:type="integer"&gt;4&lt;/stripesize&gt;</screen>
+      <para>LUKS で暗号化を行う際の鍵サイズをビット単位で指定します。この値は <literal>crypt_method</literal> の値が <literal>luks1</literal> または <literal>luks2</literal> である場合にのみ意味を持ちます。また、値は 8 の倍数でなければならないほか、使用する暗号方式によって異なる上限値があります。</para>
+<screen>&lt;crypt_key_size config:type="integer"&gt;256&lt;/crypt_key_size&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>crypt_fs</term>
+     <term>crypt_pbkdf</term>
      <listitem>
-      <para>
-       Password-based key derivation function used for LUKS2 encryption.
-       This is only relevant if the <literal>crypt_method</literal> is
-       <literal>luks2</literal>. The possible values are
-       <literal>pbkdf2</literal>, <literal>argon2i</literal> and
-       <literal>argon2id</literal>. If omitted, the device will be encrypted
-       using the default function of the command cryptsetup. Note that both
-       variants of Argon2 are designed to intentionally consume a big amount
-       of memory during the encryption process. Using any of those functions
-       or omitting this setting (which will likely result in the usage of
-       Argon2) implies bigger RAM requirements to complete the installation
-       process, when compared to a non-encrypted setup.
-      </para>
-<screen>&lt;crypt_fs config:type="boolean"&gt;true&lt;/crypt_fs&gt;</screen>
+      <para>LUKS2 暗号化で使用されるパスワードベースの鍵導出関数を指定します。この値は <literal>crypt_method</literal> の値が <literal>luks1</literal> または <literal>luks2</literal> である場合にのみ意味を持ちます。設定可能な値は <literal>pbkdf2</literal> , <literal>argon2i</literal> , <literal>argon2id</literal> のいずれかで、何も指定しない場合は cryptsetup コマンドの既定の関数が使用されます。なお、 argon2 の 2 種類の形式はいずれも、暗号化処理時に大きなサイズのメモリを占有するように意図して設計されているため、これらの関数を直接指定した場合や、何も指定しなかった場合 (argon2 が使用される可能性があります) は、暗号化処理を行わない場合に比べてインストール処理時のメモリ要件が厳しくなることに注意してください。</para>
+<screen>&lt;crypt_pbkdf config:type="symbol"&gt;argon2id&lt;/crypt_pbkdf&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>crypt_key</term>
+     <term>crypt_label</term>
      <listitem>
-      <para>
-       LUKS label for the encrypted device. This is only relevant if the
-       <literal>crypt_method</literal> is <literal>luks2</literal>.
-      </para>
-<screen>&lt;label&gt;mydata&lt;/label&gt;</screen>
+      <para>暗号化デバイスに設定する LUKS ラベルを指定します。この値は <literal>crypt_method</literal> の値が <literal>luks2</literal> である場合にのみ意味を持ちます。</para>
+<screen>&lt;crypt_label&gt;crypt_home&lt;/crypt_label&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>

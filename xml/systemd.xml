@@ -780,7 +780,7 @@ WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
               <para>init スクリプトがデーモンを起動する場合にのみ設定します。</para>
             </callout>
             <callout arearefs="co-service-wrapper-target">
-              <para><literal>graphical.target</literal> で起動する場合、 <literal>multi-user.target</literal> で init スクリプトを起動します。ディスプレイマネージャを起動する場合にのみ init スクリプトを起動したい場合は、ここを <literal>graphical.target</literal> にします。</para>
+              <para><literal>graphical.target</literal> で起動する場合でも、 <literal>multi-user.target</literal> を指定した init スクリプトを起動します。ディスプレイマネージャを起動する場合にのみ init スクリプトを起動したい場合は、ここを <literal>graphical.target</literal> にします。</para>
             </callout>
           </calloutlist>
         </step>
@@ -850,7 +850,7 @@ WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
       <title>ユニットファイルのカスタマイズ</title>
       <para>ユニットファイルのカスタマイズを行う場合は、 <command>systemctl edit <replaceable>サービス名</replaceable></command> コマンドを使用するのがお勧めです。このコマンドは <filename>/etc/systemd/system/<replaceable>名前</replaceable>.service.d/</filename> ディレクトリを作成し、そのディレクトリ内に <filename>override.conf</filename> ファイルを作成したあと、既定のテキストエディタを起動します。また、このコマンドは動作中の &systemd; プロセスに対して、変更が行われたことを通知する機能も備えています。</para>
       <para>このほか、 <command>systemctl edit --full <replaceable>名前</replaceable></command> コマンドを実行すると、元のファイルをコピーしてから編集することもできます。この場合は、既存のセクションを削除しないように注意してください。</para>
-      <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 root で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
+      <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 &rootuser; で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
 <screen>
 [Unit]
 Description=MySQL server
@@ -884,112 +884,79 @@ UMask=007</screen>
     </sect2>
 
     <sect2 xml:id="sec-boot-systemd-custom-drop-in">
-      <title>ドロップ・インファイルの作成</title>
-      <para>設定ファイルの一部分だけを変更したい場合は、ドロップ・インファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。</para>
+      <title>ドロップイン・ファイルの作成</title>
+      <para>設定ファイルの一部分だけを変更したい場合は、ドロップイン・ファイルまたは <emphasis>ドロップイン</emphasis> と呼ばれる仕組みを使用することができます。ドロップインは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。ドロップインは元の設定ファイルよりも優先度が高く設定されるため、指定した部分のみを入れ替えることができます。ドロップインは下記のディレクトリ内に保存します:</para>
       <variablelist>
         <varlistentry>
-          <term>このファイルを、 <filename>/etc/systemd/system/</filename> ディレクトリ内の <filename>foo.service</filename> という名前で保存します。</term>
+          <term><filename>/etc/systemd/*.conf.d/</filename> , <filename>/etc/systemd/system/*.service.d/</filename></term>
           <listitem>
-            <para>
-              Drop-ins added and customized by system administrators.
-            </para>
+            <para>システム管理者が追加したりカスタマイズしたりする場合のドロップイン用ディレクトリです。</para>
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><filename>/usr/lib/systemd/*.conf.d/</filename>, <filename>/usr/lib/systemd/system/*.service.d/</filename></term>
+          <term><filename>/usr/lib/systemd/*.conf.d/</filename> , <filename>/usr/lib/systemd/system/*.service.d/</filename></term>
           <listitem>
-            <para>
-              Drop-ins installed by customization packages to override upstream
-              settings. For example, &suse; ships
-              <package>systemd-default-settings</package>.
-            </para>
+            <para>提供元の設定を書き換えるためのカスタマイズパッケージが使用するドロップイン用ディレクトリです。たとえば &suse; では <package>systemd-default-settings</package> 等があります。</para>
           </listitem>
         </varlistentry>
       </variablelist>
       <tip>
-        <para>詳しい説明をご希望の場合は、 <command>man 1 systemctl</command> をお読みください。</para>
+        <para>ドロップインの検索パスの完全な一覧については、 <command>man 5 systemd.unit</command> で表示されるマニュアルページをお読みください。</para>
       </tip>
-      <para>
-        For example, to disable the rate limiting that is enforced by the
-        default setting of
-        <systemitem class="daemon">systemd-journald</systemitem>,
-        follow these steps:
-      </para>
+      <para>たとえば <systemitem class="daemon">systemd-journald</systemitem> の既定で設定されている流量制限を無効化したい場合は、下記のような手順を実施します:</para>
       <procedure>
         <step>
-          <para><filename>/etc/systemd/system/<replaceable>FOOBAR</replaceable>.service.d/</filename> というディレクトリを作成します。</para>
-<screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
+          <para><filename>/etc/systemd/journald.conf.d</filename> という名前のディレクトリを作成します。</para>
+<screen>&prompt.sudo;mkdir /etc/systemd/journald.conf.d</screen>
           <note>
-            <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行う旨を宣言します。</para>
+            <para>ディレクトリ名はドロップイン・ファイルを作成したいサービス名の後ろに <filename>.conf.d</filename> を付けて指定します。</para>
           </note>
         </step>
         <step>
-          <para>
-            In that directory, create a file
-            <filename>/etc/systemd/journald.conf.d/60-rate-limit.conf</filename>
-            with the option that you want to override, for example:
-          </para>
+          <para>このディレクトリ内に <filename>/etc/systemd/journald.conf.d/60-rate-limit.conf</filename> というファイルを作成して、その中に書き換えたい内容を記述します。たとえば下記のようになります:</para>
 <screen>&prompt.user;<command>cat /etc/systemd/journald.conf.d/60-rate-limit.conf</command>
-# Disable rate limiting
+# 流量制限の無効化
 RateLimitIntervalSec=0</screen>
         </step>
         <step>
-          <para>
-            Save your changes and restart the service of the corresponding
-            &systemd; daemon.
-          </para>
-<screen>&prompt.sudo;systemctl daemon-reload</screen>
+          <para>あとは作成したファイルを保存して &systemd; サービスを再起動するだけです。</para>
+<screen>&prompt.sudo;systemctl restart systemd-journald</screen>
         </step>
       </procedure>
       <!--  bsc#1182491 -->
       <note>
         <title>名前の衝突回避について</title>
-        <para>ドロップ・インファイルと &suse; が提供するファイルとの間で名前の衝突が起こらないように注意してください。一般的には、全てのドロップ・インファイルのファイル名を 2 桁の数値とハイフンで始めてください。たとえば <filename>80-override.conf</filename> のようになります。</para>
+        <para>ドロップイン・ファイルと &suse; が提供するファイルとの間で名前の衝突が起こらないように注意してください。一般的には、全てのドロップイン・ファイルのファイル名を 2 桁の数値とハイフンで始めてください。たとえば <filename>80-override.conf</filename> のようになります。</para>
         <para>なお、下記の数値範囲が予約されています:</para>
         <itemizedlist>
           <listitem>
-            <para><literal>0-19</literal>: &systemd; の提供元が使用します</para>
+            <para><literal>0-19</literal>: &systemd; の提供元が使用します。</para>
           </listitem>
           <listitem>
-            <para><literal>20-25</literal>: &systemd; のうち &suse; が独自に使用します</para>
+            <para><literal>20-25</literal>: &systemd; のうち &suse; が独自に使用します。</para>
           </listitem>
           <listitem>
-            <para><literal>26-29</literal>: その他の (systemd 以外の) &suse; パッケージが使用します</para>
+            <para><literal>26-29</literal>: &systemd; 以外の &suse; パッケージが使用します。</para>
           </listitem>
           <listitem>
-            <para><literal>50</literal>: <command>systemctl set-property</command> で作成されるドロップ・インファイルが使用します。</para>
+            <para><literal>50</literal>: <command>systemctl set-property</command> で作成されるドロップイン・ファイルが使用します。</para>
           </listitem>
         </itemizedlist>
         <para>上記に示した範囲よりも大きい 2 桁の数値を指定することで、 &suse; や &systemd; の提供元が設定する値を上書きできるようになります。</para>
       </note>
       <tip>
-        <para>なお、ドロップ・インファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
+        <para>なお、ドロップイン・ファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
       </tip>
       <tip>
-        <para>
-          Because the configuration of &systemd; components can be scattered
-          across different places on the file system, it might be hard to get a
-          global overview. To inspect the configuration of a &systemd;
-          component, use the following commands:
-        </para>
+        <para>なお、 &systemd; のコンポーネントに対する設定はファイルシステム内の様々なディレクトリに分散して存在しているため、全体の概要を知るのは難しいのが通常です。 &systemd; コンポーネントの設定を調査するには、下記のコマンドを使用してください:</para>
         <itemizedlist>
           <listitem>
-            <para>
-              <command>systemctl cat
-              <replaceable>UNIT_PATTERN</replaceable></command> prints
-              configuration files related to one or more &systemd; units, for
-              example:
-            </para>
-<screen>&prompt.sudo;systemctl list-unit-files --type=service</screen>
+            <para><command>systemctl cat <replaceable>ユニットパターン</replaceable></command>: 1 つもしくは複数の &systemd; ユニットファイルの設定内容を出力します。たとえば下記のように実行します:</para>
+<screen>&prompt.user;systemctl cat atd.service</screen>
           </listitem>
           <listitem>
-            <para>
-              <command>systemd-analyze cat-config
-              <replaceable>DAEMON_NAME_OR_PATH</replaceable></command> copies
-              the contents of a configuration file and drop-ins for a &systemd;
-              daemon, for example:
-            </para>
-<screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
+            <para><command>systemd-analyze cat-config <replaceable>デーモン名またはパス</replaceable></command>: &systemd; デーモンに対する設定ファイルとドロップインの内容をコピーします。たとえば下記のように実行します:</para>
+<screen>&prompt.user;systemd-analyze cat-config systemd/journald.conf</screen>
           </listitem>
         </itemizedlist>
       </tip>
@@ -1135,7 +1102,7 @@ Apr 09 15:30:36 &wsI; systemd[1]: Started Daily Cleanup of Temporary Directories
         <varlistentry>
           <term>ファイルやディレクトリの作成／ディレクトリのクリーンアップ／所有者の変更</term>
           <listitem>
-            <para><filename>/etc/tmpfiles.d</filename> ディレクトリ内にドロップ・インファイルを作成します (書式については <command>man tmpfiles.d</command> をお読みください) 。</para>
+            <para><filename>/etc/tmpfiles.d</filename> ディレクトリ内にドロップイン・ファイルを作成します (書式については <command>man tmpfiles.d</command> をお読みください) 。</para>
           </listitem>
         </varlistentry>
         <varlistentry>
@@ -1170,7 +1137,7 @@ WantedBy=multi-user.target
       <title>カーネルコントロールグループ (cgroups)</title>
       <para>従来の System V init システムでは、サービスとして起動したプロセスを明示的には管理していませんでした。ただし、 Apache のようなサービスでは、 Apache 自身が必要な多数のプロセス (CGI や Java プロセスなど) を起動して管理していました。このような方法では、プロセスからサービスを探るのが難しくなってしまうか、場合によっては全く不可能になってしまっていました。これに加えて、サービスが正しく終了しなかった場合、子プロセスが残ったままになってしまう場合もありました。</para>
       <para>&systemd; では、このような問題を cgroup で解決しています。 cgroup はカーネルの機能で、プロセスをまとめ、生成された子プロセスを階層構造型のグループとして管理する仕組みです。 &systemd; では、それぞれのサービスを別々の名前付き cgroup として管理しています。なお、非特権プロセスに対しては cgroup からの <quote>脱退</quote> は認められていませんので、サービスが起動した全てのプロセスを、効率的に名前で管理できるようになっています。</para>
-      <para>サービスに属する全てのプロセスを一覧表示するには、 <command>systemd-cgls</command> コマンドを使用します。実行結果は、たとえば下記のようになります (一部省略しています):</para>
+      <para>サービスに属する全てのプロセスを一覧表示するには、 <command>systemd-cgls</command> コマンドを使用します。たとえば下記のようになります:</para>
       <example>
         <title>サービスに属する全プロセスの一覧表示</title>
 <screen>&prompt.root;systemd-cgls --no-pager
