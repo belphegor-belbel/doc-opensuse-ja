@@ -328,6 +328,9 @@
         <para><literal>luks1</literal> : 通常の LUKS1 形式での暗号化を行います。</para>
        </listitem>
        <listitem>
+        <para><literal>luks1</literal> : 通常の LUKS1 形式での暗号化を行います。</para>
+       </listitem>
+       <listitem>
         <para><literal>pervasive_luks2</literal> : 普及型のボリュームの暗号化を行います。</para>
        </listitem>
        <listitem>
@@ -343,6 +346,15 @@
 <screen>&lt;crypt_method config:type="symbol"&gt;luks1&lt;/crypt_method&gt;</screen>
       <para os="sles;sled;osuse">暗号化方式の選択機能は &productname; <phrase os="sles;sled">15 SP2</phrase> <phrase os="osuse">15.2</phrase> もしくはそれ以降のバージョンで使用することができます。以前のバージョンと同じ動作にしたい場合は、 <literal>luks1</literal> を指定してください。</para>
       <para>暗号化パスワードの指定方法については、 <literal>crypt_key</literal> 要素の説明をお読みください。</para>
+      <para>
+       When using regular LUKS encryption, it is possible to customize several aspects
+       of the encryption using <literal>crypt_pbkdf</literal>, <literal>crypt_cipher</literal>
+       or <literal>crypt_key_size</literal>, depending on the exact variant of LUKS that
+       is used. Bear in mind that the encryption method and its corresponding settings may
+       dramatically affect the amount of RAM needed to complete the installation process.
+       Using regular LUKS2 with default parameters typically implies the need of having
+       several gigabytes of RAM in the system in order to encrypt the devices.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
@@ -357,6 +369,61 @@
      <listitem>
       <para><literal>crypt_method</literal> でパスワードを設定する必要のある方式 (<literal>luks1</literal> もしくは <literal>pervasive_luks2</literal>) を選択した場合に必要となります。</para>
 <screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>crypt_key</term>
+     <listitem>
+      <para>
+       Cipher used for LUKS encryption. This value is only honored if the
+       value of <literal>crypt_method</literal> is <literal>luks1</literal>
+       or <literal>luks2</literal>. The format and value of the string must
+       be compatible with the <literal>--cipher</literal> argument of the
+       command <command>cryptsetup</command>.
+      </para>
+<screen>&lt;crypt_key&gt;xxxxxxxx&lt;/crypt_key&gt;</screen>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>crypt_key</term>
+     <listitem>
+      <para>
+       Key size, in bits, used for LUKS encryption. This value is only
+       honored if the value of <literal>crypt_method</literal> is
+       <literal>luks1</literal> or <literal>luks2</literal>. The value
+       has to be a multiple of 8. The possible key sizes are limited by
+       the used cipher.
+      </para>
+<screen>&lt;stripesize config:type="integer"&gt;4&lt;/stripesize&gt;</screen>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>crypt_fs</term>
+     <listitem>
+      <para>
+       Password-based key derivation function used for LUKS2 encryption.
+       This is only relevant if the <literal>crypt_method</literal> is
+       <literal>luks2</literal>. The possible values are
+       <literal>pbkdf2</literal>, <literal>argon2i</literal> and
+       <literal>argon2id</literal>. If omitted, the device will be encrypted
+       using the default function of the command cryptsetup. Note that both
+       variants of Argon2 are designed to intentionally consume a big amount
+       of memory during the encryption process. Using any of those functions
+       or omitting this setting (which will likely result in the usage of
+       Argon2) implies bigger RAM requirements to complete the installation
+       process, when compared to a non-encrypted setup.
+      </para>
+<screen>&lt;crypt_fs config:type="boolean"&gt;true&lt;/crypt_fs&gt;</screen>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>crypt_key</term>
+     <listitem>
+      <para>
+       LUKS label for the encrypted device. This is only relevant if the
+       <literal>crypt_method</literal> is <literal>luks2</literal>.
+      </para>
+<screen>&lt;label&gt;mydata&lt;/label&gt;</screen>
      </listitem>
     </varlistentry>
     <varlistentry>

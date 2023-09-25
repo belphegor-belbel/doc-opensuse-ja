@@ -886,18 +886,59 @@ UMask=007</screen>
     <sect2 xml:id="sec-boot-systemd-custom-drop-in">
       <title>ドロップ・インファイルの作成</title>
       <para>設定ファイルの一部分だけを変更したい場合は、ドロップ・インファイルと呼ばれる仕組みを使用することができます。ドロップ・インファイルは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。</para>
-      <para>たとえば <filename>/usr/lib/systemd/system/<replaceable>FOOBAR.SERVICE</replaceable></filename> というファイル名の <replaceable>FOOBAR</replaceable> サービスのうち、 1 つの値だけを変更したい場合は、下記のようにして行います:</para>
+      <variablelist>
+        <varlistentry>
+          <term>このファイルを、 <filename>/etc/systemd/system/</filename> ディレクトリ内の <filename>foo.service</filename> という名前で保存します。</term>
+          <listitem>
+            <para>
+              Drop-ins added and customized by system administrators.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><filename>/usr/lib/systemd/*.conf.d/</filename>, <filename>/usr/lib/systemd/system/*.service.d/</filename></term>
+          <listitem>
+            <para>
+              Drop-ins installed by customization packages to override upstream
+              settings. For example, &suse; ships
+              <package>systemd-default-settings</package>.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <tip>
+        <para>詳しい説明をご希望の場合は、 <command>man 1 systemctl</command> をお読みください。</para>
+      </tip>
+      <para>
+        For example, to disable the rate limiting that is enforced by the
+        default setting of
+        <systemitem class="daemon">systemd-journald</systemitem>,
+        follow these steps:
+      </para>
       <procedure>
         <step>
           <para><filename>/etc/systemd/system/<replaceable>FOOBAR</replaceable>.service.d/</filename> というディレクトリを作成します。</para>
-          <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行う旨を宣言します。</para>
+<screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
+          <note>
+            <para>ここで、 <literal>.d</literal> という接尾辞に注意してください。このような名前を設定することで、ドロップ・インファイルでサービスに対する修正を行う旨を宣言します。</para>
+          </note>
         </step>
         <step>
-          <para>上記のディレクトリ内に <filename><replaceable>your_modification</replaceable>.conf</filename> というファイルを作成します。</para>
-          <para>上記のファイルに、変更したい値の行を記述します。</para>
+          <para>
+            In that directory, create a file
+            <filename>/etc/systemd/journald.conf.d/60-rate-limit.conf</filename>
+            with the option that you want to override, for example:
+          </para>
+<screen>&prompt.user;<command>cat /etc/systemd/journald.conf.d/60-rate-limit.conf</command>
+# Disable rate limiting
+RateLimitIntervalSec=0</screen>
         </step>
         <step>
-          <para>あとはファイルを保存して終了するだけです。</para>
+          <para>
+            Save your changes and restart the service of the corresponding
+            &systemd; daemon.
+          </para>
+<screen>&prompt.sudo;systemctl daemon-reload</screen>
         </step>
       </procedure>
       <!--  bsc#1182491 -->
@@ -920,8 +961,38 @@ UMask=007</screen>
           </listitem>
         </itemizedlist>
         <para>上記に示した範囲よりも大きい 2 桁の数値を指定することで、 &suse; や &systemd; の提供元が設定する値を上書きできるようになります。</para>
-        <para>なお、ドロップ・インファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
       </note>
+      <tip>
+        <para>なお、ドロップ・インファイルでの上書き結果を表示したい場合は、 <command>systemctl cat $UNIT</command> コマンドを実行してください。</para>
+      </tip>
+      <tip>
+        <para>
+          Because the configuration of &systemd; components can be scattered
+          across different places on the file system, it might be hard to get a
+          global overview. To inspect the configuration of a &systemd;
+          component, use the following commands:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              <command>systemctl cat
+              <replaceable>UNIT_PATTERN</replaceable></command> prints
+              configuration files related to one or more &systemd; units, for
+              example:
+            </para>
+<screen>&prompt.sudo;systemctl list-unit-files --type=service</screen>
+          </listitem>
+          <listitem>
+            <para>
+              <command>systemd-analyze cat-config
+              <replaceable>DAEMON_NAME_OR_PATH</replaceable></command> copies
+              the contents of a configuration file and drop-ins for a &systemd;
+              daemon, for example:
+            </para>
+<screen>&prompt.sudo; systemd-analyze verify /etc/systemd/system/foo.*</screen>
+          </listitem>
+        </itemizedlist>
+      </tip>
     </sect2>
 
     <sect2 xml:id="systemd-xinetd-conversion">
