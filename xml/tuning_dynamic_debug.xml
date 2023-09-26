@@ -4,95 +4,62 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-dynamic-debug">
-  <title>Dynamic debug&mdash;kernel debugging messages</title>
+  <title>ダイナミックデバッグ: カーネルのデバッグメッセージの調整</title>
   <info>
     <abstract>
-      <para>
-        Dynamic debug is a powerful debugging feature in the Linux kernel that
-        allows you to enable and disable debugging messages at runtime without
-        the need to recompile the kernel or reboot the system.
-      </para>
+      <para>ダイナミックデバッグは Linux カーネル内に用意されているパワフルなデバッグ機能で、カーネルの再コンパイルやシステムの再起動を実施することなく、動的にデバッグメッセージの有効化や無効化を実施できる仕組みです。</para>
     </abstract>
     <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
       <dm:bugtracker/>
       <dm:translation>yes</dm:translation>
     </dm:docmanager>
   </info>
-  <para>
-    You can use dynamic debugging in several situations, such as:
-  </para>
+  <para>ダイナミックデバッグは下記のような状況で使用します:</para>
   <itemizedlist>
     <listitem>
-      <para>
-        Troubleshooting kernel issues
-      </para>
+      <para>カーネル内部の問題の調査</para>
     </listitem>
     <listitem>
-      <para>
-        Developing drivers for new hardware
-      </para>
+      <para>新しいハードウエアに対応するためのドライバ開発</para>
     </listitem>
     <listitem>
-      <para>
-        Tracing and auditing security events
-      </para>
+      <para>セキュリティイベントの追跡や監査</para>
     </listitem>
   </itemizedlist>
   <sect1 xml:id="sec-tuning-dynamic-debug-benefits">
-    <title>Benefits of dynamic debugging</title>
+    <title>ダイナミックデバッグの利点</title>
 
-    <para>
-      Certain benefits of dynamic debugging are listed below:
-    </para>
+    <para>ダイナミックデバッグを使用することで、下記のような利点をもたらします:</para>
 
     <variablelist>
       <varlistentry>
-        <term>Real-time debugging</term>
+        <term>リアルタイムなデバッグ</term>
         <listitem>
-          <para>
-            Dynamic debugging enables debugging messages without requiring a
-            system reboot. This real-time capability is crucial for diagnosing
-            issues in production environments.
-          </para>
+          <para>ダイナミックデバッグはシステムの再起動を行わずにデバッグメッセージを有効化できます。そのため、本番環境下で問題を調査する場合など、性能を損なってはならないような場合に有用です。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Selective debugging</term>
+        <term>選択的なデバッグ</term>
         <listitem>
-          <para>
-            You can enable debugging messages for specific parts of the kernel
-            or even individual modules, allowing you to focus on relevant
-            information.
-          </para>
+          <para>デバッグメッセージの有効化をカーネル内のパーツ単位や個別のモジュール単位で設定することができます。これにより、必要な情報のみに絞って出力することができます。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Performance tuning</term>
+        <term>性能のチューニング</term>
         <listitem>
-          <para>
-            Use dynamic debugging to monitor and optimize kernel performance by
-            selectively enabling or disabling debugging messages based on the
-            current analysis requirements.
-          </para>
+          <para>現在の解析要件に合わせてデバッグメッセージの有効／無効を切り替えることで、ダイナミックデバッグをカーネルの性能監視や最適化に使用することもできます。</para>
         </listitem>
       </varlistentry>
     </variablelist>
   </sect1>
   <sect1 xml:id="sec-tuning-dynamic-debug-check">
-    <title>Checking the status of dynamic debug</title>
+    <title>ダイナミックデバッグの状態確認</title>
 
-    <para>
-      For supported kernel versions that are installed by default, dynamic
-      debug is already built-in. To check the status of dynamic debug, run the
-      following command as the root user:
-    </para>
+    <para>既定でダイナミックデバッグ機能の搭載されたカーネルがインストールされているはずですが、念のためダイナミックデバッグ機能が搭載されているかどうかを確認するには、下記のようなコマンドを root で実行します:</para>
 
 <screen>&prompt.root;<command>zcat /proc/config.gz | grep CONFIG_DYNAMIC_DEBUG</command></screen>
 
-    <para>
-      If dynamic debug is compiled into the kernel, you should see an output
-      similar to the following:
-    </para>
+    <para>ダイナミックデバッグ機能が組み込まれていれば、下記のような出力が現れるはずです:</para>
 
 <screen>
 CONFIG_DYNAMIC_DEBUG=y
@@ -100,91 +67,52 @@ CONFIG_DYNAMIC_DEBUG_CORE=y
 </screen>
   </sect1>
   <sect1 xml:id="sec-tuning-dynamic-debug-use">
-    <title>Using dynamic debug</title>
+    <title>ダイナミックデバッグの使用</title>
 
-    <para>
-      To enable specific debug messages or logs within the running kernel, you
-      can use the <command>echo</command> command and write to the
-      <filename>/sys/kernel/debug/dynamic_debug/control</filename> file.
-    </para>
+    <para>動作中のカーネルに対して、特定のデバッグメッセージやログを有効化したい場合は、<command>echo</command> コマンドで <filename>/sys/kernel/debug/dynamic_debug/control</filename> ファイルに書き込みを行います。</para>
 
-    <para>
-      The following examples illustrate certain simple uses of dynamic debug:
-    </para>
+    <para>ダイナミックデバッグの簡単な使用手順は、下記のようになります:</para>
 
     <note>
-      <para>
-        Dynamic debug relies on specific debugging macros, such as
-        <systemitem>pr_debug</systemitem>, embedded in the kernel code. These
-        macros are used by kernel developers to insert debugging messages into
-        the code.
-      </para>
-      <para>
-        The examples in this section assume that the
-        <systemitem>pr_debug</systemitem> macro works correctly because dynamic
-        debug is allowed for the running kernel.
-      </para>
+      <para>ダイナミックデバッグの機能は、カーネルのソースコード内に組み込まれた <systemitem>pr_debug</systemitem> 等の特定のデバッグマクロに依存しています。これらのマクロはカーネルの開発者に対して、コード内でのデバッグメッセージ出力に使用されています。</para>
+      <para>本章内での例は、動作中のカーネルでダイナミックデバッグが既に有効化されているはずであることから、 <systemitem>pr_debug</systemitem> マクロが正しく動作していることを前提にしています。</para>
     </note>
 
     <variablelist>
       <varlistentry>
-        <term>Enabling debug messages for a specific kernel source code file</term>
+        <term>特定のカーネルソースコードファイルに対するデバッグメッセージの有効化</term>
         <listitem>
-          <para>
-            To enable the debug messages for a specific kernel source code
-            file, use the following example:
-          </para>
-<screen>&prompt.root;<command>echo "file <replaceable>FILE_NAME.c</replaceable> +p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
+          <para>たとえば特定のカーネルのソースコードファイル内にあるデバッグメッセージを有効化するには、下記のように入力して実行します:</para>
+<screen>&prompt.root;<command>echo "file <replaceable>ファイル名.c</replaceable> +p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Enabling debug messages for a specific kernel module</term>
+        <term>特定のカーネルモジュールに対するデバッグメッセージの有効化</term>
         <listitem>
-          <para>
-            To enable debug messages for a specific kernel module, use the
-            following example:
-          </para>
-<screen>&prompt.root;<command>echo "module <replaceable>MODULE_NAME</replaceable> +p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
+          <para>特定のカーネルモジュール内にあるデバッグメッセージを有効化するには、下記のように入力して実行します:</para>
+<screen>&prompt.root;<command>echo "module <replaceable>モジュール名</replaceable> +p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Disabling debug messages</term>
+        <term>デバッグメッセージの無効化</term>
         <listitem>
-          <para>
-            To disable previously enabled debugging messages for a specific
-            kernel source code file or a kernel module, run the
-            <command>echo</command> command with the <command>-p</command>
-            option. For example:
-          </para>
-<screen>&prompt.root;<command>echo "file <replaceable>FILE_NAME.c</replaceable> -p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
-<screen>&prompt.root;<command>echo "module <replaceable>MODULE_NAME</replaceable> -p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
+          <para>特定のカーネルのソースコードやカーネルモジュールに対して有効化したデバッグメッセージを無効化したい場合は、 <command>echo</command> コマンドで <command>-p</command> オプションを指定します。たとえば下記のようになります:</para>
+<screen>&prompt.root;<command>echo "file <replaceable>ファイル名.c</replaceable> -p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
+<screen>&prompt.root;<command>echo "module <replaceable>モジュール名</replaceable> -p" &gt; /sys/kernel/debug/dynamic_debug/control</command></screen>
         </listitem>
       </varlistentry>
     </variablelist>
 
-    <para>
-      For detailed information about dynamic debug and its use cases, refer to
-      its
-      <link xlink:href="https://www.kernel.org/doc/html/latest/admin-guide/dynamic-debug-howto.html">official
-      documentation</link>.
-    </para>
+    <para>ダイナミックデバッグに関する詳細な情報や使用例などについては、 <link xlink:href="https://www.kernel.org/doc/html/latest/admin-guide/dynamic-debug-howto.html">公式文書 (英語)</link> をお読みください。</para>
   </sect1>
   <sect1 xml:id="sec-tuning-dynamic-debug-view">
-    <title>Viewing the dynamic debug messages</title>
+    <title>ダイナミックデバッグメッセージの表示</title>
 
-    <para>
-      You can view the dynamic debug messages that were generated based on the
-      configurations you enabled, by running <command>dmesg</command> and
-      filtering the output with <command>grep</command>. For example:
-    </para>
+    <para>上記までの手順で有効化し、その後に出力されたデバッグメッセージを表示するには、 <command>dmesg</command> コマンドを使用します。なお、 <command>grep</command> コマンドで出力をフィルタすると、より読みやすくなります:</para>
 
-<screen>&prompt.root;<command>dmesg | grep -i "<replaceable>FILE_NAME.c</replaceable>"</command></screen>
+<screen>&prompt.root;<command>dmesg | grep -i "<replaceable>ファイル名.c</replaceable>"</command></screen>
 
-    <para>
-      Optionally, to continuously monitor the system messages as they are
-      generated, you can use the <command>tail</command> command with the
-      <command>-f</command> option:
-    </para>
+    <para>また、生成されたメッセージを継続的に追跡したい場合は、 <command>tail</command> コマンドに <command>-f</command> オプションを指定して実行します:</para>
 
 <screen>&prompt.root;<command>tail -f /var/log/messages</command></screen>
   </sect1>
