@@ -11,13 +11,13 @@
       <dm:translation>yes</dm:translation>
     </dm:docmanager>
   </info>
-  <para>&kvm; や &xen; の機能を提供する &libvirt; を使用するにあたっては、 1 つまたは複数のデーモンをインストールして有効化しておく必要があります。また &libvirt; には、モノリシック型とモジュール型という 2 種類の利用形態があります。モノリシック型の場合、 &libvirt; に標準で付属する &libvirtd; という単一のデーモンを使用します。ここには主要なハイパーバイザドライバのほか、ストレージやネットワーク、ノードデバイス管理機能など、必要な全てのセカンダリドライバも用意されています。またモノリシック型の場合、 &libvirtd; は外部クライアントからの機密を保持したリモートアクセス機能も提供します。もう一方のモジュール型の場合、これらの機能はそれぞれ別々のデーモンとして起動します。これにより、 &libvirt; のインストールをカスタマイズすることができるようになっています。既定ではモノリシック型のデーモンが有効化されますが、対応する &systemd; サービスファイルを管理することで、後からモジュール型に切り替えることができます。</para>
+  <para>&kvm; や &xen; の機能を提供する &libvirt; を使用するにあたっては、 1 つまたは複数のデーモンをインストールして有効化しておく必要があります。また &libvirt; には、モノリシック型とモジュール型という 2 種類の利用形態があります。モノリシック型の場合、 &libvirt; に標準で付属する &libvirtd; という単一のデーモンを使用します。ここには主要なハイパーバイザドライバのほか、ストレージやネットワーク、ノードデバイスの管理機能など、必要な全てのセカンダリドライバも用意されています。またモノリシック型の場合、 &libvirtd; は外部クライアントからの機密を保持したリモートアクセス機能も提供します。もう一方のモジュール型はしばらく後に作られた仕組みで、この場合それらの機能はそれぞれ別々のデーモンとして起動します。これにより、 &libvirt; のインストールをカスタマイズすることができるようになっています。既定ではモジュール型のデーモンが有効化されますが、個別のデーモンを無効化して &libvirtd; を有効化することで、従来のモノリシック型に切り替えることもできます。</para>
   <para>モジュール型は &libvirt; の機能の一部のみを使用したい場合に有用です。たとえば仮想マシンで &libvirt; 以外が提供するストレージとネットワークを利用したい場合、 <package>libvirt-daemon-driver-storage</package> や <package>libvirt-daemon-driver-network</package> などのパッケージは不要になります。典型的な例が &kube; で、ネットワークやストレージ、 cgroup やネームスペース統合などの機能は &kube; 側が処理します。そのためモジュール型の場合は、 <systemitem class="daemon">virtqemud</systemitem> を提供する <package>libvirt-daemon-driver-&qemu;</package> パッケージのみが必須となります。モジュール型は、実際に使用するコンポーネントの種類が少ない場合に &libvirt; のインストールを最小化できる仕組みです。</para>
 
   <sect1 xml:id="libvirt-modular-daemon">
     <title>モジュール型デーモンの開始と停止</title>
 
-    <para>モジュール型デーモンの場合、 <quote>virt<replaceable>ドライバ名</replaceable>d</quote> の形式でそれぞれのデーモンが提供されています。これらは <filename>/etc/libvirt/virt<replaceable>ドライバ名</replaceable>d.conf</filename> という設定ファイルで制御することができます。 &suse; では virtqemud および virtxend のハイパーバイザデーモンをサポートしているほか、下記に示すセカンダリドライバをサポートしています:</para>
+    <para>モジュール型デーモンの場合、 <quote>virt<replaceable>ドライバ名</replaceable>d</quote> の形式でそれぞれのデーモンが提供されています。これらは <filename>/etc/libvirt/virt<replaceable>ドライバ名</replaceable>d.conf</filename> という設定ファイルで制御することができます。 &suse; では <systemitem class="daemon">virtqemud</systemitem> と <systemitem class="daemon">virtxend</systemitem> のハイパーバイザデーモンをサポートしているほか、下記に示すセカンダリデーモンをサポートしています:</para>
 
     <itemizedlist>
       <listitem>
@@ -49,29 +49,11 @@
       </listitem>
     </itemizedlist>
 
-    <para>
-      <systemitem class="daemon">virtlogd</systemitem> and
-      <systemitem class="daemon">virtlockd</systemitem> are also used by the
-      monolithic &libvirtd;. These daemons have always been separate from
-      &libvirtd; for security reasons.
-    </para>
+    <para><systemitem class="daemon">virtlogd</systemitem> と <systemitem class="daemon">virtlockd</systemitem> はモノリシック型の &libvirtd; でも使用されます。また、これらのデーモンはセキュリティ上の理由から、 &libvirtd; とは分離されているためです。</para>
 
     <para>既定では、モジュール型デーモンは <filename>/var/run/libvirt/virt<replaceable>ドライバ名</replaceable>d-sock</filename> および <filename>/var/run/libvirt/virt<replaceable>ドライバ名</replaceable>d-sock-ro</filename> の 2 種類の UNIX ドメインソケットで待ち受けを行います。クライアントライブラリは通常、従来型の <filename>/var/run/libvirt/libvirtd-sock</filename> という UNIX ソケットファイルにアクセスしますが、これらのクライアント向けに virtproxyd というデーモンが提供されています。</para>
 
-    <para>
-      The <systemitem class="daemon">virtqemud</systemitem> and
-      <systemitem class="daemon">virtxend</systemitem> services are enabled in
-      the &systemd; presets. The sockets for
-      <systemitem class="daemon">virtnetworkd</systemitem>,
-      <systemitem class="daemon">virtnodedevd</systemitem>,
-      <systemitem class="daemon">virtnwfilterd</systemitem>,
-      <systemitem class="daemon">virtstoraged</systemitem>, and
-      <systemitem class="daemon">virtsecretd</systemitem> are also enabled in
-      the presets, ensuring the daemons are enabled and available when the
-      corresponding packages are installed. Although enabled in presets for
-      convenience, the modular daemons can also be managed with their &systemd;
-      unit files:
-    </para>
+    <para>また、 <systemitem class="daemon">virtqemud</systemitem> と <systemitem class="daemon">virtxend</systemitem> は、 &systemd; の事前設定で有効化されているほか、 <systemitem class="daemon">virtnetworkd</systemitem> , <systemitem class="daemon">virtnodedevd</systemitem> , <systemitem class="daemon">virtnwfilterd</systemitem> , <systemitem class="daemon">virtstoraged</systemitem> , <systemitem class="daemon">virtsecretd</systemitem> の各デーモンも、対応するパッケージがインストールされていれば事前に有効化されます。これらは利便性向上のために設定されているものですが、モジュール型のデーモンはそれぞれ個別に管理することができます:</para>
 
     <itemizedlist>
       <listitem>
@@ -170,7 +152,7 @@
     </itemizedlist>
 
     <important>
-      <title>矛盾関係にある <systemitem class="daemon">libvirtd</systemitem> と <systemitem class="daemon">xendomains</systemitem> のサービスについて</title>
+      <title>矛盾関係にある &libvirtd; と <systemitem class="daemon">xendomains</systemitem> のサービスについて</title>
       <para>&libvirtd; を開始してもエラーになってしまう場合は、まず <systemitem class="daemon">xendomains</systemitem> サービスが開始されていないかどうかを確認してください:</para>
 <screen>&prompt.user;systemctl is-active xendomains active</screen>
       <para>上記のコマンドが <literal>active</literal> を返した場合、 &libvirtd; を開始するには、事前に <systemitem class="daemon">xendomains</systemitem> を停止させる必要があります。また、システムの起動時に &libvirtd; を開始したい場合は、これに加えて <systemitem class="daemon">xendomains</systemitem> が自動的に開始されないように設定する必要もあります。具体的には、下記のように入力して実行してください:</para>
@@ -183,43 +165,42 @@
     </important>
   </sect1>
   <sect1 xml:id="libvirt-switch-daemons">
-    <title>モノリシック型デーモンの開始と停止</title>
+    <title>モノリシック型デーモンへの切り替え</title>
 
-    <para>モノリシック型のデーモンからモジュール型のデーモンに移行する場合は、いくつかのサービスを調整する必要があります。なお、デーモンを移行する際には、あらかじめ仮想マシンを停止しておくか、別のホストに移行しておくことをお勧めします。</para>
+    <para>モジュール型のデーモンからモノリシック型のデーモンに切り替えたい場合は、いくつかのサービスに対して変更を行う必要があります。なお、切り替えに際しては事前に動作中の仮想マシンを停止させるか、別のホストに移行しておくことをお勧めします。</para>
 
     <procedure>
       <step>
-        <para>あとは &kvm; や &xen; に対応するデーモンと、その他のセカンダリドライバをそれぞれ有効化します。下記の例では、 &kvm; 向けの &qemu; ドライバと、必要な全てのセカンダリドライバを有効化しています:</para>
+        <para>まずはモジュール型のデーモンとソケットをそれぞれ停止します。下記の例では、 &kvm; 向けの &qemu; といくつかのセカンダリデーモンをそれぞれ停止しています。</para>
 <screen>
 for drv in qemu network nodedev nwfilter secret storage
 do
- &prompt.sudo;systemctl enable virt${drv}d.service
- &prompt.sudo;systemctl enable virt${drv}d{,-ro,-admin}.socket
+ &prompt.sudo;systemctl stop virt${drv}d.service
+ &prompt.sudo;systemctl stop virt${drv}d{,-ro,-admin}.socket
 done
 </screen>
       </step>
       <step>
-        <para>次回のシステム起動時に開始しないように設定します</para>
+        <para>次回のシステム起動時にモジュール型のデーモンが開始しないように設定します</para>
 <screen>
 for drv in qemu network nodedev nwfilter secret storage
 do
- &prompt.sudo;systemctl enable virt${drv}d.service
- &prompt.sudo;systemctl enable virt${drv}d{,-ro,-admin}.socket
+ &prompt.sudo;systemctl disable virt${drv}d.service
+ &prompt.sudo;systemctl disable virt${drv}d{,-ro,-admin}.socket
 done
 </screen>
       </step>
       <step>
-        <para>まずはモノリシック型のデーモンとソケットを停止します</para>
+        <para>あとはモノリシック型の &libvirtd; のサービスとソケットを有効化します</para>
 <screen>
-&prompt.sudo;systemctl disable libvirtd.service
-&prompt.sudo;systemctl disable libvirtd{,-ro,-admin}.socket
+&prompt.sudo;systemctl enable libvirtd.service
+&prompt.sudo;systemctl enable libvirtd{,-ro,-admin}.socket
 </screen>
       </step>
       <step>
-        <para>まずはモノリシック型のデーモンとソケットを停止します</para>
+        <para>最後にモノリシック型の &libvirtd; ソケットを開始します</para>
 <screen>
-&prompt.sudo;systemctl stop libvirtd.service
-&prompt.sudo;systemctl stop libvirtd{,-ro,-admin}.socket
+&prompt.sudo;systemctl start libvirtd{,-ro,-admin}.socket
 </screen>
       </step>
     </procedure>
