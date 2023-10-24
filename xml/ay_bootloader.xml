@@ -4,18 +4,32 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="CreateProfile-Bootloader">
- <title>ブートローダ</title>
+  <title>ブートローダ</title>
 
- <info>
-  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker/>
-   <dm:translation>yes</dm:translation>
-  </dm:docmanager>
- </info>
+  <info>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
 
- <para>このドキュメンテーションは <command>yast2-bootloader</command> と &grub; 向けにのみ作成されています。従来バージョンの GRUB を含む古いバージョンについては、古いバージョンに含まれている <filename>/usr/share/doc/packages/autoyast2/</filename> 以下のドキュメンテーションをお読みください。</para>
+  <para>このドキュメンテーションは <command>yast2-bootloader</command> と &grub; 向けにのみ作成されています。従来バージョンの GRUB を含む古いバージョンについては、古いバージョンに含まれている <filename>/usr/share/doc/packages/autoyast2/</filename> 以下のドキュメンテーションをお読みください。</para>
 
- <para>&ay; でのブートローダの部分は、下記のような構成になっています:</para>
+  <para>
+    By default, &ay; proposes the same booting mechanism as used by the booting
+    medium. For example, if you boot using EFI, the GRUB 2 for EFI is
+    installed. Therefore, you can omit this section unless you have specific
+    requirements. As the EFI boot requires specific partitioning, we
+    recommend using the automatic partitioning as described in
+    <xref linkend="CreateProfile-Automatic-Partitioning"/>, which will create
+    all needed partitions automatically.
+  </para>
+
+  <para>
+    If you need to adapt the default, use the
+    <literal>&lt;bootloader&gt;</literal> part. Its general structure
+    looks like the following snippet:
+  </para>
 
 <screen>&lt;bootloader&gt;
   &lt;loader_type&gt;
@@ -30,241 +44,244 @@
     &lt;!-- デバイスの順序を定義するための設定 --&gt;
   &lt;/device_map&gt;
  &lt;/bootloader&gt;</screen>
+ <para>
+    It is not necessary to fill in all settings, you can specify only those you need to change. &ay; will then merge the default values with those specified in the profile.
+ </para>
 
- <sect2 xml:id="CreateProfile-Bootloader-type">
-  <title>ローダの種類</title>
-  <para>ここでは、使用すべきブートローダの種類 (UEFI 向けもしくは BIOS 向け) を指定します。ただし、全てのアーキテクチャで両方のブートローダを使用できるわけではありません。最も安全な設定 ( <literal>default</literal> ) では、インストーラ側で自動的に判断します。</para>
+  <sect2 xml:id="CreateProfile-Bootloader-type">
+    <title>ローダの種類</title>
+    <para>ここでは、使用すべきブートローダの種類 (UEFI 向けもしくは BIOS 向け) を指定します。ただし、全てのアーキテクチャで両方のブートローダを使用できるわけではありません。最も安全な設定 ( <literal>default</literal> ) では、インストーラ側で自動的に判断します。</para>
 <screen>&lt;loader_type&gt;<replaceable>ローダの種類</replaceable>&lt;/loader_type&gt;</screen>
-  <para><replaceable>ローダの種類</replaceable> で指定可能な値は下記のとおりです:</para>
-  <itemizedlist>
-   <listitem>
-    <para><literal>default</literal> : インストーラ側で適切なブートローダを選択します。特に何もオプションが指定されていない場合、これが既定値となります。</para>
-   </listitem>
-   <listitem>
-    <para><literal>grub2</literal>:  古い BIOS 向けのブートローダを使用します。</para>
-   </listitem>
-   <listitem>
-    <para><literal>grub2-efi</literal> : EFI ブートローダを使用します。</para>
-   </listitem>
-   <listitem>
-    <para><literal>none</literal> : インストーラ側では起動関連の処理および設定を行わないようにします。</para>
-   </listitem>
-  </itemizedlist>
- </sect2>
+    <para><replaceable>ローダの種類</replaceable> で指定可能な値は下記のとおりです:</para>
+    <itemizedlist>
+      <listitem>
+        <para><literal>default</literal> : インストーラ側で適切なブートローダを選択します。特に何もオプションが指定されていない場合、これが既定値となります。</para>
+      </listitem>
+      <listitem>
+        <para><literal>grub2</literal>:  古い BIOS 向けのブートローダを使用します。</para>
+      </listitem>
+      <listitem>
+        <para><literal>grub2-efi</literal> : EFI ブートローダを使用します。</para>
+      </listitem>
+      <listitem>
+        <para><literal>none</literal> : インストーラ側では起動関連の処理および設定を行わないようにします。</para>
+      </listitem>
+    </itemizedlist>
+  </sect2>
 
- <sect2 xml:id="CreateProfile-Bootloader-globals">
-  <title>グローバル</title>
-  <para>この箇所は任意指定ではありますが重要な箇所です。ここでは &grub; のインストール先と起動処理の動作方法について設定を行います。なお、特に何も設定を行わない場合、 <command>yast2-bootloader</command> が設定を作成します。通常は &ay; の制御ファイルにはこの部分のみを設定し、それ以外の箇所は <command>yast2-bootloader</command> が自動生成するようにします。特別な要件がある場合を除いて、 XML ファイル内ではブートローダの設定を行わないでください。</para>
-  <tip>
-    <title>ハイバネーション (休止状態) について</title>
-    <para>固有のハイバネーション設定が必要となる場合は、 <literal>append</literal> の設定内に <literal>resume</literal> もしくは <literal>noresume</literal> を指定してください。</para>
-    <para>インストール時の提案に関わらずハイバネーションを無効化したい場合は、 <literal>append</literal> セクション内のカーネルパラメータとして <literal>noresume</literal> を指定してください。</para>
-    <para>ハイバネーションに使用するデバイスを指定したい場合は、 <literal>resume</literal> キーに続いてデバイスパスを指定してください。この場合、結果を確実なものにするため、パーティション設定は独自に作成してスワップデバイスにラベルを指定してください:</para>
-      <screen>
+  <sect2 xml:id="CreateProfile-Bootloader-globals">
+    <title>グローバル</title>
+    <para>この箇所は任意指定ではありますが重要な箇所です。ここでは &grub; のインストール先と起動処理の動作方法について設定を行います。なお、特に何も設定を行わない場合、 <command>yast2-bootloader</command> が設定を作成します。通常は &ay; の制御ファイルにはこの部分のみを設定し、それ以外の箇所は <command>yast2-bootloader</command> が自動生成するようにします。特別な要件がある場合を除いて、 XML ファイル内ではブートローダの設定を行わないでください。</para>
+    <tip>
+      <title>ハイバネーション (休止状態) について</title>
+      <para>固有のハイバネーション設定が必要となる場合は、 <literal>append</literal> の設定内に <literal>resume</literal> もしくは <literal>noresume</literal> を指定してください。</para>
+      <para>インストール時の提案に関わらずハイバネーションを無効化したい場合は、 <literal>append</literal> セクション内のカーネルパラメータとして <literal>noresume</literal> を指定してください。</para>
+      <para>ハイバネーションに使用するデバイスを指定したい場合は、 <literal>resume</literal> キーに続いてデバイスパスを指定してください。この場合、結果を確実なものにするため、パーティション設定は独自に作成してスワップデバイスにラベルを指定してください:</para>
+<screen>
         &lt;append&gt;quiet resume=/dev/disk/by-label/my_swap&lt;/append&gt;
       </screen>
-    <para><literal>resume</literal> や <literal>noresume</literal> を指定しなかった場合や、インストール済みのシステムに <literal>resume</literal> で指定したデバイスが存在していなかった場合は、インストーラ内の判断で <literal>resume</literal> 以下の値を自動的に修正して設定するか、もしくはハイバネーションのパラメータそのものを削除します。</para>
-  </tip>
+      <para><literal>resume</literal> や <literal>noresume</literal> を指定しなかった場合や、インストール済みのシステムに <literal>resume</literal> で指定したデバイスが存在していなかった場合は、インストーラ内の判断で <literal>resume</literal> 以下の値を自動的に修正して設定するか、もしくはハイバネーションのパラメータそのものを削除します。</para>
+    </tip>
 <screen>&lt;global&gt;
   &lt;activate&gt;true&lt;/activate&gt;
   &lt;timeout config:type="integer"&gt;10&lt;/timeout&gt;
   &lt;terminal&gt;gfxterm&lt;/terminal&gt;
   &lt;gfxmode&gt;1280x1024x24&lt;/gfxmode&gt;
 &lt;/global&gt;</screen>
-  <variablelist>
-   <title>ブートローダのグローバルオプション</title>
-   <varlistentry>
-    <term>activate</term>
-    <listitem>
-     <para>起動パーティションの起動フラグを設定するようにします。起動パーティションは、個別に <filename>/boot</filename> パーティションを設定していない場合、 <filename>/</filename> の存在するパーティションになります。起動パーティションが論理パーティション内に存在する場合は、拡張パーティションに対して起動フラグが設定されます。</para>
+    <variablelist>
+      <title>ブートローダのグローバルオプション</title>
+      <varlistentry>
+        <term>activate</term>
+        <listitem>
+          <para>起動パーティションの起動フラグを設定するようにします。起動パーティションは、個別に <filename>/boot</filename> パーティションを設定していない場合、 <filename>/</filename> の存在するパーティションになります。起動パーティションが論理パーティション内に存在する場合は、拡張パーティションに対して起動フラグが設定されます。</para>
 <screen>&lt;activate&gt;true&lt;/activate&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>append</term>
-    <listitem>
-     <para>通常モードと復元モードの両方に対して、起動項目の末尾に追加するカーネルパラメータを指定します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>append</term>
+        <listitem>
+          <para>通常モードと復元モードの両方に対して、起動項目の末尾に追加するカーネルパラメータを指定します。</para>
 <screen>&lt;append&gt;nomodeset vga=0x317&lt;/append&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>boot_boot</term>
-    <listitem>
-     <para>個別の <filename>/boot</filename> パーティションに対して &grub; を書き込みます。個別の <filename>/boot</filename> パーティションが存在しない場合、 &grub; は <filename>/</filename> に書き込まれます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>boot_boot</term>
+        <listitem>
+          <para>個別の <filename>/boot</filename> パーティションに対して &grub; を書き込みます。個別の <filename>/boot</filename> パーティションが存在しない場合、 &grub; は <filename>/</filename> に書き込まれます。</para>
 <screen>&lt;boot_boot&gt;false&lt;/boot_boot&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>boot_custom</term>
-    <listitem>
-     <para>指定したデバイスに &grub; を書き込みます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>boot_custom</term>
+        <listitem>
+          <para>指定したデバイスに &grub; を書き込みます。</para>
 <screen>&lt;boot_custom&gt;/dev/sda3&lt;/boot_custom&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>boot_extended</term>
-    <listitem>
-     <para>&grub; を拡張パーティションに書き込みます (汎用のブートコードを使用する必要があり、 <filename>/boot</filename> が論理パーティションである場合に重要です) 。注意: 起動パーティションが論理パーティションである場合、 <literal>generic_mbr</literal> よりも <literal>boot_mbr</literal> (&grub; を MBR に書き込む) を使用すべきです。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>boot_extended</term>
+        <listitem>
+          <para>&grub; を拡張パーティションに書き込みます (汎用のブートコードを使用する必要があり、 <filename>/boot</filename> が論理パーティションである場合に重要です) 。注意: 起動パーティションが論理パーティションである場合、 <literal>generic_mbr</literal> よりも <literal>boot_mbr</literal> (&grub; を MBR に書き込む) を使用すべきです。</para>
 <screen>&lt;boot_extended&gt;false&lt;/boot_extended&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>boot_mbr</term>
-    <listitem>
-     <para>&grub; を順序の中で最初に現れるディスクの MBR に書き込みます (ディスクの順序は <filename>device.map</filename> で設定します) 。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>boot_mbr</term>
+        <listitem>
+          <para>&grub; を順序の中で最初に現れるディスクの MBR に書き込みます (ディスクの順序は <filename>device.map</filename> で設定します) 。</para>
 <screen>&lt;boot_mbr&gt;false&lt;/boot_mbr&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>boot_root</term>
-    <listitem>
-     <para>&grub; を <filename>/</filename> のパーティションに書き込みます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>boot_root</term>
+        <listitem>
+          <para>&grub; を <filename>/</filename> のパーティションに書き込みます。</para>
 <screen>&lt;boot_root&gt;false&lt;/boot_root&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>cpu_mitigations</term>
-    <listitem>
-     <para>CPU の脆弱性に対する緩和策に対するカーネルのコマンドラインパラメータを選択します (それと同時に、セキュリティ保護と性能のどちらを重視するのかを選択することにもなります) 。</para>
-     <para>設定可能な値は下記のとおりです:</para>
-     <variablelist>
-      <varlistentry>
-       <term>auto</term>
-       <listitem>&kernel_cpu_mitigations_auto;</listitem>
+        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>nosmt</term>
-       <listitem>&kernel_cpu_mitigations_nosmt;</listitem>
-      </varlistentry>
-      <varlistentry>
-       <term>off</term>
-       <listitem>&kernel_cpu_mitigations_off;</listitem>
-      </varlistentry>
-      <varlistentry>
-       <term>manual</term>
-       <listitem>&kernel_cpu_mitigations_manual;</listitem>
-      </varlistentry>
-     </variablelist>
+        <term>cpu_mitigations</term>
+        <listitem>
+          <para>CPU の脆弱性に対する緩和策に対するカーネルのコマンドラインパラメータを選択します (それと同時に、セキュリティ保護と性能のどちらを重視するのかを選択することにもなります) 。</para>
+          <para>設定可能な値は下記のとおりです:</para>
+          <variablelist>
+            <varlistentry>
+              <term>auto</term>
+              <listitem>&kernel_cpu_mitigations_auto;</listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>nosmt</term>
+              <listitem>&kernel_cpu_mitigations_nosmt;</listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>off</term>
+              <listitem>&kernel_cpu_mitigations_off;</listitem>
+            </varlistentry>
+            <varlistentry>
+              <term>manual</term>
+              <listitem>&kernel_cpu_mitigations_manual;</listitem>
+            </varlistentry>
+          </variablelist>
 <screen>&lt;cpu_mitigations&gt;auto&lt;/cpu_mitigations&gt;</screen>
-     <para>&ay; 内で何も設定を行わない場合、カーネルのコマンドラインを介して対応する設定を変更できるようになります。既定ではインストールメディア内の <filename>/control.xml</filename> に、何も指定しない場合の (製品固有の) 設定が書かれています。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>generic_mbr</term>
-    <listitem>
-     <para>汎用のブートコードを MBR に書き込みます (<literal>boot_mbr</literal> が <literal>true</literal> に設定されている場合は無視されます) 。</para>
+          <para>&ay; 内で何も設定を行わない場合、カーネルのコマンドラインを介して対応する設定を変更できるようになります。既定ではインストールメディア内の <filename>/control.xml</filename> に、何も指定しない場合の (製品固有の) 設定が書かれています。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>generic_mbr</term>
+        <listitem>
+          <para>汎用のブートコードを MBR に書き込みます (<literal>boot_mbr</literal> が <literal>true</literal> に設定されている場合は無視されます) 。</para>
 <screen>&lt;generic_mbr config:type="boolean"&gt;false&lt;/generic_mbr&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>gfxmode</term>
-    <listitem>
-     <para>&grub; の画面での解像度を指定します (ただし &lt;terminal&gt; が <literal>gfxterm</literal> でなければなりません) 。</para>
-     <para>この項目には <literal>auto</literal> (自動設定) のほか、 <literal><replaceable>水平解像度</replaceable>x<replaceable>垂直解像度</replaceable></literal> もしくは <literal><replaceable>水平解像度</replaceable>x<replaceable>垂直解像度</replaceable>x<replaceable>色深</replaceable></literal> の形式で設定します。お使いのシステムで指定できる &grub; の解像度について知りたい場合は、 &grub; のコマンドラインから <command>vbeinfo</command> コマンドを実行してください。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>gfxmode</term>
+        <listitem>
+          <para>&grub; の画面での解像度を指定します (ただし &lt;terminal&gt; が <literal>gfxterm</literal> でなければなりません) 。</para>
+          <para>この項目には <literal>auto</literal> (自動設定) のほか、 <literal><replaceable>水平解像度</replaceable>x<replaceable>垂直解像度</replaceable></literal> もしくは <literal><replaceable>水平解像度</replaceable>x<replaceable>垂直解像度</replaceable>x<replaceable>色深</replaceable></literal> の形式で設定します。お使いのシステムで指定できる &grub; の解像度について知りたい場合は、 &grub; のコマンドラインから <command>vbeinfo</command> コマンドを実行してください。</para>
 <screen>&lt;gfxmode&gt;1280x1024x24&lt;/gfxmode&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>os_prober</term>
-    <listitem>
-     <para><literal>true</literal> に設定すると、インストール時に既にインストールされているオペレーティングシステムを自動的に検索し、それらに対する起動項目を生成するようにします。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>os_prober</term>
+        <listitem>
+          <para><literal>true</literal> に設定すると、インストール時に既にインストールされているオペレーティングシステムを自動的に検索し、それらに対する起動項目を生成するようにします。</para>
 <screen>&lt;os_prober&gt;false&lt;/os_prober&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>password</term>
-    <listitem>
-     <para>この項目を指定した場合、ブートローダをパスワードで保護するようになります。パスワード入力を行わない限り、システムは起動しません。</para>
-    <para>この項目には <literal>value</literal> , <literal>encrypted</literal> , <literal>unrestricted</literal> の各要素を含めることができます。</para>
-    <para><literal>value</literal> にはパスワードそのものを指定します。パスワードは暗号化せずにそのまま指定することもできます (この場合は &yast; が暗号化を行います) し、 <command>grub-mkpasswd-pbkdf2</command> で暗号化したパスワードを指定することもできます。暗号化済みのパスワードを指定する場合は、 <literal>encrypted</literal> を <literal>true</literal> に設定してください。</para>
-    <para><literal>unrestricted</literal> を <literal>false</literal> に設定すると、起動や &grub; メニュー項目の編集 (<keycap>E</keycap> を押すと編集することができます) に際して <literal>value</literal> 要素で指定したパスワードの入力を求めるようになります。この項目を <literal>true</literal> にすると、パスワードを入力することなくシステムを起動できるようになりますが、 &grub; のメニュー項目の編集時にはパスワード入力が必要になります。このオプションを指定しない場合は、既定値として <literal>true</literal> が指定されたものとみなされます。</para>
-    <para><phrase os="sles;sled">起動時のパスワード設定についての詳細は、 <xref linkend="vle-grub2-yast2-boot-password"/> をお読みください。</phrase></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>password</term>
+        <listitem>
+          <para>この項目を指定した場合、ブートローダをパスワードで保護するようになります。パスワード入力を行わない限り、システムは起動しません。</para>
+          <para>この項目には <literal>value</literal> , <literal>encrypted</literal> , <literal>unrestricted</literal> の各要素を含めることができます。</para>
+          <para><literal>value</literal> にはパスワードそのものを指定します。パスワードは暗号化せずにそのまま指定することもできます (この場合は &yast; が暗号化を行います) し、 <command>grub-mkpasswd-pbkdf2</command> で暗号化したパスワードを指定することもできます。暗号化済みのパスワードを指定する場合は、 <literal>encrypted</literal> を <literal>true</literal> に設定してください。</para>
+          <para><literal>unrestricted</literal> を <literal>false</literal> に設定すると、起動や &grub; メニュー項目の編集 (<keycap>E</keycap> を押すと編集することができます) に際して <literal>value</literal> 要素で指定したパスワードの入力を求めるようになります。この項目を <literal>true</literal> にすると、パスワードを入力することなくシステムを起動できるようになりますが、 &grub; のメニュー項目の編集時にはパスワード入力が必要になります。このオプションを指定しない場合は、既定値として <literal>true</literal> が指定されたものとみなされます。</para>
+          <para><phrase os="sles;sled">起動時のパスワード設定についての詳細は、 <xref linkend="vle-grub2-yast2-boot-password"/> をお読みください。</phrase></para>
 <screen>&lt;password&gt;&lt;value&gt;my_strong_password&lt;/value&gt;&lt;encrypted&gt;false&lt;/encrypted&gt;&lt;unrestricted&gt;false&lt;/unrestricted&gt;&lt;/password&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>suse_btrfs</term>
-    <listitem>
-     <para>廃止予定であり、現在は使用できません。 btrfs スナップショットからの起動は自動的に有効化されます。</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>serial</term>
-    <listitem>
-     <para>&grub; の端末モードが <literal>serial</literal> (シリアル) である場合に、実行すべきコマンドを設定します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>suse_btrfs</term>
+        <listitem>
+          <para>廃止予定であり、現在は使用できません。 btrfs スナップショットからの起動は自動的に有効化されます。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>serial</term>
+        <listitem>
+          <para>&grub; の端末モードが <literal>serial</literal> (シリアル) である場合に、実行すべきコマンドを設定します。</para>
 <screen>&lt;serial&gt;serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1&lt;/serials&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <!-- secure_boot disable added to SLE 15 SP2 oct 1 2019, not in
-    earlier releases yet, see
-    https://github.com/SUSE/doc-sle/pull/481 (cjs) -->
-   <varlistentry>
-    <term>secure_boot</term>
-    <listitem>
-     <para><literal>false</literal> を指定すると、 UEFI Secure Boot を無効化します。 <literal>grub2-efi</literal> ブートローダを選択している場合にのみ意味のある項目です。</para>
+        </listitem>
+      </varlistentry>
+      <!-- secure_boot disable added to SLE 15 SP2 oct 1 2019, not in
+        earlier releases yet, see
+        https://github.com/SUSE/doc-sle/pull/481 (cjs) -->
+      <varlistentry>
+        <term>secure_boot</term>
+        <listitem>
+          <para><literal>false</literal> を指定すると、 UEFI Secure Boot を無効化します。 <literal>grub2-efi</literal> ブートローダを選択している場合にのみ意味のある項目です。</para>
 <screen>&lt;secure_boot&gt;false&lt;/secure_boot&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>terminal</term>
-    <listitem>
-     <para>&grub; で使用したい端末モードを選択します。設定可能な値は <literal>console</literal> , <literal>gfxterm</literal> , <literal>serial</literal> のいずれかとなります。 <literal>serial</literal> を指定した場合は、 &lt;serial&gt; 内でシリアル用のコマンドを設定する必要があります。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>terminal</term>
+        <listitem>
+          <para>&grub; で使用したい端末モードを選択します。設定可能な値は <literal>console</literal> , <literal>gfxterm</literal> , <literal>serial</literal> のいずれかとなります。 <literal>serial</literal> を指定した場合は、 &lt;serial&gt; 内でシリアル用のコマンドを設定する必要があります。</para>
 <screen>&lt;terminal&gt;serial&lt;/terminal&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>timeout</term>
-    <listitem>
-     <para>既定の起動項目を自動的に起動するまでの待機時間を、秒単位で指定します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>timeout</term>
+        <listitem>
+          <para>既定の起動項目を自動的に起動するまでの待機時間を、秒単位で指定します。</para>
 <screen>&lt;timeout config:type="integer"&gt;10&lt;/timeout&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>trusted_boot</term>
-    <listitem>
-     <para><literal>true</literal> を指定すると Trusted GRUB を使用するようになります。 Trusted GRUB は Trusted Platform Module (TPM) に対応しています。 <literal>grub2</literal> ブートローダを選択している場合にのみ意味のある項目です。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>trusted_boot</term>
+        <listitem>
+          <para><literal>true</literal> を指定すると Trusted GRUB を使用するようになります。 Trusted GRUB は Trusted Platform Module (TPM) に対応しています。 <literal>grub2</literal> ブートローダを選択している場合にのみ意味のある項目です。</para>
 <screen>&lt;trusted_boot"&gt;true&lt;/trusted_boot&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>update_nvram</term>
-    <listitem>
-     <para>この値を <literal>true</literal> に設定すると、 &ay; はファームウエア内に ブートローダ用の NVRAM の項目を設定するようになります。これは特殊な設定を維持させたいような場合や、ファームウエア側の問題を回避したい場合などを除いて、通常は設定しておくべきものです。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>update_nvram</term>
+        <listitem>
+          <para>この値を <literal>true</literal> に設定すると、 &ay; はファームウエア内に ブートローダ用の NVRAM の項目を設定するようになります。これは特殊な設定を維持させたいような場合や、ファームウエア側の問題を回避したい場合などを除いて、通常は設定しておくべきものです。</para>
 <screen>&lt;update_nvram&gt;true&lt;/update_nvram&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>vgamode</term>
-    <listitem>
-     <para>起動項目のカーネルパラメータに対して、 <literal>vga=<replaceable>値</replaceable></literal> の形式で追加を行います。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>vgamode</term>
+        <listitem>
+          <para>起動項目のカーネルパラメータに対して、 <literal>vga=<replaceable>値</replaceable></literal> の形式で追加を行います。</para>
 <screen>&lt;vgamode&gt;0x317&lt;/vgamode&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>xen_append</term>
-    <listitem>
-     <para>&xen; ゲスト向けの起動項目の末尾に追加する、カーネルのパラメータを指定します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>xen_append</term>
+        <listitem>
+          <para>&xen; ゲスト向けの起動項目の末尾に追加する、カーネルのパラメータを指定します。</para>
 <screen>&lt;xen_append&gt;nomodeset vga=0x317&lt;/xen_append&gt;</screen>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>xen_kernel_append</term>
-    <listitem>
-     <para>&vmhost; 内の &xen; カーネルに対して、起動項目の末尾に追加するパラメータを指定します。</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>xen_kernel_append</term>
+        <listitem>
+          <para>&vmhost; 内の &xen; カーネルに対して、起動項目の末尾に追加するパラメータを指定します。</para>
 <screen>&lt;xen_kernel_append&gt;dom0_mem=768M&lt;/xen_kernel_append&gt;</screen>
-    </listitem>
-   </varlistentry>
-  </variablelist>
- </sect2>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </sect2>
 
- <sect2 xml:id="CreateProfile-Bootloader-dev-map">
-  <title>デバイスマップ</title>
-  <para>&grub; では BIOS ドライブと Linux デバイスの間でのマッピングに関わる問題を回避するため、設定ファイルを生成する際にデバイス ID 文字列 (UUID) もしくはファイルシステムのラベルを使用するようになっています。 &grub; ユーティリティではその場で一時的なデバイスマップを作成しますが、これは特にディスクが 1 台しか搭載されていないシステムであれば十分な仕組みです。しかしながら、何らかの理由で自動デバイスマップの仕組みを上書きする必要がある場合は、このセクションを利用して独自のマッピングを指定してください。</para>
+  <sect2 xml:id="CreateProfile-Bootloader-dev-map">
+    <title>デバイスマップ</title>
+    <para>&grub; では BIOS ドライブと Linux デバイスの間でのマッピングに関わる問題を回避するため、設定ファイルを生成する際にデバイス ID 文字列 (UUID) もしくはファイルシステムのラベルを使用するようになっています。 &grub; ユーティリティではその場で一時的なデバイスマップを作成しますが、これは特にディスクが 1 台しか搭載されていないシステムであれば十分な仕組みです。しかしながら、何らかの理由で自動デバイスマップの仕組みを上書きする必要がある場合は、このセクションを利用して独自のマッピングを指定してください。</para>
 <screen>&lt;device_map config:type="list"&gt;
   &lt;device_map_entry&gt;
     &lt;firmware&gt;hd0&lt;/firmware&gt; &lt;!-- ターゲットマップ内でのデバイスの順序  --&gt;
     &lt;linux&gt;/dev/disk/by-id/ata-ST3500418AS_6VM23FX0&lt;/linux&gt; &lt;!-- デバイス (ディスク) 名  --&gt;
   &lt;/device_map_entry&gt;
 &lt;/device_map&gt;</screen>
- </sect2>
+  </sect2>
 </sect1>
