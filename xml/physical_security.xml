@@ -227,173 +227,139 @@ polkit.addRule(function(action, subject) {
     </procedure>
    </sect1>
   <sect1 xml:id="sec-USBGuard">
-<title>System protection with enforced USB device authorization via <emphasis>USBGuard</emphasis></title>
-<para>
-  The USBGuard software framework helps to protect your system with enforced USB device authorization.
-  It implements allowlist and blocklist capabilities based on the device attributes.
-</para>
-<para>The USBGuard provides the following features:</para>
+<title><emphasis>USBGuard</emphasis> による USB デバイスの認可とシステムの保護</title>
+<para>USBGuard ソフトウエアフレームワークは、 USB デバイスの認可を強制することによって、お使いのシステムを保護する機能を提供します。このフレームワークは、デバイスの属性情報をベースにした許可／拒否リストを使用します。</para>
+<para>USBGuard には下記のような機能があります:</para>
 <itemizedlist>
   <listitem>
-   <para>
-    A command-line interface to interact with a running USBGuard daemon
-    </para>
+   <para>動作中の USBGuard デーモンとの対話を行うためのコマンドラインインターフェイス</para>
   </listitem>
   <listitem>
-   <para>The daemon component with an inter-process communication (IPC)
-    interface for dynamic interaction and policy enforcement</para>
+   <para>動的な処理やポリシー強制を行うためのプロセス間通信 (IPC) 機能を持ったデーモンコンポーネント</para>
   </listitem>
   <listitem>
-   <para>The rule language for writing USB device authorization policies</para>
+   <para>USB デバイスの認可ポリシーを記述するためのルール言語</para>
   </listitem>
-  <listitem><para>The C++ API for interacting with the daemon component implemented in a shared library</para></listitem>
+  <listitem><para>共有ライブラリとして提供された、デーモンコンポーネントとの対話を行うための C++ API</para></listitem>
    </itemizedlist>
    <sect2 xml:id="sec-installing-usbguard">
-    <title>Installing USBGuard</title>
-    <para> The USBGuard daemon decides which USB device to authorize based on a set of rules defined in the policy.
-      To install and configure USBGuard, use the following commands:</para>
+    <title>USBGuard のインストール</title>
+    <para>USBGuard デーモンは、ポリシー内に規定されたルールをもとに、 USB デバイスの使用可否を判断します。 USBGuard をインストールして設定するには、下記のコマンドを使用してください:</para>
     <procedure>
-      <step><para>To install USBGuard:</para>
+      <step><para>USBGuard をインストールするには、下記の手順を実施します:</para>
       <screen>&prompt.sudo; zypper install usbguard</screen>
-    <para>USBGuard and the required dependencies are installed. If you want to interact with the USBGuard service, you can
-      install <literal>usbguard-tools</literal>.</para>
+    <para>これで USBGuard と必要な依存関係がインストールされます。 USBGuard サービスとの対話を行うには、 <literal>usbguard-tools</literal> も合わせてインストールしてください。</para>
     </step>
-    <step><para>To generate a rule set based on currently connected USB devices, switch to &rootuser;: </para>
+    <step><para>現在接続されている USB デバイスを元にしてルールセットを生成したい場合は、 &rootuser; に切り替えて下記のコマンドを実行します:</para>
       <screen>&prompt.root;usbguard generate-policy &gt; /etc/usbguard/rules.conf</screen>
-      <note><para>You can customize USBGuard by editing the <filename>/etc/usbguard/rules.conf</filename>
-      file.
-      </para></note>
+      <note><para>あとは必要に応じて <filename>/etc/usbguard/rules.conf</filename> ファイルを編集し、 USBGuard のカスタマイズを行ってください。</para></note>
     </step>
-    <step><para> You can start the USBGuard daemon or ensure automatic enablement at
-      system start by switching to &rootuser;:</para>
-      <screen>&prompt.root;systemctl restart udisks2</screen>
+    <step><para>USBGuard の開始やシステム起動時の自動開始を設定したい場合は、 &rootuser; に切り替えて下記のコマンドを実行します:</para>
+      <screen>&prompt.root;systemctl enable --now usbguard.service</screen>
         </step>
-    <step><para> You can either authorize or deauthorize a device from interacting with the system. Note that
-      this depends on the value of the <literal>ImplicitPolicyTarget</literal> option in the <filename>usbguard-daemon.conf
-      </filename> file. This option is used to treat devices that do not match any rule in the policy.
-    </para>
+    <step><para>なお、 USBGuard ではデバイスの許可か拒否をそれぞれ設定することができます。これは <filename>usbguard-daemon.conf </filename> ファイル内の <literal>ImplicitPolicyTarget</literal> オプションの値によっても影響を受けますが、これはポリシー内のどのルールにも該当しなかった場合の取り扱いを指定します。</para>
       <screen>usbguard allow-device 6</screen>
       <screen>usbguard block-device 6</screen>
-      <para> You can also use the <command>reject-device</command>option to deauthorize and
-        remove a device from the system.
-              </para>
-      <note><para>Use the <command>usbguard --help </command> command to see all the options.</para></note>
+      <para>システムへの接続を拒否してデバイスを取り外したい場合は、 <command>reject-device</command> オプションを設定してください。</para>
+      <note><para>なお、全てのオプションを確認したい場合は、 <command>usbguard --help </command> コマンドを実行してください。</para></note>
     </step>
     </procedure>
    </sect2>
 <sect2 xml:id="sec-how-to-use-usbguard">
-<title>How to use USBGuard</title>
-<para>You can configure a security policy to protect your system with enforced USB device authorization
-  by implementing <emphasis>allow</emphasis> and <emphasis>block</emphasis> lists based on the device attributes.
-</para>
-<sect3><title>The USBGuard configuration file </title>
-  <para>The USBGuard daemon loads the <filename>usbguard-daemon.conf</filename> file after the command-line
-  options are parsed and are used to configure the runtime parameters of the daemon. The file is by default, located at
-<filename>/etc/usbguard/usbguard-daemon.conf</filename>. Some options in the file include:</para>
+<title>USBGuard の使用方法</title>
+<para>デバイスの属性をベースにして <emphasis>allow</emphasis> (許可) または <emphasis>block</emphasis> (拒否) を設定することで、お使いのシステムに対する USB デバイスの接続ポリシーを設定することができます。</para>
+<sect3><title>USBGuard の設定ファイル</title>
+  <para>USBGuard はコマンドラインオプションの解釈とデーモンへの設定適用が完了すると、 <filename>usbguard-daemon.conf</filename> ファイルの読み込みを行います。このファイルは既定で <filename>/etc/usbguard/usbguard-daemon.conf</filename> に配置します。このファイルには下記のようなオプションが含まれています:</para>
 <variablelist>
-  <title>Options</title>
+  <title>オプション</title>
   <varlistentry>
-    <term><option>RuleFile=<replaceable>PATH</replaceable></option></term>
+    <term><option>RuleFile=<replaceable>パス</replaceable></option></term>
     <listitem>
-    <para>The USBGuard daemon uses this file to load the policy rule set from it and to write
-      new rules received through the IPC (inter-process communication) interface.
-      The default is <filename>%sysconfdir%/usbguard/rules.conf</filename>.</para> </listitem>
+    <para>USBGuard デーモンは、このファイルをポリシールールセットの読み込み元として使用するほか、 IPC (プロセス間通信) で指示された新しいルールの書き込み先としても使用します。既定値は <filename>%sysconfdir%/usbguard/rules.conf</filename> になります。</para> </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>ImplicitPolicyTarget= <replaceable>TARGET</replaceable></option></term>
+    <term><option>ImplicitPolicyTarget= <replaceable>ターゲット</replaceable></option></term>
    <listitem>
-    <para> How to treat devices that do not match any rule in the policy, for example: </para>
+    <para>ポリシー内のどのルールにも該当しないデバイスの取り扱い方法を指定します。たとえば下記のようになります:</para>
     <itemizedlist>
       <listitem>
-         <para>allow - authorize every present device</para>
+         <para>allow - デバイスの接続を許可します</para>
       </listitem>
       <listitem>
-         <para>block - deauthorize every present device</para>
+         <para>block - デバイスの接続を拒否します</para>
       </listitem>
       <listitem>
-        <para>reject - logically remove the device node from the system</para>
+        <para>reject - システムからデバイスノードを論理的に削除します</para>
      </listitem>
       </itemizedlist>
     </listitem></varlistentry>
     <varlistentry>
-      <term><option>PresentDevicePolicy= <replaceable>POLICY</replaceable></option></term>
+      <term><option>PresentDevicePolicy= <replaceable>ポリシー</replaceable></option></term>
      <listitem>
-      <para>How to treat devices that are already connected when the daemon starts.</para>
+      <para>デーモンの起動時に既に接続されていたデバイスの取り扱い方法を指定します。</para>
       <itemizedlist>
         <listitem>
-           <para>allow - authorize every present device</para>
+           <para>allow - デバイスの接続を許可します</para>
         </listitem>
         <listitem>
-           <para>block - deauthorize every present device</para>
+           <para>block - デバイスの接続を拒否します</para>
         </listitem>
         <listitem>
-          <para>reject - remove every present device</para>
+          <para>reject - デバイスを削除します</para>
        </listitem>
        <listitem>
-        <para>keep - sync the internal state </para>
+        <para>keep - 内部状態を同期させます</para>
      </listitem>
      <listitem>
-      <para>apply-policy - evaluate the rule set for all present devices </para>
+      <para>apply-policy - 全ての既存デバイスに対して、ルールセットを適用します</para>
    </listitem>
     </itemizedlist>
       </listitem></varlistentry>
     <varlistentry>
-      <term><option>IPCAllowedUsers= <replaceable>USERNAME</replaceable></option></term>
+      <term><option>IPCAllowedUsers= <replaceable>ユーザ名</replaceable></option></term>
        <listitem>
-      <para>A space-delimited list of user names that the daemon accepts IPC connections from.</para>
+      <para>デーモンに対して IPC 経由でコマンドの送信を許可するユーザ名を、スペース区切りで指定します。</para>
       </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>IPCAllowedGroups= <replaceable>GROUPNAME</replaceable></option></term>
+          <term><option>IPCAllowedGroups= <replaceable>グループ名</replaceable></option></term>
            <listitem>
-          <para>A space-delimited list of group names that the daemon accepts IPC connections from.</para>
+          <para>デーモンに対して IPC 経由でコマンドの送信を許可するグループ名を、スペース区切りで指定します。</para>
           </listitem>
             </varlistentry>
             <varlistentry>
-              <term><option>IPCAccessControlFiles= <replaceable>PATH</replaceable></option></term>
+              <term><option>IPCAccessControlFiles= <replaceable>パス</replaceable></option></term>
                <listitem>
-              <para>Path to files that are interpreted by the daemon as IPC access control definition files.</para>
+              <para>IPC のアクセス制御設定ファイルとしてデーモンが解釈すべきファイルパスを指定します。</para>
               </listitem>
                 </varlistentry>
    </variablelist>
       <example xml:id="usbguard-config-file-ipcaccess">
-    <title>Configuration</title>
+    <title>設定</title>
  <screen>IPCAllowedUsers=root joe
 IPCAllowedGroups=wheel</screen>
-<para>The example allows full IPC access to the users <literal>root</literal>,<literal>joe</literal>
-and to the members of the group <literal>wheel</literal>.</para>
+<para>たとえば上記のような例の場合、 <literal>root</literal> , <literal>joe</literal> の各ユーザ、および <literal>wheel</literal> グループに属するユーザからの全ての IPC を許可します。</para>
     </example>
 </sect3>
 </sect2>
 <sect2 xml:id="sec-more-information-usbguard">
-<title>More information</title>
-<para>To know more about USBGuard, see: </para>
+<title>さらなる情報</title>
+<para>USBGuard に関するさらに詳しい情報を参照したい場合は、それぞれ下記をご覧ください:</para>
 <itemizedlist>
   <listitem>
-    <para>
-      The upstream documentation at
-      <link xlink:href="https://usbguard.github.io/"/>
-    </para>
+    <para>提供元のドキュメンテーション: <link xlink:href="https://usbguard.github.io/"/></para>
   </listitem>
   <listitem>
-    <para>
-      man <emphasis>usbguard</emphasis>
-    </para>
+    <para>man <emphasis>usbguard</emphasis></para>
   </listitem>
   <listitem>
-    <para>
-      man <emphasis>usbguard-rules.conf</emphasis>
-    </para>
+    <para>man <emphasis>usbguard-rules.conf</emphasis></para>
   </listitem>
     <listitem>
-    <para>
-      man <emphasis>usbguard-daemon</emphasis>
-    </para>
+    <para>man <emphasis>usbguard-daemon</emphasis></para>
   </listitem>
     <listitem>
-    <para>
-      man <emphasis>usbguard-daemon.conf</emphasis>
-    </para>
+    <para>man <emphasis>usbguard-daemon.conf</emphasis></para>
   </listitem>
 </itemizedlist>
 </sect2>
