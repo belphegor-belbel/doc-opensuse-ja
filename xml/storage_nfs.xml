@@ -131,7 +131,7 @@
           <para>まずは <guimenu>開始</guimenu> のラジオボタンを押します。</para>
         </step>
         <step>
-          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を個別に実施する必要があります (詳しくは <xref linkend="sec-security-firewall-firewalld"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 "ファイアウオールを設定できません" のメッセージを無視して続行してください。</para>
+          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を別途実施する必要があります (詳しくは <xref linkend="sec-nfs-firewall"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 "ファイアウオールを設定できません" のメッセージを無視して続行してください。</para>
         </step>
         <step>
           <para>また、必要であれば <guimenu>NFSv4 を有効にする</guimenu> をチェックしてください。 NFSv4 を無効化した場合、 &yast; は NFSv3 のみに対応するようになります。なお、 NFSv2 の有効化については、 <xref linkend="sec-nfs-export-manual-nsfv2"/> をお読みください。</para>
@@ -140,13 +140,8 @@
               <para>NFSv4 を有効化した場合は、追加で NFSv4 ドメイン名を入力します。このパラメータは <systemitem class="daemon">idmapd</systemitem> デーモンが使用するパラメータで、 &krb; の設定時やクライアントが数字のユーザ名では処理できないような場合に利用します。 <systemitem class="daemon">idmapd</systemitem> を動作させない場合や、特に要件がない場合は、 <literal>localdomain</literal> (既定値) のままでかまいません。 <systemitem class="daemon">idmapd</systemitem> について、詳しくは <xref linkend="var-nfs-export-manual-idmapd"/> をお読みください。</para>
 
               <important>
-                <title>NFSv4 Domain Name</title>
-                <para>
-                  Note that the domain name needs to be configured on all NFSv4
-                  clients as well. Only clients that share the same domain name
-                  as the server can access the server. The default domain name
-                  for server and clients is <literal>localdomain</literal>.
-                 </para>
+                <title>NFSv4 ドメイン名について</title>
+                <para>ドメイン名は全ての NFSv4 クライアント側でも設定する必要があります。同じドメイン名を設定したクライアントでないと、アクセスが拒否されてしまうためです。なお、既定のドメイン名は、サーバ／クライアントとも <literal>localdomain</literal> になっています。</para>
                 </important>
 
             </step>
@@ -180,8 +175,8 @@
     <sect2 xml:id="sec-nfs-export-manual" os="sles;osuse">
       <title>手作業によるファイルシステムの公開</title>
       <para>NFS のエクスポートサービスで使用される設定ファイルは、 <filename>/etc/exports</filename> と <filename>/etc/sysconfig/nfs</filename> の 2 種類です。これらのファイルに加えて、 Ketberos が有効化された NFSv4 サーバの設定や、クライアントが数字のユーザ名を扱うことができない場合は、 <filename>/etc/idmapd.conf</filename> も必要となります。</para>
-      <para>サービスを開始もしくは再起動するには、 <command>systemctl restart nfsserver</command> を実行します。これにより、 NFS サーバが必要とする RPC port mapper も再起動することができます。</para>
-      <para>NFS サーバをシステムの起動時に開始するようにするには。 <command>sudo systemctl enable nfsserver</command> を実行します。</para>
+      <para>サービスを開始もしくは再起動するには、 <command>systemctl restart nfs-server</command> を実行します。これにより、 NFS サーバが必要とする RPC port mapper も再起動することができます。</para>
+      <para>NFS サーバをシステムの起動時に開始するようにするには。 <command>sudo systemctl enable nfs-server</command> を実行します。</para>
       <note>
         <title>NFSv4</title>
         <para>NFSv4 は &productname; で利用できる最新バージョンの NFS プロトコルです。現在の NFSv4 でディレクトリをエクスポートする際の設定は、 NFSv3 と同じです。</para>
@@ -198,37 +193,23 @@
 /nfs_exports/department1 *.department1.&exampledomain;(rw,sync,root_squash,wdelay)
 /nfs_exports/team1 &subnetI;.0/24(rw,sync,root_squash,wdelay)
 /nfs_exports/&exampleuser_plain; &subnetI;.2(rw,sync,root_squash)</screen>
-            <para>
-              In this example, the following values for
-              <replaceable>HOST</replaceable> are used:
-            </para>
+            <para>上記の例では、 <replaceable>ホスト</replaceable> の欄にそれぞれ下記を指定しています:</para>
             <itemizedlist>
               <listitem>
-                <para>
-                  <literal>*</literal>: exports to all clients on the network
-                </para>
+                <para><literal>*</literal> : ネットワーク内の全てのクライアントに対して共有するよう指定しています</para>
               </listitem>
               <listitem>
-                <para>
-                  <literal>*.department1.&exampledomain;</literal>: only exports
-                  to clients on the *.department1.&exampledomain; domain
-                </para>
+                <para><literal>*.department1.&exampledomain;</literal> : *.department1.&exampledomain; のドメインに属するクライアントにのみ共有するよう指定しています</para>
               </listitem>
               <listitem>
-                <para>
-                  <literal>&subnetI;.0/24</literal>: only exports
-                  to clients with IP adresses in the range of &subnetI;.0/24
-                </para>
+                <para><literal>&subnetI;.0/24</literal> : &subnetI;.0/24 の IP アドレス範囲内にのみ共有するよう指定しています</para>
               </listitem>
               <listitem>
-                <para>
-                  <literal>&subnetI;.2</literal>: only exports
-                  to the machine with the IP address &subnetI;.2
-                </para>
+                <para><literal>&subnetI;.2</literal> : &subnetI;.2 の IP アドレスを持つマシンにのみ共有するよう指定しています</para>
               </listitem>
             </itemizedlist>
-            <para>全てのオプションとそれらの意味に関する説明について、詳しくは <filename>/etc/exports</filename> のマニュアルページ ( <command>man exports</command> ) をお読みください。</para>
-            <para>なお、 NFS サーバが動作している間に <filename>/etc/exports</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfsserver</command> を実行して、変更内容を反映させるために再起動を行う必要があります。</para>
+            <para>上記の例に加えて、 <filename>/etc/netgroup</filename> ファイルで定義できるネットグループを利用した制限を設定 ( <literal>@my-hosts</literal> ) することもできます。指定可能な全てのオプションとその意味について、詳しくは <filename>/etc/exports</filename> のマニュアルページ ( <command>man exports</command> ) をお読みください。</para>
+            <para>なお、 NFS サーバが動作している間に <filename>/etc/exports</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfs-server</command> を実行して、変更内容を反映させるために再起動を行う必要があります。</para>
             <!--
               <para>
               When clients mount from this server, they just mount
@@ -244,7 +225,7 @@
           <term><filename>/etc/sysconfig/nfs</filename></term>
           <listitem>
             <para><filename>/etc/sysconfig/nfs</filename> ファイルには、 NFSv4 サーバデーモンの動作に関わるいくつかのパラメータが含まれています。特に <systemitem>NFS4_SUPPORT</systemitem> を <literal>yes</literal> (既定値) に設定しておくことが重要です。 <systemitem>NFS4_SUPPORT</systemitem> は NFS サーバが NFSv4 のエクスポートとクライアントに対応するかどうかを決定するパラメータです。</para>
-            <para>なお、 NFS サーバが動作している間に <filename>/etc/sysconfig/nfs</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfsserver</command> を実行して、変更内容を反映させるために再起動を行う必要があります。</para>
+            <para>なお、 NFS サーバが動作している間に <filename>/etc/sysconfig/nfs</filename> ファイルを変更した場合は、 <command>sudo systemctl restart nfs-server</command> を実行して、変更内容を反映させるために再起動を行う必要があります。</para>
             <tip>
               <title>マウントオプション</title>
               <para><phrase os="sles;sled">&sls; 11</phrase> <phrase os="osuse">Leap 以前の &opensuse; </phrase> では、 <filename>/etc/exports</filename> 内で <option>--bind</option> マウントのオプションが必須でした。現在もなお、この構成に対応してはいますが、廃止予定になっています。また、現在の NFSv4 でディレクトリをエクスポートする際の設定は、 NFSv3 と同じです。</para>
@@ -267,7 +248,7 @@ MOUNTD_OPTIONS="-V2"</screen>
             <para><systemitem class="daemon">idmapd</systemitem> デーモンは、 &krb; 認証を使用している場合や、クライアント側で数字のユーザ名を扱うことができない場合にのみ必要となるデーモンです。 Linux カーネル 2.6.39 以降では、 Linux クライアントは数字のユーザ名にも対応しています。 <systemitem class="daemon">idmapd</systemitem> デーモンは、 NFSv4 のサーバ宛のリクエストやクライアント宛の応答に対して、名前と ID とのマッピングを行います。</para>
             <para>必要であれば、 <systemitem class="daemon">idmapd</systemitem> を NFSv4 サーバ内で動作させる必要があります。クライアント側での名前と ID のマッピングは、 <package>nfs-client</package> パッケージで提供されている <command>nfsidmap</command> が行います。</para>
             <para>なお、ユーザ名と ID (uid) が、 NFS でファイルを共有する可能性のある全てのマシン間で正しく統一されていることをご確認ください。これは NIS や LDAP など、任意のドメイン認証の仕組みで実施することができます。</para>
-            <para>また、 <filename>/etc/idmapd.conf</filename> 内の <literal>Domain</literal> パラメータの値が、クライアントとサーバの両方で同じ値になっていることをご確認ください。よく分からない場合は、サーバとクライアントの両方で <literal>localdomain</literal> をドメインとしてお使いください。設定ファイルの例は下記のようになります:</para>
+            <para>また、 <filename>/etc/idmapd.conf</filename> 内の <literal>Domain</literal> パラメータは設定必須となります。この値は NFSv4 のクライアントとサーバの両方で同じ値になっていなければなりません。よく分からない場合は、サーバとクライアントの両方で、既定値である <literal>localdomain</literal> をお使いください。それ以外の値を設定する場合、通常はホストの FQDN 名からホスト名を抜いたものを指定します。設定ファイルの例は下記のようになります:</para>
 <screen>[General]
 Verbosity = 0
 Pipefs-Directory = /var/lib/nfs/rpc_pipefs
@@ -276,7 +257,7 @@ Domain = localdomain
 [Mapping]
 Nobody-User = nobody
 Nobody-Group = nobody</screen>
-            <para><systemitem class="daemon">idmapd</systemitem> デーモンを開始するには、 <command>systemctl start nfs-idmapd</command> を実行します。デーモンが動作している間に <filename>/etc/idmapd.conf</filename> ファイルを変更した場合は、 <command>systemctl start nfs-idmapd</command> を実行して設定を適用してください。</para>
+            <para><systemitem class="daemon">idmapd</systemitem> デーモンを開始するには、 <command>systemctl start nfs-idmapd</command> を実行します。デーモンが動作している間に <filename>/etc/idmapd.conf</filename> ファイルを変更した場合は、 <command>systemctl restart nfs-idmapd</command> を実行して設定を適用してください。</para>
             <para>詳しくは <literal>idmapd</literal> と <literal>idmapd.conf</literal> のマニュアルページをお読みください ( <literal>man idmapd</literal> および <literal>man idmapd.conf</literal> で読むことができます) 。</para>
           </listitem>
         </varlistentry>
@@ -329,7 +310,7 @@ Nobody-Group = nobody</screen>
           <para>NFS 向けに &krb; 認証を使用するには、 GSS セキュリティを有効化しなければなりません。この場合は、 <guimenu>GSS セキュリティを有効にする</guimenu> を選択します。</para>
         </step>
         <step>
-          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を個別に実施する必要があります (詳しくは <xref linkend="sec-security-firewall-firewalld"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 "ファイアウオールを設定できません" のメッセージを無視して続行してください。</para>
+          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を別途実施する必要があります (詳しくは <xref linkend="sec-nfs-firewall"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 <quote>ファイアウオールを設定できません</quote> のメッセージを無視して続行してください。</para>
         </step>
         <!-- End: NFS Settings -->
         <step>
@@ -393,7 +374,7 @@ nfs4mount -fstype=nfs4 server2:/</screen>
 <screen>&prompt.sudo;mount /local/path</screen>
         <note>
           <title>起動時点でのマウントについて</title>
-          <para><literal>noauto</literal> オプションを指定しない場合、システムの起動時に動作する初期化スクリプトが、自動的にマウント処理を行います。</para>
+          <para><literal>noauto</literal> オプションを指定しない場合、システムの起動時に動作する初期化スクリプトが、自動的にマウント処理を行います。また、ネットワークが動作する前にマウント処理を実施しないようにするため、 <option>_netdev</option> オプションを設定してもかまいません。</para>
         </note>
       </sect3>
     </sect2>
@@ -427,8 +408,8 @@ nfs4mount -fstype=nfs4 server2:/</screen>
       </sect3>
       <sect3 xml:id="sec-nfs-pnfs-manual">
         <title>手作業による pNFS クライアントの設定</title>
-        <para>起動については <xref linkend="sec-nfs-import"/> をお読みください。ほとんどの設定は NFSv4 サーバ側で行います。 pNFS の場合、 <command>mount</command> に指定する <option>minorversion</option> オプションと、メタデータサーバを指定する <replaceable>MDS_サーバ</replaceable> が異なります。</para>
-<screen>&prompt.sudo;mount -t nfs4 -o minorversion=1 <replaceable>MDS_サーバ</replaceable> <replaceable>マウントポイント</replaceable></screen>
+        <para>起動については <xref linkend="sec-nfs-import"/> をお読みください。ほとんどの設定は NFSv4 サーバ側で行います。 pNFS の場合、 <command>mount</command> に指定する <option>nfsvers</option> オプションと、メタデータサーバを指定する <replaceable>MDS_サーバ</replaceable> が異なります。</para>
+<screen>&prompt.sudo;mount -t nfs4 -o nfsvers=4.2 <replaceable>MDS_サーバ</replaceable> <replaceable>マウントポイント</replaceable></screen>
         <para>デバッグ機能を有効にするには、下記の <filename>/proc</filename> ファイルシステム内の値を変更してください:</para>
 <screen>&prompt.sudo;echo 32767 &gt; /proc/sys/sunrpc/nfsd_debug
 &prompt.sudo;echo 32767 &gt; /proc/sys/sunrpc/nfs_debug</screen>
@@ -436,46 +417,20 @@ nfs4mount -fstype=nfs4 server2:/</screen>
     </sect2>
   </sect1>
   <sect1 xml:id="sec-nfs-firewall" os="sles;sled;osuse">
-    <title>Operating an NFS server and clients behind a firewall</title>
-    <para>
-      Communication between an NFS server and its clients happens via Remote
-      Procedure Calls (RPC). Several RPC services, such as the mount daemon or the
-      file locking service, are part of the Linux NFS implementation. If
-      the server and the clients run behind a firewall, these services and the
-      firewall(s) need to be configured to not block the client-server
-      communication.
-    </para>
-    <para>
-      An NFS 4 server is backwards-compatible with NFS version 3, and firewall
-      configurations vary for both versions. If any of your clients use
-      NFS 3 to mount shares, configure your firewall to allow
-      both, NFS 4 and NFS 3.
-    </para>
+    <title>ファイアウオールを介した NFS サーバと NFS クライアントの通信</title>
+    <para>NFS サーバと NFS クライアントとの通信は、 Remote Procedure Calls (RPC) と言う仕組みを利用します。マウントデーモンやファイル施錠 (ロック) サービスなどの RPC サービスは、いずれも Linux の NFS 実装の一部として提供されているものです。サーバとクライアントの間にファイアウオールが存在する場合、これらのサービスとファイアウオールは、通信を妨害されることの無いように設定しておく必要があります。</para>
+    <para>NFS 4 サーバは NFS バージョン 3 との後方互換性がありますが、バージョンによってファイアウオールの設定内容が異なります。また、 NFS 3 で共有をマウントするクライアントが存在する場合、ファイアウオールでは NFS 4 と NFS 3 の両方の設定を実施する必要があります。</para>
     <sect2 xml:id="nfs-firewall-nfsv4">
-      <title>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</title>
-      <para>
-        NFS 4 requires TCP port 2049 to be open on the server side only. To
-        open this port on the firewall, enable the <literal>nfs</literal>
-        service in firewalld <emphasis>on the NFS server</emphasis>:
-      </para>
-      <screen>&prompt.sudo;firewall-cmd --permanent --add-service=nfs --zone=<replaceable>ACTIVE_ZONE</replaceable>
+      <title>NFS 4. <replaceable>x</replaceable></title>
+      <para>NFS 4 では、サーバ側で TCP ポート 2049 を開くだけでかまいません。ファイアウオールでポートを開くには、 <emphasis>NFS サーバ側の</emphasis> firewalld で、 <literal>nfs</literal> サービスを有効化します:</para>
+      <screen>&prompt.sudo;firewall-cmd --permanent --add-service=nfs --zone=<replaceable>ゾーン名</replaceable>
 firewall-cmd --reload</screen>
-      <para>
-        Replace <replaceable>ACTIVE_ZONE</replaceable> with the firewall zone
-        used on the NFS server.
-      </para>
-      <para>
-        No additional firewall configuration on the client side is needed when
-        using NFSv4. By default mount defaults to the highest supported
-        NFS version, so if your client supports NFSv4, shares will
-        automatically be mounted as version 4.2.
-      </para>
+      <para>ここで、 <replaceable>ゾーン名</replaceable> には NFS サーバ側で使用しているゾーン名を指定します。</para>
+      <para>NFSv4 の場合、クライアント側でのファイアウオール設定は不要です。特に指定を行わない限り、クライアント側は利用可能な最新の NFS バージョンを利用してマウントを実施しますので、クライアント側が NFSv4 に対応していれば、共有は自動的にバージョン 4.2 でマウントすることになります。</para>
     </sect2>
     <sect2 xml:id="nfs-firewall-nfsv3">
       <title>NFS 3</title>
-      <para>
-        NFS 3 requires the following services:
-      </para>
+      <para>NFS 3 では下記のようなサービスが必要となります:</para>
       <itemizedlist>
         <listitem>
           <para><systemitem class="daemon">portmapper</systemitem></para>
@@ -493,41 +448,31 @@ firewall-cmd --reload</screen>
           <para><systemitem class="daemon">statd</systemitem></para>
         </listitem>
       </itemizedlist>
-      <para>
-        These services are operated by <systemitem>rpcbind</systemitem>, which,
-        by default, dynamically assigns ports. To allow access to these
-        services behind a firewall, they need to be configured to run on a
-        static port first. These ports need to be opened in the firewall(s) afterwards.
-      </para>
+      <para>これらのサービスは <systemitem>rpcbind</systemitem> で制御され、既定では動的にポートが割り当てられます。ファイアウオール内に位置する NFS サーバの場合、まずは使用するサービスに対して固定のポートを使用するように設定する必要があります。ポートを固定したのち、ファイアウオールでポートを開いてください。</para>
       <variablelist>
         <varlistentry>
           <term><systemitem class="daemon">portmapper</systemitem></term>
           <listitem>
-            <para>
-              On &productname;, <systemitem class="daemon">portmapper</systemitem> is already configured to
-              run on a static port.
-            </para>
+            <para>&productname; の場合、 <systemitem class="daemon">portmapper</systemitem> は既定で固定のポートを使用するように設定されています。</para>
             <informaltable>
               <tgroup cols="2">
                 <colspec colnum="1" colname="1" colwidth="70*"/>
                 <colspec colnum="2" colname="2" colwidth="30*"/>
                 <tbody>
                   <row>
-                    <entry><para>Port</para></entry>
+                    <entry><para>ポート</para></entry>
                     <entry><para>111</para></entry>
                    </row>
                    <row>
-                     <entry><para>Protocol(s)</para></entry>
+                     <entry><para>プロトコル</para></entry>
                      <entry><para>TCP, UDP</para></entry>
                    </row>
                    <row>
-                     <entry><para>Runs on</para></entry>
-                     <entry><para>Client, Server</para></entry>
+                     <entry><para>動作</para></entry>
+                     <entry><para>クライアント, サーバ</para></entry>
                    </row>
                    <row>
-                     <entry namest="1" nameend="2">
-                       <screen>&prompt.sudo;firewall-cmd --add-service=rpc-bind --permanent --zone=<replaceable>ACTIVE_ZONE</replaceable></screen>
-                     </entry>
+                     <entry namest="1" nameend="2"><screen>&prompt.sudo;firewall-cmd --add-service=rpc-bind --permanent --zone=<replaceable>ゾーン名</replaceable></screen></entry>
                    </row>
                 </tbody>
               </tgroup>
@@ -537,31 +482,26 @@ firewall-cmd --reload</screen>
         <varlistentry>
           <term><systemitem class="daemon">nfsd</systemitem></term>
           <listitem>
-            <para>
-              On &productname;, <systemitem class="daemon">nfsd</systemitem> is already configured to
-              run on a static port.
-            </para>
+            <para>&productname; の場合、 <systemitem class="daemon">nfsd</systemitem> は既定で固定のポートを使用するように設定されています。</para>
             <informaltable>
               <tgroup cols="2">
                 <colspec colnum="1" colname="1" colwidth="50*"/>
                 <colspec colnum="2" colname="2" colwidth="50*"/>
                 <tbody>
                   <row>
-                    <entry><para>Port</para></entry>
+                    <entry><para>ポート</para></entry>
                     <entry><para>2049</para></entry>
                    </row>
                    <row>
-                     <entry><para>Protocol(s)</para></entry>
+                     <entry><para>プロトコル</para></entry>
                      <entry><para>TCP, UDP</para></entry>
                    </row>
                    <row>
-                     <entry><para>Runs on</para></entry>
-                     <entry><para>NFS サーバ</para></entry>
+                     <entry><para>動作</para></entry>
+                     <entry><para>サーバ</para></entry>
                    </row>
                    <row>
-                     <entry namest="1" nameend="2">
-                       <screen>&prompt.sudo;firewall-cmd --add-service=nfs3 --permanent --zone=<replaceable>ACTIVE_ZONE</replaceable></screen>
-                     </entry>
+                     <entry namest="1" nameend="2"><screen>&prompt.sudo;firewall-cmd --add-service=nfs3 --permanent --zone=<replaceable>ゾーン名</replaceable></screen></entry>
                    </row>
                 </tbody>
               </tgroup>
@@ -571,31 +511,26 @@ firewall-cmd --reload</screen>
         <varlistentry>
           <term><systemitem class="daemon">mountd</systemitem></term>
           <listitem>
-            <para>
-               On &productname;, <systemitem class="daemon">mountd</systemitem> is already configured to
-              run on a static port.
-            </para>
+            <para>&productname; の場合、 <systemitem class="daemon">mountd</systemitem> は既定で固定のポートを使用するように設定されています。</para>
             <informaltable>
               <tgroup cols="2">
                 <colspec colnum="1" colname="1" colwidth="50*"/>
                 <colspec colnum="2" colname="2" colwidth="50*"/>
                 <tbody>
                   <row>
-                    <entry><para>Port</para></entry>
-                    <entry><para>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</para></entry>
+                    <entry><para>ポート</para></entry>
+                    <entry><para><replaceable>20048</replaceable></para></entry>
                    </row>
                    <row>
-                     <entry><para>Protocol(s)</para></entry>
+                     <entry><para>プロトコル</para></entry>
                      <entry><para>TCP, UDP</para></entry>
                    </row>
                    <row>
-                     <entry><para>Runs on</para></entry>
-                     <entry><para>NFS サーバ</para></entry>
+                     <entry><para>動作</para></entry>
+                     <entry><para>サーバ</para></entry>
                    </row>
                    <row>
-                     <entry namest="1" nameend="2">
-                       <screen>&prompt.sudo;firewall-cmd --add-service=mountd --permanent --zone=<replaceable>ACTIVE_ZONE</replaceable></screen>
-                     </entry>
+                     <entry namest="1" nameend="2"><screen>&prompt.sudo;firewall-cmd --add-service=mountd --permanent --zone=<replaceable>ゾーン名</replaceable></screen></entry>
                    </row>
                 </tbody>
               </tgroup>
@@ -605,21 +540,16 @@ firewall-cmd --reload</screen>
         <varlistentry>
           <term><systemitem class="daemon">lockd</systemitem></term>
           <listitem>
-            <para>
-               To set a static port for <systemitem class="daemon">lockd</systemitem>:
-            </para>
+            <para><systemitem class="daemon">lockd</systemitem> に対して固定のポートを使用するように設定するには、下記のようにします:</para>
             <procedure>
               <step>
-                <para>また、 <filename>/etc/sysconfig/nfs</filename> を変更した場合は、サービスを再起動する必要があります:</para>
+                <para>サーバ側の <filename>/etc/sysconfig/nfs</filename> ファイルの下記の箇所を編集します:</para>
                 <screen>LOCKD_TCPPORT=<replaceable>NNNNN</replaceable>
 LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
-                <para>
-                  Replace <replaceable>NNNNN</replaceable> with an unused port of
-                  your choice. Use the same port for both protocols.
-                </para>
+                <para>なお、 <replaceable>NNNNN</replaceable> の箇所には未使用のポート番号を指定します。なお、両方のプロトコルで同じポートを使用するようにしてください。</para>
               </step>
               <step>
-                <para>NFS サーバコードのデバッグ向け</para>
+                <para>あとは NFS サーバを再起動します:</para>
                 <screen>&prompt.sudo;systemctl restart nfs-server</screen>
               </step>
             </procedure>
@@ -629,21 +559,19 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
                 <colspec colnum="2" colname="2" colwidth="50*"/>
                 <tbody>
                   <row>
-                    <entry><para>Port</para></entry>
-                    <entry><para>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</para></entry>
+                    <entry><para>ポート</para></entry>
+                    <entry><para><replaceable>NNNNN</replaceable></para></entry>
                    </row>
                    <row>
-                     <entry><para>Protocol(s)</para></entry>
+                     <entry><para>プロトコル</para></entry>
                      <entry><para>TCP, UDP</para></entry>
                    </row>
                    <row>
-                     <entry><para>Runs on</para></entry>
-                     <entry><para>Client, Server</para></entry>
+                     <entry><para>動作</para></entry>
+                     <entry><para>クライアント, サーバ</para></entry>
                    </row>
                    <row>
-                     <entry namest="1" nameend="2">
-                       <screen>&prompt.sudo;firewall-cmd --add-port=<replaceable>NNNNN</replaceable>/{tcp,udp} --permanent --zone=<replaceable>ACTIVE_ZONE</replaceable></screen>
-                     </entry>
+                     <entry namest="1" nameend="2"><screen>&prompt.sudo;firewall-cmd --add-port=<replaceable>NNNNN</replaceable>/{tcp,udp} --permanent --zone=<replaceable>ゾーン名</replaceable></screen></entry>
                    </row>
                 </tbody>
               </tgroup>
@@ -653,20 +581,15 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
         <varlistentry>
           <term><systemitem class="daemon">statd</systemitem></term>
           <listitem>
-            <para>
-               To set a static port for <systemitem class="daemon">statd</systemitem>:
-            </para>
+            <para><systemitem class="daemon">statd</systemitem> に対して固定のポートを使用するように設定するには、下記のようにします:</para>
             <procedure>
               <step>
-                <para>また、 <filename>/etc/sysconfig/nfs</filename> を変更した場合は、サービスを再起動する必要があります:</para>
-                <screen>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</screen>
-                <para>
-                  Replace <replaceable>NNNNN</replaceable> with an unused port of
-                  your choice.
-                </para>
+                <para>サーバ側の <filename>/etc/sysconfig/nfs</filename> ファイルの下記の箇所を編集します:</para>
+                <screen>STATD_PORT=<replaceable>NNNNN</replaceable></screen>
+                <para>なお、 <replaceable>NNNNN</replaceable> の箇所には未使用のポート番号を指定します。</para>
               </step>
               <step>
-                <para>NFS サーバコードのデバッグ向け</para>
+                <para>あとは NFS サーバを再起動します:</para>
                 <screen>&prompt.sudo;systemctl restart nfs-server</screen>
               </step>
             </procedure>
@@ -676,21 +599,19 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
                 <colspec colnum="2" colname="2" colwidth="50*"/>
                 <tbody>
                   <row>
-                    <entry><para>Port</para></entry>
-                    <entry><para>ここで、 <replaceable>モジュール名</replaceable> には下記のいずれかを指定します:</para></entry>
+                    <entry><para>ポート</para></entry>
+                    <entry><para><replaceable>NNNNN</replaceable></para></entry>
                    </row>
                    <row>
-                     <entry><para>Protocol(s)</para></entry>
+                     <entry><para>プロトコル</para></entry>
                      <entry><para>TCP, UDP</para></entry>
                    </row>
                    <row>
-                     <entry><para>Runs on</para></entry>
-                     <entry><para>Client, Server</para></entry>
+                     <entry><para>動作</para></entry>
+                     <entry><para>クライアント, サーバ</para></entry>
                    </row>
                    <row>
-                     <entry namest="1" nameend="2">
-                       <screen>&prompt.sudo;firewall-cmd --add-port=<replaceable>NNNNN</replaceable>/{tcp,udp} --permanent --zone=<replaceable>ACTIVE_ZONE</replaceable></screen>
-                     </entry>
+                     <entry namest="1" nameend="2"><screen>&prompt.sudo;firewall-cmd --add-port=<replaceable>NNNNN</replaceable>/{tcp,udp} --permanent --zone=<replaceable>ゾーン名</replaceable></screen></entry>
                    </row>
                 </tbody>
               </tgroup>
@@ -700,21 +621,14 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
       </variablelist>
 
       <important>
-        <title>Loading a changed <systemitem class="daemon">firewalld</systemitem> configuration</title>
-        <para>
-          Whenever you change the <systemitem class="daemon">firewalld</systemitem> configuration, you need to reload
-          the daemon to activate the changes:
-        </para>
+        <title><systemitem class="daemon">firewalld</systemitem> の設定再読み込みについて</title>
+        <para><systemitem class="daemon">firewalld</systemitem> の設定を変更したあとは、変更を反映させるために下記のコマンドを実行し、デーモンに再読み込みを行わせる必要があります:</para>
         <screen>&prompt.sudo;firewall-cmd --reload</screen>
       </important>
 
       <note>
-        <title>Firewall zone</title>
-        <para>
-          Make sure to replace <replaceable>ACTIVE_ZONE</replaceable> with the firewall zone
-          used on the respective machine. Note that, depending on the firewall
-          configuration, the active zone can differ from machine to machine.
-        </para>
+        <title>ファイアウオールのゾーンについて</title>
+        <para><replaceable>ゾーン名</replaceable> の箇所には、マシン内で現在使用しているファイアウオールゾーンを指定してください。どのゾーンを使用しているのかはマシンごとに異なる可能性があることに注意してください。</para>
       </note>
     </sect2>
   </sect1>
@@ -888,7 +802,7 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
         <para>指定可能なオプションについて知りたい場合は、下記のマニュアルページをお読みください:</para>
 <screen>man 8 rpc.mountd</screen>
         <para>また、 <filename>/etc/sysconfig/nfs</filename> を変更した場合は、サービスを再起動する必要があります:</para>
-<screen>systemctl restart nfsserver  # NFS サーバ関連の変更の場合
+<screen>systemctl restart nfs-server  # NFS サーバ関連の変更の場合
 systemctl restart nfs  # NFS クライアント関連の変更の場合</screen>
       </sect3>
     </sect2>
