@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2022-04-04 22:51+0000\n"
+"POT-Creation-Date: 2023-11-22 22:22+0000\n"
 "PO-Revision-Date: 2021-09-14 22:12+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -164,8 +164,9 @@ msgstr ""
 #: deployment_images_combustion.xml:108
 #, no-c-format
 msgid ""
-"As the <filename>script</filename> file is interpreted by bash, make sure to "
-"start the file with the interpreter declaration at the first line:"
+"As the <filename>script</filename> file is interpreted by shell, make sure "
+"to start the file with the interpreter declaration at the first line, for "
+"example for Bash:"
 msgstr ""
 
 #. Tag: screen
@@ -222,13 +223,77 @@ msgid ""
 msgstr ""
 
 #. Tag: title
+#: deployment_images_combustion.xml:142
+#, no-c-format
+msgid "Performing modifications in the initramfs"
+msgstr ""
+
+#. Tag: para
 #: deployment_images_combustion.xml:143
+#, no-c-format
+msgid ""
+"You may need to perform changes to the initramfs environment, for example, "
+"to write a custom network configuration for &nm; into <filename>/etc/"
+"NetworkManager/system-connections/</filename> . To do so, use the "
+"<literal>prepare</literal> statement."
+msgstr ""
+
+#. Tag: para
+#: deployment_images_combustion.xml:149
+#, no-c-format
+msgid ""
+"For example, to create a connection with a static IP address and configure "
+"DNS:"
+msgstr ""
+
+#. Tag: screen
+#: deployment_images_combustion.xml:153
+#, no-c-format
+msgid ""
+"\n"
+"#!/bin/bash\n"
+"# combustion: network prepare\n"
+"set -euxo pipefail\n"
+"\n"
+"nm_config() {\n"
+"umask 077 # Required for NM config\n"
+"mkdir -p /etc/NetworkManager/system-connections/\n"
+"cat &gt;/etc/NetworkManager/system-connections/static.nmconnection &lt;&lt;-"
+"EOF\n"
+"[connection]\n"
+"id=static\n"
+"type=ethernet\n"
+"autoconnect=true\n"
+"\n"
+"[ipv4]\n"
+"method=manual\n"
+"dns=192.168.100.1\n"
+"address1=192.168.100.42/24,192.168.100.1\n"
+"EOF\n"
+"}\n"
+"\n"
+"if [ \"${1-}\" = \"--prepare\" ]; then\n"
+"nm_config # Configure NM in the initrd\n"
+"exit 0\n"
+"fi\n"
+"\n"
+"# Redirect output to the console\n"
+"exec &gt; &gt;(exec tee -a /dev/tty0) 2&gt;&amp;1\n"
+"\n"
+"nm_config # Configure NM in the system\n"
+"curl example.com\n"
+"# Leave a marker\n"
+"echo \"Configured with combustion\" &gt; /etc/issue.d/combustion"
+msgstr ""
+
+#. Tag: title
+#: deployment_images_combustion.xml:189
 #, no-c-format
 msgid "Partitioning"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:144
+#: deployment_images_combustion.xml:190
 #, no-c-format
 msgid ""
 "&slema; raw images are delivered with a default partitioning scheme as "
@@ -238,13 +303,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:151
+#: deployment_images_combustion.xml:197
 #, no-c-format
 msgid "Performing changes outside of directories included in snapshots"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:152
+#: deployment_images_combustion.xml:198
 #, no-c-format
 msgid ""
 "The following script performs changes that are not included in snapshots. If "
@@ -254,7 +319,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:159
+#: deployment_images_combustion.xml:205
 #, no-c-format
 msgid ""
 "The following snippet creates a GPT with a single partition on the <literal>/"
@@ -262,7 +327,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:163
+#: deployment_images_combustion.xml:209
 #, no-c-format
 msgid ""
 "\n"
@@ -276,13 +341,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:171
+#: deployment_images_combustion.xml:217
 #, no-c-format
 msgid "The partition is formatted to BTRFS:"
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:174
+#: deployment_images_combustion.xml:220
 #, no-c-format
 msgid ""
 "\n"
@@ -292,7 +357,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:178
+#: deployment_images_combustion.xml:224
 #, no-c-format
 msgid ""
 "Possible content of <filename>/home</filename> is moved to the new "
@@ -300,7 +365,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:182
+#: deployment_images_combustion.xml:228
 #, no-c-format
 msgid ""
 "\n"
@@ -312,7 +377,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:188
+#: deployment_images_combustion.xml:234
 #, no-c-format
 msgid ""
 "The snippet below removes an old entry in <filename>/etc/fstab</filename> "
@@ -320,7 +385,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:192
+#: deployment_images_combustion.xml:238
 #, no-c-format
 msgid ""
 "\n"
@@ -331,13 +396,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:199
+#: deployment_images_combustion.xml:245
 #, no-c-format
 msgid "Setting a password for &rootuser;"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:200
+#: deployment_images_combustion.xml:246
 #, no-c-format
 msgid ""
 "Before you set the &rootuser; password, generate a hash of the password, e."
@@ -346,7 +411,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:205
+#: deployment_images_combustion.xml:251
 #, no-c-format
 msgid ""
 "\n"
@@ -356,13 +421,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:211
+#: deployment_images_combustion.xml:257
 #, no-c-format
 msgid "Adding SSH keys"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:212
+#: deployment_images_combustion.xml:258
 #, no-c-format
 msgid ""
 "The following snippet creates a directory to store the &rootuser;'s SSH key "
@@ -371,7 +436,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:217
+#: deployment_images_combustion.xml:263
 #, no-c-format
 msgid ""
 "\n"
@@ -381,7 +446,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:222
+#: deployment_images_combustion.xml:268
 #, no-c-format
 msgid ""
 "The SSH service must be enabled in case you need to use remote login via "
@@ -389,13 +454,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:230
+#: deployment_images_combustion.xml:276
 #, no-c-format
 msgid "Enabling services"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:231
+#: deployment_images_combustion.xml:277
 #, no-c-format
 msgid ""
 "You may need to enable some services, for example the SSH service. To enable "
@@ -403,7 +468,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:236
+#: deployment_images_combustion.xml:282
 #, no-c-format
 msgid ""
 "\n"
@@ -412,19 +477,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:242
+#: deployment_images_combustion.xml:288
 #, no-c-format
 msgid "Installing packages"
 msgstr ""
 
 #. Tag: title
-#: deployment_images_combustion.xml:244
+#: deployment_images_combustion.xml:290
 #, no-c-format
 msgid "Network connection and registering your system might be necessary"
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:245
+#: deployment_images_combustion.xml:291
 #, no-c-format
 msgid ""
 "As some packages may require additional subscription, you might need to "
@@ -433,7 +498,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:251
+#: deployment_images_combustion.xml:297
 #, no-c-format
 msgid ""
 "During the first boot configuration, you can install additional packages to "
@@ -442,7 +507,7 @@ msgid ""
 msgstr ""
 
 #. Tag: screen
-#: deployment_images_combustion.xml:256
+#: deployment_images_combustion.xml:302
 #, no-c-format
 msgid ""
 "\n"
@@ -451,7 +516,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: deployment_images_combustion.xml:260
+#: deployment_images_combustion.xml:306
 #, no-c-format
 msgid ""
 "Bear in mind that you will not be able to use <command>zypper</command> "
