@@ -233,27 +233,10 @@ network=vnet_nated</screen>
         <term>&uefisecboot; の使用</term>
         <listitem>
           <note>
-            <para>
-              &suse; supports &uefisecboot; on &x86-64; &kvm; guests only.
-              &xen; HVM guests support booting with UEFI firmware, but
-              they do not support &uefisecboot;.
-            </para>
+            <para>&suse; では &x86-64; の &kvm; ゲストに対してのみ &uefisecboot; のサポートを提供しています。 &xen; HVM ゲストでも UEFI ファームウエアに対応していますが、こちらは &uefisecboot; をサポートしていません。</para>
           </note>
-          <para>
-            By default, new virtual machines installed using
-            <command>virt-install</command> are configured with a legacy
-            BIOS. They can be configured to use UEFI with
-            <option>--boot firmware=efi</option>. A firmware that supports
-            &uefisecboot; and has Microsoft keys enrolled will be selected.
-            If secure boot is undesirable, the option
-            <option>--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no</option>
-            can be used to select a UEFI firmware without secure boot support.
-          </para>
-          <para>
-            It is also possible to explicitly specify a UEFI firmware image. See
-            <xref linkend="cha-kvm-inst-virtman-advanced-uefi"/> for advanced
-            information and examples on using UEFI with virtual machines.
-          </para>
+          <para>規定では、 <command>virt-install</command> を利用して新しい仮想マシンをインストールしようとすると、従来型の BIOS を利用するようになっています。 UEFI を使用したい場合は、 <option>--boot firmware=efi</option> を指定してください。この場合、 &uefisecboot; に対応し、 Microsoft 社の鍵を取り込み済みのファームウエアを選択します。 Secure Boot を利用したくない場合は、 <option>--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no</option> と指定してください。これにより、 Secure Boot に対応しない UEFI ファームウエアを選択するようになります。</para>
+          <para>このほか、 UEFI ファームウエアイメージを明示的に指定することもできます。仮想マシンで UEFI を使用する場合の高度な情報と設定例については、 <xref linkend="cha-kvm-inst-virtman-advanced-uefi"/> をお読みください。</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -284,87 +267,37 @@ network=vnet_nated</screen>
   <sect1 xml:id="sec-libvirt-inst-advanced">
     <title>高度なゲストインストール手順</title>
 
-    <para>本章では、通常のインストール方法には含まれない機能を使用する場合の手順について説明しています。 <!-- NOTE: memory ballooning is not available for openSUSE...  such as memory ballooning and installing add-on products. --></para>
+    <para>本章では、通常のインストール方法には含まれない機能、たとえば UEFI ファームウエアやメモリバルーンの手作業での設定、アドオン製品のインストールなどを使用する場合の手順について説明しています。</para>
 
     <sect2 xml:id="cha-kvm-inst-virtman-advanced-uefi">
-      <title>Advanced UEFI Configuration</title>
-      <para>
-        The UEFI firmware used by virtual machines is provided by
-        <emphasis>OVMF</emphasis> (<emphasis>Open Virtual Machine Firmware</emphasis>).
-        The <package>qemu-ovmf-x86_64</package> package contains firmwares for
-        &x86-64; &vmguest;s. Firmwares for &aarch64; &vmguest;s are provided by
-        the <package>qemu-uefi-aarch64</package> package. Both packages contain
-        several firmwares, each supporting a different set of features and
-        capabilities. The packages also include JSON firmware descriptor files,
-        which describe the features and capabilities of the various firmwares.
-      </para>
+      <title>高度な UEFI 設定</title>
+      <para>仮想マシンで使用される UEFI ファームウエアは <emphasis>OVMF</emphasis> ( <emphasis>Open Virtual Machine Firmware</emphasis> ) が提供するものです。 <package>qemu-ovmf-x86_64</package> パッケージには &x86-64; の &vmguest; に対するファームウエアが含まれていますし、 <package>qemu-uefi-aarch64</package> パッケージには &aarch64; の &vmguest; に対するファームウエアが含まれています。どちらのパッケージにも複数のファームウエアが含まれていますが、それらはそれぞれ異なる機能が含まれています。このほかこれらのパッケージには、 JSON ファームウエアディスクリプタファイルと呼ばれる、各ファームウエアが提供する機能を説明したファイルも含まれています。</para>
 
-      <para>
-        &libvirt; supports two methods of selecting virtual machine UEFI
-        firmware: automatic and manual. With automatic selection, &libvirt; will
-        select a firmware based on an optional set of features specified by the
-        user. If no explicit features are specified, &libvirt; will select a
-        firmware with secure boot enabled and Microsoft keys enrolled. When using
-        manual selection, the full path of the firmware and any optional settings
-        must be explicitly specified. Users can reference the JSON descriptor
-        files to find a firmware that satisfies their requirements. 
-      </para>
+      <para>&libvirt; では仮想マシンの UEFI ファームウエアの選択に際して、自動と手動の 2 種類の方式を提供しています。自動選択の場合、 &libvirt; はユーザが指定したオプションセットに従ってファームウエアを選択します。明示的に何も機能を指定しない場合、 &libvirt; は Secure Boot 対応で Microsoft 社の鍵を取り込み済みのファームウエアを選択します。手動選択の場合、ファームウエアのフルパスを手作業で指定し、オプション機能については明示的に設定することになります。この場合、 JSON ディスクリプタファイルを参照して、要件に合致するファームウエアを選択することができます。</para>
 
-      <para>
-        When using <command>virt-install</command>, automatic firmware selection
-        is enabled by specifying the <emphasis>firmware=efi</emphasis> parameter
-        to the <emphasis>boot</emphasis> option, for example
-        <option>--boot firmware=efi</option>. The selection process can be
-        influenced by requesting the presence or absence of firmware features.
-        The following example illustrates automatic firmware selection with
-        &uefisecboot; disabled.
-      </para>
+      <para>なお、 <command>virt-install</command> を使用する場合、 <emphasis>boot</emphasis> オプションに <emphasis>firmware=efi</emphasis> パラメータを指定することで、ファームウエアの自動選択機能が有効化されます。選択はファームウエアに求める／求めない機能を指定することで、選択されるファームウエアが変化することになります。たとえば下記の例では、 &uefisecboot; が無効化されたファームウエアを自動選択するように指定しています。</para>
 
-<screen> <screen>&prompt.user;virt-install --connect qemu:///system --virt-type kvm \
---name sle15sp2 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \
---os-variant sle15sp2</screen> </screen>
+<screen>&prompt.user;virt-install --connect qemu:///system --virt-type kvm \
+--name sle15sp5 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \
+--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no \
+--os-variant sle15sp5</screen>
 
       <note>
-        <para>
-          To ensure persistent &vmguest;s use the same firmware and variable
-          store throughout their lifetime, &libvirt; will record automatically
-          selected firmware in the &vmguest; XML configuration. Automatic
-          firmware selection is a one-time activity. Once firmware has been
-          selected, it will only change if the &vmguest; administrator
-          explicitly does so using the manual firmware selection method.
-        </para>
+        <para>ファームウエアの自動選択によって &vmguest; が使用するファームウエアが変わってしまわないようにするため、 &libvirt; では &vmguest; の XML 設定ファイル内に自動選択したファームウエアを記録するようにしています。これにより、ファームウエアの自動選択は 1 回だけ動作することになります。いったんファームウエアを自動選択したあとは、 &vmguest; の管理者が明示的に変更しない限り、手動でのファームウエア選択と同じように動作することになります。</para>
       </note>
 
-      <para>
-        The <emphasis>loader</emphasis> and <emphasis>nvram</emphasis>
-        parameters are used for manual firmware selection. <emphasis>loader</emphasis>
-        is required, and <emphasis>nvram</emphasis> defines an optional UEFI
-        variable store. The following example illustrates manual firmware
-        selection with secure boot enabled.
-      </para>
+      <para>また、手動でのファームウエア選択を行う場合は、 <emphasis>loader</emphasis> と <emphasis>nvram</emphasis> のパラメータを使用します。 <emphasis>loader</emphasis> は必須パラメータで <emphasis>nvram</emphasis> は任意パラメータとなります。 <emphasis>nvram</emphasis> パラメータは、 UEFI の変数ストアの保存先を指定します。たとえば下記の例では、 Secure Boot が有効化されたファームウエアを手動で指定しています。</para>
 
-<screen> <screen>&prompt.user;virt-install --connect qemu:///system --virt-type kvm \
---name sle15sp2 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \
---os-variant sle15sp2</screen> </screen>
+<screen>&prompt.user;virt-install --connect qemu:///system --virt-type kvm \
+--name sle15sp5 --memory 1024 --disk size=10 --cdrom /dev/cdrom --graphics vnc \
+--boot loader=/usr/share/qemu/ovmf-x86_64-smm-code.bin,loader.readonly=yes,loader.type=pflash,loader.secure=yes,nvram.template=/usr/share/qemu/ovmf-x86_64-smm-vars.bin \
+--os-variant sle15sp5</screen>
 
       <note>
-        <para>
-          &libvirt; cannot modify any characteristics of the UEFI firmwares. For
-          example, it cannot disable &uefisecboot; in a firmware that has
-          &uefisecboot; enabled, even when specifying <emphasis>loader.secure=no</emphasis>.
-          &libvirt; will ensure the specified firmware can satisfy any specified
-          features. For example, it will reject configuration that disables secure
-          boot with <emphasis>loader.secure=no</emphasis>, but specifies a
-          firmware that has &uefisecboot; enabled.
-        </para>
+        <para>&libvirt; は UEFI ファームウエアの特性を変更することはできません。たとえば &uefisecboot; が有効化されたファームウエアを使用している場合、 <emphasis>loader.secure=no</emphasis> を指定しても、 &uefisecboot; を無効化することはできません。また &libvirt; は、指定したファームウエアが指定した機能を提供するかどうかを確認します。たとえば <emphasis>loader.secure=no</emphasis> を指定して &uefisecboot; を無効化した状態で、 &uefisecboot; の有効化されたファームウエアを指定すると、設定が拒否されます。</para>
       </note>
 
-      <para>
-        The <package>qemu-ovmf-x86_64</package> package contains several UEFI
-        firmware images. For example, the following subset supports SMM,
-        &uefisecboot;, and has either Microsoft, openSUSE, or SUSE UEFI CA keys
-        enrolled:
-      </para>
+      <para>また、 <package>qemu-ovmf-x86_64</package> パッケージには、複数の UEFI ファームウエアイメージが含まれています。たとえば下記のファイルは、いずれも SMM と &uefisecboot; が有効化されていますが、 Microsoft, openSUSE, SUSE UEFI のそれぞれ異なる鍵が取り込まれているファームウエアになります:</para>
 
 <screen>
 &prompt.root;<command>rpm -ql qemu-ovmf-x86_64</command>
@@ -378,10 +311,7 @@ network=vnet_nated</screen>
 [...]
 </screen>
 
-      <para>
-        For the &aarch64; architecture, the package is named
-        <package>qemu-uefi-aarch32</package>:
-      </para>
+      <para>&aarch64; アーキテクチャの場合、パッケージ名は <package>qemu-uefi-aarch32</package> になります:</para>
 
 <screen>
 &prompt.root;<command>rpm -ql qemu-uefi-aarch32</command>
@@ -393,30 +323,11 @@ network=vnet_nated</screen>
 /usr/share/qemu/qemu-uefi-aarch32.bin
 </screen>
 
-      <para>
-        The <filename>*-code.bin</filename> files are the UEFI firmware files.
-        The <filename>*-vars.bin</filename> files are corresponding variable
-        store images that can be used as a template for a per-VM non-volatile
-        store. &libvirt; copies the specified <literal>vars</literal> template
-        to a per-VM path under <filename>/var/lib/libvirt/qemu/nvram/</filename>
-        when first creating the VM. Files without <literal>code</literal> or
-        <literal>vars</literal> in the name can be used as a single UEFI image.
-        They are not as useful since no UEFI variables persist across power
-        cycles of the VM.
-      </para>
+      <para>上記では <filename>*-code.bin</filename> ファイルが UEFI ファームウエアファイル、 <filename>*-vars.bin</filename> ファイルがそれぞれ対応する変数ストアイメージになります。変数ストアイメージは仮想マシンごとの不揮発性ストアの雛型としてしようされるものです。変数ストアイメージは仮想マシンの作成時に <filename>/var/lib/libvirt/qemu/nvram/</filename> 以下にコピーされて書き込みが行われます。 <literal>code</literal> や <literal>vars</literal> を含まないファイルは単独 UEFI イメージと呼ばれますが、これらはいずれも仮想マシンのシャットダウンで UEFI 変数が消えてしまう構造のため、あまり使い道はありません。</para>
 
-      <para>
-        The <filename>*-ms*.bin</filename> files contain UEFI CA keys as found
-        on real hardware. Therefore, they are configured as the default in
-        &libvirt;. Likewise, the <filename>*-suse*.bin</filename> files contain
-        preinstalled &suse; keys. There is also a set of files with no
-        preinstalled keys.
-      </para>
+      <para>また <filename>*-ms*.bin</filename> ファイルには実在するハードウエアにも搭載されている UEFI CA 鍵が含まれています。そのため、これらは &libvirt; での既定値として指定されています。また <filename>*-suse*.bin</filename> には &suse; 社の鍵が取り込まれています。それ以外にも、事前には全く鍵を含まないファームウエアも存在しています。</para>
 
-      <para>
-        For more details on OVMF, see
-        <link xlink:href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt"/>.
-      </para>
+      <para>OVMF に関する詳細は、 <link xlink:href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt"/> (英語) をお読みください。</para>
     </sect2>
 
     <sect2 xml:id="libvirt-advanced-balloon" os="sles;sled">
