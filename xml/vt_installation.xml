@@ -133,69 +133,6 @@
       </variablelist>
     </sect2>
   </sect1>
-  <sect1 xml:id="sec-vt-installation-ovmf">
-    <title>UEFI サポートのインストール</title>
-
-    <note>
-      <para>&uefisecboot; は &x86-64; ゲストのみをサポート対象としています。また &kvm; ゲストの場合、 OVMF ファームウエアを利用する &uefisecboot; のみをサポートします。 &xen; HVM ゲストでも OVMF ファームウエアからの起動に対応していますが、 &uefisecboot; はサポートしていません。</para>
-    </note>
-
-    <para>UEFI への対応は <emphasis>OVMF</emphasis> ( <emphasis>Open Virtual Machine Firmware</emphasis> ) で提供されています。 UEFI での起動を有効化するには、まずお使いのアーキテクチャに合わせて <package>qemu-ovmf-x86_64</package> もしくは <package>qemu-uefi-aarch64</package> パッケージをインストールしてください。</para>
-
-    <para>仮想マシンで使用されるファームウエアは自動的に選択されます。この自動選択の機能は、上述のファームウエアパッケージ内にある *.json ファイルをベースにしています。 &libvirt; &qemu; ドライバは読み込み時にこれらのファイルを処理して、ファームウエア側での機能を知ることができるようになっています。その後、 &libvirt; 側でユーザ側の要件に合わせ、必要な機能 (&uefisecboot; の有効可否など) のあるファームウエアを選択します。</para>
-
-    <para>たとえば &uefisecboot; 機能付きの EFI を有効化するには、下記のような設定を追加します:</para>
-
-<screen>
-&lt;os firmware='efi'&gt;
- &lt;loader secure='yes'/&gt;
-&lt;/os&gt;
-</screen>
-
-    <para><package>qemu-ovmf-x86_64</package> パッケージには、下記のような重要な UEFI ファームウエアイメージが含まれています。これらは様々な &vmguest; に対して、 &uefisecboot; の機能を提供します:</para>
-
-<screen>
-&prompt.root;<command>rpm -ql qemu-ovmf-x86_64</command>
-[...]
-/usr/share/qemu/ovmf-x86_64-smm-ms-code.bin
-/usr/share/qemu/ovmf-x86_64-smm-ms-vars.bin
-/usr/share/qemu/ovmf-x86_64-smm-opensuse-code.bin
-/usr/share/qemu/ovmf-x86_64-smm-opensuse-vars.bin
-/usr/share/qemu/ovmf-x86_64-smm-suse-code.bin
-/usr/share/qemu/ovmf-x86_64-smm-suse-vars.bin
-[...]
-</screen>
-
-    <itemizedlist>
-      <listitem>
-        <para>&sle; ゲストで &uefisecboot; を使用したい場合は、 <filename>ovmf-x86_64-smm-suse-code.bin</filename> ファームウエアをお使いください。</para>
-      </listitem>
-      <listitem>
-        <para>&opensuse; ゲストで &uefisecboot; を使用したい場合は、 <filename>ovmf-x86_64-smm-opensuse-code.bin</filename> ファームウエアをお使いください。</para>
-      </listitem>
-      <listitem>
-        <para>&mswin; ゲストで &uefisecboot; を使用したい場合は、 <filename>ovmf-x86_64-smm-ms-code.bin</filename> ファームウエアをお使いください。</para>
-      </listitem>
-    </itemizedlist>
-
-    <para>&aarch64; アーキテクチャの場合、パッケージ名は <package>qemu-uefi-aarch32</package> になります:</para>
-
-<screen>
-&prompt.root;<command>rpm -ql qemu-uefi-aarch32</command>
-[...]
-/usr/share/qemu/aavmf-aarch32-code.bin
-/usr/share/qemu/aavmf-aarch32-vars.bin
-/usr/share/qemu/firmware
-/usr/share/qemu/firmware/60-aavmf-aarch32.json
-/usr/share/qemu/qemu-uefi-aarch32.bin
-</screen>
-
-    <para><filename>*-code.bin</filename> ファイルは UEFI ファームウエアです。 <filename>*-vars.bin</filename> ファイルは対応する変数ストアイメージで、 VM ごとの不揮発性ストア向けのテンプレートとして使用できるファイルです。 &libvirt; は VM を初めて作成する際、指定された <literal>vars</literal> テンプレートを VM ごとのパス (<filename>/var/lib/libvirt/qemu/nvram/</filename>) にコピーします。なお、ファイル名の中に <literal>code</literal> や <literal>vars</literal> を含まないファイルは、単独の UEFI イメージとして使用することができるものです。これらは VM のシャットダウン後には UEFI 変数が維持されない仕組みであることから、有用ではありません。</para>
-
-    <para><filename>*-ms*.bin</filename> ファイルには、実際のハードウエア内に存在する  UEFI CA の鍵が含まれています。そのため、これらは &libvirt; の既定で設定されるようになっています。同様に、 <filename>*-suse*.bin</filename> ファイルには、事前にインストールされる &suse; の鍵が含まれています。このほか、事前にインストールされる鍵の無いファイルも提供されています。</para>
-
-    <para>詳しくは <xref linkend="vle-libvirt-inst-virt-install-ovmf"/> と <link xlink:href="http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt"/> (英語) をお読みください。</para>
-  </sect1>
   <sect1 xml:id="sec-vt-installation-nested-vms">
     <title>&kvm; での入れ子型仮想化 (nested virtualization) の有効化</title>
 
