@@ -20,19 +20,19 @@
 
     <sect2 xml:id="sec-tuning-taskscheduler-intro-preemption">
       <title>プリエンプション</title>
-      <para>タスクスケジューリングでの考え方はシンプルです。システム内に動作可能なプロセスが存在すれば、それらのうちの少なくとも 1 つを動作させます。また、システム内にプロセッサの数よりも多くの動作可能なプロセスが存在した場合、同時にそれら全てを動作させることはできません。</para>
+      <para>タスクスケジューリングでの考え方はシンプルです。システム内に動作可能なプロセスが存在すれば、それらのうちの少なくとも 1 つを動作させます。また、プロセッサ数よりも多く動作可能なプロセスが存在した場合、同時にそれら全てを動作させることはできません。</para>
       <para>そのため、プロセスによっては一時的に停止させる (<emphasis>サスペンドさせる</emphasis>) 必要があることになり、後で実行させる必要があることになります。タスクスケジューラは、キュー内にあるどのプロセスを次に実行させるのかを決定します。</para>
       <para>上述のとおり、他の Unix 系オペレーティングシステムと同様に、 Linux は <emphasis>マルチタスク型の</emphasis> (複数のタスクを同時に動作させることのできる) オペレーティングシステムです。 Linux は <emphasis>プリエンプティブ</emphasis> マルチタスクと呼ばれる構造で、スケジューラ側でプロセスの一時停止を決定します。このような強制的な一時停止を <emphasis>プリエンプション</emphasis> (横取り等の意味) と呼びます。全ての Unix 系オペレーティングシステムは、その登場当初からプリエンプティブマルチタスクを提供しています。</para>
     </sect2>
 
     <sect2 xml:id="sec-tuning-taskscheduler-intro-timeslice">
       <title>タイムスライス</title>
-      <para>それぞれのプロセスに対して与えられる時間枠で、その時間が経過するまではタスクスケジューラ側から一時停止を指示されない、最小単位の時間を指します。タイムスライスとは、各プロセスに対して提供されるプロセッサ時間の量を表す値でもあります。タイムスライスを割り当てておくことで、タスクスケジューラは動作中のシステムに対してグローバルな決定を下すことができるほか、プロセスがプロセッサを占有しないようにするための仕組みです。 <remark>sknorr, 2014-08-22: "dominate over" sounds weird, not sure if just "dominate" would be better, though.</remark></para>
+      <para>それぞれのプロセスに対して与えられる時間枠で、その時間が経過するまではタスクスケジューラ側から一時停止を指示されない、最小単位の時間を指します。タイムスライスとは、各プロセスに対して提供されるプロセッサ時間の量を表す値でもあります。タイムスライスを割り当てておくことで、タスクスケジューラは動作中のシステムに対して大まかに決定を下しながら、かつプロセスがプロセッサを占有しないようにすることができます。 <remark>sknorr, 2014-08-22: "dominate over" sounds weird, not sure if just "dominate" would be better, though.</remark></para>
     </sect2>
 
     <sect2 xml:id="sec-tuning-taskscheduler-intro-priority">
       <title>プロセスの優先順位</title>
-      <para>スケジューラは各プロセスに割り当てられた優先順位を元にして判断を行います。プロセスの現在の優先順位を計算するにあたって、タスクスケジューラは複雑なアルゴリズムを使用します。その結果、各プロセスにはプロセッサの能力に応じた値が設定されます。</para>
+      <para>スケジューラは各プロセスに割り当てられた優先順位を元にして判断を行います。プロセスの現在の優先順位を計算するにあたって、タスクスケジューラは複雑なアルゴリズムを使用します。その結果、各プロセスにはプロセッサの能力に応じた実行の <quote>許可</quote> が与えられます。</para>
     </sect2>
   </sect1>
   <sect1 xml:id="sec-tuning-taskscheduler-policy-class">
@@ -46,7 +46,7 @@
       <varlistentry>
         <term>I/O バウンド</term>
         <listitem>
-          <para>I/O とは入出力の意味で、キーボードやマウス、光学ドライブやハードディスクなどを意味します。 <emphasis>I/O バウンドプロセス</emphasis> とは、リクエストの送信や応答の待機に多くの時間を費やすプロセスの意味で、非常に頻繁に動作するものの、同様に I/O リクエストを待機している他のプロセスの動作を妨害することがないよう、その動作は短くなります。</para>
+          <para>I/O とは入出力の意味で、キーボードやマウス、光学ドライブやハードディスクなどを意味します。 <emphasis>I/O バウンドプロセス</emphasis> とは、リクエストの送受信の待機に多くの時間を費やすプロセスの意味で、非常に頻繁に動作するものの、同様に I/O リクエストを待機している他のプロセスの動作を妨害することがないよう、その動作は短くなります。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -389,7 +389,7 @@ kernel.sched_wakeup_granularity_ns = 10000000</screen>
             <para><systemitem>sched_wakeup_granularity_n</systemitem></para>
           </listitem>
         </itemizedlist>
-        <para>上述のメッセージのとおり、これらのスケジューラ関連パラメータは移行期間中として &productname; の <systemitem>sysctl</systemitem> 内で提供され続けています。ですが、将来的には CPU スケジューラの実装が更新される予定であることから、将来のバージョンの &productname; で上記パラメータが <systemitem>sysctl</systemitem> で提供され続ける保証はなく、 <systemitem>debugfs</systemitem> 経由で利用する必要がある可能性があります。</para>
+        <para>上述のメッセージのとおり、これらのスケジューラ関連パラメータは移行期間中として現行の &productname; の <systemitem>sysctl</systemitem> 内で提供され続けています。ですが、将来的には CPU スケジューラの実装が更新される予定であることから、将来バージョンの &productname; で上記パラメータが <systemitem>sysctl</systemitem> で提供され続ける保証はなく、 <systemitem>debugfs</systemitem> 経由で利用する必要があるかもしれないことに注意してください。</para>
         <para>もしもお使いのシステム内で、これら 6 種類のパラメータのうちいずれかを使用している場合は、目的に合わせて別の方式を使用するようにし、特に本番環境ではこれらに依存した作りにしないようにすることを強くお勧めします。</para>
       </warning>
     </sect2>
