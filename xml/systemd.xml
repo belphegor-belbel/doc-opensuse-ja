@@ -839,48 +839,44 @@ WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
   <sect1 xml:id="sec-boot-systemd-custom">
     <title><systemitem>systemd</systemitem> のカスタマイズ</title>
 
-    <para>下記の章では、 <systemitem>systemd</systemitem> のカスタマイズを行うにあたっての例をいくつか示しています。</para>
-
-    <warning>
-      <title>カスタマイズを行う際の注意事項</title>
-      <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
-    </warning>
+    <para>本章では、 &systemd; の裏側にある考え方について説明しています。</para>
+    <sect2 xml:id="systemd-unit-file-placement">
+      <title>Where are unit files stored?</title>
+      <para>
+        &systemd; unit files shipped by &suse; are stored in
+        <filename>/usr/lib/systemd/</filename>. Customized unit files and unit file
+        <emphasis>drop-ins</emphasis> are stored in
+        <filename>/etc/systemd/</filename>.
+      </para>
+      <warning>
+        <title>カスタマイズを行う際の注意事項</title>
+        <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
+      </warning>
+    </sect2>
 
     <sect2 xml:id="sec-boot-systemd-custom-service">
-      <title>ユニットファイルのカスタマイズ</title>
+      <title>ドロップイン・ファイルの作成</title>
       <para>ユニットファイルのカスタマイズを行う場合は、 <command>systemctl edit <replaceable>サービス名</replaceable></command> コマンドを使用するのがお勧めです。このコマンドは <filename>/etc/systemd/system/<replaceable>名前</replaceable>.service.d/</filename> ディレクトリを作成し、そのディレクトリ内に <filename>override.conf</filename> ファイルを作成したあと、既定のテキストエディタを起動します。また、このコマンドは動作中の &systemd; プロセスに対して、変更が行われたことを通知する機能も備えています。</para>
-      <para>このほか、 <command>systemctl edit --full <replaceable>名前</replaceable></command> コマンドを実行すると、元のファイルをコピーしてから編集することもできます。この場合は、既存のセクションを削除しないように注意してください。</para>
       <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 &rootuser; で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
 <screen>
-[Unit]
-Description=MySQL server
-Wants=basic.target
-Conflicts=mariadb.target
-After=basic.target network.target
-
-[Install]
-WantedBy=multi-user.target
-Alias=mysql.service
-
-[Service]
-Restart=on-abort
-Type=notify
-ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  install
-ExecStartPre=/usr/lib/mysql/mysql-systemd-helper  upgrade
-ExecStart=/usr/lib/mysql/mysql-systemd-helper     start
-
 # Configures the time to wait for start-up/stop
 TimeoutSec=300
-
-# Prevent writes to /usr, /boot, and /etc
-ProtectSystem=full
-
-# Prevent accessing /home, /root and /run/user
-ProtectHome=true
-
-UMask=007</screen>
+</screen>
       <para>あとは <literal>TimeoutSec</literal> 以下の内容を修正して保存を行います。変更をシステムに適用するには、同じく root で <command>systemctl daemon-reload</command> コマンドを実行します。</para>
       <para>詳しくは <command>man 1 systemctl</command> コマンドで表示されるマニュアルページを参照してください。</para>
+      <warning>
+        <title>Creating a copy of a full unit file</title>
+        <para>
+          If you use the <option>--full</option> option in the <command>systemctl edit --full
+          <replaceable>SERVICE</replaceable></command> command, a copy of the original unit file is
+          created where you can modify specific options. We do not recommend such customization
+          because when the unit file is updated by &suse;, its changes are overridden by the
+          customized copy in the <filename>/etc/systemd/system/</filename> directory. Moreover, if
+          &suse; provides updates to distribution drop-ins, they will override the copy of the unit
+          file created with <option>--full</option>. To prevent this confusion and always have your
+          customization valid, use drop-ins.
+        </para>
+      </warning>
     </sect2>
 
     <sect2 xml:id="sec-boot-systemd-custom-drop-in">
