@@ -839,49 +839,35 @@ WantedBy=multi-user.target<co xml:id="co-service-wrapper-target"/></screen>
   <sect1 xml:id="sec-boot-systemd-custom">
     <title><systemitem>systemd</systemitem> のカスタマイズ</title>
 
-    <para>本章では、 &systemd; の裏側にある考え方について説明しています。</para>
+    <para>本章では、 &systemd; のユニットファイルに対するカスタマイズ方法を説明しています。</para>
     <sect2 xml:id="systemd-unit-file-placement">
-      <title>Where are unit files stored?</title>
-      <para>
-        &systemd; unit files shipped by &suse; are stored in
-        <filename>/usr/lib/systemd/</filename>. Customized unit files and unit file
-        <emphasis>drop-ins</emphasis> are stored in
-        <filename>/etc/systemd/</filename>.
-      </para>
+      <title>ユニットファイルの配置場所</title>
+      <para>&suse; 製品に同梱される &systemd; ユニットファイルは <filename>/usr/lib/systemd/</filename> に、カスタマイズしたユニットファイルやユニットファイルの <emphasis>ドロップイン</emphasis> は <filename>/etc/systemd/</filename> にそれぞれ配置されます。</para>
       <warning>
         <title>カスタマイズを行う際の注意事項</title>
-        <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <emphasis>決して</emphasis> <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
+        <para>&systemd; のカスタマイズは <filename>/etc/systemd/</filename> 内で行うものとし、 <filename>/usr/lib/systemd/</filename> 内では行わないでください。 <filename>/usr/lib/systemd/</filename> でカスタマイズを行ってしまうと、次回の &systemd; の更新でそれらが上書きされて消えてしまいます。</para>
       </warning>
     </sect2>
 
     <sect2 xml:id="sec-boot-systemd-custom-service">
-      <title>ドロップイン・ファイルの作成</title>
-      <para>ユニットファイルのカスタマイズを行う場合は、 <command>systemctl edit <replaceable>サービス名</replaceable></command> コマンドを使用するのがお勧めです。このコマンドは <filename>/etc/systemd/system/<replaceable>名前</replaceable>.service.d/</filename> ディレクトリを作成し、そのディレクトリ内に <filename>override.conf</filename> ファイルを作成したあと、既定のテキストエディタを起動します。また、このコマンドは動作中の &systemd; プロセスに対して、変更が行われたことを通知する機能も備えています。</para>
-      <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 &rootuser; で <command>systemctl edit --full mariadb.service</command> コマンドを実行すると、下記のような内容が表示されるはずです:</para>
+      <title>ドロップイン・ファイルによる上書き</title>
+      <para>ドロップイン・ファイル (または単に <emphasis>ドロップイン</emphasis> と記述する場合もあります) はユニットファイルの一部分のみを記述したファイルで、元のユニットファイルの一部分のみを修正するためのファイルです。ドロップインは元のユニットファイルより優先して解釈されます。たとえば <command>systemctl edit <replaceable>サービス名</replaceable></command> を実行すると、 <filename>/etc/systemd/system/<replaceable>サービス名</replaceable>.service.d/</filename> ディレクトリを作成してその中に <filename>override.conf</filename> というファイルを作成し、既定のテキストエディタを起動してそのファイルを編集することができます。また、テキストエディタを終了すると、動作中の &systemd; プロセスに対して変更を通知します。</para>
+      <para>例として、 &mariadb; の起動時に待機する時間をカスタマイズしてみることにします。 <command>sudo systemctl edit mariadb.service</command> コマンドを実行し、下記の内容を記述します:</para>
 <screen>
-# Configures the time to wait for start-up/stop
+# 起動または停止の際の待機時間
 TimeoutSec=300
 </screen>
-      <para>あとは <literal>TimeoutSec</literal> 以下の内容を修正して保存を行います。変更をシステムに適用するには、同じく root で <command>systemctl daemon-reload</command> コマンドを実行します。</para>
+      <para>なお、 <literal>TimeoutSec</literal> の値は適宜変更して保存してください。変更をシステムに適用するには、 <command>sudo systemctl daemon-reload</command> コマンドを実行します。</para>
       <para>詳しくは <command>man 1 systemctl</command> コマンドで表示されるマニュアルページを参照してください。</para>
       <warning>
-        <title>Creating a copy of a full unit file</title>
-        <para>
-          If you use the <option>--full</option> option in the <command>systemctl edit --full
-          <replaceable>SERVICE</replaceable></command> command, a copy of the original unit file is
-          created where you can modify specific options. We do not recommend such customization
-          because when the unit file is updated by &suse;, its changes are overridden by the
-          customized copy in the <filename>/etc/systemd/system/</filename> directory. Moreover, if
-          &suse; provides updates to distribution drop-ins, they will override the copy of the unit
-          file created with <option>--full</option>. To prevent this confusion and always have your
-          customization valid, use drop-ins.
-        </para>
+        <title>ユニットファイル全体のコピーの作成について</title>
+        <para><command>systemctl edit --full <replaceable>サービス名</replaceable></command> コマンドを実行する際に <option>--full</option> オプションを指定すると、元のユニットファイルをコピーしてから編集を行うようになりますが、元のユニットファイルは &suse; 側の更新によって内容が変化する可能性があるため、このような方式でのカスタマイズは推奨しません。カスタマイズを行う場合は、 <filename>/etc/systemd/system/</filename> ディレクトリにカスタマイズしたい箇所のみを記述するようにしてください。またこれに加えて、 &suse; 製品ではディストリビューション提供のドロップイン・ファイルを提供する場合もあることに注意してください。この場合も <option>--full</option> で作成したドロップイン・ファイルが最優先で処理されますので、混乱を防ぐために <option>--full</option> の使用は避けてください。</para>
       </warning>
     </sect2>
 
     <sect2 xml:id="sec-boot-systemd-custom-drop-in">
-      <title>ドロップイン・ファイルの作成</title>
-      <para>設定ファイルの一部分だけを変更したい場合は、ドロップイン・ファイルまたは <emphasis>ドロップイン</emphasis> と呼ばれる仕組みを使用することができます。ドロップインは、ユニットファイルを編集したり、上書きしたりすることなく、拡張できる仕組みを提供します。ドロップインは元の設定ファイルよりも優先度が高く設定されるため、指定した部分のみを入れ替えることができます。ドロップインはそれぞれ下記のディレクトリ内に配置します:</para>
+      <title>手作業によるドロップイン・ファイルの作成</title>
+      <para><command>systemctl edit</command> コマンドとは別に、ドロップイン・ファイルを独自に作成して優先順位を任意に調整することもできます。これらのドロップイン・ファイルは、元のユニットファイルを編集したり変更したりすることなく、ユニットやデーモンの設定を自由に変更することができるようになります。このような独自のユニットファイルは、それぞれ下記のディレクトリに配置します:</para>
       <variablelist>
         <varlistentry>
           <term><filename>/etc/systemd/*.conf.d/</filename> , <filename>/etc/systemd/system/*.service.d/</filename></term>
