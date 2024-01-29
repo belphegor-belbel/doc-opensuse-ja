@@ -4,123 +4,70 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-pam-login">
- <title>Configuring <phrase os="slema">&slema; to require</phrase> U2F keys for local login</title>
+ <title><phrase os="slema">&slema; での</phrase> ローカルログインのための U2F キーの使用</title>
 
- <para>
-  To provide more security during the local login <phrase os="slema">to &slema;</phrase>, you can configure
-  two-factor authentication using the <literal>pam-u2f</literal> framework and
-  the U2F feature on YubiKeys and Security Keys.
- </para>
+ <para><phrase os="slema">&slema; への</phrase> ローカルログイン時にさらにセキュリティを高める方法として、 <literal>pam-u2f</literal> フレームワークと YubiKey 等の U2F 機能を持つセキュリティキーを利用した 2 要素認証を設定することができます。</para>
 
- <para>
-  To set up U2F on your <phrase os="slema">to &slema;</phrase> system, you need to associate your key with your
-  account <phrase os="slema"> on &slema;</phrase>. After that, configure your system to use the key. The
-  procedure is described in the following sections.
- </para>
+ <para>お使いの <phrase os="slema">&slema;</phrase> システムに対して U2F を設定するには、まず <phrase os="slema"> &slema;</phrase> システムで鍵とアカウントの紐付けを行う必要があります。紐付け後は鍵を使用するように設定するだけです。手順はそれぞれ後続の章で説明しています。</para>
 
  <sect2 xml:id="sec-attach-account">
-  <title>Associating the U2F key with your account</title>
-  <para>
-   To associate your U2F key with your account, proceed as follows:
-  </para>
+  <title>アカウントと U2F キーの紐付け</title>
+  <para>U2F キーとアカウントの紐付けを行うには、下記の手順を行います:</para>
   <procedure>
    <step>
-    <para>
-     Log in to your machine.
-    </para>
+    <para>まずは通常通りシステムにログインします。</para>
    </step>
    <step>
-    <para>
-     Insert your U2F key.
-    </para>
+    <para>U2F キーを接続します。</para>
    </step>
    <step>
-    <para>
-     Create a directory for the U2F key configuration:
-    </para>
+    <para>U2F キーの設定のためのディレクトリを作成します:</para>
 <screen>&prompt.sudo;mkdir -p ~/.config/Yubico</screen>
    </step>
    <step>
-    <para>
-     Run the <command>pamu2fcfg</command> command that outputs configuration
-     lines:
-    </para>
+    <para><command>pamu2fcfg</command> コマンドを実行して、出力結果を設定として出力します:</para>
 <screen>&prompt.sudo;pamu2fcfg &gt; ~/.config/Yubico/u2f_keys</screen>
    </step>
    <step>
-    <para>
-     When your device begins flashing, touch the metal contact to confirm the
-     association.
-    </para>
+    <para>接続したデバイスに搭載された LED が点灯したら、接続確認のためにデバイスの金属接点に触ってください。</para>
    </step>
   </procedure>
-  <para>
-   We recommend using a backup U2F device, which you can set up by running the
-   following commands:
-  </para>
+  <para>なお、予備の U2F デバイスを用意して設定しておくことをお勧めします。下記のようなコマンドを実行します:</para>
   <procedure>
    <step>
-    <para>
-     Run:
-    </para>
+    <para>下記を実行します:</para>
 <screen>&prompt.sudo;pamu2fcfg -n &gt;&gt; ~/.config/Yubico/u2f_keys</screen>
    </step>
    <step>
-    <para>
-     When your device begins flashing, touch the metal contact to confirm the
-     association.
-    </para>
+    <para>接続したデバイスに搭載された LED が点灯したら、接続確認のためにデバイスの金属接点に触ってください。</para>
    </step>
   </procedure>
-  <para>
-   You can move the output file from the default location to a directory that
-   requires the <literal>sudo</literal> permission to modify the file to
-   increase security. For example, move it to the <filename>/etc</filename>
-   directory.
-   To do so, follow the steps:
-  </para>
+  <para>出力されたファイルは、既定の場所から <literal>sudo</literal> での許可が必要なディレクトリに移動させておくことで、さらにセキュリティを高めることができます。たとえば <filename>/etc</filename> ディレクトリ以下に移動したい場合は、下記のような手順を実施します:</para>
   <procedure>
    <step>
-    <para>
-     Create a directory in <filename>/etc</filename>:
-    </para>
+    <para>まずは <filename>/etc</filename> 以下にディレクトリを作成します:</para>
 <screen>&prompt.sudo;mkdir /etc/Yubico</screen>
    </step>
    <step>
-    <para>
-     Move the created file:
-    </para>
+    <para>あとは作成したファイルを移動するだけです:</para>
 <screen>&prompt.sudo;mv ~/.config/Yubico/u2f_keys /etc/Yubico/u2f_keys</screen>
    </step>
   </procedure>
   <note>
-   <title>Placing the <filename>u2f_keys</filename> to a non-default location</title>
-   <para>
-    If you move the output file to a different directory than is the default
-    (<filename>$HOME/.config/Yubico/u2f_keys</filename>), you need to add the
-    path to the <filename>/etc/pam.d/login</filename> file as described in
-    <xref linkend="sec-reconfiguring-pam"/>.
-   </para>
+   <title><filename>u2f_keys</filename> ファイルの非標準の場所への移動について</title>
+   <para>出力されたファイルを既定のディレクトリ ( <filename>$HOME/.config/Yubico/u2f_keys</filename> ) 以外に移動させる場合、 <xref linkend="sec-reconfiguring-pam"/> に示された手順に従って、 <filename>/etc/pam.d/login</filename> ファイル内にそのディレクトリを設定しておく必要があります。</para>
   </note>
  </sect2>
 
  <sect2 xml:id="sec-reconfiguring-pam">
-  <title>Updating the PAM configuration</title>
-  <para>
-   After you have created the U2F keys configuration, you need to adjust the
-   PAM configuration on your system.
-  </para>
+  <title>PAM 設定の更新</title>
+  <para>U2F キーの設定が終わったら、あとはシステムの PAM 設定を調整するだけです。</para>
   <procedure>
    <step>
-    <para>
-     Open the file <filename>/etc/pam.d/login</filename>.
-    </para>
+    <para>まずは <filename>/etc/pam.d/login</filename> ファイルを開きます。</para>
    </step>
    <step>
-    <para>
-     Add the line <literal>auth required pam_u2f.so</literal> to the file as
-     follows:
-    </para>
+    <para>下記のようにして <literal>auth required pam_u2f.so</literal> という行を追加します:</para>
 <screen>
 #%PAM-1.0
 auth      include    common-auth
@@ -133,23 +80,15 @@ session   include    common-session
         </screen>
    </step>
    <step>
-    <para>
-     If you placed the <filename>u2f_keys</filename> file to a different
-     location than <filename>$HOME/.config/Yubico/u2f_keys</filename>, you need
-     to use the <literal>authfile</literal> option in the
-     <filename>/etc/pam.d/login</filename> PAM file as follows:
-    </para>
+    <para>なお、 <filename>$HOME/.config/Yubico/u2f_keys</filename> 以外のディレクトリに <filename>u2f_keys</filename> ファイルを配置している場合は、 <filename>/etc/pam.d/login</filename> ファイル内で、 <literal>authfile</literal> オプションを指定する必要があります:</para>
 <screen>
 #%PAM-1.0
 auth     requisite pam_nologin.so
 auth     include   common-auth
-<emphasis role="bold">auth  required pam_u2f.so authfile=<replaceable>&lt;PATH_TO_u2f_keys&gt;</replaceable></emphasis>
+<emphasis role="bold">auth  required pam_u2f.so authfile=<replaceable>&lt;U2F_キーのディレクトリ&gt;</replaceable></emphasis>
 ...
         </screen>
-    <para>
-     where <replaceable>&lt;PATH_TO_u2f_keys&gt;</replaceable> is the absolute
-     path to the <filename>u2f_keys</filename> file.
-    </para>
+    <para>ここで、 <replaceable>&lt;U2F_キーのディレクトリ&gt;</replaceable> には、 <filename>u2f_keys</filename> ファイルのあるディレクトリを絶対パスで指定します。</para>
    </step>
   </procedure>
  </sect2>
