@@ -7,6 +7,11 @@
   <title>FIPS 140-3 準拠機能の有効化</title>
   <info>
     <abstract>
+      <para>
+        FIPS 140-3 is a security accreditation program for validating cryptographic modules
+        produced by private companies. The Federal Information Processing Standards (FIPS) Publication 140
+        is a series of computer security standards developed by the National Institute of Standards and Technology (NIST)
+        to ensure the quality of cryptographic modules.</para>
       <para>アメリカ合衆国連邦政府向けの業務を行う場合、暗号化アプリケーション (OpenSSL, GnuTLS, OpenJDK 等) の使用にあたっては Federal Information Processing Standards (FIPS) 140-3 に準拠するよう求められることがあります。 FIPS 140-3 は私企業が提供する暗号化モジュールに向けて作られたセキュリティ認定プログラムで、このプログラムへの準拠が求められた場合にのみ有効化すべき仕組みです (求められていない場合は、何もする必要はありません) 。本章では FIPS モードの有効化を行うための手順のほか、より詳しい情報のリンクも示しています。</para>
     </abstract>
     <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -16,8 +21,9 @@
   </info>
   <important>
     <title>&productname; &productnumber; と FIPS 140-3 について</title>
-    <para>&productname; &productnumber; では現在、関連するバイナリに対して FIPS 140-3 標準の認証取得のための実装作業を実施しています。近い将来に更新されることになりますので、もうしばらくお待ちください。</para>
-    <para>さらに詳しい情報をお求めの場合は、 &suse; の営業担当者にお尋ねください。</para>
+    <para>
+      The relevant binaries are currently undergoing FIPS 140-3 certification.
+      Until the certification has been achieved, full FIPS 140-3 compliance cannot be guaranteed.</para>
   </important>
   <sect1 xml:id="sec-fips-concept">
     <title>FIPS の概要</title>
@@ -111,11 +117,57 @@
 
     <important>
       <title>パッケージの不安定性について</title>
-      <para>関連するバイナリが FIPS 140-3 の認証を受けるために作業を行っている間は、パッケージが安定しません。それでも FIPS モードを有効化したい場合は、 &suse; の営業担当者にお尋ねください。</para>
+      <para>
+        The relevant binaries are currently undergoing FIPS 140-3 certification.
+        Until the certification has been achieved, full FIPS 140-3 compliance cannot be guaranteed.
+      </para>
     </important>
 
     <para>お使いのシステムに <package>patterns-base-fips</package> をインストールして FIPS モードを有効化していても、鍵の再生成や監査システムのセットアップなど、いくつかの調整を行う必要があります。</para>
   </sect1>
+  <sect1 os="sles" xml:id="sec-how-to-fips-install">
+    <title>FIPS モードを必要とする条件</title>
+   <para>
+    The following procedure shows you how to enable FIPs mode:
+    </para>
+   <procedure>
+    <step>
+<para>The <package>crypto-policies-scripts</package> package that provides the <literal>fips-mode-setup</literal> command might not be installed by default. If not, you can install
+the package in a supported way and then enable the kernel FIPS mode, which also sets the system policy to FIPS:
+</para>
+<screen>&prompt.sudo; fips-mode-setup --enable
+Setting system policy to FIPS
+FIPS mode will be enabled.
+[...]
+Please reboot the system for the setting to take effect.
+</screen>
+      </step>
+<step>
+  <para>Reboot and verify the FIPS mode with:
+  </para>
+<screen>&prompt.sudo; fips-mode-setup --check
+FIPS mode is enabled.
+Initramfs fips module is enabled.
+The current crypto policy (FIPS) is based on the FIPS policy.
+</screen>
+</step>
+<step>
+  <para>FIPS モードを必要とする条件</para>
+<screen>&prompt.sudo; fips-mode-setup --disable
+Setting system policy to DEFAULT
+FIPS mode will be disabled.
+[...]
+Please reboot the system for the setting to take effect.
+</screen>
+</step>
+      </procedure>
+<para>You can also use the following options:</para>
+<itemizedlist mark="bullet" spacing="normal">
+<listitem><para><literal>--no-bootcfg</literal>: The tool will not reconfigure the boot loader, and, instead, will print the options that need to be added to the kernel command line.
+Exception: it still attempts executing zipl(8) on s390x, as the system might become unbootable otherwise.</para></listitem>
+<listitem><para><literal> --is-enabled</literal>: Checks the system FIPS mode status and returns failure error code if disabled (2) or inconsistent (1).</para></listitem>
+</itemizedlist>
+      </sect1>
   <!--<sect1 xml:id="sec-fips-enable">
     <title>Enabling FIPS mode</title>
     <para>
@@ -192,4 +244,32 @@
 
     <para os="sles">&samba; サーバの詳細については、 &storage_guide; の &samba; セクションをお読みください。</para>
   </sect1>
+  <sect1 xml:id="sec-fips-more">
+    <title>More information</title>
+
+    <para>
+     For more information, refer to:
+    </para>
+
+    <itemizedlist mark="bullet" spacing="normal">
+     <listitem>
+      <para>
+       Man 8 <literal>fips-mode-setup</literal>
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+        Man 8 <literal>fips-finish-install</literal>
+      </para>
+     </listitem>
+     <listitem>
+      <para>
+        Man 7 <literal>crypto-policies</literal>
+      </para>
+     </listitem>
+     <listitem>
+      <para>まずは <literal>patterns-microos-fips</literal> パターンをインストールします:</para>
+     </listitem>
+    </itemizedlist>
+   </sect1>
 </chapter>

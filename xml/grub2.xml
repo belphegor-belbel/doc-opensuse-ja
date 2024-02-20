@@ -107,11 +107,17 @@
       <para><filename>/etc/default/grub</filename> を編集したあとは、 <command>grub2-mkconfig -o /boot/grub2/grub.cfg</command> を実行してメインの設定ファイルを更新してください。</para>
       <note>
         <title>スコープについて</title>
-        <remark>
-     Do we really still have Xen-specific kernels? - sknorr, 2017-05-08
-    </remark>
         <para>このファイル内で設定したオプションは、全ての起動項目に対して適用される汎用オプションです。 &xen; カーネルや &xen; ハイパーバイザ向けの固有オプションについては、 GRUB_*_XEN_* 設定オプションで設定することができます。詳細は下記をお読みください。</para>
       </note>
+      <important>
+        <title>Escaping inner quotes</title>
+        <para>
+          More complex options with spaces require quoting so that they are
+          processed as one option. Such inner quotes need to be correctly
+          escaped, for example:
+        </para>
+<screen>GRUB_CMDLINE_LINUX_XEN="debug loglevel=9 log_buf_len=5M \"ddebug_query=file drivers/xen/xen-acpi-processor.c +p\""</screen>
+      </important>
       <variablelist>
         <varlistentry>
           <term><literal>GRUB_DEFAULT</literal></term>
@@ -174,13 +180,23 @@
         <varlistentry>
           <term><literal>GRUB_CMDLINE_XEN</literal></term>
           <listitem>
-            <para>この項目は &xen; ゲストカーネルに対してのみ設定されるカーネルパラメータを指定する項目です。項目の位置づけとしては <literal>GRUB_CMDLINE_LINUX</literal> と似た動作になります。</para>
+            <para>
+              These entries are passed to the &xen; hypervisor &xen; menu
+              entries for normal and recovery modes. For example:
+            </para>
+            <screen>GRUB_CMDLINE_XEN="loglvl=all guest_loglvl=all"</screen>
+            <tip>
+              <title>&xen; hypervisor options</title>
+              <para>
+                Find a complete list of &xen; hypervisor options in <link xlink:href="https://xenbits.xen.org/docs/unstable/misc/xen-command-line.html"/>
+              </para>
+            </tip>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term><literal>GRUB_CMDLINE_XEN_DEFAULT</literal></term>
           <listitem>
-            <para><literal>GRUB_CMDLINE_XEN</literal> と同じような意味合いを持ちますが、こちらは <literal>GRUB_CMDLINE_LINUX_DEFAULT</literal> と同じような位置づけの項目です。</para>
+            <para><literal>GRUB_CMDLINE_LINUX</literal> と同じような意味合いを持ちますが、こちらは通常モードの起動項目のみの末尾に追加されます。</para>
           </listitem>
         </varlistentry>
         <varlistentry>
