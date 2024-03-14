@@ -4,13 +4,44 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-audit-comp">
- <title>Linux 監査システムの概要</title>
+ <title>Understanding Linux audit</title>
  <info>
       <abstract>
-        <para>本バージョンの &productname; に同梱されている Linux 監査フレームワークは、 CAPP (Controlled Access Protection Profiles) 互換の監査システムとして提供され、セキュリティに関連するイベントを確実に収集します。監査記録からは、セキュリティポリシーへの違反有無と、それが誰によって行われたものであるのかを調べることができます。</para>
-        <para>監査フレームワークは CC-CAPP/EAL (Common Criteria-Controlled Access Protection Profiles/Evaluation Assurance Level) の認証を受ける際に重要な要件となるものです。また、 Common Criteria (CC) for Information Technology Security Information は、独立したセキュリティ評価に対する国際標準です。 Common Criteria の仕組みにより、顧客が任意の IT 製品に対するセキュリティレベルを判断し、ミッションクリティカルな環境への導入を支援することができます。</para>
-        <para>Common Criteria でのセキュリティ評価には、 2 種類の評価要件セット (機能要件／保証要件) があります。機能要件は評価対象の製品のセキュリティ属性を記述するもので、 Controlled Access Protection Profiles (CAPP) のもとまとめられるものです。一方の保証要件は、 Evaluation Assurance Level (EAL) に従ってまとめられるものです。 EAL は、評価者がセキュリティ属性を判断するにあたって、それが存在し、効果があって、実装されていることを確認するためのすべての作業を記述するものです。この種類の作業には、たとえば開発者によるセキュリティの脆弱性の検索、修正処理、テストなどの文書化が含まれます。</para>
-        <para>このガイドでは、監査システムの動作概要と、設定方法について説明しています。 Common Criteria に関する一般的な情報については、 <link xlink:href="https://ja.wikipedia.org/wiki/%E3%82%B3%E3%83%A2%E3%83%B3%E3%82%AF%E3%83%A9%E3%82%A4%E3%83%86%E3%83%AA%E3%82%A2">コモンクライテリア (Wikipedia)</link> などの情報をお読みください。</para>
+        <para>
+    The Linux audit framework as shipped with this version of
+    &productname; provides a CAPP-compliant (Controlled Access Protection
+    Profiles) auditing system that reliably collects information about any
+    security-relevant event. The audit records can be examined to determine
+    whether any violation of the security policies has been committed, and
+    by whom.
+   </para>
+        <para>
+    Providing an audit framework is an important requirement for a
+    CC-CAPP/EAL (Common Criteria-Controlled Access Protection
+    Profiles/Evaluation Assurance Level) certification. Common Criteria (CC)
+    for Information Technology Security Information is an international
+    standard for independent security evaluations. Common Criteria helps
+    customers judge the security level of any IT product they intend to
+    deploy in mission-critical setups.
+   </para>
+        <para>
+    Common Criteria security evaluations have two sets of evaluation
+    requirements, functional and assurance requirements. Functional
+    requirements describe the security attributes of the product under
+    evaluation and are summarized under the Controlled Access Protection
+    Profiles (CAPP). Assurance requirements are summarized under the
+    Evaluation Assurance Level (EAL). EAL describes any activities that must
+    take place for the evaluators to be confident that security attributes
+    are present, effective and implemented. Examples for activities of this
+    kind include documenting the developers' search for security
+    vulnerabilities, the patch process, and testing.
+   </para>
+        <para>
+    This guide provides a basic understanding of how audit works and how it
+    can be set up. For more information about Common Criteria itself, refer
+    to <link xlink:href="https://www.commoncriteriaportal.org/">the Common
+    Criteria Web site</link>.
+   </para>
       </abstract>
       <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
         <dm:bugtracker>
@@ -18,96 +49,177 @@
         <dm:translation>yes</dm:translation>
       </dm:docmanager>
     </info>
-    <para>Linux 監査システムでは、お使いのシステム内で発生している内容を非常に細かく分析することによって、セキュリティをより強固にする支援を行います。ただし、それ自身でセキュリティが強化されるわけではありません。つまり、コードの誤動作や様々な脆弱性からシステムを保護するわけではありません。その代わり、監査システムではそれらの問題を追跡し、 &aa; などのそれらを保護するための様々な仕組みを使用するよう促すためのものです。</para>
- <para>監査システムは複数のコンポーネントから構成される仕組みですが、それぞれがフレームワーク全体に重要な機能を提供しています。監査システムのカーネルモジュールは、システムコールを中継し、その際に関連するイベントを記録します。また <systemitem class="daemon">auditd</systemitem> デーモンは、監査レポートをディスクに記録します。このほか、様々なコマンドラインユーティリティを利用することで、監査証跡の表示や問い合わせ、書庫保存などを行うことができます。</para>
- <para>監査システムは下記の機能を提供します:</para>
+    <para>
+  Linux audit helps make your system more secure by providing you with a
+  means to analyze what is happening on your system in great detail. It does
+  not, however, provide additional security itself&mdash;it does not
+  protect your system from code malfunctions or any kind of exploits.
+  Instead, audit is useful for tracking these issues and helps you take
+  additional security measures, like &aa;, to prevent them.
+ </para>
+ <para>
+  Audit consists of several components, each contributing crucial
+  functionality to the overall framework. The audit kernel module intercepts
+  the system calls and records the relevant events. The
+  <systemitem class="daemon">auditd</systemitem> daemon writes the audit
+  reports to disk. Various command-line utilities take care of displaying,
+  querying and archiving the audit trail.
+ </para>
+ <para>
+  Audit enables you to do the following:
+ </para>
  <variablelist>
   <varlistentry>
-   <term>ユーザとプロセスとの関連づけ</term>
+   <term>Associate users with processes</term>
    <listitem>
-    <para>監査システムはプロセスとそれを起動したユーザ ID との間の関連づけを行います。これにより、管理者やセキュリティ責任者が、プロセスを所有しているユーザを正確に追跡することができるほか、システム内での不審な動作を検出することができるようになります。</para>
+    <para>
+     Audit maps processes to the user ID that started them. This makes it
+     possible for the administrator or security officer to exactly trace
+     which user owns which process and is potentially doing malicious
+     operations on the system.
+    </para>
     <important>
-     <title>ユーザ ID の名前変更について</title>
-     <para>監査デーモンは UID の変更を処理しません。そのため、たとえばユーザ名 <literal>tux</literal> の UID を <literal>uid=1001</literal> から <literal>uid=2000</literal> に変更したり、廃止したりすることは避けてください。このような作業を行ってしまった場合は、 <command>auditctl</command> データ (監査ルール) を変更する必要が発生してしまうほか、古いデータを正しく取得できなくなってしまうことがあります。</para>
+     <title>Renaming user IDs</title>
+     <para>
+      Audit does not handle the renaming of UIDs. Therefore avoid renaming
+      UIDs (for example, changing <literal>tux</literal> from
+      <literal>uid=1001</literal> to <literal>uid=2000</literal>) and
+      obsolete UIDs rather than renaming them. Otherwise you would need to
+      change <command>auditctl</command> data (audit rules) and would have
+      problems retrieving old data correctly.
+     </para>
     </important>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>監査証跡の確認</term>
+   <term>Review the audit trail</term>
    <listitem>
-    <para>Linux 監査システムでは、監査レポートのディスクへの書き込みだけでなく、レポートを人間にとって読みやすい形式に変換する処理も行います。</para>
+    <para>
+     Linux audit provides tools that write the audit reports to disk and
+     translate them into human readable format.
+    </para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>特定の監査イベントの確認</term>
+   <term>Review particular audit events</term>
    <listitem>
-    <para>監査システムでは、監査レポート内の特定のイベントのみを抽出するためのユーティリティを提供しています。下記の検索条件を指定することができます:</para>
+    <para>
+     Audit provides a utility that allows you to filter the audit reports
+     for certain events of interest. You can filter for:
+    </para>
     <itemizedlist mark="bullet" spacing="normal">
      <listitem>
-      <para>ユーザ</para>
+      <para>
+       User
+      </para>
      </listitem>
      <listitem>
-      <para>グループ</para>
+      <para>
+       Group
+      </para>
      </listitem>
      <listitem>
-      <para>監査 ID</para>
+      <para>
+       Audit ID
+      </para>
      </listitem>
      <listitem>
-      <para>リモートホスト名</para>
+      <para>
+       Remote Host Name
+      </para>
      </listitem>
      <listitem>
-      <para>リモートホストアドレス</para>
+      <para>
+       Remote Host Address
+      </para>
      </listitem>
      <listitem>
-      <para>システムコール</para>
+      <para>
+       System Call
+      </para>
      </listitem>
      <listitem>
-      <para>システムコールのパラメータ</para>
+      <para>
+       System Call Arguments
+      </para>
      </listitem>
      <listitem>
-      <para>ファイル</para>
+      <para>
+       File
+      </para>
      </listitem>
      <listitem>
-      <para>ファイル操作</para>
+      <para>
+       File Operations
+      </para>
      </listitem>
      <listitem>
-      <para>成功もしくは失敗</para>
+      <para>
+       Success or Failure
+      </para>
      </listitem>
     </itemizedlist>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>選択的監査の適用</term>
+   <term>Apply a selective audit</term>
    <listitem>
-    <para>監査システムにはフィルタリング機能が用意され、注目対象のイベントに対して監査レポートを作成することができるほか、特定のイベントのみを記録するよう監査システムを構成することもできます。このほか、独自のルールセットを作成して、これらの記録のみを実施するよう監査デーモンを構成することもできます。</para>
+    <para>
+     Audit provides the means to filter the audit reports for events of
+     interest and to tune audit to record only selected events. You can
+     create your own set of rules and have the audit daemon record only
+     those of interest to you.
+    </para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>レポートデータの可用性の保証</term>
+   <term>Guarantee the availability of the report data</term>
    <listitem>
-    <para>監査レポートは &rootuser; が所有するもので、 &rootuser; のみが削除することができます。それ以外のユーザは監査ログを削除できません。</para>
+    <para>
+     Audit reports are owned by &rootuser; and therefore only removable
+     by &rootuser;. Unauthorized users cannot remove the audit logs.
+    </para>
    </listitem>
   </varlistentry>
   <varlistentry>
-   <term>監査データの喪失保護</term>
+   <term>Prevent audit data loss</term>
    <listitem>
-    <para>カーネルのメモリが不足した場合や監査デーモンのバックログが超過した場合、もしくは監査デーモンの流量制限を超過した場合、監査デーモンはシステムのシャットダウンを実施して、監査システムの監視から外れないように設定することができます。このシャットダウンは、監査システムの中枢部からシステムの即時停止を求めるもので、この場合は直近のログがディスクに書き込まれることはありません。既定の設定では、システムの停止ではなく、 syslog への警告記録のみを行うように設定されています。</para>
-    <para>ログの記録に必要なディスク領域が不足した場合、監査システムに対してクリーンなシャットダウンを求めるように設定することもできます。既定の設定では、ディスク領域が不足した場合、ログを停止するように設定されています。</para>
+    <para>
+     If the kernel runs out of memory, the audit daemon's backlog is
+     exceeded, or its rate limit is exceeded, audit can trigger a shutdown
+     of the system to keep events from escaping audit's control. This
+     shutdown would be an immediate halt of the system triggered by the
+     audit kernel component without synchronizing the latest logs to disk.
+     The default configuration is to log a warning to syslog rather than to
+     halt the system.
+    </para>
+    <para>
+     If the system runs out of disk space when logging, the audit system can
+     be configured to perform clean shutdown. The default configuration
+     tells the audit daemon to stop logging when it runs out of disk space.
+    </para>
    </listitem>
   </varlistentry>
  </variablelist>
  <sect1 xml:id="sec-audit-bigpicture">
-  <title>Linux 監査システムのコンポーネント紹介</title>
+  <title>Introducing the components of Linux audit</title>
 
   <important>
-   <title>audispd の auditd への併合について</title>
-   <para><phrase os="sles;sled;slemicro">&sles;&nbsp;15&nbsp;SP4</phrase> <phrase os="osuse">&leap; 15.4</phrase> およびそれ以降のバージョンでは、 <systemitem class="daemon">audispd</systemitem> のソースコードが <systemitem class="daemon">auditd</systemitem> に併合されています。また、 <systemitem class="daemon">audispd</systemitem> の全ての設定は <filename>/etc/audit/auditd.conf</filename> および <filename>/etc/audit/plugins.d</filename> 内に移動しています。</para>
+   <title>audispd merged into auditd</title>
+   <para>
+    In <phrase os="sles;sled;slemicro">&sles;&nbsp;15&nbsp;SP4</phrase><phrase os="osuse">&leap; 15.4</phrase> the code for <systemitem class="daemon">audispd</systemitem> has been merged into <systemitem class="daemon">auditd</systemitem>.  All <systemitem class="daemon">audispd</systemitem> configurations are now in
+    <filename>/etc/audit/auditd.conf</filename> and
+    <filename>/etc/audit/plugins.d</filename>.
+   </para>
   </important>
 
-  <para>下記の図には、監査システムでの様々なコンポーネントと、相互作用の関係を示しています:</para>
+  <para>
+   The following figure illustrates how the various components of audit
+   interact with each other:
+  </para>
 
   <figure xml:id="fig-audit-components">
-   <title>Linux 監査システムのコンポーネント紹介</title>
+   <title>Introducing the components of Linux audit</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="audit_components.png" width="75%"/>
@@ -118,65 +230,171 @@
    </mediaobject>
   </figure>
 
-  <para>実線の矢印はコンポーネント間でのデータの流れを、点線の矢印はコンポーネント間の制御を表しています。</para>
+  <para>
+   Straight arrows represent the data flow between components while dashed
+   arrows represent lines of control between components.
+  </para>
 
   <variablelist>
    <varlistentry>
     <term>auditd</term>
     <listitem>
-     <para>監査デーモンは、アプリケーションやシステムの動作によって生成され、監査カーネルインターフェイスを介して提供された監査メッセージを、ディスクに書き込むデーモンです。監査デーモンは &systemd; によって起動されます。監査システムの (起動時の) 設定は、 <filename>/etc/audit/auditd.conf</filename> で制御します。 <systemitem class="daemon">auditd</systemitem> に関する詳細情報と設定方法について、詳しくは <xref linkend="sec-audit-auditd"/> をお読みください。</para>
+     <para>
+      The audit daemon writes the audit messages that
+      were generated through the audit kernel interface and triggered by
+      application and system activity to disk. The way the audit daemon is
+      started is controlled by &systemd;. The audit system functions
+      (when started) are controlled by
+      <filename>/etc/audit/auditd.conf</filename>. For more information
+      about <systemitem class="daemon">auditd</systemitem> and its
+      configuration, refer to <xref linkend="sec-audit-auditd"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><command>auditctl</command></term>
+    <term><command>auditctl</command>
+    </term>
     <listitem>
-     <para><command>auditctl</command> ユーティリティは、監査システムを制御するためのユーティリティです。ログ生成に関わるパラメータのほか、監査インターフェイスのカーネル設定や、どのイベントを追跡するかのルールなどを設定することができます。<command>auditctl</command> に関する詳細は、 <xref linkend="sec-audit-auditctl"/> をお読みください。</para>
+     <para>
+      The <command>auditctl</command> utility controls the audit system. It
+      controls the log generation parameters and kernel settings of the
+      audit interface and the rule sets that determine which events
+      are tracked. For more information about <command>auditctl</command>,
+      refer to <xref linkend="sec-audit-auditctl"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>監査ルール</term>
+    <term>audit rules</term>
     <listitem>
-     <para><filename>/etc/audit/audit.rules</filename> ファイルには、 <command>auditctl</command> コマンドのシーケンスが含まれていて、監査デーモンの起動直後のシステム起動時に読み込まれる内容が記述されています。監査ルールに関する詳細は、 <xref linkend="sec-audit-rules"/> をお読みください。</para>
+     <para>
+      The file <filename>/etc/audit/audit.rules</filename> contains a
+      sequence of <command>auditctl</command> commands that are loaded at
+      system boot time immediately after the audit daemon is started. For
+      more information about audit rules, refer to
+      <xref linkend="sec-audit-rules"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>aureport</term>
     <listitem>
-     <para><command>aureport</command> ユーティリティは、監査イベントログから独自のレポートを作成することができるユーティリティです。このレポート生成は簡単にスクリプトに組み込むことができますし、出力は他のアプリケーションから使用することができる (たとえば結果のグラフ化など) ようになっています。 <command>aureport</command> に関する詳細は、<xref linkend="sec-audit-aureport"/> をお読みください。</para>
+     <para>
+      The <command>aureport</command> utility allows you to create custom
+      reports from the audit event log. This report generation can easily be
+      scripted, and the output can be used by various other applications,
+      for example, to plot these results. For more information about
+      <command>aureport</command>, refer to
+      <xref linkend="sec-audit-aureport"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>ausearch</term>
     <listitem>
-     <para><command>ausearch</command> ユーティリティは監査ログ内を検索するためのユーティリティで、様々なキーを指定してイベントを検索したり、様々なログ形式の属性を指定して検索したりすることができるようになっています。 <command>ausearch</command> に関する詳細は、<xref linkend="sec-audit-ausearch"/> をお読みください。</para>
+     <para>
+      The <command>ausearch</command> utility can search the audit log file
+      for certain events using various keys or other characteristics of the
+      logged format. For more information about <command>ausearch</command>,
+      refer to <xref linkend="sec-audit-ausearch"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>autrace</term>
     <listitem>
-     <para><command>autrace</command> は <command>strace</command> のように、特定のプロセスを追跡するためのユーティリティです。 <command>autrace</command> の出力についても、監査ログに記録されるようになっています。 <command>autrace</command> に関する詳細は、 <xref linkend="sec-audit-autrace"/> をお読みください。</para>
+     <para>
+      The <command>autrace</command> utility traces individual processes in
+      a fashion similar to <command>strace</command>. The output of
+      <command>autrace</command> is logged to the audit log. For more
+      information about <command>autrace</command>, refer to
+      <xref linkend="sec-audit-autrace"/>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>aulast</term>
     <listitem>
-     <para><command>last</command> コマンドのように、ユーザが直近にログインした日時を一覧表示します。 <command>aulast</command> は過去の監査ログ (もしくは指定した監査ログファイル) を読み込んで、指定した日時範囲におけるユーザのログインおよびログアウトを一覧で表示します。</para>
+     <para>
+      Prints a list of the last logged-in users, similarly to
+      <command>last</command>. <command>aulast</command> searches back
+      through the audit logs (or the given audit log file) and displays a
+      list of all users logged in and out based on the range of time in the
+      audit logs.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>aulastlog</term>
     <listitem>
-     <para><command>lastlog</command> コマンドのように、マシンに対する最新のログイン日時を一覧表示します。ログイン名のほか、ポートと最終ログイン日時が表示されます。</para>
+     <para>
+      Prints the last login for all users of a machine similar to the way
+      <command>lastlog</command> does. The login name, port and last login
+      time are printed.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-audit-auditd">
-  <title>監査デーモンの設定</title>
+  <title>Configuring the audit daemon</title>
 
-  <para>監査ログの生成やそのログの処理を行う前に、まずは監査デーモン自身の設定を行います。 <!-- fs 2016-11-17: bsc #918655 Not sure where this can be configured now (not in /etc/audit/auditd.conf); therefore keeping this as reference Configure how the Audit system functions in <filename>/etc/audit/auditd.conf</filename>. </para> <para> The most important configuration parameters in <filename>/etc/sysconfig/auditd</filename> are: </para><screen>AUDITD_LANG="en_US"AUDITD_DISABLE_CONTEXTS="no"</screen> <variablelist> <varlistentry> <term><envar>AUDITD_LANG</envar> </term> <listitem> <para> The locale information used by audit. The default setting is <literal>en_US</literal>. Setting it to <literal>none</literal> would remove all locale information from audit's environment. </para> </listitem> </varlistentry> <varlistentry> <term><envar>AUDITD_DISABLE_CONTEXTS</envar> </term> <listitem> <para> Disable system call auditing by default. Set to <literal>no</literal> for full audit functionality including file and directory watches and system call auditing. </para> </listitem> </varlistentry> </variablelist> <para>--> 設定ファイル <filename>/etc/audit/auditd.conf</filename> では、デーモンの起動時にどのようにして監査システムを動作させるのかを設定します。ほとんどの用途では、 &productname; に同梱されている既定の設定のままでかまいません。 CAPP 環境向けに使用する場合は、ほとんどのパラメータに調整が必要です。下記は既定の設定です:</para>
+  <para>
+   Before you can start generating audit logs and processing them,
+   configure the audit daemon itself.
+
+<!-- fs 2016-11-17: bsc #918655
+     Not sure where this can be configured now
+     (not in /etc/audit/auditd.conf); therefore keeping this as reference
+
+   Configure how the Audit system
+   functions in <filename>/etc/audit/auditd.conf</filename>.
+  </para>
+
+  <para>
+   The most important configuration parameters in
+   <filename>/etc/sysconfig/auditd</filename> are:
+  </para>
+
+<screen>AUDITD_LANG="en_US"
+AUDITD_DISABLE_CONTEXTS="no"</screen>
+
+  <variablelist>
+   <varlistentry>
+    <term><envar>AUDITD_LANG</envar>
+    </term>
+    <listitem>
+     <para>
+      The locale information used by audit. The default setting is
+      <literal>en_US</literal>. Setting it to <literal>none</literal> would
+      remove all locale information from audit's environment.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><envar>AUDITD_DISABLE_CONTEXTS</envar>
+    </term>
+    <listitem>
+     <para>
+      Disable system call auditing by default. Set to <literal>no</literal>
+      for full audit functionality including file and directory watches and
+      system call auditing.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+
+  <para>
+-->
+   The <filename>/etc/audit/auditd.conf</filename> configuration file
+   determines how the audit system functions when the daemon has been
+   started. For most use cases, the default settings shipped with
+   &productname; should suffice. For CAPP environments, most of these
+   parameters need tweaking. The following example is the default
+   configuration:
+  </para>
   <example>
-   <title>/etc/audit/auditd.conf の既定値</title>
+   <title>Default /etc/audit/auditd.conf</title>
 <screen>
 local_events = yes
 write_logs = yes
@@ -214,46 +432,110 @@ plugin_dir = /etc/audit/plugins.d
 end_of_event_timeout = 2</screen>
 </example>
 
-  <para>これらの設定値に関する詳細は、 <command>man 5 auditd.conf</command> で表示されるマニュアルページをお読みください。</para>
+  <para>
+   Refer to <command>man 5 auditd.conf</command> for an explanation of these
+   options.
+  </para>
 
-  <para>CAPP の要件を満たすよう環境を設定する必要があるかどうかによって異なりますが、必要である場合は監査デーモンの設定をより厳密に行う必要があります。 CAPP の要件を満たす場合は、 <quote>CAPP 環境について</quote> と書かれた注記に従って設定を行ってください。</para>
+  <para>
+   Depending on whether you want your environment to satisfy the
+   requirements of CAPP, you need to be extra restrictive when configuring
+   the audit daemon. Where you need to use particular settings to meet the
+   CAPP requirements, a <quote>CAPP Environment</quote> note tells you how
+   to adjust the configuration.
+  </para>
 
-  <para><filename>/etc/audit/auditd.conf</filename> でのデーモン設定が完了したら、次は監査デーモンが監査する範囲の制御と、デーモンが適切に動作するために必要な十分なリソースの割り当てと制限を行います。</para>
+  <para>
+   When the daemon configuration in
+   <filename>/etc/audit/auditd.conf</filename> is complete, the next step is
+   to focus on controlling the amount of auditing the daemon does, and to
+   assign sufficient resources and limits to the daemon so it can operate
+   smoothly.
+  </para>
  </sect1>
  <sect1 xml:id="sec-audit-auditctl">
-  <title><command>auditctl</command> による監査システムの制御</title>
+  <title>Controlling the audit system using <command>auditctl</command></title>
 
-  <para><command>auditctl</command> は監査デーモンの状態の制御のほか、基本的なシステムパラメータを設定することができます。このほか、システム内で実施される監査範囲の制御を行うこともできます。監査ルールを使用することで、 <command>auditctl</command> はお使いのシステム内のどのコンポーネントを監査するのか、およびどの範囲までを監査するのかを制御することができます。監査ルールは <command>auditctl</command> コマンドを使用してコマンドラインから渡すことができるほか、ルールセットを作成して監査デーモン側で処理させることもできます。既定では、 <systemitem class="daemon">auditd</systemitem> は <filename>/etc/audit/audit.rules</filename> にある監査ルールを使用するようになっています。監査ルールに関する詳細は、 <xref linkend="sec-audit-rules"/> をお読みください。</para>
+  <para>
+   <command>auditctl</command> controls the status and
+   basic system parameters of the audit daemon. It controls the amount
+   of auditing performed on the system. Using audit rules,
+   <command>auditctl</command> controls which components of your system are
+   subjected to the audit and to what extent they are audited. Audit rules
+   can be passed to the audit daemon on the <command>auditctl</command>
+   command line or by composing a rule set and instructing the audit
+   daemon to process this file. By default, the
+   <systemitem class="daemon">auditd</systemitem> daemon is configured to
+   check for audit rules under <filename>/etc/audit/audit.rules</filename>.
+   For more details on audit rules, refer to
+   <xref linkend="sec-audit-rules"/>.
+  </para>
 
-  <para>基本的な監査システムパラメータを制御するための主な <command>auditctl</command> コマンドは下記のとおりです:</para>
+  <para>
+   The main <command>auditctl</command> commands to control basic audit
+   system parameters are:
+  </para>
 
   <itemizedlist mark="bullet" spacing="normal">
    <listitem>
-    <para><command>auditctl</command> <option>-e</option>: 監査の有効化と無効化</para>
+    <para>
+     <command>auditctl</command> <option>-e</option> to enable or disable
+     audit
+    </para>
    </listitem>
    <listitem>
-    <para><command>auditctl</command> <option>-f</option>: 失敗フラグの制御</para>
+    <para>
+     <command>auditctl</command> <option>-f</option> to control the failure
+     flag
+    </para>
    </listitem>
    <listitem>
-    <para><command>auditctl</command> <option>-r</option>: 監査メッセージの流量制限の制御</para>
+    <para>
+     <command>auditctl</command> <option>-r</option> to control the rate
+     limit for audit messages
+    </para>
    </listitem>
    <listitem>
-    <para><command>auditctl</command> <option>-b</option>: バックログ制限の制御</para>
+    <para>
+     <command>auditctl</command> <option>-b</option> to control the backlog
+     limit
+    </para>
    </listitem>
    <listitem>
-    <para><command>auditctl</command> <option>-s</option>: 監査デーモンに関する現在の状態の表示</para>
+    <para>
+     <command>auditctl</command> <option>-s</option> to query the current
+     status of the audit daemon
+    </para>
    </listitem>
    <listitem>
-     <para><command>auditctl</command> <option>-S</option> では監査対象とするシステムコールを指定します。なお、お使いのシステムで <command>auditctl -S</command> を実行する際は、 <option>-F arch=b64</option> を指定して、アーキテクチャの間違いに関する警告が発生しないようにしてください。</para>
+     <para>
+      <command>auditctl</command> <option>-S</option> specifies which system
+      call to audit. Before running <command>auditctl -S</command> on your system,
+      add <option>-F arch=b64</option> to prevent the architecture mismatch
+      warning.
+     </para>
    </listitem>
   </itemizedlist>
 
-  <para><option>-e</option> , <option>-f</option> , <option>-r</option> , <option>-b</option> オプションは <filename>audit.rules</filename> ファイル内でも指定することができます。これにより、監査デーモンの起動時に毎回入力するような手間を省くことができます。</para>
+  <para>
+   The <option>-e</option>, <option>-f</option>, <option>-r</option>, and
+   <option>-b</option> options can also be specified in the
+   <filename>audit.rules</filename> file to avoid having to enter them each
+   time the audit daemon is started.
+  </para>
 
-  <para><command>auditctl</command> <option>-s</option> で監査デーモンの状態を問い合わせる場合や、 <command>auditctl</command> <option>-e<replaceable>フラグ</replaceable></option> で状態フラグを変更する場合は、状態メッセージ (上述のパラメータに関する情報を含む) が出力されます。下記は、一般的な監査状態のメッセージ例を示しています。</para>
+  <para>
+   Any time you query the status of the audit daemon with
+   <command>auditctl</command> <option>-s</option> or change the status flag
+   with <command>auditctl</command>
+   <option>-e<replaceable>FLAG</replaceable></option>, a status message
+   (including information on each of the above-mentioned parameters) is
+   printed. The following example highlights the typical audit status
+   message.
+  </para>
 
   <example xml:id="ex-auditctl-status">
-   <title><command>auditctl</command> <option>-s</option> の出力例</title>
+   <title>Example output of <command>auditctl</command> <option>-s</option></title>
 <screen>
 enabled 1
 failure 1
@@ -268,97 +550,156 @@ loginuid_immutable 0 unlocked
   </example>
 
   <table xml:id="tab-audit-auditctl">
-   <title>監査状態フラグ</title>
+   <title>Audit status flags</title>
    <tgroup cols="3">
     <thead>
      <row>
       <entry>
-       <para>フラグ</para>
+       <para>
+        Flag
+       </para>
       </entry>
       <entry>
-       <para>意味 [取り得る値]</para>
+       <para>
+        Meaning [Possible Values]
+       </para>
       </entry>
       <entry>
-       <para>コマンド</para>
+       <para>
+        Command
+       </para>
       </entry>
      </row>
     </thead>
     <tbody>
      <row>
       <entry>
-       <para><literal>enabled</literal></para>
+       <para>
+        <literal>enabled</literal>
+       </para>
       </entry>
       <entry>
-       <para>有効化フラグを設定します。 [0..2] 0=無効, 1=有効, 2=有効にして設定をロックダウンします。なお、この有効化フラグはシステムコールのログにのみ適用されるものであり、その他のイベントについては効果がありません (詳しくは<package>audit-devel</package> パッケージ内の <command>man 3 audit_set_enabled</command> をお読みください) 。</para>
+       <para>
+        Set the enable flag. [0..2] 0=disable, 1=enable, 2=enable and lock
+        down the configuration. Note that this only disables logging syscalls,
+        and other events may still be logged. (See
+        <command>man 3 audit_set_enabled</command> in the
+        <package>audit-devel</package>.)
+       </para>
       </entry>
       <entry>
-       <para><command>auditctl</command> <option>-e [0|1|2]</option></para>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <para><literal>flag</literal></para>
-      </entry>
-      <entry>
-       <para>失敗フラグを設定します。 [0..2] 0=何もしない, 1=printk, 2=panic (ディスクへの書き込み待ちのデータを書き込むことなく、即時に停止する)</para>
-      </entry>
-      <entry>
-       <para><command>auditctl</command> <option>-f [0|1|2]</option></para>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <para><literal>pid</literal></para>
-      </entry>
-      <entry>
-       <para><systemitem class="daemon">auditd</systemitem> のプロセス ID を表します。</para>
-      </entry>
-      <entry>
-       <para>&mdash;</para>
+       <para>
+        <command>auditctl</command> <option>-e [0|1|2]</option>
+       </para>
       </entry>
      </row>
      <row>
       <entry>
-       <para><literal>rate_limit</literal></para>
+       <para>
+        <literal>flag</literal>
+       </para>
       </entry>
       <entry>
-       <para>メッセージの流量制限 (毎秒メッセージ数) を設定します。この値にゼロより大きい値が設定され、その値を超過した場合は、失敗フラグ内で設定した動作を実行します。</para>
+       <para>
+        Set the failure flag. [0..2] 0=silent, 1=printk, 2=panic (immediate
+        halt without synchronizing pending data to disk)
+       </para>
       </entry>
       <entry>
-       <para><command>auditctl</command> <option>-r <replaceable>流量</replaceable></option></para>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <para><literal>backlog_limit</literal></para>
-      </entry>
-      <entry>
-       <para>未処理の監査バッファの最大サイズを指定します。すべてのバッファが使用中になると、失敗フラグ内で設定した動作を実行します。</para>
-      </entry>
-      <entry>
-       <para><command>auditctl</command> <option>-b <replaceable>バックログ</replaceable></option></para>
+       <para>
+        <command>auditctl</command> <option>-f [0|1|2]</option>
+       </para>
       </entry>
      </row>
      <row>
       <entry>
-       <para><literal>lost</literal></para>
+       <para>
+        <literal>pid</literal>
+       </para>
       </entry>
       <entry>
-       <para>現時点までに喪失した監査メッセージの数を表します。</para>
+       <para>
+        Process ID under which
+        <systemitem class="daemon">auditd</systemitem> is running.
+       </para>
       </entry>
       <entry>
-       <para>&mdash;</para>
+       <para>
+        &mdash;
+       </para>
       </entry>
      </row>
      <row>
       <entry>
-       <para><literal>backlog</literal></para>
+       <para>
+        <literal>rate_limit</literal>
+       </para>
       </entry>
       <entry>
-       <para>現時点での未処理の監査バッファ数を表します。</para>
+       <para>
+        Set a limit in messages per second. If the rate is not zero and is
+        exceeded, the action specified in the failure flag is triggered.
+       </para>
       </entry>
       <entry>
-       <para>&mdash;</para>
+       <para>
+        <command>auditctl</command> <option>-r
+        <replaceable>RATE</replaceable></option>
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>
+        <literal>backlog_limit</literal>
+       </para>
+      </entry>
+      <entry>
+       <para>
+        Specify the maximum number of outstanding audit buffers allowed. If
+        all buffers are full, the action specified in the failure flag is
+        triggered.
+       </para>
+      </entry>
+      <entry>
+       <para>
+        <command>auditctl</command> <option>-b
+        <replaceable>BACKLOG</replaceable></option>
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>
+        <literal>lost</literal>
+       </para>
+      </entry>
+      <entry>
+       <para>
+        Count the current number of lost audit messages.
+       </para>
+      </entry>
+      <entry>
+       <para>
+        &mdash;
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>
+        <literal>backlog</literal>
+       </para>
+      </entry>
+      <entry>
+       <para>
+        Count the current number of outstanding audit buffers.
+       </para>
+      </entry>
+      <entry>
+       <para>
+        &mdash;
+       </para>
       </entry>
      </row>
     </tbody>
@@ -366,14 +707,32 @@ loginuid_immutable 0 unlocked
   </table>
  </sect1>
  <sect1 xml:id="sec-audit-rules">
-  <title>監査システムに対するパラメータ指定</title>
+  <title>Passing parameters to the audit system</title>
 
-  <para>監査システムに対するコマンドは <command>auditctl</command> コマンドを利用してシェルから個別に実行することもできますし、 <command>auditctl -</command> <option>R</option> のように指定して、ファイルから読み込んで一括処理することもできます。後者のやり方は起動時のスクリプトでも使用していて、監査デーモンの起動後に、 <filename>/etc/audit/audit.rules</filename> ファイルからルールを読み込む目的で使用しています。ルールは上から順に実行されます。それぞれのルールは、それぞれが <command>auditctl</command> のコマンドに展開されます。ルールファイル内で使用する書式は、 <command>auditctl</command> コマンドと同じです。</para>
+  <para>
+   Commands to control the audit system can be invoked individually from the
+   shell using <command>auditctl</command> or batch read from a file using
+   <command>auditctl -</command> <option>R</option>. This latter method is
+   used by the init scripts to load rules from the file
+   <filename>/etc/audit/audit.rules</filename> after the audit daemon has
+   been started. The rules are executed in order from top to bottom. Each of
+   these rules would expand to a separate <command>auditctl</command>
+   command. The syntax used in the rules file is the same as that used for
+   the <command>auditctl</command> command.
+  </para>
 
-  <para>動作中の監査システムを <command>auditctl</command> で設定変更しても、その変更点はシステムの再起動で失われてしまいます。恒久的に変更したい場合は、 <filename>/etc/audit/audit.rules</filename> ファイルに追加するとともに、現時点で監査デーモン内に読み込まれていない場合は、 <command>systemctl restart auditd</command> を実行して、監査システムを再起動してください。</para>
+  <para>
+   Changes made to the running audit system by executing
+   <command>auditctl</command> on the command line are not persistent across
+   system restarts. For changes to persist, add them to the
+   <filename>/etc/audit/audit.rules</filename> file and, if they are not
+   currently loaded into audit, restart the audit system to load the
+   modified rule set by using the <command>systemctl restart
+   auditd</command> command.
+  </para>
 
   <example xml:id="ex-audit-rules-sysparam">
-   <title>監査ルール例: 監査システムのパラメータ</title>
+   <title>Example audit rules&mdash;audit system parameters</title>
 <screen>-b 1000<co xml:id="co-aurules-b"/>
 -f 1<co xml:id="co-aurules-f"/>
 -r 10<co xml:id="co-aurules-r"/>
@@ -382,43 +741,88 @@ loginuid_immutable 0 unlocked
 
   <calloutlist>
    <callout arearefs="co-aurules-b">
-    <para>未処理の監査バッファの最大数を指定しています。ログの発生頻度にも依存しますが、監査の負荷がシステムにとって重すぎない程度の値に設定してください。</para>
+    <para>
+     Specify the maximum number of outstanding audit buffers. Depending on
+     the level of logging activity, you might need to adjust the number of
+     buffers to avoid causing too heavy an audit load on your system.
+    </para>
    </callout>
    <callout arearefs="co-aurules-f">
-    <para>使用する失敗フラグを指定しています。指定可能な値は <xref linkend="tab-audit-auditctl"/> をご覧ください。</para>
+    <para>
+     Specify the failure flag to use. See
+     <xref linkend="tab-audit-auditctl"/> for possible values.
+    </para>
    </callout>
    <callout arearefs="co-aurules-r">
-    <para>カーネル側で発信される最大流量のメッセージ数を指定しています。詳しくは <xref linkend="tab-audit-auditctl"/> をご覧ください。</para>
+    <para>
+     Specify the maximum number of messages per second that may be issued by
+     the kernel. See <xref linkend="tab-audit-auditctl"/> for details.
+    </para>
    </callout>
    <callout arearefs="co-aurules-e">
-    <para>監査サブシステムの有効化／無効化を設定しています。</para>
+    <para>
+     Enable or disable the audit subsystem.
+    </para>
    </callout>
   </calloutlist>
 
-  <para>監査の仕組みを使用することで、重要なファイルや設定、リソースなどのファイルシステムアクセスを追跡することができるようになります。また、これらに対して監視を設定してキーを割り当てることで、ログ内でより見つけやすくすることができます。</para>
+  <para>
+   Using audit, you can track any kind of file system access to important
+   files, configurations or resources. You can add watches on these and
+   assign keys to each kind of watch for better identification in the logs.
+  </para>
 
   <example xml:id="ex-audit-rules-fs">
-   <title>監査ルール例: ファイルシステムの監査</title>
+   <title>Example audit rules&mdash;file system auditing</title>
 <screen>-w /etc/shadow<co xml:id="co-aurules-fs"/>
 -w /etc -p rx<co xml:id="co-aurules-fsmode"/>
 -w /etc/passwd -k fk_passwd -p rwxa<co xml:id="co-aurules-fskey"/></screen>
    <calloutlist>
     <callout arearefs="co-aurules-fs">
-     <para><literal>-w</literal> オプションは、指定したファイル (この例では <filename>/etc/shadow</filename>) に対する監視を監査システムに設定しています。このファイルに対するアクセス許可要求に関わるすべてのシステムコールが、分析の対象となります。</para>
+     <para>
+      The <literal>-w</literal> option tells audit to add a watch to the
+      file specified, in this case <filename>/etc/shadow</filename>. All
+      system calls requesting access permissions to this file are analyzed.
+     </para>
     </callout>
     <callout arearefs="co-aurules-fsmode">
-     <para>このルールは <filename>/etc</filename> ディレクトリに対する監視を追加していて、読み込みと実行のアクセスに対するフィルタリングを設定 ( <literal>-p rx</literal> ) しています。これら 2 種類の許可に関わるシステムコールが分析の対象となります。ディレクトリに対する監視では、新しいファイルの作成と既存のファイルの削除のみが記録の対象となります。特定のディレクトリ内にあるファイルに対して、より詳しいイベントを監視したい場合は、それぞれのファイルに対してルールを作成してください。ただし、監視を設定する前に、あらかじめファイルが存在していなければなりません。なお、ファイル作成時点からの監査には対応していません。</para>
+     <para>
+      This rule adds a watch to the <filename>/etc</filename> directory and
+      applies permission filtering for read and execute access to this
+      directory (<literal>-p rx</literal>). Any system call requesting any
+      of these two permissions is analyzed. Only the creation of new files
+      and the deletion of existing ones are logged as directory-related
+      events. To get more specific events for files located under this
+      particular directory, you should add a separate rule for each file. A
+      file must exist before you add a rule containing a watch on it.
+      Auditing files as they are created is not supported.
+     </para>
     </callout>
     <callout arearefs="co-aurules-fskey">
-     <para>このルールは、 <filename>/etc/passwd</filename> ファイルに対する監視を追加しています。このとき、読み込みと書き込み、実行と属性変更を監視しています。 <literal>-k</literal> オプションを指定すると、後から特定のイベントを検索する (たとえば <command>ausearch</command>など) 目的で、監査ログ内にキーを書き込むことができます。なお、複数のルールに対して同じキーを指定しておくことで、それらをまとめて出力することもできるようになります。逆に、 1 つのルールに複数のキーを設定することもできます。</para>
+     <para>
+      This rule adds a file watch to <filename>/etc/passwd</filename>.
+      Permission filtering is applied for read, write, execute, and
+      attribute change permissions. The <literal>-k</literal> option allows
+      you to specify a key to use to filter the audit logs for this
+      particular event later (for example with <command>ausearch</command>).
+      You may use the same key on different rules to be able to
+      group rules when searching for them. It is also possible to apply
+      multiple keys to a rule.
+     </para>
     </callout>
    </calloutlist>
   </example>
 
-  <para>システムコールの監査では、アプリケーションよりも下のレベルで、システムの動作を追跡することができます。これらのルールを設計する際は、多数のシステムコールに対して監査を行うと、システムの負荷が上昇するだけでなく、ディスク領域も不足する危険性があることに注意してください。追跡対象のイベントと、それらのフィルタリング方法については、より具体的に設定するようにしてください。</para>
+  <para>
+   System call auditing lets you track your system's behavior on a level
+   even below the application level. When designing these rules, consider
+   that auditing a great many system calls may increase your system load and
+   cause you to run out of disk space. Consider carefully which events need
+   tracking and how they can be filtered to be even more specific.
+  </para>
 
   <example xml:id="ex-audit-rules-syscall">
-   <title>監査ルール例: システムコールの監査</title>
+   <title>Example audit rules&mdash;system call auditing</title>
 <screen>-a exit,always -S mkdir<co xml:id="co-aurules-scalladd"/>
 -a exit,always -S access -F a1=4<co xml:id="co-aurules-scallfilter"/>
 -a exit,always -S ipc -F a0=2<co xml:id="co-aurules-scallipc"/>
@@ -429,34 +833,78 @@ loginuid_immutable 0 unlocked
 
   <calloutlist>
    <callout arearefs="co-aurules-scalladd">
-    <para>このルールは <systemitem>mkdir</systemitem> システムコールに対する監査を設定しています。 <literal>-a</literal> オプションは、システムコールルールを追加するためのオプションです。この監査は、 <systemitem>mkdir</systemitem> システムコールが実行されるたびに毎回 ( <literal>exit</literal> , <literal>always</literal> ) 行われます。また、 <literal>-S</literal> オプションでは、このルールの適用先となるシステムコール名を指定しています。</para>
+    <para>
+     This rule activates auditing for the <systemitem>mkdir</systemitem>
+     system call. The <literal>-a</literal> option adds system call rules.
+     This rule triggers an event whenever the <systemitem>mkdir</systemitem>
+     system call is entered (<literal>exit</literal>,
+     <literal>always</literal>). The <literal>-S</literal> option specifies
+     the system call to which this rule should be applied.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scallfilter">
-    <para>このルールは access システムコールに対する監査を設定していますが、システムコールの 2 番目のパラメータ ( <literal>mode</literal> ) が <literal>4</literal> ( <literal>R_OK</literal> ) である場合にのみ監査を行っています。 <literal>exit,always</literal> は監査システムに対して、このシステムコールへの突入時に監査コンテキストを追加し、監査発生時にレポートを書き出すように指定しています。</para>
+    <para>
+     This rule adds auditing to the access system call, but only if the
+     second argument of the system call (<literal>mode</literal>) is
+     <literal>4</literal> (<literal>R_OK</literal>).
+     <literal>exit,always</literal> tells audit to add an audit context to
+     this system call when entering it, and to write out a report when
+     it gets audited.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scallipc">
-    <para>このルールは IPC 多重化システムコールに対して監査コンテキストを設定しています。特定の <literal>ipc</literal> システムコールは最初の syscall パラメータとして渡され、 <option>-F a0=<replaceable>IPC_コール番号</replaceable></option> の指定で選択することができます。</para>
+    <para>
+     This rule adds an audit context to the IPC multiplexed system call. The
+     specific <literal>ipc</literal> system call is passed as the first
+     syscall argument and can be selected using <option>-F
+     a0=<replaceable>IPC_CALL_NUMBER</replaceable></option>.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scalls">
-    <para>このルールは open システムコールが失敗した場合に対する監査を設定しています。</para>
+    <para>
+     This rule audits failed attempts to call open.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scalltask">
-    <para>このルールはタスクルール (キーワード: <literal>task</literal> ) の例です。これはこれまでのルールとは異なり、 fork や clone されるプロセスに適用されます。これらの種類のイベントにフィルタを設定したい場合は、 fork の時点で既知の状態にあるフィールドのみを使用することができます。具体的には UID, GID, AUID です。この例では、監査 ID が <literal>0</literal> であるすべてのタスクに対して監査を行っています。</para>
+    <para>
+     This rule is an example of a task rule (keyword:
+     <literal>task</literal>). It is different from the other rules above in
+     that it applies to processes that are forked or cloned. To filter these
+     kind of events, you can only use fields that are known at fork time,
+     such as UID, GID, and AUID. This example rule filters for all tasks
+     carrying an audit ID of <literal>0</literal>.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scallsu">
-    <para>最後のルールはフィルタを複雑に設定した場合の例です。すべてのフィルタオプションが組み合わせられていて、それらを論理積 (AND) で結んでいます。つまり、このルールは監査 ID が <literal>501</literal> であり、 &rootuser; で実行され、かつグループが <literal>wheel</literal> であるものに適用されます。監査 ID はユーザのログイン時にプロセスに対して設定されます。この ID は、そのユーザの初期プロセスから起動されたすべての子プロセスに渡されます。ユーザが自身の識別情報を変更した場合でも、監査 ID は変わらずそのままであり続けるため、元のユーザの動きをそのまま追跡できることになります。</para>
+    <para>
+     This last rule makes heavy use of filters. All filter options are
+     combined with a logical AND operator, meaning that this rule applies to
+     all tasks that carry the audit ID of <literal>501</literal>, run as
+     &rootuser;, and have <literal>wheel</literal> as the group. A
+     process is given an audit ID on user login. This ID is then handed down
+     to any child process started by the initial process of the user. Even
+     if the user changes their identity, the audit ID stays the same and
+     allows tracing actions to the original user.
+    </para>
    </callout>
   </calloutlist>
 
   <tip>
-   <title>システムコールパラメータのフィルタリングについて</title>
-   <para>システムコールパラメータのフィルタリングについて、詳しくは <xref linkend="sec-audit-scenipc"/> をお読みください。</para>
+   <title>Filtering system call arguments</title>
+   <para>
+    For more details on filtering system call arguments, refer to
+    <xref linkend="sec-audit-scenipc"/>.
+   </para>
   </tip>
 
-  <para>監査システムにはルールを追加するだけでなく、ルールを削除することもできます。ルール全体を一括で削除することができるほか、個別のシステムコールルールやファイル／ディレクトリの監視ルールを削除することができます:</para>
+  <para>
+   You cannot only add rules to the audit system, but also remove them.
+   There are different methods for deleting the entire rule set at once or
+   for deleting system call rules or file and directory watches:
+  </para>
 
   <example xml:id="ex-audit-ruledel">
-   <title>監査ルールとイベントの削除</title>
+   <title>Deleting audit rules and events</title>
 <screen>-D<co xml:id="co-aurules-d"/>
 -d exit,always -S mkdir<co xml:id="co-aurules-scalldel"/>
 -W /etc<co xml:id="co-aurules-fsdel"/></screen>
@@ -464,20 +912,42 @@ loginuid_immutable 0 unlocked
 
   <calloutlist>
    <callout arearefs="co-aurules-d">
-    <para>監査ルールのキューを消去して、既存のルールをすべて削除します。このルールは <filename>/etc/audit/audit.rules</filename> 内の冒頭で使用すべきもので、ルールを適用し直す際に、それまでに存在したルールをいったん削除するために設定します。もちろん <command>auditctl</command> <option>-D</option> のように入力して実行し、 <command>autrace</command> を実行する前に <filename>audit.rules</filename> 内にある既存のトレース規則をいったん削除しておくような使い方もできます。</para>
+    <para>
+     Clear the queue of audit rules and delete any preexisting rules. This
+     rule is used as the first rule in
+     <filename>/etc/audit/audit.rules</filename> files to make sure that the
+     rules that are about to be added do not clash with any preexisting
+     ones. The <command>auditctl</command> <option>-D</option> command is
+     also used before doing an <command>autrace</command> to avoid having
+     the trace rules clash with any rules present in the
+     <filename>audit.rules</filename> file.
+    </para>
    </callout>
    <callout arearefs="co-aurules-scalldel">
-    <para>このルールでは、システムコールのルールを削除しています。ルールキューから削除する必要のあるシステムコールを指定する場合は、その前に <literal>-d</literal> オプションを指定する必要があるほか、 <literal>-d</literal> は正確にマッチするものでなければなりません。</para>
+    <para>
+     This rule deletes a system call rule. The <literal>-d</literal> option
+     must precede any system call rule that needs to be deleted from the
+     rule queue, and must match exactly.
+    </para>
    </callout>
    <callout arearefs="co-aurules-fsdel">
-    <para>このルールでは、監査システムのルールキューから <filename>/etc</filename> ディレクトリに対するルールを破棄するよう指定しています。このルール削除では、パーミッションのフィルタリングやキーのオプション指定にかかわらず、すべての <filename>/etc</filename> を含むディレクトリの監視を削除します。</para>
+    <para>
+     This rule tells audit to discard the rule with the directory watch on
+     <filename>/etc</filename> from the rules queue. This rule deletes any
+     rule containing a directory watch on <filename>/etc</filename>,
+     regardless of any permission filtering or key options.
+    </para>
    </callout>
   </calloutlist>
 
-  <para>現時点での監査設定で使用しているルールの概要を知りたい場合は、 <command>auditctl</command> <option>-l</option> と入力して実行します。このコマンドは、 1 ルールあたり 1 行で表示します。</para>
+  <para>
+   To get an overview of which rules are currently in use in your audit
+   setup, run <command>auditctl</command> <option>-l</option>. This command
+   displays all rules with one rule per line.
+  </para>
 
   <example>
-   <title><command>auditctl</command> <option>-l</option> によるルール一覧の表示</title>
+   <title>Listing rules with <command>auditctl</command> <option>-l</option></title>
 <screen>exit,always watch=/etc perm=rx
 exit,always watch=/etc/passwd perm=rwxa key=fk_passwd
 exit,always watch=/etc/shadow perm=rwxa
@@ -488,21 +958,51 @@ exit,always success!=0 syscall=open</screen>
   </example>
 
   <note>
-   <title>フィルタルールの作成について</title>
-   <para>様々なフィルタオプションを組み合わせることで、より洗練された監査ルールを構築することができます。監査フィルタルールを構築する際に利用可能なオプションのほか、監査ルールに関する詳細については、 <command>auditctl(8)</command> のマニュアルページをお読みください。</para>
+   <title>Creating filter rules</title>
+   <para>
+    You can build sophisticated audit rules by using the various filter
+    options. Refer to the <command>auditctl(8)</command> man page for more
+    information about the options available for building audit filter rules
+    and audit rules.
+   </para>
   </note>
  </sect1>
  <sect1 xml:id="sec-audit-aureport">
-  <title>監査ログの仕組みとレポートの生成</title>
+  <title>Understanding the audit logs and generating reports</title>
 
-  <para><command>aureport</command> ユーティリティが何かをするものなのかを知るには、まず監査デーモンが生成するログの構造について知っておく必要があるほか、イベント内にどのような情報が存在するのかを知っておく必要があります。これにより、要件に対応できる最適なレポートタイプを判断することができるようになります。</para>
+  <para>
+   To understand what the <command>aureport</command> utility does, it is
+   vital to know how the logs generated by the audit daemon are structured,
+   and what exactly is recorded for an event. Only then can you decide which
+   report types are most appropriate for your needs.
+  </para>
 
   <sect2 xml:id="sec-audit-aureport-ustand">
-   <title>監査ログの仕組み</title>
-   <para>下記の例には、監査デーモンが記録した 2 種類の典型的なイベントと、それらの証跡が示されています。監査ログは、ローテーションしたものを含め、 <filename>/var/log/audit</filename> 内に保存されます。</para>
-   <para>ログには 2 種類の情報が記録されます。それぞれレコードタイプとイベントフィールドと呼びます。レコードタイプはそれぞれの記録内の <literal>type=</literal> 以下に書かれています。イベントフィールドはそれ以外の項目で、イコール記号の前に書かれたものを指します。下記の例では <literal>type=SYSCALL</literal> や <literal>type=CWD</literal> がレコードタイプ、 <literal>arch=c000003e</literal> や <literal>syscall=2</literal> がイベントフィールド (値付きのもの) となります。</para>
-   <para>レコードタイプの全ての一覧とそれらの意味について、詳しくは <filename>/usr/include/libaudit.h</filename> ファイル (<package>audit-devel</package> パッケージに含まれています) をお読みください。</para>
-   <para>また、 <command>ausyscall --dump</command> コマンドを実行することで、システムコールの番号と対応する関数名を出力することができます:</para>
+   <title>Understanding the audit logs</title>
+   <para>
+    The following examples highlight two typical events that are logged by
+    audit and how their trails in the audit log are read. The audit log or
+    logs (if log rotation is enabled) are stored in the
+    <filename>/var/log/audit</filename> directory.
+   </para>
+   <para>
+     The logs record two types of information: record types and event
+     fields. The record types are identified by <literal>type=</literal> in
+     each log entry. Event fields are all other items on the left side of
+     the equals signs. In the following examples,
+     <literal>type=SYSCALL</literal> and <literal>type=CWD</literal>are
+     record types, and <literal>arch=c000003e</literal> and
+     <literal>syscall=2</literal> are event fields, followed by their values.
+   </para>
+   <para>
+     Refer to the <filename>/usr/include/libaudit.h</filename> file (from the
+     <package>audit-devel</package> package) to see
+     a complete list of record types and their definitions.
+   </para>
+   <para>
+     Run the <command>ausyscall --dump</command> command to see a table of
+     syscall numbers, and what they represent:
+   </para>
    <screen>&prompt.user;ausyscall --dump
 Using x86_64 syscall table:
 0       read
@@ -512,9 +1012,13 @@ Using x86_64 syscall table:
 4       stat
 5       fstat
 [...]</screen>
-   <para>最初の例は単純な <command>less</command> コマンドを実行した場合の例、 2 番目の例は、監査を実施しているマシン内にユーザがリモートからログインしようとした場合、ログ内に PAM の動作に関わる大量のログが出力されている場合の例を示しています。</para>
+   <para>
+    The first example is a simple <command>less</command> command. The second
+    example covers a great deal of PAM activity in the logs when a user tries
+    to remotely log in to a machine running audit.
+   </para>
    <example xml:id="ex-audit-aureport-logtrail">
-    <title>シンプルな監査イベント例: 監査ログの表示</title>
+    <title>A simple audit event&mdash;viewing the audit log</title>
 <screen>type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2
 success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid
 =25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0
@@ -524,189 +1028,363 @@ type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/
 audit.log" inode=1219041 dev=08:06 mode=0100644 ouid=0 ogid=0 rdev=00:00
 </screen>
    </example>
-   <para>上記のイベントは <command>less /var/log/audit/audit.log</command> を実行した場合のログで、 3 種類のメッセージが記録されています。これらのすべては密接にリンクしているため、その他の情報が無ければ意味を理解するのが難しいものと思います。最初のメッセージには下記の情報が記録されています:</para>
+   <para>
+    The above event, a simple <command>less
+    /var/log/audit/audit.log</command>, wrote three messages to the log. All
+    of them are closely linked together and you would not be able to make
+    sense of one of them without the others. The first message reveals the
+    following information:
+   </para>
    <variablelist>
     <varlistentry>
-     <term><literal>type</literal></term>
+     <term><literal>type</literal>
+     </term>
      <listitem>
-      <para>記録されたイベントの種類を示しています。この場合は <literal>SYSCALL</literal> という種類で、システムコールによる記録であることを示しています。それ以外には <literal>CWD</literal> という種類のイベントもあり、これはシステムコール時点でのカレントディレクトリを示しています。次の <literal>PATH</literal> という種類のイベントは、システムコールに渡されたパスに関する情報が示されています。 open システムコールは 1 つのパラメータを取るシステムコールであることから、 <literal>PATH</literal> イベントも 1 つだけ生成されます。ここで重要となるのが、 <literal>PATH</literal> イベントはパス名の文字列パラメータを報告するだけで、それ以外の解釈については何も行わないものである点です。そのため、相対パスを指定した場合は、 <literal>CWD</literal> のイベントで示されたカレントディレクトリの情報とあわせて、手作業で絶対パスに戻さなければならないことになります。</para>
+      <para>
+       The type of event recorded. In this case, it assigns the
+       <literal>SYSCALL</literal> type to an event triggered by a system
+       call. The <literal>CWD</literal> event was recorded to record the
+       current working directory at the time of the syscall. A
+       <literal>PATH</literal> event is generated for each path passed to
+       the system call. The open system call takes only one path argument,
+       so only generates one <literal>PATH</literal> event. It is important
+       to understand that the <literal>PATH</literal> event reports the path
+       name string argument without any further interpretation, so a
+       relative path requires manual combination with the path reported by
+       the <literal>CWD</literal> event to determine the object accessed.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>msg</literal></term>
+     <term><literal>msg</literal>
+     </term>
      <listitem>
 <!-- hint: Unix time: 1175176190.105 = Thu Mar 29 15:49:50 2007 -->
 <!-- perl -le 'print scalar localtime ...' -->
-      <para>括弧内にはメッセージ ID が書かれています。メッセージ ID は 2 種類のパーツから構成されていて、 <literal>:</literal> の前は Unix エポックタイムを、後ろは実際のイベント ID を表しています。同じシステムコール内であれば、同じイベント ID が割り当てられます。アプリケーションがさらに別のシステムコールを行うと、イベント ID が新たに割り当てられます。</para>
+      <para>
+       A message ID enclosed in brackets. The ID splits into two parts. All
+       characters before the <literal>:</literal> represent a Unix epoch
+       time stamp. The number after the colon represents the actual event
+       ID. All events that are logged from one application's system call
+       have the same event ID. If the application makes a second system
+       call, it gets another event ID.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>arch</literal></term>
+     <term><literal>arch</literal>
+     </term>
      <listitem>
-      <para>システムコールに対応する CPU アーキテクチャを示しています。この情報は <command>ausearch</command> コマンドでログを検索する際、 <option>-i</option> オプションを指定するとデコードすることができます。</para>
+      <para>
+       References the CPU architecture of the system call. Decode this
+       information using the <option>-i</option> option on any of your
+       <command>ausearch</command> commands when searching the logs.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>syscall</literal></term>
+     <term><literal>syscall</literal>
+     </term>
      <listitem>
-      <para>このシステムコールに対して <command>strace</command> で表示することのできる、システムコールの種類を表しています。このデータは <filename>/usr/include/asm/unistd.h</filename> ファイル内に示されていて、アーキテクチャによって番号体系が異なります。このアーキテクチャでは、 <literal>syscall=2</literal> は open システムコール (詳しくは <command>man open(2)</command> をお読みください) を表しています。</para>
+      <para>
+       The type of system call as it would have been printed by an <command>strace</command> on
+       this particular system call. This data is taken from the list of
+       system calls under <filename>/usr/include/asm/unistd.h</filename> and
+       may vary depending on the architecture. In this case,
+       <literal>syscall=2</literal> refers to the open system call (see
+       <command>man open(2)</command>) invoked by the less application.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>success</literal></term>
+     <term><literal>success</literal>
+     </term>
      <listitem>
-      <para>システムコールが成功したか、失敗したかを示しています。</para>
+      <para>
+       Whether the system call succeeded or failed.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>exit</literal></term>
+     <term><literal>exit</literal>
+     </term>
      <listitem>
-      <para>システムコールの返り値を表しています。この例では <command>open</command> システムコールに対する返り値ですが、これは作成されたファイルディスクリプタ番号を表しています。返り値の意味はシステムコールによって異なります。</para>
+      <para>
+       The exit value returned by the system call. For the
+       <command>open</command> system call used in this example, this is the
+       file descriptor number. This varies by system call.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>a0</literal> から <literal>a3</literal></term>
+     <term><literal>a0</literal> to <literal>a3</literal>
+     </term>
      <listitem>
-      <para>数値形式で表現された、システムコールの最初の 4 つのパラメータです。これらはシステムコールによって異なる解釈になります。この例 (<command>open</command> システムコール) では、下記のように解釈します:</para>
+      <para>
+       The first four arguments to the system call in numeric form. The
+       values of these are system call dependent. In this example (an
+       <command>open</command> system call), the following are used:
+      </para>
 <screen>a0=62fb60 a1=8000 a2=31 a3=0</screen>
-      <para><literal>a0</literal> はパス名の開始アドレスを表しています。 <literal>a1</literal> はフラグを表していて、 16 進数の <literal>8000</literal> は 8 進数でいうと <literal>100000</literal> にあたることから、 <literal>O_LARGEFILE</literal> というフラグを指定していることになります。また <literal>a2</literal> はモード指定で、 <literal>O_CREAT</literal> を指定していないことから、使用していないパラメータであることがわかります。 <remark>jsegitz 2014-07-22: a2 is 31, not unused</remark> <literal>a3</literal> は <command>open</command> システムコールでは使用していないパラメータです。それぞれのパラメータの意味については、マニュアルページをお読みください。</para>
+      <para>
+       <literal>a0</literal> is the start address of the passed path.
+       <literal>a1</literal> is the flags. <literal>8000</literal> in hex
+       notation translates to <literal>100000</literal> in octal notation,
+       which in turn translates to <literal>O_LARGEFILE</literal>.
+       <literal>a2</literal> is the mode, which, because
+       <literal>O_CREAT</literal> was not specified, is unused.
+       <remark>jsegitz 2014-07-22: a2 is 31, not unused</remark>
+       <literal>a3</literal> is not passed by the <command>open</command>
+       system call. Check the manual page of the relevant system call to
+       find out which arguments are used with it.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>items</literal></term>
+     <term><literal>items</literal>
+     </term>
      <listitem>
-      <para>アプリケーションに渡された文字列の数を表しています。</para>
+      <para>
+       The number of strings passed to the application.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>ppid</literal></term>
+     <term><literal>ppid</literal>
+     </term>
      <listitem>
-      <para>このプロセスの親のプロセス ID を表しています。</para>
+      <para>
+       The process ID of the parent of the process analyzed.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>pid</literal></term>
+     <term><literal>pid</literal>
+     </term>
      <listitem>
-      <para>このプロセスのプロセス ID を表しています。</para>
+      <para>
+       The process ID of the process analyzed.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>auid</literal></term>
+     <term><literal>auid</literal>
+     </term>
      <listitem>
-      <para>監査 ID を表しています。監査 ID はユーザのログイン時にプロセスに対して設定されます。この ID は、そのユーザの初期プロセスから起動されたすべての子プロセスに渡されます。ユーザが自身の識別情報を変更した場合 (たとえば &rootuser; になった場合) でも、監査 ID は変わらずそのままであり続けるため、元のユーザの動きをそのまま追跡できることになります。</para>
+      <para>
+       The audit ID. A process is given an audit ID on user login. This ID
+       is then handed down to any child process started by the initial
+       process of the user. Even if the user changes their identity (for
+       example, becomes &rootuser;), the audit ID stays the same. Thus
+       you can always trace actions to the original user who logged in.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>uid</literal></term>
+     <term><literal>uid</literal>
+     </term>
      <listitem>
-      <para>プロセスを起動したユーザの実ユーザ ID を表しています。この場合は <literal>0</literal> であることから、 &rootuser; であることになります。</para>
+      <para>
+       The user ID of the user who started the process. In this case,
+       <literal>0</literal> for &rootuser;.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>gid</literal></term>
+     <term><literal>gid</literal>
+     </term>
      <listitem>
-      <para>プロセスを起動したユーザの実グループ ID を表しています。この場合は <literal>0</literal> であることから、 &rootuser; であることになります。</para>
+      <para>
+       The group ID of the user who started the process. In this case,
+       <literal>0</literal> for &rootuser;.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>euid</literal> , <literal>suid</literal> , <literal>fsuid</literal></term>
+     <term><literal>euid</literal>, <literal>suid</literal>, <literal>fsuid</literal>
+     </term>
      <listitem>
-      <para>プロセスを起動したユーザの実効ユーザ ID, Set User ID, ファイルシステムユーザ ID をそれぞれ表しています。</para>
+      <para>
+       Effective user ID, set user ID, and file system user ID of the user
+       that started the process.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>egid</literal> , <literal>sgid</literal> , <literal>fsgid</literal></term>
+     <term><literal>egid</literal>, <literal>sgid</literal>, <literal>fsgid</literal>
+     </term>
      <listitem>
-      <para>プロセスを起動したユーザの実効グループ ID, Set Group ID, ファイルシステムグループ ID をそれぞれ表しています。</para>
+      <para>
+       Effective group ID, set group ID, and file system group ID of the
+       user that started the process.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>tty</literal></term>
+     <term><literal>tty</literal>
+     </term>
      <listitem>
-      <para>アプリケーションを起動した端末を表しています。この場合は、 SSH セッション内で疑似端末 (pts) を使用していることを表しています。</para>
+      <para>
+       The terminal from which the application was started. In this case, a
+       pseudo-terminal used in an SSH session.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>ses</literal></term>
+     <term><literal>ses</literal>
+     </term>
      <listitem>
-      <para>ログインセッション ID を表しています。このプロセス属性はユーザのログイン時に設定されるほか、どのプロセスも特定のユーザログインに結びつけることができます。</para>
+      <para>
+       The login session ID. This process attribute is set when a user logs
+       in and can tie any process to a particular user login.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>comm</literal></term>
+     <term><literal>comm</literal>
+     </term>
      <listitem>
-      <para>タスクリストに表示されるアプリケーション名を表しています。</para>
+      <para>
+       The application name under which it appears in the task list.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>exe</literal></term>
+     <term><literal>exe</literal>
+     </term>
      <listitem>
-      <para>バイナリプログラムに対する解決済みパスを表しています。</para>
+      <para>
+       The resolved path to the binary program.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>subj</literal></term>
+     <term><literal>subj</literal>
+     </term>
      <listitem>
-      <para><systemitem class="daemon">auditd</systemitem> は、プロセスに対して &aa; などのセキュリティコンテキストが割り当てられている場合、その内容を記録することができます。この場合は <literal>unconstrained</literal> になっていますが、これは &aa; でプロセスが保護されていないことを表しています。プロセスが何らかの制限を受けた場合、バイナリパスと &aa; のプロファイルモードも記録されます。</para>
+      <para>
+       <systemitem class="daemon">auditd</systemitem> records whether the
+       process is subject to any security context, such as &aa;.
+       <literal>unconstrained</literal>, as in this case, means that the
+       process is not confined with &aa;. If the process had been
+       confined, the binary path plus the &aa; profile mode would
+       have been logged.
+      </para>
       <remark>jsegitz 2014-07-22: doesn't show in the example</remark>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>key</literal></term>
+     <term><literal>key</literal>
+     </term>
      <listitem>
-      <para>多数のディレクトリやファイルに対して監査を行っている際、監視対象の判別用にキー文字列を指定することができます。これらのキーを <command>ausearch</command> に指定すると、そのキーに合致するもののみを表示することができます。</para>
+      <para>
+       If you are auditing many directories or files, assign
+       key strings to each of these watches. You can use these keys with
+       <command>ausearch</command> to search the logs for events of this
+       type only.
+      </para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para><command>less</command> コマンドが生成した 2 つ目のメッセージには、 <command>less</command> コマンドを実行した時点でのカレントディレクトリを表しています。</para>
-   <para>3 つ目のメッセージの意味は下記のとおりです (<literal>type</literal> と <literal>message</literal> のフラグは既に説明しているとおりです):</para>
+   <para>
+    The second message triggered by the example <command>less</command> call
+    does not reveal anything apart from the current working directory when
+    the <command>less</command> command was executed.
+   </para>
+   <para>
+    The third message reveals the following (the <literal>type</literal> and
+    <literal>message</literal> flags have already been introduced):
+   </para>
    <variablelist>
     <varlistentry>
-     <term><literal>item</literal></term>
+     <term><literal>item</literal>
+     </term>
      <listitem>
-      <para>この例では、 <literal>item</literal> は <literal>a0</literal> パラメータを表しています。ここには元々の <literal>SYSCALL</literal> メッセージ内に対応する、パス名が書かれています。 <command>cp</command> や <command>mv</command> などのように、複数のパスパラメータを指定する場合は、さらに <literal>PATH</literal> イベントが生成されて記録されることになります。</para>
+      <para>
+       In this example, <literal>item</literal> references the
+       <literal>a0</literal> argument&mdash;a path&mdash;that is
+       associated with the original <literal>SYSCALL</literal> message. Had
+       the original call had more than one path argument (such as a
+       <command>cp</command> or <command>mv</command> command), an
+       additional <literal>PATH</literal> event would have been logged for
+       the second path argument.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>name</literal></term>
+     <term><literal>name</literal>
+     </term>
      <listitem>
-      <para>open システムコールのパラメータとして渡されたパスを表しています。</para>
+      <para>
+       Refers to the path passed as an argument to the open system
+       call.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>inode</literal></term>
+     <term><literal>inode</literal>
+     </term>
      <listitem>
-      <para><literal>name</literal> に対応する inode 番号を表しています。</para>
+      <para>
+       Refers to the inode number corresponding to <literal>name</literal>.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>dev</literal></term>
+     <term><literal>dev</literal>
+     </term>
      <listitem>
-      <para>ファイルが保存されているデバイスを表しています。この場合、 <literal>08:06</literal> と書かれていますので、 <literal>/dev/sda1</literal> もしくは <quote>最初の IDE デバイス上の最初のパーティション</quote> であることを示しています。</para>
+      <para>
+       Specifies the device on which the file is stored. In this case,
+       <literal>08:06</literal>, which stands for
+       <literal>/dev/sda1</literal> or <quote>first partition on the first
+       IDE device.</quote>
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>mode</literal></term>
+     <term><literal>mode</literal>
+     </term>
      <listitem>
-      <para>ファイルのアクセス許可を数値で表現したものです。この場合は &rootuser; が読み書きの権限を持ち、グループ (&rootuser;) は読み込みのみ、その他のユーザはファイルへのアクセス権を持たない設定になっています。</para>
+      <para>
+       Numerical representation of the file's access permissions. In this
+       case, &rootuser; has read and write permissions and their group
+       (&rootuser;) has read access while the entire rest of the world
+       cannot access the file.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>ouid</literal> と <literal>ogid</literal></term>
+     <term><literal>ouid</literal> and <literal>ogid</literal>
+     </term>
      <listitem>
-      <para>inode が指し示すものに対する UID と GID を表しています。</para>
+      <para>
+       Refer to the UID and GID of the inode itself.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term><literal>rdev</literal></term>
+     <term><literal>rdev</literal>
+     </term>
      <listitem>
-      <para>この例では意味を持たないものです。 <literal>rdev</literal> はブロックデバイスやキャラクタデバイスの場合にのみ意味を持つもので、ファイルでは意味を持ちません。</para>
+      <para>
+       Not applicable for this example. The <literal>rdev</literal> entry
+       only applies to block or character devices, not to files.
+      </para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para><xref linkend="ex-audit-aureport-sshd"/> には、 SSH 接続を受け付けた際の監査イベントを示しています。ほとんどのメッセージは PAM スタックに関連するもので、 SSH PAM の処理における様々なステージを表しています。また、いくつかの監査メッセージは入れ子になっていて、それぞれの PAM の処理段階を示しています。監査システムでは PAM の処理についても記録を行いますが、独自のメッセージタイプが割り当てられます:</para>
+   <para>
+    <xref linkend="ex-audit-aureport-sshd"/> highlights the audit events
+    triggered by an incoming SSH connection. Most of the messages are
+    related to the PAM stack and reflect the different stages of the SSH PAM
+    process. Several of the audit messages carry nested PAM messages in them
+    that signify that a particular stage of the PAM process has been
+    reached. Although the PAM messages are logged by audit, audit assigns
+    its own message type to each event:
+   </para>
    <example xml:id="ex-audit-aureport-sshd">
-    <title>複雑な監査イベント例: SSH でのログイン</title>
+    <title>An advanced audit event&mdash;login via SSH</title>
 <screen>type=USER_AUTH msg=audit(1234877011.791:7731): user pid=26127 uid=0 <co xml:id="co-audit-sshd-auth"/>
 auid=4294967295 ses=4294967295 msg='op=PAM:authentication acct="root" exe="/usr/sbin/sshd"
 (hostname=&wsIname;, addr=&wsIip;, terminal=ssh res=success)'
@@ -730,41 +1408,75 @@ auid=0 ses=1172 msg='op=PAM:setcred acct="root" exe="/usr/sbin/sshd"
    </example>
    <calloutlist>
     <callout arearefs="co-audit-sshd-auth">
-     <para>リモートのホスト (&wsIname;, &wsIip;) から &rootuser; に対してユーザ認証が求められ、それが成功したことを PAM が報告しています。ここで使用されている端末は <literal>ssh</literal> になっています。</para>
+     <para>
+      PAM reports that is has successfully requested user authentication for
+      &rootuser; from a remote host (&wsIname;, &wsIip;). The
+      terminal where this is happening is <literal>ssh</literal>.
+     </para>
     </callout>
     <callout arearefs="co-audit-sshd-acct">
-     <para>PAM は、ユーザにログイン権限があることを確認した、と報告しています。</para>
+     <para>
+      PAM reports that it has successfully determined whether the user is
+      authorized to log in.
+     </para>
     </callout>
     <callout arearefs="co-audit-sshd-acq">
-     <para>PAM はログインにあたって適切な資格情報が必要である旨を報告するとともに、端末が通常の端末 ( <literal>/dev/pts0</literal> ) に変更されたことを報告しています。</para>
+     <para>
+      PAM reports that the appropriate credentials to log in have been
+      acquired and that the terminal changed to a normal terminal
+      (<literal>/dev/pts0</literal>).
+     </para>
     </callout>
     <callout arearefs="co-audit-sshd-start">
-     <para>PAM は、 &rootuser; に対してセッションを開くことができたことを報告しています。</para>
+     <para>
+      PAM reports that it has successfully opened a session for
+      &rootuser;.
+     </para>
     </callout>
     <callout arearefs="co-audit-sshd-login">
-     <para>ユーザのログインが成功したことを示しています。このイベントは <command>aureport</command> <option>-l</option> でユーザログイン情報を報告させる際に、使用されるイベントです。</para>
+     <para>
+      The user has successfully logged in. This event is the one used by
+      <command>aureport</command> <option>-l</option> to report about user
+      logins.
+     </para>
     </callout>
     <callout arearefs="co-audit-sshd-refr">
-     <para>PAM は資格情報を再取得したことを報告しています。</para>
+     <para>
+      PAM reports that the credentials have been successfully reacquired.
+     </para>
     </callout>
    </calloutlist>
   </sect2>
 
   <sect2 xml:id="sec-audit-aureport-gen">
-   <title>独自の監査レポートの生成</title>
-   <para><filename>/var/log/audit</filename> ディレクトリ内にある未加工の監査レポートは、かさばって理解しにくいものになってしまっています。必要なメッセージを簡単に取得できるようにするには、 <command>aureport</command> ユーティリティを利用して、独自にレポートを作成してください。</para>
-   <para>下記の利用例では、 <command>aureport</command> で生成することのできる、いくつかのレポートタイプについて説明しています:</para>
+   <title>Generating custom audit reports</title>
+   <para>
+    The raw audit reports stored in the <filename>/var/log/audit</filename>
+    directory tend to become bulky and hard to understand. To more
+    easily find relevant messages, use the <command>aureport</command>
+    utility and create custom reports.
+   </para>
+   <para>
+    The following use cases highlight a few of the possible report types
+    that you can generate with <command>aureport</command>:
+   </para>
    <variablelist>
     <varlistentry>
-     <term>他のファイルからの監査ログ読み込み</term>
+     <term>Read audit logs from another file</term>
      <listitem>
-      <para>監査ログを他のマシンに移動させた場合や、それぞれのマシンに接続することなく、ローカルのマシン内で複数のマシンの監査ログを分析したりしたい場合は、対象となるログファイルをローカルに移動したあと、 <command>aureport</command> を利用してローカルで分析してください:</para>
+      <para>
+       When the audit logs have moved to another machine or when you want to
+       analyze the logs of several machines on your local machine
+       without wanting to connect to each of these individually, move the
+       logs to a local file and have <command>aureport</command> analyze
+       them locally:
+      </para>
 <screen>&prompt.sudo;<command>aureport -if myfile</command>
 
 Summary Report
 ======================
-Range of time in logs: 2009年02月03日 14:13:38.225 - 2009年02月17日 14:52:27.971
-Selected time for report: 2009年02月03日 14:13:38 - 2009年02月17日 14:52:27.971
+Range of time in logs: 03/02/09 14:13:38.225 - 17/02/09 14:52:27.971
+Selected time for report: 03/02/09 14:13:38 - 17/02/09 14:52:27.971
 Number of changes in configuration: 13
 Number of changes to accounts, groups, or roles: 0
 Number of logins: 6
@@ -785,39 +1497,59 @@ Number of crypto events: 0
 Number of keys: 2
 Number of process IDs: 1211
 Number of events: 5320</screen>
-      <para>上記のコマンドでは <command>aureport</command> に何もパラメータを指定しておらず、 <filename>myfile</filename> 内に含まれているログ情報から、標準的で一般的な概要レポートのみを生成するように指定しています。より詳しいレポートを作成したい場合は、 <option>-if</option> オプションに加えて、必要なオプションを指定してください。たとえば特定の時間帯のログインレポートのみを生成したい場合は、下記のように入力して実行します:</para>
+      <para>
+       The above command, <command>aureport</command> without any arguments,
+       provides only the standard general summary report generated from the
+       logs contained in <filename>myfile</filename>. To create more
+       detailed reports, combine the <option>-if</option> option with any of
+       the options below. For example, generate a login report that is
+       limited to a certain time frame:
+      </para>
 <screen>&prompt.sudo;<command>aureport -l -ts 14:00 -te 15:00 -if myfile</command>
 
 Login Report
 ============================================
 # date time auid host term exe success event
 ============================================
-1. 2017年02月09日 14:21:09 root: &wsIip; sshd /usr/sbin/sshd no 7718
-2. 2017年02月09日 14:21:15 0 &wsI; /dev/pts/3 /usr/sbin/sshd yes 7724</screen>
+1. 17/02/09 14:21:09 root: &wsIip; sshd /usr/sbin/sshd no 7718
+2. 17/02/09 14:21:15 0 &wsI; /dev/pts/3 /usr/sbin/sshd yes 7724</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>数値表現の文字列変換</term>
+     <term>Convert numeric entities to text</term>
      <listitem>
-      <para>ユーザ ID などの情報は数値で出力されます。これらを読みやすいテキスト形式に変換するには、 <command>aureport</command> コマンドに <option>-i</option> オプションを追加してください。</para>
+      <para>
+       Some information, such as user IDs, are printed in numeric form. To
+       convert these into a human-readable text format, add the
+       <option>-i</option> option to your <command>aureport</command>
+       command.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>大まかな概要レポートの作成</term>
+     <term>Create a rough summary report</term>
      <listitem>
-      <para>現在の監査統計情報 (イベント数, ログイン数, プロセス数など) のみを知りたい場合は、 <command>aureport</command> に何もパラメータを指定せずに実行してください。</para>
+      <para>
+       If you are interested in the current audit statistics (events,
+       logins, processes, etc.), run <command>aureport</command> without any
+       other option.
+      </para>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>失敗イベントの概要レポートの作成</term>
+     <term>Create a summary report of failed events</term>
      <listitem>
-      <para>純粋な <command>aureport</command> の概要統計情報を失敗イベントのみの統計情報に変更したい場合は、 <command>aureport</command> <option>--failed</option> のように入力して実行します:</para>
+      <para>
+       To break down the overall statistics of plain
+       <command>aureport</command> to the statistics of failed events, use
+       <command>aureport</command> <option>--failed</option>:
+      </para>
 <screen><?dbfo keep-together="always"?>&prompt.sudo;<command>aureport --failed</command>
 
 Failed Summary Report
 ======================
-Range of time in logs: 2009年02月03日 14:13:38.225 - 2009年02月17日 14:57:35.183
-Selected time for report: 2009年02月03日 14:13:38 - 2009年02月17日 14:57:35.183
+Range of time in logs: 03/02/09 14:13:38.225 - 17/02/09 14:57:35.183
+Selected time for report: 03/02/09 14:13:38 - 17/02/09 14:57:35.183
 Number of changes in configuration: 0
 Number of changes to accounts, groups, or roles: 0
 Number of logins: 0
@@ -841,15 +1573,19 @@ Number of events: 1583</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>成功イベントの概要レポートの作成</term>
+     <term>Create a summary report of successful events</term>
      <listitem>
-      <para>純粋な <command>aureport</command> の概要統計情報を成功イベントのみの統計情報に変更したい場合は、 <command>aureport</command> <option>--success</option> のように入力して実行します:</para>
+      <para>
+       If you want to break down the overall statistics of a plain
+       <command>aureport</command> to the statistics of successful events,
+       use <command>aureport</command> <option>--success</option>:
+      </para>
 <screen>&prompt.sudo;<command>aureport --success</command>
 
 Success Summary Report
 ======================
-Range of time in logs: 2009年02月03日 14:13:38.225 - 2009年02月17日 15:00:01.535
-Selected time for report: 2009年02月03日 14:13:38 - 2009年02月17日 15:00:01.535
+Range of time in logs: 03/02/09 14:13:38.225 - 17/02/09 15:00:01.535
+Selected time for report: 03/02/09 14:13:38 - 17/02/09 15:00:01.535
 Number of changes in configuration: 13
 Number of changes to accounts, groups, or roles: 0
 Number of logins: 6
@@ -873,9 +1609,15 @@ Number of events: 3739</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>概要レポートの作成</term>
+     <term>Create summary reports</term>
      <listitem>
-      <para>専用の概要レポート (全体概要／失敗概要／成功概要) に加えて、 <option>--summary</option> オプションと他のオプションを併用することで、指定した分野のみの概要レポートを作成することもできます。ただし、すべてのオプションがレポートに対応しているわけではありません。この例では、ユーザのログインイベントに関する概要レポートを作成しています:</para>
+      <para>
+       In addition to the dedicated summary reports (main summary and failed
+       and success summary), use the <option>--summary</option> option with
+       most of the other options to create summary reports for a particular
+       area of interest only. Not all reports support this option, however.
+       This example creates a summary report for user login events:
+      </para>
 <screen><?dbfo keep-together="always"?>&prompt.sudo;<command>aureport -u -i --summary</command>
 
 User Summary Report
@@ -888,290 +1630,549 @@ total  auid
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>イベント一覧レポートの作成</term>
+     <term>Create a report of events</term>
      <listitem>
-      <para>監査デーモンが記録したイベントの概要を取得するには、 <command>aureport</command> <option>-e</option> コマンドを使用します。このコマンドは順序番号付きのリストで、すべてのイベントに対する日付と時刻、イベント番号と種類、そして監査 ID を出力します。</para>
+      <para>
+       To get an overview of the events logged by audit, use the
+       <command>aureport</command> <option>-e</option> command. This command
+       generates a numbered list of all events including date, time, event
+       number, event type, and audit ID.
+      </para>
 <screen>&prompt.sudo;aureport -e -ts 14:00 -te 14:21
 
 Event Report
 ===================================
 # date time event type auid success
 ===================================
-1. 2009年02月17日 14:20:27 7462 DAEMON_START 0 yes
-2. 2009年02月17日 14:20:27 7715 CONFIG_CHANGE 0 yes
-3. 2009年02月17日 14:20:57 7716 USER_END 0 yes
-4. 2009年02月17日 14:20:57 7717 CRED_DISP 0 yes
-5. 2009年02月17日 14:21:09 7718 USER_LOGIN -1 no
-6. 2009年02月17日 14:21:15 7719 USER_AUTH -1 yes
-7. 2009年02月17日 14:21:15 7720 USER_ACCT -1 yes
-8. 2009年02月17日 14:21:15 7721 CRED_ACQ -1 yes
-9. 2009年02月17日 14:21:15 7722 LOGIN 0 yes
-10. 2009年02月17日 14:21:15 7723 USER_START 0 yes
-11. 2009年02月17日 14:21:15 7724 USER_LOGIN 0 yes
-12. 2009年02月17日 14:21:15 7725 CRED_REFR 0 yes</screen>
+1. 17/02/09 14:20:27 7462 DAEMON_START 0 yes
+2. 17/02/09 14:20:27 7715 CONFIG_CHANGE 0 yes
+3. 17/02/09 14:20:57 7716 USER_END 0 yes
+4. 17/02/09 14:20:57 7717 CRED_DISP 0 yes
+5. 17/02/09 14:21:09 7718 USER_LOGIN -1 no
+6. 17/02/09 14:21:15 7719 USER_AUTH -1 yes
+7. 17/02/09 14:21:15 7720 USER_ACCT -1 yes
+8. 17/02/09 14:21:15 7721 CRED_ACQ -1 yes
+9. 17/02/09 14:21:15 7722 LOGIN 0 yes
+10. 17/02/09 14:21:15 7723 USER_START 0 yes
+11. 17/02/09 14:21:15 7724 USER_LOGIN 0 yes
+12. 17/02/09 14:21:15 7725 CRED_REFR 0 yes</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>すべてのプロセスイベントからのレポート作成</term>
+     <term>Create a report from all process events</term>
      <listitem>
-      <para>プロセスの観点からログを分析したい場合は、 <command>aureport</command> <option>-p</option> コマンドを使用します。このコマンドは順序番号付きのリストで、プロセス関連のイベントを列挙します。これには日付と時刻、プロセス ID と実行ファイルの名前、システムコールと監査 ID 、イベント番号が含まれます。</para>
+      <para>
+       To analyze the log from a process's point of view, use the
+       <command>aureport</command> <option>-p</option> command. This command
+       generates a numbered list of all process events including date, time,
+       process ID, name of the executable, system call, audit ID, and event
+       number.
+      </para>
 <screen><?dbfo keep-together="always"?><command>aureport -p</command>
 
 Process ID Report
 ======================================
 # date time pid exe syscall auid event
 ======================================
-1. 2009年02月13日 15:30:01 32742 /usr/sbin/cron 0 0 35
-2. 2009年02月13日 15:30:01 32742 /usr/sbin/cron 0 0 36
-3. 2009年02月13日 15:38:34 32734 /usr/lib/gdm/gdm-session-worker 0 -1 37</screen>
+1. 13/02/09 15:30:01 32742 /usr/sbin/cron 0 0 35
+2. 13/02/09 15:30:01 32742 /usr/sbin/cron 0 0 36
+3. 13/02/09 15:38:34 32734 /usr/lib/gdm/gdm-session-worker 0 -1 37</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>すべてのシステムコールイベントからのレポート作成</term>
+     <term>Create a report from all system call events</term>
      <listitem>
-      <para>システムコールの観点からログを分析したい場合は、 <command>aureport</command> <option>-s</option> コマンドを使用します。このコマンドは順序番号付きのリストで、システムコール関連のイベントを列挙します。これには日付と時刻、システムコールの回数とそのコールを使用したコマンドの名前、監査 ID とイベント番号が含まれます。</para>
+      <para>
+       To analyze the audit log from a system call's point of view, use the
+       <command>aureport</command> <option>-s</option> command. This command
+       generates a numbered list of all system call events including date,
+       time, number of the system call, process ID, name of the command that
+       used this call, audit ID, and event number.
+      </para>
 <screen>&prompt.sudo;<command>aureport -s</command>
 
 Syscall Report
 =======================================
 # date time syscall pid comm auid event
 =======================================
-1. 2009年02月16日 17:45:01 2 20343 cron -1 2279
-2. 2009年02月16日 17:45:02 83 20350 mktemp 0 2284
-3. 2009年02月16日 17:45:02 83 20351 mkdir 0 2285</screen>
+1. 16/02/09 17:45:01 2 20343 cron -1 2279
+2. 16/02/09 17:45:02 83 20350 mktemp 0 2284
+3. 16/02/09 17:45:02 83 20351 mkdir 0 2285</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>すべての実行ファイルイベントからのレポート作成</term>
+     <term>Create a report from all executable events</term>
      <listitem>
-      <para>実行ファイルの観点からログを分析したい場合は、 <command>aureport</command> <option>-x</option> コマンドを使用します。このコマンドは順序番号付きのリストで、実行ファイル関連のイベントを列挙します。これには日付と時刻、実行ファイルの名前と実行していた端末、実行していたホストと監査 ID 、イベント番号が含まれます。</para>
+      <para>
+       To analyze the audit log from an executable's point of view, use the
+       <command>aureport</command> <option>-x</option> command. This command
+       generates a numbered list of all executable events including date,
+       time, name of the executable, the terminal it is run in, the host
+       executing it, the audit ID, and event number.
+      </para>
 <screen><command>aureport -x</command>
 
 Executable Report
 ====================================
 # date time exe term host auid event
 ====================================
-1. 2009年02月13日 15:08:26 /usr/sbin/sshd sshd &wsIip; -1 12
-2. 2009年02月13日 15:08:28 /usr/lib/gdm/gdm-session-worker :0 ? -1 13
-3. 2009年02月13日 15:08:28 /usr/sbin/sshd ssh &wsIip; -1 14</screen>
+1. 13/02/09 15:08:26 /usr/sbin/sshd sshd &wsIip; -1 12
+2. 13/02/09 15:08:28 /usr/lib/gdm/gdm-session-worker :0 ? -1 13
+3. 13/02/09 15:08:28 /usr/sbin/sshd ssh &wsIip; -1 14</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>ファイルに関するレポート作成</term>
+     <term>Create a report about files</term>
      <listitem>
-      <para>ファイルアクセスの観点からログを分析したい場合は、 <command>aureport</command> <option>-f</option> コマンドを使用します。このコマンドは順序番号付きのリストで、アクセスしているファイル、アクセスに使用したシステムコールの数と成功可否、実行ファイルと監査 ID 、イベント番号が含まれます。</para>
+      <para>
+       To generate a report from the audit log that focuses on file access,
+       use the <command>aureport</command> <option>-f</option> command. This
+       command generates a numbered list of all file-related events
+       including date, time, name of the accessed file, number of the system
+       call accessing it, success or failure of the command, the executable
+       accessing the file, audit ID, and event number.
+      </para>
 <screen><?dbfo keep-together="always"?>&prompt.sudo;<command>aureport -f</command>
 
 File Report
 ===============================================
 # date time file syscall success exe auid event
 ===============================================
-1. 2009年02月16日 17:45:01 /etc/shadow 2 yes /usr/sbin/cron -1 2279
-2. 2009年02月16日 17:45:02 /tmp/ 83 yes /bin/mktemp 0 2284
-3. 2009年02月16日 17:45:02 /var 83 no /bin/mkdir 0 2285</screen>
+1. 16/02/09 17:45:01 /etc/shadow 2 yes /usr/sbin/cron -1 2279
+2. 16/02/09 17:45:02 /tmp/ 83 yes /bin/mktemp 0 2284
+3. 16/02/09 17:45:02 /var 83 no /bin/mkdir 0 2285</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>ユーザに関するレポートの作成</term>
+     <term>Create a report about users</term>
      <listitem>
-      <para>システム内で、どのユーザが何の実行ファイルを実行させたのかを監査ログから調べ、レポートとしてまとめたい場合は、 <command>aureport</command> <option>-u</option> コマンドを使用します。このコマンドは順序番号付きのリストで、日付や時刻、監査 ID や使用した端末とホスト、実行ファイルの名前とイベント ID がそれぞれ示されます。</para>
+      <para>
+       To generate a report from the audit log that illustrates which users
+       are running what executables on your system, use the
+       <command>aureport</command> <option>-u</option> command. This command
+       generates a numbered list of all user-related events including date,
+       time, audit ID, terminal used, host, name of the executable, and an
+       event ID.
+      </para>
 <screen><command>aureport -u</command>
 
 User ID Report
 ====================================
 # date time auid term host exe event
 ====================================
-1. 2009年02月13日 15:08:26 -1 sshd &wsIip; /usr/sbin/sshd 12
-2. 2009年02月13日 15:08:28 -1 :0 ? /usr/lib/gdm/gdm-session-worker 13
-3. 2009年02月13日 08:25:39 -1 ssh &wsIIip; /usr/sbin/sshd 14</screen>
+1. 13/02/09 15:08:26 -1 sshd &wsIip; /usr/sbin/sshd 12
+2. 13/02/09 15:08:28 -1 :0 ? /usr/lib/gdm/gdm-session-worker 13
+3. 14/02/09 08:25:39 -1 ssh &wsIIip; /usr/sbin/sshd 14</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>ログインに関するレポートの作成</term>
+     <term>Create a report about logins</term>
      <listitem>
-      <para>マシンに対するログイン試行に着目してレポートを作成するには、 <command>aureport</command> <option>-l</option> コマンドを使用します。このコマンドは順序番号付きのリストで、日付や時刻、監査 ID や使用したホストおよび端末、実行ファイルの名前と試行の成功可否、イベント ID がそれぞれ含まれる、ログイン関連のレポートを生成します。</para>
+      <para>
+       To create a report that focuses on login attempts to your machine,
+       run the <command>aureport</command> <option>-l</option> command. This
+       command generates a numbered list of all login-related events
+       including date, time, audit ID, host and terminal used, name of the
+       executable, success or failure of the attempt, and an event ID.
+      </para>
 <screen>&prompt.sudo;<command>aureport -l -i</command>
 
 Login Report
 ============================================
 # date time auid host term exe success event
 ============================================
-1. 2009年02月13日 15:08:31 tux: &wsIip; sshd /usr/sbin/sshd no 19
-2. 2009年02月16日 12:39:05 root: &wsIIip; sshd /usr/sbin/sshd no 2108
-3. 2009年02月17日 15:29:07 geeko: ? tty3 /bin/login yes 7809</screen>
+1. 13/02/09 15:08:31 tux: &wsIip; sshd /usr/sbin/sshd no 19
+2. 16/02/09 12:39:05 root: &wsIIip; sshd /usr/sbin/sshd no 2108
+3. 17/02/09 15:29:07 geeko: ? tty3 /bin/login yes 7809</screen>
      </listitem>
     </varlistentry>
     <varlistentry>
-     <term>特定の時刻範囲に限定したレポート作成</term>
+     <term>Limit a report to a certain time frame</term>
      <listitem>
-      <para>特定の時刻範囲に限定してログを分析したい場合、たとえば 2009 年 2 月 16 日の日中時間帯のみを調べたい場合は、まず対象のデータが現在の <filename>audit.log</filename> 内に含まれているか、それとも既にローテーションされてしまったものかどうかを確認します。これは <command>aureport</command> <option>-t</option> を実行することで判別することができます。</para>
+      <para>
+       To analyze the logs for a particular time frame, such as only the
+       working hours of Feb 16, 2009, first find out whether this data is
+       contained in the current <filename>audit.log</filename> or whether
+       the logs have been rotated in by running <command>aureport</command>
+       <option>-t</option>:
+      </para>
 <screen><?dbfo keep-together="always"?><command>aureport -t</command>
 
 Log Time Range Report
 =====================
-/var/log/audit/audit.log: 2009年02月03日 14:13:38.225 - 2009年02月17日 15:30:01.636</screen>
-      <para>現在の <filename>audit.log</filename> ファイル内に必要な時間帯のデータがすべて含まれていれば、通常通りにレポートを作成します。そうでない場合は、 <command>aureport</command> コマンドに <option>-if</option> オプションを指定し、必要なデータを含むログファイルを指定します。</para>
-      <para>あとは開始日時と終了日時を指定して、作成するレポートの種類を選ぶオプションを加えます。下記の例では、ログイン試行に着目してレポートを作成しています:</para>
+/var/log/audit/audit.log: 03/02/09 14:13:38.225 - 17/02/09 15:30:01.636</screen>
+      <para>
+       The current <filename>audit.log</filename> contains all the desired
+       data. Otherwise, use the <option>-if</option> option to point the
+       <command>aureport</command> commands to the log file that contains
+       the needed data.
+      </para>
+      <para>
+       Then, specify the start date and time and the end date and time of
+       the desired time frame and combine it with the report option needed.
+       This example focuses on login attempts:
+      </para>
 <screen>&prompt.sudo;<command>aureport -ts 02/16/09 8:00 -te 02/16/09 18:00 -l</command>
 
 Login Report
 ============================================
 # date time auid host term exe success event
 ============================================
-1. 2009年02月16日 12:39:05 root: &wsIip; sshd /usr/sbin/sshd no 2108
-2. 2009年02月16日 12:39:12 0 &wsIip; /dev/pts/1 /usr/sbin/sshd yes 2114
-3. 2009年02月16日 13:09:28 root: &wsIip; sshd /usr/sbin/sshd no 2131
-4. 2009年02月16日 13:09:32 root: &wsIip; sshd /usr/sbin/sshd no 2133
-5. 2009年02月16日 13:09:37 0 &wsIip; /dev/pts/2 /usr/sbin/sshd yes 2139</screen>
-      <para>開始日時は <option>-ts</option> で指定します。指定した日時と同じか、それより後のイベントがレポート内に出力されます。日付部分を省略した場合、 <command>aureport</command> は <emphasis>今日</emphasis> を指定したものとして扱います。時刻部分を省略した場合は、日付の切り替わった深夜を開始時刻として指定したものとして扱います。<!-- NOTE: More explanations are needed for Japanese; date should be "month/day/year" format --> なお、日付は <replaceable>月</replaceable>/<replaceable>日</replaceable>/<replaceable>年</replaceable> の形式で指定することに注意してください。 <!-- fs 2016-11-17: /etc/sysconfig/audit has been removed without replacement Use the 24 clock notation rather than the 12 hour one and adjust the date format to your locale (specified in <filename>/etc/sysconfig/audit</filename> under <envar>AUDITD_LANG</envar>, default is <literal>en_US</literal>).--></para>
-      <para>終了日時は <option>-te</option> で指定します。指定した日時と同じか、それより前のイベントがレポート内に出力されます。日付を省略した場合、 <command>aureport</command> は <emphasis>今日</emphasis> を指定したものとして扱います。また、時刻部分を省略した場合、 <command>aureport</command> は <emphasis>現在時刻</emphasis> を指定したものとして扱います。指定可能な書式は <option>-ts</option> と同じです。</para>
+1. 16/02/09 12:39:05 root: &wsIip; sshd /usr/sbin/sshd no 2108
+2. 16/02/09 12:39:12 0 &wsIip; /dev/pts/1 /usr/sbin/sshd yes 2114
+3. 16/02/09 13:09:28 root: &wsIip; sshd /usr/sbin/sshd no 2131
+4. 16/02/09 13:09:32 root: &wsIip; sshd /usr/sbin/sshd no 2133
+5. 16/02/09 13:09:37 0 &wsIip; /dev/pts/2 /usr/sbin/sshd yes 2139</screen>
+      <para>
+       The start date and time are specified with the <option>-ts</option>
+       option. Any event that has a time stamp equal to or after your given
+       start time appears in the report. If you omit the date,
+       <command>aureport</command> assumes that you meant
+       <emphasis>today</emphasis>. If you omit the time, it assumes that the
+       start time should be midnight of the date specified.
+
+<!-- fs 2016-11-17:
+     /etc/sysconfig/audit has been removed without replacement
+
+       Use the 24 clock
+       notation rather than the 12 hour one and adjust the date format to
+       your locale (specified in <filename>/etc/sysconfig/audit</filename>
+       under <envar>AUDITD_LANG</envar>, default is
+       <literal>en_US</literal>).
+-->
+      </para>
+      <para>
+       Specify the end date and time with the <option>-te</option> option.
+       Any event that has a time stamp equal to or before your given event
+       time appears in the report. If you omit the date,
+       <command>aureport</command> assumes that you meant today. If you omit
+       the time, it assumes that the end time should be now. Use the same
+       format for the date and time as for <option>-ts</option>.
+      </para>
      </listitem>
     </varlistentry>
    </variablelist>
-   <para>概要を除き、レポートは表形式で標準出力に出力されます。つまり、出力された情報を他のコマンドに取り込むことが容易であることになります。たとえば <xref linkend="sec-audit-auviz"/> で紹介されている可視化スクリプトを使用すると、監査デーモンが生成したデータをさらに詳しく処理することができます。</para>
+   <para>
+    All reports except the summary ones are printed in column format and
+    sent to STDOUT, which means that this data can be written to other
+    commands easily. The visualization scripts introduced in
+    <xref linkend="sec-audit-auviz"/> are examples of how to further process
+    the data generated by audit.
+   </para>
   </sect2>
  </sect1>
  <sect1 xml:id="sec-audit-ausearch">
-  <title><command>ausearch</command> による監査デーモンログへの問い合わせ</title>
+  <title>Querying the audit daemon logs with <command>ausearch</command></title>
 
-  <para><command>aureport</command> では、システム内で何が起こっているのかを概要レベルで表示することができますが、特定のイベントの詳細までは追うことができません。特定のイベントを追跡したい場合は、 <command>ausearch</command> ツールを使用します。</para>
+  <para>
+   The <command>aureport</command> tool helps you to create overall
+   summaries of what is happening on the system, but if you are interested
+   in the details of a particular event, <command>ausearch</command> is the
+   tool to use.
+  </para>
 
-  <para><command>ausearch</command> コマンドは <filename>/var/log/audit/audit.log</filename> にある監査ログ内を検索するためのツールで、キーや語句などを条件に指定して検索することができます。ただし、すべてのレコードタイプに同じ項目が含まれているわけではないことに注意してください。たとえば <literal>PATH</literal> レコードの場合、 <literal>hostname</literal> や <literal>uid</literal> の項目はありません。</para>
+  <para>
+   <command>ausearch</command> allows you to search the audit logs using
+   special keys and search phrases that relate to most of the flags that
+   appear in event messages in
+   <filename>/var/log/audit/audit.log</filename>. Not all record types
+   contain the same search phrases. There are no <literal>hostname</literal>
+   or <literal>uid</literal> entries in a <literal>PATH</literal> record,
+   for example.
+  </para>
 
-  <para>検索を行う場合、必要なレコードをすべて抽出できるような適切な検索条件を指定してください。その一方、特定のレコードタイプを抽出したり、それに付随するその他の関連レコードを抽出したりすることもできます。これは、カーネル内の様々な箇所で、イベントに関連する複数のレコードを出力する仕組みであるためです。たとえば <command>open</command> システムコールの場合、 <literal>SYSCALL</literal> レコードだけでなく <literal>PATH</literal> レコードも同時に出力されます。</para>
+  <para>
+   When searching, make sure that you choose appropriate search criteria to
+   catch all records you need. Otherwise, you could be searching for
+   a specific type of record and still get various other related records
+   along with it. This is caused by different parts of the kernel
+   contributing additional records for events that are related to the one to
+   find. For example, you would always get a <literal>PATH</literal> record
+   along with the <literal>SYSCALL</literal> record for an
+   <command>open</command> system call.
+  </para>
 
   <tip>
-   <title>複数の検索オプションの使用について</title>
-   <para>複数のコマンドラインオプションを指定すると、それらは論理積 (AND) 演算子で結びつけられ、検索を絞り込む用途として使用することができます。</para>
+   <title>Using multiple search options</title>
+   <para>
+    Any of the command line options can be combined with logical AND
+    operators to narrow down your search.
+   </para>
   </tip>
 
   <variablelist>
    <varlistentry>
-    <term>他のファイルからの監査ログ読み込み</term>
+    <term>Read audit logs from another file</term>
     <listitem>
-     <para>監査ログを他のマシンに移動させた場合や、それぞれのマシンに接続することなく、ローカルのマシン内で複数のマシンの監査ログを分析したりしたい場合は、対象となるログファイルをローカルに移動したあと、 <command>ausearch</command> を利用してローカルで分析してください:</para>
-<screen>&prompt.sudo;<command>ausearch -</command> <replaceable>オプション</replaceable> -if <replaceable>ファイル名</replaceable></screen>
+     <para>
+      When the audit logs have moved to another machine or when you want to
+      analyze the logs of several machines on your local machine without
+      wanting to connect to each of these individually, move the logs to a
+      local file and have <command>ausearch</command> search them locally:
+     </para>
+<screen>&prompt.sudo;<command>ausearch -</command> <replaceable>option</replaceable> -if <replaceable>myfile</replaceable></screen>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>数値表現の文字列変換</term>
+    <term>Convert numeric results into text</term>
     <listitem>
-     <para>ユーザ ID などの情報は数値で出力されます。これらを読みやすいテキスト形式に変換するには、 <command>ausearch</command> コマンドに <option>-i</option> オプションを追加してください。</para>
+     <para>
+      Some information, such as user IDs are printed in numeric form. To
+      convert these into human readable text format, add the
+      <option>-i</option> option to your <command>ausearch</command>
+      command.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>監査イベント ID での検索</term>
+    <term>Search by audit event ID</term>
     <listitem>
-     <para>既に監査レポートを作成している場合や、 <command>autrace</command> を実行している場合は、ログ内の特定のイベントに対して、証跡を分析する必要があります。 <xref linkend="sec-audit-aureport"/> で説明しているほとんどの種類のレポートには、出力内に監査イベント ID が含まれます。監査イベント ID は監査メッセージ ID の第 2 パートの部分ですが、ここには Unix エポックのタイムスタンプと監査イベント ID がコロン区切りで書かれています。また、同じシステムコール内であれば、同じイベント ID が割り当てられます。 <command>ausearch</command> でこのイベント ID を使用することで、ログ内のイベント証跡を取得することができます。</para>
-     <para>下記のようにしてコマンドを使用してください:</para>
+     <para>
+      If you have previously run an audit report or done an
+      <command>autrace</command>, you should analyze the trail of a
+      particular event in the log. Most of the report types described in
+      <xref linkend="sec-audit-aureport"/> include audit event IDs in their
+      output. An audit event ID is the second part of an audit message ID,
+      which consists of a Unix epoch time stamp and the audit event ID
+      separated by a colon. All events that are logged from one
+      application's system call have the same event ID. Use this event ID
+      with <command>ausearch</command> to retrieve this event's trail from
+      the log.
+     </para>
+     <para>
+      Use a command similar to the following:
+     </para>
 <screen><?dbfo keep-together="always"?>&prompt.sudo;<command>ausearch -a 5207</command>
 ----
 time-&gt;Tue Feb 17 13:43:58 2009
 type=PATH msg=audit(1234874638.599:5207): item=0 name="/var/log/audit/audit.log" inode=1219041 dev=08:06 mode=0100644 ouid=0 ogid=0 rdev=00:00
 type=CWD msg=audit(1234874638.599:5207):  cwd="/root"
 type=SYSCALL msg=audit(1234874638.599:5207): arch=c000003e syscall=2 success=yes exit=4 a0=62fb60 a1=0 a2=31 a3=0 items=1 ppid=25400 pid=25616 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=1164 comm="less" exe="/usr/bin/less" key="doc_log"</screen>
-     <para><command>ausearch</command> <option>-a</option> コマンドを使用すると、指定したイベント ID に関連するログ内のすべてのレコードを検索して、表示します。このオプションは、他のオプションと組み合わせて指定することもできます。</para>
+     <para>
+      The <command>ausearch</command> <option>-a</option> command grabs all
+      records in the logs that are related to the audit event ID provided
+      and displays them. This option can be combined with any other option.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>メッセージタイプによる検索</term>
+    <term>Search by message type</term>
     <listitem>
-     <para>特定のメッセージタイプの監査レコードを検索するには、 <command>ausearch</command> <option>-m <replaceable>メッセージタイプ</replaceable></option> コマンドを実行します。指定できるメッセージタイプには、 <literal>PATH</literal> , <literal>SYSCALL</literal> , <literal>USER_LOGIN</literal> などがあります。メッセージタイプを指定せずに <command>ausearch</command> <option>-m</option> を実行すると、すべてのメッセージタイプの一覧を表示することができます。</para>
+     <para>
+      To search for audit records of a particular message type, use the
+      <command>ausearch</command> <option>-m
+      <replaceable>MESSAGE_TYPE</replaceable></option> command. Examples of
+      valid message types include <literal>PATH</literal>,
+      <literal>SYSCALL</literal>, and <literal>USER_LOGIN</literal>. Running
+      <command>ausearch</command> <option>-m</option> without a message type
+      displays a list of all message types.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>ログイン ID による検索</term>
+    <term>Search by login ID</term>
     <listitem>
-     <para>特定のログインユーザ ID に関連するレコードを表示するには、<command>ausearch</command> <option>-ul</option> コマンドを使用します。このコマンドは、指定したログインユーザ ID に関連し、ログインに成功したすべてのレコードを取得します。</para>
+     <para>
+      To view records associated with a particular login user ID, use the
+      <command>ausearch</command> <option>-ul</option> command. It displays
+      any records related to the user login ID specified provided that user
+      had been able to log in successfully.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>ユーザ ID による検索</term>
+    <term>Search by user ID</term>
     <listitem>
-     <para>特定の実ユーザ ID および実効ユーザ ID の両方に関連するレコードを表示するには、 <command>ausearch</command> <option>-ua</option> コマンドを使用します。特定の実ユーザ ID に関連するレコードを表示するには、 <command>ausearch</command> <option>-ui <replaceable>UID</replaceable></option> のように入力して実行します。特定の実効ユーザ ID に関連するレコードを表示するには、 <command>ausearch</command> <option>-ue <replaceable>EUID</replaceable></option> のように入力して実行します。実ユーザ ID での検索はプロセスを作成したユーザの ID を、実効ユーザ ID での検索は、そのプロセスを実行するのに必要なユーザ ID と権限の ID を意味しています。</para>
+     <para>
+      View records related to any of the user IDs (both user ID and
+      effective user ID) with <command>ausearch</command>
+      <option>-ua</option>. View reports related to a particular user ID
+      with <command>ausearch</command> <option>-ui
+      <replaceable>UID</replaceable></option>. Search for records related to
+      a particular effective user ID, use the <command>ausearch</command>
+      <option>-ue <replaceable>EUID</replaceable></option>. Searching for a
+      user ID means the user ID of the user creating a process. Searching
+      for an effective user ID means the user ID and privileges that are
+      required to run this process.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>グループ ID による検索</term>
+    <term>Search by group ID</term>
     <listitem>
-     <para>特定の実グループ ID および実効グループ ID の両方に関連するレコードを表示するには、 <command>ausearch</command> <option>-ga</option> コマンドを使用します。特定の実グループ ID に関連するレコードを表示するには、 <command>ausearch</command> <option>-gi <replaceable>GID</replaceable></option> のように入力して実行します。特定の実効グループ ID に関連するレコードを表示するには、 <command>ausearch</command> <option>-ge <replaceable>EGID</replaceable></option> のように入力して実行します。</para>
+     <para>
+      View records related to any of the group IDs (both group ID and
+      effective group ID) with the <command>ausearch</command>
+      <option>-ga</option> command. View reports related to a particular
+      user ID with <command>ausearch</command> <option>-gi
+      <replaceable>GID</replaceable></option>. Search for records related to
+      a particular effective group ID, use <command>ausearch</command>
+      <option>-ge <replaceable>EGID</replaceable></option>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>コマンドライン名による検索</term>
+    <term>Search by command line name</term>
     <listitem>
-     <para>特定のコマンドに関連するレコードを表示するには、 <command>ausearch</command> <option>-c <replaceable>コマンド名</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-c less</option> のように入力して実行すると、 <command>less</command> コマンドに関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records related to a certain command, using the
+      <command>ausearch</command> <option>-c
+      <replaceable>COMM_NAME</replaceable></option> command, for example,
+      <command>ausearch</command> <option>-c less</option> for all records
+      related to the <command>less</command> command.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>実行ファイル名による検索</term>
+    <term>Search by executable name</term>
     <listitem>
-     <para>特定の実行ファイルに関連するレコードを表示するには、 <command>ausearch</command> <option>-x <replaceable>実行ファイルのパス</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-x /usr/bin/less</option> のように入力して実行すると、 <command>/usr/bin/less</command> の実行ファイルに関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records related to a certain executable with the
+      <command>ausearch</command> <option>-x
+      <replaceable>EXE</replaceable></option> command, for example
+      <command>ausearch</command> <option>-x /usr/bin/less</option> for all
+      records related to the <command>/usr/bin/less</command> executable.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>システムコール名による検索</term>
+    <term>Search by system call name</term>
     <listitem>
-     <para>特定のシステムコールに関連するレコードを表示するには、 <command>ausearch</command> <option>-sc <replaceable>システムコール名</replaceable></option> コマンドを使用します。たとえば <command>ausearch -sc open</command> のように入力して実行すると、 <command>open</command> システムコールに関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records related to a certain system call with the
+      <command>ausearch</command> <option>-sc
+      <replaceable>SYSCALL</replaceable></option> command, for example,
+      <command>ausearch -sc open</command> for all records related to the
+      <command>open</command> system call.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>プロセス ID による検索</term>
+    <term>Search by process ID</term>
     <listitem>
-     <para>特定のプロセス ID に関連するレコードを表示するには、 <command>ausearch</command> <option>-p <replaceable>プロセス_ID</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-p 13368</option> のように入力して実行すると、指定したプロセス ID に関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records related to a certain process ID with the
+      <command>ausearch</command> <option>-p
+      <replaceable>PID</replaceable></option> command, for example
+      <command>ausearch</command> <option>-p 13368</option> for all records
+      related to this process ID.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>イベントもしくはシステムコールの成功可否による検索</term>
+    <term>Search by event or system call success value</term>
     <listitem>
-     <para>システムコールの成功可否を指定してレコードを表示するには、 <command>ausearch</command> <option>-sv <replaceable>成功可否</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-sv yes</option> のように入力して実行すると、成功したシステムコールに関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records containing a certain system call success value with
+      <command>ausearch</command> <option>-sv
+      <replaceable>SUCCESS_VALUE</replaceable></option>, for example,
+      <command>ausearch</command> <option>-sv yes</option> for all
+      successful system calls.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>ファイル名による検索</term>
+    <term>Search by file name</term>
     <listitem>
-     <para>ファイル名を指定してレコードを表示するには、 <command>ausearch</command> <option>-f <replaceable>ファイル名</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-f /foo/bar</option> のように入力して実行すると、 <filename>/foo/bar</filename> ファイルに関連するすべてのレコードを表示することができます。なお、ファイル名だけの指定でも問題なく動作しますが、相対パスでの指定はできません。</para>
+     <para>
+      View records containing a certain file name with
+      <command>ausearch</command> <option>-f
+      <replaceable>FILE_NAME</replaceable></option>, for example,
+      <command>ausearch</command> <option>-f /foo/bar</option> for all
+      records related to the <filename>/foo/bar</filename> file. Using the
+      file name alone would work as well, but using relative paths does not
+      work.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>端末による検索</term>
+    <term>Search by terminal</term>
     <listitem>
-     <para>特定の端末に関連するレコードを表示するには、 <command>ausearch</command> <option>-tm <replaceable>端末名</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-tm ssh</option> のように入力して実行すると、 SSH 端末に関連するすべてのレコードを表示することができますし、 <command>ausearch</command> <option>-tm tty</option> のように入力して実行すると、コンソールに関連するすべてのレコードを表示することができます。</para>
+     <para>
+      View records of events related to a certain terminal only with
+      <command>ausearch</command> <option>-tm
+      <replaceable>TERM</replaceable></option>, for example,
+      <command>ausearch</command> <option>-tm ssh</option> to view all
+      records related to events on the SSH terminal and
+      <command>ausearch</command> <option>-tm tty</option> to view all
+      events related to the console.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>ホスト名による検索</term>
+    <term>Search by host name</term>
     <listitem>
-     <para>特定のホストに関連するレコードを表示するには、 <command>ausearch</command> <option>-hn <replaceable>ホスト名</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-hn &wsIname;</option> のように入力して実行します。ホスト名や完全修飾ホスト名、ネットワークアドレスのいずれかを指定することができます。</para>
+     <para>
+      View records related to a certain remote host name with
+      <command>ausearch</command> <option>-hn
+      <replaceable>HOSTNAME</replaceable></option>, for example,
+      <command>ausearch</command> <option>-hn &wsIname;</option>. You can
+      use a host name, fully qualified domain name, or numeric network
+      address.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>キー項目による検索</term>
+    <term>Search by key field</term>
     <listitem>
-     <para>あらかじめ特定の種類のイベントを識別するために設定して記録しておいたキー項目を指定してレコードを表示するには、 <command>ausearch</command> <option>-k <replaceable>キー項目</replaceable></option> コマンドを使用します。たとえば <command>ausearch</command> <option>-k CFG_etc</option> のように入力して実行すると、 <literal>CFG_etc</literal> というキーを含むレコードのみを表示します。</para>
+     <para>
+      View records that contain a certain key assigned in the audit rule set
+      to identify events of a particular type. Use the
+      <command>ausearch</command> <option>-k
+      <replaceable>KEY_FIELD</replaceable></option>, for example,
+      <command>ausearch</command> <option>-k CFG_etc</option> to display any
+      records containing the <literal>CFG_etc</literal> key.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>単語による検索</term>
+    <term>Search by word</term>
     <listitem>
-     <para>監査ルールセット内に含まれる、さまざまなイベントの情報に対して、文字列での検索を行うこともできます。文字列はファイル名やホスト名のほか、端末名に対しても検索することができます。具体的には <command>ausearch</command> <option>-w <replaceable>文字列</replaceable></option> のように入力して実行してください。</para>
+     <para>
+      View records that contain a certain string assigned in the audit rule
+      set to identify events of a particular type. The whole string is
+      matched on file name, host name, and terminal. Use the
+      <command>ausearch</command> <option>-w
+      <replaceable>WORD</replaceable></option>.
+     </para>
      <remark>jsegitz 2014-07-23: also matches SELinux context</remark>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>特定の時刻範囲に限定した検索</term>
+    <term>Limit a search to a certain time frame</term>
     <listitem>
-     <para><option>-ts</option> と <option>-te</option> の各オプションを指定することで、特定の時間帯範囲のものを検索することができるようになります。 <option>-ts</option> オプションでは開始日時を、 <option>-te</option> オプションでは終了日時をそれぞれ指定します。これらのオプションは、上述の任意のオプションと組み合わせて使用することができます。また、使用方法は <command>aureport</command> と同じです。</para>
+     <para>
+      Use <option>-ts</option> and <option>-te</option> to limit the scope
+      of your searches to a certain time frame. The <option>-ts</option>
+      option is used to specify the start date and time and the
+      <option>-te</option> option is used to specify the end date and time.
+      These options can be combined with any of the above. The use of these
+      options is similar to use with <command>aureport</command>.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
  </sect1>
  <sect1 xml:id="sec-audit-autrace">
-  <title><command>autrace</command> によるプロセスの解析</title>
+  <title>Analyzing processes with <command>autrace</command></title>
 
-  <para>監査システムでは、設定したルールを利用してシステムを監視するだけでなく、 <command>autrace</command> コマンドを使用することで、特定のプロセス専用の監査を実施することもできます。 <command>autrace</command> は <command>strace</command> コマンドのように動作するコマンドですが、少し異なる情報を採取します。また、 <command>autrace</command> の出力は <filename>/var/log/audit/audit.log</filename> に書き込まれ、標準的な監査ログ項目と同様の書式で出力されます。</para>
+  <para>
+   Other than monitoring your system using the rules you set up, you can
+   also perform dedicated audits of individual processes using the
+   <command>autrace</command> command. <command>autrace</command> works
+   similarly to the <command>strace</command> command, but gathers slightly
+   different information. The output of <command>autrace</command> is
+   written to <filename>/var/log/audit/audit.log</filename> and does not
+   look any different from the standard audit log entries.
+  </para>
 
-  <para>プロセスに対して <command>autrace</command> を実行する前に、まずはキュー内から監査ルールすべてを削除して、 <command>autrace</command> 自身の監査と衝突しないようにしておいてください。監査ルールの削除は <command>auditctl</command> <option>-D</option> で行います。これにより、すべての通常監査が停止します。</para>
+  <para>
+   When performing an <command>autrace</command> on a process, make sure
+   that any audit rules are purged from the queue to avoid these rules
+   clashing with the ones <command>autrace</command> adds itself. Delete the
+   audit rules with the <command>auditctl</command> <option>-D</option>
+   command. This stops all normal auditing.
+  </para>
 
 <screen>&prompt.sudo;<command>auditctl -D</command>
 
@@ -1184,16 +2185,42 @@ Cleaning up...
 No rules
 Trace complete. You can locate the records with 'ausearch -i -p 7642'</screen>
 
-  <para><command>autrace</command> で実行ファイルを指定する際には、必ずフルパスで指定してください。追跡が完了すると、 <command>autrace</command> はトレースのイベント ID を通知しますので、証跡を <command>ausearch</command> で検索できるようになります。作業後は監査ルールを元に戻すため、 <command>systemctl restart auditd</command> と入力して実行してください。</para>
+  <para>
+   Always use the full path to the executable to track with
+   <command>autrace</command>. After the trace is complete,
+   <command>autrace</command> provides the event ID of the trace, so you can
+   analyze the entire data trail with <command>ausearch</command>. To
+   restore the audit system to use the audit rule set again, restart the
+   audit daemon with <command>systemctl restart auditd</command>.
+  </para>
  </sect1>
  <sect1 xml:id="sec-audit-auviz">
-  <title>監査データの可視化</title>
+  <title>Visualizing audit data</title>
 
-  <para><filename>/var/log/audit/audit.log</filename> にある監査証跡も、 <xref linkend="sec-audit-aureport-gen"/> で説明している様々な種類の <command>aureport</command> のレポートも、ユーザが読む場合にはある程度の経験が必要となります。 <command>aureport</command> の出力は表形式であるため、 sed, Perl, awk などのスクリプトを使用することで、容易に監査データを可視化することができます。</para>
+  <para>
+   Neither the data trail in <filename>/var/log/audit/audit.log</filename>
+   nor the different report types generated by <command>aureport</command>,
+   described in <xref linkend="sec-audit-aureport-gen"/>, provide an
+   intuitive reading experience to the user. The <command>aureport</command>
+   output is formatted in columns and thus easily available to any sed,
+   Perl or awk scripts that users might connect to the audit framework to
+   visualize the audit data.
+  </para>
 
-  <para>可視化に対応するスクリプト (詳しくは <xref linkend="sec-audit-viz"/> をお読みください) は、 &productname; やその他の Linux ディストリビューションで、読みやすい監査出力を作成するための標準的な Linux ツールの使い方の例となっているものです。下記の例では、純粋なテキスト形式の監査レポートを、グラフに変換する作業を行っています。</para>
+  <para>
+   The visualization scripts (see <xref linkend="sec-audit-viz"/>) are one
+   example of how to use standard Linux tools available with
+   &productname; or any other Linux distribution to create easy-to-read
+   audit output. The following examples help you understand how the plain
+   audit reports can be transformed into human readable graphics.
+  </para>
 
-  <para>最初の例では、プログラムとシステムコールの対応付けを可視化しているものです。この種類のデータを取得するには、最終的なグラフを生成するための元となるデータを <command>aureport</command> で作成する必要があります:</para>
+  <para>
+   The first example illustrates the relationship of programs and system
+   calls. To get to this kind of data, you need to determine the appropriate
+   <command>aureport</command> command that delivers the source data from
+   which to generate the final graphic:
+  </para>
 
 <screen>&prompt.sudo;<command>aureport -s -i</command>
 
@@ -1201,12 +2228,18 @@ Syscall Report
 =======================================
 # date time syscall pid comm auid event
 =======================================
-1. 2009年02月16日 17:45:01 open 20343 cron unset 2279
-2. 2009年02月16日 17:45:02 mkdir 20350 mktemp root 2284
-3. 2009年02月16日 17:45:02 mkdir 20351 mkdir root 2285
+1. 16/02/09 17:45:01 open 20343 cron unset 2279
+2. 16/02/09 17:45:02 mkdir 20350 mktemp root 2284
+3. 16/02/09 17:45:02 mkdir 20351 mkdir root 2285
 ...</screen>
 
-  <para>このレポートに対して可視化スクリプトが行うべき最初の処理は、必要な列の情報のみを抽出することです。この例では、 <literal>syscall</literal> と <literal>comm</literal> の列になります。出力は並べ替えられたあと重複を排除し、グラフ作成プログラム自身に渡すことになります:</para>
+  <para>
+   The first thing that the visualization script needs to do on this report
+   is to extract only those columns that are of interest, in this example,
+   the <literal>syscall</literal> and the <literal>comm</literal> columns.
+   The output is sorted and duplicates removed then the final output is
+   written into the visualization program itself:
+  </para>
 
 <screen>LC_ALL=C aureport -s -i | awk '/^[0-9]/ { print $6" "$4 }' | sort | uniq | mkgraph</screen>
 
@@ -1228,7 +2261,7 @@ Syscall Report
 -->
 
   <figure xml:id="fig-audit-mkgraph">
-   <title>フローグラフ: プログラムとシステムコールの関係性</title>
+   <title>Flow graph&mdash;program versus system call relationship</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="audit_mkgraph.png" width="75%"/>
@@ -1239,7 +2272,12 @@ Syscall Report
    </mediaobject>
   </figure>
 
-  <para>2 つ目の例では、様々な種類のイベントとそのログ記録数をまとめたグラフです。この種類のグラフを作成するにあたって、 <command>aureport</command> で対応するコマンドは <command>aureport -e</command> です:</para>
+  <para>
+   The second example illustrates the different types of events and how many
+   of each type have been logged. The appropriate
+   <command>aureport</command> command to extract this kind of information
+   is <command>aureport -e</command>:
+  </para>
 
 <screen>&prompt.sudo;aureport -e -i --summary
 
@@ -1257,12 +2295,15 @@ total  type
 99  CONFIG_CHANGE
 52  USER_LOGIN</screen>
 
-  <para>この種類のレポートは既に 2 列のみの出力になっていることから、単純にグラフ作成プログラムに渡して棒グラフにするだけです。</para>
+  <para>
+   Because this type of report already contains a two column output, it is
+   only fed into the visualization script and transformed into a bar chart.
+  </para>
 
 <screen>&prompt.sudo;aureport -e -i --summary  | mkbar events</screen>
 
   <figure xml:id="fig-audit-mkbar">
-   <title>棒グラフ: 一般的なイベントの種類</title>
+   <title>Bar chart&mdash;common event types</title>
    <mediaobject>
     <imageobject role="html">
      <imagedata fileref="audit_mkbar.png" width="75%"/>
@@ -1273,55 +2314,107 @@ total  type
    </mediaobject>
   </figure>
 
-  <para>監査データの可視化の背景となる情報について、詳しくは <link xlink:href="https://people.redhat.com/sgrubb/audit/visualize/index.html"/> (英語) をお読みください。</para>
+  <para>
+   For background information about the visualization of audit data, refer
+   to the Web site of the audit project at
+   <link xlink:href="https://people.redhat.com/sgrubb/audit/visualize/index.html"/>.
+  </para>
  </sect1>
  <sect1 xml:id="sec-audit-audisp">
-  <title>監査イベント通知の中継</title>
+  <title>Relaying audit event notifications</title>
 
-  <para>監査システムでは、リアルタイムに外部プログラムを呼び出して、 <systemitem class="daemon">auditd</systemitem> にアクセスしたり、使用したりすることができます。この機能は <emphasis>監査ディスパッチャ</emphasis> と呼ばれる仕組みで、たとえば侵入検知システムなどが <systemitem class="daemon">auditd</systemitem> を使用し、より詳しい検知情報を取得したりすることができます。</para>
-  <para><systemitem class="daemon">auditd</systemitem> の設定ファイルは <filename>/etc/audit/auditd.conf</filename> に保存されています。このファイルには下記のようなオプションを記述することができます:</para>
+  <para>
+   The auditing system also allows external applications to access and
+   use the <systemitem class="daemon">auditd</systemitem> daemon in real
+   time. This feature is provided by so called <emphasis>audit
+   dispatcher</emphasis> which allows, for example, intrusion detection
+   systems to use <systemitem class="daemon">auditd</systemitem> to receive
+   enhanced detection information.
+  </para>
+  <para>
+   The configuration of <systemitem class="daemon">auditd</systemitem> is
+   stored in <filename>/etc/audit/auditd.conf</filename>. The file includes
+   the following options:
+  </para>
 
   <variablelist>
    <varlistentry>
-    <term><literal>q_depth</literal></term>
+    <term><literal>q_depth</literal>
+    </term>
     <listitem>
-     <para>監査ディスパッチャの内部キューのサイズを指定します。 syslog 内に監査イベントの喪失を表すメッセージが現れた場合は、この値を増やしてください。既定値は 250 です。</para>
+     <para>
+      Specifies the size of the event dispatcher internal queue. If syslog
+      complains about audit events getting dropped, increase this value.
+      Default is 250.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>overflow_action</literal></term>
+    <term><literal>overflow_action</literal>
+    </term>
     <listitem>
-     <para>監査ディスパッチャの内部キューが溢れてしまった場合、監査デーモンがどのように対応するのかを指定します。指定可能な値は <option>ignore</option> (何もしない), <option>syslog</option> (syslog に警告を発する), <option>suspend</option> (イベントの処理を停止させる), <option>single</option> (コンピュータシステムをシングルユーザモードに移行させる), <option>halt</option> (システムをシャットダウンする) のいずれかです。</para>
+     <para>
+      Specifies the way the audit daemon reacts to the internal queue
+      overflow. Possible values are <option>ignore</option> (nothing
+      happens), <option>syslog</option> (issues a warning to syslog),
+      <option>suspend</option> (stop processing events),
+      <option>single</option> (the computer system is put in single
+      user mode), or <option>halt</option> (shuts the system down).
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>priority_boost</literal></term>
+    <term><literal>priority_boost</literal>
+    </term>
     <listitem>
-     <para>監査イベントディスパッチャに対する優先度設定を指定します (監査デーモン自身の優先度からの相対指定です) 。既定値は 4 で、優先度を変更しません。</para>
+     <para>
+      Specifies the priority for the audit event dispatcher (in addition to
+      the audit daemon priority itself). Default is 4 which means no change
+      in priority.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>name_format</literal></term>
+    <term><literal>name_format</literal>
+    </term>
     <listitem>
-     <para>監査イベント内へ挿入するコンピュータノード名の設定方法を指定します。指定可能な値は <option>none</option> (コンピュータ名を挿入しない), <option>hostname</option> (<systemitem>gethostname</systemitem> システムコールで取得した名前), <option>fqd</option> (マシンの完全修飾ホスト名), <option>numeric</option> (マシンの IP アドレス), <option>user</option> (<option>name</option> オプションで指定する任意の値) のいずれかです。既定値は <option>none</option> です。</para>
+     <para>
+      Specifies the way the computer node name is inserted into the audit
+      event. Possible values are <option>none</option> (no computer name is
+      inserted), <option>hostname</option> (name returned by the
+      <systemitem>gethostname</systemitem> system call),
+      <option>fqd</option> (fully qualified domain name of the machine),
+      <option>numeric</option> (IP address of the machine), or
+      <option>user</option> (user defined string from the
+      <option>name</option> option). Default is <option>none</option>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>name</literal></term>
+    <term><literal>name</literal>
+    </term>
     <listitem>
-     <para>マシンを識別するためのユーザ定義の文字列です。このオプションを動作させるには、 <option>name_format</option> オプションが <option>user</option> でなければなりません。それ以外の場合、このオプションは無視されます。</para>
+     <para>
+      Specifies a user-defined string which identifies the machine. The
+      <option>name_format</option> option must be set to
+      <option>user</option>, otherwise this option is ignored.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>max_restarts</literal></term>
+    <term><literal>max_restarts</literal>
+    </term>
     <listitem>
-     <para>非負の整数を入れる項目で、監査イベントディスパッチャに対して、何回までクラッシュしたプラグインを再起動しようとするかを指定します。既定値は 10 です。</para>
+     <para>
+      A non-negative number that tells the audit event dispatcher how many
+      times it can try to restart a crashed plug-in. The default is 10.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
     <example>
-   <title>/etc/audit/auditd.conf の例</title>
+   <title>Example /etc/audit/auditd.conf</title>
 <screen>
   q_depth = 250
   overflow_action = SYSLOG
@@ -1330,49 +2423,90 @@ total  type
   #name = mydomain</screen>
   </example>
 
-  <para>プラグインプログラムでは、自身の設定ファイルを専用のディレクトリである <filename>/etc/audit/plugins.d</filename> にインストールします。プラグインの設定ファイルには、下記のようなオプションがあります:</para>
+  <para>
+   The plug-in programs install their configuration files in a special
+   directory, <filename>/etc/audit/plugins.d</filename>.
+   The plug-in configuration files have the following options:
+  </para>
 
   <variablelist>
    <varlistentry>
-    <term><literal>active</literal></term>
+    <term><literal>active</literal>
+    </term>
     <listitem>
-     <para>プログラムが <systemitem class="daemon">auditd</systemitem> を使用するかどうかを指定します。指定可能な値は <option>yes</option> (はい), <option>no</option> (いいえ) のいずれかです。</para>
+     <para>
+      Specifies if the program uses
+      <systemitem class="daemon">auditd</systemitem>. Possible values are
+      <option>yes</option> or <option>no</option>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>direction</literal></term>
+    <term><literal>direction</literal>
+    </term>
     <listitem>
-     <para>プラグインと監査システムの通信方法を指定します。これはイベントディスパッチャに対して、イベントの流れる方向を示すことになります。指定可能な値は <option>in</option> (入力), <option>out</option> (出力) のいずれかです。</para>
+     <para>
+      Specifies the way the plug-in was designed to communicate with audit.
+      It informs the event dispatcher in which directions the events flow.
+      Possible values are <option>in</option> or <option>out</option>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>path</literal></term>
+    <term><literal>path</literal>
+    </term>
     <listitem>
-     <para>プラグインの実行ファイルに対する絶対パスを指定します。内部プラグインの場合、ここにはプラグイン名を指定します。</para>
+     <para>
+      Specifies the absolute path to the plug-in executable. In case of
+      internal plug-ins, this option specifies the plug-in name.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>type</literal></term>
+    <term><literal>type</literal>
+    </term>
     <listitem>
-     <para>プラグインの動作方法を指定します。指定可能な値は <option>builtin</option>, <option>always</option> のいずれかです。 <option>builtin</option> は内部プラグイン ( <literal>af_unix</literal> および <literal>syslog</literal> ) であることを示すもので、 <option>always</option> はほとんどすべて (ただし全てではありません) のプラグイン向けの値です。既定値は <option>always</option> です。</para>
+     <para>
+      Specifies the way the plug-in is to be run. Possible values are
+      <option>builtin</option> or <option>always</option>. Use
+      <option>builtin</option> for internal plug-ins
+      (<literal>af_unix</literal> and <literal>syslog</literal>) and
+      <option>always</option> for most (if not all) other plug-ins. Default
+      is <option>always</option>.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>args</literal></term>
+    <term><literal>args</literal>
+    </term>
     <listitem>
-     <para>プラグインプログラムに渡すパラメータを指定します。通常、プラグインプログラムは自身の設定ファイルからパラメータを読み込む仕組みであるため、何もパラメータを指定する必要はありません。また、 2 個までのパラメータに対応しています。</para>
+     <para>
+      Specifies the argument that is passed to the plug-in program.
+      Normally, plug-in programs read their arguments from their
+      configuration file and do not need to receive any arguments. There is
+      a limit of two arguments.
+     </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><literal>format</literal></term>
+    <term><literal>format</literal>
+    </term>
     <listitem>
-     <para>監査ディスパッチャがプラグインプログラムに渡すデータの形式を指定します。指定可能な値は <option>binary</option>, <option>string</option> のいずれかです。 <option>binary</option> はイベントディスパッチャが監査デーモンから受信したデータをそのまま渡す指定で、 <option>string</option> はディスパッチャに対して、イベントデータを監査処理ライブラリで処理できる文字列に変換する指定です。既定値は <option>string</option> です。</para>
+     <para>
+      Specifies the format of data that the audit dispatcher passes to the
+      plug-in program. Valid options are <option>binary</option> or
+      <option>string</option>. <option>binary</option> passes the data
+      exactly as the event dispatcher receives them from the audit daemon.
+      <option>string</option> instructs the dispatcher to change the event
+      into a string that is parsable by the audit parsing library. Default
+      is <option>string</option>.
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
 
  <example>
-   <title>/etc/audit/plugins.d/syslog.conf の例</title>
+   <title>Example /etc/audit/plugins.d/syslog.conf</title>
 <screen>
   active = no
   direction = out
