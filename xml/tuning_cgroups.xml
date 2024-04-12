@@ -12,118 +12,114 @@
 <!ENTITY prompt.unified "<prompt role='root' xmlns='http://docbook.org/ns/docbook'>[io-controller] host1:/sys/fs/cgroup/unified # </prompt>">
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-tuning-cgroups">
- <title>カーネルコントロールグループ</title>
- <info>
-  <abstract>
-   <para>カーネルコントロールグループ ( <quote>cgroups</quote> ) は、プロセスに対してハードウエアやシステムの資源を割り当てたり、制限したりするための仕組みです。この機能を利用することで、プロセスをツリー構造で管理することができるようになります。</para>
-  </abstract>
-  <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
-   <dm:bugtracker/>
-   <dm:translation>yes</dm:translation>
-  </dm:docmanager>
- </info>
- <sect1 xml:id="sec-tuning-cgroups-overview">
-  <title>概要</title>
+  <title>カーネルコントロールグループ</title>
+  <info>
+    <abstract>
+      <para>カーネルコントロールグループ ( <quote>cgroups</quote> ) は、プロセスに対してハードウエアやシステムの資源を割り当てたり、制限したりするための仕組みです。この機能を利用することで、プロセスをツリー構造で管理することができるようになります。</para>
+    </abstract>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker/>
+      <dm:translation>yes</dm:translation>
+    </dm:docmanager>
+  </info>
+  <sect1 xml:id="sec-tuning-cgroups-overview">
+    <title>概要</title>
 
-  <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などのリソース制限を割り当てます。</para>
+    <para>それぞれのプロセスは正確に 1 つの管理用 cgroup に割り当てられます。 cgroup は階層構造型のツリー (木構造) として管理するもので、その構造の任意の箇所 (枝) もしくは 1 つのプロセスに対して、 CPU やメモリ、ディスクの I/O やネットワーク帯域などのリソース制限を割り当てます。</para>
 
-  <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; には、 cgroup の設定を行うためのインターフェイスも用意されています。</para>
+    <para>&productname; では、 &systemd; が cgroup を利用してグループ内の全てのプロセスを管理しています。この場合、 &systemd; はグループをスライスと呼んでいます。 &systemd; には、 cgroup の設定を行うためのインターフェイスも用意されています。</para>
 
-  <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
+    <para><command>systemd-cgls</command> コマンドでは、階層構造を表示することができます。</para>
 
-  <para>カーネルが提供する cgroup の API には v1 と v2 と呼ばれる 2 種類のものが存在しています。それに加えて、異なる API を提供する複数の cgroup 階層構造が存在しています。これらの組み合わせのうち、一般的に使用される組み合わせは下記の 2 種類になります:</para>
-  <itemizedlist>
-   <listitem>
-    <para>ハイブリッド型: コントローラ以外は v2, コントローラは v1 の階層構造を使用する構成</para>
-   </listitem>
-   <listitem>
-    <para>統合型: コントローラを含めて v2 階層構造を使用する構成</para>
-   </listitem>
-  </itemizedlist>
-  <para>現時点での既定のモードはハイブリッド型です。これにより、必要なアプリケーションに後方互換性を提供することになります。なお、統合型 v2 階層構造の場合のみ、下記の機能が追加で提供されます:</para>
-  <itemizedlist>
-   <listitem>
-    <para>メモリコントローラ: リクレーム保護 (memory.low としても知られています), memory.high, PSI (pressure stall information)</para>
-   </listitem>
-   <listitem>
-    <para>I/O コントローラ: ライトバック制御と新しい制御ポリシー</para>
-  </listitem>
-  <listitem>
-   <para>非特権ユーザに対するコントローラの代理 (ルートレスコンテナ)</para>
-  </listitem>
-  <listitem>
-   <para>systemd 内でのフリーザサポート</para>
-  </listitem>
-  <listitem>
-   <para>単一階層構造によるよりシンプルな制御</para>
-  </listitem>
- </itemizedlist>
-   <para>いずれかのモードのみを設定できます。</para>
-   <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。 &grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
- </sect1>
+    <para>カーネルが提供する cgroup の API には v1 と v2 と呼ばれる 2 種類のものが存在しています。それに加えて、異なる API を提供する複数の cgroup 階層構造が存在しています。これらの組み合わせのうち、一般的に使用される組み合わせは下記の 2 種類になります:</para>
 
- <sect1 xml:id="sec-tuning-cgroups-accounting">
-  <title>リソースアカウンティング</title>
+    <itemizedlist>
+      <listitem>
+        <para>統合型: コントローラを含めて v2 階層構造を使用する構成</para>
+      </listitem>
+      <listitem>
+        <para>ハイブリッド型: コントローラ以外は v2, コントローラは v1 の階層構造を使用する構成</para>
+      </listitem>
+    </itemizedlist>
 
-  <para>複数の cgroup にプロセスをまとめることで、 cgroup ごとの資源消費データを取得できるようになります。</para>
+    <para>現時点での既定のモードはハイブリッド型です。これにより、必要なアプリケーションに後方互換性を提供することになります。なお、統合型 v2 階層構造の場合のみ、下記の機能が追加で提供されます:</para>
 
-  <para>このような機能をアカウンティングと呼びますが、この機能自身にも小さいながらオーバーヘッドが存在しています。このオーバーヘッドはその中での処理内容にも依存しますが、特定の 1 つのユニットに対してアカウンティングを有効にすると、同じスライスに含まれる全てのユニットだけでなく、親スライスやそこに直接含まれるユニットに対しても、この機能が有効化されることに注意してください。</para>
+    <para>いずれかのモードのみを設定できます。</para>
 
-  <para>ユニット単位でアカウンティングを有効化したい場合は <literal>MemoryAccounting=</literal> のようなディレクティブを使用することができます。全てのユニットに対して有効化したい場合は、 <filename>/etc/systemd/system.conf</filename> ファイル内の <literal>DefaultMemoryAccounting=</literal> ディレクティブを設定してください。設定可能なディレクティブに関する詳細は、 <command>man systemd.resource-control</command> で表示されるマニュアルページ (英語) をお読みください。</para>
- </sect1>
- <sect1 xml:id="sec-tuning-cgroups-usage">
-  <title>リソース制限の設定</title>
+    <sect2 xml:id="sec-cgroups-hybrid-hierarchy">
+      <title>統合型 cgroup 階層構造</title>
+      <note>
+        <title>Deprecation notice</title>
+        <para>
+          cgroup v1 has been deprecated, and might be removed in a future
+          release.
+        </para>
+      </note>
+      <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。 &grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
+    </sect2>
+  </sect1>
+  <sect1 xml:id="sec-tuning-cgroups-accounting">
+    <title>リソースアカウンティング</title>
 
-  <note>
-   <title>暗黙のリソース消費について</title>
-   <para>暗黙のうちに消費され、実行環境によって異なるリソースが存在することに注意してください。これにはたとえば、ライブラリやカーネル内のデータ構造のほか、利用しているユーティリティの fork() 処理の振る舞い、計算の効率性などがあります。このようなことから、実行環境を変えた場合は、リソース制限を再計算する必要があります。</para>
-  </note>
+    <para>複数の cgroup にプロセスをまとめることで、 cgroup ごとの資源消費データを取得できるようになります。</para>
 
-  <para>cgroup に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
+    <para>このような機能をアカウンティングと呼びますが、この機能自身にも小さいながらオーバーヘッドが存在しています。このオーバーヘッドはその中での処理内容にも依存しますが、特定の 1 つのユニットに対してアカウンティングを有効にすると、同じスライスに含まれる全てのユニットだけでなく、親スライスやそこに直接含まれるユニットに対しても、この機能が有効化されることに注意してください。</para>
+
+    <para>ユニット単位でアカウンティングを有効化したい場合は <literal>MemoryAccounting=</literal> のようなディレクティブを使用することができます。全てのユニットに対して有効化したい場合は、 <filename>/etc/systemd/system.conf</filename> ファイル内の <literal>DefaultMemoryAccounting=</literal> ディレクティブを設定してください。設定可能なディレクティブに関する詳細は、 <command>man systemd.resource-control</command> で表示されるマニュアルページ (英語) をお読みください。</para>
+  </sect1>
+  <sect1 xml:id="sec-tuning-cgroups-usage">
+    <title>リソース制限の設定</title>
+
+    <note>
+      <title>暗黙のリソース消費について</title>
+      <para>暗黙のうちに消費され、実行環境によって異なるリソースが存在することに注意してください。これにはたとえば、ライブラリやカーネル内のデータ構造のほか、利用しているユーティリティの fork() 処理の振る舞い、計算の効率性などがあります。このようなことから、実行環境を変えた場合は、リソース制限を再計算する必要があります。</para>
+    </note>
+
+    <para>cgroup に対する制限は、 <command>systemctl set-property</command> コマンドで設定します。書式は下記のとおりです:</para>
 
 <screen>&prompt.root;<command>systemctl set-property [--runtime] <replaceable>名前</replaceable> <replaceable>プロパティ_1</replaceable>=<replaceable>値</replaceable> [<replaceable>プロパティ_2</replaceable>=<replaceable>値</replaceable>]</command></screen>
 
-  <para>設定値は即時に適用されます。なお、必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
+    <para>設定値は即時に適用されます。なお、必要であれば <option>--runtime</option> オプションを指定することもできます。このオプションを指定すると、再起動後には指定した制限が適用されなくなります。</para>
 
-  <para>また、 <replaceable>名前</replaceable> には &systemd; のサービス名やスコープ名、もしくはスライス名を指定します。</para>
+    <para>また、 <replaceable>名前</replaceable> には &systemd; のサービス名やスコープ名、もしくはスライス名を指定します。</para>
 
-  <para>プロパティの一覧と詳細については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
- </sect1>
- <sect1 xml:id="sec-tuning-cgroups-tasksmax">
-  <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
+    <para>プロパティの一覧と詳細については、 <command>man systemd.resource-control</command> で表示されるマニュアルページをお読みください。</para>
+  </sect1>
+  <sect1 xml:id="sec-tuning-cgroups-tasksmax">
+    <title><literal>TasksMax</literal> を利用した fork ボムの防止</title>
 
-  <para>&systemd; では、ユニットごとやスライスごとにタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値が設定されています (カーネル全体での制限 (詳しくは <command>/usr/sbin/sysctl kernel.pid_max</command> を参照) に対して 15% に設定しています) 。また、各ユーザのスライスはカーネル全体での制限の 33% になっています。ただし、 &productname; では異なる設定になっています。</para>
+    <para>&systemd; では、ユニットごとやスライスごとにタスク数の制限を設定することができます。 &systemd; の提供元では、ユニットごとのタスク数制限の既定値が設定されています (カーネル全体での制限 (詳しくは <command>/usr/sbin/sysctl kernel.pid_max</command> を参照) に対して 15% に設定しています) 。また、各ユーザのスライスはカーネル全体での制限の 33% になっています。ただし、 &productname; では異なる設定になっています。</para>
 
-  <sect2 xml:id="sec-tasksmax-defaults">
-   <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
-   <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename os="sles;sled;slemicro">/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf</filename> <filename os="osuse">/usr/lib/systemd/system.conf.d/__20-defaults-SUSE.conf</filename> には、下記のような設定が書かれています:</para>
+    <sect2 xml:id="sec-tasksmax-defaults">
+      <title>現時点での既定の <literal>TasksMax</literal> 値の検出</title>
+      <para>しかしながら、全ての用途に対して単一の制限を適用するのは現実的ではありません。 &productname; では、システムユニットやユーザスライスに対する提供元の既定値を上書きするための独自設定ファイルが 2 つ用意され、いずれも <literal>infinity</literal> に設定されています。 <filename os="sles;sled;slemicro">/usr/lib/systemd/system.conf.d/__25-defaults-SLE.conf</filename> <filename os="osuse">/usr/lib/systemd/system.conf.d/__20-defaults-SUSE.conf</filename> には、下記のような設定が書かれています:</para>
 <screen>
 [Manager]
 DefaultTasksMax=infinity
 </screen>
-   <para>もう 1 つの存在である <filename os="sles;sled;slemicro">/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf </filename> <filename os="osuse">/usr/lib/systemd/system/user-.slice.d/10-defaults.conf </filename> には、下記のような設定が書かれています:</para>
+      <para>もう 1 つの存在である <filename os="sles;sled;slemicro">/usr/lib/systemd/system/user-.slice.d/25-defaults-SLE.conf </filename> <filename os="osuse">/usr/lib/systemd/system/user-.slice.d/10-defaults.conf </filename> には、下記のような設定が書かれています:</para>
 <screen>[Slice]
 TasksMax=infinity
 </screen>
-   <para>DefaultTasksMax の値を確認するには、 <command>systemctl</command> を下記のように入力して実行します:</para>
+      <para>DefaultTasksMax の値を確認するには、 <command>systemctl</command> を下記のように入力して実行します:</para>
 <screen>&prompt.user;<command>systemctl show --property DefaultTasksMax</command>
 DefaultTasksMax=infinity</screen>
-   <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、システムのクラッシュを防ぐために必要であれば設定を変更してください。</para>
-  </sect2>
+      <para><literal>infinity</literal> は無制限の意味です。特に要件がなければ既定値を変更する必要はありませんが、システムのクラッシュを防ぐために必要であれば設定を変更してください。</para>
+    </sect2>
 
-  <sect2 xml:id="sec-edit-taskmax-default">
-   <title><literal>DefaultTasksMax</literal> 値の設定</title>
-   <para>グローバルな <literal>DefaultTasksMax</literal> の値を変更したい場合は、設定を上書きするための新しい設定ファイル <filename>/etc/systemd/system.conf.d/90-system-tasksmax.conf</filename> を作成して対応してください。この設定ファイルには、下記のような内容を記述します (下記の例では、 systemd のユニットごとに最大 256 個までのタスク制限を設定します):</para>
+    <sect2 xml:id="sec-edit-taskmax-default">
+      <title><literal>DefaultTasksMax</literal> 値の設定</title>
+      <para>グローバルな <literal>DefaultTasksMax</literal> の値を変更したい場合は、設定を上書きするための新しい設定ファイル <filename>/etc/systemd/system.conf.d/90-system-tasksmax.conf</filename> を作成して対応してください。この設定ファイルには、下記のような内容を記述します (下記の例では、 systemd のユニットごとに最大 256 個までのタスク制限を設定します):</para>
 <screen>
 [Manager]
 DefaultTasksMax=256
 </screen>
-   <para>新しい設定を読み込んで、設定が反映されたことを確認します:</para>
+      <para>新しい設定を読み込んで、設定が反映されたことを確認します:</para>
 <screen>&prompt.sudo;<command>systemctl daemon-reload</command>
 &prompt.user;<command>systemctl show --property DefaultTasksMax</command>
 DefaultTasksMax=256
 </screen>
-   <para>設定値はお使いのシステムの要件に合わせて指定してください。また、特定のサービスに限定して制限を高くすることもできます。たとえば MariaDB で設定を変更したい場合、まずは現在の設定値を確認します:</para>
+      <para>設定値はお使いのシステムの要件に合わせて指定してください。また、特定のサービスに限定して制限を高くすることもできます。たとえば MariaDB で設定を変更したい場合、まずは現在の設定値を確認します:</para>
 <screen>
 &prompt.user;<command>systemctl status mariadb.service</command>
   ● mariadb.service - MariaDB database server
@@ -137,7 +133,7 @@ DefaultTasksMax=256
    CGroup: /system.slice/mariadb.service
            └─11845 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
 </screen>
-   <para>Tasks 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。</para>
+      <para>Tasks 以下には現在動作中のタスク数 (30 個) と上限 (256 個) が示されています。負荷の高いデータベースシステムとしては不十分な値であることから、たとえば MariaDB のみを 8192 個までに拡大してみることにします。</para>
 <screen>&prompt.sudo;<command>systemctl set-property mariadb.service TasksMax=8192</command>
 &prompt.user;<command>systemctl status mariadb.service</command>
 ● mariadb.service - MariaDB database server
@@ -155,79 +151,71 @@ DefaultTasksMax=256
    CGroup: /system.slice/mariadb.service
            └─3452 /usr/sbin/mysqld --defaults-file=/etc/my.cnf --user=mysql
 </screen>
-   <para><command>systemctl set-property</command> コマンドは、 <filename>/etc/systemd/system/mariadb.service.d/50-TasksMax.conf</filename> という名前の上書き用設定ファイルを作成して、新しい制限を設定します。ここには既存のユニットファイルに対する上書き値のみを保存します。もちろん 8192 でなくてもかまいません。お使いのシステムの負荷状況に合わせて設定してください。</para>
-  </sect2>
+      <para><command>systemctl set-property</command> コマンドは、 <filename>/etc/systemd/system/mariadb.service.d/50-TasksMax.conf</filename> という名前の上書き用設定ファイルを作成して、新しい制限を設定します。ここには既存のユニットファイルに対する上書き値のみを保存します。もちろん 8192 でなくてもかまいません。お使いのシステムの負荷状況に合わせて設定してください。</para>
+    </sect2>
 
-  <sect2>
-   <title>ユーザに対する既定の <literal>TasksMax</literal> 制限</title>
-   <para>ユーザに対する既定の制限値は高めに設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
+    <sect2>
+      <title>ユーザに対する既定の <literal>TasksMax</literal> 制限</title>
+      <para>ユーザに対する既定の制限値は高めに設定されています。これは、ユーザセッションではより多くのリソースを必要とするためです。独自の制限を設定したい場合は、 <filename>/etc/systemd/system/user-.slice.d/40-user-taskmask.conf</filename> のような設定ファイルを作成し、その中に設定値を記述してください。下記の例では、タスクの最大値を 16284 に設定しています:</para>
 <screen>
 [Slice]
 TasksMax=16284
 </screen>
-   <note>
-    <title>ファイル名の冒頭に付与する数値について</title>
-    <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <xref linkend="sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
-   </note>
-   <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
+      <note>
+        <title>ファイル名の冒頭に付与する数値について</title>
+        <para>上書き用の設定ファイルを作成する場合、そのファイル名の冒頭には数値を指定する必要があります。その数値の設定方法に関する詳細は、 <xref linkend="sec-boot-systemd-custom-drop-in"/> をお読みください。</para>
+      </note>
+      <para>あとは systemd に対して設定値の再読み込みを指示し、設定が変更されたことを確認します:</para>
 <screen>&prompt.sudo;<command>systemctl daemon-reload</command>
 &prompt.user;<command>systemctl show --property TasksMax user-1000.slice</command>
 TasksMax=16284
 </screen>
-   <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
-   <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
-  </sect2>
- </sect1>
+      <para>具体的にどのような設定値にすべきかについては、システムの用途と搭載されているリソースのほか、他のリソース設定によっても異なります。 <literal>TasksMax</literal> の値が少なすぎる場合は <emphasis>Failed to fork (Resources temporarily unavailable)</emphasis> (fork に失敗した (リソースが一時的に利用できなくなっている)) や <emphasis>Can't create thread to handle new connection</emphasis> (新しい接続を処理するためのスレッドが作成できない), <emphasis>Error: Function call 'fork' failed with error code 11, 'Resource temporarily unavailable'</emphasis> (エラーコード 11 (リソースが一時的に利用できなくなっている) で fork の関数呼び出しが失敗した) などのエラーが発生します。</para>
+      <para>systemd でのシステムリソースの制限の設定方法について、詳しくは<literal>systemd.resource-control (5)</literal> をお読みください。</para>
+    </sect2>
+  </sect1>
+  <!-- BEGIN NEW VERSION -->
+  <sect1 xml:id="sec-control-io-cgroups">
+    <title>cgroups と I/O 制御の併用</title>
 
-<!-- BEGIN NEW VERSION -->
-<sect1 xml:id="sec-control-io-cgroups">
-<title>cgroups と I/O 制御の併用</title>
-<para>本章では、 Linux カーネルのブロック I/O コントローラに対して、 I/O 操作の優先順位を設定したり、負荷制限を行ったりするための方法を説明しています。この仕組みにより、 systemd が提供する cgroup の仕組みをさらに効果的なものにすることができますが、 I/O の制御によって陥りやすい落とし穴もまた存在しています。</para>
+    <para>本章では、 Linux カーネルのブロック I/O コントローラに対して、 I/O 操作の優先順位を設定したり、負荷制限を行ったりするための方法を説明しています。この仕組みにより、 systemd が提供する cgroup の仕組みをさらに効果的なものにすることができますが、 I/O の制御によって陥りやすい落とし穴もまた存在しています。</para>
 
-<sect2 xml:id="sec-cgroups-prerequisites">
-<title>事前要件</title>
-<para>ここではまず、システムを設定する前の準備について説明しています。これらはいずれも、動作中に変更できるようなものではないためです。</para>
-
-<sect3 xml:id="sec-cgroups-filesystems">
-<title>ファイルシステム</title>
-<para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 &productname; では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
-   <itemizedlist mark="bullet" spacing="normal">
-           <listitem>
-     <para>Btrfs (v4.3)</para>
-      </listitem>
-           <listitem>
-     <para>Ext4 (v4.3)</para>
-      </listitem>
-           <listitem>
-     <para>XFS (v5.3)</para>
-      </listitem>
-   </itemizedlist>
-<para>&productname;&nbsp;15 <phrase os="sles;sled">&nbsp;SP3</phrase> <phrase os="osuse">.3</phrase> の時点では、上記のファイルシステムのいずれかを使用することができます。</para>
-</sect3>
-
-<sect3 xml:id="sec-cgroups-unified-hierarchy">
-<title>統合型 cgroup 階層構造</title>
-<para>I/O の書き戻し処理を適切に集計できるようにするため、 I/O とメモリコントローラの cgroup 階層構造を同じに設定するほか、 cgroup v2 I/O コントローラを使用する必要もあります。これらを組み合わせることで、 <emphasis>統合型の</emphasis> cgroup 階層構造を持つことになります。 &productname; の場合、 <option>systemd.unified_cgroup_hierarchy=1</option> をカーネルのコマンドラインオプションに指定することで、明示的に設定を行うことができます。</para>
-</sect3>
-
-<sect3 xml:id="sec-cgroups-block-io-scheduler">
-<title>ブロック I/O スケジューラ</title>
-<para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されていますが、ここでは BFQ のみを説明しています。それは、特定のデバイスに対して負荷制御を行う場合、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
+    <sect2 xml:id="sec-cgroups-prerequisites">
+      <title>事前要件</title>
+      <para>ここではまず、システムを設定する前の準備について説明しています。これらはいずれも、動作中に変更できるようなものではないためです。</para>
+      <sect3 xml:id="sec-cgroups-filesystems">
+        <title>ファイルシステム</title>
+        <para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 &productname; では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
+        <itemizedlist mark="bullet" spacing="normal">
+          <listitem>
+            <para>Btrfs (v4.3)</para>
+          </listitem>
+          <listitem>
+            <para>Ext4 (v4.3)</para>
+          </listitem>
+          <listitem>
+            <para>XFS (v5.3)</para>
+          </listitem>
+        </itemizedlist>
+        <para>&productname;&nbsp;15 <phrase os="sles;sled">&nbsp;SP3</phrase> <phrase os="osuse">.3</phrase> の時点では、上記のファイルシステムのいずれかを使用することができます。</para>
+      </sect3>
+      <sect3 xml:id="sec-cgroups-block-io-scheduler">
+        <title>ブロック I/O スケジューラ</title>
+        <para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されていますが、ここでは BFQ のみを説明しています。それは、特定のデバイスに対して負荷制御を行う場合、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
 <screen>
 &prompt.user;<command>cat /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 mq-deadline kyber bfq [none]
 </screen>
-<para>スケジューラを BFQ に変更します:</para>
+        <para>スケジューラを BFQ に変更します:</para>
 <screen>
  &prompt.root;<command>echo bfq &gt; /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 </screen>
-<para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに適切な方法は、 udev のルール設定です。ただし &productname; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください。</para>
-</sect3>
-
-<sect3 xml:id="sec-cgroups-hierarchy">
-<title>cgroup の階層構造の仕組み</title>
-<para>通常、全ての処理は階層構造内のルート (根幹) に位置し、互いに競合する関係になります。処理が cgroup の階層構造内に配布されると、兄弟姉妹関係の cgroup 間でのみ競合が発生します。これにより、負荷制御は全ての子孫が持つ帯域を集約することになりますので、これによって I/O の負荷制御が実現されます (下記の図を参照) 。</para>
-<!-- this is not code but a picture -->
+        <para>ここではパーティションではなく、ディスクデバイスを指定しなければなりません。また、この設定を適用するのに適切な方法は、 udev のルール設定です。ただし &productname; の場合、回転型のディスクドライブに対しては既に BFQ が有効化されていることに注意してください。</para>
+      </sect3>
+      <sect3 xml:id="sec-cgroups-hierarchy">
+        <title>cgroup の階層構造の仕組み</title>
+        <para>通常、全ての処理は階層構造内のルート (根幹) に位置し、互いに競合する関係になります。処理が cgroup の階層構造内に配布されると、兄弟姉妹関係の cgroup 間でのみ競合が発生します。これにより、負荷制御は全ての子孫が持つ帯域を集約することになりますので、これによって I/O の負荷制御が実現されます (下記の図を参照) 。</para>
+        <!-- this is not code but a picture -->
 <screen>
 r
 `-  a      IOWeight=100
@@ -235,79 +223,112 @@ r
     `-  d  IOWeight=100
 `- [b]     IOWeight=200
 </screen>
-<para>I/O は cgroups の c と b からのみ発生するものとすると、 c には高い優先順位が付けられているものの、 b との比較では低いため、低い優先順位として扱われます。</para>
-</sect3>
-</sect2>
+        <para>I/O は cgroups の c と b からのみ発生するものとすると、 c には高い優先順位が付けられているものの、 b との比較では低いため、低い優先順位として扱われます。</para>
+      </sect3>
+    </sect2>
 
-<sect2 xml:id="sec-cgroups-configure-control-quantities">
-<title>制御量の設定</title>
-<para>長期間動作するようなサービスに対しては、値を恒久的に適用することができます。</para>
+    <sect2 xml:id="sec-cgroups-configure-control-quantities">
+      <title>制御量の設定</title>
+      <para>長期間動作するようなサービスに対しては、値を恒久的に適用することができます。</para>
 <screen>
 &prompt.sudo;<command>systemctl set-property <replaceable>fast.service</replaceable> IOWeight=<replaceable>400</replaceable></command>
 &prompt.sudo;<command>systemctl set-property <replaceable>slow.service</replaceable> IOWeight=<replaceable>50</replaceable></command>
 &prompt.sudo;<command>systemctl set-property <replaceable>throttled.service</replaceable> IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>"</command>
 </screen>
-
-<para>それ以外にも、個別のコマンドに対して I/O 制御を適用することもできます。たとえば下記のようになります:</para>
+      <para>それ以外にも、個別のコマンドに対して I/O 制御を適用することもできます。たとえば下記のようになります:</para>
 <screen>
 &prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>400</replaceable> <replaceable>高い優先順位で実行するコマンド</replaceable></command>
 &prompt.sudo;<command>systemd-run --scope -p IOWeight=<replaceable>50</replaceable> <replaceable>低い優先順位で実行するコマンド</replaceable></command>
 &prompt.sudo;<command>systemd-run --scope -p IOReadBandwidthMax="<replaceable>/dev/sda 1M</replaceable>" <replaceable>dd if=/dev/sda of=/dev/null bs=1M count=10</replaceable></command>
 </screen>
-</sect2>
+    </sect2>
 
-<sect2 xml:id="sec-cgroups-control-behavior">
-<title>I/O 制御の動作説明</title>
-<para>下記は I/O 制御の動作と、異なる状況下において何を期待すべきかについて説明しています。</para>
-<itemizedlist>
-<listitem>
-<para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
-</listitem>
-<listitem>
-<para>systemd ではより厳密な BFQ 調整のため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比も異なる場合があります。</para>
-</listitem>
-<listitem>
-<para>書き戻しの処理は sysctl で設定したグローバル値 ( <filename>vm.dirty_background_ratio</filename> および <filename>vm.dirty_ratio</filename> ) のほか、 dirty ページの量に依存して動作を行います。また、個別の cgroup に対して dirty 制限が分散されるような場合、それぞれの cgroup に対するメモリ制限にも影響を受けることがあります。これによって、それら cgroup の I/O 集中度に影響がある場合があります。</para>
-</listitem>
-<listitem>
-<para>全てのストレージが等価でないことにも注意してください。 I/O 制御は I/O スケジューラの階層で行われるため、その先にスケジューリングを行わないデバイスが存在しているような場合には異なる動作になります。たとえば複数の物理デバイスを利用した論理ボリュームのデバイスマッパーや MD RAID 、そして btrfs の RAID などがそれに該当します。これらのデバイスに対して I/O 制御を行う場合は、注意してお使いください。</para>
-</listitem>
-<listitem>
-<para>読み込みと書き込みのそれぞれに対して I/O 制御を行うような設定は提供されていません。</para>
-</listitem>
-<listitem>
-<para>I/O 制御の制限は相互に作用するポリシーのうちの 1 つであることに注意してください。ただし、適切なリソース設計をしていれば、問題なく動作するはずのものです。</para>
-</listitem>
-<listitem>
-<para>I/O デバイスの帯域は I/O パス内での共有資源というだけではないことに注意してください。I/O 制御が一定の帯域を保障することを目指している場合、グローバルなファイルシステム構造も考慮する必要があります。場合によっては優先順位が効果を発揮しない場合があるほか、たとえば優先順位の高い cgroup が遅い cgroup を待ち合わせる必要が生じてしまうことにより、優先順位が逆転する可能性すらあることに注意してください。</para>
-</listitem>
-<listitem>
-<para>ここまではファイルシステムデータに対する明示的な I/O 制御について説明してきましたが、スワップデバイスの入出力に対する制御も行うことができます。このような要件が発生した場合は、メモリの配置 (もしくはメモリ制限) を設定することを検討してください。</para>
-</listitem>
-</itemizedlist>
-</sect2>
-</sect1>
-<!-- END NEW VERSION -->
+    <sect2 xml:id="sec-cgroups-control-behavior">
+      <title>I/O 制御の動作説明</title>
+      <para>下記は I/O 制御の動作と、異なる状況下において何を期待すべきかについて説明しています。</para>
+      <itemizedlist>
+        <listitem>
+          <para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
+        </listitem>
+        <listitem>
+          <para>systemd ではより厳密な BFQ 調整のため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比も異なる場合があります。</para>
+        </listitem>
+        <listitem>
+          <para>書き戻しの処理は sysctl で設定したグローバル値 ( <filename>vm.dirty_background_ratio</filename> および <filename>vm.dirty_ratio</filename> ) のほか、 dirty ページの量に依存して動作を行います。また、個別の cgroup に対して dirty 制限が分散されるような場合、それぞれの cgroup に対するメモリ制限にも影響を受けることがあります。これによって、それら cgroup の I/O 集中度に影響がある場合があります。</para>
+        </listitem>
+        <listitem>
+          <para>全てのストレージが等価でないことにも注意してください。 I/O 制御は I/O スケジューラの階層で行われるため、その先にスケジューリングを行わないデバイスが存在しているような場合には異なる動作になります。たとえば複数の物理デバイスを利用した論理ボリュームのデバイスマッパーや MD RAID 、そして btrfs の RAID などがそれに該当します。これらのデバイスに対して I/O 制御を行う場合は、注意してお使いください。</para>
+        </listitem>
+        <listitem>
+          <para>読み込みと書き込みのそれぞれに対して I/O 制御を行うような設定は提供されていません。</para>
+        </listitem>
+        <listitem>
+          <para>I/O 制御の制限は相互に作用するポリシーのうちの 1 つであることに注意してください。ただし、適切なリソース設計をしていれば、問題なく動作するはずのものです。</para>
+        </listitem>
+        <listitem>
+          <para>I/O デバイスの帯域は I/O パス内での共有資源というだけではないことに注意してください。I/O 制御が一定の帯域を保障することを目指している場合、グローバルなファイルシステム構造も考慮する必要があります。場合によっては優先順位が効果を発揮しない場合があるほか、たとえば優先順位の高い cgroup が遅い cgroup を待ち合わせる必要が生じてしまうことにより、優先順位が逆転する可能性すらあることに注意してください。</para>
+        </listitem>
+        <listitem>
+          <para>ここまではファイルシステムデータに対する明示的な I/O 制御について説明してきましたが、スワップデバイスの入出力に対する制御も行うことができます。このような要件が発生した場合は、メモリの配置 (もしくはメモリ制限) を設定することを検討してください。</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
 
- <sect1>
-  <title>さらなる情報</title>
+    <sect2 xml:id="sec-cgroups-user-sessions">
+      <title>Resource control in user sessions</title>
+      <para>
+        In order to apply cgroup resource control within user sessions,
+        controllers must be delegated user instances of &systemd;.
+        &productname; ships &systemd; default configuration that delegates
+        <emphasis>no</emphasis> controllers.
+      </para>
+      <para>
+        You can use drop-in files to change the set of delegated controllers.
+        For instance,
+        <filename>/etc/systemd/system/user@.service.d/60-delegate.conf</filename>
+        adds controllers to all users, while
+        <filename>/etc/systemd/system/user@<replaceable>uid</replaceable>.service.d/60-delegate.conf</filename>
+        adds controllers only to particular user. The content of the file
+        should be like following:
+      </para>
+<screen>
+[Service]
+Delegate=pids memory
+</screen>
+      <para>
+        Both the &systemd; instance and affected user instance must be notified
+        to reload the new configuration.
+      </para>
+<screen>&prompt.sudo;<command>systemctl daemon-reload</command>
+&prompt.user;<command>systemctl show --property TasksMax user-1000.slice</command>
+TasksMax=16284
+</screen>
+      <para>
+        Alternatively, the affected user may log out and log in instead of the
+        second line to restart their user instance.
+      </para>
+    </sect2>
+  </sect1>
+  <!-- END NEW VERSION -->
+  <sect1>
+    <title>さらなる情報</title>
 
-  <itemizedlist mark="bullet" spacing="normal">
-   <listitem>
-    <para>カーネルのドキュメンテーション (<systemitem>kernel-source</systemitem> パッケージ内):  <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v1</filename> および <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v2.rst</filename> の各ファイル</para>
-   </listitem>
-   <listitem>
-    <para><command>man systemd.resource-control</command></para>
-   </listitem>
-   <listitem>
-    <para><link xlink:href="https://lwn.net/Articles/604609/"/>: Brown, Neil: Control Groups Series (2014 年, 7 部構成)</para>
-   </listitem>
-   <listitem>
-    <para><link xlink:href="https://lwn.net/Articles/243795/"/>: Corbet, Jonathan: Controlling memory use in containers (2007 年)</para>
-   </listitem>
-   <listitem>
-    <para><link xlink:href="https://lwn.net/Articles/236038/"/>: Corbet, Jonathan: Process containers (2007 年)</para>
-   </listitem>
-  </itemizedlist>
- </sect1>
+    <itemizedlist mark="bullet" spacing="normal">
+      <listitem>
+        <para>カーネルのドキュメンテーション (<systemitem>kernel-source</systemitem> パッケージ内):  <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v1</filename> および <filename>/usr/src/linux/Documentation/admin-guide/cgroup-v2.rst</filename> の各ファイル</para>
+      </listitem>
+      <listitem>
+        <para><command>man systemd.resource-control</command></para>
+      </listitem>
+      <listitem>
+        <para><link xlink:href="https://lwn.net/Articles/604609/"/>: Brown, Neil: Control Groups Series (2014 年, 7 部構成)</para>
+      </listitem>
+      <listitem>
+        <para><link xlink:href="https://lwn.net/Articles/243795/"/>: Corbet, Jonathan: Controlling memory use in containers (2007 年)</para>
+      </listitem>
+      <listitem>
+        <para><link xlink:href="https://lwn.net/Articles/236038/"/>: Corbet, Jonathan: Process containers (2007 年)</para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
 </chapter>
