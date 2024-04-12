@@ -38,24 +38,21 @@
         <para>統合型: コントローラを含めて v2 階層構造を使用する構成</para>
       </listitem>
       <listitem>
-        <para>ハイブリッド型: コントローラ以外は v2, コントローラは v1 の階層構造を使用する構成</para>
+        <para>ハイブリッド型: コントローラ以外は v2, コントローラは v1 の階層構造を使用する構成 (廃止予定)</para>
       </listitem>
     </itemizedlist>
 
-    <para>現時点での既定のモードはハイブリッド型です。これにより、必要なアプリケーションに後方互換性を提供することになります。なお、統合型 v2 階層構造の場合のみ、下記の機能が追加で提供されます:</para>
+    <para>既定のモードは統合型です。アプリケーション側の要件に応じて後方互換性を提供するハイブリッド型もあります。</para>
 
     <para>いずれかのモードのみを設定できます。</para>
 
     <sect2 xml:id="sec-cgroups-hybrid-hierarchy">
-      <title>統合型 cgroup 階層構造</title>
+      <title>ハイブリッド型 cgroup 階層構造</title>
       <note>
-        <title>Deprecation notice</title>
-        <para>
-          cgroup v1 has been deprecated, and might be removed in a future
-          release.
-        </para>
+        <title>廃止予定について</title>
+        <para>cgroup v1 は廃止予定になっています。将来のバージョンで削除される予定です。</para>
       </note>
-      <para>統合型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=1</option> を追加してください。 &grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
+      <para>ハイブリッド型のコントロールグループ階層構造を有効化したい場合は、 &grub; ブートローダの設定で、カーネルのコマンドラインパラメータに <option>systemd.unified_cgroup_hierarchy=0</option> を追加してください。 &grub; の設定方法に関する詳細は、 <xref linkend="cha-grub2"/> をお読みください。</para>
     </sect2>
   </sect1>
   <sect1 xml:id="sec-tuning-cgroups-accounting">
@@ -182,10 +179,10 @@ TasksMax=16284
 
     <sect2 xml:id="sec-cgroups-prerequisites">
       <title>事前要件</title>
-      <para>ここではまず、システムを設定する前の準備について説明しています。これらはいずれも、動作中に変更できるようなものではないためです。</para>
+      <para>ここではまず、システムを設計したり設定したりする前の準備について説明しています。これらはいずれも、動作中に変更できるようなものではないためです。</para>
       <sect3 xml:id="sec-cgroups-filesystems">
         <title>ファイルシステム</title>
-        <para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 &productname; では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docscjs: that slide is old! We must find something newer.--></para>
+        <para>まずは cgroup のライトバック機能に対応したファイルシステムを使用する必要があります (対応したファイルシステムを使用しないと、ライトバックチャージングと呼ばれる機能が使用できないためです) 。 &productname; では下記のファイルシステムに対してサポートを提供しています:<!-- [2] is https://www.susecon.com/doc/2015/sessions/TUT20066.pdf, slide 7, maybe there's better SLES docs cjs: that slide is old! We must find something newer.--></para>
         <itemizedlist mark="bullet" spacing="normal">
           <listitem>
             <para>Btrfs (v4.3)</para>
@@ -201,7 +198,7 @@ TasksMax=16284
       </sect3>
       <sect3 xml:id="sec-cgroups-block-io-scheduler">
         <title>ブロック I/O スケジューラ</title>
-        <para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースのモデルの 2 つの実装が提供されていますが、ここでは BFQ のみを説明しています。それは、特定のデバイスに対して負荷制御を行う場合、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
+        <para>負荷制御のポリシーはスタック内の高い箇所で実装されているため、それ以外の調整は特に行う必要はありません。また、 I/O 制御のポリシーとしては、 BFQ とコストベースモデルの 2 つの実装が提供されていますが、ここでは BFQ のみを説明しています。これは、特定のデバイスに対して負荷制御を行う場合、スケジューラとして BFQ を使用するのが最適であるためです。まずは現時点で使用しているスケジューラを判断します:</para>
 <screen>
 &prompt.user;<command>cat /sys/class/block/<replaceable>sda</replaceable>/queue/scheduler</command>
 mq-deadline kyber bfq [none]
@@ -248,7 +245,7 @@ r
       <para>下記は I/O 制御の動作と、異なる状況下において何を期待すべきかについて説明しています。</para>
       <itemizedlist>
         <listitem>
-          <para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (ページキャッシュを介して書き戻す処理を含みます) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
+          <para>I/O 制御は直接的な I/O 操作 (ページキャッシュを迂回する操作) に対しては最適な動作を提供しますが、実際の I/O と呼び出し元が独立して動作するような場合 (一般にページキャッシュを介して書き戻す処理) は様々な振る舞いになることに注意してください。たとえば遅延型の I/O 制御を使用しているような場合や、全く I/O 制御を行わなかった場合などがそれに該当します。具体的にはごく僅かな帯域超過や、互いに完全に独立した負荷などの場合、 I/O が全く同じタイミングで送信されることになりますので、帯域を飽和させる結果になってしまいます。これらの理由により、最終的に生成された I/O 帯域が完全には設定した重み付けにならないことがあります。</para>
         </listitem>
         <listitem>
           <para>systemd ではより厳密な BFQ 調整のため、設定した重み付けを規模に応じて処理します。そのため、最終的な帯域比も異なる場合があります。</para>
@@ -260,7 +257,7 @@ r
           <para>全てのストレージが等価でないことにも注意してください。 I/O 制御は I/O スケジューラの階層で行われるため、その先にスケジューリングを行わないデバイスが存在しているような場合には異なる動作になります。たとえば複数の物理デバイスを利用した論理ボリュームのデバイスマッパーや MD RAID 、そして btrfs の RAID などがそれに該当します。これらのデバイスに対して I/O 制御を行う場合は、注意してお使いください。</para>
         </listitem>
         <listitem>
-          <para>読み込みと書き込みのそれぞれに対して I/O 制御を行うような設定は提供されていません。</para>
+          <para>また、読み込みと書き込みのそれぞれに対して I/O 制御を行うような設定は提供されていません。</para>
         </listitem>
         <listitem>
           <para>I/O 制御の制限は相互に作用するポリシーのうちの 1 つであることに注意してください。ただし、適切なリソース設計をしていれば、問題なく動作するはずのものです。</para>
@@ -275,38 +272,19 @@ r
     </sect2>
 
     <sect2 xml:id="sec-cgroups-user-sessions">
-      <title>Resource control in user sessions</title>
-      <para>
-        In order to apply cgroup resource control within user sessions,
-        controllers must be delegated user instances of &systemd;.
-        &productname; ships &systemd; default configuration that delegates
-        <emphasis>no</emphasis> controllers.
-      </para>
-      <para>
-        You can use drop-in files to change the set of delegated controllers.
-        For instance,
-        <filename>/etc/systemd/system/user@.service.d/60-delegate.conf</filename>
-        adds controllers to all users, while
-        <filename>/etc/systemd/system/user@<replaceable>uid</replaceable>.service.d/60-delegate.conf</filename>
-        adds controllers only to particular user. The content of the file
-        should be like following:
-      </para>
+      <title>ユーザセッション内での資源制御</title>
+      <para>ユーザセッション内で cgroup の資源制御を適用したい場合は、 &systemd; のユーザインスタンスに対してコントローラの委任を行う必要があります。なお、 &productname; の既定の設定では、コントローラの委任は設定されて <emphasis>いません</emphasis> 。</para>
+      <para>コントローラの委任を実施したい場合は、ドロップイン・ファイルを利用して設定してください。たとえば <filename>/etc/systemd/system/user@.service.d/60-delegate.conf</filename> のようなファイルを作成すれば、全てのユーザに対してコントローラの委任を行うことができますし、 <filename>/etc/systemd/system/user@<replaceable>uid</replaceable>.service.d/60-delegate.conf</filename> のようなファイルを作成すれば、特定のユーザに対してのみ委任を実施することができます。それぞれのファイルの内容は下記のように記述します:</para>
 <screen>
 [Service]
 Delegate=pids memory
 </screen>
-      <para>
-        Both the &systemd; instance and affected user instance must be notified
-        to reload the new configuration.
-      </para>
-<screen>&prompt.sudo;<command>systemctl daemon-reload</command>
-&prompt.user;<command>systemctl show --property TasksMax user-1000.slice</command>
-TasksMax=16284
+      <para>設定が終わったら、 &systemd; のインスタンスとユーザインスタンスに対して、変更を通知して再読み込みを実施します。</para>
+<screen>
+&prompt.sudo;<command>systemctl daemon-reload</command>
+&prompt.user;<command>systemctl --user daemon-reexec</command>
 </screen>
-      <para>
-        Alternatively, the affected user may log out and log in instead of the
-        second line to restart their user instance.
-      </para>
+      <para>2 行目を実行する以外にも、対象のユーザがいったんログアウトしてログインしなおし、ユーザインスタンスを再起動してもかまいません。</para>
     </sect2>
   </sect1>
   <!-- END NEW VERSION -->
