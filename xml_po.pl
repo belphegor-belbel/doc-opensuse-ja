@@ -9,7 +9,7 @@ use utf8;
 my @SkipNodes =
   ( "option", "replaceable", "command", "emphasis", "package",
   "literal", "quote", "filename", "link", "systemitem", "xref",
-  "menuchoice", "guimenu", "phrase", "remark", "envar", "keycombo",
+  "menuchoice", "guimenu", "guilabel", "phrase", "remark", "envar", "keycombo",
   "keycap", "co", "prompt", "varname", "citetitle", "tag", "superscript",
   "constant", "email", "trademark", "productname", "productnumber", "uri",
   "parameter", "indexterm", "primary", "secondary", "tertiary", "screen", "function",
