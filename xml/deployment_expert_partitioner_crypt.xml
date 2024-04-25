@@ -4,7 +4,7 @@
 %entities;
 ]>
 <sect1 xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="deployment-encryption" os="sles;sled;osuse">
-  <title>Device encryption</title>
+  <title>デバイスの暗号化</title>
 
   <info>
     <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
@@ -13,218 +13,108 @@
     </dm:docmanager>
   </info>
 
-  <para>
-    Linux Unified Key Setup (LUKS) is the standard for Linux disk encryption. It provides a
-    standardized on-disk format and enables users to transport or migrate data seamlessly.
-  </para>
-  <para>
-    LUKS is used to encrypt block devices. The contents of the encrypted device are arbitrary, and
-    therefore any file system can be encrypted, including swap partitions. All necessary setup
-    information like encryption keys and parameters such as cipher type and key size, is stored
-    in the partition header.
-  </para>
-  <para>
-    Encryption is done with a multi-layer approach. First, the block device is encrypted using a
-    master key. Then, this master key is encrypted with each active user keys. User keys are derived
-    from passphrases, FIDO2 security keys, TPMs or smart cards. This multi-layer approach allows
-    users to change their passphrase without re-encrypting the whole block device.
-  </para>
-  <para>
-    For more information about LUKS, refer to <xref linkend="cha-configure-cryptctl"/>.
-  </para>
+  <para>Linux Unified Key Setup (LUKS) は Linux におけるディスク暗号化の標準仕様です。ディスク内の形式も標準化されているため、ユーザからはデータを円滑に転送および移行することができるようになっています。</para>
+  <para>LUKS はブロックデバイスの暗号化を行う仕組みです。暗号化されたデバイス内には任意のデータを書き込むことができますので、ファイルシステムに対する制限がありません。もちろんスワップパーティションを暗号化することもできます。また、暗号鍵や暗号化の種類、鍵のサイズ等の全ての設定情報は、パーティション内のヘッダ内に書き込まれます。</para>
+  <para>暗号化は複数階層のアプローチで実施されます。まずブロックデバイスをマスターキーで暗号化し、このマスターキーをそれぞれの有効なユーザキーで暗号化します。ユーザキーはパスフレーズのほか、 FIDO2 セキュリティキーや TPM 、スマートカードなどから生成します。このような複数階層型の仕組みにより、ディスクの暗号化をやり直すことなくパスフレーズを変更できるようになっています。</para>
+  <para>LUKS に関する詳細については、 <xref linkend="cha-configure-cryptctl"/> をお読みください。</para>
 
   <sect2 xml:id="deployment-encryption-methods">
-    <title>Encryption methods</title>
-    <para>
-      To encrypt a device, follow the instruct in <xref linkend="sec-expert-partitioner-options"/>.
-    </para>
+    <title>暗号化方式</title>
+    <para>デバイスを暗号化するには、 <xref linkend="sec-expert-partitioner-options"/> の手順に従って作業を行ってください。</para>
     <tip>
-      <title>Enabling LUKS2 support in &yast;</title>
-      <para>
-        LUKS2 encryption is supported by the &yast; Partitioner as of &sle; 15 SP4, but needs to be
-        enabled explicitly. There are two ways to do this:
-      </para>
+      <title>&yast; での LUKS2 サポートの有効化について</title>
+      <para>LUKS2 による暗号化は &sle; 15 SP4 およびそれ以降のバージョンでサポートしていますが、明示的に有効化する必要があります。具体的には下記を実施してください:</para>
       <orderedlist>
         <listitem>
-          <para>
-            At boot time by adding the parameter to <literal>YAST_LUKS2_AVAILABLE</literal> to the
-            kernel command line. For information about boot parameters, refer to <xref linkend="cha-boot-parameters"/>.
-          </para>
+          <para>まずはシステムの起動時に、カーネルのコマンドラインに対して <literal>YAST_LUKS2_AVAILABLE</literal> を追加する必要があります。起動時のパラメータについて、詳しくは <xref linkend="cha-boot-parameters"/> をお読みください。</para>
         </listitem>
         <listitem>
-          <para>
-            During installation in the &yast; configuration
-          </para>
+          <para>&yast; によるインストール時</para>
           <itemizedlist>
             <listitem>
-              <para>
-                In the graphical interface, press <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap>
-                  <keycap>Shift</keycap><keycap>C</keycap></keycombo>.
-              </para>
+              <para>グラフィカルなインターフェイスを使用している場合は、 <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap> <keycap>Shift</keycap><keycap>C</keycap></keycombo> を押します。</para>
             </listitem>
             <listitem>
-              <para>
-                In the text interface, press <keycombo><keycap>Ctrl</keycap><keycap>D</keycap></keycombo>
-                and then <keycombo><keycap>Shift</keycap><keycap>C</keycap></keycombo>.
-              </para>
+              <para>テキストインターフェイスを使用している場合は、 <keycombo><keycap>Ctrl</keycap><keycap>D</keycap></keycombo> を押してから <keycombo><keycap>Shift</keycap><keycap>C</keycap></keycombo> を押します。</para>
             </listitem>
           </itemizedlist>
-          <para>
-            Check <literal>Enable Experimental LUKS2 Encryption Support</literal> and exit the
-            configuration screen with <literal>OK</literal>.
-          </para>
+          <para><literal>実験中の LUKS2 暗号化サポートの有効化</literal> にチェックを入れ、 <literal>OK</literal> を押して設定画面を閉じます。</para>
         </listitem>
       </orderedlist>
     </tip>
-    <para>
-      If you do not enable LUKS2 support, the <guimenu>Encryption method</guimenu> selection is not
-      visible and you only need to enter the encryption password.
-    </para>
+    <para>LUKS2 差ボートを有効化しない場合、 <guimenu>暗号化方式</guimenu> の選択は表示されません。暗号化パスワードの入力のみが必要となります。</para>
     <variablelist xml:id="vl-encryption-methods">
       <varlistentry>
-        <term><guimenu>Regular LUKS1</guimenu></term>
+        <term><guimenu>通常の LUKS1</guimenu></term>
         <listitem>
-          <para>
-            This method allows to encrypt the device using LUKS1. You have to provide the encryption
-            password. Additional passwords&mdash;up to eight in total&mdash;can be added later with
-            <command>cryptsetup luksAddKey</command>.
-          </para>
+          <para>この方式を選択すると、 LUKS1 方式でデバイスを暗号化します。この場合、暗号化パスワードの入力が必要となります。また、後から <command>cryptsetup luksAddKey</command> を実行することで、追加のパスワードを最大 8 つまで追加することができます。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><guimenu>Regluar LUKS2</guimenu></term>
+        <term><guimenu>通常の LUKS2</guimenu></term>
         <listitem>
-          <para>
-            LUKS2 uses a newer version of the header format, which is resilient to corruption, and
-            supports up to 32 user keys and device labels. You have to provide the encryption password
-            and the password-based key derivation function (PBKDF) that will be used to protect
-            that passphrase (see <xref linkend="deployment-encryption-pbkdf"/>).
-          </para>
+          <para>LUKS2 は新しいヘッダ形式のバージョンで、より壊れにくい形式になっているほか、最大で 32 個までのユーザキーおよびデバイスラベルを設定することができます。また暗号化パスワードのほか、パスワードベースの鍵導出関数 (PBKDF) を設定して、パスフレーズを保護することができるようになっています (詳しくは <xref linkend="deployment-encryption-pbkdf"/> をお読みください) 。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><guimenu>Pervasive LUKS2</guimenu> (only on &zseries;)</term>
+        <term><guimenu>Pervasive LUKS2</guimenu> (&zseries; のみ)</term>
         <listitem>
-          <para>
-            This method allows to encrypt the device using LUKS2 with a master secure key processed
-            by a Crypto Express cryptographic coprocessor configured in CCA mode. If the
-            cryptographic system already contains a secure key associated to this volume, that key
-            will be used. Otherwise, a new secure key will be generated and registered in the
-            system. You need to provide an encryption password that will be used to protect the
-            access to that master key. Moreover, when there are several APQNs in the system, you can
-            select which ones to use.
-          </para>
+          <para>この方式を選択すると、 CCA モードで設定した Crypto Express 暗号化コプロセッサによって処理されたセキュアマスターキーで LUKS2 によるデバイス暗号化を実施します。なお、暗号化システム内に本ボリュームに関連づけられたセキュアキーが既に存在する場合は、その鍵を使用するようになります。存在しない場合は新しいセキュアキーが生成され、システムに登録されます。なお、マスターキーを保護するための暗号化パスワードを設定する必要があります。これに加えて、システム内に複数の APQN が存在する場合は、どれを使用するのかを選択することもできます。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><guimenu>Encryption with Volatile Random Key</guimenu> (only for swap devices)</term>
+        <term><guimenu>揮発性の乱数鍵による暗号化</guimenu> (スワップデバイスのみ)</term>
         <listitem>
-          <para>
-            This method encrypts a swap device with a randomly generated key at boot and therefor
-            does not support hibernation to hard disk. The swap device is re-encrypted on every
-            boot, and its previous content is destroyed. To avoid data loss, disable hibernation and
-            configure your system to shutdown instead.
-          </para>
-          <para>
-            In addition to the encryption key, the device label and the UUID change every time the
-            swap is re-encrypted, so neither are valid options to mount a randomly encrypted swap
-            device. Make sure the swap device is referenced by a stable name that is not subject to
-            change on every reboot in the <filename>/etc/crypttab</filename> file. For example, for
-            a swap partition it is safer to use the udev device id or path instead of the partition
-            device name, since that device name may be assigned to a different partition during the
-            next boot. If that happens, a wrong device could be encrypted instead of your swap!
-          </para>
-          <para>
-            &yast; tries to use stable names in <filename>/etc/crypttab</filename>, unless it is
-            configured to always use device names (see the <guimenu>Settings</guimenu> section of
-            the partitioner). But for some devices finding a fully stable name may not be possible.
-            Only use encryption with volatile keys if you are sure about the implications.
-          </para>
+          <para>この方式を選択すると、システムの起動時に乱数から生成された鍵を利用してスワップデバイスを暗号化するようになります。この方式を選択した場合、ハードディスクへのハイバネーションはできなくなります。スワップデバイスはシステムの起動のたびに再暗号化されるため、以前の内容には全くアクセスできなくなります。また、データ損失を避けるため、お使いのシステムでハイバネーションを無効化し、代わりにシャットダウンするように設定してください。</para>
+          <para>なお暗号鍵のほかにも、スワップデバイスの再暗号化の際にデバイスラベルと UUID が変化することにも注意してください。いずれも乱数による暗号化を実施したスワップデバイスではサポートされないオプションです。そのため、 <filename>/etc/crypttab</filename> 内では、スワップデバイスの参照に際して、起動のたびに変化しない名前を指定するようにしてください。また、パーティションのデバイス名ではシステムの起動時に名前が入れ替わることもありますので、 udev デバイス ID やパスを使用するようにしてください。万が一デバイス名が入れ替わってしまうと、予期しないデバイスを暗号化して使用することになってしまいます！</para>
+          <para>&yast; では常にデバイス名を使用するように設定した場合 (詳しくはパーティション設定内の <guimenu>設定</guimenu> 画面をご覧ください) を除き、 <filename>/etc/crypttab</filename> 内では変化しない名前を選択して設定します。ですが、デバイスの接続方式によっては、全く変化しない名前を選択できない場合もあります。揮発性の乱数鍵を利用した暗号化を使用する場合は、よく注意して設定してください。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><guimenu>Protected Swap</guimenu> (only for swap devices)</term>
+        <term><guimenu>揮発性の保護鍵による暗号化</guimenu> (スワップデバイスのみ)</term>
         <listitem>
-          <para>
-            This method encrypts a swap device with volatile protected AES key without requiring a
-            cryptographic co-processor. It is an improvement over the <literal>Encryption with
-              Volatile Random Key</literal> method and all considerations for that method still apply.
-          </para>
+          <para>この方式を選択すると、暗号化コプロセッサを使用せずに保護用の一時 AES 鍵を生成してスワップデバイスを暗号化します。これは <literal>揮発性の乱数鍵による暗号化</literal> の改善版ですが、注意すべき事項は同じです。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><guimenu>Secure Swap</guimenu> (only for swap devices)</term>
+        <term><guimenu>揮発性の保安鍵による暗号化</guimenu> (スワップデバイスのみ)</term>
         <listitem>
-          <para>
-            This method encrypts a swap device with a volatile secure AES key generated from a
-            cryptographic co-processor. It is an improvement over the <literal>Encryption with
-              Volatile Random Key</literal> method and all considerations for that method still apply.
-          </para>
+          <para>この方式を選択すると、暗号化コプロセッサを利用して保護用の一時 AES 鍵を生成してスワップデバイスを暗号化します。これは <literal>揮発性の乱数鍵による暗号化</literal> の改善版ですが、注意すべき事項は同じです。</para>
         </listitem>
       </varlistentry>
     </variablelist>
   </sect2>
 
   <sect2 xml:id="deployment-encryption-pbkdf">
-    <title>Password-based key derivation functions</title>
-    <para>
-      The password-based key derivation function (PBKDF) to use depends on the context, the hardware
-      capabilities and the needed level of compatibility with other system components:
-    </para>
+    <title>パスワードベースの鍵導出関数</title>
+    <para>パスワードベースの鍵導出関数 (PBKDF) はハードウエアの性能のほか、その他のシステムコンポーネントとの互換性要求レベルによって選択すべき項目です。</para>
     <variablelist xml:id="vl-pbkdf">
       <varlistentry>
         <term>PBKDF2</term>
         <listitem>
-          <para>
-            <literal>PBKDF2</literal> is the function that LUKS1 uses. It is defined in
-            <link xlink:href="https://tools.ietf.org/html/rfc2898">RFC 2898</link>.
-          </para>
+          <para><literal>PBKDF2</literal> は LUKS1 が使用する関数です。こちらは <link xlink:href="https://tools.ietf.org/html/rfc2898">RFC 2898</link> で規定されています。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term>Argon2i</term>
         <listitem>
-          <para>
-            Argon2 is a function designed to be more secure and to require a lot of memory to be
-            computed. It is defined in <link xlink:href="https://tools.ietf.org/html/rfc9106">RFC 9106</link>. Argon2i is a variant
-            of Argon2 optimized to resist side-channel attacks by accessing the memory array in a
-            password-independent order.
-          </para>
+          <para>Argon2 はより安全性を高めるように設計された関数で、計算にあたっては多くのメモリを必要とします。こちらは <link xlink:href="https://tools.ietf.org/html/rfc9106">RFC 9106</link> で規定されています。 Argon2i は Argon2 の派生形で、パスワードには依存しない形式でメモリ配列に対するサイドチャネル攻撃への耐性を高めた形式となります。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term>Argon2id</term>
         <listitem>
-          <para>
-            Argon2id is a hybrid version of Argon2. It follows the Argon2i approach for the first
-            half pass over memory and the Argon2d (not supported by &yast;) approach to limit GPU
-            cracking attacks for subsequent passes. RFC 9106 recommends using Argon2id if you do not
-            know the difference between the types or you consider side-channel attacks to be a
-            viable threat.
-          </para>
+          <para>Argon2id は Argon2 のハイブリッド版です。最初の半分のバスではメモリに対する攻撃について Argon2i の形式を採用しながら、残りのパスでは Argon2d (&yast; ではサポートしていません) を利用して、 GPU クラッキング攻撃を防ぐように設計されています。 RFC 9106 では両者の違いがわからないような場合や、サイドチャネル攻撃が現実的に発生しうるような場合に、 Argon2id を使用するように推奨しています。</para>
         </listitem>
       </varlistentry>
     </variablelist>
-    <para>
-      While <literal>Argon2</literal> is more secure, there are still use cases for
-      <literal>PBKDF2</literal>:
-    </para>
+    <para>なお、 <literal>Argon2</literal> のほうがより安全ではありますが、 <literal>PBKDF2</literal> を使用すべき場合もあります:</para>
     <itemizedlist>
       <listitem>
-        <para>
-          As an intentional security feature, Argon2 requires a lot more memory to be comupted.
-          This may result in problems on some systems. If the strength of the password can be fully
-          assured, then using PBKDF2 may still be secure and save memory.
-        </para>
+        <para>Argon2 は意図的なセキュリティ機能として、計算に多くのメモリを使用するように設計されています。システムによってはこれが問題となる場合もあります。パスワードによる保護が十分な強度であれば PBKDF2 のほうがより安全で、メモリ消費量も減らせることになります。</para>
       </listitem>
       <listitem>
-        <para>
-          <systemitem>grub2</systemitem> offers limited support to boot from devices encrypted with
-          LUKS2, but only if PBKDF2 is used. This means you cannot use Argon2 for a file system that
-          contains the <filename>/boot</filename> directory. Note that even if PBKDF2 is used, some
-          manual <systemitem>grub2</systemitem> configuration may be needed to boot from a LUKS2
-          device.
-        </para>
+        <para><systemitem>grub2</systemitem> では LUKS2 で暗号化されたデバイスからの起動に対してサポートが制限されていて、 PBKDF2 のみを使用することができます。これは <filename>/boot</filename> ディレクトリを含むファイルシステムに対して、 Argon2 を選択できないことを意味しています。なお、 PBKDF2 を使用した場合でも、 LUKS2 で暗号化したデバイスから起動を行う場合は、いくつかの <systemitem>grub2</systemitem> 設定を手作業で実施する必要があります。</para>
       </listitem>
     </itemizedlist>
     <!--
@@ -234,10 +124,6 @@
       encrypt the root file system.
     </para>
     -->
-    <para>
-      For more information on configuring device encryption with LUKS, use the
-      <literal>Help</literal> button in the installer and refer to
-      <xref linkend="cha-configure-cryptctl"/>.
-    </para>
+    <para>LUKS によるデバイス暗号化に対する詳細情報については、インストーラ内の <literal>ヘルプ</literal> ボタンを押すか、または <xref linkend="cha-configure-cryptctl"/> をお読みください。</para>
   </sect2>
 </sect1>
