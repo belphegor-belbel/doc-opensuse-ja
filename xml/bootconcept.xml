@@ -7,7 +7,7 @@
  <title>起動処理の紹介</title>
  <info>
   <abstract>
-   <para>Linux システムの起動に際しては、様々なコンポーネントや処理が介在しています。ファームウエアとハードウエアの初期化処理が完了すると、マシンのアーキテクチャによって、ブートローダ &grub; などを利用してカーネルを起動します。この時点まで到達すると、ようやくオペレーティングシステムが完全に制御を行うことができる状況になり、 &systemd; が続きを処理するようになります。 &systemd; は <quote>ターゲット</quote> と呼ばれるセットを提供し、日々の費用やメンテナンス、緊急時用など、それぞれに役割が設定されます。</para>
+   <para>Linux システムの起動に際しては、様々なコンポーネントや処理が介在しています。ファームウエアとハードウエアの初期化処理が完了した後は、マシンのアーキテクチャによって異なりますが、ブートローダ &grub; などを利用してカーネルを起動します。この時点まで到達すると、ようやくオペレーティングシステムが制御できる状況になり、 &systemd; が続きを処理するようになります。 &systemd; は <quote>ターゲット</quote> と呼ばれるセットを提供し、日々の費用やメンテナンス、緊急時用など、それぞれに役割が設定されています。</para>
   </abstract>
   <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
    <dm:bugtracker/>
@@ -72,7 +72,7 @@
     <para>従来型の BIOS を搭載したマシンの場合、起動ディスク内の最初の 512 バイト分のデータセクタ (マスターブートレコード、略して MBR) だけを読み込むことができます。 MBR には最小限の機能だけを持つ &grub; を書き込むことができます。この最小限の機能の &grub; には、ファイルシステムのドライバを含む &grub; のメインイメージを読み込むだけの機能が含まれています。メインイメージは MBR と最初のパーティションまでの間のギャップに含まれている (MBR パーティションテーブルの場合) か、もしくは BIOS の起動パーティション内に含まれています (GPT パーティションテーブルの場合) 。メインイメージにはファイルシステムドライバが含まれていますので、ルートファイルシステムにある <filename>/boot</filename> にアクセスすることができます。 <filename>/boot</filename> には &grub; のメインイメージに対応する追加のモジュールのほか、カーネルや initramfs のイメージが含まれていますので、あとはこれらを読み込めばカーネルに処理を渡すことができるようになります。</para>
     <para>暗号化された <filename>/boot</filename> を含む暗号化ファイルシステムから BIOS のシステムを起動する場合、暗号化を解くためのパスワードは 2 回入力する必要があります。 1 回目は &grub; が <filename>/boot</filename> を解読するために、 2 回目は &systemd; が暗号化されたボリュームをマウントするために必要となります。</para>
     <para>UEFI のマシンの場合は、従来型の BIOS マシンより簡単です。ファームウェアは GPT パーティションテーブル内の FAT でフォーマットされたパーティションを読み込むことができます (これを EFI システムパーティションと呼び、起動後のシステムでは <filename>/boot/efi</filename> にマウントします) ので、このパーティション内に完全機能の &grub; を配置すれば、それを直接読み込んで実行することができるようになります。</para>
-    <para>BIOS/UEFI のマシンがネットワーク経由での起動に対応している場合は、ブートローダ内で起動用のサーバを指定することができます。システムは PXE を介して起動することになります。この場合は、 BIOS/UEFI がブートローダとしての機能を持つことになります。起動用のサーバから起動用のイメージを取得して、システムを起動します。この仕組みは、ローカルのハードディスクを全く使用することなく起動できるものです。</para>
+    <para>BIOS/UEFI のマシンがネットワーク経由での起動に対応している場合は、 PXE と呼ばれる仕組みを利用して起動用のサーバからブートローダを取得することができます。この場合、 BIOS/UEFI 自身がブートローダ機能の一部を持つことになります。あとは起動用のサーバからイメージを取得してシステムを起動しますので、ローカルのハードディスクを全く使用することなくシステムを立ち上げることができます。</para>
    </sect3>
    <sect3 xml:id="sec-boot-proc-initialization-zsystems" arch="zseries">
     <title>&zseries; における初期化とブートローダの処理フェーズ</title>
@@ -101,7 +101,7 @@
 
     <sect4 xml:id="sec-boot-initrd-regenerate">
      <title>initramfs の再生成</title>
-     <para><systemitem>initramfs</systemitem> にはドライバが含まれていることからもわかるとおり、特定のドライバに対して新しいバージョンのものが提供されるようになった場合は、 <systemitem>initramfs</systemitem> を更新する必要があります。これはドライバ更新を含むパッケージをインストールした場合には、自動的に実行されるものです。 &yast; や zypper では、それらのパッケージをインストールした場合、 <systemitem>initramfs</systemitem> を生成したことを表す出力を表示します。しかしながら、場合によっては <systemitem>initramfs</systemitem> を手作業で生成しなければならなくなる場合があります:</para>
+     <para><systemitem>initramfs</systemitem> にはドライバが含まれているため、新しいバージョンのドライバが提供されるようになった場合は、 <systemitem>initramfs</systemitem> を更新する必要があります。なお、ドライバ更新を含むパッケージをインストールした場合には自動で実行されますし、 &yast; や zypper でそれらのパッケージをインストールした場合は、 <systemitem>initramfs</systemitem> を生成したことを表す出力を表示します。しかしながら、場合によっては <systemitem>initramfs</systemitem> を手作業で生成しなければならなくなる場合があります:</para>
      <itemizedlist>
       <listitem>
        <para><!-- Adding Drivers Because of Hardware Changes --> <xref xrefstyle="select:title" linkend="var-initrd-regenerate-drivers"/></para>

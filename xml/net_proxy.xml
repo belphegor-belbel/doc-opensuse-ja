@@ -32,7 +32,7 @@
  </itemizedlist>
  <para>squid は汎用のプロキシサーバではありません。通常は HTTP 接続のみを取り扱います。 FTP, Gopher, SSL, WAIS などのプロトコルにも対応していますが、 news プロトコルやビデオ会議プロトコルなどの他のインターネットプロトコルには対応していません。また squid では、 UDP プロトコルへの対応はプロキシキャッシュ間の通信にのみ対応しているため、ほとんどのマルチメディアプログラムにも対応していません。</para>
  <sect1 xml:id="sec-squid-cacheinfos">
-  <title>プロキシサーバに関するいくつかの事実</title>
+  <title>プロキシサーバについて</title>
 
   <para>squid はキャッシュ機能付きプロキシサーバとして、様々な用途に使用することができます。たとえばファイアウオールと併用すると、セキュリティを高めることができます。また、プロキシは複数を組み合わせて使用することもできます。また、キャッシュ対象とするオブジェクトの種類を指定したり、どれだけの期間保存しておくのかを指定したりすることもできます。</para>
 
@@ -45,7 +45,7 @@
   <sect2 xml:id="sec-squid-morecaches">
    <title>複数のキャッシュ</title>
    <para>複数の squid インスタンスを動作させて、お互いにオブジェクトを交換できるように設定することもできます。これによりシステム全体の負荷を軽減し、ローカルネットワーク内でオブジェクトの取得を完了させる機会を増やすことができます。また、キャッシュには階層構造を設定することもできます。これにより、オブジェクトへの要求を兄弟関係にあるキャッシュに転送したり、親キャッシュに転送したりすることができるようになります。これにより、ローカルネットワーク内の他のキャッシュからオブジェクトを提供するか、直接情報源から取得するかを効率的に選択することができるようになります。</para>
-   <para>キャッシュの階層構造を構築するにあたっては、適切なトポロジ選択が重要です。なぜなら、ネットワーク内のトラフィック量を減らすことが、プロキシキャッシュの目的の 1 つであるからです。非常に巨大なネットワークの場合、それぞれのサブネット内にそれぞれプロキシサーバを設置して、それらは親プロキシサーバに接続して、親プロキシサーバからインターネットに直接アクセスするような構成が良いでしょう。</para>
+   <para>キャッシュの階層構造を構築するにあたっては、適切なトポロジ選択が重要です。なぜなら、ネットワーク内のトラフィック量を減らすことが、プロキシキャッシュの目的の 1 つであるからです。巨大なネットワークの場合、それぞれのサブネット内にそれぞれプロキシサーバを設置して、それらは親プロキシサーバに接続して、親プロキシサーバからインターネットに直接アクセスするような構成が良いでしょう。</para>
    <para>ここで行われる通信は、 UDP プロトコル上で動作する ICP (Internet Cache Protocol) で行われます。キャッシュ間のデータ転送は、 TCP をベースにした HTTP (HyperText Transmission Protocol) で行われます。</para>
    <para>特定のオブジェクトを要求するにあたって、最も適切なサーバを選択する目的で、キャッシュは全ての兄弟関係のプロキシに対して、 ICP リクエストを送信します。 ICP リクエストを受け取ったプロキシは、 ICP レスポンスとしてそれらの要求に応答します。オブジェクトが見つかった場合は <literal>HIT</literal> を、見つからなかった場合は <literal>MISS</literal> を使用して応答します。</para>
    <para>複数の <literal>HIT</literal> 応答が届いた場合、プロキシサーバは最も高速に応答したサーバや、最も近いサーバなどの判断基準で、特定のサーバを選択します。逆に、必要な応答が届かなかった場合、要求はそのまま親キャッシュに送信されます。 <remark>Is timestamp a factor? - sknorr, 2016-06-24</remark></para>
@@ -57,7 +57,7 @@
 
   <sect2 xml:id="sec-squid-latching">
    <title>インターネットオブジェクトのキャッシュ</title>
-   <para>動的に生成されるページや TLS/SSL で暗号化されたコンテンツなど、ネットワーク内にある多くのオブジェクトは静的なものではありません。これらのオブジェクトは、アクセスが行われるたびに変化するものであることから、キャッシュが行われません。 <remark>Squid can now decrypt TLS traffic with plugins. Not sure whether that is then stored or not. Also, not sure how/whether to get this information in here. - sknorr, 2016-06-24 </remark></para>
+   <para>動的に生成されるページや TLS/SSL で暗号化されたコンテンツなど、ネットワーク内にある多くのオブジェクトは静的なものではありません。これらのオブジェクトは、アクセスが行われるたびに変化するものであることから、キャッシュが行われません。 <remark>Squid can now decrypt TLS traffic with plug-ins. Not sure whether that is then stored or not. Also, not sure how/whether to get this information in here. - sknorr, 2016-06-24 </remark></para>
    <para>また、キャッシュ内にオブジェクトを保持する期間を判断する目的で、オブジェクトには状態が割り当てられます。 Web やプロキシサーバでは、 <quote>最終更新日時</quote> や <quote>期限切れ日時</quote> などの仕組みを用意することで、これらのオブジェクトに対して状態を付与できるようになっています。なお、オブジェクトに含まれるその他のヘッダ情報については、そのままキャッシュ内に保持されます。</para>
    <para>キャッシュ内のオブジェクトは、ディスク領域の不足などを理由として置き換えられるのが一般的です。この処理を行うにあたっては、 LRU (Least <remark>not last?</remark> Recently Used) などのアルゴリズムを使用します。これにより、最も長い時間使われていないオブジェクトは、キャッシュから消滅することを意味します。</para>
   </sect2>
@@ -65,7 +65,7 @@
  <sect1 xml:id="sec-squid-sysneeds">
   <title>システム要件</title>
 
-  <para>システムに対する要件は、システムが耐えられるべき最大のネットワーク負荷に大きく依存して決まります。ネットワークの負荷は、最大では日々の平均の 4 倍を超えるようなことも珍しくありません。また、心配な場合は、システムの要件よりも少し多めに見積もっておくとよいでしょう。これは、 squid は性能の限界まで使用されてしまうと、サービス品質の観点で多大な損失が発生してしまうためです。下記には、システム要件の要素として重要な順序を示しています:</para>
+  <para>システムに対する要件は、システムが耐えられるべき最大のネットワーク負荷に依存して決まります。ネットワークの負荷は、最大では日々の平均の 4 倍を超えるようなことも珍しくありません。また、心配な場合は、システムの要件よりも少し多めに見積もっておくとよいでしょう。これは、 squid は性能の限界まで使用されてしまうと、サービス品質の観点で多大な損失が発生してしまうためです。下記には、システム要件の要素として重要な順序を示しています:</para>
 
 <!-- Source: http://wiki.squid-cache.org/BestOsForSquid#Tuning_for_More -->
 
@@ -93,7 +93,7 @@
   <sect2 xml:id="sec-squid-cpu">
    <title>CPU</title>
    <para>squid はプロセッサのコア数の少ない (物理コア数で 4 〜 8 コア程度) 環境でも十分に動作するようチューニングされています。また、ハイパースレッディングなどの仮想的なコアでは、性能が十分に引き出せない場合があります。</para>
-   <para>複数の CPU コアを効率的に使用するため、異なるキャッシュデバイスに書き込むワーカースレッド数を多くする必要があります。既定では、マルチコアサポートのほとんどが無効化されています。</para>
+   <para>複数の CPU コアを効率的に使用するため、異なるキャッシュデバイスに書き込むワーカースレッド数を多くする必要があります。既定では、マルチコアサポートが無効化されています。</para>
   </sect2>
 
   <sect2 xml:id="sec-squid-sysneeds-cache-size">
@@ -462,7 +462,7 @@ Connection: close
     </listitem>
    </itemizedlist>
    <para>&yast; の squid モジュールでルールを追加する場合は、モジュールを開いて <guimenu>アクセス制御</guimenu> タブを選択します。あとは ACL グループの一覧から <guimenu>追加</guimenu> ボタンを押して、ルールの名前と種類、パラメータを指定します。</para>
-   <para>ACL ルールに関するより詳しい説明については、 <link xlink:href="http://www.squid-cache.org/Versions/v3/3.5/cfgman/acl.html"/> にある squid のドキュメンテーションをお読みください。</para>
+   <para>ACL ルールに関するより詳しい説明については、 <link xlink:href="https://www.squid-cache.org/Versions/v3/3.5/cfgman/acl.html"/> にある squid のドキュメンテーションをお読みください。</para>
    <example xml:id="ex-squid-school">
     <title>ACL ルールの設定</title>
 <screen>
@@ -661,7 +661,7 @@ cachemgr_passwd disable all
  <sect1 xml:id="sec-squid-calamaris">
   <title>Calamaris によるキャッシュレポートの生成</title>
 
-  <para>Calamaris は ASCII や HTML の出力形式に対応した、 squid のアクセスログファイルを読み込んでキャッシュ動作のレポート生成を行う Perl スクリプトです。このツールは &productname; の既定ではインストールが行われません。必要な場合は <systemitem>calamaris</systemitem> パッケージをインストールしてお使いください。なお、 Calamaris の Web ページは <link xlink:href="https://cord.de/calamaris-english"/> (英語) にあります。</para>
+  <para>Calamaris は ASCII や HTML の出力形式に対応した Perl スクリプトで、 squid のアクセスログファイルを読み込んでキャッシュ動作のレポート生成を行います。このツールは &productname; の既定ではインストールが行われません。必要な場合は <systemitem>calamaris</systemitem> パッケージをインストールしてお使いください。なお、 Calamaris の Web ページは <link xlink:href="https://cord.de/calamaris-english"/> (英語) にあります。</para>
 
   <para>まずは <systemitem class="username">root</systemitem> でログインして、下記のように入力します:</para>
 
@@ -706,8 +706,8 @@ cachemgr_passwd disable all
  <sect1 xml:id="sec-squid-moreinfo">
   <title>さらなる情報</title>
 
-  <para>squid の Web ページは <link xlink:href="http://www.squid-cache.org/"/> にあります。ここには <quote>Squid User Guide</quote> (squid ユーザガイド) としてマニュアルが用意されているほか、 squid の FAQ なども用意されています。</para>
+  <para>squid の Web ページは <link xlink:href="https://www.squid-cache.org/"/> にあります。ここには <quote>Squid User Guide</quote> (squid ユーザガイド) としてマニュアルが用意されているほか、 squid の FAQ なども用意されています。</para>
 
-  <para>squid のメーリングリストもあります。詳しくは <link xlink:href="http://www.squid-cache.org/Support/mailing-lists.html"/> をお読みください。</para>
+  <para>squid のメーリングリストもあります。詳しくは <link xlink:href="https://www.squid-cache.org/Support/mailing-lists.html"/> をお読みください。</para>
  </sect1>
 </chapter>
