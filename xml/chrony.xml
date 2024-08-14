@@ -144,51 +144,29 @@
     </warning>
   </sect1>
   <sect1 xml:id="ntp-configure-nts">
-    <title>Configuring NTS</title>
+    <title>NTS の設定</title>
 
-    <para>
-      &ntp; (NTP) is a protocol used to synchronize and keep the system time of
-      one or more hosts in the network accurate. This article describes how to
-      secure NTP using &nts; (NTS).
-    </para>
+    <para>&ntp; (NTP) はネットワーク内の 1 つまたは複数のホストに対して、システム時刻の同期と維持を行うためのプロトコルです。本記事では、 &nts; (NTS) を利用した機密保持機能の設定方法を説明しています。</para>
 
-    <para>
-      NTP protocol does not introduce security mechanism to make the
-      communication between the time server and client authenticated and
-      encrypted. &nts; (NTS) is an extension that improves the security of NTP.
-      &chrony; supports NTS and can authenticate time sources and protect
-      against certain network attacks.
-    </para>
+    <para>NTP プロトコルにはセキュリティ機能が含まれていないため、タイムサーバとクライアントとの間でやり取りされる通信に認証や暗号化を追加できません。 &nts; (NTS) はそのような NTP に対して、セキュリティ機能を提供します。 &chrony; は NTS に対応していますので、時刻ソースからの情報を認証し、特定の種類のネットワーク攻撃から保護できるようになっています。</para>
 
-    <para>
-      The following procedures outline how to configure the time server and
-      client machine for secure time synchronization.
-    </para>
+    <para>下記の手順では、より安全な時刻同期のため、タイムサーバとクライアントとの間で設定すべき事項について概要を説明しています。</para>
 
     <procedure xml:id="configure-nts-procedure">
-      <title>タイムサーバの設定</title>
+      <title>NTS タイムサーバの設定</title>
       <step performance="optional">
-        <para>
-          It is a good idea to configure the time server to update its time via
-          NTS. This ensures secure time synchronization from the very beginning
-          of the synchronization chain. Comment out any existing time sources in
-          <filename>/etc/chrony.conf</filename> that do not support NTS and add
-          at least one that supports NTS, for example:
-        </para>
+        <para>NTS を利用して時刻の更新を行うようタイムサーバを設定しておくことをお勧めします。これにより、同期処理の最初から安全に時刻を取得できるようになります。まずは <filename>/etc/chrony.conf</filename> 内にある NTS 非対応の時刻ソースをコメントアウトし、少なくとも 1 つ以上の NTS 対応サーバを指定します。たとえば下記のようになります:</para>
 <screen>server time.cloudflare.com iburst nts</screen>
         <tip>
-          <para>
-            The <option>nts</option> option requests NTS connection if it is
-            available, otherwise it falls back to NTP if NTS is not available.
-          </para>
+          <para><option>nts</option> オプションを指定すると、 NTS に対応しているサーバであれば NTS を使用するようになります。対応していないサーバの場合は従来の NTP として通信します。</para>
         </tip>
       </step>
       <step>
-        <para>systemctl start chronyd.service</para>
-<screen>systemctl start chronyd.service</screen>
+        <para>あとは &chronyd; サービスを再起動します。</para>
+<screen>&prompt.sudo;<command>systemctl restart chronyd.srvice</command></screen>
       </step>
       <step>
-        <para>設定元の種類</para>
+        <para>あとは設定済みの時刻ソースとの同期状況を確認します。</para>
 <screen>&prompt.user;<command>chronyc sources -v</command>
 MS Name/IP address         Stratum Poll Reach LastRx Last sample               
 ===============================================================================
@@ -197,14 +175,9 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 ^* whitesoft-intex16.c.cbsn&gt;     1   6     1     2   -948ms[ -948ms] +/- 5444us
 ^? mail.combatostrich.dev        2   6     1     1   -948ms[ -948ms] +/-   28ms</screen>
         <note>
-          <para>
-            The line that starts with <literal>^*</literal> includes the time
-            source that was selected as best.
-          </para>
+          <para><literal>^*</literal> で始まる行が、最適な時刻ソースとして判断されたサーバを表します。</para>
         </note>
-        <para>
-          Verify that the configured time source uses the NTS mode.
-        </para>
+        <para>あとは NTS モードで同期しているかどうかを確認します。</para>
 <screen>&prompt.user;<command>chronyc -N authdata</command>
 Name/IP address             Mode KeyID Type KLen Last Atmp  NAK Cook CLen
 =========================================================================
@@ -212,99 +185,58 @@ Name/IP address             Mode KeyID Type KLen Last Atmp  NAK Cook CLen
 time.cloudflare.com          NTS     1   15  256    3    0    0    8   96</screen>
       </step>
       <step>
-        <para>
-          Verify that the server configuration includes the
-          <option>allow</option> option that specifies which clients can
-          synchronize time with the time server, for example:
-        </para>
+        <para>なお、サーバ側で <option>allow</option> オプションを指定していると、そのタイムサーバと同期可能なクライアントを指定することができます。たとえば下記のようになります:</para>
 <screen>allow 192.168.1.0/24</screen>
       </step>
       <step performance="optional">
-        <para>
-          If the time server is running behind a firewall, allow communication
-          on ports for both NTP and NTS. They are 123 and 4460 by default.
-        </para>
+        <para>タイムサーバがファイアウオール内で動作している場合は、 NTP と NTS の両方を許可するように設定してください。既定で NTP はポート 123, NTS はポート 4460 を使用します。</para>
       </step>
       <step>
-        <para>
-          Obtain a TLS certificate and a corresponding private key and copy them
-          to <filename>/var/lib/chrony/</filename>. Verify that they are
-          readable by &chrony;, for example:
-        </para>
+        <para>また、 TLS 証明書と対応する機密鍵を取得し、それらを <filename>/var/lib/chrony/</filename> 内にコピーします。また、それらのファイルが &chrony; から読み取れる用に設定します。たとえば下記のようになります:</para>
 <screen>&prompt.sudo;install -m 0440 -o chrony -g chrony <replaceable>nts.key</replaceable> /var/lib/chrony/
 &prompt.sudo;install -m 0440 -o chrony -g chrony <replaceable>nts.crt</replaceable> /var/lib/chrony/</screen>
         <tip>
-          <para>
-            Find detailed information about TLS certificates in a
-            <link xlink:href="https://documentation.suse.com/smart/security/html/tls-certificates/index.html">dedicated
-            article.</link>
-          </para>
+          <para>TLS 証明書に関する詳細情報については、 <link xlink:href="https://documentation.suse.com/smart/security/html/tls-certificates/index.html">こちらの記事</link> をお読みください。</para>
         </tip>
       </step>
       <step>
-        <para>
-          Edit <filename>/etc/chrony.conf</filename> and verify that the
-          <option>ntsdumpdir /var/lib/chrony</option> option is active. Then
-          append the paths to the TLS key and certificate.
-        </para>
+        <para>また、 <filename>/etc/chrony.conf</filename> ファイルを編集して、 <option>ntsdumpdir /var/lib/chrony</option> オプションを有効化してください。これに加えて、 TLS 鍵と証明書のパスを指定してください。</para>
 <screen>ntsdumpdir /var/lib/chrony
 ntsserverkey /var/lib/chrony/nts.key
 ntsservercert /var/lib/chrony/nts.crt</screen>
       </step>
       <step>
-        <para>systemctl start chronyd.service</para>
-<screen>systemctl start chronyd.service</screen>
+        <para>あとは &chronyd; サービスを再起動します。</para>
+<screen>&prompt.sudo;systemctl restart chronyd.service</screen>
       </step>
     </procedure>
 
     <procedure>
-      <title>&yast; を利用した NTP クライアントの設定</title>
+      <title>NTS クライアントの設定</title>
       <step>
-        <para>
-          Disable existing NTP sources, for example:
-        </para>
+        <para>まずは既存の NTP タイムソースを無効化します。たとえば下記のように設定します:</para>
 <screen>#server 192.168.1.1 iburst</screen>
-        <para>
-          The sources configurations are included in
-          <filename>/etc/chrony.conf</filename> or in files under
-          <filename>/etc/chrony.d/</filename>.
-        </para>
+        <para>タイムソースの設定は <filename>/etc/chrony.conf</filename> 内に直接記述するか、もしくは <filename>/etc/chrony.d/</filename> ディレクトリ内にファイルを作成して記述します。</para>
       </step>
       <step>
-        <para>
-          The client host needs to trust the Root CA that signed the TLS
-          certificate. Find details on how to manage the CA certificate store in
-          a
-          <link xlink:href="https://documentation.suse.com/smart/security/html/tls-certificates/index.html#tls-certificates-store">dedicated
-          article</link>.
-        </para>
+        <para>クライアント側では、サーバ側に設定されている TLS 証明書の発行元となるルート証明機関 (CA) を信頼するように設定する必要があります。証明機関 (CA) ストアの管理方法に関する詳細は、 <link xlink:href="https://documentation.suse.com/smart/security/html/tls-certificates/index.html#tls-certificates-store">こちらの記事</link> で説明しています。</para>
       </step>
       <step>
-        <para>
-          Add the NTS time server source that you configured in
-          <xref linkend="configure-nts-procedure"/> to the client &chrony;
-          configuration in <filename>/etc/chrony.conf</filename>, for example:
-        </para>
-<screen>server <replaceable>サーバアドレス</replaceable> offline</screen>
+        <para>あとはクライアント側の &chrony; 設定ファイルである <filename>/etc/chrony.conf</filename> に対して、 <xref linkend="configure-nts-procedure"/> で設定した NTS タイムサーバを指定します。具体的には下記のように設定します:</para>
+<screen>server <replaceable>サーバアドレス</replaceable> iburst nts</screen>
       </step>
       <step>
-        <para>systemctl start chronyd.service</para>
-<screen>systemctl start chronyd.service</screen>
+        <para>あとは &chronyd; サービスを再起動します。</para>
+<screen>&prompt.sudo;systemctl restart chronyd.service</screen>
       </step>
       <step>
-        <para>
-          Verify configured time sources on the client and confirm that the
-          connection is authenticated.
-        </para>
+        <para>再起動が終わったら下記を実行して、クライアント側で正しく時刻ソースが設定されているかどうか、および接続認証が働いているかどうかを確認します。</para>
 <screen>&prompt.sudo;chronyc sources -v
 &prompt.sudo;chronyc -N authdata</screen>
       </step>
       <step>
-        <para>
-          On the NTS time server, verify per client statistics about NTS
-          connections.
-        </para>
-<screen>&prompt.root;&chronyc; activity</screen>
+        <para>NTS タイムサーバ側では、 NTS 接続に対するクライアント統計情報を確認します。</para>
+<screen>&prompt.sudo;chronyc -N clients -k</screen>
       </step>
     </procedure>
   </sect1>
