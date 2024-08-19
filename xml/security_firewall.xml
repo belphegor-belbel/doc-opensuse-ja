@@ -437,50 +437,34 @@ nfs-rpc
     <para>このツールは、上記の章で実施したサービス設定を対話に設定するツールです。このほか、現時点でのポートの割り当てを表示することができるほか、スクリプト内で使用することもできるようになっています。詳しくは <command>firewall-rpc-helper.py --help</command> を実行して出力された内容をお読みください。</para>
    </sect3>
    <sect3 xml:id="sec-security-firewall-firewalld-nftables">
-    <title>nftables as the default back-end </title>
-    <para>
-  The default back-end for &firewalld; is nftables. nftables is a framework by the Linux <systemitem>netfilter</systemitem> project
-  that provides packet filtering, network address translation (NAT) and other similar functionalities. nftables reuses the existing Netfilter
-  subsystems such as the connection tracking system, user space queueing, logging and the hook infrastructure.
-  nftables is a replacement for iptables, ip6tables, arptables, ebtables, and ipset.
-</para>
-    <para>
-  The advantages of using nftables include:
-    </para>
+    <title>既定のバックエンドとしての nftables の使用</title>
+    <para>&firewalld; では、既定のバックエンドとして nftables を私用します。 nftables は Linux <systemitem>netfilter</systemitem> プロジェクトが提供するフレームワークで、パケットフィルタリングのほか、ネットワークアドレス変換 (NAT) 等の機能を提供します。また、 nftables はコネクショントラッキングやユーザスペースキューイング、ロギングやフック機能などの既存の netfilter サブシステムを流用した仕組みで、 iptables, ip6tables,  arptables, ebtables, ipset 等の代替として機能するものとなっています。</para>
+    <para>nftables を使用することの利点としては、下記のようなものがあります:</para>
     <itemizedlist mark="bullet" spacing="normal">
         <listitem>
-       <para>
-        One framework for both the IPv4 and IPv6 protocols.
-       </para>
+       <para>IPv4, IPv6 の両プロトコルに対して 1 つのフレームワークで対応できます。</para>
       </listitem>
       <listitem>
-       <para>
-        Rules are applied atomically instead of fetching, updating and storing a complete rule set.
-        </para>
+       <para>ルールはルールセット全体の再読み込みや更新、保存などを行うことなく適用することができます。</para>
       </listitem>
       <listitem>
-       <para>
-        Monitor trace events in the <emphasis>nft</emphasis> tool, debug and trace the ruleset via <emphasis>nftrace</emphasis>.
-        </para>
+       <para>イベントの追跡は <emphasis>nft</emphasis> ツールで、ルールセットのデバッグやトレースは <emphasis>nftrace</emphasis> でそれぞれ行うことができます。</para>
       </listitem>
       <listitem>
-       <para>
-      The <command>nft</command> command line tool compiles into VM bytecode in netlink format.
-      During the rule set retrieval, the VM bytecode in netlink format is translated back into the original ruleset representation.
-      </para></listitem>
+       <para><command>nft</command> コマンドラインツールは、ルールを netlink 形式の VM バイトコードにコンパイルします。逆にルールセットを取り出す際は、 VM バイトコードを元のルールセット表記に翻訳して出力します。</para></listitem>
      </itemizedlist>
 
-   <para><emphasis role="bold">A basic nftables configuration file:</emphasis></para>
+   <para><emphasis role="bold">基本的な nftables の設定ファイル:</emphasis></para>
   <screen>&prompt.user; cat /etc/nftables.conf
     #!/usr/sbin/nft -f
 
     flush ruleset
 
-    # This matches IPv4 and IPv6
+    # IPv4 と IPv6 の両方にマッチします
     table inet filter {
-        # chain names are up to you.
-        # what part of the traffic they cover,
-        # depends on the type table.
+        # チェイン名は任意に設定できます。
+        # どのトラフィックを処理するのかについては、
+        # type 以下で指定します。
         chain input {
             type filter hook input priority 0; policy accept;
         }
@@ -492,9 +476,8 @@ nfs-rpc
         }
     }
   </screen>
-  <para>In the above example, all traffic is allowed because all chains have the policy <emphasis>accept</emphasis>.
-  Note that, in reality, this is a bad practice, as firewalls should deny traffic by default.</para>
-  <para><emphasis role="bold">A basic nftables configuration file with masquerade:</emphasis></para>
+  <para>上記の例では、全てのチェインで <emphasis>accept</emphasis> ポリシーを設定していることから、全てのトラフィックを許可することになります。もちろん実際には全てのトラフィックが既定で拒否されますので、必要なトラフィックのみを許可するように設定するのが適切です。</para>
+  <para><emphasis role="bold">マスカレードを使用する nftables の設定:</emphasis></para>
   <screen>&prompt.user; cat /etc/nftables.conf
     #!/sbin/nft -f
 
@@ -505,16 +488,16 @@ nfs-rpc
         type nat hook prerouting priority 0; policy accept;
       }
 
-      # for all packets to WAN, after routing, replace source address with primary IP of WAN interface
+      # WAN 宛に送信される全てのトラフィックに対して、経路の判断後に
+      # 発信元アドレスを WAN インターフェイスのプライマリ IP アドレスに置き換えます。
       chain postrouting {
         type nat hook postrouting priority 100; policy accept;
         oifname "wan0" masquerade
       }
     }
   </screen>
-  <para>If you have a static IP, it would be slightly faster to use source nat (SNAT) instead of masquerade.
-    The router replaces the source with a predefined IP instead of looking up the outgoing IP for every packet.</para>
-  <para><emphasis role="bold">An nftables configuration file with some rules applied:</emphasis></para>
+  <para>固定 IP の環境であれば、マスカレードではなくソース NAT (SNAT) を使用したほうが少しだけ高速になります。これは、それぞれの発信パケットの置き換え時にあらかじめ IP アドレスが分かっていたほうが、手っ取り早く処理できるためです。</para>
+  <para><emphasis role="bold">いくつかのルールを適用した nftables の設定ファイル:</emphasis></para>
   <screen>&prompt.user; cat /etc/nftables.conf
     #!/usr/sbin/nft -f
 
@@ -522,28 +505,28 @@ flush ruleset
 
 table inet filter {
     chain base_checks {
-        ## another set, this time for connection tracking states.
-        # allow established/related connections
+        ## 接続状態の確認を行うルールセットです。
+        # 確立済みの接続や関連する接続は自動的に許可します
         ct state {established, related} accept;
 
-        # early drop of invalid connections
+        # 不正な接続に対しては早めに拒否します
         ct state invalid drop;
     }
 
     chain input {
         type filter hook input priority 0; policy drop;
 
-        # allow from loopback
+        # ループバック接続を許可します
         iif "lo" accept;
 
         jump base_checks;
 
-        # allow icmp and igmp
+        # ICMP, IGMP を許可します
         ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, packet-too-big, time-exceeded, parameter-problem, destination-unreachable, packet-too-big, mld-listener-query, mld-listener-report, mld-listener-reduction, nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept;
         ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } accept;
         ip protocol igmp accept;
 
-        # for testing reject with logging
+        # ログを記録して拒否するテストです
         counter log prefix "[nftables] input reject " reject;
     }
     chain forward {
@@ -554,49 +537,33 @@ table inet filter {
     }
 }
   </screen>
-  <para>In the above example: </para>
+  <para>上記の例は、下記のようになっています:</para>
   <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-   <para>
-   The chain policy is to drop and add a reject rule at the end, which means all incoming traffic is blocked.
-    </para>
+   <para>input チェインの既定値は drop (廃棄) で、末尾に reject (拒否) ルールが設定されているため、全ての到着トラフィックをブロックする設定になっています。</para>
   </listitem>
   <listitem>
-   <para>
-    All traffic on the <literal>localhost</literal> interface is allowed.
-    </para>
+   <para><literal>localhost</literal> インターフェイスの全てのトラフィックを許可しています。</para>
   </listitem>
   <listitem>
-   <para>
-   The <literal>base_checks</literal> chain handles all packets that are related to established connections.
-   This ensures that incoming packets for outgoing connections are not blocked.
-    </para>
+   <para><literal>base_checks</literal> チェインでは、全てのパケットに対して既存の接続に関係したものであるかどうかを確認しています。これにより、こちらから接続した接続に対する応答はブロックされないようになります。</para>
   </listitem>
   <listitem>
-   <para>
-    ICMP and IGMP packets are allowed by utilizing a set and specific type names.
-   </para>
+   <para>ICMP, IGMP の各パケットは、タイプ名を指定したセットを使用することでそれぞれ許可しています。</para>
   </listitem>
   <listitem>
-    <para>
-    A counter keeps a count of both the total number of packets and bytes it has seen since it was last reset.
-    With nftables, you must specify a counter for each rule you want to count.
-    </para>
+    <para>カウンタは、直近にリセットされた時点からの合計パケット数や合計バイト数を保持する仕組みです。 nftables の場合、カウンタを実装したいルールでそれぞれ指定しなければなりません。</para>
    </listitem>
  </itemizedlist>
  <sect4 xml:id="sec-security-nftables-more-information">
   <title>さらなる情報</title>
-  <para>For more information about nftables, see:</para>
+  <para>nftables に関する詳細については、下記をお読みください:</para>
   <itemizedlist mark="bullet" spacing="normal">
     <listitem>
-   <para>
-    Upstream documentation <link xlink:href="https://www.netfilter.org/projects/nftables/index.html"> </link>
-    </para>
+   <para>提供元のドキュメンテーション: <link xlink:href="https://www.netfilter.org/projects/nftables/index.html"> </link></para>
   </listitem>
   <listitem>
-   <para>
-    nftables man page <link xlink:href="https://www.netfilter.org/projects/nftables/manpage.html"> </link>
-    </para>
+   <para>nftables のマニュアルページ: <link xlink:href="https://www.netfilter.org/projects/nftables/manpage.html"> </link></para>
   </listitem>
 </itemizedlist>
   </sect4>
