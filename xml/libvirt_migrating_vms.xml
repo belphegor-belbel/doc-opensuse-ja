@@ -4,423 +4,218 @@
 %entities;
 ]>
 <chapter xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="sec-libvirt-admin-migrate">
-  <title>Migrating &vmguest;s</title>
+  <title>&vmguest; の移行</title>
   <info>
     <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
       <dm:bugtracker/>
       <dm:translation>yes</dm:translation>
     </dm:docmanager>
   </info>
-  <para>
-    One of the major advantages of virtualization is that &vmguest;s are
-    portable. When a &vmhost; needs maintenance, or when the host becomes
-    overloaded, the guests can be moved to another &vmhost;. &kvm; and &xen;
-    even support <quote>live</quote> migrations during which the &vmguest; is
-    constantly available.
-  </para>
+  <para>仮想化における最大の利点として、 &vmguest; を移動できるという点があります。たとえば &vmhost; でメンテナンスを実施しなければならないような場合や、 &vmhost; の負荷が過剰である場合、ゲストを他の &vmhost; に移行することができます。 &kvm; と &xen; では <quote>ライブ</quote> マイグレーションにも対応していますので、これにより &vmguest; を動作させたまま移行することもできます。</para>
   <sect1 xml:id="libvirt-migration-types">
-    <title>Types of migration</title>
+    <title>移行の種類</title>
 
-    <para>
-      Depending on the required scenario, there are three ways you can migrate
-      virtual machines (VM).
-    </para>
+    <para>仮想マシン (VM) の移行に際しては、要件に応じて下記の 3 種類の方式から選択することができます。</para>
 
     <variablelist>
       <varlistentry>
-        <term>Live migration</term>
+        <term>ライブマイグレーション</term>
         <listitem>
-          <para>
-            The source VM continues to run while its configuration and memory is
-            transferred to the target host. When the transfer is complete, the
-            source VM is suspended and the target VM is resumed.
-          </para>
-          <para>
-            Live migration is useful for VMs that need to be online without any
-            downtime.
-          </para>
+          <para>移行元の VM を動作させたまま、設定とメモリ内容を移行先のホストに転送します。全ての転送が完了した時点で移行元の VM を一時停止し、移行先の VM を復元します。</para>
+          <para>ライブマイグレーションは、常に動作させておく必要のある VM を移行したい場合に有用です。</para>
           <note>
-            <para>
-              VMs experiencing heavy I/O load or frequent memory page writes are
-              challenging to live migrate. In such cases, consider using
-              non-live or offline migration.
-            </para>
+            <para>ライブマイグレーションを行う場合、 I/O 負荷やメモリページへの書き込みが非常に多くなります。このような場合は、非ライブマイグレーションやオフラインマイグレーションの使用をご検討ください。</para>
           </note>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Non-live migration</term>
+        <term>非ライブマイグレーション</term>
         <listitem>
-          <para>
-            The source VM is suspended and its configuration and memory
-            transferred to the target host. Then the target VM is resumed.
-          </para>
-          <para>
-            Non-live migration is more reliable than live migration, although it
-            creates downtime for the VM. If downtime is tolerable, non-live
-            migration can be an option for VMs that are difficult to live
-            migrate.
-          </para>
+          <para>いったん移行元の VM を一時停止して、設定とメモリを移行先のホストに転送します。転送完了後、移行先で VM を再開します。</para>
+          <para>非ライブマイグレーションは、ライブマイグレーションより信頼性の高い方式ではありますが、 VM にアクセスできなくなる時間が存在するという問題があります。このようなダウンタイムを許容できるシステムであれば、ライブマイグレーションの難しい VM には有用な選択肢となります。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Offline migration</term>
+        <term>オフラインマイグレーション</term>
         <listitem>
-          <para>
-            The VM definition is transferred to the target host. The source VM
-            is not stopped and the target VM is not resumed.
-          </para>
-          <para>
-            Offline migration can be used to migrate inactive VMs.
-          </para>
+          <para>VM の設定を移行先のホストにコピーするだけです。移行元の VM は停止させず、移行先の VM を復元させない方式です。</para>
+          <para>オフラインマイグレーションは、その時点で動作させていない VM を移行する際に使用します。</para>
           <important>
-            <para>
-              The <option>--persistent</option> option must be used together
-              with offline migration.
-            </para>
+            <para>オフラインマイグレーションを行う場合、 <option>--persistent</option> オプションを指定しておかなければなりません。</para>
           </important>
         </listitem>
       </varlistentry>
     </variablelist>
   </sect1>
   <sect1 xml:id="libvirt-admin-live-migration-requirements">
-    <title>Migration requirements</title>
+    <title>移行における要件</title>
 
-    <para>
-      To successfully migrate a &vmguest; to another &vmhost;, the following
-      requirements need to be met:
-    </para>
+    <para>&vmguest; を他の &vmhost; に移行するに際しては、下記の要件を満たす必要があります:</para>
 
     <itemizedlist>
       <listitem>
-        <para>
-          The source and target systems must have the same architecture.
-        </para>
+        <para>移行元と移行先のシステムが同じアーキテクチャであること。</para>
       </listitem>
       <listitem>
-        <para>
-          Storage devices must be accessible from both machines, for example,
-          via NFS or iSCSI. For more information, see
-          <xref linkend="cha-libvirt-storage"/>.
-        </para>
-        <para>
-          This is also true for CD-ROM or floppy images that are connected
-          during the move. However, you can disconnect them before the move as
-          described in <xref linkend="sec-libvirt-config-cdrom-media-change"/>.
-        </para>
+        <para>NFS や iSCSI など、両方のマシンから同じストレージデバイスにアクセスできること。詳しくは <xref linkend="cha-libvirt-storage"/> をお読みください。</para>
+        <para>なお、移行の時点で接続済みの CD-ROM やフロッピィディスクのイメージについても、両方のマシンからアクセスできるようにしなければなりません。ただし、これらは移行実施前に取り外しておくことができます。詳しくは <xref linkend="sec-libvirt-config-cdrom-media-change"/> をお読みください。</para>
       </listitem>
       <listitem>
-        <para>
-          &libvirtd; needs to run on both &vmhost;s and you must be able to open
-          a remote &libvirt; connection between the target and the source host
-          (or vice versa). Refer to <xref linkend="sec-libvirt-connect-remote"/>
-          for details.
-        </para>
+        <para>両方の &vmhost; で &libvirtd; を動作させ、かつ移行元と移行先の間でリモートの &libvirt; 接続を許可しておくこと。詳しくは <xref linkend="sec-libvirt-connect-remote"/> をお読みください。</para>
       </listitem>
       <listitem>
-        <para>
-          If a firewall is running on the target host, ports need to be opened
-          to allow the migration. If you do not specify a port during the
-          migration process, &libvirt; chooses one from the range 49152:49215.
-          Make sure that either this range (recommended) or a dedicated port of
-          your choice is opened in the firewall on the <emphasis>target
-          host</emphasis>.
-        </para>
+        <para>移行先のホストでファイアウオールを動作させている場合は、移行時に使用するポートを開いておく必要があります。移行処理時に特に何も指定しない場合、 &libvirt; では 49152:49215 の範囲からポート番号を選択します。 <emphasis>移行先のホスト</emphasis> でこのポート範囲の通信を許可するように設定するか、もしくは独自にポートを選択して許可し、移行処理時にそのポート番号を指定してください。</para>
       </listitem>
       <listitem>
-        <para>
-          The source and target machines should be in the same subnet on the
-          network, otherwise networking fails after the migration.
-        </para>
+        <para>移行元と移行先のホストが、ネットワーク内の同じサブネットに属していること。異なるサブネットに属している場合、移行後に接続できなくなってしまいます。</para>
       </listitem>
       <listitem>
-        <para>
-          All &vmhost;s participating in migration must have the same UID for
-          the qemu user and the same GIDs for the kvm, qemu and libvirt groups.
-        </para>
+        <para>移行元と移行先の &vmhost; で、 qemu ユーザ, kvm グループ, qemu グループ, libvirt グループの UID や GID が一致していること。</para>
       </listitem>
       <listitem>
-        <para>
-          No running or paused &vmguest; with the same name must exist on the
-          target host. If a shut-down machine with the same name exists, its
-          configuration is overwritten.
-        </para>
+        <para>移行先のホストで既に同名の &vmguest; が設定されていないこと。同名の &vmguest; が存在していて停止している場合、設定は上書きされてしまいます。</para>
       </listitem>
       <listitem>
-        <para>
-          All CPU models, except the <emphasis>host cpu</emphasis> model, are
-          supported when migrating &vmguest;s.
-        </para>
+        <para>CPU モデルの設定で <emphasis>host cpu</emphasis> モデルを選択していないこと。</para>
       </listitem>
       <listitem>
-        <para>
-          The <xref linkend="gloss-vt-acronym-sata"/> disk device type is not
-          migratable.
-        </para>
+        <para><xref linkend="gloss-vt-acronym-sata"/> ディスクデバイスを使用していないこと。</para>
       </listitem>
       <listitem>
-        <para>
-          File system pass-through feature is incompatible with migration.
-        </para>
+        <para>ファイルシステムのパススルー機能を使用していないこと。</para>
       </listitem>
       <listitem>
-        <para>
-          The &vmhost; and &vmguest; need to have proper timekeeping installed.
-          See <xref linkend="sec-kvm-managing-clock"/>.
-        </para>
+        <para>&vmhost; と &vmguest; の間で適切な時刻維持機能が設定されていること。詳しくは <xref linkend="sec-kvm-managing-clock"/> をお読みください。</para>
       </listitem>
       <listitem>
-        <para>
-          No physical devices can be passed from host to guest. Live migration
-          is currently not supported when using devices with PCI pass-through or
-          <xref linkend="vt-io-sriov"/>. If live migration needs to be
-          supported, use software virtualization (paravirtualization or full
-          virtualization).
-        </para>
+        <para>&vmhost; から &vmguest; に対して、物理デバイスに直接アクセスできる機能を提供していないこと。現時点でのライブマイグレーションは、 PCI パススルーや <xref linkend="vt-io-sriov"/> を使用している場合、サポート対象外となります。ライブマイグレーションを使用したい場合は、ソフトウエアによる仮想化 (準仮想化または完全仮想化) をお使いください。</para>
       </listitem>
       <listitem>
-        <para>
-          The cache mode setting is an important setting for migration. See:
-          <xref linkend="sec-cache-mode-live-migration"/>.
-        </para>
+        <para>移行に際してはキャッシュモードの設定が重要となります。詳しくは <xref linkend="sec-cache-mode-live-migration"/> をお読みください。</para>
       </listitem>
       <listitem os="sles;sled">
-        <para os="sles;sled">
-          Backward migration, for example, from &slsa; 15 SP2 to 15 SP1, is not
-          supported.
-        </para>
+        <para os="sles;sled">古いバージョンへの移行 (例: &slsa; 15 SP2 から 15 SP1 へ) はサポートされていません。</para>
       </listitem>
       <listitem os="sles;sled">
-        <para>
-          SUSE strives to support live migration of &vmguest;s from a &vmhost;
-          running a service pack under LTSS to a &vmhost; running a newer
-          service pack within the same &slsa; major version. For example,
-          &vmguest; migration from a &slsa; 12 SP2 host to a &slsa; 12 SP5 host.
-          SUSE only performs minimal testing of LTSS-to-newer migration
-          scenarios and recommends thorough on-site testing before attempting to
-          migrate critical &vmguest;s.
-        </para>
+        <para>SUSE 社では、同一の &slsa; メジャーバージョン内にある &vmhost; 間の移行のうち、 LTSS の適用されたサービスパックの &vmhost; から、より新しいサービスパックの &vmhost; へのライブマイグレーションをサポートするように努力しています。たとえば &slsa; 12 SP2 のホストから &slsa; 12 SP5 のホストへの移行が該当します。ただし、 SUSE 社ではこのような移行に対して最低限のテストのみを実施していますので、本番環境の &vmguest; を移行する場合は、事前に同一環境でのテストを実施してから行うようにしてください。</para>
       </listitem>
       <listitem>
-        <para>
-          The image directory should be located in the same path on both hosts.
-        </para>
+        <para>両方のホストでイメージディレクトリが同じパスであること。</para>
       </listitem>
       <listitem>
-        <para>
-          All hosts should be on the same level of microcode (especially the
-          Spectre microcode updates). This can be achieved by installing the
-          latest updates of &productname; on all hosts.
-        </para>
+        <para>全てのホストは同一レベルのマイクロコード (特に Spectre マイクロコード更新) が適用されている必要があります。これは全てのホストで &productname; の最新版をインストールすることで実現できます。</para>
       </listitem>
     </itemizedlist>
   </sect1>
   <sect1 xml:id="sec-libvirt-admin-migrate-virtmanager">
-    <title>Live-migrating with &vmm;</title>
+    <title>&vmm; によるライブマイグレーション</title>
 
-    <para>
-      When using the &vmm; to migrate &vmguest;s, it does not matter on which
-      machine it is started. You can start &vmm; on the source or the target
-      host or even on a third host. In the latter case, you need to be able to
-      open remote connections to both the target and the source host.
-    </para>
+    <para>&vmm; で &vmguest; の移行を行う場合、どちらのマシンで処理を開始してもかまいません。移行元のホストで &vmm; を実行してもかまいませんし、全く別の第 3 のホストで実行してもかまいません。ただし、後者の場合は移行元と移行先の両方に接続できるように設定しておく必要があります。</para>
 
     <procedure>
       <step>
-        <para>
-          Start &vmm; and establish a connection to the target or the source
-          host. If the &vmm; was started neither on the target nor the source
-          host, connections to both hosts need to be opened.
-        </para>
+        <para>まずは &vmm; を起動し、移行元と移行先に接続します。移行元のホストでも移行先のホストでもない場所から &vmm; を起動している場合は、両方のホストに接続してください。</para>
       </step>
       <step>
-        <para>
-          Right-click the &vmguest; that you want to migrate and choose
-          <guimenu>Migrate</guimenu>. Make sure the guest is running or
-          paused&mdash;it is not possible to migrate guests that are shut down.
-        </para>
+        <para>移行したい &vmguest; を選択して右クリックし、 <guimenu>移行</guimenu> を選択します。なお、対象のゲストが実行中か、もしくは一時停止されている必要があります。停止中の場合は移行できません。</para>
         <tip>
-          <title>Increasing the speed of the migration</title>
-          <para>
-            To increase the speed of the migration, pause the &vmguest;. This is
-            the equivalent of <quote>non-live migration</quote> described in
-            <xref linkend="libvirt-migration-types"/>.
-          </para>
+          <title>移行処理の高速化について</title>
+          <para>移行処理を高速化するためには、 &vmguest; を一時停止するのが最適です。これは <xref linkend="libvirt-migration-types"/> で説明している <quote>非ライブマイグレーション</quote> と同じ処理になります。</para>
         </tip>
       </step>
       <step>
-        <para>
-          Choose a <guimenu>New Host</guimenu> for the &vmguest;. If the desired
-          target host does not show up, make sure that you are connected to the
-          host.
-        </para>
-        <para>
-          To change the default options for connecting to the remote host, under
-          <guimenu>Connection</guimenu>, set the <guimenu>Mode</guimenu>, and
-          the target host's <guimenu>Address</guimenu> (IP address or host name)
-          and <guimenu>Port</guimenu>. If you specify a <guimenu>Port</guimenu>,
-          you must also specify an <guimenu>Address</guimenu>.
-        </para>
-        <para>
-          Under <guimenu>Advanced options</guimenu>, choose whether the move
-          should be permanent (default) or temporary, using <guimenu>Temporary
-          move</guimenu>.
-        </para>
-        <para>
-          Additionally, there is the option <guimenu>Allow unsafe</guimenu>,
-          which allows migrating without disabling the cache of the &vmhost;.
-          This can speed up the migration but only works when the current
-          configuration allows for a consistent view of the &vmguest; storage
-          without using
-          <literal>cache=&quot;none&quot;</literal>/<literal>0_DIRECT</literal>.
-        </para>
+        <para>&vmguest; の移行先となる <guimenu>新しいホスト</guimenu> を選択します。移行先が表示されない場合は、移行先に対して接続を実施しているかどうかをご確認ください。</para>
+        <para>移行先のホストに対する接続オプションを変更したい場合は、 <guimenu>接続</guimenu> 内の <guimenu>モード</guimenu>, <guimenu>アドレス</guimenu> (IP アドレスまたはホスト名), <guimenu>ポート</guimenu> をそれぞれ設定します。なお、 <guimenu>ポート</guimenu> を指定した場合は <guimenu>アドレス</guimenu> の設定も行わなければなりません。</para>
+        <para>また、 <guimenu>詳細なオプション</guimenu> 内では、恒久的な移行か一時的な移行かを選択することができます。一時的に移行するだけであれば、 <guimenu>一時的に移動</guimenu> を選択します。</para>
+        <para>このほか、 <guimenu>安全ではない場合を許可する</guimenu> というオプションも用意されています。これは &vmhost; のキャッシュ機構を無効化することなく移行を実施するためのオプションで、移行処理を高速化することができますが、 <literal>cache=&quot;none&quot;</literal> / <literal>0_DIRECT</literal> を使用しておらず、 &vmguest; のストレージに対する一貫したビューが利用可能な場合にのみ動作します。</para>
         <note>
-          <title>Bandwidth option</title>
-          <para>
-            In recent versions of &vmm;, the option of setting a bandwidth for
-            the migration has been removed. To set a specific bandwidth, use
-            <command>virsh</command> instead.
-          </para>
+          <title>帯域オプションについて</title>
+          <para>&vmm; の新しいバージョンでは、移行時の帯域設定に関する設定オプションが削除されています。帯域を指定して移行を行いたい場合は、 <command>virsh</command> をお使いください。</para>
         </note>
       </step>
       <step>
-        <para>
-          To perform the migration, click <guimenu>Migrate</guimenu>.
-        </para>
-        <para>
-          When the migration is complete, the <guimenu>Migrate</guimenu> window
-          closes and the &vmguest; is now listed on the new host in the &vmm;
-          window. The original &vmguest; is still available on the source host
-          in the shut-down state.
-        </para>
+        <para>移行を開始するには <guimenu>マイグレーション</guimenu> を押します。</para>
+        <para>移行処理が完了すると <guimenu>マイグレーション</guimenu> ウインドウが閉じ、 &vmm; ウインドウ内の移行先ホスト内に &vmguest; が表示されるようになります。なお、移行元の &vmguest; についても、シャットダウン状態で残ります。</para>
       </step>
     </procedure>
   </sect1>
   <sect1 xml:id="sec-libvirt-admin-migrate-virsh">
-    <title>Migrating with <command>virsh</command></title>
+    <title><command>virsh</command> による移行</title>
 
-    <para>
-      To migrate a &vmguest; with <command>virsh</command>
-      <option>migrate</option>, you need to have direct or remote shell access
-      to the &vmhost;, because the command needs to be run on the host. The
-      migration command looks like this:
-    </para>
+    <para>&vmguest; を <command>virsh</command> <option>migrate</option> コマンドで移行するには、 &vmhost; に対する直接のアクセスまたはリモートからのシェルアクセスが必要となります。これは、コマンドをホスト内で実行する必要があるためです。移行のコマンドは下記のように記述します:</para>
 
-<screen>&prompt.user;virsh migrate [OPTIONS] <replaceable>VM_ID_or_NAME</replaceable> <replaceable>CONNECTION_URI</replaceable> [--migrateuri tcp://<replaceable>REMOTE_HOST:PORT</replaceable>]</screen>
+<screen>&prompt.user;virsh migrate [オプション] <replaceable>VM_ID_または名前</replaceable> <replaceable>接続_URI</replaceable> [--migrateuri tcp://<replaceable>リモートホスト:ポート</replaceable>]</screen>
 
-    <para>
-      The most important options are listed below. See <command>virsh help
-      migrate</command> for a full list.
-    </para>
+    <para>下記に主要なオプションを示します。完全な一覧を読みたい場合は、 <command>virsh help migrate</command> コマンドを実行してください。</para>
 
     <variablelist>
       <varlistentry>
         <term><option>--live</option></term>
         <listitem>
-          <para>
-            Does a live migration. If not specified, the guest is paused during
-            the migration (<quote>non-live migration</quote>).
-          </para>
+          <para>ライブマイグレーションを実行します。このオプションを指定しない場合、ゲストは移行の際に一時停止します ( <quote>非ライブマイグレーション</quote> になります) 。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>--suspend</option></term>
         <listitem>
-          <para>
-            Leaves the VM paused on the target host during live or non-live
-            migration.
-          </para>
+          <para>ライブマイグレーションや非ライブマイグレーションで、移行先のホストを一時停止したままの状態にします。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>--persistent</option></term>
         <listitem>
-          <para>
-            Persists the migrated VM on the target host. Without this option,
-            the VM is not be included in the list of domains reported by
-            <command>virsh list --all</command> when shut down.
-          </para>
+          <para>移行先のホストで恒久的な VM 移行を実施します。このオプションを指定しないと、 VM をシャットダウンした段階で <command>virsh list --all</command>  の一覧には表示されなくなります。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>--undefinesource</option></term>
         <listitem>
-          <para>
-            When specified, the &vmguest; definition on the source host is
-            deleted after a successful migration. However, virtual disks
-            attached to this guest are <emphasis>not</emphasis> deleted.
-          </para>
+          <para>このオプションを指定すると、移行が成功した時点で移行元のホストでの &vmguest; の定義を削除します。なお、ゲストに接続されている仮想ディスクは削除<emphasis>されない</emphasis> ことに注意してください。</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>--parallel --parallel-connections <replaceable>NUM_OF_CONNECTIONS</replaceable></option></term>
+        <term><option>--parallel --parallel-connections <replaceable>接続数</replaceable></option></term>
         <listitem>
-          <para>
-            Parallel migration can be used to increase migration data throughput
-            in cases where a single migration thread is not capable of
-            saturating the network link between source and target hosts. On
-            hosts with 40&nbsp;GB network interfaces, it may require four
-            migration threads to saturate the link. With parallel migration, the
-            time required to migrate large memory VMs can be reduced.
-          </para>
+          <para>パラレルマイグレーション (並行移行) は、単一スレッドでの移行処理ではネットワークの帯域を使い切れないような場合に使用するもので、移行処理をより高速化する目的で使用されます。たとえば 40&nbsp;GB のネットワークインターフェイスを持つホストの場合、スレッドを 4 つにすることでネットワーク帯域を産めることができるようになります。またパラレルマイグレーションを使用することで、移行処理に必要な巨大なメモリ占有の時間を減らすこともできます。</para>
         </listitem>
       </varlistentry>
     </variablelist>
 
-    <para>
-      The following examples use &wsIVname; as the source system and &wsIname;
-      as the target system; the &vmguest;'s name is
-      <literal>opensuse131</literal> with ID <literal>37</literal>.
-    </para>
+    <para>下記の例では、移行元を &wsIVname; とし、移行先を &wsIname; とした移行処理を実行しています。また、 &vmguest; の名前は <literal>opensuse131</literal> で、 ID が <literal>37</literal> である場合の例となります。</para>
 
     <variablelist>
       <varlistentry>
-        <term>Non-live migration with default parameters</term>
-        <listitem>
-<screen>&prompt.user;virsh migrate 37 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen>
-        </listitem>
+        <term>既定のパラメータを利用した非ライブマイグレーションの例</term>
+        <listitem><screen>&prompt.user;virsh migrate 37 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen></listitem>
       </varlistentry>
       <varlistentry>
-        <term>Transient live migration with default parameters</term>
-        <listitem>
-<screen>&prompt.user;virsh migrate --live opensuse131 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen>
-        </listitem>
+        <term>既定のパラメータを利用した一時的なライブマイグレーションの例</term>
+        <listitem><screen>&prompt.user;virsh migrate --live opensuse131 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen></listitem>
       </varlistentry>
       <varlistentry>
-        <term>Persistent live migration; delete VM definition on source</term>
+        <term>恒久的なライブマイグレーションで、移行元の VM 定義を削除する例</term>
         <listitem>
 <screen>&prompt.user;virsh migrate --live --persistent --undefinesource 37 \
 qemu+tls://&exampleuser_plain;@&wsIname;/system</screen>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Non-live migration using port 49152</term>
+        <term>ポート 49152 を利用した非ライブマイグレーション</term>
         <listitem>
 <screen>&prompt.user;virsh migrate opensuse131 qemu+ssh://&exampleuser_plain;@&wsIname;/system \
 --migrateuri tcp://@&wsIname;:49152</screen>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term>Live migration transferring all used storage</term>
+        <term>使用している全てのストレージを転送するライブマイグレーション</term>
         <listitem>
 <screen>&prompt.user;virsh migrate --live --persistent --copy-storage-all \
 opensuse156 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen>
           <important>
-            <para>
-              When migrating VM's storage using the
-              <option>--copy-storage-all</option> option, the storage must be
-              placed in a &libvirt; storage pool. The target storage pool must
-              exist with identical type and name as the source pool.
-            </para>
-            <para>
-              To obtain the XML representation of the source pool, use the
-              following command:
-            </para>
-<screen>&prompt.sudo;virsh pool-dumpxml <replaceable>EXAMPLE_VM</replaceable> &gt; <replaceable>EXAMPLE_POOL.xml</replaceable></screen>
-            <para>
-              To create and start the storage pool on the target host, copy its
-              XML representation there and use the following commands:
-            </para>
+            <para><option>--copy-storage-all</option> オプションを指定して VM のストレージを転送する場合、ストレージは &libvirt; のストレージプール内に存在していなければなりません。また、移行先でも同じ種類かつ同じ名前のストレージプールが存在していなければなりません。</para>
+            <para>移行元でストレージプールの XML 形式出力を行いたい場合は、下記のようなコマンドを入力して実行します:</para>
+<screen>&prompt.sudo;virsh pool-dumpxml <replaceable>VM_名</replaceable> &gt; <replaceable>EXAMPLE_POOL.xml</replaceable></screen>
+            <para>移行先のホストでストレージプールを作成して開始するには、上記で出力した XML ファイルをコピーしてから下記のコマンドを実行します:</para>
 <screen>&prompt.sudo;virsh pool-define <replaceable>EXAMPLE_POOL.xml</replaceable>
 &prompt.sudo;virsh pool-start <replaceable>EXAMPLE_VM</replaceable></screen>
           </important>
@@ -429,65 +224,29 @@ opensuse156 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen>
     </variablelist>
 
     <note>
-      <title>Transient compared to persistent migrations</title>
-      <para>
-        By default, <command>virsh migrate</command> creates a temporary
-        (transient) copy of the &vmguest; on the target host. A shut-down
-        version of the original guest description remains on the source host. A
-        transient copy is deleted from the server after it is shut down.
-      </para>
-      <para>
-        To create a permanent copy of a guest on the target host, use the switch
-        <option>--persistent</option>. A shut-down version of the original guest
-        description remains on the source host, too. Use the option
-        <option>--undefinesource</option> together with
-        <option>--persistent</option> for a <quote>real</quote> move where a
-        permanent copy is created on the target host and the version on the
-        source host is deleted.
-      </para>
-      <para>
-        It is not recommended to use <option>--undefinesource</option> without
-        the <option>--persistent</option> option, since this results in the loss
-        of both &vmguest; definitions when the guest is shut down on the target
-        host.
-      </para>
+      <title>一時的な移行と恒久的な移行</title>
+      <para>既定では、 <command>virsh migrate</command> は移行先のホスト内に一時的な &vmguest; のコピーを作成します。移行元のホストには元のゲストの設定が残り、ゲストはシャットダウン状態になります。また、移行先のゲストをシャットダウンすると、一時的な移行の場合は削除されてしまいます。</para>
+      <para>移行先のホストで恒久的に動作させたい場合は、 <option>--persistent</option> オプションを指定してください。この場合も移行元のホストには、ゲストがシャットダウンした状態で残されます。 <option>--persistent</option> に加えて <option>--undefinesource</option> を指定することで、移行先のホストに恒久的な移行を実施し、移行元のゲストを削除するようになります。</para>
+      <para>なお、 <option>--persistent</option> オプションを指定せずに <option>--undefinesource</option> オプションを指定してしまうと、移行先のホストではゲストをシャットダウンしたタイミングで設定が失われてしまうため、両方のホストからゲストが削除されてしまうことに注意してください。</para>
     </note>
   </sect1>
 <!-- Step by step example -->
   <sect1 xml:id="sec-libvirt-migrate-stepbstep">
-    <title>Step-by-step example</title>
+    <title>手順例</title>
 
     <sect2 xml:id="sec-migrate-stepbstep-export">
-      <title>Exporting the storage</title>
-      <para>
-        First, you need to export the storage to share the guest image between
-        hosts. This can be done by an NFS server. In the following example, we
-        want to share the <filename>/volume1/VM</filename> directory for all
-        machines that are on the network 10.0.1.0/24. We are using a &sle; NFS
-        server. As root user, edit the <filename>/etc/exports</filename> file
-        and add:
-      </para>
+      <title>ストレージのエクスポート</title>
+      <para>まずはホスト間でゲストイメージを共有するため、ストレージのエクスポート (公開) を実施します。一般的には NFS サーバを利用します。下記の例では、 <filename>/volume1/VM</filename> ディレクトリを 10.0.1.0/24 のネットワーク内にある全てのホストに対して提供します。具体的には、 root ユーザで <filename>/etc/exports</filename> ファイルを編集して、下記の内容を追記します:</para>
 <screen>/volume1/VM 10.0.1.0/24  (rw,sync,no_root_squash)</screen>
-      <para>
-        You need to restart the NFS server:
-      </para>
+      <para>設定変更後は NFS サーバの再起動が必要です:</para>
 <screen>&prompt.sudo;systemctl restart nfsserver
 &prompt.sudo;exportfs
 /volume1/VM      10.0.1.0/24</screen>
     </sect2>
 
     <sect2 xml:id="sec-migrate-stepbstep-pool">
-      <title>Defining the pool on the target hosts</title>
-      <para>
-        On each host where you want to migrate the &vmguest;, the pool must be
-        defined to be able to access the volume (that contains the Guest image).
-        Our NFS server IP address is 10.0.1.99, its share is the
-        <filename>/volume1/VM</filename> directory, and we want to get it
-        mounted in the <filename>/var/lib/libvirt/images/VM</filename>
-        directory. The pool name is <emphasis>VM</emphasis>. To define this
-        pool, create a <filename>VM.xml</filename> file with the following
-        content:
-      </para>
+      <title>移行先ホストでのプールの設定</title>
+      <para>&vmguest; の移行を行いたい全てのホストにおいて、ボリュームへのアクセスを許可するためのプール定義を実施しなければなりません。ここでは NFS サーバのアドレスが 10.0.1.99 であり、 <filename>/volume1/VM</filename> ディレクトリを <filename>/var/lib/libvirt/images/VM</filename> ディレクトリにマウントするものとします。また、プール名は <emphasis>VM</emphasis> であるものとします。プールを定義するには、 <filename>VM.xml</filename> ファイルを作成して下記のような内容を記述します:</para>
 <screen>&lt;pool type='netfs'&gt;
   &lt;name&gt;VM&lt;/name&gt;
   &lt;source&gt;
@@ -504,98 +263,64 @@ opensuse156 qemu+ssh://&exampleuser_plain;@&wsIname;/system</screen>
     &lt;/permissions&gt;
   &lt;/target&gt;
   &lt;/pool&gt;</screen>
-      <para>
-        Then load it into &libvirt; using the <command>pool-define</command>
-        command:
-      </para>
+      <para>あとは <command>pool-define</command> コマンドを利用して &libvirt; に読み込みます:</para>
 <screen>&prompt.root;virsh pool-define VM.xml</screen>
-      <para>
-        An alternative way to define this pool is to use the
-        <command>virsh</command> command:
-      </para>
+      <para>このほかにも、プールの定義は <command>virsh</command> コマンドで直接実施することもできます:</para>
 <screen>&prompt.root;virsh pool-define-as VM --type netfs --source-host 10.0.1.99 \
      --source-path /volume1/VM --target /var/lib/libvirt/images/VM
-Pool VM created</screen>
-      <para>
-        The following commands assume that you are in the interactive shell of
-        <command>virsh</command>, which can also be reached by using the command
-        <command>virsh</command> without any arguments. Then the pool can be set
-        to start automatically at host boot (autostart option):
-      </para>
+プール VM が作成されました</screen>
+      <para>下記のコマンドは、 <command>virsh</command> に何もパラメータを付与せずに実行した場合に起動される、 <command>virsh</command> の対話型シェル内で実行した場合の例となります。あとはホストの起動時に自動的にプールを開始するように設定します (autostart オプションを指定します):</para>
 <screen><prompt>virsh # </prompt>pool-autostart VM
-Pool VM marked as autostarted</screen>
-      <para>
-        To disable the autostart:
-      </para>
+プール VM が自動起動としてマークされました</screen>
+      <para>自動起動を無効化したい場合は、下記のように入力して実行します:</para>
 <screen><prompt>virsh # </prompt>pool-autostart VM --disable
-Pool VM unmarked as autostarted</screen>
-      <para>
-        Check if the pool is present:
-      </para>
+プール VM の自動起動マークが解除されました</screen>
+      <para>プールが存在しているかどうかを確認します:</para>
 <screen><prompt>virsh # </prompt>pool-list --all
- Name                 State      Autostart
+ 名前                 状態      自動起動
 -------------------------------------------
- default              active     yes
- VM                   active     yes
+ default              動作中    はい (yes)
+ VM                   動作中    はい (yes)
 
 <prompt>virsh # </prompt>pool-info VM
-Name:           VM
+名前:           VM
 UUID:           42efe1b3-7eaa-4e24-a06a-ba7c9ee29741
-State:          running
-Persistent:     yes
-Autostart:      yes
-Capacity:       2,68 TiB
-Allocation:     2,38 TiB
-Available:      306,05 GiB</screen>
+状態:           実行中
+永続:           はい (yes)
+自動起動:       はい (yes)
+容量:           2,68 TiB
+割り当て:       2,38 TiB
+利用可能:       306,05 GiB</screen>
       <warning>
-        <title>Pool needs to exist on all target hosts</title>
-        <para>
-          Remember: this pool must be defined on each host where you want to be
-          able to migrate your &vmguest;.
-        </para>
+        <title>全ての宛先ホストにプールが必要となる件について</title>
+        <para>注意: &vmguest; の移行を行う場合、移行元と移行先の両方で同じプールを定義しなければなりません。</para>
       </warning>
     </sect2>
 
     <sect2 xml:id="sec-migrate-stepbstep-volume">
-      <title>Creating the volume</title>
-      <para>
-        The pool has been defined&mdash;now we need a volume which contains the
-        disk image:
-      </para>
+      <title>ボリュームの作成</title>
+      <para>プールを定義したら、次はディスクイメージを保持するボリュームを定義します:</para>
 <screen><prompt>virsh # </prompt>vol-create-as VM sled12.qcow2 8G --format qcow2
-Vol sled12.qcow2 created</screen>
-      <para>
-        The volume names shown are used later to install the guest with
-        virt-install.
-      </para>
+ボリューム sled12.qcow2 が作成されました</screen>
+      <para>ここで設定したボリューム名は、 virt-install でゲストをインストールする際に表示されます。</para>
     </sect2>
 
     <sect2 xml:id="sec-migrate-stepbstep-guest">
-      <title>Creating the &vmguest;</title>
-      <para>
-        Let us create a &productname; &vmguest; with the
-        <command>virt-install</command> command. The <emphasis>VM</emphasis>
-        pool is specified with the <command>--disk</command> option,
-        <emphasis>cache=none</emphasis> is recommended if you do not want to use
-        the <command>--unsafe</command> option while doing the migration.
-      </para>
+      <title>&vmguest; の作成</title>
+      <para>あとは <command>virt-install</command> コマンドで &productname; の &vmguest; を作成するだけです。 <emphasis>VM</emphasis> プールは <command>--disk</command> オプションで指定しますが、移行時に <command>--unsafe</command> オプションを指定しなくて済むようにするため、 <emphasis>cache=none</emphasis> を指定しておくことをお勧めします。</para>
 <screen>&prompt.root;virt-install --connect qemu:///system --virt-type kvm --name \
    sles15 --memory 1024 --disk vol=VM/sled12.qcow2,cache=none --cdrom \
    /mnt/install/ISO/SLE-15-Server-DVD-x86_64-Build0327-Media1.iso --graphics \
    vnc --os-variant sled15
-Starting install...
-Creating domain...</screen>
+インストールの開始中...
+ドメインを作成中...</screen>
     </sect2>
 
     <sect2 xml:id="sec-migrate-stepbstep-migrate">
-      <title>Migrate the &vmguest;</title>
-      <para>
-        Everything is ready to do the migration now. Run the
-        <command>migrate</command> command on the &vmhost; that is currently
-        hosting the &vmguest;, and choose the target.
-      </para>
-<screen>virsh # migrate --live sled12 --verbose qemu+ssh://<replaceable>IP/Hostname</replaceable>/system
-Password:
+      <title>&vmguest; の移行</title>
+      <para>これで移行に関する全ての準備ができました。あとは現時点で &vmguest; が動作している &vmhost; で、 <command>migrate</command> コマンドで、移行先を指定して実行するだけです。</para>
+<screen>virsh # migrate --live sled12 --verbose qemu+ssh://<replaceable>IP/ホスト名</replaceable>/system
+パスワード:
 Migration: [ 12 %]</screen>
     </sect2>
   </sect1>
