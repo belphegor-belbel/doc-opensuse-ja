@@ -158,9 +158,62 @@ KERNELS=="0000:00:19.0", ATTR{dev_id}=="0x0", ATTR{type}=="1",
 KERNEL=="eth*", NAME="eth0"</screen>
   <para>システムの起動時点では、 systemd の <systemitem>network.service</systemitem> はホットプラグ指定されたボンドポートを待機しませんが、ボンドインターフェイスを動作させるためには、少なくとも 1 つ以上のボンドポートが必要となります。ボンドポートのいずれかが取り外される (NIC ドライバからバインド解除される、つまり NIC のドライバが <command>rmmod</command> されるか、 PCI ホットプラグで取り外される) と、カーネルはボンドデバイスについても自動的に削除を行います。新しいカードがシステムに接続される (置き換えとして同じスロットに接続される) と、 <systemitem>udev</systemitem> はバス ID ベースの固定名を付与して <command>ifup</command> を呼び出します。 <command>ifup</command> 側では、ボンドデバイス側への参加を自動的に行います。<remark> ke: I think this can stay that way for now. </remark></para>
  </sect2>
+<sect2 xml:id="sec-predictable-naming-scheme">
+  <title>Predictable naming scheme</title>
+  <para>
+    There is a limitation with the persistent network name generator and bonding. When an interface is enslaved to a bond,
+    the MAC address is temporarily overridden and set to match the MAC address of the bond interface.
+    This creates inconsistencies in the <literal>70-persistent-net.rules</literal> file when the rules for enslaved interfaces are based on MAC addresses.
+   </para>
+   <para>
+  If an <systemitem>uevent</systemitem> occurs for an enslaved NIC with an updated MAC address,<systemitem>udev</systemitem> may try to
+  rename it using the name of the first enslaved interface, resulting in a temporary name such as <literal>rename4</literal>.
+  Modifying the persistent network name generator to avoid MAC-based rules is not feasible due to the high risk of regressions and the necessity of MAC filtering in certain cases.
+  The persistent network name generator is obsolete and replaced by the predictable naming scheme, which offers more configurability and avoids reliance on MAC addresses.
+  We recommend enabling the predictable naming scheme by appending <literal>net.ifnames=1'</literal> to the <literal>Boot Options</literal> prompt during a new system installation.
+  </para>
+  <procedure>
+    <title>Enabling the naming scheme on an already installed system</title>
+    <step>
+      <para>
+        If the <package>biosdevname</package> package is installed, uninstall
+        it.
+      </para>
+  <screen>&prompt.sudo;zypper rm biosdevname</screen>
+    </step>
+    <step>
+      <para>
+        Back up existing naming rules from
+        <filename>/etc/udev/rules.d</filename> if they exist. For example:
+      </para>
+  <screen>&prompt.sudo;cp /etc/udev/rules.d/70-persistent-net.rules /backup</screen>
+  <note><para>Remove the file <filename>/etc/udev/rules.d/70-persistent-net.rules</filename>, if it exists, to enable
+    predictable network interface names.</para></note>
+    </step>
+      <step>
+      <para>
+        Regenerate the initrd.
+      </para>
+  <screen>&prompt.sudo;dracut -f</screen>
+    </step>
+    <step>
+      <para>
+        Start the &yast; Boot Loader module and append
+        <literal>net.ifnames=1</literal> to the kernel command line. Confirm
+        with <guimenu>OK</guimenu> and reboot the system.
+      </para>
+       </step>
+    <step>
+      <para>
+        If the system is using Wicked as a network manager, align the
+        configuration of network interfaces. Use the <command>yast
+        lan</command> module or rename
+        <filename>/etc/sysconfig/network/ifcfg-*</filename> files accordingly.
+        Then restart Wicked.
+      </para>
+  <screen>&prompt.sudo;systemctl restart wicked.service</screen>
+    </step>
+  </procedure>
+</sect2>
 
-<!--
-  http://www.cyberciti.biz/howto/question/static/linux-ethernet-bonding-driver-howto.php
-  - this is not as fresh as the kernel documentation!
-  -->
 </sect1>
