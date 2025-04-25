@@ -159,58 +159,29 @@ KERNEL=="eth*", NAME="eth0"</screen>
   <para>システムの起動時点では、 systemd の <systemitem>network.service</systemitem> はホットプラグ指定されたボンドポートを待機しませんが、ボンドインターフェイスを動作させるためには、少なくとも 1 つ以上のボンドポートが必要となります。ボンドポートのいずれかが取り外される (NIC ドライバからバインド解除される、つまり NIC のドライバが <command>rmmod</command> されるか、 PCI ホットプラグで取り外される) と、カーネルはボンドデバイスについても自動的に削除を行います。新しいカードがシステムに接続される (置き換えとして同じスロットに接続される) と、 <systemitem>udev</systemitem> はバス ID ベースの固定名を付与して <command>ifup</command> を呼び出します。 <command>ifup</command> 側では、ボンドデバイス側への参加を自動的に行います。<remark> ke: I think this can stay that way for now. </remark></para>
  </sect2>
 <sect2 xml:id="sec-predictable-naming-scheme">
-  <title>Predictable naming scheme</title>
-  <para>
-    There is a limitation with the persistent network name generator and bonding. When an interface is enslaved to a bond,
-    the MAC address is temporarily overridden and set to match the MAC address of the bond interface.
-    This creates inconsistencies in the <literal>70-persistent-net.rules</literal> file when the rules for enslaved interfaces are based on MAC addresses.
-   </para>
-   <para>
-  If an <systemitem>uevent</systemitem> occurs for an enslaved NIC with an updated MAC address,<systemitem>udev</systemitem> may try to
-  rename it using the name of the first enslaved interface, resulting in a temporary name such as <literal>rename4</literal>.
-  Modifying the persistent network name generator to avoid MAC-based rules is not feasible due to the high risk of regressions and the necessity of MAC filtering in certain cases.
-  The persistent network name generator is obsolete and replaced by the predictable naming scheme, which offers more configurability and avoids reliance on MAC addresses.
-  We recommend enabling the predictable naming scheme by appending <literal>net.ifnames=1'</literal> to the <literal>Boot Options</literal> prompt during a new system installation.
-  </para>
+  <title>予測可能なインターフェイス命名方式</title>
+  <para>ネットワークインターフェイスに対して恒久的な名前を設定する機能とボンディングを併用する場合は、いくつかの制限があります。インターフェイスがボンドデバイスに参加する場合、 MAC アドレスはボンドデバイスのものに一時的に上書きされるため、 <literal>70-persistent-net.rules</literal> において MAC アドレスベースの命名を行っている場合、うまく動作しなくなってしまうためです。</para>
+   <para>なお、 MAC アドレス変更済みの NIC に対して <systemitem>uevent</systemitem> が実行された場合、 <systemitem>udev</systemitem> は暫定的なインターフェイス名 (例: <literal>rename4</literal>) を設定します。また、 MAC アドレスベースのルールを避けて別の方式で恒久的な名前を設定しようとするのも現実的ではありません。このような事情から、恒久的な命名方式は廃止予定とされ、新たに予測可能な命名方式に置き換えられるようになっています。これにより設定の可能性が広がっているほか、 MAC アドレスにも依存しなくなっています。予測可能な命名方式は、新規システムのインストール時に <literal>起動オプション</literal> に <literal>net.ifnames=1</literal> を設定することで有効化できます。</para>
   <procedure>
-    <title>Enabling the naming scheme on an already installed system</title>
+    <title>インストール済みのシステムでの命名方式の有効化</title>
     <step>
-      <para>
-        If the <package>biosdevname</package> package is installed, uninstall
-        it.
-      </para>
+      <para><package>biosdevname</package> パッケージがインストールされている場合、アンインストールします。</para>
   <screen>&prompt.sudo;zypper rm biosdevname</screen>
     </step>
     <step>
-      <para>
-        Back up existing naming rules from
-        <filename>/etc/udev/rules.d</filename> if they exist. For example:
-      </para>
+      <para><filename>/etc/udev/rules.d</filename> 内に既存の命名方式が設定されている場合は、まずバックアップしておきます。たとえば下記のように実行します:</para>
   <screen>&prompt.sudo;cp /etc/udev/rules.d/70-persistent-net.rules /backup</screen>
-  <note><para>Remove the file <filename>/etc/udev/rules.d/70-persistent-net.rules</filename>, if it exists, to enable
-    predictable network interface names.</para></note>
+  <note><para><filename>/etc/udev/rules.d/70-persistent-net.rules</filename> 内の既存の命名方式があれば、これらを削除して予測可能なインターフェイス命名方式に切り替えます。</para></note>
     </step>
       <step>
-      <para>
-        Regenerate the initrd.
-      </para>
+      <para>initrd を生成し直します。</para>
   <screen>&prompt.sudo;dracut -f</screen>
     </step>
     <step>
-      <para>
-        Start the &yast; Boot Loader module and append
-        <literal>net.ifnames=1</literal> to the kernel command line. Confirm
-        with <guimenu>OK</guimenu> and reboot the system.
-      </para>
+      <para>あとは &yast; ブートローダモジュールを起動して、カーネルのコマンドラインに <literal>net.ifnames=1</literal> を追加します。作業が終わったら <guimenu>OK</guimenu> を押してシステムを再起動してください。</para>
        </step>
     <step>
-      <para>
-        If the system is using Wicked as a network manager, align the
-        configuration of network interfaces. Use the <command>yast
-        lan</command> module or rename
-        <filename>/etc/sysconfig/network/ifcfg-*</filename> files accordingly.
-        Then restart Wicked.
-      </para>
+      <para>なお、 Wicked をネットワークマネージャとして使用している場合は、ネットワークインターフェイスの設定も変更しておく必要があります。 <command>yast lan</command> モジュールを実行して設定し直すか、もしくは <filename>/etc/sysconfig/network/ifcfg-*</filename> のファイル名を適宜変更してください。ファイル名を変更したあとは、下記のようにして Wicked を再起動してください。</para>
   <screen>&prompt.sudo;systemctl restart wicked.service</screen>
     </step>
   </procedure>
