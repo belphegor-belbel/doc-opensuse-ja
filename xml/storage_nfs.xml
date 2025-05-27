@@ -92,7 +92,7 @@
 
 <screen os="sles">&prompt.sudo;<command>zypper in yast2-nfs-server</command></screen>
 
-    <para>NIS と同様に、 NFS もクライアント／サーバ型のシステムになっています。ですが、 1 台のマシンでネットワークに対してファイルシステムを提供 (エクスポート) しながら、他のホストにあるファイルシステムをマウントする (インポート) することができます。</para>    
+    <para>NIS と同様に、 NFS もクライアント／サーバ型のシステムになっています。ですが、 1 台のマシンでネットワークに対してファイルシステムを提供 (エクスポート) しながら、他のホストにあるファイルシステムをマウントする (インポート) することができます。</para>
   </sect1>
   <sect1 xml:id="sec-nfs-configuring-nfs-server" os="sles;osuse">
     <title>NFS サーバの設定</title>
@@ -125,7 +125,7 @@
           <para>まずは <guimenu>開始</guimenu> のラジオボタンを押します。</para>
         </step>
         <step>
-          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を別途実施する必要があります (詳しくは <xref linkend="sec-nfs-firewall"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 "ファイアウオールを設定できません" のメッセージを無視して続行してください。</para>
+          <para>お使いのシステムで &firewalld; が動作している場合は、 NFS 向けの設定を別途実施する必要があります (詳しくは <xref linkend="sec-nfs-firewall"/> をお読みください) 。現時点の &yast; では &firewalld; への対応が完全ではありませんので、 <quote>ファイアウオールを設定できません</quote> のメッセージを無視して続行してください。</para>
         </step>
         <step>
           <para>また、必要であれば <guimenu>NFSv4 を有効にする</guimenu> をチェックしてください。 NFSv4 を無効化した場合、 &yast; は NFSv3 のみに対応するようになります。なお、 NFSv2 の有効化については、 <xref linkend="sec-nfs-export-manual-nsfv2"/> をお読みください。</para>
@@ -152,7 +152,7 @@
           <!--<para>The default settings allow every host in your network to
             connect. In case you want to restrict to a set of allowed
             hosts, enter the IP addresses or host names in the
-            <guimenu>Host Wild Card</guimenu> textfield. See
+            <guimenu>Host Wild Card</guimenu> textfield. Refer to
             <citetitle>man exports</citetitle> for a detailed view of all
             possible variants.</para>-->
           <para>ホストのワイルドカードでは、下記の 4 種類の設定を行うことができます。 1 種類目は単一のホスト名を指すためのホスト名や IP アドレスの設定、 2 種類目はネットグループによる設定、 3 種類目はワイルドカード (たとえば <literal>*</literal> を指定すると、全てのマシンからアクセスできるようになります) 、そして 4 種類目は IP ネットワークです。これらの設定について、詳しくは <literal>exports</literal> のマニュアルページをお読みください。</para>
@@ -210,8 +210,8 @@
               When clients mount from this server, they just mount
               <literal>servername:/</literal> rather than
               <literal>servername:/export</literal>. It is not necessary to mount
-              <literal>servername:/data</literal>, because it will automatically
-              appear beneath wherever <literal>servername:/</literal> was mounted.
+              <literal>servername:/data</literal>, because it automatically
+              appears beneath wherever <literal>servername:/</literal> was mounted.
               </para>
               -->
           </listitem>
@@ -263,17 +263,60 @@ Nobody-Group = nobody</screen>
 
     <sect2 xml:id="sec-nfs-kerberos">
       <title>&krb; 併用 NFS</title>
-      <para>NFS 向けに &krb; 認証を使用するには、 Generic Security Services (GSS) を有効化しなければなりません。 &yast; の NFS サーバダイアログの冒頭で、 <guimenu>GSS セキュリティを有効にする</guimenu> にチェックを入れてください。また、この機能を利用するには、動作する &krb; サーバを用意しなければなりません。 &yast; では &krb; サーバの構築を行うことはできませんが、この機能を利用するように設定することは可能です。なお、 &yast; の設定に加えて &krb; 認証を使用するにあたっては、 NFS の設定を完了する前に下記の手順を完了する必要があります:</para>
+      <para>
+       To use &krb; authentication for NFS, you must have access to a working
+       &krb; server. The &yast; NFS server module does not set up a &krb;
+       server. Assuming that both server and client are in the same &krb;
+       realm, complete the following server and client procedures before
+       running the NFS configuration.
+      </para>
       <procedure>
+       <title>サーバ</title>
+       <step>
+        <para>
+         Check that the NFS server has a &krb; principal or Service Principal
+         Name (SPN) for nfs/server.fqdn.
+        </para>
+       </step>
+       <step>
+         <para>
+          Check that the nfs/server.fqdn principal keys are in the system
+          keytab.
+         </para>
+       </step>
         <step>
-          <para>サーバとクライアントの両方が、同じ &krb; ドメインに属するようにしてください。同じ KDC (鍵配布センター) サーバにアクセスしなければならないほか、 <filename>krb5.keytab</filename> ファイルを共有しなければなりません (既定では <filename>/etc/krb5.keytab</filename> 内に配置されます) 。 &krb; について、詳しくは <xref linkend="cha-security-kerberos"/> をお読みください。</para>
-        </step>
-        <step>
-          <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
-        </step>
-        <step os="sles;osuse">
-          <para>サーバ側で <command>systemctl start rpc-svcgssd.service</command> を実行して、 svcgssd サービスを開始します。</para>
-        </step>
+         <para>
+          Enable &krb; security for the exported directories.
+         </para>
+       </step>
+       <step>
+         <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+       </step>
+       <step>
+         <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+       </step>
+      </procedure>
+      <procedure>
+       <title>クライアント, サーバ</title>
+       <step>
+        <para>
+         Check the NFS client has a &krb; principal or Service Principal Name
+         (SPN) for host/client.fqdn.
+        </para>
+       </step>
+       <step>
+        <para>
+         Check the host/client.fqdn principal keys are in the system keytab.
+        </para>
+       </step>
+       <step>
+        <para>
+         Enable &krb; security for the NFS mounts.
+        </para>
+       </step>
+       <step>
+        <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+       </step>
       </procedure>
       <para>&krb; 認証を使用するには、サーバ側で <systemitem class="daemon">idmapd</systemitem> デーモンを動作させる必要もあります。詳しくは <xref linkend="var-nfs-export-manual-idmapd"/> をお読みください。</para>
       <para>&krb; が有効化された NFS について、さらに詳しくは <xref linkend="sec-nfs-info"/> にあるリンク先をお読みください。</para>
