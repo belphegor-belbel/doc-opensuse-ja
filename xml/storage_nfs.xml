@@ -23,9 +23,9 @@
 
     <para>ネットワーク内でのユーザ管理を共通化し、中央でとりまとめる目的で、 <emphasis>Network Information Service</emphasis> (NIS) を併用する場合があります。 NFS と NIS を併用することで、ネットワーク内でのファイルやディレクトリに対するアクセス制御を集中管理することができるようになります。また、ユーザにとっても NFS と NIS を利用することで、ネットワークの資源とローカルの資源を完全に透過的に扱うことができるようになります。</para>
 
-    <para>既定の設定では、 NFS はネットワーク側を完全に信用する設計になっていることから、 NFS サーバを有効化するにあたっては、信頼のできるネットワークに接続するようにしてください。具体的には、 NFS サーバが接続するネットワーク内の全てのコンピュータで管理者権限が適切に管理され、かつ物理的なアクセスに対しても保護があることをお確かめください。</para>
+    <para>既定の設定では、 NFS はネットワーク側を信用する設計になっていることから、 NFS サーバを有効化するにあたっては、信頼できるネットワークに接続するようにしてください。具体的には、 NFS サーバが接続するネットワーク内の全てのコンピュータで管理者権限が適切に管理され、かつ物理的なアクセスに対しても保護があることをお確かめください。</para>
 
-    <para>また、 NFS サーバが接続するネットワークが完全にプライベートなものであり、単一のキャビネット内やマシンルーム内に存在していて、部外者による不正なアクセスができないよう、十分なセキュリティを確保してください。場合によっては、サブネット全体についても十分な制限が必要となるなど、きめ細かく信頼を構築する必要があることもあります。このような場合の要件に適合させるため、 NFS では <emphasis>&krb;</emphasis> インフラストラクチャなどにも対応しています。 &krb; を使用するには NFSv4 が必要となりますが、既定で有効化されています。詳しくは <xref linkend="cha-security-kerberos"/> をお読みください。</para>
+    <para>また、 NFS サーバが接続するネットワークをプライベートなものとするほか、単一のキャビネット内やマシンルーム内に配置して、部外者による不正なアクセスができないよう、十分なセキュリティを確保してください。場合によっては、サブネット全体についても十分な制限が必要となるなど、きめ細かく信頼を構築する必要があることもあります。このような場合の要件に適合させるため、 NFS では <emphasis>&krb;</emphasis> インフラストラクチャなどにも対応しています。なお、 &krb; を使用するには NFSv4 が必要となりますが、既定で有効化されています。詳しくは <xref linkend="cha-security-kerberos"/> をお読みください。</para>
 
     <para>&yast; モジュールでは、下記の用語を使用します。</para>
 
@@ -101,7 +101,7 @@
 
     <sect2 xml:id="sec-nfs-export-yast2">
       <title>&yast; を利用したファイルシステムの公開</title>
-      <para>&yast; を利用することで、お使いのコンピュータを NFS サーバに仕立て上げることができます。 NFS サーバでは、許可するコンピュータや特定のグループ内の全メンバーに対して、ファイルやディレクトリをエクスポートすることができます。そのため、 NFS を利用することで、それぞれのホストにインストールすることなく、特定のアプリケーションを利用できるようにすることもできます。</para>
+      <para>&yast; を利用することで、お使いのコンピュータを NFS サーバに仕立て上げることができます。 NFS サーバでは、特定のコンピュータやグループ内の全メンバーに対して、ファイルやディレクトリをエクスポート (公開) することができます。そのため、 NFS を利用することで、それぞれのホストにインストールすることなく、特定のアプリケーションを利用できるようにすることもできます。</para>
       <para>このようなサーバを構築するには、下記の手順で行います:</para>
       <procedure xml:id="pro-nfs-export-yast2-nfs">
         <title>NFS サーバの設定</title>
@@ -184,7 +184,7 @@
 <screen>/<replaceable>共有</replaceable>/<replaceable>ディレクトリ</replaceable>   <replaceable>ホスト</replaceable>(<replaceable>オプションリスト</replaceable>)</screen>
             <para>たとえば、下記のようになります:</para>
             <screen>/nfs_exports/public *(rw,sync,root_squash,wdelay)
-/nfs_exports/department1 *.department1.&exampledomain;(rw,sync,root_squash,wdelay)
+/nfs_exports/dept1 *.dept1.&exampledomain;(rw,sync,root_squash,wdelay)
 /nfs_exports/team1 &subnetI;.0/24(rw,sync,root_squash,wdelay)
 /nfs_exports/&exampleuser_plain; &subnetI;.2(rw,sync,root_squash)</screen>
             <para>上記の例では、 <replaceable>ホスト</replaceable> の欄にそれぞれ下記を指定しています:</para>
@@ -193,7 +193,7 @@
                 <para><literal>*</literal> : ネットワーク内の全てのクライアントに対して共有するよう指定しています</para>
               </listitem>
               <listitem>
-                <para><literal>*.department1.&exampledomain;</literal> : *.department1.&exampledomain; のドメインに属するクライアントにのみ共有するよう指定しています</para>
+                <para><literal>*.dept1.&exampledomain;</literal> : *.dept1.&exampledomain; のドメインに属するクライアントにのみ共有するよう指定しています</para>
               </listitem>
               <listitem>
                 <para><literal>&subnetI;.0/24</literal> : &subnetI;.0/24 の IP アドレス範囲内にのみ共有するよう指定しています</para>
@@ -242,7 +242,7 @@ MOUNTD_OPTIONS="-V2"</screen>
           <listitem>
             <para><systemitem class="daemon">idmapd</systemitem> デーモンは、 &krb; 認証を使用している場合や、クライアント側で数字のユーザ名を扱うことができない場合にのみ必要となるデーモンです。 Linux カーネル 2.6.39 以降では、 Linux クライアントは数字のユーザ名にも対応しています。 <systemitem class="daemon">idmapd</systemitem> デーモンは、 NFSv4 のサーバ宛のリクエストやクライアント宛の応答に対して、名前と ID とのマッピングを行います。</para>
             <para>必要であれば、 <systemitem class="daemon">idmapd</systemitem> を NFSv4 サーバ内で動作させる必要があります。クライアント側での名前と ID のマッピングは、 <package>nfs-client</package> パッケージで提供されている <command>nfsidmap</command> が行います。</para>
-            <para>なお、ユーザ名と ID (uid) が、 NFS でファイルを共有する可能性のある全てのマシン間で正しく統一されていることをご確認ください。これは NIS や LDAP など、任意のドメイン認証の仕組みで実施することができます。</para>
+            <para>なお、ユーザ名と ID (uid) が、 NFS でファイルを共有する可能性のある全てのマシン間で統一されていることをご確認ください。これは NIS や LDAP など、任意のドメイン認証の仕組みで実施することができます。</para>
             <para>また、 <filename>/etc/idmapd.conf</filename> 内の <literal>Domain</literal> パラメータは設定必須となります。この値は NFSv4 のクライアントとサーバの両方で同じ値になっていなければなりません。よく分からない場合は、サーバとクライアントの両方で、既定値である <literal>localdomain</literal> をお使いください。それ以外の値を設定する場合、通常はホストの FQDN 名からホスト名を抜いたものを指定します。設定ファイルの例は下記のようになります:</para>
 <screen>[General]
 Verbosity = 0
@@ -262,60 +262,39 @@ Nobody-Group = nobody</screen>
     <!-- ============================================================== -->
 
     <sect2 xml:id="sec-nfs-kerberos">
-      <title>&krb; 併用 NFS</title>
-      <para>
-       To use &krb; authentication for NFS, you must have access to a working
-       &krb; server. The &yast; NFS server module does not set up a &krb;
-       server. Assuming that both server and client are in the same &krb;
-       realm, complete the following server and client procedures before
-       running the NFS configuration.
-      </para>
+      <title>&krb; を併用する NFS</title>
+      <para>NFS で &krb;: 認証を使用するには、 &krb; サーバの構築をしなければなりません。なお、 &yast; の NFS サーバモジュールでは &krb; サーバの設定を行うことはできません。また、サーバとクライアントの双方を同一の &krb; のレルム内に配置するため、 NFS サーバを構築する前に下記の手順を実施してください。</para>
       <procedure>
-       <title>サーバ</title>
+       <title>サーバの設定</title>
        <step>
-        <para>
-         Check that the NFS server has a &krb; principal or Service Principal
-         Name (SPN) for nfs/server.fqdn.
-        </para>
+        <para>まずは NFS サーバに対して、 nfs/server.fqdn の &krb; プリンシパル、もしくはサービスプリンシパル名が存在することを確認します。</para>
        </step>
        <step>
-         <para>
-          Check that the nfs/server.fqdn principal keys are in the system
-          keytab.
-         </para>
+         <para>次にシステムの keytab 内に、 nfs/server.fqdn のプリンシパルキーが存在することを確認します。</para>
        </step>
         <step>
-         <para>
-          Enable &krb; security for the exported directories.
-         </para>
+         <para>エクスポートしたディレクトリに対して &krb; を有効化します。</para>
        </step>
        <step>
-         <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+         <para><command>systemctl enable gssproxy.service</command> を実行して、 gssproxy サービスを有効化します。</para>
        </step>
        <step>
-         <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+         <para><command>systemctl start gssproxy.service</command> を実行して、 gssproxy サービスを開始します。</para>
        </step>
       </procedure>
       <procedure>
-       <title>クライアント, サーバ</title>
+       <title>クライアントの設定</title>
        <step>
-        <para>
-         Check the NFS client has a &krb; principal or Service Principal Name
-         (SPN) for host/client.fqdn.
-        </para>
+        <para>まずは NFS クライアントに対して、 nfs/client.fqdn の &krb; プリンシパル、もしくはサービスプリンシパル名 (SPN) が存在することを確認します。</para>
        </step>
        <step>
-        <para>
-         Check the host/client.fqdn principal keys are in the system keytab.
-        </para>
+        <para>次にシステムの keytab 内に、 nfs/client.fqdn のプリンシパルキーが存在することを確認します。</para>
        </step>
        <step>
-        <para>
-         Enable &krb; security for the NFS mounts.
-        </para>
+        <para>NFS マウントに対して &krb; のセキュリティを有効化します。</para>
        </step>
        <step>
-        <para>クライアント側で <command>systemctl start rpc-gssd.service</command> を実行して、 gssd サービスを開始します。</para>
+        <para><command>systemctl start rpc-gssd.service</command> を実行して、 rpc-gssd サービスを開始します。</para>
        </step>
       </procedure>
       <para>&krb; 認証を使用するには、サーバ側で <systemitem class="daemon">idmapd</systemitem> デーモンを動作させる必要もあります。詳しくは <xref linkend="var-nfs-export-manual-idmapd"/> をお読みください。</para>
@@ -419,7 +398,7 @@ nfs4mount -fstype=nfs4 server2:/</screen>
 
     <sect2 xml:id="sec-nfs-pnfs">
       <title>Parallel NFS (pNFS)</title>
-      <para>NFS は 1980 年代に開発された、最も古いプロトコルのうちの 1 つです。そのため、 NFS は小さなファイルを共有するには十分なプロトコルですが、巨大なファイルや多数のクライアントを扱うような環境では、 NFS がボトルネックとなって、システムの性能に顕著な悪影響を及ぼしてしまいます。これは昔に比べてファイルが容易に巨大化しやすい環境になったためで、イーサネットの速度がそれに追随できていないことによるものです。</para>
+      <para>NFS は 1980 年代に開発された古いプロトコルです。そのため、 NFS は小さなファイルを共有するには十分なプロトコルですが、巨大なファイルや多数のクライアントを扱うような環境では、 NFS がボトルネックとなって、システムの性能に顕著な悪影響を及ぼしてしまいます。これは昔に比べてファイルが容易に巨大化しやすい環境になったためで、イーサネットの速度がそれに追随できていないことによるものです。</para>
       <para>通常の NFS サーバに対してクライアントがファイルを要求すると、サーバはファイルのメタデータを読み込んだあと、全てのデータを収集してネットワーク経由でファイルを転送します。しかしながら、小さなファイルであっても大きなファイルであっても、性能のボトルネックが発生します:</para>
       <itemizedlist mark="bullet" spacing="normal">
         <listitem>
@@ -666,7 +645,7 @@ LOCKD_UDPPORT=<replaceable>NNNN</replaceable></screen>
 
       <note>
         <title>ファイアウオールのゾーンについて</title>
-        <para><replaceable>ゾーン名</replaceable> の箇所には、マシン内で現在使用しているファイアウオールゾーンを指定してください。どのゾーンを使用しているのかはマシンごとに異なる可能性があることに注意してください。</para>
+        <para><replaceable>ゾーン名</replaceable> の箇所には、マシン内で現在使用しているファイアウオールゾーンを指定してください。どのゾーンを使用しているのかは、マシンごとに異なる可能性があることに注意してください。</para>
       </note>
     </sect2>
   </sect1>
