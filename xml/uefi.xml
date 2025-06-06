@@ -348,56 +348,36 @@ media that will boot on both legacy architectures and UEFI platforms.
   </sect2>
  </sect1>
  <sect1 xml:id="sec-uefi-revocation-list">
-  <title>The Secure Boot Revocation List</title>
-<para>The UEFI Secure Boot Revocation List, also known as <literal>dbx</literal> (Secure Boot Forbidden Signature Database), is a critical security component
-  of a computer's UEFI firmware. It enhances the system security by preventing the loading and execution of untrusted software during the
-  boot process. <literal>dbx</literal> is important because it does the following:
-</para>
+  <title>Secure Boot 失効リスト</title>
+<para>UEFI Secure Boot 失効リストは <literal>dbx</literal> (Secure Boot Forbidden Signature Database (Secure Boot 禁止署名データベース)) としても知られ、コンピュータ内の UEFI ファームウエアでは重要なセキュリティコンポーネントです。このリストは、システムの起動時に信頼のできないソフトウエアの読み込みや実行を阻止するための仕組みで、システムのセキュリティ向上に有用なものです。具体的には、 <literal>dbx</literal> は下記のようなことを行います:</para>
 <itemizedlist mark="bullet" spacing="normal">
   <listitem>
-    <para>
-      <emphasis role="bold">Prevents boot-time malware:</emphasis>
-     <literal>dbx</literal> stops malicious code from being loaded and executed before the operating system even starts.
-    </para>
+    <para><emphasis role="bold">システム起動時のマルウエア阻止:</emphasis> <literal>dbx</literal> は、オペレーティングシステムが動作するよりも前の段階で、不正なコードがシステムに読み込まれて実行されるのを防ぎます。</para>
    </listitem>
    <listitem>
-    <para>
-      <emphasis role="bold">Maintains a chain of trust:</emphasis>
-      Each component verifies the next one in the boot sequence. <literal>dbx</literal> ensures that any component in this chain that has been compromised is immediately blocked.
-     </para>
+    <para><emphasis role="bold">信頼の連鎖:</emphasis> システムの起動時、それぞれのコンポーネントは次に読み込まれるコンポーネントの検証を実施します。 <literal>dbx</literal> を利用することで、そのような連鎖内に不正なコードが存在していれば、それを即時に停止する機能を提供します。</para>
    </listitem>
    <listitem>
-    <para>
-      <emphasis role="bold">Protects against rollback attacks:</emphasis>
-      Helps prevent attackers from rolling back firmware or boot-loaders to older, vulnerable versions.
-     </para>
+    <para><emphasis role="bold">ロールバック (巻き戻し) 攻撃からの保護:</emphasis> 古いバージョンのファームウエアやブートローダへの巻き戻しを防止することで、古いバージョンに存在する脆弱性からの保護を提供します。</para>
    </listitem>
    <listitem>
-    <para>
-      <emphasis role="bold">Enhanced security:</emphasis>
-      Updating <literal>dbx</literal> is important to keep your system protected as new vulnerabilities are discovered.
-      Failing to update it can leave your system exposed to known exploits.
-    </para>
+    <para><emphasis role="bold">セキュリティの拡張:</emphasis> <literal>dbx</literal> は新しく発見された脆弱性から、お使いのシステムを保護するのに重要な仕組みです。このリストを更新しないと、お使いのシステムが既知の脆弱性から保護されなくなってしまいます。</para>
    </listitem>
   </itemizedlist>
 
    <sect2 xml:id="sec-uefi-revocation-list-online">
-    <title>How to apply an online Revocation List update</title>
+    <title>オンラインの失効リスト更新の適用</title>
     <itemizedlist mark="bullet" spacing="normal">
-      <title>Prerequisites</title>
+      <title>前提条件</title>
       <listitem>
-       <para>
-        Secure boot is enabled on your system.
-       </para>
+       <para>お使いのシステムで Secure Boot を有効化しておく必要があります。</para>
       </listitem>
       <listitem>
-       <para>
-        Your system can access the Internet for updates.
-       </para>
+       <para>更新をダウンロードするため、インターネットへの接続が必要です。</para>
       </listitem>
      </itemizedlist>
     <procedure>
-     <step><para>Check the current version of the Revocation List:</para>
+     <step><para>まずは失効リストの現在のバージョンを確認します:</para>
     <screen>&prompt.user; <command>fwupdmgr get-devices</command>
       LENOVO 21AAS05L00
       │
@@ -411,29 +391,28 @@ media that will boot on both legacy architectures and UEFI platforms.
       │     Device Requests:    • Message
       </screen>
         </step>
-        <step><para>Enable the LVFS (Linux Vendor Firmware Service) Revocation List repository:</para>
+        <step><para>まずは LVFS (Linux Vendor Firmware Service) 失効リストリポジトリを有効化します:</para>
           <screen>&prompt.user; <command>fwupdmgr enable-remote lvfs</command>
            </screen>
               </step>
-              <step><para>Refresh the repository metadata:</para>
+              <step><para>リポジトリのメタデータを更新します:</para>
           <screen>&prompt.user; <command>fwupdmgr refresh</command>
            </screen>
               </step>
-              <step><para>Apply the Revocation List update:</para>
+              <step><para>失効リストの更新を適用します:</para>
                 <screen>&prompt.user; <command>fwupdmgr update</command>
                  </screen>
                     </step>
-                   <step><para>To verify after reboot, check the current version:</para>
+                   <step><para>システムを再起動して、最新バージョンが適用されたことを確認します:</para>
                     <screen>&prompt.user; <command>fwupdmgr get-devices</command></screen>
                           </step>
     </procedure>
   </sect2>
   <sect2 xml:id="sec-uefi-revocation-list-offline">
-    <title>How to apply an online Revocation List update </title>
-    <para>For an offline revocation list update, you can update the secure Boot revocation list from &productname; so that secure boot prevents known security issues.
-      This procedure is safe and ensures that the update does not prevent your system from booting.</para>
+    <title>オンラインの失効リスト更新の適用</title>
+    <para>オフライン環境で失効リスト更新を行いたい場合は、 &productname; が提供する情報で Secure Boot 失効リストを更新することができます。これにより、既知のセキュリティ問題から保護できます。この手順によってシステムが起動できなくなるようなことはありませんので、安全です。</para>
       <procedure>
-        <step><para>Check the current version of the Revocation List:</para>
+        <step><para>まずは失効リストの現在のバージョンを確認します:</para>
        <screen>&prompt.user; <command>fwupdmgr get-devices</command>
          LENOVO 21AAS05L00
          │
@@ -447,18 +426,18 @@ media that will boot on both legacy architectures and UEFI platforms.
          │     Device Requests:    • Message
              </screen>
            </step>
-           <step><para>List the updates available from &productname;:</para>
+           <step><para>次に &productname; が提供する更新を一覧表示します:</para>
              <screen>&prompt.user; <command>ls /usr/share/dbxtool/</command>
               </screen>
                  </step>
-                 <step><para>Choose the most recent update file for your architecture. For example, <literal>DBXUpdate-date-architecture.cab</literal>.</para>
+                 <step><para>お使いのアーキテクチャに合致する最新の更新ファイルを探します。たとえば <literal>DBXUpdate-date-architecture.cab</literal> のようなファイルになります。</para>
                               </step>
-                 <step><para>Install the selected update file:</para>
+                 <step><para>選択した更新ファイルをインストールします:</para>
                    <screen>&prompt.user; <command>fwupdmgr install /usr/share/dbxtool/DBXUpdate-date-architecture.cab</command>
                     </screen>
                        </step>
-                      <step><para>To verify after reboot, check the current version:</para>
-                       <screen>&prompt.user; <command>fwupdmgr get-devices</command> </screen>
+                      <step><para>システムを再起動して、最新バージョンが適用されたことを確認します:</para>
+                       <screen>&prompt.user; <command>fwupdmgr get-devices</command></screen>
                              </step>
        </procedure>
   </sect2>
