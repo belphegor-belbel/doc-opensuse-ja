@@ -238,24 +238,86 @@
 
     <para>状態復元の操作は、以前に状態保存しておいた &vmguest; のメモリ状態を読み込んで、実行中の状態に戻す操作です。ここではゲストの起動処理は発生せず、状態を保存した時点の状態に戻します。この操作は、ハイバネーションからの復帰に似ています。</para>
 
-    <para>なお、 &vmguest; の状態は専用のファイルに保存されます。そのため、保存先のディスクには十分な空き容量があることを確認してください。下記のコマンドをゲスト内で実行すると、おおよそ必要な容量を計算することができます (メガバイト単位で表示されます):</para>
+    <para>
+      &libvirt; supports several save file formats. The default format is called
+      <option>raw</option> and consists of a sequential stream of &vmguest;
+      memory pages. The sequential layout of the <option>raw</option> format is
+      not well suited for multiple readers and writers.
+    </para>
+
+    <para>
+      In addition to the <option>raw</option> save file format, &libvirt; also
+      supports several compressed formats: <option>zstd</option>,
+      <option>lzop</option>, <option>gzip</option>, <option>bzip2</option>
+      and <option>xz</option>. Similar to the <option>raw</option> format, the
+      compressed formats consist of a sequential stream of &vmguest; memory
+      pages, but are compressed by the named compression algorithm before being written
+      to or read from the save file. These formats conserve space on the 
+      device holding the save file, but increase save/restore times and host 
+      CPU usage.
+    </para>
+
+    <para>
+      The <option>sparse</option> save file format uses pre-calculated, fixed
+      offsets within the save file to read/write the &vmguest; memory pages. This
+      results in a save file that is roughly the logical size of the &vmguest;'s
+      memory, although its on-disk size depends on the &vmguest;'s actual memory
+      usage. With fixed offsets for the &vmguest; memory pages, the
+      <option>sparse</option> format is well suited to support multiple readers
+      and writers, which may improve save and restore times for &vmguest;s
+      with large memory allocations.
+    </para>
+
+    <para>
+      The default save file format can be changed with the
+      <option>save_image_format</option> setting in
+      <filename>/etc/libvirt/qemu.conf</filename>. The format can also be
+      specified when performing a save operation using <command>virsh</command>.
+      See <xref linkend="sec-libvirt-manage-save-virsh"/> for more information on
+      save and restore with <command>virsh</command>.
+    </para>
+
+    <para>
+      Because the &vmguest;'s state is saved to a file, make sure
+      there is enough space on the device hosting the save file. When
+      using the <option>sparse</option> save file format, the logical save
+      file size will be approximately the same as the &vmguest; memory
+      allocation. However, the actual on-disk file size is usually smaller and
+      depends on the &vmguest; memory usage. Unused memory in the &vmguest;
+      is not written to the save file, hence the term <literal>sparse</literal>.
+    </para>
+
+    <para>
+      For the <option>raw</option> save file format, the logical
+      and on-disk file size are equivalent, and both depend on the
+      &vmguest;'s memory usage. Whether using the <option>raw</option> or
+      <option>sparse</option> format, the on-disk save file size in megabytes
+      can be estimated by running the following command in the &vmguest;:
+    </para>
 
 <screen>&prompt.user;free -mh | awk '/^Mem:/ {print $3}'</screen>
 
+    <para>
+      The compressed formats will result in a smaller on-disk size, depending
+      on the efficiency of the specified compression algorithm.
+    </para>
+
     <warning xml:id="adm-vm-restore">
       <title>保存後の復元作業について</title>
-      <para>&vmguest; の状態保存を行った後は、必ず状態復元を行うものとし、通常の起動や開始は行ってはなりません。通常の起動や開始を行ってしまうと、マシンの仮想ディスクが途中の状態のまま起動することになってしまうほか、状態保存のファイルとも整合性が取れなくなってしまうため、状態復元を行うと致命的なエラーが発生することになります。</para>
+      <para>
+        After a successful save operation, booting or starting the &vmguest;
+        by means other than a restore operation will render the saved state
+        file obsolete. The save file may contain file system data
+        that has not been flushed to disk. Attempting to restore the saved
+        state after the &vmguest; has executed by other means can result
+        in file system corruption.
+      </para>
       <para>状態保存された &vmguest; を正しく使用し続けるには、状態復元を忘れずに実施してください。また、 <command>virsh</command> で状態保存を行った場合は、 &vmm; で状態を復元することができません。この場合は <command>virsh</command> で復元を行ってください。</para>
     </warning>
 
     <important>
       <title>復元後の &vmguest; の時刻同期について</title>
       <para>&vmguest; の状態を保存してから長い時間 (2〜3時間以上) が経過した後に復元を行った場合、時刻同期サービスが正しく時刻を修正できなくなったりする場合があります。このような場合は、 &vmguest; の時刻を手作業で修正してください。たとえば &kvm; ホストであれば、 &qemu; のゲストエージェントを利用することで、 <command>guest-set-time</command> コマンドでゲスト側の時刻を修正することができます。詳しくは <xref linkend="cha-qemu-ga"/> をお読みください。</para>
-    </important>
-
-    <important>
-      <title>&vmguest; がディスクタイプ <literal>raw</literal> , <literal>qcow2</literal> のいずれかでなければならない件について</title>
-      <para>&vmguest; の状態保存や状態復元を行うには、 &vmguest; が <literal>raw</literal> ( <filename>.img</filename> ) もしくは <emphasis>qcow2</emphasis> の種類の仮想ディスクを使用している必要があります。</para>
     </important>
 
     <sect2 xml:id="sec-libvirt-manage-save-vmm">
@@ -283,19 +345,54 @@
 
     <sect2 xml:id="sec-libvirt-manage-save-virsh">
       <title><command>virsh</command> による状態保存と状態復元</title>
-      <para>&vmguest; の状態保存を行うには、 <command>virsh</command> <option>save</option> に続いて <!-- NOTE: VM name/ID is also requires --> 仮想マシン名 (もしくは ID) と保存先のファイルを指定します。</para>
-      <variablelist>
-        <varlistentry>
-          <term><literal>opensuse13</literal> という名前のゲストを状態保存</term>
-          <listitem><screen>&prompt.user;virsh save opensuse13 /virtual/saves/opensuse13.vmsav</screen></listitem>
-        </varlistentry>
-        <varlistentry>
-          <term>ID が <literal>37</literal> のゲストを状態保存</term>
-          <listitem><screen>&prompt.user;virsh save 37 /virtual/saves/opensuse13.vmsave</screen></listitem>
-        </varlistentry>
-      </variablelist>
-      <para>&vmguest; の状態を復元するには、 <command>virsh</command> <option>restore</option> コマンドを使用します:</para>
+      <para>
+        &libvirt; provides more control over the save and restore operations
+        than &vmm;. <command>virsh save</command> and <command>virsh
+        restore</command> support several options to modify the behavior of the
+        operations. In the most basic form, a &vmguest; is saved by providing
+        its name, ID, or UUID and a file name. For example:
+      </para>
 <screen>&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave</screen>
+      <para>
+        A basic &vmguest; restore operation only requires specifying the save
+        file name. For example:
+      </para>
+<screen>&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave</screen>
+      <para>
+        As &vmguest; memory size increases, save and restore operations may
+        require additional options to attain satisfactory transfer rates,
+        particularly when the save image files are backed by high throughput
+        storage. The &vmhost; file system cache is often counterproductive
+        in these scenarios and should be avoided with the
+        <option>bypass-cache</option> option. For example:
+      </para>
+<screen>&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave</screen>
+<screen>&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave</screen>
+      <para>
+        The time required to save and restore &vmguest;s to high throughput
+        storage can be improved by using multiple channels to write and read
+        the &vmguest; memory pages. As noted in
+        <xref linkend="sec-libvirt-manage-save"/>, the <option>sparse</option>
+        image format is required to use multiple channels. When selecting the
+        number of channels, care must be taken to ensure the operation does not
+        adversely affect other workloads running on the &vmhost;. When the
+        &vmhost; resources are statically partitioned, general advice would be
+        to use the same number of channels as physical CPUs dedicated to the
+        &vmguest;. The vCPUs of a &vmguest; are stopped at the start of a
+        save operation, thus it would be safe to use those CPU resources
+        to save &vmguest; memory pages.
+      </para>
+      <para>
+        The following examples save and restore a &vmguest; using 4 channels,
+        while also bypassing the &vmhost; file system cache:
+      </para>
+<screen>&prompt.user;virsh save --bypass-cache --image-format sparse --parallel-channels 4 openSUSE-Leap /virtual/saves/openSUSE-Leap.vmsav</screen>
+<screen>&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave</screen>
+      <para>
+        The image format is encoded in the save image file and does not need to
+        be specified during a restore operation.
+      </para>
+      <para>詳細およびさらなるオプションについては、 <command>virsh help list</command> または <command>man 1 virsh</command> で表示されるマニュアルページをお読みください。</para>
     </sect2>
   </sect1>
   <sect1 xml:id="sec-libvirt-managing-snapshots">

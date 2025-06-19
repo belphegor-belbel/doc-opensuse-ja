@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2025-06-17 22:04+0000\n"
+"POT-Creation-Date: 2025-06-19 22:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -587,13 +587,13 @@ msgstr ""
 #. Tag: para
 #: libvirt_managing.xml:466
 #, no-c-format
-msgid "Saving a &vmguest; preserves the exact state of the guest’s memory. The operation is similar to <emphasis>hibernating</emphasis> a computer. A saved &vmguest; can be quickly restored to its previously saved running condition."
+msgid "Saving a &vmguest; preserves the exact state of the guest’s memory. The operation is similar to <emphasis>hibernating</emphasis> a computer. A saved &vmguest; can be quickly restored to the same running condition prior to the save operation."
 msgstr ""
 
 #. Tag: para
 #: libvirt_managing.xml:473
 #, no-c-format
-msgid "When saved, the &vmguest; is paused, its current memory state is saved to disk, and then the guest is stopped. The operation does not make a copy of any portion of the &vmguest;’s virtual disk. The amount of time taken to save the virtual machine depends on the amount of memory allocated. When saved, a &vmguest;’s memory is returned to the pool of memory available on the &vmhost;."
+msgid "When saved, the &vmguest; is paused, its current memory state is saved to a file, and then the guest is stopped. The operation does not make a copy of any portion of the &vmguest;’s virtual disk. The time required to save the virtual machine depends on the amount of memory allocated. The &vmguest;'s resources are returned to the &vmhost; following a successful save operation."
 msgstr ""
 
 #. Tag: para
@@ -605,359 +605,419 @@ msgstr ""
 #. Tag: para
 #: libvirt_managing.xml:489
 #, no-c-format
-msgid "The &vmguest; is saved to a state file. Make sure there is enough space on the partition you are going to save to. For an estimation of the file size in megabytes to be expected, issue the following command on the guest:"
+msgid "&libvirt; supports several save file formats. The default format is called <option>raw</option> and consists of a sequential stream of &vmguest; memory pages. The sequential layout of the <option>raw</option> format is not well suited for multiple readers and writers."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:496
+#, no-c-format
+msgid "In addition to the <option>raw</option> save file format, &libvirt; also supports several compressed formats: <option>zstd</option> , <option>lzop</option> , <option>gzip</option> , <option>bzip2</option> and <option>xz</option> . Similar to the <option>raw</option> format, the compressed formats consist of a sequential stream of &vmguest; memory pages, but are compressed by the named compression algorithm before being written to or read from the save file. These formats conserve space on the device holding the save file, but increase save/restore times and host CPU usage."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:508
+#, no-c-format
+msgid "The <option>sparse</option> save file format uses pre-calculated, fixed offsets within the save file to read/write the &vmguest; memory pages. This results in a save file that is roughly the logical size of the &vmguest;'s memory, although its on-disk size depends on the &vmguest;'s actual memory usage. With fixed offsets for the &vmguest; memory pages, the <option>sparse</option> format is well suited to support multiple readers and writers, which may improve save and restore times for &vmguest;s with large memory allocations."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:519
+#, no-c-format
+msgid "The default save file format can be changed with the <option>save_image_format</option> setting in <filename>/etc/libvirt/qemu.conf</filename> . The format can also be specified when performing a save operation using <command>virsh</command> . See <xref linkend=\"sec-libvirt-manage-save-virsh\"/> for more information on save and restore with <command>virsh</command> ."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:528
+#, no-c-format
+msgid "Because the &vmguest;'s state is saved to a file, make sure there is enough space on the device hosting the save file. When using the <option>sparse</option> save file format, the logical save file size will be approximately the same as the &vmguest; memory allocation. However, the actual on-disk file size is usually smaller and depends on the &vmguest; memory usage. Unused memory in the &vmguest; is not written to the save file, hence the term <literal>sparse</literal> ."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:538
+#, no-c-format
+msgid "For the <option>raw</option> save file format, the logical and on-disk file size are equivalent, and both depend on the &vmguest;'s memory usage. Whether using the <option>raw</option> or <option>sparse</option> format, the on-disk save file size in megabytes can be estimated by running the following command in the &vmguest;:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:496
+#: libvirt_managing.xml:546
 #, no-c-format
 msgid "&prompt.user;free -mh | awk '/^Mem:/ {print $3}'"
 msgstr ""
 
-#. Tag: title
-#: libvirt_managing.xml:499
-#, no-c-format
-msgid "Always restore saved guests"
-msgstr ""
-
 #. Tag: para
-#: libvirt_managing.xml:500
+#: libvirt_managing.xml:548
 #, no-c-format
-msgid "After using the save operation, do not boot or start the saved &vmguest;. Doing so would cause the machine's virtual disk and the saved memory state to get out of synchronization. This can result in critical errors when restoring the guest."
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:506
-#, no-c-format
-msgid "To be able to work with a saved &vmguest; again, use the restore operation. If you used <command>virsh</command> to save a &vmguest;, you cannot restore it using &vmm;. In this case, make sure to restore using <command>virsh</command> ."
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:515
-#, no-c-format
-msgid "Synchronize &vmguest;'s time after restoring it"
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:516
-#, no-c-format
-msgid "If you restore the &vmguest; after a long pause (hours) since it was saved, its time synchronization service, for example, &chronyd;, may refuse to synchronize its time. In this case, manually synchronize &vmguest;'s time. For example, for &kvm; hosts, you can use the &qemu; guest agent and instruct the guest with the <command>guest-set-time</command> . Refer to <xref linkend=\"cha-qemu-ga\"/> for more details."
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:528
-#, no-c-format
-msgid "Only for &vmguest;s with disk types <literal>raw</literal> , <literal>qcow2</literal>"
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:529
-#, no-c-format
-msgid "Saving and restoring &vmguest;s is only possible if the &vmguest; is using a virtual disk of the type <literal>raw</literal> ( <filename>.img</filename> ), or <emphasis>qcow2</emphasis> ."
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:537
-#, no-c-format
-msgid "Saving/restoring with &vmm;"
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:539
-#, no-c-format
-msgid "Saving a &vmguest;"
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:541
-#, no-c-format
-msgid "Open a VNC connection window to a &vmguest;. Make sure the guest is running."
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:547
-#, no-c-format
-msgid "Choose <menuchoice> <guimenu>Virtual Machine</guimenu> <guimenu>Shutdown</guimenu> <guimenu>Save</guimenu> </menuchoice> ."
+msgid "The compressed formats will result in a smaller on-disk size, depending on the efficiency of the specified compression algorithm."
 msgstr ""
 
 #. Tag: title
 #: libvirt_managing.xml:554
 #, no-c-format
+msgid "Always restore saved guests"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:555
+#, no-c-format
+msgid "After a successful save operation, booting or starting the &vmguest; by means other than a restore operation will render the saved state file obsolete. The save file may contain file system data that has not been flushed to disk. Attempting to restore the saved state after the &vmguest; has executed by other means can result in file system corruption."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:563
+#, no-c-format
+msgid "Always use the same application when saving and restoring &vmguest;s. For example, if <command>virsh</command> is used to save a &vmguest;, do not restore it using &vmm;. In this case, make sure to restore using <command>virsh</command> ."
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:572
+#, no-c-format
+msgid "Synchronize &vmguest;'s time after restoring it"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:573
+#, no-c-format
+msgid "If you restore the &vmguest; after a long pause (hours) since it was saved, its time synchronization service, for example, &chronyd;, may refuse to synchronize its time. In this case, manually synchronize &vmguest;'s time. For example, for &kvm; hosts, you can use the &qemu; guest agent and instruct the guest with the <command>guest-set-time</command> . Refer to <xref linkend=\"cha-qemu-ga\"/> for more details."
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:585
+#, no-c-format
+msgid "Saving/restoring with &vmm;"
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:587
+#, no-c-format
+msgid "Saving a &vmguest;"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:589
+#, no-c-format
+msgid "Open a VNC connection window to a &vmguest;. Make sure the guest is running."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:595
+#, no-c-format
+msgid "Choose <menuchoice> <guimenu>Virtual Machine</guimenu> <guimenu>Shutdown</guimenu> <guimenu>Save</guimenu> </menuchoice> ."
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:602
+#, no-c-format
 msgid "Restoring a &vmguest;"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:556
+#: libvirt_managing.xml:604
 #, no-c-format
 msgid "Open a VNC connection window to a &vmguest;. Make sure the guest is not running."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:562
+#: libvirt_managing.xml:610
 #, no-c-format
 msgid "Choose <menuchoice> <guimenu>Virtual Machine</guimenu> <guimenu>Restore</guimenu> </menuchoice> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:566
+#: libvirt_managing.xml:614
 #, no-c-format
 msgid "If the &vmguest; was previously saved using &vmm;, you are not offered an option to <guimenu>Run</guimenu> the guest. However, note the caveats on machines saved with <command>virsh</command> outlined in <xref linkend=\"adm-vm-restore\"/> ."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:577
+#: libvirt_managing.xml:625
 #, no-c-format
 msgid "Saving and restoring with <command>virsh</command>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:578
+#: libvirt_managing.xml:626
 #, no-c-format
-msgid "Save a running &vmguest; with the command <command>virsh</command> <option>save</option> and specify the file which it is saved to."
-msgstr ""
-
-#. Tag: term
-#: libvirt_managing.xml:584
-#, no-c-format
-msgid "Save the guest named <literal>opensuse13</literal>"
-msgstr ""
-
-#. Tag: listitem
-#: libvirt_managing.xml:585
-#, no-c-format
-msgid "<screen>&prompt.user;virsh save opensuse13 /virtual/saves/opensuse13.vmsav</screen>"
-msgstr ""
-
-#. Tag: term
-#: libvirt_managing.xml:590
-#, no-c-format
-msgid "Save the guest with the ID <literal>37</literal>"
-msgstr ""
-
-#. Tag: listitem
-#: libvirt_managing.xml:591
-#, no-c-format
-msgid "<screen>&prompt.user;virsh save 37 /virtual/saves/opensuse13.vmsave</screen>"
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:596
-#, no-c-format
-msgid "To restore a &vmguest;, use <command>virsh</command> <option>restore</option> :"
+msgid "&libvirt; provides more control over the save and restore operations than &vmm;. <command>virsh save</command> and <command>virsh restore</command> support several options to modify the behavior of the operations. In the most basic form, a &vmguest; is saved by providing its name, ID, or UUID and a file name. For example:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:600
+#: libvirt_managing.xml:633
 #, no-c-format
-msgid "&prompt.user;virsh restore /virtual/saves/opensuse13.vmsave"
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:604
-#, no-c-format
-msgid "Creating and managing snapshots"
+msgid "&prompt.user;virsh save openSUSE-Leap /virtual/saves/openSUSE-Leap.vmsav"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:606
+#: libvirt_managing.xml:634
 #, no-c-format
-msgid "&vmguest; snapshots are snapshots of the complete virtual machine including the state of CPU, RAM, devices and the content of all writable disks. To use virtual machine snapshots, all the attached hard disks need to use the qcow2 disk image format, and at least one of them needs to be writable."
+msgid "A basic &vmguest; restore operation only requires specifying the save file name. For example:"
 msgstr ""
 
-#. Tag: para
-#: libvirt_managing.xml:614
+#. Tag: screen
+#: libvirt_managing.xml:638
 #, no-c-format
-msgid "Snapshots let you restore the state of the machine at a particular point in time. This is useful when undoing a faulty configuration or the installation of a lot of packages. After starting a snapshot that was created while the &vmguest; was shut off, you need to boot it. Any changes written to the disk afterward are lost when starting the snapshot."
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:624
-#, no-c-format
-msgid "Snapshots are supported on &kvm; &vmhost;s only."
-msgstr ""
-
-#. Tag: title
-#: libvirt_managing.xml:630
-#, no-c-format
-msgid "Terminology"
-msgstr ""
-
-#. Tag: para
-#: libvirt_managing.xml:631
-#, no-c-format
-msgid "There are several specific terms used to describe the types of snapshots:"
-msgstr ""
-
-#. Tag: term
-#: libvirt_managing.xml:637
-#, no-c-format
-msgid "Internal snapshots"
+msgid "&prompt.user;virsh restore /virtual/saves/openSUSE-Leap.vmsav"
 msgstr ""
 
 #. Tag: para
 #: libvirt_managing.xml:639
 #, no-c-format
+msgid "As &vmguest; memory size increases, save and restore operations may require additional options to attain satisfactory transfer rates, particularly when the save image files are backed by high throughput storage. The &vmhost; file system cache is often counterproductive in these scenarios and should be avoided with the <option>bypass-cache</option> option. For example:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_managing.xml:647
+#, no-c-format
+msgid "&prompt.user;virsh save --bypass-cache openSUSE-Leap /virtual/saves/openSUSE-Leap.vmsav"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_managing.xml:648
+#, no-c-format
+msgid "&prompt.user;virsh restore --bypass-cache /virtual/saves/openSUSE-Leap.vmsav"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:649
+#, no-c-format
+msgid "The time required to save and restore &vmguest;s to high throughput storage can be improved by using multiple channels to write and read the &vmguest; memory pages. As noted in <xref linkend=\"sec-libvirt-manage-save\"/> , the <option>sparse</option> image format is required to use multiple channels. When selecting the number of channels, care must be taken to ensure the operation does not adversely affect other workloads running on the &vmhost;. When the &vmhost; resources are statically partitioned, general advice would be to use the same number of channels as physical CPUs dedicated to the &vmguest;. The vCPUs of a &vmguest; are stopped at the start of a save operation, thus it would be safe to use those CPU resources to save &vmguest; memory pages."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:663
+#, no-c-format
+msgid "The following examples save and restore a &vmguest; using 4 channels, while also bypassing the &vmhost; file system cache:"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_managing.xml:667
+#, no-c-format
+msgid "&prompt.user;virsh save --bypass-cache --image-format sparse --parallel-channels 4 openSUSE-Leap /virtual/saves/openSUSE-Leap.vmsav"
+msgstr ""
+
+#. Tag: screen
+#: libvirt_managing.xml:668
+#, no-c-format
+msgid "&prompt.user;virsh restore --bypass-cache --parallel-channels 4 /virtual/saves/openSUSE-Leap.vmsav"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:669
+#, no-c-format
+msgid "The image format is encoded in the save image file and does not need to be specified during a restore operation."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:673
+#, no-c-format
+msgid "For more information on save/restore and the supported options, see <command>virsh help save</command> , <command>virsh help restore</command> or <command>man 1 virsh</command> ."
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:681
+#, no-c-format
+msgid "Creating and managing snapshots"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:683
+#, no-c-format
+msgid "&vmguest; snapshots are snapshots of the complete virtual machine including the state of CPU, RAM, devices and the content of all writable disks. To use virtual machine snapshots, all the attached hard disks need to use the qcow2 disk image format, and at least one of them needs to be writable."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:691
+#, no-c-format
+msgid "Snapshots let you restore the state of the machine at a particular point in time. This is useful when undoing a faulty configuration or the installation of a lot of packages. After starting a snapshot that was created while the &vmguest; was shut off, you need to boot it. Any changes written to the disk afterward are lost when starting the snapshot."
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:701
+#, no-c-format
+msgid "Snapshots are supported on &kvm; &vmhost;s only."
+msgstr ""
+
+#. Tag: title
+#: libvirt_managing.xml:707
+#, no-c-format
+msgid "Terminology"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:708
+#, no-c-format
+msgid "There are several specific terms used to describe the types of snapshots:"
+msgstr ""
+
+#. Tag: term
+#: libvirt_managing.xml:714
+#, no-c-format
+msgid "Internal snapshots"
+msgstr ""
+
+#. Tag: para
+#: libvirt_managing.xml:716
+#, no-c-format
 msgid "Snapshots that are saved into the qcow2 file of the original &vmguest;. The file holds both the saved state of the snapshot and the changes made since the snapshot was taken. The main advantage of internal snapshots is that they are all stored in one file and therefore it is easy to copy or move them across multiple machines."
 msgstr ""
 
 #. Tag: term
-#: libvirt_managing.xml:650
+#: libvirt_managing.xml:727
 #, no-c-format
 msgid "External snapshots"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:652
+#: libvirt_managing.xml:729
 #, no-c-format
 msgid "When creating an external snapshot, the original qcow2 file is saved and made read-only, while a new qcow2 file is created to hold the changes. The original file is sometimes called a <emphasis>backing</emphasis> or <emphasis>base</emphasis> file, while the new file with all the changes is called an <emphasis>overlay</emphasis> or <emphasis>derived</emphasis> file. External snapshots are useful when performing backups of &vmguest;s. However, external snapshots are not supported by &vmm;, and cannot be deleted by <command>virsh</command> directly. For more information on external snapshots in &qemu;, refer to <xref linkend=\"cha-qemu-guest-inst-qemu-img-effect\"/> ."
 msgstr ""
 
 #. Tag: term
-#: libvirt_managing.xml:668
+#: libvirt_managing.xml:745
 #, no-c-format
 msgid "Live snapshots"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:670
+#: libvirt_managing.xml:747
 #, no-c-format
 msgid "Snapshots created when the original &vmguest; is running. Internal live snapshots support saving the devices, and memory and disk states, while external live snapshots with <command>virsh</command> support saving either the memory state, or the disk state, or both."
 msgstr ""
 
 #. Tag: term
-#: libvirt_managing.xml:680
+#: libvirt_managing.xml:757
 #, no-c-format
 msgid "Offline snapshots"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:682
+#: libvirt_managing.xml:759
 #, no-c-format
 msgid "Snapshots created from a &vmguest; that is shut off. This ensures data integrity as all the guest's processes are stopped and no memory is in use."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:693
+#: libvirt_managing.xml:770
 #, no-c-format
 msgid "Creating and managing snapshots with &vmm;"
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:695
+#: libvirt_managing.xml:772
 #, no-c-format
 msgid "Internal snapshots only"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:696
+#: libvirt_managing.xml:773
 #, no-c-format
 msgid "&vmm; supports only internal snapshots, either live or offline."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:700
+#: libvirt_managing.xml:777
 #, no-c-format
 msgid "To open the snapshot management view in &vmm;, open the VNC window as described in <xref linkend=\"sec-libvirt-managing-console-vnc-vmm\"/> . Now either choose <menuchoice> <guimenu>View</guimenu> <guimenu>Snapshots</guimenu> </menuchoice> or click <guimenu>Manage VM Snapshots</guimenu> in the toolbar."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:717
+#: libvirt_managing.xml:794
 #, no-c-format
 msgid "The list of existing snapshots for the chosen &vmguest; is displayed in the left-hand part of the window. The snapshot that was last started is marked with a green tick. The right-hand part of the window shows details of the snapshot currently marked in the list. These details include the snapshot's title and time stamp, the state of the &vmguest; at the time the snapshot was taken and a description. Snapshots of running guests also include a screenshot. The <guimenu>Description</guimenu> can be changed directly from this view. Other snapshot data cannot be changed."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:729
+#: libvirt_managing.xml:806
 #, no-c-format
 msgid "Creating a snapshot"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:730
+#: libvirt_managing.xml:807
 #, no-c-format
 msgid "To take a new snapshot of a &vmguest;, proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:735
+#: libvirt_managing.xml:812
 #, no-c-format
 msgid "Optionally, shut down the &vmguest; to create an offline snapshot."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:741
+#: libvirt_managing.xml:818
 #, no-c-format
 msgid "Click <guimenu>Add</guimenu> in the bottom left corner of the VNC window."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:745
+#: libvirt_managing.xml:822
 #, no-c-format
 msgid "The window <guimenu>Create Snapshot</guimenu> opens."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:750
+#: libvirt_managing.xml:827
 #, no-c-format
 msgid "Provide a <guimenu>Name</guimenu> and, optionally, a description. The name cannot be changed after the snapshot has been taken. To be able to identify the snapshot later easily, use a <quote>speaking name</quote> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:758
+#: libvirt_managing.xml:835
 #, no-c-format
 msgid "Confirm with <guimenu>Finish</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:766
+#: libvirt_managing.xml:843
 #, no-c-format
 msgid "To delete a snapshot of a &vmguest;, proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:771
+#: libvirt_managing.xml:848
 #, no-c-format
 msgid "Click <guimenu>Delete</guimenu> in the bottom left corner of the VNC window."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:777
+#: libvirt_managing.xml:854
 #, no-c-format
 msgid "Confirm the deletion with <guimenu>Yes</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:785
+#: libvirt_managing.xml:862
 #, no-c-format
 msgid "To start a snapshot, proceed as follows:"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:790
+#: libvirt_managing.xml:867
 #, no-c-format
 msgid "Click <guimenu>Run</guimenu> in the bottom left corner of the VNC window."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:796
+#: libvirt_managing.xml:873
 #, no-c-format
 msgid "Confirm the start with <guimenu>Yes</guimenu> ."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:805
+#: libvirt_managing.xml:882
 #, no-c-format
 msgid "Creating and managing snapshots with <command>virsh</command>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:806
+#: libvirt_managing.xml:883
 #, no-c-format
 msgid "To list all existing snapshots for a domain ( <replaceable>admin_server</replaceable> in the following), run the <literal>snapshot-list</literal> command:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:811
+#: libvirt_managing.xml:888
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-list --domain sle-ha-node1\n"
       " Name                 Creation Time             State\n"
@@ -975,13 +1035,13 @@ msgid "&prompt.user;virsh snapshot-list --domain sle-ha-node1\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:824
+#: libvirt_managing.xml:901
 #, no-c-format
 msgid "The snapshot that was last started is shown with the <literal>snapshot-current command:</literal>"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:828
+#: libvirt_managing.xml:905
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-current --domain admin_server\n"
       "Basic installation incl. SMT for CLOUD4\n"
@@ -989,13 +1049,13 @@ msgid "&prompt.user;virsh snapshot-current --domain admin_server\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:831
+#: libvirt_managing.xml:908
 #, no-c-format
 msgid "Details about a particular snapshot can be obtained by running the <literal>snapshot-info</literal> command:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:835
+#: libvirt_managing.xml:912
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-info --domain admin_server \\\n"
       "   -name  \"Basic installation incl. SMT for CLOUD4\"\n"
@@ -1012,75 +1072,75 @@ msgid "&prompt.user;virsh snapshot-info --domain admin_server \\\n"
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:848
+#: libvirt_managing.xml:925
 #, no-c-format
 msgid "Creating internal snapshots"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:849
+#: libvirt_managing.xml:926
 #, no-c-format
 msgid "To take an internal snapshot of a &vmguest;, either a live or offline, use the <literal>snapshot-create-as</literal> command as follows:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:854
+#: libvirt_managing.xml:931
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-create-as --domain admin_server<co xml:id=\"virsh-snapshot-add-domain\"/> --name \"Snapshot 1\"<co xml:id=\"virsh-snapshot-add-name\"/> \\\n"
       "--description \"First snapshot\"<co xml:id=\"virsh-snapshot-add-description\"/>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:858
+#: libvirt_managing.xml:935
 #, no-c-format
 msgid "Domain name. Mandatory."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:863
+#: libvirt_managing.xml:940
 #, no-c-format
 msgid "Name of the snapshot. It is recommended to use a <quote>speaking name</quote> , since that makes it easier to identify the snapshot. Mandatory."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:870
+#: libvirt_managing.xml:947
 #, no-c-format
 msgid "Description for the snapshot. Optional."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:877
+#: libvirt_managing.xml:954
 #, no-c-format
 msgid "Creating external snapshots"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:878
+#: libvirt_managing.xml:955
 #, no-c-format
 msgid "With <command>virsh</command> , you can take external snapshots of the guest's memory state, disk state, or both."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:882
+#: libvirt_managing.xml:959
 #, no-c-format
 msgid "To take both live and offline external snapshots of the guest's disk, specify the <option>--disk-only</option> option:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:886
+#: libvirt_managing.xml:963
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
       " \"Offline external snapshot\" --disk-only"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:888
+#: libvirt_managing.xml:965
 #, no-c-format
 msgid "You can specify the <option>--diskspec</option> option to control how the external files are created:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:892
+#: libvirt_managing.xml:969
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
       " \"Offline external snapshot\" \\\n"
@@ -1088,13 +1148,13 @@ msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:895
+#: libvirt_managing.xml:972
 #, no-c-format
 msgid "To take a live external snapshot of the guest's memory, specify the <option>--live</option> and <option>--memspec</option> options:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:899
+#: libvirt_managing.xml:976
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
       " \"Offline external snapshot\" --live \\\n"
@@ -1102,13 +1162,13 @@ msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:902
+#: libvirt_managing.xml:979
 #, no-c-format
 msgid "To take a live external snapshot of both the guest's disk and memory states, combine the <option>--live</option> , <option>--diskspec</option> , and <option>--memspec</option> options:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:907
+#: libvirt_managing.xml:984
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
       " \"Offline external snapshot\" --live \\\n"
@@ -1117,229 +1177,229 @@ msgid "&prompt.user;virsh snapshot-create-as --domain admin_server --name \\\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:911
+#: libvirt_managing.xml:988
 #, no-c-format
 msgid "Refer to the <citetitle>SNAPSHOT COMMANDS</citetitle> section in <command>man 1 virsh</command> for more details."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:917
+#: libvirt_managing.xml:994
 #, no-c-format
 msgid "Deleting a snapshot"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:918
+#: libvirt_managing.xml:995
 #, no-c-format
 msgid "External snapshots cannot be deleted with <command>virsh</command> . To delete an internal snapshot of a &vmguest; and restore the disk space it occupies, use the <literal>snapshot-delete</literal> command:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:924
+#: libvirt_managing.xml:1001
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-delete --domain admin_server --snapshotname \"Snapshot 2\""
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:927
+#: libvirt_managing.xml:1004
 #, no-c-format
 msgid "Starting a snapshot"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:928
+#: libvirt_managing.xml:1005
 #, no-c-format
 msgid "To start a snapshot, use the <literal>snapshot-revert</literal> command:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:932
+#: libvirt_managing.xml:1009
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-revert --domain admin_server --snapshotname \"Snapshot 1\""
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:933
+#: libvirt_managing.xml:1010
 #, no-c-format
 msgid "To start the current snapshot (the one the &vmguest; was started off), it is sufficient to use <option>--current</option> rather than specifying the snapshot name:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:938
+#: libvirt_managing.xml:1015
 #, no-c-format
 msgid "&prompt.user;virsh snapshot-revert --domain admin_server --current"
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:943
+#: libvirt_managing.xml:1020
 #, no-c-format
 msgid "Deleting a &vmguest;"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:945
+#: libvirt_managing.xml:1022
 #, no-c-format
 msgid "By default, deleting a &vmguest; using <command>virsh</command> removes only its XML configuration. Since attached storage is not deleted by default, you can reuse it with another &vmguest;. With &vmm;, you can also delete a guest's storage files as well."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:953
+#: libvirt_managing.xml:1030
 #, no-c-format
 msgid "Deleting a &vmguest; with &vmm;"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:956
+#: libvirt_managing.xml:1033
 #, no-c-format
 msgid "In the &vmm;, right-click a &vmguest; entry."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:961
+#: libvirt_managing.xml:1038
 #, no-c-format
 msgid "From the context menu, choose <guimenu>Delete</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:966
+#: libvirt_managing.xml:1043
 #, no-c-format
 msgid "A confirmation window opens. Clicking <guimenu>Delete</guimenu> permanently erases the &vmguest;. The deletion is not recoverable."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:970
+#: libvirt_managing.xml:1047
 #, no-c-format
 msgid "You can also permanently delete the guest's virtual disk by activating <guimenu>Delete Associated Storage Files</guimenu> . The deletion is not recoverable either."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:980
+#: libvirt_managing.xml:1057
 #, no-c-format
 msgid "Deleting a &vmguest; with <command>virsh</command>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:981
+#: libvirt_managing.xml:1058
 #, no-c-format
 msgid "To delete a &vmguest;, it needs to be shut down first. It is not possible to delete a running guest. For information on shutting down, see <xref linkend=\"sec-libvirt-managing-status\"/> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:986
+#: libvirt_managing.xml:1063
 #, no-c-format
 msgid "To delete a &vmguest; with <command>virsh</command> , run <command>virsh</command> <option>undefine</option> <replaceable>VM_NAME</replaceable> ."
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:991
+#: libvirt_managing.xml:1068
 #, no-c-format
 msgid "&prompt.user;virsh undefine sles12"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:992
+#: libvirt_managing.xml:1069
 #, no-c-format
 msgid "There is no option to automatically delete the attached storage files. If they are managed by libvirt, delete them as described in <xref linkend=\"sec-libvirt-storage-virsh-del-volumes\"/> ."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:1000
+#: libvirt_managing.xml:1077
 #, no-c-format
 msgid "Monitoring"
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:1005
+#: libvirt_managing.xml:1082
 #, no-c-format
 msgid "Monitoring with &vmm;"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1006
+#: libvirt_managing.xml:1083
 #, no-c-format
 msgid "After starting &vmm; and connecting to the &vmhost;, a CPU usage graph of all the running guests is displayed."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1010
+#: libvirt_managing.xml:1087
 #, no-c-format
 msgid "It is also possible to get information about disk and network usage with this tool, however, you must first activate this in <guimenu>Preferences</guimenu> :"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1017
+#: libvirt_managing.xml:1094
 #, no-c-format
 msgid "Run <command>virt-manager</command> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1022
+#: libvirt_managing.xml:1099
 #, no-c-format
 msgid "Select <menuchoice><guimenu>Edit</guimenu> <guimenu>Preferences</guimenu></menuchoice> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1028
+#: libvirt_managing.xml:1105
 #, no-c-format
 msgid "Change the tab from <guimenu>General</guimenu> to <guimenu>Polling</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1034
+#: libvirt_managing.xml:1111
 #, no-c-format
 msgid "Activate the check boxes for the kind of activity you want to see: <guimenu>Poll Disk I/O</guimenu> , <guimenu>Poll Network I/O</guimenu> , and <guimenu>Poll Memory stats</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1041
+#: libvirt_managing.xml:1118
 #, no-c-format
 msgid "If desired, also change the update interval using <guimenu>Update status every n seconds</guimenu> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1047
+#: libvirt_managing.xml:1124
 #, no-c-format
 msgid "Close the <guimenu>Preferences</guimenu> dialog."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1052
+#: libvirt_managing.xml:1129
 #, no-c-format
 msgid "Activate the graphs that should be displayed under <menuchoice> <guimenu>View</guimenu> <guimenu>Graph</guimenu> </menuchoice> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1058
+#: libvirt_managing.xml:1135
 #, no-c-format
 msgid "Afterward, the disk and network statistics are also displayed in the main window of the &vmm;."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1062
+#: libvirt_managing.xml:1139
 #, no-c-format
 msgid "More precise data is available from the VNC window. Open a VNC window as described in <xref linkend=\"sec-libvirt-managing-console-vnc\"/> . Choose <guimenu>Details</guimenu> from the toolbar or the <guimenu>View</guimenu> menu. The statistics are displayed from the <guimenu>Performance</guimenu> entry of the left-hand tree menu."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:1072
+#: libvirt_managing.xml:1149
 #, no-c-format
 msgid "Monitoring with <command>virt-top</command>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1073
+#: libvirt_managing.xml:1150
 #, no-c-format
 msgid "<command>virt-top</command> is a command-line tool similar to the well-known process monitoring tool <command>top</command> . <command>virt-top</command> uses libvirt and therefore is capable of showing statistics for &vmguest;s running on different hypervisors. It is recommended to use <command>virt-top</command> instead of hypervisor-specific tools like <command>xentop</command> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1081
+#: libvirt_managing.xml:1158
 #, no-c-format
 msgid "By default <command>virt-top</command> shows statistics for all running &vmguest;s. Among the data that is displayed is the percentage of memory used ( <literal>%MEM</literal> ) and CPU ( <literal>%CPU</literal> ) and the uptime of the guest ( <literal>TIME</literal> ). The data is updated regularly (every three seconds by default). The following shows the output on a &vmhost; with seven &vmguest;s, four of them inactive:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:1089
+#: libvirt_managing.xml:1166
 #, no-c-format
 msgid "virt-top 13:40:19 - x86_64 8/8CPU 1283MHz 16067MB 7.6% 0.5%\n"
       "7 domains, 3 active, 3 running, 0 sleeping, 0 paused, 4 inactive D:0 O:0 X:0\n"
@@ -1356,103 +1416,103 @@ msgid "virt-top 13:40:19 - x86_64 8/8CPU 1283MHz 16067MB 7.6% 0.5%\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1101
+#: libvirt_managing.xml:1178
 #, no-c-format
 msgid "By default the output is sorted by ID. Use the following key combinations to change the sort field:"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1105
+#: libvirt_managing.xml:1182
 #, no-c-format
 msgid "<keycombo><keycap function=\"shift\"/><keycap>P</keycap></keycombo> : CPU usage"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1107
+#: libvirt_managing.xml:1184
 #, no-c-format
 msgid "<keycombo><keycap function=\"shift\"/><keycap>M</keycap></keycombo> : total memory allocated by the guest"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1109
+#: libvirt_managing.xml:1186
 #, no-c-format
 msgid "<keycombo><keycap function=\"shift\"/><keycap>T</keycap></keycombo> : time"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1110
+#: libvirt_managing.xml:1187
 #, no-c-format
 msgid "<keycombo><keycap function=\"shift\"/><keycap>I</keycap></keycombo> : ID"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1113
+#: libvirt_managing.xml:1190
 #, no-c-format
 msgid "To use any other field for sorting, press <keycombo> <keycap function=\"shift\"/> <keycap>F</keycap> </keycombo> and select a field from the list. To toggle the sort order, use <keycombo> <keycap function=\"shift\"/> <keycap>R</keycap> </keycombo> ."
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1121
+#: libvirt_managing.xml:1198
 #, no-c-format
 msgid "<command>virt-top</command> also supports different views on the &vmguest;s data, which can be changed on-the-fly by pressing the following keys:"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1126
-#, no-c-format
-msgid "<keycap>1</keycap> : show physical CPUs"
-msgstr ""
-
-#. Tag: member
-#: libvirt_managing.xml:1126
+#: libvirt_managing.xml:1203
 #, no-c-format
 msgid "<keycap>0</keycap> : default view"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1126
+#: libvirt_managing.xml:1203
+#, no-c-format
+msgid "<keycap>1</keycap> : show physical CPUs"
+msgstr ""
+
+#. Tag: member
+#: libvirt_managing.xml:1203
 #, no-c-format
 msgid "<keycap>3</keycap> : show virtual disks"
 msgstr ""
 
 #. Tag: member
-#: libvirt_managing.xml:1126
+#: libvirt_managing.xml:1203
 #, no-c-format
 msgid "<keycap>2</keycap> : show network interfaces"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1128
+#: libvirt_managing.xml:1205
 #, no-c-format
 msgid "<command>virt-top</command> supports more hot keys to change the view of the data and many command line switches that affect the behavior of the program. For more information, see <command>man 1 virt-top</command> ."
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:1137
+#: libvirt_managing.xml:1214
 #, no-c-format
 msgid "Monitoring with <command>kvm_stat</command>"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1138
+#: libvirt_managing.xml:1215
 #, no-c-format
 msgid "<command>kvm_stat</command> can be used to trace &kvm; performance events. It monitors <filename>/sys/kernel/debug/kvm</filename> , so it needs the debugfs to be mounted. On &productname; it should be mounted by default. In case it is not mounted, use the following command:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:1144
+#: libvirt_managing.xml:1221
 #, no-c-format
 msgid "&prompt.sudo;mount -t debugfs none /sys/kernel/debug"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1145
+#: libvirt_managing.xml:1222
 #, no-c-format
 msgid "<command>kvm_stat</command> can be used in three different modes:"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:1148
+#: libvirt_managing.xml:1225
 #, no-c-format
 msgid "kvm_stat                    # update in 1 second intervals\n"
       "kvm_stat -1                 # 1 second snapshot\n"
@@ -1461,13 +1521,13 @@ msgid "kvm_stat                    # update in 1 second intervals\n"
 msgstr ""
 
 #. Tag: title
-#: libvirt_managing.xml:1153
+#: libvirt_managing.xml:1230
 #, no-c-format
 msgid "Typical output of <command>kvm_stat</command>"
 msgstr ""
 
 #. Tag: screen
-#: libvirt_managing.xml:1154
+#: libvirt_managing.xml:1231
 #, no-c-format
 msgid "kvm statistics\n"
       "\n"
@@ -1506,7 +1566,7 @@ msgid "kvm statistics\n"
 msgstr ""
 
 #. Tag: para
-#: libvirt_managing.xml:1189
+#: libvirt_managing.xml:1266
 #, no-c-format
 msgid "See <link xlink:href=\"https://clalance.blogspot.com/2009/01/kvm-performance-tools.html\"/> for further information on how to interpret these values."
 msgstr ""
