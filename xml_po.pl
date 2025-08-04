@@ -342,6 +342,9 @@ __EOF__
     $attr->setAttribute("xml:lang", $lang);
   }
 
+  # force encoding="UTF-8" in order to avoid unnecessary escaping @ 2025/08/05
+  $d->setEncoding("UTF-8");
+
   # XML out
   my $dest = $d->toString(2);
   $dest =~ s/__XML_PO__&amp;/&/g;
