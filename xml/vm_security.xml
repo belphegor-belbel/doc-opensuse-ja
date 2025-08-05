@@ -29,57 +29,15 @@
 
     <para>AMD SEV-SNP 仮想マシンを実行するには、 AMD 社の EPYC (第 3 世代もしくはそれ以降) を搭載したシステムが必要となります。また、 BIOS 設定でコンフィデンシャル・コンピューティング機能を有効化する設定が提供されている必要もあります。</para>
   </sect1>
-  <sect1 xml:id="vm-security-enable-confidential-compute-module">
-    <title>Confidential Compute Module の有効化</title>
-
-    <para>AMD SEV-SNP に必要なパッケージは Confidential Compute Module として提供されています。このモジュールはインストール時に有効化できるほか、 SUSEConnect コマンドラインツールを利用して後から有効化することもできます。</para>
-
-    <itemizedlist>
-      <listitem>
-        <para>モジュールを有効化しているかどうかを確認するには、下記のコマンドを実行します:</para>
-<screen>&prompt.sudo; suseconnect -l</screen>
-        <para>上記を実行することにより、利用可能なモジュールとその有効化状態が出力されるほか、有効化するためのコマンドも表示されます。</para>
-        <para>Confidential Compute Module が有効化されていない場合は、下記のように出力されます:</para>
-<screen>Confidential Computing Technical Preview Module 15 SP6 x86_64
-Activate with: suseconnect -p sle-module-confidential-computing/15.6/x86_64</screen>
-      </listitem>
-      <listitem>
-        <para>Confidential Compute Module 技術プレビューを有効化するには、下記のコマンドを実行します:</para>
-<screen> &prompt.sudo; <command>suseconnect -p sle-module-confidential-computing/15.6/x86_64</command>
-Registering system to SUSE Customer Center
-Updating system details on https://scc.suse.com ...
-Activating sle-module-confidential-computing 15.6 x86_64 ...
-Adding service to system ...
-Installing release package ...
-Successfully registered system</screen>
-        <para>上記のように出力されればモジュールの登録は成功です。あとは必要なパッケージをインストールして設定するだけです。</para>
-      </listitem>
-    </itemizedlist>
-  </sect1>
   <sect1 xml:id="vm-security-verify-setup">
     <title>パッケージのインストールとシステムの基礎部分の設定</title>
-
-    <para>Confidential Compute Module では、 AMD SEV-SNP に対応するための代替パッケージを提供しています。また、最大限の互換性を確保するため、下記に示すパッケージはいずれも &productname; &productnumber; のコードストリームをベースにしています。</para>
-
-    <para>置き換える必要のあるパッケージは下記のとおりです:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para>Linux カーネル</para>
-      </listitem>
-      <listitem>
-        <para>QEMU 仮想マシンモニタ</para>
-      </listitem>
-      <listitem>
-        <para>&libvirt; フレームワーク</para>
-      </listitem>
-    </itemizedlist>
-
+    <para>パッケージの置き換えが完了したら、あとは AMD SEV-SNP を使用するための設定変更を実施します。ホスト側では、非パススルーモードで IOMMU を設定しなければなりません。これは、周辺機器から暗号化されたゲストに属するメモリに対して、書き込みを防止し、データの破壊を防ぐために必要な措置となります。 &productname; &productnumber; での既定値は <literal>passthrough</literal> (パススルー) になっています。</para>
     <procedure>
-      <step>
-        <para>パッケージを置き換えながらインストールするには、下記のコマンドを実行します:</para>
-<screen>&prompt.sudo; <command>zypper install --from SLE-Module-Confidential-Computing-15-SP6-Pool --from SLE-Module-Confidential-Computing-15-SP6-Updates qemu-ovmf-x86_64 libvirt kernel-coco</command></screen>
-        <para>パッケージの置き換えが完了したら、あとは AMD SEV-SNP を使用するための設定変更を実施します。ホスト側では、非パススルーモードで IOMMU を設定しなければなりません。これは、周辺機器から暗号化されたゲストに属するメモリに対して、書き込みを防止し、データの破壊を防ぐために必要な措置となります。 &productname; &productnumber; での既定値は <literal>passthrough</literal> (パススルー) になっています。</para>
+       <step>
+        <para>
+          To automatically load the <literal>msr</literal> module at boot:
+        </para>
+<screen>&prompt.sudo;; <command>update-bootloader</command></screen>
       </step>
       <step>
         <para>&productname; &productnumber; で IOMMU の設定を無効化するには、 <filename>/etc/default/grub</filename> ファイルを開いて、 <varname>GRUB_CMDLINE_LINUX_DEFAULT</varname> 変数内に <literal>iommu=nopt</literal> を追加します。</para>
@@ -97,13 +55,7 @@ Successfully registered system</screen>
     <title>設定の確認</title>
 
     <para>次にインストールの確認とパッケージの設定を行います。</para>
-
     <procedure>
-      <step>
-        <para>まずは新しいカーネルで起動していることを確認します。 <command>uname -r</command> コマンドを実行して、下記のように出力されていることを確認します。</para>
-<screen>&prompt.sudo; <command>uname -r</command> <replaceable>6.4.0-150616.coco15sp6-coco</replaceable></screen>
-        <para>上記のように <quote>coco</quote> というタグが表示されていることを確認してください。</para>
-      </step>
       <step>
         <para>また、カーネルの起動時に AMD Secure Processor の初期化結果が出力されていることを確認します。下記のようにコマンドを実行して確認してください:</para>
 <screen>&prompt.sudo; <command>dmesg | grep -i ccp</command>
