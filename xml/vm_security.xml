@@ -30,14 +30,12 @@
     <para>AMD SEV-SNP 仮想マシンを実行するには、 AMD 社の EPYC (第 3 世代もしくはそれ以降) を搭載したシステムが必要となります。また、 BIOS 設定でコンフィデンシャル・コンピューティング機能を有効化する設定が提供されている必要もあります。</para>
   </sect1>
   <sect1 xml:id="vm-security-verify-setup">
-    <title>パッケージのインストールとシステムの基礎部分の設定</title>
-    <para>パッケージの置き換えが完了したら、あとは AMD SEV-SNP を使用するための設定変更を実施します。ホスト側では、非パススルーモードで IOMMU を設定しなければなりません。これは、周辺機器から暗号化されたゲストに属するメモリに対して、書き込みを防止し、データの破壊を防ぐために必要な措置となります。 &productname; &productnumber; での既定値は <literal>passthrough</literal> (パススルー) になっています。</para>
+    <title>システムの基礎部分の設定</title>
+    <para>AMD SEV-SNP を有効化した &vmguest; を動作させるには、まず &vmhost; 側において設定調整を実施する必要があります。 SUSE Linux Enterprise Server 15 SP7 では、既定の IOMMU はパススルーに設定されていますが、 AMD SEV-SNP を使用するには非パススルーモードに設定しなければなりません。これは、暗号化された &vmguest; からメモリを介して物理デバイスにアクセスしてしまうと、データの整合性が損なわれる危険性があるためです。なお、任意でインストールする <command>snphost</command> ツールを利用するには、 MSR カーネルモジュールが必要となります。</para>
     <procedure>
        <step>
-        <para>
-          To automatically load the <literal>msr</literal> module at boot:
-        </para>
-<screen>&prompt.sudo;; <command>update-bootloader</command></screen>
+        <para><literal>msr</literal> モジュールを起動時に読み込むように設定するには、下記のように実行します:</para>
+<screen>&prompt.sudo; <command>echo "msr" &gt; /etc/modules-load.d/msr.conf</command></screen>
       </step>
       <step>
         <para>&productname; &productnumber; で IOMMU の設定を無効化するには、 <filename>/etc/default/grub</filename> ファイルを開いて、 <varname>GRUB_CMDLINE_LINUX_DEFAULT</varname> 変数内に <literal>iommu=nopt</literal> を追加します。</para>
@@ -54,7 +52,7 @@
   <sect1 xml:id="vm-verify-setup">
     <title>設定の確認</title>
 
-    <para>次にインストールの確認とパッケージの設定を行います。</para>
+    <para>&vmhost; のインストールと設定が正しくできているかどうかを確認するには、 dmesg もしくは任意でインストールする <command>snphost</command> ツールを使用します。</para>
     <procedure>
       <step>
         <para>また、カーネルの起動時に AMD Secure Processor の初期化結果が出力されていることを確認します。下記のようにコマンドを実行して確認してください:</para>
