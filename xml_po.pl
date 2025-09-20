@@ -322,7 +322,7 @@ __EOF__
             }
           }
 
-          my $chunk = $parser->parse_balanced_chunk(
+          my $chunk = $parser->parse_string(
             #dummy <para> in order to resolve XML namespace
             $dummyParaStart . $msgstr . $dummyParaEnd);
           for my $c (($chunk->childNodes)[0]->childNodes) {
