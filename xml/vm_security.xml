@@ -209,57 +209,35 @@
   </sect1>
 
   <sect1 xml:id="sev-snp-attestation">
-    <title>AMD SEV-SNP 仮想マシンの確認</title>
+    <title>AMD SEV-SNP 仮想マシンの認証</title>
 
-    <para>
-      Once SEV-SNP activation has been verified, the integrity of the confidential VM can be
-      established through attestation, which provides cryptographic proof that it runs on
-      genuine AMD hardware under a verified firmware and TCB level, backed by a trusted certificate hierarchy.
-    </para>
+    <para>SEV-SNP の有効化が確認できたら、あとは認証処理を行うことで仮想マシンの機密性を確立することができるようになります。この認証処理は暗号処理をベースにした認証で、階層構造による証明関係を構築することで、検証済みのファームウエアや TCB レベルを使用した、正規の AMD ハードウエアであることを証明します。</para>
 
-    <para>
-      The attestation process involves two tools: <command>snpguest</command> and <command>snphost</command>.  
-    </para>
+    <para>認証処理に際しては、 <command>snpguest</command> と <command>snphost</command> というツールを使用します。</para>
 
     <sect2 xml:id="sev-snp-attestation-guest">
-      <title>Generating and verifying the attestation report</title>
+      <title>認証レポートの生成と検証</title>
 
-       <para>
-        Inside the guest, the <command>snpguest</command> tool can be used to perform the
-        attestation workflow. This process generates an attestation report, fetches the
-        corresponding AMD certificate chain, and verifies that the report is cryptographically
-        signed by a valid platform key.
-       </para>
+       <para>ゲスト内で <command>snpguest</command> ツールを使用することで、認証ワークフローを実行することができます。この処理では認証レポートを生成し、それぞれの AMD 証明書の連鎖にアクセスして、正しいプラットフォーム鍵で電子的に署名されていることを検証します。</para>
 
       <procedure>
         <step>
-          <para>
-            Generate an attestation report and a corresponding request file. The
-            <option>--random</option> flag includes random data for uniqueness:
-          </para>
+          <para>まずは認証レポートと対応する要求ファイルを生成します。 <option>--random</option> フラグを指定することで、唯一性を保証するための乱数データを含めることができます:</para>
           <screen>&prompt.sudo;<command>snpguest report attestation-report.bin request-file.bin --random</command></screen>
         </step>
 
         <step>
-          <para>
-            Fetch the AMD CA and ASK certificates from the Key Distribution Service (KDS) in DER
-            format. Replace <literal>genoa</literal> with your processor model if different:
-          </para>
-        <screen>&prompt.sudo;; <command>update-bootloader</command></screen>
+          <para>次に鍵配布サービス (KDS) から AMD CA と ASK の各証明書を DER 形式で取得します。ここで、 <literal>genoa</literal> の箇所にはプロセッサモデルを指定します (モデルが異なる場合は変更してください):</para>
+        <screen>&prompt.sudo;<command>snpguest fetch ca der genoa ./certs-kds</command></screen>
         </step>
 
         <step>
-          <para>
-            Fetch the Versioned Chip Endorsement Key (VCEK) using the generated attestation
-            report:
-          </para>
+          <para>さらに生成された認証レポートを利用して、 Versioned Chip Endorsement Key (VCEK) を取得します:</para>
           <screen>&prompt.sudo;<command>snpguest fetch vcek der genoa ./certs-kds attestation-report.bin</command></screen>
         </step>
 
         <step>
-          <para>
-            Verify the attestation report against the fetched certificates:
-          </para>
+          <para>取得した証明書を利用して、認証レポートを検証します:</para>
           <screen>&prompt.sudo;<command>snpguest verify attestation ./certs-kds attestation-report.bin</command>
 
 Reported TCB Boot Loader from certificate matches the attestation report.
@@ -273,40 +251,27 @@ VEK signed the Attestation Report!
       </procedure>
     
       <note>
-        <para>
-          The extended attestation workflow using the
-          <command>snpguest certificates</command> command relies on QEMU functionality that is
-          not currently available.
-        </para>
+        <para>なお、 <command>snpguest certificates</command> コマンドを利用した拡張型の認証ワークフローは QEMU 側の機能に依存して動作するものですが、こちらは現時点では利用できません。</para>
       </note>
     </sect2>
 
     <sect2 xml:id="sev-snp-host-attestation">
-      <title>Validating AMD certificates on the host</title>
-    <para>
-        The host can optionally fetch and verify the AMD certificate chain used to validate
-        guest attestation reports.
-    </para>
+      <title>ホスト側での AMD 証明書の検証</title>
+    <para>ホスト側では、必要に応じてゲスト側の認証レポートを検証するための AMD 証明書連鎖を取得および検証することができます。</para>
 
     <procedure>
         <step>
-          <para>
-            Fetch the AMD CA and ASK certificates from AMD’s Key Distribution Service (KDS):
-          </para>
+          <para>AMD 社の鍵配布サービス (KDS) から AMD CA と ASK の各証明書を取得します:</para>
 <screen>&prompt.sudo; snphost fetch ca pem ./certs</screen>
         </step>
 
         <step>
-          <para>
-            Fetch the chip endorsement certificate (VCEK or VLEK) for the platform:
-          </para>
+          <para>次に、プラットフォームに対応した Chip Endorsement Certificate (VCEK または VLEK) を取得します:</para>
 <screen>&prompt.sudo; snphost fetch vek pem ./certs</screen>
         </step>
 
         <step>
-          <para>
-            Verify the integrity of the fetched certificate chain:
-          </para>
+          <para>取得した証明書の連鎖の正当性を検証します:</para>
 <screen>&prompt.sudo; <command>snphost verify ./certs</command>
 • = self signed, ⬑ = signs, •̷ = invalid self sign, ⬑̸ = invalid signs
 
