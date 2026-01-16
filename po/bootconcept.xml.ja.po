@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bootconcept.xml\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2025-08-04 22:05+0000\n"
+"POT-Creation-Date: 2026-01-16 22:16+0000\n"
 "PO-Revision-Date: 2024-06-28 07:12+0900\n"
 "Last-Translator: Yasuhiko Kamata <belphegor@belbel.or.jp>\n"
 "Language-Team: Japanese <opensuse-ja@opensuse.org>\n"
@@ -25,561 +25,1083 @@ msgstr ""
 msgid "Introduction to the boot process"
 msgstr "起動処理の紹介"
 
-#. Tag: para
-#: bootconcept.xml:11
+#. Tag: meta
+#: bootconcept.xml:10
 #, no-c-format
-msgid "Booting a Linux system involves different components and tasks. After a firmware and hardware initialization process, which depends on the machine's architecture, the kernel is started by the boot loader &grub;. After this point, the boot process is controlled by the operating system and handled by &systemd;. &systemd; provides a set of <quote>targets</quote> that boot configurations for everyday usage, maintenance or emergencies."
-msgstr "Linux システムの起動に際しては、様々なコンポーネントや処理が介在しています。ファームウエアとハードウエアの初期化処理が完了した後は、マシンのアーキテクチャによって異なりますが、ブートローダ &grub; などを利用してカーネルを起動します。この時点まで到達すると、ようやくオペレーティングシステムが制御できる状況になり、 &systemd; が続きを処理するようになります。 &systemd; は <quote>ターゲット</quote> と呼ばれるセットを提供し、日々の費用やメンテナンス、緊急時用など、それぞれに役割が設定されています。"
+msgid ""
+"Learn how the Linux boot process works, from firmware and hardware "
+"initialization to kernel loading, initramfs setup, and systemd startup"
+msgstr ""
+
+#. Tag: para
+#: bootconcept.xml:12
+#, no-c-format
+msgid ""
+"Booting a Linux system involves different components and tasks. After a "
+"firmware and hardware initialization process, which depends on the machine's "
+"architecture, the kernel is started by the boot loader &grub;. After this "
+"point, the boot process is controlled by the operating system and handled by "
+"&systemd;. &systemd; provides a set of <quote>targets</quote> that boot "
+"configurations for everyday usage, maintenance or emergencies."
+msgstr ""
+"Linux システムの起動に際しては、様々なコンポーネントや処理が介在しています。"
+"ファームウエアとハードウエアの初期化処理が完了した後は、マシンのアーキテク"
+"チャによって異なりますが、ブートローダ &grub; などを利用してカーネルを起動し"
+"ます。この時点まで到達すると、ようやくオペレーティングシステムが制御できる状"
+"況になり、 &systemd; が続きを処理するようになります。 &systemd; は <quote>"
+"ターゲット</quote> と呼ばれるセットを提供し、日々の費用やメンテナンス、緊急時"
+"用など、それぞれに役割が設定されています。"
 
 #. Tag: date
-#: bootconcept.xml:27
+#: bootconcept.xml:28
 #, no-c-format
 msgid "2024-06-27"
 msgstr "2024-06-27"
 
 #. Tag: title
-#: bootconcept.xml:37
+#: bootconcept.xml:38
 #, no-c-format
 msgid "Terminology"
 msgstr "用語説明"
 
 #. Tag: para
-#: bootconcept.xml:38
+#: bootconcept.xml:39
 #, no-c-format
-msgid "This chapter uses terms that can be interpreted ambiguously. To understand how they are used here, read the definitions below:"
+msgid ""
+"This chapter uses terms that can be interpreted ambiguously. To understand "
+"how they are used here, read the definitions below:"
 msgstr "この章では、誤解を生みやすい用語に関して、詳しい説明を行っています:"
 
 #. Tag: term
-#: bootconcept.xml:44
+#: bootconcept.xml:45
 #, no-c-format
 msgid "<systemitem>init</systemitem>"
 msgstr "<systemitem>init</systemitem>"
 
 #. Tag: para
-#: bootconcept.xml:46
+#: bootconcept.xml:47
 #, no-c-format
 msgid "Two different processes are commonly named <quote>init</quote> :"
 msgstr "一般的に <quote>init</quote> というと、下記の 2 つの意味があります:"
 
 #. Tag: para
-#: bootconcept.xml:51
+#: bootconcept.xml:52
 #, no-c-format
-msgid "The <systemitem>initramfs</systemitem> process mounting the root file system"
-msgstr "ルートファイルシステムをマウントするための <systemitem>initramfs</systemitem> の処理"
+msgid ""
+"The <systemitem>initramfs</systemitem> process mounting the root file system"
+msgstr ""
+"ルートファイルシステムをマウントするための <systemitem>initramfs</"
+"systemitem> の処理"
 
 #. Tag: para
-#: bootconcept.xml:57
+#: bootconcept.xml:58
 #, no-c-format
-msgid "The operating system process that starts all other processes that is executed from the real root file system"
-msgstr "実際のルートファイルシステムをマウントしたあとに実行される、様々なプログラムを起動するためのオペレーティングシステムの処理"
+msgid ""
+"The operating system process that starts all other processes that is "
+"executed from the real root file system"
+msgstr ""
+"実際のルートファイルシステムをマウントしたあとに実行される、様々なプログラム"
+"を起動するためのオペレーティングシステムの処理"
 
 #. Tag: para
-#: bootconcept.xml:63
+#: bootconcept.xml:64
 #, no-c-format
-msgid "In both cases, the &systemd; program is taking care of this task. It is first executed from the <systemitem>initramfs</systemitem> to mount the root file system. When that has succeeded, it is re-executed from the root file system as the initial process. To avoid confusing these two &systemd; processes, we refer to the first process as <emphasis>init on initramfs</emphasis> and to the second one as <emphasis>systemd</emphasis> ."
-msgstr "いずれの処理に対しても &systemd; がその役割を担っています。まず &systemd; はルートファイルシステムをマウントするため、 <systemitem>initramfs</systemitem> 内に存在するものが最初に起動され、ルートファイルシステムのマウントが成功すると、最初のプロセスとしてルートファイルシステム内に存在するものが起動され、元のプロセスを置き換えて動作します。このような構造から、 &systemd; のプロセスのうち前者を <emphasis>init on initramfs</emphasis> 、後者を <emphasis>systemd</emphasis> と呼びます。"
+msgid ""
+"In both cases, the &systemd; program is taking care of this task. It is "
+"first executed from the <systemitem>initramfs</systemitem> to mount the root "
+"file system. When that has succeeded, it is re-executed from the root file "
+"system as the initial process. To avoid confusing these two &systemd; "
+"processes, we refer to the first process as <emphasis>init on initramfs</"
+"emphasis> and to the second one as <emphasis>systemd</emphasis> ."
+msgstr ""
+"いずれの処理に対しても &systemd; がその役割を担っています。まず &systemd; は"
+"ルートファイルシステムをマウントするため、 <systemitem>initramfs</"
+"systemitem> 内に存在するものが最初に起動され、ルートファイルシステムのマウン"
+"トが成功すると、最初のプロセスとしてルートファイルシステム内に存在するものが"
+"起動され、元のプロセスを置き換えて動作します。このような構造から、 &systemd; "
+"のプロセスのうち前者を <emphasis>init on initramfs</emphasis> 、後者を "
+"<emphasis>systemd</emphasis> と呼びます。"
 
 #. Tag: term
-#: bootconcept.xml:75
+#: bootconcept.xml:76
 #, no-c-format
 msgid "<systemitem>initrd</systemitem> / <systemitem>initramfs</systemitem>"
 msgstr "<systemitem>initrd</systemitem> / <systemitem>initramfs</systemitem>"
 
 #. Tag: para
-#: bootconcept.xml:79
+#: bootconcept.xml:80
 #, no-c-format
-msgid "An <systemitem>initrd</systemitem> (initial RAM disk) is an image file containing a root file system image which is loaded by the kernel and mounted from <filename>/dev/ram</filename> as the temporary root file system. Mounting this file system requires a file system driver."
-msgstr "<systemitem>initrd</systemitem> (INITial Ram Disk (初期 RAM ディスク) の略) は一時的なルートファイルシステムのイメージを含むファイルで、カーネルによって読み込まれ、 <filename>/dev/ram</filename> からマウントされる仕組みです。このファイルシステムをマウントするには、ファイルシステムドライバが必要となります。"
+msgid ""
+"An <systemitem>initrd</systemitem> (initial RAM disk) is an image file "
+"containing a root file system image which is loaded by the kernel and "
+"mounted from <filename>/dev/ram</filename> as the temporary root file "
+"system. Mounting this file system requires a file system driver."
+msgstr ""
+"<systemitem>initrd</systemitem> (INITial Ram Disk (初期 RAM ディスク) の略) "
+"は一時的なルートファイルシステムのイメージを含むファイルで、カーネルによって"
+"読み込まれ、 <filename>/dev/ram</filename> からマウントされる仕組みです。この"
+"ファイルシステムをマウントするには、ファイルシステムドライバが必要となりま"
+"す。"
 
 #. Tag: para
-#: bootconcept.xml:85
+#: bootconcept.xml:86
 #, no-c-format
-msgid "Beginning with kernel 2.6.13, the initrd has been replaced by the <systemitem>initramfs</systemitem> (initial RAM file system), which does not require a file system driver to be mounted. &productname; exclusively uses an <systemitem>initramfs</systemitem> . However, since the <systemitem>initramfs</systemitem> is stored as <filename>/boot/initrd</filename> , it is often called <quote>initrd</quote> . In this chapter we exclusively use the name <systemitem>initramfs</systemitem> ."
-msgstr "カーネルバージョン 2.6.13 より、 initrd は <systemitem>initramfs</systemitem> (INITial RAM File System) と呼ばれるようになり、マウント時にファイルシステムのドライバを必要とはしなくなりました。 &productname; では <systemitem>initramfs</systemitem> のみを使用しています。ですが、現在も <systemitem>initramfs</systemitem> は<filename>/boot/initrd</filename> というファイル名で保存されることから、今も <quote>initrd</quote> と呼ばれることが多くなっています。本章では <systemitem>initramfs</systemitem> の用語に統一して説明しています。"
+msgid ""
+"Beginning with kernel 2.6.13, the initrd has been replaced by the "
+"<systemitem>initramfs</systemitem> (initial RAM file system), which does not "
+"require a file system driver to be mounted. &productname; exclusively uses "
+"an <systemitem>initramfs</systemitem> . However, since the "
+"<systemitem>initramfs</systemitem> is stored as <filename>/boot/initrd</"
+"filename> , it is often called <quote>initrd</quote> . In this chapter we "
+"exclusively use the name <systemitem>initramfs</systemitem> ."
+msgstr ""
+"カーネルバージョン 2.6.13 より、 initrd は <systemitem>initramfs</"
+"systemitem> (INITial RAM File System) と呼ばれるようになり、マウント時にファ"
+"イルシステムのドライバを必要とはしなくなりました。 &productname; では "
+"<systemitem>initramfs</systemitem> のみを使用しています。ですが、現在も "
+"<systemitem>initramfs</systemitem> は<filename>/boot/initrd</filename> という"
+"ファイル名で保存されることから、今も <quote>initrd</quote> と呼ばれることが多"
+"くなっています。本章では <systemitem>initramfs</systemitem> の用語に統一して"
+"説明しています。"
 
 #. Tag: title
-#: bootconcept.xml:100
+#: bootconcept.xml:101
 #, no-c-format
 msgid "The Linux boot process"
 msgstr "Linux の起動処理"
 
 #. Tag: para
-#: bootconcept.xml:101
+#: bootconcept.xml:102
 #, no-c-format
-msgid "The Linux boot process consists of several stages, each represented by a different component:"
-msgstr "Linux の起動処理は、複数のフェーズ (段階) に分けられます。それぞれは別々のコンポーネントが使われます:"
+msgid ""
+"The Linux boot process consists of several stages, each represented by a "
+"different component:"
+msgstr ""
+"Linux の起動処理は、複数のフェーズ (段階) に分けられます。それぞれは別々のコ"
+"ンポーネントが使われます:"
 
 #. Tag: para
-#: bootconcept.xml:107
+#: bootconcept.xml:108
 #, no-c-format
 msgid "<xref linkend=\"sec-boot-proc-initialization\"/>"
 msgstr "<xref linkend=\"sec-boot-proc-initialization\"/>"
 
 #. Tag: para
-#: bootconcept.xml:112
+#: bootconcept.xml:113
 #, no-c-format
 msgid "<xref linkend=\"sec-boot-proc-kernel\"/>"
 msgstr "<xref linkend=\"sec-boot-proc-kernel\"/>"
 
 #. Tag: para
-#: bootconcept.xml:117
+#: bootconcept.xml:118
 #, no-c-format
 msgid "<xref linkend=\"sec-boot-initramfs\"/>"
 msgstr "<xref linkend=\"sec-boot-initramfs\"/>"
 
 #. Tag: para
-#: bootconcept.xml:122
+#: bootconcept.xml:123
 #, no-c-format
 msgid "<xref linkend=\"sec-boot-systemd\"/>"
 msgstr "<xref linkend=\"sec-boot-systemd\"/>"
 
 #. Tag: title
-#: bootconcept.xml:129
+#: bootconcept.xml:130
 #, no-c-format
 msgid "The initialization and boot loader phase"
 msgstr "初期化とブートローダの処理フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:130
+#: bootconcept.xml:131
 #, no-c-format
-msgid "During the initialization phase, the machine's hardware is set up, and the devices are prepared. This process differs across hardware architectures."
-msgstr "初期化フェーズでは、マシンのハードウエアの初期化を行い、デバイスの準備を実施します。この処理は、ハードウエアのアーキテクチャによって異なる処理になります。"
+msgid ""
+"During the initialization phase, the machine's hardware is set up, and the "
+"devices are prepared. This process differs across hardware architectures."
+msgstr ""
+"初期化フェーズでは、マシンのハードウエアの初期化を行い、デバイスの準備を実施"
+"します。この処理は、ハードウエアのアーキテクチャによって異なる処理になりま"
+"す。"
 
 #. Tag: para
-#: bootconcept.xml:134
+#: bootconcept.xml:135
 #, no-c-format
-msgid "&productname; uses the boot loader &grub; on all architectures. Depending on the architecture and firmware, starting the &grub; boot loader can be a multi-step process. The purpose of the boot loader is to load the kernel and the initial, RAM-based file system (initramfs). For more information about &grub;, refer to <xref linkend=\"cha-grub2\"/> ."
-msgstr "&productname; では、全てのアーキテクチャで &grub; を使用しています。アーキテクチャとファームウェアによりますが、 &grub; ブートローダの開始処理は複数の段階に分けることができます。ブートローダの目的は、カーネルと initramfs (初期 RAM ファイルシステム) を読み込むことです。 &grub; についての詳細は、 <xref linkend=\"cha-grub2\"/> をお読みください。"
+msgid ""
+"&productname; uses the boot loader &grub; on all architectures. Depending on "
+"the architecture and firmware, starting the &grub; boot loader can be a "
+"multi-step process. The purpose of the boot loader is to load the kernel and "
+"the initial, RAM-based file system (initramfs). For more information about "
+"&grub;, refer to <xref linkend=\"cha-grub2\"/> ."
+msgstr ""
+"&productname; では、全てのアーキテクチャで &grub; を使用しています。アーキテ"
+"クチャとファームウェアによりますが、 &grub; ブートローダの開始処理は複数の段"
+"階に分けることができます。ブートローダの目的は、カーネルと initramfs (初期 "
+"RAM ファイルシステム) を読み込むことです。 &grub; についての詳細は、 <xref "
+"linkend=\"cha-grub2\"/> をお読みください。"
 
 #. Tag: title
-#: bootconcept.xml:142
+#: bootconcept.xml:143
 #, no-c-format
 msgid "Initialization and boot loader phase on &aarch64; and &x86-64;"
 msgstr "&aarch64; と &x86-64; における初期化とブートローダの処理フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:143
+#: bootconcept.xml:144
 #, no-c-format
-msgid "After turning on the computer, the BIOS or the UEFI initializes the screen and keyboard, and tests the main memory. Up to this stage, the machine does not access any mass storage media. Subsequently, the information about the current date, time and the most important peripherals are loaded from the CMOS values. When the boot media and its geometry are recognized, the system control passes from the BIOS/UEFI to the boot loader."
-msgstr "コンピュータの電源を投入すると、 BIOS や UEFI が画面とキーボードを初期化し、メインメモリのテストを行います。この段階では、マシンはストレージメディアにアクセスすることは行いません。続いて現在の日付と時刻と、最も重要な周辺機器類に関する情報を CMOS から読み込みます。起動メディアとそのジオメトリ情報が認識できるようになると、システムは BIOS/UEFI からブートローダに処理を渡します。"
+msgid ""
+"After turning on the computer, the BIOS or the UEFI initializes the screen "
+"and keyboard, and tests the main memory. Up to this stage, the machine does "
+"not access any mass storage media. Subsequently, the information about the "
+"current date, time and the most important peripherals are loaded from the "
+"CMOS values. When the boot media and its geometry are recognized, the system "
+"control passes from the BIOS/UEFI to the boot loader."
+msgstr ""
+"コンピュータの電源を投入すると、 BIOS や UEFI が画面とキーボードを初期化し、"
+"メインメモリのテストを行います。この段階では、マシンはストレージメディアにア"
+"クセスすることは行いません。続いて現在の日付と時刻と、最も重要な周辺機器類に"
+"関する情報を CMOS から読み込みます。起動メディアとそのジオメトリ情報が認識で"
+"きるようになると、システムは BIOS/UEFI からブートローダに処理を渡します。"
 
 #. Tag: para
-#: bootconcept.xml:152
+#: bootconcept.xml:153
 #, no-c-format
-msgid "On a machine equipped with a traditional BIOS, only code from the first physical 512-byte data sector (the Master Boot Record, MBR) of the boot disk can be loaded. Only a minimal &grub; fits into the MBR. Its sole purpose is to load a &grub; core image containing file system drivers from the gap between the MBR and the first partition (MBR partition table) or from the BIOS boot partition (GPT partition table). This image contains file system drivers and therefore is able to access <filename>/boot</filename> located on the root file system. <filename>/boot</filename> contains additional modules for &grub; core as well as the kernel and the initramfs image. When it has access to this partition, &grub; loads the kernel and the initramfs image into memory and hands control over to the kernel."
-msgstr "従来型の BIOS を搭載したマシンの場合、起動ディスク内の最初の 512 バイト分のデータセクタ (マスターブートレコード、略して MBR) だけを読み込むことができます。 MBR には最小限の機能だけを持つ &grub; を書き込むことができます。この最小限の機能の &grub; には、ファイルシステムのドライバを含む &grub; のメインイメージを読み込むだけの機能が含まれています。メインイメージは MBR と最初のパーティションまでの間のギャップに含まれている (MBR パーティションテーブルの場合) か、もしくは BIOS の起動パーティション内に含まれています (GPT パーティションテーブルの場合) 。メインイメージにはファイルシステムドライバが含まれていますので、ルートファイルシステムにある <filename>/boot</filename> にアクセスすることができます。 <filename>/boot</filename> には &grub; のメインイメージに対応する追加のモジュールのほか、カーネルや initramfs のイメージが含まれていますので、あとはこれらを読み込めばカーネルに処理を渡すことができるようになります。"
+msgid ""
+"On a machine equipped with a traditional BIOS, only code from the first "
+"physical 512-byte data sector (the Master Boot Record, MBR) of the boot disk "
+"can be loaded. Only a minimal &grub; fits into the MBR. Its sole purpose is "
+"to load a &grub; core image containing file system drivers from the gap "
+"between the MBR and the first partition (MBR partition table) or from the "
+"BIOS boot partition (GPT partition table). This image contains file system "
+"drivers and therefore is able to access <filename>/boot</filename> located "
+"on the root file system. <filename>/boot</filename> contains additional "
+"modules for &grub; core as well as the kernel and the initramfs image. When "
+"it has access to this partition, &grub; loads the kernel and the initramfs "
+"image into memory and hands control over to the kernel."
+msgstr ""
+"従来型の BIOS を搭載したマシンの場合、起動ディスク内の最初の 512 バイト分の"
+"データセクタ (マスターブートレコード、略して MBR) だけを読み込むことができま"
+"す。 MBR には最小限の機能だけを持つ &grub; を書き込むことができます。この最小"
+"限の機能の &grub; には、ファイルシステムのドライバを含む &grub; のメインイ"
+"メージを読み込むだけの機能が含まれています。メインイメージは MBR と最初のパー"
+"ティションまでの間のギャップに含まれている (MBR パーティションテーブルの場"
+"合) か、もしくは BIOS の起動パーティション内に含まれています (GPT パーティ"
+"ションテーブルの場合) 。メインイメージにはファイルシステムドライバが含まれて"
+"いますので、ルートファイルシステムにある <filename>/boot</filename> にアクセ"
+"スすることができます。 <filename>/boot</filename> には &grub; のメインイメー"
+"ジに対応する追加のモジュールのほか、カーネルや initramfs のイメージが含まれて"
+"いますので、あとはこれらを読み込めばカーネルに処理を渡すことができるようにな"
+"ります。"
 
 #. Tag: para
-#: bootconcept.xml:166
+#: bootconcept.xml:167
 #, no-c-format
-msgid "When booting a BIOS system from an encrypted file system that includes an encrypted <filename>/boot</filename> partition, you need to enter the password for decryption twice. It is first needed by &grub; to decrypt <filename>/boot</filename> and then for &systemd; to mount the encrypted volumes."
-msgstr "暗号化された <filename>/boot</filename> を含む暗号化ファイルシステムから BIOS のシステムを起動する場合、暗号化を解くためのパスワードは 2 回入力する必要があります。 1 回目は &grub; が <filename>/boot</filename> を解読するために、 2 回目は &systemd; が暗号化されたボリュームをマウントするために必要となります。"
+msgid ""
+"When booting a BIOS system from an encrypted file system that includes an "
+"encrypted <filename>/boot</filename> partition, you need to enter the "
+"password for decryption twice. It is first needed by &grub; to decrypt "
+"<filename>/boot</filename> and then for &systemd; to mount the encrypted "
+"volumes."
+msgstr ""
+"暗号化された <filename>/boot</filename> を含む暗号化ファイルシステムから "
+"BIOS のシステムを起動する場合、暗号化を解くためのパスワードは 2 回入力する必"
+"要があります。 1 回目は &grub; が <filename>/boot</filename> を解読するため"
+"に、 2 回目は &systemd; が暗号化されたボリュームをマウントするために必要とな"
+"ります。"
 
 #. Tag: para
-#: bootconcept.xml:173
+#: bootconcept.xml:174
 #, no-c-format
-msgid "On machines with UEFI the boot process is much simpler than on machines with a traditional BIOS. The firmware is able to read from a FAT formatted system partition of disks with a GPT partition table. This EFI system-partition (in the running system mounted as <filename>/boot/efi</filename> ) holds enough space to host a fully fledged &grub; which is directly loaded and executed by the firmware."
-msgstr "UEFI のマシンの場合は、従来型の BIOS マシンより簡単です。ファームウェアは GPT パーティションテーブル内の FAT でフォーマットされたパーティションを読み込むことができます (これを EFI システムパーティションと呼び、起動後のシステムでは <filename>/boot/efi</filename> にマウントします) ので、このパーティション内に完全機能の &grub; を配置すれば、それを直接読み込んで実行することができるようになります。"
+msgid ""
+"On machines with UEFI the boot process is much simpler than on machines with "
+"a traditional BIOS. The firmware is able to read from a FAT formatted system "
+"partition of disks with a GPT partition table. This EFI system-partition (in "
+"the running system mounted as <filename>/boot/efi</filename> ) holds enough "
+"space to host a fully fledged &grub; which is directly loaded and executed "
+"by the firmware."
+msgstr ""
+"UEFI のマシンの場合は、従来型の BIOS マシンより簡単です。ファームウェアは "
+"GPT パーティションテーブル内の FAT でフォーマットされたパーティションを読み込"
+"むことができます (これを EFI システムパーティションと呼び、起動後のシステムで"
+"は <filename>/boot/efi</filename> にマウントします) ので、このパーティション"
+"内に完全機能の &grub; を配置すれば、それを直接読み込んで実行することができる"
+"ようになります。"
 
 #. Tag: para
-#: bootconcept.xml:181
+#: bootconcept.xml:182
 #, no-c-format
-msgid "If the BIOS/UEFI supports network booting, it is also possible to configure a boot server that provides the boot loader. The system can then be booted via PXE. The BIOS/UEFI acts as the boot loader. It gets the boot image from the boot server and starts the system, independent of local hard disks."
-msgstr "BIOS/UEFI のマシンがネットワーク経由での起動に対応している場合は、 PXE と呼ばれる仕組みを利用して起動用のサーバからブートローダを取得することができます。この場合、 BIOS/UEFI 自身がブートローダ機能の一部を持つことになります。あとは起動用のサーバからイメージを取得してシステムを起動しますので、ローカルのハードディスクを全く使用することなくシステムを立ち上げることができます。"
+msgid ""
+"If the BIOS/UEFI supports network booting, it is also possible to configure "
+"a boot server that provides the boot loader. The system can then be booted "
+"via PXE. The BIOS/UEFI acts as the boot loader. It gets the boot image from "
+"the boot server and starts the system, independent of local hard disks."
+msgstr ""
+"BIOS/UEFI のマシンがネットワーク経由での起動に対応している場合は、 PXE と呼ば"
+"れる仕組みを利用して起動用のサーバからブートローダを取得することができます。"
+"この場合、 BIOS/UEFI 自身がブートローダ機能の一部を持つことになります。あとは"
+"起動用のサーバからイメージを取得してシステムを起動しますので、ローカルのハー"
+"ドディスクを全く使用することなくシステムを立ち上げることができます。"
 
 #. Tag: title
-#: bootconcept.xml:189
+#: bootconcept.xml:190
 #, no-c-format
 msgid "Initialization and boot loader phase on &zseries;"
 msgstr "&zseries; における初期化とブートローダの処理フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:192
+#: bootconcept.xml:193
 #, no-c-format
-msgid "On &zseries; the boot process must be initialized by a boot loader called <command>zipl</command> (z initial program load). Although <command>zipl</command> supports reading from multiple file systems, it does not support the &slea; default file system (Btrfs) or booting from snapshots. &productname; therefore uses a two-stage boot process that ensures full Btrfs support at boot-time:"
-msgstr "&zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなければなりません。 <command>zipl</command> では様々なファイルシステムを読み込むことができますが、 &slea; の既定のファイルシステム (btrfs) やスナップショットからの起動には対応していません。そのため、 &productname; は 2 ステージから構成される起動処理を使用して、起動時から btrfs に対応できるようにしています:"
+msgid ""
+"On &zseries; the boot process must be initialized by a boot loader called "
+"<command>zipl</command> (z initial program load). Although <command>zipl</"
+"command> supports reading from multiple file systems, it does not support "
+"the &slea; default file system (Btrfs) or booting from snapshots. "
+"&productname; therefore uses a two-stage boot process that ensures full "
+"Btrfs support at boot-time:"
+msgstr ""
+"&zseries; において、起動処理は <command>zipl</command> (Z 初期プログラム読み"
+"込みプログラム; Z Initial Program Load) と呼ばれるブートローダで準備しなけれ"
+"ばなりません。 <command>zipl</command> では様々なファイルシステムを読み込むこ"
+"とができますが、 &slea; の既定のファイルシステム (btrfs) やスナップショットか"
+"らの起動には対応していません。そのため、 &productname; は 2 ステージから構成"
+"される起動処理を使用して、起動時から btrfs に対応できるようにしています:"
 
 #. Tag: para
-#: bootconcept.xml:202
+#: bootconcept.xml:203
 #, no-c-format
-msgid "<command>zipl</command> boots from the partition <filename>/boot/zipl</filename> , which can be formatted with the Ext2, Ext3, Ext4, or XFS file system. This partition contains a minimal kernel and an initramfs that are loaded into memory. The initramfs contains a Btrfs driver (among others) and the boot loader &grub;. The kernel is started with a parameter <literal>initgrub</literal> , which tells it to start &grub;."
-msgstr "<command>zipl</command> は ext2, ext3, ext4, xfs のいずれかのファイルシステムでフォーマットされたパーティション <filename>/boot/zipl</filename> から起動することができます。このパーティションには最小限のカーネルのほか、メモリに読み込まれる initramfs が含まれています。 initramfs には btrfs のドライバなどと共に &grub; が含まれ、これによってそのカーネルに <literal>initgrub</literal> を渡して &grub; を起動します。"
+msgid ""
+"<command>zipl</command> boots from the partition <filename>/boot/zipl</"
+"filename> , which can be formatted with the Ext2, Ext3, Ext4, or XFS file "
+"system. This partition contains a minimal kernel and an initramfs that are "
+"loaded into memory. The initramfs contains a Btrfs driver (among others) and "
+"the boot loader &grub;. The kernel is started with a parameter "
+"<literal>initgrub</literal> , which tells it to start &grub;."
+msgstr ""
+"<command>zipl</command> は ext2, ext3, ext4, xfs のいずれかのファイルシステム"
+"でフォーマットされたパーティション <filename>/boot/zipl</filename> から起動す"
+"ることができます。このパーティションには最小限のカーネルのほか、メモリに読み"
+"込まれる initramfs が含まれています。 initramfs には btrfs のドライバなどと共"
+"に &grub; が含まれ、これによってそのカーネルに <literal>initgrub</literal> を"
+"渡して &grub; を起動します。"
 
 #. Tag: para
-#: bootconcept.xml:213
+#: bootconcept.xml:214
 #, no-c-format
-msgid "The kernel mounts the root file system, so <filename>/boot</filename> becomes accessible. Now &grub; is started from the initramfs. It reads its configuration from <filename>/boot/grub2/grub.cfg</filename> and loads the final kernel and initramfs from <filename>/boot</filename> . The new kernel now gets loaded via &kexec;."
-msgstr "カーネルはルートファイルシステムをマウントし、 <filename>/boot</filename> にもアクセスできるようになります。これで &grub; を initramfs から起動することができます。あとは <filename>/boot/grub2/grub.cfg</filename> から設定ファイルを読み込むと共に、最終的なカーネルと initramfs を <filename>/boot</filename> から読み込みます。新しく読み込んだカーネルは、 &kexec; 経由で実行されるようになります。"
+msgid ""
+"The kernel mounts the root file system, so <filename>/boot</filename> "
+"becomes accessible. Now &grub; is started from the initramfs. It reads its "
+"configuration from <filename>/boot/grub2/grub.cfg</filename> and loads the "
+"final kernel and initramfs from <filename>/boot</filename> . The new kernel "
+"now gets loaded via &kexec;."
+msgstr ""
+"カーネルはルートファイルシステムをマウントし、 <filename>/boot</filename> に"
+"もアクセスできるようになります。これで &grub; を initramfs から起動することが"
+"できます。あとは <filename>/boot/grub2/grub.cfg</filename> から設定ファイルを"
+"読み込むと共に、最終的なカーネルと initramfs を <filename>/boot</filename> か"
+"ら読み込みます。新しく読み込んだカーネルは、 &kexec; 経由で実行されるようにな"
+"ります。"
 
 #. Tag: title
-#: bootconcept.xml:226
+#: bootconcept.xml:227
 #, no-c-format
 msgid "The kernel phase"
 msgstr "カーネルの処理フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:227
+#: bootconcept.xml:228
 #, no-c-format
-msgid "When the boot loader has passed on system control, the boot process is the same on all architectures. The boot loader loads both the kernel and an initial RAM-based file system ( <systemitem>initramfs</systemitem> ) into memory and the kernel takes over."
-msgstr "ブートローダの処理が終わると、起動処理は全てのアーキテクチャで同じになります。ブートローダはカーネルと <systemitem>initramfs</systemitem> (RAM ベースの初期ファイルシステム) をメモリに読み込んで、カーネルが動き始めます。"
+msgid ""
+"When the boot loader has passed on system control, the boot process is the "
+"same on all architectures. The boot loader loads both the kernel and an "
+"initial RAM-based file system ( <systemitem>initramfs</systemitem> ) into "
+"memory and the kernel takes over."
+msgstr ""
+"ブートローダの処理が終わると、起動処理は全てのアーキテクチャで同じになりま"
+"す。ブートローダはカーネルと <systemitem>initramfs</systemitem> (RAM ベースの"
+"初期ファイルシステム) をメモリに読み込んで、カーネルが動き始めます。"
 
 #. Tag: para
-#: bootconcept.xml:233
+#: bootconcept.xml:234
 #, no-c-format
-msgid "After the kernel has set up memory management and has detected the CPU type and its features, it initializes the hardware and mounts the temporary root file system from the memory that was loaded with the <systemitem>initramfs</systemitem> ."
-msgstr "カーネルがメモリ管理機能を設定し、 CPU の種類と機能を検出すると、ハードウエアの準備を行い、 <systemitem>initramfs</systemitem> として読み込んでおいた、メモリ内にある一時的なルートファイルシステムをマウントします。"
+msgid ""
+"After the kernel has set up memory management and has detected the CPU type "
+"and its features, it initializes the hardware and mounts the temporary root "
+"file system from the memory that was loaded with the <systemitem>initramfs</"
+"systemitem> ."
+msgstr ""
+"カーネルがメモリ管理機能を設定し、 CPU の種類と機能を検出すると、ハードウエア"
+"の準備を行い、 <systemitem>initramfs</systemitem> として読み込んでおいた、メ"
+"モリ内にある一時的なルートファイルシステムをマウントします。"
 
 #. Tag: title
-#: bootconcept.xml:241
+#: bootconcept.xml:242
 #, no-c-format
 msgid "The <systemitem>initramfs</systemitem> file"
 msgstr "<systemitem>initramfs</systemitem> ファイル"
 
 #. Tag: para
-#: bootconcept.xml:242
+#: bootconcept.xml:243
 #, no-c-format
-msgid "<systemitem>initramfs</systemitem> (initial RAM file system) is a small cpio archive that the kernel can load into a RAM disk. It is located at <filename>/boot/initrd</filename> . It can be created with a tool called <command>dracut</command> &mdash;refer to <command>man 8 dracut</command> for details."
-msgstr "<systemitem>initramfs</systemitem> (INITial RAM File System; 初期 RAM ファイルシステム) は小さな cpio アーカイブで、カーネルが RAM ディスク内に読み込むことができる仕組みです。これは <filename>/boot/initrd</filename> に配置されるもので、 <command>dracut</command> というツールで作成することができます (詳しくは <command>man 8 dracut</command> をお読みください) 。"
+msgid ""
+"<systemitem>initramfs</systemitem> (initial RAM file system) is a small cpio "
+"archive that the kernel can load into a RAM disk. It is located at "
+"<filename>/boot/initrd</filename> . It can be created with a tool called "
+"<command>dracut</command> &mdash;refer to <command>man 8 dracut</command> "
+"for details."
+msgstr ""
+"<systemitem>initramfs</systemitem> (INITial RAM File System; 初期 RAM ファイ"
+"ルシステム) は小さな cpio アーカイブで、カーネルが RAM ディスク内に読み込むこ"
+"とができる仕組みです。これは <filename>/boot/initrd</filename> に配置されるも"
+"ので、 <command>dracut</command> というツールで作成することができます (詳しく"
+"は <command>man 8 dracut</command> をお読みください) 。"
 
 #. Tag: para
-#: bootconcept.xml:249
+#: bootconcept.xml:250
 #, no-c-format
-msgid "The <systemitem>initramfs</systemitem> provides a minimal Linux environment that enables the execution of programs before the actual root file system is mounted. This minimal Linux environment is loaded into memory by BIOS or UEFI routines and does not have specific hardware requirements other than sufficient memory. The <systemitem>initramfs</systemitem> archive must always provide an executable named <systemitem>init</systemitem> that executes the &systemd; daemon on the root file system for the boot process to proceed."
-msgstr "<systemitem>initramfs</systemitem> は最小限の Linux 環境を提供するもので、実際のルートファイルシステムをマウントするまでの間に、プログラムを実行する仕組みを提供します。この最小限の Linux 環境は BIOS や UEFI のルーチンからメモリ内に読み込まれ、メモリ以外には特定のハードウエア要件を持ちません。また、 <systemitem>initramfs</systemitem> には <systemitem>init</systemitem> と呼ばれる実行ファイルが存在していなければなりません。このプログラムはルートファイルシステムの &systemd; デーモンを読み込んで、続きの起動処理を実行させる役割を持ちます。"
+msgid ""
+"The <systemitem>initramfs</systemitem> provides a minimal Linux environment "
+"that enables the execution of programs before the actual root file system is "
+"mounted. This minimal Linux environment is loaded into memory by BIOS or "
+"UEFI routines and does not have specific hardware requirements other than "
+"sufficient memory. The <systemitem>initramfs</systemitem> archive must "
+"always provide an executable named <systemitem>init</systemitem> that "
+"executes the &systemd; daemon on the root file system for the boot process "
+"to proceed."
+msgstr ""
+"<systemitem>initramfs</systemitem> は最小限の Linux 環境を提供するもので、実"
+"際のルートファイルシステムをマウントするまでの間に、プログラムを実行する仕組"
+"みを提供します。この最小限の Linux 環境は BIOS や UEFI のルーチンからメモリ内"
+"に読み込まれ、メモリ以外には特定のハードウエア要件を持ちません。また、 "
+"<systemitem>initramfs</systemitem> には <systemitem>init</systemitem> と呼ば"
+"れる実行ファイルが存在していなければなりません。このプログラムはルートファイ"
+"ルシステムの &systemd; デーモンを読み込んで、続きの起動処理を実行させる役割を"
+"持ちます。"
 
 #. Tag: para
-#: bootconcept.xml:259
+#: bootconcept.xml:260
 #, no-c-format
-msgid "Before the root file system can be mounted and the operating system can be started, the kernel needs the corresponding drivers to access the device on which the root file system is located. These drivers may include special drivers for certain kinds of hard disks or even network drivers to access a network file system. The needed modules for the root file system are loaded by <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> . After the modules are loaded, <systemitem class=\"service\">udev</systemitem> provides the <systemitem>initramfs</systemitem> with the needed devices. Later in the boot process, after changing the root file system, it is necessary to regenerate the devices. This is done by the &systemd; unit <filename>systemd-udev-trigger.service</filename> ."
-msgstr "ルートファイルシステムがマウントできるようになり、オペレーティングシステムが開始できるようになるには、カーネルはルートファイルシステムの存在するデバイスにアクセスするためのドライバを読み込む必要があります。これらのドライバは特殊なハードディスク向けのドライバであったり、ネットワーク経由でアクセスする場合はネットワークドライバであったりする場合もあります。ルートファイルシステムに対して必要なモジュールは、 <systemitem>initramfs</systemitem> 内にある <systemitem>init</systemitem> が読み込みます。必要なモジュールが読み込まれると、 <systemitem class=\"service\">udev</systemitem> が <systemitem>initramfs</systemitem> に対して必要なデバイスを提供するようになります。その後ルートファイルシステムの切り替えが行われ、再度デバイスの生成が行われます。これは &systemd; のユニットである <filename>systemd-udev-trigger.service</filename> が行います。"
+msgid ""
+"Before the root file system can be mounted and the operating system can be "
+"started, the kernel needs the corresponding drivers to access the device on "
+"which the root file system is located. These drivers may include special "
+"drivers for certain kinds of hard disks or even network drivers to access a "
+"network file system. The needed modules for the root file system are loaded "
+"by <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> . "
+"After the modules are loaded, <systemitem class=\"service\">udev</"
+"systemitem> provides the <systemitem>initramfs</systemitem> with the needed "
+"devices. Later in the boot process, after changing the root file system, it "
+"is necessary to regenerate the devices. This is done by the &systemd; unit "
+"<filename>systemd-udev-trigger.service</filename> ."
+msgstr ""
+"ルートファイルシステムがマウントできるようになり、オペレーティングシステムが"
+"開始できるようになるには、カーネルはルートファイルシステムの存在するデバイス"
+"にアクセスするためのドライバを読み込む必要があります。これらのドライバは特殊"
+"なハードディスク向けのドライバであったり、ネットワーク経由でアクセスする場合"
+"はネットワークドライバであったりする場合もあります。ルートファイルシステムに"
+"対して必要なモジュールは、 <systemitem>initramfs</systemitem> 内にある "
+"<systemitem>init</systemitem> が読み込みます。必要なモジュールが読み込まれる"
+"と、 <systemitem class=\"service\">udev</systemitem> が "
+"<systemitem>initramfs</systemitem> に対して必要なデバイスを提供するようになり"
+"ます。その後ルートファイルシステムの切り替えが行われ、再度デバイスの生成が行"
+"われます。これは &systemd; のユニットである <filename>systemd-udev-trigger."
+"service</filename> が行います。"
 
 #. Tag: title
-#: bootconcept.xml:275
+#: bootconcept.xml:276
 #, no-c-format
 msgid "Regenerating the initramfs"
 msgstr "initramfs の再生成"
 
 #. Tag: para
-#: bootconcept.xml:276
+#: bootconcept.xml:277
 #, no-c-format
-msgid "Because the <systemitem>initramfs</systemitem> contains drivers, it needs to be updated whenever a new version of one of its drivers is available. This is done automatically when installing the package containing the driver update. &yast; or zypper informs you about this by showing the output of the command that generates the <systemitem>initramfs</systemitem> . However, there are specific occasions when you need to regenerate an <systemitem>initramfs</systemitem> manually:"
-msgstr "<systemitem>initramfs</systemitem> にはドライバが含まれているため、新しいバージョンのドライバが提供されるようになった場合は、 <systemitem>initramfs</systemitem> を更新する必要があります。なお、ドライバ更新を含むパッケージをインストールした場合には自動で実行されますし、 &yast; や zypper でそれらのパッケージをインストールした場合は、 <systemitem>initramfs</systemitem> を生成したことを表す出力を表示します。しかしながら、場合によっては <systemitem>initramfs</systemitem> を手作業で生成しなければならなくなる場合があります:"
+msgid ""
+"Because the <systemitem>initramfs</systemitem> contains drivers, it needs to "
+"be updated whenever a new version of one of its drivers is available. This "
+"is done automatically when installing the package containing the driver "
+"update. &yast; or zypper informs you about this by showing the output of the "
+"command that generates the <systemitem>initramfs</systemitem> . However, "
+"there are specific occasions when you need to regenerate an "
+"<systemitem>initramfs</systemitem> manually:"
+msgstr ""
+"<systemitem>initramfs</systemitem> にはドライバが含まれているため、新しいバー"
+"ジョンのドライバが提供されるようになった場合は、 <systemitem>initramfs</"
+"systemitem> を更新する必要があります。なお、ドライバ更新を含むパッケージをイ"
+"ンストールした場合には自動で実行されますし、 &yast; や zypper でそれらのパッ"
+"ケージをインストールした場合は、 <systemitem>initramfs</systemitem> を生成し"
+"たことを表す出力を表示します。しかしながら、場合によっては "
+"<systemitem>initramfs</systemitem> を手作業で生成しなければならなくなる場合が"
+"あります:"
 
 #. Tag: term
-#: bootconcept.xml:289
+#: bootconcept.xml:290
 #, no-c-format
 msgid "Adding drivers because of hardware changes"
 msgstr "ハードウエアを変更したことによってドライバを追加する必要がある場合"
 
 #. Tag: para
-#: bootconcept.xml:291
+#: bootconcept.xml:292
 #, no-c-format
-msgid "If you need to change hardware, for example, hard disks, and this hardware requires different drivers to be in the kernel at boot time, you must update the <systemitem>initramfs</systemitem> file."
-msgstr "ハードウエア (例: ハードディスク) の変更を行った場合で、変更したハードウエアが起動時に必要であり、かつ従来とは異なるドライバを必要とする場合は、 <systemitem>initramfs</systemitem> ファイルの更新が必要になります。"
+msgid ""
+"If you need to change hardware, for example, hard disks, and this hardware "
+"requires different drivers to be in the kernel at boot time, you must update "
+"the <systemitem>initramfs</systemitem> file."
+msgstr ""
+"ハードウエア (例: ハードディスク) の変更を行った場合で、変更したハードウエア"
+"が起動時に必要であり、かつ従来とは異なるドライバを必要とする場合は、 "
+"<systemitem>initramfs</systemitem> ファイルの更新が必要になります。"
 
 #. Tag: para
-#: bootconcept.xml:296
+#: bootconcept.xml:297
 #, no-c-format
-msgid "Open or create <filename>/etc/dracut.conf.d/10-<replaceable>DRIVER</replaceable>.conf</filename> and add the following line (mind the leading blank space):"
-msgstr "<filename>/etc/dracut.conf.d/10-<replaceable>ドライバ</replaceable>.conf</filename> ファイルを開くか新規に作成して、下記の行を追加します (最初の引用符の後にスペースが含まれていることに注意してください):"
+msgid ""
+"Open or create <filename>/etc/dracut.conf.d/10-<replaceable>DRIVER</"
+"replaceable>.conf</filename> and add the following line (mind the leading "
+"blank space):"
+msgstr ""
+"<filename>/etc/dracut.conf.d/10-<replaceable>ドライバ</replaceable>.conf</"
+"filename> ファイルを開くか新規に作成して、下記の行を追加します (最初の引用符"
+"の後にスペースが含まれていることに注意してください):"
 
 #. Tag: screen
-#: bootconcept.xml:301
+#: bootconcept.xml:302
 #, no-c-format
 msgid "force_drivers+=\" <replaceable>DRIVER1</replaceable> \""
 msgstr "force_drivers+=\" <replaceable>ドライバ_1</replaceable> \""
 
 #. Tag: para
-#: bootconcept.xml:302
+#: bootconcept.xml:303
 #, no-c-format
-msgid "Replace <replaceable>DRIVER1</replaceable> with the module name of the driver. If you need to add more than one driver, list them space-separated:"
-msgstr "<replaceable>ドライバ_1</replaceable> の箇所はドライバのモジュール名に置き換えてお使いください。なお、複数のドライバが必要な場合は、スペース区切りで指定します:"
+msgid ""
+"Replace <replaceable>DRIVER1</replaceable> with the module name of the "
+"driver. If you need to add more than one driver, list them space-separated:"
+msgstr ""
+"<replaceable>ドライバ_1</replaceable> の箇所はドライバのモジュール名に置き換"
+"えてお使いください。なお、複数のドライバが必要な場合は、スペース区切りで指定"
+"します:"
 
 #. Tag: screen
-#: bootconcept.xml:307
+#: bootconcept.xml:308
 #, no-c-format
-msgid "force_drivers+=\" <replaceable>DRIVER1</replaceable> <replaceable>DRIVER2</replaceable> \""
-msgstr "force_drivers+=\" <replaceable>ドライバ_1</replaceable> <replaceable>ドライバ_2</replaceable> \""
+msgid ""
+"force_drivers+=\" <replaceable>DRIVER1</replaceable> <replaceable>DRIVER2</"
+"replaceable> \""
+msgstr ""
+"force_drivers+=\" <replaceable>ドライバ_1</replaceable> <replaceable>ドライバ"
+"_2</replaceable> \""
 
 #. Tag: term
-#: bootconcept.xml:314
+#: bootconcept.xml:315
 #, no-c-format
 msgid "Moving system directories to a RAID or LVM"
 msgstr "システムディレクトリを RAID や LVM に移動した場合"
 
 #. Tag: para
-#: bootconcept.xml:316
+#: bootconcept.xml:317
 #, no-c-format
-msgid "Whenever you move swap files, or system directories like <filename>/usr</filename> in a running system to a RAID or logical volume, you need to create an <systemitem>initramfs</systemitem> that contains support for software RAID or LVM drivers."
-msgstr "スワップファイルや <filename>/usr</filename> などのシステムディレクトリを、 RAID や論理ボリュームに移動した場合も、 <systemitem>initramfs</systemitem> を再生成して、ソフトウエア RAID や LVM のドライバが含まれるようにする必要があります。"
+msgid ""
+"Whenever you move swap files, or system directories like <filename>/usr</"
+"filename> in a running system to a RAID or logical volume, you need to "
+"create an <systemitem>initramfs</systemitem> that contains support for "
+"software RAID or LVM drivers."
+msgstr ""
+"スワップファイルや <filename>/usr</filename> などのシステムディレクトリを、 "
+"RAID や論理ボリュームに移動した場合も、 <systemitem>initramfs</systemitem> を"
+"再生成して、ソフトウエア RAID や LVM のドライバが含まれるようにする必要があり"
+"ます。"
 
 #. Tag: para
-#: bootconcept.xml:322
+#: bootconcept.xml:323
 #, no-c-format
-msgid "To do so, create the respective entries in <filename>/etc/fstab</filename> and mount the new entries (for example with <command>mount -a</command> and/or <command>swapon -a</command> )."
-msgstr "この場合は、 <filename>/etc/fstab</filename> 内に対応する項目を作成して、その項目をマウント (例: <command>mount -a</command> または <command>swapon -a</command>) してください。"
+msgid ""
+"To do so, create the respective entries in <filename>/etc/fstab</filename> "
+"and mount the new entries (for example with <command>mount -a</command> and/"
+"or <command>swapon -a</command> )."
+msgstr ""
+"この場合は、 <filename>/etc/fstab</filename> 内に対応する項目を作成して、その"
+"項目をマウント (例: <command>mount -a</command> または <command>swapon -a</"
+"command>) してください。"
 
 #. Tag: term
-#: bootconcept.xml:333
+#: bootconcept.xml:334
 #, no-c-format
-msgid "Adding disks to an LVM group or Btrfs RAID containing the root file system"
-msgstr "ルートファイルシステムを含む LVM グループや btrfs RAID にディスクを追加した場合"
+msgid ""
+"Adding disks to an LVM group or Btrfs RAID containing the root file system"
+msgstr ""
+"ルートファイルシステムを含む LVM グループや btrfs RAID にディスクを追加した場"
+"合"
 
 #. Tag: para
-#: bootconcept.xml:336
+#: bootconcept.xml:337
 #, no-c-format
-msgid "Whenever you add (or remove) a disk to a logical volume group or a Btrfs RAID containing the root file system, you need to create an <systemitem>initramfs</systemitem> that contains support for the enlarged volume. Follow the instructions at <xref linkend=\"pro-generate-initramfs\"/> ."
-msgstr "ルートファイルシステムを含む論理ボリュームグループや btrfs の RAID に対して、ディスクを追加 (または削除) した場合も、サイズの変更したボリュームにアクセスすることができるようにするため、 <systemitem>initramfs</systemitem> を再生成する必要があります。この場合は <xref linkend=\"pro-generate-initramfs\"/> にある手順に従ってください。"
+msgid ""
+"Whenever you add (or remove) a disk to a logical volume group or a Btrfs "
+"RAID containing the root file system, you need to create an "
+"<systemitem>initramfs</systemitem> that contains support for the enlarged "
+"volume. Follow the instructions at <xref linkend=\"pro-generate-initramfs\"/"
+"> ."
+msgstr ""
+"ルートファイルシステムを含む論理ボリュームグループや btrfs の RAID に対して、"
+"ディスクを追加 (または削除) した場合も、サイズの変更したボリュームにアクセス"
+"することができるようにするため、 <systemitem>initramfs</systemitem> を再生成"
+"する必要があります。この場合は <xref linkend=\"pro-generate-initramfs\"/> に"
+"ある手順に従ってください。"
 
 #. Tag: para
-#: bootconcept.xml:342
+#: bootconcept.xml:343
 #, no-c-format
 msgid "Proceed with <xref linkend=\"pro-generate-initramfs\"/> ."
-msgstr "あとは <xref linkend=\"pro-generate-initramfs\"/> の手順に従って進めます。"
+msgstr ""
+"あとは <xref linkend=\"pro-generate-initramfs\"/> の手順に従って進めます。"
 
 #. Tag: term
-#: bootconcept.xml:348
+#: bootconcept.xml:349
 #, no-c-format
 msgid "Changing kernel variables"
 msgstr "カーネルの変数を変更した場合"
 
 #. Tag: para
-#: bootconcept.xml:350
+#: bootconcept.xml:351
 #, no-c-format
-msgid "If you change the values of kernel variables via the <command>sysctl</command> interface by editing related files ( <filename>/etc/sysctl.conf</filename> or <filename>/etc/sysctl.d/*.conf</filename> ), the change will be lost on the next system reboot. Even if you load the values with <command>sysctl --system</command> at runtime, the changes are not saved into the <systemitem>initramfs</systemitem> file. You need to update it by proceeding as outlined in <xref linkend=\"pro-generate-initramfs\"/> ."
-msgstr "<filename>/etc/sysctl.conf</filename> や <filename>/etc/sysctl.d/*.conf</filename> などのファイルを利用して、 <command>sysctl</command> インターフェイスを介してカーネルの変数を変更した場合、この変更は次回の再起動で失われてしまいます。これは実行中に <command>sysctl --system</command> で変数を指定していても同様で、これらは <systemitem>initramfs</systemitem> ファイル内に保存が行われません。この場合も <xref linkend=\"pro-generate-initramfs\"/> に示されている手順を実行する必要があります。"
+msgid ""
+"If you change the values of kernel variables via the <command>sysctl</"
+"command> interface by editing related files ( <filename>/etc/sysctl.conf</"
+"filename> or <filename>/etc/sysctl.d/*.conf</filename> ), the change will be "
+"lost on the next system reboot. Even if you load the values with "
+"<command>sysctl --system</command> at runtime, the changes are not saved "
+"into the <systemitem>initramfs</systemitem> file. You need to update it by "
+"proceeding as outlined in <xref linkend=\"pro-generate-initramfs\"/> ."
+msgstr ""
+"<filename>/etc/sysctl.conf</filename> や <filename>/etc/sysctl.d/*.conf</"
+"filename> などのファイルを利用して、 <command>sysctl</command> インターフェイ"
+"スを介してカーネルの変数を変更した場合、この変更は次回の再起動で失われてしま"
+"います。これは実行中に <command>sysctl --system</command> で変数を指定してい"
+"ても同様で、これらは <systemitem>initramfs</systemitem> ファイル内に保存が行"
+"われません。この場合も <xref linkend=\"pro-generate-initramfs\"/> に示されて"
+"いる手順を実行する必要があります。"
 
 #. Tag: term
-#: bootconcept.xml:363
+#: bootconcept.xml:364
 #, no-c-format
 msgid "Adding or removing swap devices, re-creating swap area"
 msgstr "スワップ出刃は椅子の追加や削除、再作成を行った場合"
 
 #. Tag: para
-#: bootconcept.xml:365
+#: bootconcept.xml:366
 #, no-c-format
-msgid "Whenever you add or remove a swap device, or re-create a swap area with a different UUID, update the initramfs as outlined in <xref linkend=\"pro-generate-initramfs\"/> . You may also need to update <option>GRUB_CMDLINE_*</option> variables that include the <option>resume=</option> option in <filename>/etc/default/grub</filename> , and then regenerate <filename>/boot/grub2/grub.cfg</filename> as outlined in <xref linkend=\"sec-grub2-cfg\"/> ."
-msgstr "スワップデバイスの追加や削除のほか、異なる UUID で再作成を行った場合は、 <xref linkend=\"pro-generate-initramfs\"/> にある手順に従って initramfs を更新する必要があります。また、 <filename>/etc/default/grub</filename> 内の <option>GRUB_CMDLINE_*</option> 変数についても、 <option>resume=</option> 以下にスワップデバイスの UUID が書かれていますので、こちらについても修正を行い、 <xref linkend=\"sec-grub2-cfg\"/> に書かれた手順に従って <filename>/boot/grub2/grub.cfg</filename> を作り直してください。"
+msgid ""
+"Whenever you add or remove a swap device, or re-create a swap area with a "
+"different UUID, update the initramfs as outlined in <xref linkend=\"pro-"
+"generate-initramfs\"/> . You may also need to update <option>GRUB_CMDLINE_*</"
+"option> variables that include the <option>resume=</option> option in "
+"<filename>/etc/default/grub</filename> , and then regenerate <filename>/boot/"
+"grub2/grub.cfg</filename> as outlined in <xref linkend=\"sec-grub2-cfg\"/> ."
+msgstr ""
+"スワップデバイスの追加や削除のほか、異なる UUID で再作成を行った場合は、 "
+"<xref linkend=\"pro-generate-initramfs\"/> にある手順に従って initramfs を更"
+"新する必要があります。また、 <filename>/etc/default/grub</filename> 内の "
+"<option>GRUB_CMDLINE_*</option> 変数についても、 <option>resume=</option> 以"
+"下にスワップデバイスの UUID が書かれていますので、こちらについても修正を行"
+"い、 <xref linkend=\"sec-grub2-cfg\"/> に書かれた手順に従って <filename>/"
+"boot/grub2/grub.cfg</filename> を作り直してください。"
 
 #. Tag: title
-#: bootconcept.xml:379
+#: bootconcept.xml:380
 #, no-c-format
 msgid "Generate an initramfs"
 msgstr "initramfs の生成"
 
 #. Tag: para
-#: bootconcept.xml:381
+#: bootconcept.xml:382
 #, no-c-format
-msgid "All commands in the following procedure need to be executed as the &rootuser; user."
+msgid ""
+"All commands in the following procedure need to be executed as the "
+"&rootuser; user."
 msgstr "なお、下記の手順では、いずれも &rootuser; による実行が必要となります。"
 
 #. Tag: para
-#: bootconcept.xml:387
+#: bootconcept.xml:388
 #, no-c-format
 msgid "Enter your <filename>/boot</filename> directory:"
 msgstr "まずは <filename>/boot</filename> ディレクトリに移動します:"
 
 #. Tag: screen
-#: bootconcept.xml:390
+#: bootconcept.xml:391
 #, no-c-format
 msgid "&prompt.root;cd /boot"
 msgstr "&prompt.root;cd /boot"
 
 #. Tag: para
-#: bootconcept.xml:393
+#: bootconcept.xml:394
 #, no-c-format
-msgid "Generate a new <systemitem>initramfs</systemitem> file with <command>dracut</command> , replacing <replaceable>MY_INITRAMFS</replaceable> with a file name of your choice:"
-msgstr "<command>dracut</command> コマンドを実行して、新しい <systemitem>initramfs</systemitem> ファイルを生成します。このとき、 <replaceable>出力先ファイル名</replaceable> には出力先のファイル名を指定します:"
+msgid ""
+"Generate a new <systemitem>initramfs</systemitem> file with <command>dracut</"
+"command> , replacing <replaceable>MY_INITRAMFS</replaceable> with a file "
+"name of your choice:"
+msgstr ""
+"<command>dracut</command> コマンドを実行して、新しい <systemitem>initramfs</"
+"systemitem> ファイルを生成します。このとき、 <replaceable>出力先ファイル名</"
+"replaceable> には出力先のファイル名を指定します:"
 
 #. Tag: screen
-#: bootconcept.xml:399
+#: bootconcept.xml:400
 #, no-c-format
 msgid "&prompt.root;dracut <replaceable>MY_INITRAMFS</replaceable>"
 msgstr "&prompt.root;dracut <replaceable>出力先ファイル名</replaceable>"
 
 #. Tag: para
-#: bootconcept.xml:400
+#: bootconcept.xml:401
 #, no-c-format
-msgid "Alternatively, run <command>dracut -f</command> <replaceable>FILENAME</replaceable> to replace an existing init file."
-msgstr "<command>dracut -f</command> <replaceable>出力先ファイル名</replaceable> のように実行してもかまいません。この場合は、既存のファイルを上書きします。"
+msgid ""
+"Alternatively, run <command>dracut -f</command> <replaceable>FILENAME</"
+"replaceable> to replace an existing init file."
+msgstr ""
+"<command>dracut -f</command> <replaceable>出力先ファイル名</replaceable> のよ"
+"うに実行してもかまいません。この場合は、既存のファイルを上書きします。"
 
 #. Tag: para
-#: bootconcept.xml:407
+#: bootconcept.xml:408
 #, no-c-format
-msgid "(Skip this step if you ran <command>dracut -f</command> in the previous step.) Create a symbolic link from the <systemitem>initramfs</systemitem> file you created in the previous step to <systemitem>initrd</systemitem> :"
-msgstr "(この手順は、以前の手順で <command>dracut -f</command> を実行した場合には不要です) 以前の手順で生成した <systemitem>initramfs</systemitem> ファイルから、 <filename>initrd</filename> に対してシンボリックリンクを作成します:"
+msgid ""
+"(Skip this step if you ran <command>dracut -f</command> in the previous "
+"step.) Create a symbolic link from the <systemitem>initramfs</systemitem> "
+"file you created in the previous step to <systemitem>initrd</systemitem> :"
+msgstr ""
+"(この手順は、以前の手順で <command>dracut -f</command> を実行した場合には不要"
+"です) 以前の手順で生成した <systemitem>initramfs</systemitem> ファイルから、 "
+"<filename>initrd</filename> に対してシンボリックリンクを作成します:"
 
 #. Tag: screen
-#: bootconcept.xml:412
+#: bootconcept.xml:413
 #, no-c-format
-msgid "&prompt.root; ln -sf <replaceable>MY_INITRAMFS</replaceable> <systemitem>initrd</systemitem>"
-msgstr "&prompt.root; ln -sf <replaceable>出力先ファイル名</replaceable> <systemitem>initrd</systemitem>"
+msgid ""
+"&prompt.root; ln -sf <replaceable>MY_INITRAMFS</replaceable> "
+"<systemitem>initrd</systemitem>"
+msgstr ""
+"&prompt.root; ln -sf <replaceable>出力先ファイル名</replaceable> "
+"<systemitem>initrd</systemitem>"
 
 #. Tag: para
-#: bootconcept.xml:415
+#: bootconcept.xml:416
 #, no-c-format
-msgid "On the &zseries; architecture, additionally run <command>grub2-install</command> ."
-msgstr "&zseries; アーキテクチャでは、あわせて <command>grub2-install</command> を実行してください。"
+msgid ""
+"On the &zseries; architecture, additionally run <command>grub2-install</"
+"command> ."
+msgstr ""
+"&zseries; アーキテクチャでは、あわせて <command>grub2-install</command> を実"
+"行してください。"
 
 #. Tag: title
-#: bootconcept.xml:426
+#: bootconcept.xml:427
 #, no-c-format
 msgid "The init on initramfs phase"
 msgstr "initramfs での初期化フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:427
+#: bootconcept.xml:428
 #, no-c-format
-msgid "The temporary root file system mounted by the kernel from the <systemitem>initramfs</systemitem> contains the executable &systemd; (which is called <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> in the following, also see <xref linkend=\"sec-boot-terminology\"/> . This program performs all actions needed to mount the proper root file system. It provides kernel functionality for the needed file system and device drivers for mass storage controllers with <systemitem class=\"service\">udev</systemitem> ."
-msgstr "&systemd; (<systemitem>initramfs</systemitem> 内では <systemitem>init</systemitem> とも呼びます。詳しくは <xref linkend=\"sec-boot-terminology\"/> をお読みください) を含む <systemitem>initramfs</systemitem> がカーネルによってマウントされ、一時的なルートファイルシステムになります。このプログラムは適切なルートファイルシステムをマウントするのに必要な、全ての処理を実施するほか、必要なファイルシステム向けの機能や、 <systemitem class=\"service\">udev</systemitem> によるマスストレージコントローラ向けのデバイスドライバの読み込みなどを行います。"
+msgid ""
+"The temporary root file system mounted by the kernel from the "
+"<systemitem>initramfs</systemitem> contains the executable &systemd; (which "
+"is called <systemitem>init</systemitem> on <systemitem>initramfs</"
+"systemitem> in the following, also see <xref linkend=\"sec-boot-"
+"terminology\"/> . This program performs all actions needed to mount the "
+"proper root file system. It provides kernel functionality for the needed "
+"file system and device drivers for mass storage controllers with <systemitem "
+"class=\"service\">udev</systemitem> ."
+msgstr ""
+"&systemd; (<systemitem>initramfs</systemitem> 内では <systemitem>init</"
+"systemitem> とも呼びます。詳しくは <xref linkend=\"sec-boot-terminology\"/> "
+"をお読みください) を含む <systemitem>initramfs</systemitem> がカーネルによっ"
+"てマウントされ、一時的なルートファイルシステムになります。このプログラムは適"
+"切なルートファイルシステムをマウントするのに必要な、全ての処理を実施するほ"
+"か、必要なファイルシステム向けの機能や、 <systemitem class=\"service\">udev</"
+"systemitem> によるマスストレージコントローラ向けのデバイスドライバの読み込み"
+"などを行います。"
 
 #. Tag: para
-#: bootconcept.xml:437
+#: bootconcept.xml:438
 #, no-c-format
-msgid "The main purpose of <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> is to prepare the mounting of and access to the real root file system. Depending on your system configuration, <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> is responsible for the following tasks."
-msgstr "<systemitem>initramfs</systemitem> における <systemitem>init</systemitem> の主な目的は、実際のルートファイルシステムのマウントを準備し、アクセスすることにあります。システムの設定によっても異なりますが、 <systemitem>initramfs</systemitem> における <systemitem>init</systemitem> は、下記を実施します:"
+msgid ""
+"The main purpose of <systemitem>init</systemitem> on <systemitem>initramfs</"
+"systemitem> is to prepare the mounting of and access to the real root file "
+"system. Depending on your system configuration, <systemitem>init</"
+"systemitem> on <systemitem>initramfs</systemitem> is responsible for the "
+"following tasks."
+msgstr ""
+"<systemitem>initramfs</systemitem> における <systemitem>init</systemitem> の"
+"主な目的は、実際のルートファイルシステムのマウントを準備し、アクセスすること"
+"にあります。システムの設定によっても異なりますが、 <systemitem>initramfs</"
+"systemitem> における <systemitem>init</systemitem> は、下記を実施します:"
 
 #. Tag: term
-#: bootconcept.xml:447
+#: bootconcept.xml:448
 #, no-c-format
 msgid "Loading kernel modules"
 msgstr "カーネルモジュールの読み込み"
 
 #. Tag: para
-#: bootconcept.xml:449
+#: bootconcept.xml:450
 #, no-c-format
-msgid "Depending on your hardware configuration, special drivers may be needed to access the hardware components of your computer (the most important component being your hard disk). To access the final root file system, the kernel needs to load the proper file system drivers."
-msgstr "ハードウエア設定にも依存しますが、お使いのコンピュータのハードウエアコンポーネント (ハードディスクなどの最も重要なもの) に対して、特別なドライバが必要となる場合があります。最終的なルートファイルシステムにアクセスするため、カーネルは適切なファイルシステムドライバも読み込む必要があります。"
+msgid ""
+"Depending on your hardware configuration, special drivers may be needed to "
+"access the hardware components of your computer (the most important "
+"component being your hard disk). To access the final root file system, the "
+"kernel needs to load the proper file system drivers."
+msgstr ""
+"ハードウエア設定にも依存しますが、お使いのコンピュータのハードウエアコンポー"
+"ネント (ハードディスクなどの最も重要なもの) に対して、特別なドライバが必要と"
+"なる場合があります。最終的なルートファイルシステムにアクセスするため、カーネ"
+"ルは適切なファイルシステムドライバも読み込む必要があります。"
 
 #. Tag: term
-#: bootconcept.xml:458
+#: bootconcept.xml:459
 #, no-c-format
 msgid "Providing block special files"
 msgstr "ブロックスペシャルファイルの提供"
 
 #. Tag: para
-#: bootconcept.xml:460
+#: bootconcept.xml:461
 #, no-c-format
-msgid "The kernel generates device events depending on loaded modules. <systemitem class=\"service\">udev</systemitem> handles these events and generates the required special block files on a RAM file system in <filename>/dev</filename> . Without those special files, the file system and other devices would not be accessible."
-msgstr "カーネルは読み込んだモジュールに従って、デバイスイベントを生成します。 <systemitem class=\"service\">udev</systemitem> はそれらのイベントを処理して、 RAM ファイルシステムである <filename>/dev</filename> 内に、必要なブロックスペシャルファイルを作成します。これらのスペシャルファイルが存在しないと、ファイルシステムやその他のデバイスにアクセスすることができなくなります。"
+msgid ""
+"The kernel generates device events depending on loaded modules. <systemitem "
+"class=\"service\">udev</systemitem> handles these events and generates the "
+"required special block files on a RAM file system in <filename>/dev</"
+"filename> . Without those special files, the file system and other devices "
+"would not be accessible."
+msgstr ""
+"カーネルは読み込んだモジュールに従って、デバイスイベントを生成します。 "
+"<systemitem class=\"service\">udev</systemitem> はそれらのイベントを処理し"
+"て、 RAM ファイルシステムである <filename>/dev</filename> 内に、必要なブロッ"
+"クスペシャルファイルを作成します。これらのスペシャルファイルが存在しないと、"
+"ファイルシステムやその他のデバイスにアクセスすることができなくなります。"
 
 #. Tag: term
-#: bootconcept.xml:470
+#: bootconcept.xml:471
 #, no-c-format
 msgid "Managing RAID and LVM setups"
 msgstr "RAID と LVM の設定管理"
 
 #. Tag: para
-#: bootconcept.xml:472
+#: bootconcept.xml:473
 #, no-c-format
-msgid "If you configured your system to hold the root file system under RAID or LVM, <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> sets up LVM or RAID to enable access to the root file system later."
-msgstr "RAID や LVM の中にルートファイルシステムを保持するような設定を行っている場合、 <systemitem>initramfs</systemitem> 内の <systemitem>init</systemitem> は、 LVM や RAID を設定して後続の手順でルートファイルシステムにアクセスできるように構成します。"
+msgid ""
+"If you configured your system to hold the root file system under RAID or "
+"LVM, <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> "
+"sets up LVM or RAID to enable access to the root file system later."
+msgstr ""
+"RAID や LVM の中にルートファイルシステムを保持するような設定を行っている場"
+"合、 <systemitem>initramfs</systemitem> 内の <systemitem>init</systemitem> "
+"は、 LVM や RAID を設定して後続の手順でルートファイルシステムにアクセスできる"
+"ように構成します。"
 
 #. Tag: term
-#: bootconcept.xml:480
+#: bootconcept.xml:481
 #, no-c-format
 msgid "Managing the network configuration"
 msgstr "ネットワーク設定の管理"
 
 #. Tag: para
-#: bootconcept.xml:482
+#: bootconcept.xml:483
 #, no-c-format
-msgid "If you configured your system to use a network-mounted root file system (mounted via NFS), <systemitem>init</systemitem> must make sure that the proper network drivers are loaded and that they are set up to allow access to the root file system."
-msgstr "お使いのシステムのルートファイルシステムが、ネットワーク経由でマウントするもの (例: NFS) であった場合、 <systemitem>init</systemitem> は必要なネットワークドライバを読み込んで、ルートファイルシステムにアクセスできる状態にする必要があります。"
+msgid ""
+"If you configured your system to use a network-mounted root file system "
+"(mounted via NFS), <systemitem>init</systemitem> must make sure that the "
+"proper network drivers are loaded and that they are set up to allow access "
+"to the root file system."
+msgstr ""
+"お使いのシステムのルートファイルシステムが、ネットワーク経由でマウントするも"
+"の (例: NFS) であった場合、 <systemitem>init</systemitem> は必要なネットワー"
+"クドライバを読み込んで、ルートファイルシステムにアクセスできる状態にする必要"
+"があります。"
 
 #. Tag: para
-#: bootconcept.xml:488
+#: bootconcept.xml:489
 #, no-c-format
-msgid "If the file system resides on a network block device like iSCSI or SAN, the connection to the storage server is also set up by <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> . &productname; supports booting from a secondary iSCSI target if the primary target is not available. <phrase os=\"sles\">For more details regarding configuration of the booting iSCSI target refer to <xref linkend=\"sec-iscsi-initiator-yast\"/></phrase> ."
-msgstr "iSCSI や SAN のようなネットワークブロックデバイス内にファイルシステムが存在する場合も、 <systemitem>initramfs</systemitem> 内の <systemitem>init</systemitem> がネットワークを設定します。 &productname; では、プライマリ (最初) のターゲットにアクセスできない場合、セカンダリ (第 2) の iSCSI ターゲットから起動する機能に対応しています。 <phrase os=\"sles\">iSCSI ターゲットからの起動に関する設定について、詳しくは <xref linkend=\"sec-iscsi-initiator-yast\"/> をお読みください。</phrase>"
+msgid ""
+"If the file system resides on a network block device like iSCSI or SAN, the "
+"connection to the storage server is also set up by <systemitem>init</"
+"systemitem> on <systemitem>initramfs</systemitem> . &productname; supports "
+"booting from a secondary iSCSI target if the primary target is not "
+"available. <phrase os=\"sles\">For more details regarding configuration of "
+"the booting iSCSI target refer to <xref linkend=\"sec-iscsi-initiator-yast\"/"
+"></phrase> ."
+msgstr ""
+"iSCSI や SAN のようなネットワークブロックデバイス内にファイルシステムが存在す"
+"る場合も、 <systemitem>initramfs</systemitem> 内の <systemitem>init</"
+"systemitem> がネットワークを設定します。 &productname; では、プライマリ (最"
+"初) のターゲットにアクセスできない場合、セカンダリ (第 2) の iSCSI ターゲット"
+"から起動する機能に対応しています。 <phrase os=\"sles\">iSCSI ターゲットからの"
+"起動に関する設定について、詳しくは <xref linkend=\"sec-iscsi-initiator-"
+"yast\"/> をお読みください。</phrase>"
 
 #. Tag: title
-#: bootconcept.xml:501
+#: bootconcept.xml:502
 #, no-c-format
 msgid "Handling of mount failures"
 msgstr "マウント失敗時の処理"
 
 #. Tag: para
-#: bootconcept.xml:502
+#: bootconcept.xml:503
 #, no-c-format
-msgid "If the root file system fails to mount from within the boot environment, it must be checked and repaired before the boot can continue. The file system checker will be automatically started for Ext3 and Ext4 file systems. The repair process is not automated for XFS and Btrfs file systems, and the user is presented with information describing the options available to repair the file system. When the file system has been successfully repaired, exiting the boot environment will cause the system to retry mounting the root file system. If successful, the boot will continue normally."
-msgstr "起動環境内でのルートファイルシステムのマウントが失敗した場合は、起動を続行するためにそれらを確認したり修復したりする必要があります。 ext3 や ext4 のファイルシステムである場合は、ファイルシステムチェッカーが自動で起動します。 XFS や btrfs のファイルシステムの場合は、修復処理が自動化されていませんので、指定可能なオプションを利用して手作業で修復作業を行います。修復が成功すると、起動環境はシステムに対してマウントのやり直しを指示します。これで問題なくマウントできれば、起動処理はそのまま続行されます。"
+msgid ""
+"If the root file system fails to mount from within the boot environment, it "
+"must be checked and repaired before the boot can continue. The file system "
+"checker will be automatically started for Ext3 and Ext4 file systems. The "
+"repair process is not automated for XFS and Btrfs file systems, and the user "
+"is presented with information describing the options available to repair the "
+"file system. When the file system has been successfully repaired, exiting "
+"the boot environment will cause the system to retry mounting the root file "
+"system. If successful, the boot will continue normally."
+msgstr ""
+"起動環境内でのルートファイルシステムのマウントが失敗した場合は、起動を続行す"
+"るためにそれらを確認したり修復したりする必要があります。 ext3 や ext4 のファ"
+"イルシステムである場合は、ファイルシステムチェッカーが自動で起動します。 XFS "
+"や btrfs のファイルシステムの場合は、修復処理が自動化されていませんので、指定"
+"可能なオプションを利用して手作業で修復作業を行います。修復が成功すると、起動"
+"環境はシステムに対してマウントのやり直しを指示します。これで問題なくマウント"
+"できれば、起動処理はそのまま続行されます。"
 
 #. Tag: title
-#: bootconcept.xml:516
+#: bootconcept.xml:517
 #, no-c-format
 msgid "The init on initramfs phase in the installation process"
 msgstr "インストール処理内での initramfs の処理"
 
 #. Tag: para
-#: bootconcept.xml:517
+#: bootconcept.xml:518
 #, no-c-format
-msgid "When <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> is called during the initial boot as part of the installation process, its tasks differ from those mentioned above. The installation system also does not start &systemd; from <systemitem>initramfs</systemitem> &mdash;these tasks are performed by <command>linuxrc</command> ."
-msgstr "<systemitem>initramfs</systemitem> 内の <systemitem>init</systemitem> がインストール処理内の一部として起動時に呼び出された場合、上述とは異なる方式で処理が進みます。インストールシステムでは <systemitem>initramfs</systemitem> から &systemd; を開始することはせず、代わりに <command>linuxrc</command> がこれらの処理を行います。"
+msgid ""
+"When <systemitem>init</systemitem> on <systemitem>initramfs</systemitem> is "
+"called during the initial boot as part of the installation process, its "
+"tasks differ from those mentioned above. The installation system also does "
+"not start &systemd; from <systemitem>initramfs</systemitem> &mdash;these "
+"tasks are performed by <command>linuxrc</command> ."
+msgstr ""
+"<systemitem>initramfs</systemitem> 内の <systemitem>init</systemitem> がイン"
+"ストール処理内の一部として起動時に呼び出された場合、上述とは異なる方式で処理"
+"が進みます。インストールシステムでは <systemitem>initramfs</systemitem> から "
+"&systemd; を開始することはせず、代わりに <command>linuxrc</command> がこれら"
+"の処理を行います。"
 
 #. Tag: term
-#: bootconcept.xml:528
+#: bootconcept.xml:529
 #, no-c-format
 msgid "Finding the installation medium"
 msgstr "インストールメディアの検出"
 
 #. Tag: para
-#: bootconcept.xml:530
+#: bootconcept.xml:531
 #, no-c-format
-msgid "When starting the installation process, your machine loads an installation kernel and a special <systemitem>init</systemitem> containing the &yast; installer. The &yast; installer is running in a RAM file system and needs to have information about the location of the installation medium to access it for installing the operating system."
-msgstr "インストール処理を開始すると、お使いのマシンはインストール用のカーネルと、 &yast; インストーラを含む特別な <systemitem>init</systemitem> を読み込みます。 &yast; インストーラは RAM 内のファイルシステムで動作するもので、オペレーティングシステムのインストールを行うためのインストールメディアの場所に関する情報を与える必要があります。"
+msgid ""
+"When starting the installation process, your machine loads an installation "
+"kernel and a special <systemitem>init</systemitem> containing the &yast; "
+"installer. The &yast; installer is running in a RAM file system and needs to "
+"have information about the location of the installation medium to access it "
+"for installing the operating system."
+msgstr ""
+"インストール処理を開始すると、お使いのマシンはインストール用のカーネルと、 "
+"&yast; インストーラを含む特別な <systemitem>init</systemitem> を読み込みま"
+"す。 &yast; インストーラは RAM 内のファイルシステムで動作するもので、オペレー"
+"ティングシステムのインストールを行うためのインストールメディアの場所に関する"
+"情報を与える必要があります。"
 
 #. Tag: term
-#: bootconcept.xml:540
+#: bootconcept.xml:541
 #, no-c-format
 msgid "Initiating hardware recognition and loading appropriate kernel modules"
 msgstr "ハードウエア検出の実行と適切なカーネルモジュールの読み込み"
 
 #. Tag: para
-#: bootconcept.xml:544
+#: bootconcept.xml:545
 #, no-c-format
-msgid "As mentioned in <xref linkend=\"sec-boot-initrd\"/> , the boot process starts with a minimum set of drivers that can be used with most hardware configurations. On &aarch64;, &power;, and &x86-64; machines, <command>linuxrc</command> starts an initial hardware scanning process that determines the set of drivers suitable for your hardware configuration. On &zseries;, a list of drivers and their parameters needs to be provided, for example, via linuxrc or a parmfile."
-msgstr "<xref linkend=\"sec-boot-initrd\"/> でも説明しているとおり、起動処理はほとんどのハードウエア設定で使用できる最小セットのドライバで開始されます。 &aarch64;, &power;, &x86-64; の各マシンでは、 <command>linuxrc</command> が初期のハードウエア検出処理を行い、お使いのハードウエア設定でどのようなドライバが必要なのかを判別します。 &zseries; では、 linuxrc や parmfile などで、ドライバとパラメータの一覧を指定する必要があります。"
+msgid ""
+"As mentioned in <xref linkend=\"sec-boot-initrd\"/> , the boot process "
+"starts with a minimum set of drivers that can be used with most hardware "
+"configurations. On &aarch64;, &power;, and &x86-64; machines, "
+"<command>linuxrc</command> starts an initial hardware scanning process that "
+"determines the set of drivers suitable for your hardware configuration. On "
+"&zseries;, a list of drivers and their parameters needs to be provided, for "
+"example, via linuxrc or a parmfile."
+msgstr ""
+"<xref linkend=\"sec-boot-initrd\"/> でも説明しているとおり、起動処理はほとん"
+"どのハードウエア設定で使用できる最小セットのドライバで開始されます。 "
+"&aarch64;, &power;, &x86-64; の各マシンでは、 <command>linuxrc</command> が初"
+"期のハードウエア検出処理を行い、お使いのハードウエア設定でどのようなドライバ"
+"が必要なのかを判別します。 &zseries; では、 linuxrc や parmfile などで、ドラ"
+"イバとパラメータの一覧を指定する必要があります。"
 
 #. Tag: para
-#: bootconcept.xml:553
+#: bootconcept.xml:554
 #, no-c-format
-msgid "These drivers are used to generate a custom <systemitem>initramfs</systemitem> that is needed to boot the system. If the modules are not needed for boot but for coldplug, the modules can be loaded with &systemd;; for more information, see <xref linkend=\"sec-boot-systemd-advanced-kernel-modules\"/> ."
-msgstr "これらのドライバは、システムを起動するのに必要な独自の <systemitem>initramfs</systemitem> を生成するために使用されることになります。なお、起動時にはモジュールを必要としないコールドプラグ型のハードウエアの場合は、それらのモジュールは &systemd; 側で読み込みます。詳しくは <xref linkend=\"sec-boot-systemd-advanced-kernel-modules\"/> をお読みください。"
+msgid ""
+"These drivers are used to generate a custom <systemitem>initramfs</"
+"systemitem> that is needed to boot the system. If the modules are not needed "
+"for boot but for coldplug, the modules can be loaded with &systemd;; for "
+"more information, see <xref linkend=\"sec-boot-systemd-advanced-kernel-"
+"modules\"/> ."
+msgstr ""
+"これらのドライバは、システムを起動するのに必要な独自の "
+"<systemitem>initramfs</systemitem> を生成するために使用されることになります。"
+"なお、起動時にはモジュールを必要としないコールドプラグ型のハードウエアの場合"
+"は、それらのモジュールは &systemd; 側で読み込みます。詳しくは <xref "
+"linkend=\"sec-boot-systemd-advanced-kernel-modules\"/> をお読みください。"
 
 #. Tag: term
-#: bootconcept.xml:562
+#: bootconcept.xml:563
 #, no-c-format
 msgid "Loading the installation system"
 msgstr "インストールシステムの読み込み"
 
 #. Tag: para
-#: bootconcept.xml:564
+#: bootconcept.xml:565
 #, no-c-format
-msgid "When the hardware is properly recognized, the appropriate drivers are loaded. The <systemitem class=\"service\">udev</systemitem> program creates the special device files and <command>linuxrc</command> starts the installation system with the &yast; installer."
-msgstr "ハードウエアが正しく認識されると、必要なドライバが読み込まれます。 <systemitem class=\"service\">udev</systemitem> プログラムは特殊なデバイスファイルを作成し、 &yast; インストーラを含む <command>linuxrc</command> を開始します。"
+msgid ""
+"When the hardware is properly recognized, the appropriate drivers are "
+"loaded. The <systemitem class=\"service\">udev</systemitem> program creates "
+"the special device files and <command>linuxrc</command> starts the "
+"installation system with the &yast; installer."
+msgstr ""
+"ハードウエアが正しく認識されると、必要なドライバが読み込まれます。 "
+"<systemitem class=\"service\">udev</systemitem> プログラムは特殊なデバイス"
+"ファイルを作成し、 &yast; インストーラを含む <command>linuxrc</command> を開"
+"始します。"
 
 #. Tag: term
-#: bootconcept.xml:573
+#: bootconcept.xml:574
 #, no-c-format
 msgid "Starting &yast;"
 msgstr "&yast; の起動"
 
 #. Tag: para
-#: bootconcept.xml:575
+#: bootconcept.xml:576
 #, no-c-format
-msgid "Finally, <command>linuxrc</command> starts &yast;, which starts the package installation and the system configuration."
-msgstr "最後に <command>linuxrc</command> が &yast; を起動します。これでパッケージのインストールやシステムの設定などを行うことができるようになります。"
+msgid ""
+"Finally, <command>linuxrc</command> starts &yast;, which starts the package "
+"installation and the system configuration."
+msgstr ""
+"最後に <command>linuxrc</command> が &yast; を起動します。これでパッケージの"
+"インストールやシステムの設定などを行うことができるようになります。"
 
 #. Tag: title
-#: bootconcept.xml:587
+#: bootconcept.xml:588
 #, no-c-format
 msgid "The systemd phase"
 msgstr "systemd の処理フェーズ"
 
 #. Tag: para
-#: bootconcept.xml:588
+#: bootconcept.xml:589
 #, no-c-format
-msgid "After the <quote>real</quote> root file system has been found, it is checked for errors and mounted. If this is successful, the <systemitem>initramfs</systemitem> is cleaned and the &systemd; daemon on the root file system is executed. &systemd; is Linux's system and service manager. It is the parent process that is started as PID 1 and acts as an init system which brings up and maintains user space services. See <xref linkend=\"cha-systemd\"/> for details."
-msgstr "<quote>実際の</quote> ルートファイルシステムが見つかると、まずはエラーがないかどうかを確認して、マウントを行います。マウントが成功すれば、 <systemitem>initramfs</systemitem> がメモリ内から削除され、ルートファイルシステム内の &systemd; デーモンを起動します。 &systemd; は Linux システムとサービスのマネージャです。また、プロセス ID (PID) 1 で起動される親プロセスでもあり、ユーザスペースのサービスを立ち上げて管理するための init システムとしても動作します。詳しくは <xref linkend=\"cha-systemd\"/> をお読みください。"
-
+msgid ""
+"After the <quote>real</quote> root file system has been found, it is checked "
+"for errors and mounted. If this is successful, the <systemitem>initramfs</"
+"systemitem> is cleaned and the &systemd; daemon on the root file system is "
+"executed. &systemd; is Linux's system and service manager. It is the parent "
+"process that is started as PID 1 and acts as an init system which brings up "
+"and maintains user space services. See <xref linkend=\"cha-systemd\"/> for "
+"details."
+msgstr ""
+"<quote>実際の</quote> ルートファイルシステムが見つかると、まずはエラーがない"
+"かどうかを確認して、マウントを行います。マウントが成功すれば、 "
+"<systemitem>initramfs</systemitem> がメモリ内から削除され、ルートファイルシス"
+"テム内の &systemd; デーモンを起動します。 &systemd; は Linux システムとサービ"
+"スのマネージャです。また、プロセス ID (PID) 1 で起動される親プロセスでもあ"
+"り、ユーザスペースのサービスを立ち上げて管理するための init システムとしても"
+"動作します。詳しくは <xref linkend=\"cha-systemd\"/> をお読みください。"

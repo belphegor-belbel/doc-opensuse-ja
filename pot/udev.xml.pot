@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/belphegor-belbel/doc-opensuse-ja\n"
-"POT-Creation-Date: 2025-08-04 22:05+0000\n"
+"POT-Creation-Date: 2026-01-16 22:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <someuser@example.org>\n"
@@ -20,122 +20,128 @@ msgstr ""
 msgid "Dynamic kernel device management with <systemitem class=\"service\">udev</systemitem>"
 msgstr ""
 
+#. Tag: meta
+#: udev.xml:10
+#, no-c-format
+msgid "Learn how to configure dynamic kernel device management using udev, and access a centralized point for detailed information on configuration files and rules"
+msgstr ""
+
 #. Tag: date
-#: udev.xml:16
+#: udev.xml:17
 #, no-c-format
 msgid "2024-05-13"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:23
+#: udev.xml:24
 #, no-c-format
 msgid "The kernel can add or remove almost any device in a running system. Changes in the device state (whether a device is plugged in or removed) need to be propagated to user space. Devices need to be configured when they are plugged in and recognized. Users of a certain device need to be informed about any changes in this device's recognized state. <systemitem class=\"service\">udev</systemitem> provides the needed infrastructure to dynamically maintain the device node files and symbolic links in the <filename>/dev</filename> directory. <systemitem class=\"service\">udev</systemitem> rules provide a way to plug external tools into the kernel device event processing. This allows you to customize <systemitem class=\"service\">udev</systemitem> device handling by adding certain scripts to execute as part of kernel device handling, or request and import additional data to evaluate during device handling."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:39
+#: udev.xml:40
 #, no-c-format
 msgid "The <filename>/dev</filename> directory"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:41
+#: udev.xml:42
 #, no-c-format
 msgid "The device nodes in the <filename>/dev</filename> directory provide access to the corresponding kernel devices. With <systemitem class=\"service\">udev</systemitem> , the <filename>/dev</filename> directory reflects the current state of the kernel. Every kernel device has one corresponding device file. If a device is disconnected from the system, the device node is removed."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:50
+#: udev.xml:51
 #, no-c-format
 msgid "The content of the <filename>/dev</filename> directory is kept on a temporary file system and all files are rendered at every system start-up. Manually created or modified files do not, by design, survive a reboot. Static files and directories that should always be in the <filename>/dev</filename> directory regardless of the state of the corresponding kernel device can be created with systemd-tmpfiles. The configuration files are found in <filename>/usr/lib/tmpfiles.d/</filename> and <filename>/etc/tmpfiles.d/</filename> ; for more information, see the <systemitem>systemd-tmpfiles(8)</systemitem> man page."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:63
+#: udev.xml:64
 #, no-c-format
 msgid "Kernel <systemitem class=\"service\">uevents</systemitem> and <systemitem class=\"service\">udev</systemitem>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:65
+#: udev.xml:66
 #, no-c-format
 msgid "The required device information is exported by the <systemitem class=\"filesystem\">sysfs</systemitem> file system. For every device the kernel has detected and initialized, a directory with the device name is created. It contains attribute files with device-specific properties."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:73
+#: udev.xml:74
 #, no-c-format
 msgid "Every time a device is added or removed, the kernel sends a uevent to notify <systemitem class=\"service\">udev</systemitem> of the change. The <systemitem class=\"service\">udev</systemitem> daemon reads and parses all rules from the <filename>/usr/lib/udev/rules.d/*.rules</filename> and <filename>/etc/udev/rules.d/*.rules</filename> files at start-up and keeps them in memory. If rules files are changed, added or removed, the daemon can reload their in-memory representation with the command <command>udevadm control --reload</command> . For more details on <systemitem class=\"service\">udev</systemitem> rules and their syntax, refer to <xref linkend=\"sec-udev-rules\"/> ."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:86
+#: udev.xml:87
 #, no-c-format
 msgid "Every received event is matched against the set of provides rules. The rules can add or change event environment keys, request a specific name for the device node to create, add symbolic links pointing to the node or add programs to run after the device node is created. The driver core <systemitem class=\"service\">uevents</systemitem> are received from a kernel netlink socket."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:96
+#: udev.xml:97
 #, no-c-format
 msgid "Drivers, kernel modules and devices"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:98
+#: udev.xml:99
 #, no-c-format
 msgid "The kernel bus drivers probe for devices. For every detected device, the kernel creates an internal device structure while the driver core sends a uevent to the <systemitem class=\"service\">udev</systemitem> daemon. Bus devices identify themselves by a specially formatted ID, which tells what kind of device it is. These IDs consist of vendor and product ID and other subsystem-specific values. Every bus has its own scheme for these IDs, called <envar>MODALIAS</envar> . The kernel takes the device information, composes a <envar>MODALIAS</envar> ID string from it and sends that string along with the event. For a USB mouse, it looks like this:"
 msgstr ""
 
 #. Tag: screen
-#: udev.xml:110
+#: udev.xml:111
 #, no-c-format
 msgid "MODALIAS=usb:v046DpC03Ed2000dc00dsc00dp00ic03isc01ip02"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:112
+#: udev.xml:113
 #, no-c-format
 msgid "Every device driver carries a list of known aliases for devices it can handle. The list is contained in the kernel module file itself. The program depmod reads the ID lists and creates the file <filename>modules.alias</filename> in the kernel's <filename>/lib/modules</filename> directory for all currently available modules. With this infrastructure, module loading is as easy as calling <command>modprobe</command> for every event that carries a <literal>MODALIAS</literal> key. If <command>modprobe $MODALIAS</command> is called, it matches the device alias composed for the device with the aliases provided by the modules. If a matching entry is found, that module is loaded. All this is automatically triggered by <systemitem class=\"service\">udev</systemitem> ."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:128
+#: udev.xml:129
 #, no-c-format
 msgid "Booting and initial device setup"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:130
+#: udev.xml:131
 #, no-c-format
 msgid "All device events happening during the boot process before the <systemitem class=\"service\">udev</systemitem> daemon is running are lost, because the infrastructure to handle these events resides on the root file system and is not available at that time. To cover that loss, the kernel provides a <filename>uevent</filename> file located in the device directory of every device in the <systemitem class=\"filesystem\">sysfs</systemitem> file system. By writing <literal>add</literal> to that file, the kernel resends the same event as the one lost during boot. A simple loop over all <filename>uevent</filename> files in <filename>/sys</filename> triggers all events again to create the device nodes and perform device setup."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:143
+#: udev.xml:144
 #, no-c-format
 msgid "As an example, a USB mouse present during boot may not be initialized by the early boot logic, because the driver is not available at that time. The event for the device discovery was lost and failed to find a kernel module for the device. Instead of manually searching for connected devices, <systemitem class=\"service\">udev</systemitem> requests all device events from the kernel after the root file system is available, so the event for the USB mouse device runs again. Now it finds the kernel module on the mounted root file system and the USB mouse can be initialized."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:154
+#: udev.xml:155
 #, no-c-format
 msgid "From user space, there is no visible difference between a device coldplug sequence and a device discovery during runtime. In both cases, the same rules are used to match and the same configured programs are run."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:161
+#: udev.xml:162
 #, no-c-format
 msgid "Monitoring the running <systemitem class=\"service\">udev</systemitem> daemon"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:163
+#: udev.xml:164
 #, no-c-format
 msgid "The program <command>udevadm monitor</command> can be used to visualize the driver core events and the timing of the <systemitem class=\"service\">udev</systemitem> event processes."
 msgstr ""
 
 #. Tag: screen
-#: udev.xml:169
+#: udev.xml:170
 #, no-c-format
 msgid "UEVENT[1185238505.276660] add   /devices/pci0000:00/0000:00:1d.2/usb3/3-1 (usb)\n"
       "UDEV  [1185238505.279198] add   /devices/pci0000:00/0000:00:1d.2/usb3/3-1 (usb)\n"
@@ -150,19 +156,19 @@ msgid "UEVENT[1185238505.276660] add   /devices/pci0000:00/0000:00:1d.2/usb3/3-1
 msgstr ""
 
 #. Tag: para
-#: udev.xml:180
+#: udev.xml:181
 #, no-c-format
 msgid "The <literal>UEVENT</literal> lines show the events the kernel has sent over netlink. The <literal>UDEV</literal> lines show the finished <systemitem class=\"service\">udev</systemitem> event handlers. The timing is printed in microseconds. The time between <literal>UEVENT</literal> and <literal>UDEV</literal> is the time <systemitem class=\"service\">udev</systemitem> took to process this event or the <systemitem class=\"service\">udev</systemitem> daemon has delayed its execution to synchronize this event with related and already running events. For example, events for hard disk partitions always wait for the main disk device event to finish, because the partition events may rely on the data that the main disk event has queried from the hardware."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:194
+#: udev.xml:195
 #, no-c-format
 msgid "<command>udevadm monitor --env</command> shows the complete event environment:"
 msgstr ""
 
 #. Tag: screen
-#: udev.xml:199
+#: udev.xml:200
 #, no-c-format
 msgid "ACTION=add\n"
       "DEVPATH=/devices/pci0000:00/0000:00:1d.2/usb3/3-1/3-1:1.0/input/input10\n"
@@ -178,37 +184,37 @@ msgid "ACTION=add\n"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:211
+#: udev.xml:212
 #, no-c-format
 msgid "<systemitem class=\"service\">udev</systemitem> also sends messages to syslog. The default syslog priority that controls which messages are sent to syslog is specified in the <systemitem class=\"service\">udev</systemitem> configuration file <filename>/etc/udev/udev.conf</filename> . The log priority of the running daemon can be changed with <command>udevadm control --log_priority=</command> <replaceable>LEVEL/NUMBER</replaceable> ."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:221
+#: udev.xml:222
 #, no-c-format
 msgid "Influencing kernel device event handling with <systemitem class=\"service\">udev</systemitem> rules"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:223
+#: udev.xml:224
 #, no-c-format
 msgid "A <systemitem class=\"service\">udev</systemitem> rule can match any property the kernel adds to the event itself or any information that the kernel exports to <filename>sysfs</filename> . The rule can also request additional information from external programs. Events are matched against all rules provided in the directories <filename>/usr/lib/udev/rules.d/</filename> (for default rules) and <filename>/etc/udev/rules.d</filename> (system-specific configuration)."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:233
+#: udev.xml:234
 #, no-c-format
 msgid "Every line in the rules file contains at least one key value pair. There are two kinds of keys, match and assignment keys. If all match keys match their values, the rule is applied and the assignment keys are assigned the specified value. A matching rule may specify the name of the device node, add symbolic links pointing to the node or run a specified program as part of the event handling. If no matching rule is found, the default device node name is used to create the device node. Detailed information about the rule syntax and the provided keys to match or import data are described in the <systemitem class=\"service\">udev</systemitem> man page. The following example rules provide a basic introduction to <systemitem class=\"service\">udev</systemitem> rule syntax. The example rules are all taken from the <systemitem class=\"service\">udev</systemitem> default rule set <filename>/usr/lib/udev/rules.d/50-udev-default.rules</filename> ."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:250
+#: udev.xml:251
 #, no-c-format
 msgid "Example <systemitem class=\"service\">udev</systemitem> rules"
 msgstr ""
 
 #. Tag: screen
-#: udev.xml:251
+#: udev.xml:252
 #, no-c-format
 msgid "# console\n"
       "KERNEL==\"console\", MODE=\"0600\", OPTIONS=\"last_rule\"\n"
@@ -224,655 +230,655 @@ msgid "# console\n"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:264
+#: udev.xml:265
 #, no-c-format
 msgid "The <systemitem>console</systemitem> rule consists of three keys: one match key ( <literal>KERNEL</literal> ) and two assign keys ( <literal>MODE</literal> , <literal>OPTIONS</literal> ). The <literal>KERNEL</literal> match rule searches the device list for any items of the type <literal>console</literal> . Only exact matches are valid and trigger this rule to be executed. The <literal>MODE</literal> key assigns special permissions to the device node, in this case, read and write permissions to the owner of this device only. The <literal>OPTIONS</literal> key makes this rule the last rule to be applied to any device of this type. Any later rule matching this particular device type does not have any effect."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:278
+#: udev.xml:279
 #, no-c-format
 msgid "The <systemitem>serial devices</systemitem> rule is not available in <filename>50-udev-default.rules</filename> anymore, but it is still worth considering. It consists of two match keys ( <literal>KERNEL</literal> and <literal>ATTRS</literal> ) and one assign key ( <literal>SYMLINK</literal> ). The <literal>KERNEL</literal> key searches for all devices of the <literal>ttyUSB</literal> type. Using the <literal>*</literal> wild card, this key matches several of these devices. The second match key, <literal>ATTRS</literal> , checks whether the <filename>product</filename> attribute file in <literal>sysfs</literal> for any <literal>ttyUSB</literal> device contains a certain string. The assign key ( <literal>SYMLINK</literal> ) triggers the addition of a symbolic link to this device under <filename>/dev/pilot</filename> . The operator used in this key ( <literal>+=</literal> ) tells <systemitem class=\"service\">udev</systemitem> to additionally perform this action, even if previous or later rules add other symbolic links. As this rule contains two match keys, it is only applied if both conditions are met."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:297
+#: udev.xml:298
 #, no-c-format
 msgid "The <systemitem>printer</systemitem> rule deals with USB printers and contains two match keys which must both apply to get the entire rule applied ( <literal>SUBSYSTEM</literal> and <literal>KERNEL</literal> ). Three assign keys deal with the naming for this device type ( <literal>NAME</literal> ), the creation of symbolic device links ( <literal>SYMLINK</literal> ) and the group membership for this device type ( <literal>GROUP</literal> ). Using the <literal>*</literal> wild card in the <literal>KERNEL</literal> key makes it match several <literal>lp</literal> printer devices. Substitutions are used in both, the <literal>NAME</literal> and the <literal>SYMLINK</literal> keys to extend these strings by the internal device name. For example, the symbolic link to the first <literal>lp</literal> USB printer would read <filename>/dev/usblp0</filename> ."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:312
+#: udev.xml:313
 #, no-c-format
 msgid "The <systemitem>kernel firmware loader</systemitem> rule makes <systemitem class=\"service\">udev</systemitem> load additional firmware by an external helper script during runtime. The <literal>SUBSYSTEM</literal> match key searches for the <literal>firmware</literal> subsystem. The <literal>ACTION</literal> key checks whether any device belonging to the <literal>firmware</literal> subsystem has been added. The <literal>RUN+=</literal> key triggers the execution of the <literal>firmware.sh</literal> script to locate the firmware that is to be loaded."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:324
+#: udev.xml:325
 #, no-c-format
 msgid "General characteristics are common to all rules:"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:330
+#: udev.xml:331
 #, no-c-format
 msgid "Each rule consists of one or more key value pairs separated by a comma."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:335
+#: udev.xml:336
 #, no-c-format
 msgid "A key's operation is determined by the operator. <systemitem class=\"service\">udev</systemitem> rules support several operators."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:342
+#: udev.xml:343
 #, no-c-format
 msgid "Each given value must be enclosed by quotation marks."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:347
+#: udev.xml:348
 #, no-c-format
 msgid "Each line of the rules file represents one rule. If a rule is longer than one line, use <literal>\\</literal> to join the different lines as you would do in shell syntax."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:354
+#: udev.xml:355
 #, no-c-format
 msgid "<systemitem class=\"service\">udev</systemitem> rules support a shell-style pattern that matches the <literal>*</literal> , <literal>?</literal> , and <literal>[]</literal> patterns."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:361
+#: udev.xml:362
 #, no-c-format
 msgid "<systemitem class=\"service\">udev</systemitem> rules support substitutions."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:368
+#: udev.xml:369
 #, no-c-format
 msgid "Using operators in <systemitem class=\"service\">udev</systemitem> rules"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:369
+#: udev.xml:370
 #, no-c-format
 msgid "Creating keys you can choose from several operators, depending on the type of key you want to create. Match keys will normally be used to find a value that either matches or explicitly mismatches the search value. Match keys contain either of the following operators:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:377
+#: udev.xml:378
 #, no-c-format
 msgid "<literal>==</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:380
+#: udev.xml:381
 #, no-c-format
 msgid "Compare for equality. If the key contains a search pattern, all results matching this pattern are valid."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:387
+#: udev.xml:388
 #, no-c-format
 msgid "<literal>!=</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:390
+#: udev.xml:391
 #, no-c-format
 msgid "Compare for non-equality. If the key contains a search pattern, all results matching this pattern are valid."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:397
+#: udev.xml:398
 #, no-c-format
 msgid "Any of the following operators can be used with assign keys:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:402
+#: udev.xml:403
 #, no-c-format
 msgid "<literal>=</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:405
+#: udev.xml:406
 #, no-c-format
 msgid "Assign a value to a key. If the key previously consisted of a list of values, the key resets and only the single value is assigned."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:412
+#: udev.xml:413
 #, no-c-format
 msgid "<literal>+=</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:415
+#: udev.xml:416
 #, no-c-format
 msgid "Add a value to a key that contains a list of entries."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:421
+#: udev.xml:422
 #, no-c-format
 msgid "<literal>:=</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:424
+#: udev.xml:425
 #, no-c-format
 msgid "Assign a final value. Disallow any later change by later rules."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:433
+#: udev.xml:434
 #, no-c-format
 msgid "Using substitutions in <systemitem class=\"service\">udev</systemitem> rules"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:434
+#: udev.xml:435
 #, no-c-format
 msgid "<systemitem class=\"service\">udev</systemitem> rules support the use of placeholders and substitutions. Use them in a similar fashion as you would do in any other scripts. The following substitutions can be used with <systemitem class=\"service\">udev</systemitem> rules:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:442
+#: udev.xml:443
 #, no-c-format
 msgid "<literal>%r</literal> , <literal>$root</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:445
+#: udev.xml:446
 #, no-c-format
 msgid "The device directory, <filename>/dev</filename> by default."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:451
+#: udev.xml:452
 #, no-c-format
 msgid "<literal>%p</literal> , <literal>$devpath</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:454
+#: udev.xml:455
 #, no-c-format
 msgid "The value of <envar>DEVPATH</envar> ."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:460
+#: udev.xml:461
 #, no-c-format
 msgid "<literal>%k</literal> , <literal>$kernel</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:463
+#: udev.xml:464
 #, no-c-format
 msgid "The value of <envar>KERNEL</envar> or the internal device name."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:469
+#: udev.xml:470
 #, no-c-format
 msgid "<literal>%n</literal> , <literal>$number</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:472
+#: udev.xml:473
 #, no-c-format
 msgid "The device number."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:478
+#: udev.xml:479
 #, no-c-format
 msgid "<literal>%N</literal> , <literal>$tempnode</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:481
+#: udev.xml:482
 #, no-c-format
 msgid "The temporary name of the device file."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:487
+#: udev.xml:488
 #, no-c-format
 msgid "<literal>%M</literal> , <literal>$major</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:490
+#: udev.xml:491
 #, no-c-format
 msgid "The major number of the device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:496
+#: udev.xml:497
 #, no-c-format
 msgid "<literal>%m</literal> , <literal>$minor</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:499
+#: udev.xml:500
 #, no-c-format
 msgid "The minor number of the device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:505
+#: udev.xml:506
 #, no-c-format
 msgid "<literal>%s{<replaceable>ATTRIBUTE</replaceable>}</literal> , <literal>$attr{<replaceable>ATTRIBUTE</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:509
+#: udev.xml:510
 #, no-c-format
 msgid "The value of a <filename>sysfs</filename> attribute (specified by <replaceable>ATTRIBUTE</replaceable> )."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:516
+#: udev.xml:517
 #, no-c-format
 msgid "<literal>%E{<replaceable>VARIABLE</replaceable>}</literal> , <literal>$env{<replaceable>VARIABLE</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:520
+#: udev.xml:521
 #, no-c-format
 msgid "The value of an environment variable (specified by <replaceable>VARIABLE</replaceable> )."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:527
+#: udev.xml:528
 #, no-c-format
 msgid "<literal>%c</literal> , <literal>$result</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:530
+#: udev.xml:531
 #, no-c-format
 msgid "The output of <envar>PROGRAM</envar> ."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:536
+#: udev.xml:537
 #, no-c-format
 msgid "<literal>%%</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:539
+#: udev.xml:540
 #, no-c-format
 msgid "The <literal>%</literal> character."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:545
+#: udev.xml:546
 #, no-c-format
 msgid "<literal>$$</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:548
+#: udev.xml:549
 #, no-c-format
 msgid "The <literal>$</literal> character."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:557
+#: udev.xml:558
 #, no-c-format
 msgid "Using <systemitem class=\"service\">udev</systemitem> match keys"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:558
+#: udev.xml:559
 #, no-c-format
 msgid "Match keys describe conditions that must be met before a <systemitem class=\"service\">udev</systemitem> rule can be applied. The following match keys are available:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:565
+#: udev.xml:566
 #, no-c-format
 msgid "<literal>ACTION</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:568
+#: udev.xml:569
 #, no-c-format
 msgid "The name of the event action, for example, <literal>add</literal> or <literal>remove</literal> when adding or removing a device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:575
+#: udev.xml:576
 #, no-c-format
 msgid "<literal>DEVPATH</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:578
+#: udev.xml:579
 #, no-c-format
 msgid "The device path of the event device, for example, <literal>DEVPATH=/bus/pci/drivers/ipw3945</literal> to search for all events related to the ipw3945 driver."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:586
+#: udev.xml:587
 #, no-c-format
 msgid "<literal>KERNEL</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:589
+#: udev.xml:590
 #, no-c-format
 msgid "The internal (kernel) name of the event device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:595
+#: udev.xml:596
 #, no-c-format
 msgid "<literal>SUBSYSTEM</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:598
+#: udev.xml:599
 #, no-c-format
 msgid "The subsystem of the event device, for example, <literal>SUBSYSTEM=usb</literal> for all events related to USB devices."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:605
+#: udev.xml:606
 #, no-c-format
 msgid "<literal>ATTR{<replaceable>FILENAME</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:608
+#: udev.xml:609
 #, no-c-format
 msgid "<systemitem class=\"filesystem\">sysfs</systemitem> attributes of the event device. To match a string contained in the <filename>vendor</filename> attribute file name, you could use <literal>ATTR{vendor}==\"On[sS]tream\"</literal> , for example."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:617
+#: udev.xml:618
 #, no-c-format
 msgid "<literal>KERNELS</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:620
+#: udev.xml:621
 #, no-c-format
 msgid "Let <systemitem class=\"service\">udev</systemitem> search the device path upward for a matching device name."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:627
+#: udev.xml:628
 #, no-c-format
 msgid "<literal>SUBSYSTEMS</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:630
+#: udev.xml:631
 #, no-c-format
 msgid "Let <systemitem class=\"service\">udev</systemitem> search the device path upward for a matching device subsystem name."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:637
+#: udev.xml:638
 #, no-c-format
 msgid "<literal>DRIVERS</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:640
+#: udev.xml:641
 #, no-c-format
 msgid "Let <systemitem class=\"service\">udev</systemitem> search the device path upward for a matching device driver name."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:647
+#: udev.xml:648
 #, no-c-format
 msgid "<literal>ATTRS{<replaceable>FILENAME</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:650
+#: udev.xml:651
 #, no-c-format
 msgid "Let <systemitem class=\"service\">udev</systemitem> search the device path upward for a device with matching <systemitem class=\"filesystem\">sysfs</systemitem> attribute values."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:661
+#: udev.xml:662
 #, no-c-format
 msgid "The value of an environment variable, for example, <literal>ENV{ID_BUS}=\"ieee1394</literal> to search for all events related to the FireWire bus ID."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:669
+#: udev.xml:670
 #, no-c-format
 msgid "<literal>PROGRAM</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:672
+#: udev.xml:673
 #, no-c-format
 msgid "Let <systemitem class=\"service\">udev</systemitem> execute an external program. To be successful, the program must return with exit code zero. The program's output, printed to STDOUT, is available to the <literal>RESULT</literal> key."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:681
+#: udev.xml:682
 #, no-c-format
 msgid "<literal>RESULT</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:684
+#: udev.xml:685
 #, no-c-format
 msgid "Match the output string of the last <literal>PROGRAM</literal> call. Either include this key in the same rule as the <literal>PROGRAM</literal> key or in a later one."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:695
+#: udev.xml:696
 #, no-c-format
 msgid "Using <systemitem class=\"service\">udev</systemitem> assign keys"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:696
+#: udev.xml:697
 #, no-c-format
 msgid "In contrast to the match keys described above, assign keys do not describe conditions that must be met. They assign values, names and actions to the device nodes maintained by <systemitem class=\"service\">udev</systemitem> ."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:703
+#: udev.xml:704
 #, no-c-format
 msgid "<literal>NAME</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:706
+#: udev.xml:707
 #, no-c-format
 msgid "The name of the device node to be created. After a rule has set a node name, all other rules with a <literal>NAME</literal> key for this node are ignored."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:714
+#: udev.xml:715
 #, no-c-format
 msgid "<literal>SYMLINK</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:717
+#: udev.xml:718
 #, no-c-format
 msgid "The name of a symbolic link related to the node to be created. Multiple matching rules can add symbolic links to be created with the device node. You can also specify multiple symbolic links for one node in one rule using the space character to separate the symbolic link names."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:726
+#: udev.xml:727
 #, no-c-format
 msgid "<literal>OWNER, GROUP, MODE</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:729
+#: udev.xml:730
 #, no-c-format
 msgid "The permissions for the new device node. Values specified here overwrite anything that has been compiled in."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:736
+#: udev.xml:737
 #, no-c-format
 msgid "<literal>ATTR{<replaceable>KEY</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:739
+#: udev.xml:740
 #, no-c-format
 msgid "Specify a value to be written to a <systemitem class=\"filesystem\">sysfs</systemitem> attribute of the event device. If the <literal>==</literal> operator is used, this key is also used to match against the value of a <systemitem class=\"filesystem\">sysfs</systemitem> attribute."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:749
+#: udev.xml:750
 #, no-c-format
 msgid "<literal>ENV{<replaceable>KEY</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:752
+#: udev.xml:753
 #, no-c-format
 msgid "Tell <systemitem class=\"service\">udev</systemitem> to export a variable to the environment. If the <literal>==</literal> operator is used, this key is also used to match against an environment variable."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:760
+#: udev.xml:761
 #, no-c-format
 msgid "<literal>RUN</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:763
+#: udev.xml:764
 #, no-c-format
 msgid "Tell <systemitem class=\"service\">udev</systemitem> to add a program to the list of programs to be executed for this device. Keep in mind to restrict this to short tasks to avoid blocking further events for this device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:772
+#: udev.xml:773
 #, no-c-format
 msgid "<literal>LABEL</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:775
+#: udev.xml:776
 #, no-c-format
 msgid "Add a label where a <literal>GOTO</literal> can jump to."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:781
+#: udev.xml:782
 #, no-c-format
 msgid "<literal>GOTO</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:784
+#: udev.xml:785
 #, no-c-format
 msgid "Tell <systemitem class=\"service\">udev</systemitem> to skip several rules and continue with the one that carries the label referenced by the <literal>GOTO</literal> key."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:792
+#: udev.xml:793
 #, no-c-format
 msgid "<literal>IMPORT{<replaceable>TYPE</replaceable>}</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:795
+#: udev.xml:796
 #, no-c-format
 msgid "Load variables into the event environment such as the output of an external program. <systemitem class=\"service\">udev</systemitem> imports variables of several types. If no type is specified, <systemitem class=\"service\">udev</systemitem> tries to determine the type itself based on the executable bit of the file permissions."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:804
+#: udev.xml:805
 #, no-c-format
 msgid "<literal>program</literal> tells <systemitem class=\"service\">udev</systemitem> to execute an external program and import its output."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:811
+#: udev.xml:812
 #, no-c-format
 msgid "<literal>file</literal> tells <systemitem class=\"service\">udev</systemitem> to import a text file."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:817
+#: udev.xml:818
 #, no-c-format
 msgid "<literal>parent</literal> tells <systemitem class=\"service\">udev</systemitem> to import the stored keys from the parent device."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:827
+#: udev.xml:828
 #, no-c-format
 msgid "<literal>WAIT_FOR_SYSFS</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:830
+#: udev.xml:831
 #, no-c-format
 msgid "Tells <systemitem class=\"service\">udev</systemitem> to wait for the specified <systemitem class=\"filesystem\">sysfs</systemitem> file to be created for a certain device. For example, <literal>WAIT_FOR_SYSFS=\"ioerr_cnt\"</literal> informs <systemitem class=\"service\">udev</systemitem> to wait until the <filename>ioerr_cnt</filename> file has been created."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:841
+#: udev.xml:842
 #, no-c-format
 msgid "<literal>OPTIONS</literal>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:844
+#: udev.xml:845
 #, no-c-format
 msgid "The <literal>OPTION</literal> key may have several values:"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:849
+#: udev.xml:850
 #, no-c-format
 msgid "<literal>last_rule</literal> tells <systemitem class=\"service\">udev</systemitem> to ignore all later rules."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:856
+#: udev.xml:857
 #, no-c-format
 msgid "<literal>ignore_device</literal> tells <systemitem class=\"service\">udev</systemitem> to ignore this event."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:862
+#: udev.xml:863
 #, no-c-format
 msgid "<literal>ignore_remove</literal> tells <systemitem class=\"service\">udev</systemitem> to ignore all later remove events for the device."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:869
+#: udev.xml:870
 #, no-c-format
 msgid "<literal>all_partitions</literal> tells <systemitem class=\"service\">udev</systemitem> to create device nodes for all available partitions on a block device."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:882
+#: udev.xml:883
 #, no-c-format
 msgid "Persistent device naming"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:884
+#: udev.xml:885
 #, no-c-format
 msgid "The dynamic device directory and the <systemitem class=\"service\">udev</systemitem> rules infrastructure make it possible to provide stable names for all disk devices&mdash;regardless of their order of recognition or the connection used for the device. Every appropriate block device the kernel creates is examined by tools with special knowledge about certain buses, drive types or file systems. Along with the dynamic kernel-provided device node name, <systemitem class=\"service\">udev</systemitem> maintains classes of persistent symbolic links pointing to the device:"
 msgstr ""
 
 #. Tag: screen
-#: udev.xml:896
+#: udev.xml:897
 #, no-c-format
 msgid "/dev/disk\n"
       "|-- by-id\n"
@@ -901,151 +907,151 @@ msgid "/dev/disk\n"
 msgstr ""
 
 #. Tag: title
-#: udev.xml:922
+#: udev.xml:923
 #, no-c-format
 msgid "Files used by <systemitem class=\"service\">udev</systemitem>"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:926
+#: udev.xml:927
 #, no-c-format
 msgid "<filename>/sys/*</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:929
+#: udev.xml:930
 #, no-c-format
 msgid "Virtual file system provided by the Linux kernel, exporting all currently known devices. This information is used by <systemitem class=\"service\">udev</systemitem> to create device nodes in <filename>/dev</filename>"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:938
+#: udev.xml:939
 #, no-c-format
 msgid "<filename>/dev/*</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:941
+#: udev.xml:942
 #, no-c-format
 msgid "Dynamically created device nodes and static content created with systemd-tmpfiles; for more information, see the <systemitem>systemd-tmpfiles(8)</systemitem> man page."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:950
+#: udev.xml:951
 #, no-c-format
 msgid "The following files and directories contain the crucial elements of the <systemitem class=\"service\">udev</systemitem> infrastructure:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:957
+#: udev.xml:958
 #, no-c-format
 msgid "<filename>/etc/udev/udev.conf</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:960
+#: udev.xml:961
 #, no-c-format
 msgid "Main <systemitem class=\"service\">udev</systemitem> configuration file."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:966
+#: udev.xml:967
 #, no-c-format
 msgid "<filename>/etc/udev/rules.d/*</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:969
+#: udev.xml:970
 #, no-c-format
 msgid "System-specific <systemitem class=\"service\">udev</systemitem> event matching rules. You can add custom rules here to modify or override the default rules from <filename>/usr/lib/udev/rules.d/*</filename> ."
 msgstr ""
 
 #. Tag: para
-#: udev.xml:974
+#: udev.xml:975
 #, no-c-format
 msgid "Files are parsed in alphanumeric order. Rules from files with a higher priority modify or override rules with lower priority. The lower the number, the higher the priority."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:982
+#: udev.xml:983
 #, no-c-format
 msgid "<filename>/usr/lib/udev/rules.d/*</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:985
+#: udev.xml:986
 #, no-c-format
 msgid "Default <systemitem class=\"service\">udev</systemitem> event matching rules. The files in this directory are owned by packages and will be overwritten by updates. Do not add, remove or edit files here, use <filename>/etc/udev/rules.d</filename> instead."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:994
+#: udev.xml:995
 #, no-c-format
 msgid "<filename>/usr/lib/udev/*</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:997
+#: udev.xml:998
 #, no-c-format
 msgid "Helper programs called from <systemitem class=\"service\">udev</systemitem> rules."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:1004
+#: udev.xml:1005
 #, no-c-format
 msgid "<filename>/usr/lib/tmpfiles.d/</filename> and <filename>/etc/tmpfiles.d/</filename>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:1008
+#: udev.xml:1009
 #, no-c-format
 msgid "Responsible for static <filename>/dev</filename> content."
 msgstr ""
 
 #. Tag: title
-#: udev.xml:1016
+#: udev.xml:1017
 #, no-c-format
 msgid "More information"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:1018
+#: udev.xml:1019
 #, no-c-format
 msgid "For more information about the <systemitem class=\"service\">udev</systemitem> infrastructure, refer to the following man pages:"
 msgstr ""
 
 #. Tag: term
-#: udev.xml:1025
+#: udev.xml:1026
 #, no-c-format
 msgid "<systemitem class=\"service\">udev</systemitem>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:1028
+#: udev.xml:1029
 #, no-c-format
 msgid "General information about <systemitem class=\"service\">udev</systemitem> , keys, rules and other important configuration issues."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:1035
+#: udev.xml:1036
 #, no-c-format
 msgid "<command>udevadm</command>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:1038
+#: udev.xml:1039
 #, no-c-format
 msgid "<command>udevadm</command> can be used to control the runtime behavior of <systemitem class=\"service\">udev</systemitem> , request kernel events, manage the event queue and provide simple debugging mechanisms."
 msgstr ""
 
 #. Tag: term
-#: udev.xml:1046
+#: udev.xml:1047
 #, no-c-format
 msgid "<systemitem class=\"daemon\">udevd</systemitem>"
 msgstr ""
 
 #. Tag: para
-#: udev.xml:1049
+#: udev.xml:1050
 #, no-c-format
 msgid "Information about the <systemitem class=\"daemon\">udev</systemitem> event managing daemon."
 msgstr ""
