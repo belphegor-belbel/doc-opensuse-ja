@@ -70,48 +70,18 @@
     </procedure>
   </sect1>
   <sect1 xml:id="sec-vm-security-vm-install">
-    <title>AMD SEV-SNP 仮想マシンの起動</title>
+    <title>AMD SEV-SNP 仮想マシンのインストール</title>
 
-    <para>
-      You can create and install AMD SEV-SNP protected virtual machines using the &libvirt;
-      framework once the &vmhost; is properly configured and the AMD Secure Processor is
-      initialized. The installation methods described in <xref linkend="cha-kvm-inst"/> can
-      be used with SEV-SNP protected virtual machines. The only exception is ISO installation
-      using a virtual CD-ROM. See the limitations section for more details.
-    </para>
+    <para>&vmhost; 側で設定作業を行い、 AMD Secure Processor の初期化を行ったあとは、 &libvirt; フレームワークで AMD SEV-SNP による保護のある仮想マシンを作成し、インストールすることができます。インストールの手順は通常と同じで、 <xref linkend="cha-kvm-inst"/> に示している手順でインストールを行うことができます。ただし、仮想 CD-ROM ドライブによる ISO イメージからのインストールには対応していません。その他の詳しい制限事項については、制限事項の章をお読みください。</para>
 
-    <para>
-      In addition to virtual CD-ROMs, &vmhost;-provided TPM devices are not compatible with
-      AMD SEV-SNP-protected virtual machines and should be removed from the installation
-      configuration. Rebooting SEV-SNP virtual machines is also not supported. The installation
-      should ensure SEV-SNP virtual machines are configured to shut down on reboot. See the
-      limitations section for more details.
-    </para>
-    <para>
-      <xref linkend="sec-libvirt-inst-vmm"/> describes GUI-based virtual machine installation
-      using virt-manager. To enable AMD SEV-SNP, activate <guilabel>Customize configuration before
-      install</guilabel> before selecting <guilabel>Finish</guilabel> in the New VM wizard. When
-      the &vmguest; configuration dialog opens, select <guilabel>Memory</guilabel>, then activate
-      the <guilabel>Enable launch security</guilabel> checkbox and select <guilabel>Apply</guilabel>.
-      Finally, select <guilabel>Begin Installation</guilabel> to proceed with the installation as
-      described in <xref linkend="sec-libvirt-inst-vmm"/>.
-    </para>
+    <para>なお、仮想 CD-ROM 以外にも、 AMD SEV-SNP で保護した仮想マシンの場合、 &vmhost; が提供する TPM デバイスは利用できません。インストール時の設定に含まれている場合は、これを取り除いてください。このほか、 SEV-SNP で保護した仮想マシンは再起動にも対応していません。そのため、インストール中に再起動が必要となる場合は、いったんシャットダウンするように設定してください。その他の詳しい制限事項については、制限事項の章をお読みください。</para>
+    <para>また <xref linkend="sec-libvirt-inst-vmm"/> では、 virt-manager を利用した GUI ベースの仮想マシンインストールの手順を説明しています。なお、 AMD SEV-SNP を有効化するには、 <guilabel>新しい仮想マシンの作成</guilabel> の最後で <guilabel>完了</guilabel> を押す前に、 <guilabel>インストールの前に設定をカスタマイズする</guilabel> を選択する必要があることに注意してください。 &vmguest; の設定ダイアログが表示されたら、 <guilabel>メモリー</guilabel> を選んで <guilabel>Enable launch security</guilabel> のチェックボックスを選択して <guilabel>適用</guilabel> を押します。あとは <guilabel>インストールの開始</guilabel> を選択するだけで、 <xref linkend="sec-libvirt-inst-vmm"/> で示した手順でインストールを行うことができます。</para>
 
-    <para>
-      <xref linkend="sec-libvirt-inst-virt-install"/> describes virtual machine installation
-      using <command>virt-install</command>. AMD SEV-SNP can be enabled with the
-      <option>--launchSecurity</option> option. Below is a modification of
-      <xref linkend="ex-libvirt-inst-virt-install-example"/> that enables AMD SEV-SNP protection:
-    </para>
+    <para>このほか <xref linkend="sec-libvirt-inst-virt-install"/> では、 <command>virt-install</command> による仮想マシンインストールを説明しています。 AMD SEV-SNP を有効化したい場合は、 <option>--launchSecurity</option> オプションを指定してください。下記は <xref linkend="ex-libvirt-inst-virt-install-example"/> でのインストールの際、 AMD SEV-SNP による保護を追加した場合の例です:</para>
 <screen>&prompt.user;virt-install --connect qemu:///system --virt-type kvm \
 --name sle15sp7 --memory 4096 --disk size=60 --location /path/to/iso --graphics vnc \
 --os-variant sle15sp7 --boot uefi --events on_reboot=destroy --launchSecurity type=sev-snp </screen>
-    <para>
-      See the <citetitle>Launch Security</citetitle> section of the libvirt
-      <citetitle>Domain XML format</citetitle> manual at
-      <link xlink:href="https://libvirt.org/formatdomain.html#launch-security"/>
-      for more information on the settings supported by <option>--launchSecurity</option>.
-    </para>
+    <para>なお、 <option>--launchSecurity</option> に関する詳細については、 <link xlink:href="https://libvirt.org/formatdomain.html#launch-security"/> にある <citetitle>Domain XML format</citetitle> マニュアル内の <citetitle>Launch Security</citetitle> の章をお読みください。</para>
   </sect1>
   <sect1 xml:id="sec-vm-security-verify-vm">
     <title>AMD SEV-SNP 仮想マシンの確認</title>
@@ -215,85 +185,46 @@ ASK ⬑ VCEK
   </sect1>
 
   <sect1 xml:id="sec-vm-security-sev-snp-limits">
-    <title>Current limitations</title>
+    <title>現時点での制限事項</title>
 
-    <para>
-      The following limitations are placed on SEV-SNP &vmguest;s.
-    </para>
+    <para>SEV-SNP を有効化した &vmguest; を動作させた場合、下記の制限があることに注意してください。</para>
 
     <itemizedlist>
       <listitem>
-        <para>
-          The guest operating system running inside an SEV-SNP protected VM must
-          contain SEV-SNP support. &sls; 15 SP6 and newer releases support SEV-SNP.
-        </para>
+        <para>SEV-SNP で保護された VM 内で動作させるオペレーティングシステムは、 SEV-SNP に対応していなければなりません。 &sls; 15 SP6 またはそれ以降のバージョンであれば、 SEV-SNP に対応しています。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected &vmguest;s cannot be installed with <command>virt-install</command>
-          via ISO using the <option>--cdrom</option> option. Use the <option>--location</option>
-          instead. See the <command>virt-install</command> manual page for more information
-          on the <option>--location</option> option.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; の場合、 <command>virt-install</command> で <option>--cdrom</option> オプションを指定したインストールは実施できません。代わりに <option>--location</option> オプションをお使いください。なお、 <option>--location</option> オプションに関する説明については、 <command>virt-install</command> のマニュアルページをお読みください。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected &vmguest;s support a maximum of 255 vCPUs.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; では、仮想 CPU 数が最大 255 個までに対応します。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected &vmguest;s are not compatible with Secure Boot. UEFI firmware
-          containing Secure Boot support does not work with SEV-SNP &vmguest;s.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; では、 Secure Boot との互換性がありません。 Secure Boot サポートが有効化された UEFI ファームウエアを使用すると、 SEV-SNP 対応の &vmguest; が動作しません。</para>
       </listitem>
       <listitem>
-	<para>
-	  SEV-SNP protected &vmguest;s are not compatible with &vmhost;-provided TPM
-	  devices. This includes emulated and passthrough TPM devices.
-	</para>
+	<para>\t SEV-SNP で保護された &vmguest; は、 &vmhost; の提供する TPM デバイスを使用することができません。これは TPM デバイスを擬似する場合と、パススルーする場合の両方に当てはまります。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected Direct &vmguest;s do not support pass-through of host devices
-	  (PCI passthrough).
-        </para>
+        <para>SEV-SNP で保護された &vmguest; では、ホストデバイスのパススルー (PCI パススルー) を使用することができません。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected &vmguest;s do not support memory ballooning.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; の場合、メモリバルーン機能には対応しません。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP protected &vmguest;s do not support memory or vCPU hotplugging.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; では、メモリや仮想 CPU のホットプラグには対応しません。</para>
       </listitem>
       <listitem>
-        <para>
-          Using hugepages within a SEV-SNP protected &vmguest; is not supported.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; では、 huge page 機能には対応しません。</para>
       </listitem>
       <listitem>
-        <para>
-          SEV-SNP &vmguest;s cannot be rebooted from within using <command>reboot</command>,
-	  <command>shutdown -r now</command>, etc. A reboot must be done by shutting down the
-	  &vmguest; and starting it again.
-        </para>
+        <para>SEV-SNP で保護された &vmguest; は、 <command>reboot</command> や <command>shutdown -r now</command> で再起動を行うことができません。再起動はいったんシャットダウンしてから起動し直す方式になります。</para>
       </listitem>
       <listitem>
-        <para>
-          Any operations that involve saving and restoring the memory and state of a
-	  &vmguest; are currently not supported. This means that SEV-SNP protected
-	  &vmguest;s cannot be resumed from snapshots, saved/restored or live migrated.
-	  SEV-SNP protected &vmguest;s can be shut down and restarted on another host.
-        </para>
+        <para>&vmguest; のメモリ内容の保存と復元 (つまり &vmguest; の状態保存) には対応していません。言い換えると、 SEV-SNP で保護された &vmguest; ではスナップショット機能が利用できないばかりか、ライブマイグレーションにも対応できません。 SEV-SNP を別のホストに移行したい場合は、いったんシャットダウンして移行し、移行先で起動し直す手順が必要になります。</para>
       </listitem>
     </itemizedlist>
 
-    <para>
-      These limitations may be removed in the future as the hardware, firmware and specific
-      layers of software receive new features.
-    </para>
+    <para>これらの制限事項は様々なハードウエアやファームウェア、およびソフトウエアの特定レイヤが原因となって発生しているもので、将来的に解決できるかもしれません。</para>
   </sect1>
 </chapter>
