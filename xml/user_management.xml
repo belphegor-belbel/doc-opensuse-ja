@@ -21,7 +21,7 @@
   <revision>
      <date>2026-04-01</date>
      <revdescription>
-       <para>Adds a global environment variable</para>
+       <para>グローバル環境変数の説明を追加</para>
      </revdescription>
    </revision>
  </revhistory>
@@ -342,34 +342,30 @@ tty1</screen>
     </tgroup>
    </informaltable>
    <para>上記のシェルはいずれも内部タイムアウト値の設定が存在し、これに値を設定することで無操作タイムアウトを実現しています。ユーザ側でタイムアウト設定を上書きさせたくない場合は、シェル変数を読み込み専用にしてください。具体的な設定方法も上記で示しています。</para>
-   <para>Relying on shell specific configuration files for global timeout settings can lead to inconsistent behavior across your system:
-    </para>
+   <para>なお、シェル固有の設定ファイルを利用してシステム全体のタイムアウト設定を行ってしまうと、一貫性を損なうことになってしまいます:</para>
     <itemizedlist>
-   <listitem><para>In <filename>/etc/bash.bashrc</filename>, the <literal>.local</literal> extension is only sourced by Bash .
-  Users running standard <filename>/bin/sh</filename> do not inherit these timeout settings.</para></listitem>
-  <listitem><para> <filename>/etc/ksh.kshrc.local</filename> works for <literal>mksh</literal> but it is ignored by other common variants such as <literal>lksh</literal> or <literal>pdksh</literal>.</para></listitem>
+   <listitem><para>たとえば <filename>/etc/bash.bashrc</filename> ファイルの場合、 <literal>.local</literal> の拡張子は bash の場合にのみ読み込まれますので、標準の <filename>/bin/sh</filename> の場合は、これらのタイムアウト設定を読み込まなくなってしまいます。</para></listitem>
+  <listitem><para>また <filename>/etc/ksh.kshrc.local</filename> は <literal>mksh</literal> でのみ動作し、派生したソフトウエアである <literal>lksh</literal> や <literal>pdksh</literal> では無視されます。</para></listitem>
     </itemizedlist>
 
-   <para>To ensure these settings apply consistently, you can create a global config file, <literal>~/.common_env</literal> and then tell your various shells to load it automatically whenever they start.
- Modify <filename>/etc/profile.local</filename> to set and export the <literal>$ENV</literal> variable for all login sessions.
- </para>
+   <para>これらの設定に一貫性を持たせるためには、グローバルな設定ファイル <!-- ?? <literal>~/.common_env</literal> --> を作成して、様々なシェルの起動時に必ず読み込まれるように設定してください。具体的には、 <filename>/etc/profile.local</filename> ファイルを編集して <literal>$ENV</literal> 変数を設定し、全てのログインセッションで指定したファイルを読み込むようにします。</para>
  <procedure>
-  <step><para>Open the file:</para>
+  <step><para>まずはファイルを開きます:</para>
   <screen>&prompt.sudo; /etc/profile.local</screen>
   </step>
-  <step><para>Add the following line to the end of the file:</para>
-<screen># Point all POSIX shells to the common rc file
+  <step><para>ファイルの末尾に下記の行を追記します:</para>
+<screen># 全ての POSIX シェルに対して汎用の rc ファイルを読み込ませる
 export ENV=/etc/sh_common_rc</screen>
 </step>
-<step><para>Create the common resource file and set permissions:</para>
+<step><para>あとは汎用のリソースファイルを作成して、パーミッションを設定します:</para>
   <screen>&prompt.sudo; touch /etc/sh_common_rc</screen>
   <screen>&prompt.sudo; chmod 644 /etc/sh_common_rc</screen>
   </step>
-  <step><para>Open the file and add the following timeout logic:</para>
+  <step><para>あとはファイルを開いて、必要なタイムアウト設定を追加します:</para>
     <screen>
       # /etc/sh_common_rc
-      # Set session timeout to 15 minutes (900 seconds)
-      # 'readonly' ensures users cannot bypass this setting
+      # セッションタイムアウトの設定 (15 分 = 900 秒)
+      # 'readonly' を指定することで、ユーザ側での上書きを禁止しています
       readonly TMOUT=900
       export TMOUT</screen>
 
