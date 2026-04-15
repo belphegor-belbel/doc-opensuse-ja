@@ -132,6 +132,81 @@ Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
 
     <para>詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#elementsFeatures"/> (英語) にある libvirt の <citetitle>Domain XML format</citetitle> 内の <citetitle>Hypervisor features</citetitle> の章をお読みください。</para>
   </sect1>
+  <sect1 xml:id="sec-libvirt-config-boot-menu-virsh">
+    <title>起動オプションの変更</title>
+
+    <para>&vmguest; の起動メニューの設定は <tag>os</tag> 要素内に含まれ、下記のような内容になっています:</para>
+
+<screen>&lt;os&gt;
+  &lt;type&gt;hvm&lt;/type&gt;
+  &lt;loader&gt;readonly='yes' secure='no' type='rom'/&gt;/usr/lib/xen/boot/hvmloader&lt;/loader&gt;
+  &lt;nvram template='/usr/share/OVMF/OVMF_VARS.fd'/&gt;/var/lib/libvirt/nvram/guest_VARS.fd&lt;/nvram&gt;
+  &lt;boot dev='hd'/&gt;
+  &lt;boot dev='cdrom'/&gt;
+  &lt;bootmenu enable='yes' timeout='3000'/&gt;
+  &lt;smbios mode='sysinfo'/&gt;
+  &lt;bios useserial='yes' rebootTimeout='0'/&gt;
+  &lt;/os&gt;</screen>
+
+    <para>上記の例では、 <tag class="attvalue">hd</tag> と <tag class="attvalue">cdrom</tag> という 2 つのデバイスが有効化されています。設定の順序は実際の起動順序にも影響し、上記の例では <tag class="attvalue">cdrom</tag> よりも前に <tag class="attvalue">hd</tag> の起動が試されることになります。</para>
+
+    <sect2 xml:id="sec-libvirt-config-bootorder-virsh">
+      <title>起動順序の変更</title>
+      <para>&vmguest; の起動順序は、 XML 設定ファイル内での出現順序で表されます。つまり、デバイスのタグを入れ替えることで起動順序を変更できることになります。</para>
+      <procedure>
+        <step>
+          <para>&vmguest; の XML 設定ファイルを開きます。</para>
+<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+        </step>
+        <step>
+          <para>デバイスの順序を入れ替えます。</para>
+<screen>
+...
+&lt;boot dev='cdrom'/&gt;
+&lt;boot dev='hd'/&gt;
+...
+      </screen>
+        </step>
+        <step>
+          <para>&vmguest; の BIOS 設定内の起動メニューを確認して、起動順序が変更されていることを確認します。</para>
+        </step>
+      </procedure>
+    </sect2>
+
+    <sect2 xml:id="sec-libvirt-config-directkernel-virsh">
+      <title>直接カーネル起動の使用</title>
+      <para>直接カーネル起動を使用することで、ホスト内に保存されているカーネルと initrd を利用して起動を行うことができます。この場合は、 <tag>kernel</tag> と <tag>initrd</tag> のタグを追加してファイルを指定します:</para>
+<screen>&lt;os&gt;
+    ...
+  &lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
+  &lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
+    ...
+&lt;os&gt;</screen>
+      <para>直接カーネル起動を有効化するには、下記の手順を実施します:</para>
+      <procedure>
+        <step>
+          <para>&vmguest; の XML 設定を開きます:</para>
+<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+        </step>
+        <step>
+          <para><tag>os</tag> タグ内に <tag>kernel</tag> タグを追加し、ホスト側でのカーネルファイルのパスを指定します:</para>
+<screen>...
+&lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
+...</screen>
+        </step>
+        <step>
+          <para>同様に <tag>initrd</tag> タグを追加し、ホスト内での initrd ファイルのパスを指定します:</para>
+<screen>...
+&lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
+...</screen>
+        </step>
+        <step>
+          <para>あとは VM を起動すると、新しいカーネルでの起動が行われます:</para>
+<screen>&prompt.sudo;<command>virsh start sles15</command></screen>
+        </step>
+      </procedure>
+    </sect2>
+  </sect1>
   <sect1 xml:id="libvirt-cpu-virsh">
     <title>CPU の設定</title>
 
@@ -244,81 +319,6 @@ current      live           4
       <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
     </sect2>
   </sect1>
-  <sect1 xml:id="sec-libvirt-config-boot-menu-virsh">
-    <title>起動オプションの変更</title>
-
-    <para>&vmguest; の起動メニューの設定は <tag>os</tag> 要素内に含まれ、下記のような内容になっています:</para>
-
-<screen>&lt;os&gt;
-  &lt;type&gt;hvm&lt;/type&gt;
-  &lt;loader&gt;readonly='yes' secure='no' type='rom'/&gt;/usr/lib/xen/boot/hvmloader&lt;/loader&gt;
-  &lt;nvram template='/usr/share/OVMF/OVMF_VARS.fd'/&gt;/var/lib/libvirt/nvram/guest_VARS.fd&lt;/nvram&gt;
-  &lt;boot dev='hd'/&gt;
-  &lt;boot dev='cdrom'/&gt;
-  &lt;bootmenu enable='yes' timeout='3000'/&gt;
-  &lt;smbios mode='sysinfo'/&gt;
-  &lt;bios useserial='yes' rebootTimeout='0'/&gt;
-  &lt;/os&gt;</screen>
-
-    <para>上記の例では、 <tag class="attvalue">hd</tag> と <tag class="attvalue">cdrom</tag> という 2 つのデバイスが有効化されています。設定の順序は実際の起動順序にも影響し、上記の例では <tag class="attvalue">cdrom</tag> よりも前に <tag class="attvalue">hd</tag> の起動が試されることになります。</para>
-
-    <sect2 xml:id="sec-libvirt-config-bootorder-virsh">
-      <title>起動順序の変更</title>
-      <para>&vmguest; の起動順序は、 XML 設定ファイル内での出現順序で表されます。つまり、デバイスのタグを入れ替えることで起動順序を変更できることになります。</para>
-      <procedure>
-        <step>
-          <para>&vmguest; の XML 設定ファイルを開きます。</para>
-<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
-        </step>
-        <step>
-          <para>デバイスの順序を入れ替えます。</para>
-<screen>
-...
-&lt;boot dev='cdrom'/&gt;
-&lt;boot dev='hd'/&gt;
-...
-      </screen>
-        </step>
-        <step>
-          <para>&vmguest; の BIOS 設定内の起動メニューを確認して、起動順序が変更されていることを確認します。</para>
-        </step>
-      </procedure>
-    </sect2>
-
-    <sect2 xml:id="sec-libvirt-config-directkernel-virsh">
-      <title>直接カーネル起動の使用</title>
-      <para>直接カーネル起動を使用することで、ホスト内に保存されているカーネルと initrd を利用して起動を行うことができます。この場合は、 <tag>kernel</tag> と <tag>initrd</tag> のタグを追加してファイルを指定します:</para>
-<screen>&lt;os&gt;
-    ...
-  &lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
-  &lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
-    ...
-&lt;os&gt;</screen>
-      <para>直接カーネル起動を有効化するには、下記の手順を実施します:</para>
-      <procedure>
-        <step>
-          <para>&vmguest; の XML 設定を開きます:</para>
-<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
-        </step>
-        <step>
-          <para><tag>os</tag> タグ内に <tag>kernel</tag> タグを追加し、ホスト側でのカーネルファイルのパスを指定します:</para>
-<screen>...
-&lt;kernel&gt;/root/f8-i386-vmlinuz&lt;/kernel&gt;
-...</screen>
-        </step>
-        <step>
-          <para>同様に <tag>initrd</tag> タグを追加し、ホスト内での initrd ファイルのパスを指定します:</para>
-<screen>...
-&lt;initrd&gt;/root/f8-i386-initrd&lt;/initrd&gt;
-...</screen>
-        </step>
-        <step>
-          <para>あとは VM を起動すると、新しいカーネルでの起動が行われます:</para>
-<screen>&prompt.sudo;<command>virsh start sles15</command></screen>
-        </step>
-      </procedure>
-    </sect2>
-  </sect1>
   <sect1 xml:id="sec-libvirt-config-memory-virsh">
     <title>メモリ割り当ての設定</title>
 
@@ -381,6 +381,99 @@ Used memory:    8388608 KiB
 [...]</screen>
       <para>仮想 CPU アドレスサイズに関する詳細は、 <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> (CPU モデルとトポロジ) 内の <literal>maxphysaddr</literal> オプションの説明をお読みください。</para>
     </important>
+  </sect1>
+  <sect1 xml:id="sec-libvirt-config-cpu-memory-virsh">
+    <title>CPU and Memory configuration and placement on large NUMA systems</title>
+
+    <para>
+      When deploying &vmguest;s with large CPU and memory allocations on large
+      &vmhost;s with multiple NUMA nodes, it may be necessary for both
+      performance and resource planning to tune the &vmguest;'s allocations.
+    </para>
+
+    <sect2 xml:id="sec-libvirt-config-hugepages-virsh">
+      <title>Huge pages</title>
+      <para>
+        Using huge pages from the &vmhost; to back memory allocations for the &vmguest; can improve
+        performance for many workloads. The following procedure shows how to back &vmguest; memory
+        with huge pages. The &vmguest; should be shut off or restarted after changing the configuration.
+      </para>
+      <procedure>
+        <step>
+          <para>&vmguest; の XML 設定を開きます:</para>
+<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+        </step>
+        <step>
+          <para>
+            Add the <tag>memoryBacking</tag> element under the top level
+            <tag>domain</tag> element:
+          </para>
+          <screen>&lt;memoryBacking&gt;
+            &lt;hugePages/&gt;
+            &lt;memoryBacking/&gt;
+          </screen>
+        </step>
+        <step>
+          <para>
+            If not running, start the &vmguest;, otherwise restart.
+          </para>
+        </step>
+      </procedure>
+      <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
+    </sect2>
+    <sect2>
+      <title>Automatic NUMA placement of &vmguest;</title>
+      <para>
+        When deploying large VMs on large physical NUMA systems, one challenge
+        is ensuring the &vmguest; CPU and memory resources are not randomly
+        spread across the &vmhost;'s NUMA nodes; otherwise, performance may
+        suffer. All resources should be close to each other with respect to
+        NUMA distance. To ensure best performance, the &vmguest;'s CPU and
+        memory allocations should fit on a single &vmhost; NUMA node.
+      </para>
+
+      <para>
+        &libvirt; can automatically place &vmguest; CPU and memory resources
+        using the external <command>numa-preplace</command> program. To activate
+        automatic placement, ensure the <tag class="attvalue">placement</tag>
+        attribute on the <tag>cpu</tag> element is set to <literal>auto</literal>.
+        Memory placement should also be set to <literal>auto</literal> using
+        the <tag>numatune</tag> element. The &vmguest; should be shutoff or
+        restarted after changing the configuration.
+      </para>
+      <procedure>
+        <step>
+          <para>&vmguest; の XML 設定を開きます:</para>
+<screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
+        </step>
+        <step>
+          <para>
+            Add the <tag>numatune</tag> element under the top level
+            <tag>domain</tag> element, and set the memory mode to
+            <literal>auto</literal>:
+          </para>
+          <screen>&lt;numatune&gt;
+            &lt;memory mode="auto"/&gt;
+            &lt;numatune/&gt;
+          </screen>
+        </step>
+        <step>
+          <para>
+            If not running, start the &vmguest;, otherwise restart.
+          </para>
+        </step>
+      </procedure>
+      <important>
+        <title>Automatic NUMA placement</title>
+        <para>
+          Automatic NUMA placement is only available if the
+          <package>numa-preplace</package> package is installed. Automatic
+          NUMA placement with <command>numa-preplace</command> works with
+          both normal memory and hugepages.
+        </para>
+      </important>
+      <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
+    </sect2>
   </sect1>
   <sect1 xml:id="sec-libvirt-config-pci-virsh">
     <title>PCI デバイスの追加</title>
