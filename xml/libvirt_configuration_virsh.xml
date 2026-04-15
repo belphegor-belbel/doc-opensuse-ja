@@ -148,7 +148,7 @@ Product Name: Standard PC (Q35 + ICH9, 2009)</screen>
   &lt;bios useserial='yes' rebootTimeout='0'/&gt;
   &lt;/os&gt;</screen>
 
-    <para>上記の例では、 <tag class="attvalue">hd</tag> と <tag class="attvalue">cdrom</tag> という 2 つのデバイスが有効化されています。設定の順序は実際の起動順序にも影響し、上記の例では <tag class="attvalue">cdrom</tag> よりも前に <tag class="attvalue">hd</tag> の起動が試されることになります。</para>
+    <para>上記の例では、 <tag class="attvalue">hd</tag> と <tag class="attvalue">cdrom</tag> という 2 つのデバイスが有効化されています。設定の順序は実際の起動順序にも影響しますので、たとえば上記の例では <tag class="attvalue">cdrom</tag> よりも前に <tag class="attvalue">hd</tag> の起動が試されることになります。</para>
 
     <sect2 xml:id="sec-libvirt-config-bootorder-virsh">
       <title>起動順序の変更</title>
@@ -383,96 +383,57 @@ Used memory:    8388608 KiB
     </important>
   </sect1>
   <sect1 xml:id="sec-libvirt-config-cpu-memory-virsh">
-    <title>CPU and Memory configuration and placement on large NUMA systems</title>
+    <title>大規模 NUMA システムにおける CPU とメモリの設定と配置</title>
 
-    <para>
-      When deploying &vmguest;s with large CPU and memory allocations on large
-      &vmhost;s with multiple NUMA nodes, it may be necessary for both
-      performance and resource planning to tune the &vmguest;'s allocations.
-    </para>
+    <para>複数の NUMA ノードを持つ大規模 &vmhost; において大規模な &vmguest; を配置する場合、 &vmguest; への割り当てを適切に行うため、性能とリソースの設計を行う必要がある場合があります。</para>
 
     <sect2 xml:id="sec-libvirt-config-hugepages-virsh">
-      <title>Huge pages</title>
-      <para>
-        Using huge pages from the &vmhost; to back memory allocations for the &vmguest; can improve
-        performance for many workloads. The following procedure shows how to back &vmguest; memory
-        with huge pages. The &vmguest; should be shut off or restarted after changing the configuration.
-      </para>
+      <title>huge page</title>
+      <para>&vmhost; から &vmguest; に対して huge page を使用することで、多くの処理に対する性能を改善できる可能性があります。下記の手順では、 &vmguest; のメモリに対して huge page を設定するための手順を説明しています。なお、 &vmguest; はあらかじめシャットダウンしておくか、設定の変更後に起動し直す必要があることに注意してください。</para>
       <procedure>
         <step>
-          <para>&vmguest; の XML 設定を開きます:</para>
+          <para>&vmguest; の設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
         </step>
         <step>
-          <para>
-            Add the <tag>memoryBacking</tag> element under the top level
-            <tag>domain</tag> element:
-          </para>
+          <para><tag>domain</tag> 要素の直下に、下記のような <tag>memoryBacking</tag> 要素を追加します:</para>
           <screen>&lt;memoryBacking&gt;
             &lt;hugePages/&gt;
             &lt;memoryBacking/&gt;
           </screen>
         </step>
         <step>
-          <para>
-            If not running, start the &vmguest;, otherwise restart.
-          </para>
+          <para>&vmguest; を起動していない場合は起動します。起動中の場合はいったんシャットダウンして、起動し直してください。</para>
         </step>
       </procedure>
-      <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
+      <para><tag>memoryBacking</tag> 設定について、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#memory-backing"/> にある <citetitle>Memory Backing</citetitle> の項をお読みください。</para>
     </sect2>
     <sect2>
-      <title>Automatic NUMA placement of &vmguest;</title>
-      <para>
-        When deploying large VMs on large physical NUMA systems, one challenge
-        is ensuring the &vmguest; CPU and memory resources are not randomly
-        spread across the &vmhost;'s NUMA nodes; otherwise, performance may
-        suffer. All resources should be close to each other with respect to
-        NUMA distance. To ensure best performance, the &vmguest;'s CPU and
-        memory allocations should fit on a single &vmhost; NUMA node.
-      </para>
+      <title>&vmguest; に対する自動 NUMA 配置</title>
+      <para>大規模な物理 NUMA システムに対して大規模な VM を配置する場合、 CPU やメモリリソースが &vmhost; の NUMA ノード内を不用意に移動して性能劣化を起こしたりしないようにする、という性能改善手法があります。これにより全てのリソースが NUMA ノード内の近い場所に配置できるようになります。また、性能を適切に確保するため、 &vmguest; の CPU やメモリの割り当ては、単一の &vmhost; NUMA ノード内に収まるようにしておくことも必要です。</para>
 
-      <para>
-        &libvirt; can automatically place &vmguest; CPU and memory resources
-        using the external <command>numa-preplace</command> program. To activate
-        automatic placement, ensure the <tag class="attvalue">placement</tag>
-        attribute on the <tag>cpu</tag> element is set to <literal>auto</literal>.
-        Memory placement should also be set to <literal>auto</literal> using
-        the <tag>numatune</tag> element. The &vmguest; should be shutoff or
-        restarted after changing the configuration.
-      </para>
+      <para>&libvirt; では外部の <command>numa-preplace</command> プログラムを利用することで、 &vmguest; の CPU とメモリのリソースを自動的に配置することができます。このような自動配置を有効化するには、 <tag>cpu</tag> 要素内の <tag class="attvalue">placement</tag> 属性を <literal>auto</literal> に設定します。なお、メモリの配置についても <tag>numatune</tag> 要素で <literal>auto</literal> を指定する必要があります。</para>
       <procedure>
         <step>
-          <para>&vmguest; の XML 設定を開きます:</para>
+          <para>&vmguest; の設定を編集します:</para>
 <screen>&prompt.sudo;<command>virsh edit sles15</command></screen>
         </step>
         <step>
-          <para>
-            Add the <tag>numatune</tag> element under the top level
-            <tag>domain</tag> element, and set the memory mode to
-            <literal>auto</literal>:
-          </para>
+          <para>トップレベル要素である <tag>domain</tag> 内に <tag>numatune</tag> 要素を追加し、その中に <tag class="attvalue">mode</tag> 属性に <literal>auto</literal> を設定した <tag>memory</tag> 要素を追加します:</para>
           <screen>&lt;numatune&gt;
             &lt;memory mode="auto"/&gt;
             &lt;numatune/&gt;
           </screen>
         </step>
         <step>
-          <para>
-            If not running, start the &vmguest;, otherwise restart.
-          </para>
+          <para>&vmguest; を起動していない場合は起動します。起動中の場合はいったんシャットダウンして、起動し直してください。</para>
         </step>
       </procedure>
       <important>
-        <title>Automatic NUMA placement</title>
-        <para>
-          Automatic NUMA placement is only available if the
-          <package>numa-preplace</package> package is installed. Automatic
-          NUMA placement with <command>numa-preplace</command> works with
-          both normal memory and hugepages.
-        </para>
+        <title>自動 NUMA 配置について</title>
+        <para>自動 NUMA 配置は <package>numa-preplace</package> パッケージがインストールされている場合にのみ利用可能となります。また、 <package>numa-preplace</package> は通常のメモリと huge page の両方で動作します。</para>
       </important>
-      <para>&libvirt; の CPU モデルとトポロジのオプションについて、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#cpu-model-and-topology"/> (英語) にある <citetitle>CPU model and topology</citetitle> のドキュメンテーションをお読みください。</para>
+      <para><tag>numatune</tag> 設定について、詳しくは <link xlink:href="https://libvirt.org/formatdomain.html#numa-node-tuning"/> にある <citetitle>NUMA Node Tuning</citetitle> の項をお読みください。</para>
     </sect2>
   </sect1>
   <sect1 xml:id="sec-libvirt-config-pci-virsh">
