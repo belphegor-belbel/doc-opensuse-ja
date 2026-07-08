@@ -4,19 +4,14 @@
 %entities;
 ]>
 <chapter xmlns:its="http://www.w3.org/2005/11/its" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="cha-security-himmelblau">
-  <title>Authenticating with &ms; Entra ID using Himmelblau</title>
+  <title>Himmelblau を利用した &ms; Entra ID による認証</title>
   <info>
-    <meta name="description" its:translate="yes">Configure Himmelblau for &ms; Entra ID authentication</meta>
+    <meta name="description" its:translate="yes">&ms; Entra ID による認証を行うための Himmelblau の設定</meta>
     <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
       <dm:translation>yes</dm:translation>
     </dm:docmanager>
     <abstract>
-      <para>
-        Himmelblau integrates &ms; Entra ID authentication with Linux authentication services.
-        This chapter describes the system configuration needed on &productname;: installing the
-        required packages, enabling the PAM module, enabling NSS lookups, configuring the Entra ID
-        domain and starting the Himmelblau services.
-      </para>
+      <para>Himmelblau は &ms; Entra ID 認証と Linux 認証を統合するための仕組みです。本章では &productname; で必要なシステム設定について説明しています。具体的には必要なパッケージのインストールや PAM モジュールの有効化、そして NSS 参照の設定と Entra ID ドメインの設定、そして Himmelblau サービスの起動までを説明しています。</para>
     </abstract>
     <revhistory xml:id="rh-cha-security-himmelblau">
       <revision><date>2026-06-23</date>
@@ -27,135 +22,90 @@
     </revhistory>
   </info>
   <sect1 xml:id="sec-security-himmelblau-install">
-    <title>Installing Himmelblau</title>
+    <title>Himmelblau のインストール</title>
 
-    <para>
-      Install the Himmelblau daemon, PAM module and NSS module:
-    </para>
+    <para>まずは Himmelblau デーモンと PAM モジュール、そして NSS モジュールをそれぞれインストールします:</para>
 
 <screen>&prompt.sudo;<command>zypper install himmelblau pam-himmelblau libnss_himmelblau2</command></screen>
 
-    <para>
-      To allow Entra ID users to sign in over SSH, also install the SSH configuration package:
-    </para>
+    <para>SSH を介して Entra ID のユーザにログインを許可したい場合は、 SSH の設定パッケージもインストールしておきます:</para>
 
 <screen>&prompt.sudo;<command>zypper install himmelblau-sshd-config</command></screen>
   </sect1>
   <sect1 xml:id="sec-security-himmelblau-config">
-    <title>Configuring Himmelblau authentication</title>
+    <title>Himmelblau 認証の設定</title>
 
-    <para>
-      The following procedure configures &productname; to resolve and authenticate Entra ID users
-      through Himmelblau.
-    </para>
+    <para>下記の章では、 Himmelblau を介して Entra ID ユーザを解決し、認証を行うための設定方法を説明しています。</para>
 
     <procedure xml:id="pro-security-himmelblau-config">
       <step>
-        <para>
-          Edit <filename>/etc/himmelblau/himmelblau.conf</filename> and set the primary Entra ID
-          domain in the <literal>[global]</literal> section:
-        </para>
+        <para>まずは <filename>/etc/himmelblau/himmelblau.conf</filename> ファイルを編集し、 <literal>[global]</literal> セクション内にプライマリ Entra ID ドメインを設定します:</para>
 <screen>[global]
 domain = <replaceable>example.com</replaceable></screen>
       </step>
       <step>
-        <para>
-          Add Himmelblau to the system PAM configuration:
-        </para>
+        <para>次に PAM 認証に Himmelblau を追加します:</para>
 <screen>&prompt.sudo;<command>pam-config --add --himmelblau</command></screen>
       </step>
       <step>
-        <para>
-          Edit <filename>/etc/nsswitch.conf</filename> and add <literal>himmelblau</literal> to the
-          <literal>passwd</literal>, <literal>group</literal> and <literal>shadow</literal>
-          databases. Keep the existing sources for your system and append
-          <literal>himmelblau</literal>. For example:
-        </para>
+        <para><filename>/etc/nsswitch.conf</filename> ファイルを編集して、 <literal>passwd</literal> , <literal>group</literal>, <literal>shadow</literal> の各データベースに <literal>himmelblau</literal> を追加します。なお、既存のデータベース設定項目は削除しないでください。たとえば下記のようになります:</para>
 <screen>passwd: files systemd himmelblau
 group:  files systemd himmelblau
 shadow: files systemd himmelblau</screen>
       </step>
       <step>
-        <para>
-          Enable and start the Himmelblau services:
-        </para>
+        <para>Himmelblau サービスを有効化して起動します:</para>
 <screen>&prompt.sudo;<command>systemctl enable --now himmelblaud himmelblaud-tasks</command></screen>
       </step>
       <step>
-        <para>
-          If you installed <package>himmelblau-sshd-config</package>, restart the SSH daemon:
-        </para>
+        <para><package>himmelblau-sshd-config</package> パッケージをインストールした場合は、 SSH デーモンも再起動しておきます:</para>
 <screen>&prompt.sudo;<command>systemctl restart sshd.service</command></screen>
       </step>
     </procedure>
 
-    <para>
-      After the system is configured, an Entra ID user can sign in locally or, when SSH support is
-      installed, over SSH. The first successful sign-in may register the device with Entra ID and
-      prompt for the authentication factors required by your tenant policy.
-    </para>
+    <para>システムの設定が完了すると、 Entra ID のユーザがサインインできるようになります。 SSH サポートをインストールしている場合は、 SSH 経由でもログインできるようになります。なお、初めてユーザがサインインに成功すると、デバイスが Entra ID に登録され、テナントのポリシーで設定された認証要素を入力するように求める場合があります。</para>
   </sect1>
   <sect1 xml:id="sec-security-himmelblau-verify">
-    <title>Verifying the configuration</title>
+    <title>設定の確認</title>
 
-    <para>
-      Check that the daemons are running:
-    </para>
+    <para>まずはデーモンが動作していることを確認します:</para>
 
 <screen>&prompt.sudo;<command>systemctl status himmelblaud himmelblaud-tasks</command></screen>
 
-    <para>
-      Check that the Himmelblau daemon is reachable:
-    </para>
+    <para>次に Himmelblau デーモンが動作していることを確認します:</para>
 
 <screen>&prompt.sudo;<command>aad-tool status</command></screen>
 
-    <para>
-      Verify that NSS can resolve an Entra ID user:
-    </para>
+    <para>さらに NSS で Entra ID のユーザが解決できていることを確認します:</para>
 
 <screen>&prompt.user;<command>getent passwd <replaceable>USER</replaceable></command>
 &prompt.user;<command>id <replaceable>USER</replaceable></command></screen>
 
-    <para>
-      For troubleshooting, inspect the system journal:
-    </para>
+    <para>何らかの問題が発生している場合は、システムジャーナルを調査すると良いでしょう:</para>
 
 <screen>&prompt.sudo;<command>journalctl -u himmelblaud -u himmelblaud-tasks</command></screen>
   </sect1>
   <sect1 xml:id="sec-security-himmelblau-access">
-    <title>Restricting who can sign in</title>
+    <title>サインインできるユーザの制限</title>
 
-    <para>
-      If <literal>pam_allow_groups</literal> is not configured, all users from the configured Entra
-      ID domain can authenticate. To restrict access, add a comma-separated list of allowed user
-      principal names and Entra ID group object IDs to
-      <filename>/etc/himmelblau/himmelblau.conf</filename>:
-    </para>
+    <para><literal>pam_allow_groups</literal> を設定していない場合、設定した Entra ID 内の全てのユーザが認証できるようになります。アクセスを制限したい場合は、許可したいユーザのプリンシパル名や Entra ID グループオブジェクト ID を、 <filename>/etc/himmelblau/himmelblau.conf</filename> 内に設定してください:</para>
 
 <screen>[global]
 pam_allow_groups = <replaceable>user@example.com</replaceable>,<replaceable>00000000-1111-2222-3333-444444444444</replaceable></screen>
 
-    <para>
-      Restart both Himmelblau services after changing the configuration:
-    </para>
+    <para>設定の変更後は、 Himmelblau の両方のサービスをそれぞれ再起動してください:</para>
 
 <screen>&prompt.sudo;<command>systemctl restart himmelblaud himmelblaud-tasks</command></screen>
   </sect1>
   <sect1 xml:id="sec-security-himmelblau-intune">
-    <title>Enabling Intune policy enforcement</title>
+    <title>Intune ポリシー強制の有効化</title>
 
-    <para>
-      To allow Himmelblau to evaluate Intune compliance policy locally, enable policy processing in
-      <filename>/etc/himmelblau/himmelblau.conf</filename>:
-    </para>
+    <para>Himmelblau に対して Intune の準拠ポリシーを適用したい場合は、 <filename>/etc/himmelblau/himmelblau.conf</filename> 内でポリシー処理を有効化します:</para>
 
 <screen>[global]
 apply_policy = true</screen>
 
-    <para>
-      Restart both Himmelblau services after changing the configuration:
-    </para>
+    <para>設定の変更後は、 Himmelblau の両方のサービスをそれぞれ再起動してください:</para>
 
 <screen>&prompt.sudo;<command>systemctl restart himmelblaud himmelblaud-tasks</command></screen>
   </sect1>
