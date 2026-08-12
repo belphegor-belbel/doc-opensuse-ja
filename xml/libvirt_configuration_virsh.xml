@@ -446,75 +446,65 @@ Used memory:    8388608 KiB
         <para>まずは &vmguest; に割り当てるホスト側の PCI デバイスを識別します。下記の例では、 DEC 社のネットワークカードをゲストに割り当てようとしています:</para>
 <screen>&prompt.sudo;<command>lspci -nn</command>
 [...]
-<emphasis role="bold">03:07.0</emphasis> Ethernet controller [0200]: Digital Equipment Corporation DECchip \
+<emphasis role="bold">17:00.0</emphasis> Ethernet controller [0200]: Digital Equipment Corporation DECchip \
 21140 [FasterNet] [1011:0009] (rev 22)
 [...]</screen>
-        <para>デバイス ID (上記の例では <literal>03:07.0</literal>) をメモしておきます。</para>
+        <para>デバイス ID (上記の例では <literal>17:00.0</literal>) をメモしておきます。</para>
       </step>
       <step>
-        <para><command>virsh nodedev-dumpxml <replaceable>ID</replaceable></command> を実行して、デバイスに関する詳細情報を取得します。ここで <replaceable>ID</replaceable> にはデバイス ID (この例では <literal>03:07.0</literal> ) を指定しますが、コロン (:) とピリオド (.) をアンダースコア (_) に置き換え、かつ <quote>pci_0000_</quote> という前置きを置いた値 (この例では <literal>pci_0000_03_07_0</literal> になります) を指定して実行します:</para>
-<screen>&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_03_07_0</command>
+        <para><command>virsh nodedev-dumpxml <replaceable>ID</replaceable></command> を実行して、デバイスに関する詳細情報を取得します。ここで <replaceable>ID</replaceable> にはデバイス ID (この例では <literal>17:00.0</literal> ) を指定しますが、コロン (:) とピリオド (.) をアンダースコア (_) に置き換え、かつ <quote>pci_0000_</quote> という前置きを置いた値 (この例では <literal>pci_0000_17_00_0</literal> になります) を指定して実行します:</para>
+<screen>&prompt.sudo;<command>virsh nodedev-dumpxml pci_0000_17_00_0</command>
 &lt;device&gt;
-  &lt;name&gt;pci_0000_03_07_0&lt;/name&gt;
-  &lt;path&gt;/sys/devices/pci0000:00/0000:00:14.4/0000:03:07.0&lt;/path&gt;
+  &lt;name&gt;pci_0000_17_00_0&lt;/name&gt;
+  &lt;path&gt;/sys/devices/pci0000:00/0000:00:14.4/0000:17:00.0&lt;/path&gt;
   &lt;parent&gt;pci_0000_00_14_4&lt;/parent&gt;
   &lt;driver&gt;
     &lt;name&gt;tulip&lt;/name&gt;
   &lt;/driver&gt;
   &lt;capability type='pci'&gt;
     <emphasis role="bold">&lt;domain&gt;0&lt;/domain&gt;
-    &lt;bus&gt;3&lt;/bus&gt;
-    &lt;slot&gt;7&lt;/slot&gt;
+    &lt;bus&gt;23&lt;/bus&gt;
+    &lt;slot&gt;0&lt;/slot&gt;
     &lt;function&gt;0&lt;/function&gt;</emphasis>
     &lt;product id='0x0009'&gt;DECchip 21140 [FasterNet]&lt;/product&gt;
     &lt;vendor id='0x1011'&gt;Digital Equipment Corporation&lt;/vendor&gt;
     &lt;numa node='0'/&gt;
   &lt;/capability&gt;
 &lt;/device&gt;</screen>
-        <para>出力された値の中から、 domain, bus, function の値 (上記太字部分) をメモしておきます。</para>
+        <para>出力された値の中から、 domain, bus, slot, function の値 (上記太字部分) をメモしておきます。</para>
       </step>
       <step>
         <para>&vmguest; に対して割り当てを行う前に、 &vmhost; 側からの切り離しを行います:</para>
-<screen>&prompt.sudo;<command>virsh nodedev-detach pci_0000_03_07_0</command>
-  Device pci_0000_03_07_0 detached</screen>
+<screen>&prompt.sudo;<command>virsh nodedev-detach pci_0000_17_00_0</command>
+  Device pci_0000_17_00_0 detached</screen>
         <tip>
           <title>多機能型 PCI デバイスについて</title>
           <para>FLR (Function Level Reset; 機能レベルリセット) や PM (Power Management; 電源管理) リセットに対応していない多機能型の PCI デバイスを使用している場合、 &vmguest; 側に割り当てるには、 &vmhost; 側で全ての機能を切り離す必要があります。また、セキュリティ上の理由から、デバイス全体をリセットする必要があります。 <systemitem>libvirt</systemitem> では、 &vmhost; 側もしくは他の &vmguest; 側で機能の一部が使用されている場合、その割り当てを拒否するようになっています。</para>
         </tip>
       </step>
       <step>
-        <para>domain, bus, slot, function の各値を 16 進数に変換します。上記の例では、 domain = 0, bus = 3, slot = 7, function = 0 ですので、下記のようなコマンドを実行して変換を行います。なお、指定の順序を間違えないようにしてください:</para>
+        <para>domain, bus, slot, function の各値を 16 進数に変換します。上記の例では、 domain = 0, bus = 23, slot = 0, function = 0 ですので、下記のようなコマンドを実行して変換を行います。なお、指定の順序を間違えないようにしてください:</para>
         <note>
-          <title>Use the decimal values from the <command>nodedev-dumpxml</command> output</title>
-          <para>
-            The <literal>domain</literal>, <literal>bus</literal>, <literal>slot</literal>, and
-            <literal>function</literal> values in the <literal>&lt;capability&gt;</literal> section of
-            <command>virsh nodedev-dumpxml</command> are decimal numbers, even though the device name
-            (for example, <literal>pci_0000_17_00_0</literal>) and the output of
-            <command>lspci</command> already use hexadecimal notation. Convert only the decimal values
-            from <command>nodedev-dumpxml</command>. Using the hexadecimal segments from the device
-            name or from <command>lspci</command> as input to <command>printf</command> produces an
-            incorrect address, for example <literal>0x11</literal> instead of the correct
-            <literal>0x17</literal> for bus <literal>23</literal>.
-          </para>
+          <title><command>nodedev-dumpxml</command> の出力が 10 進数である件について</title>
+          <para><command>virsh nodedev-dumpxml</command> の <literal>&lt;capability&gt;</literal> セクション内にある <literal>domain</literal> , <literal>bus</literal> , <literal>slot</literal> , <literal>function</literal> の各値は、デバイス名 (今回の例では <literal>pci_0000_17_00_0</literal>) や <command>lspci</command> での 16 進数出力とは異なり、 10 進数であることに注意してください。ここでは <command>nodedev-dumpxml</command> の 10 進数部分のみを変換する必要があります。デバイス名や <command>lspci</command> の出力を再度 <command>printf</command> で 16 進数に変換しなおしてしまうと、誤ったアドレスになってしまいます。たとえばバス番号 <literal>23</literal> の 16 進数表記である <literal>0x17</literal> を再度変換してしまうと、 <literal>0x11</literal> という値になってしまいます。</para>
         </note>
 <screen>&prompt.user;<command>printf "&lt;address domain='0x%x' bus='0x%x' slot='0x%x' function='0x%x'/&gt;
-" 0 3 7 0</command></screen>
+" 0 23 0 0</command></screen>
         <para>上記を実行すると、下記のように出力されるはずです:</para>
-<screen>&lt;address domain='0x0' bus='0x3' slot='0x7' function='0x0'/&gt;</screen>
+<screen>&lt;address domain='0x0' bus='0x17' slot='0x0' function='0x0'/&gt;</screen>
       </step>
       <step>
         <para>あとは対象の &vmguest; の設定ファイルを <command>virsh edit</command> で編集して、上記の手順の出力結果を <literal>&lt;devices&gt;</literal> タグ内に貼り付けます:</para>
 <screen>&lt;hostdev mode='subsystem' type='pci' managed='yes'&gt;
   &lt;source&gt;
-    &lt;address domain='0x0' bus='0x03' slot='0x07' function='0x0'/&gt;
+    &lt;address domain='0x0' bus='0x17' slot='0x00' function='0x0'/&gt;
   &lt;/source&gt;
 &lt;/hostdev&gt;</screen>
         <tip xml:id="tip-libvirt-config-pci-virsh-managed">
           <title><literal>managed</literal> と <literal>unmanaged</literal> の違いについて</title>
           <para><systemitem>libvirt</systemitem> では、 PCI デバイスの処理方法を 2 種類 (<literal>managed</literal> と <literal>unmanaged</literal>) 用意しています。 <literal>managed</literal> の場合、 <systemitem>libvirt</systemitem> は必要に応じて既存のドライバからデバイスを切り離す処理からデバイスのリセット、仮想マシンを起動する前の <systemitem>vfio-pci</systemitem> への接続など、全ての詳細処理を制御するようになります。また、仮想マシンが終了した場合や仮想マシンからデバイスを切り離した場合、 <systemitem>libvirt</systemitem> は <systemitem>vfio-pci</systemitem> への接続を解除して元のドライバに再接続する処理までを行うようになります。逆に <literal>unmanaged</literal> の場合、 <systemitem>libvirt</systemitem> はそれらの処理を行わず、仮想マシンにハードウエアを割り当てる際と、仮想マシンからハードウエアを切り離す際には、それらの処理をユーザ側で行わなければなりません。</para>
         </tip>
-        <para>上記の例では <literal>managed='yes'</literal> を指定しているため、 <literal>managed</literal> を選択していることになります。 <literal>unmanaged</literal> に切り替えたい場合は、これを <literal>managed='no'</literal> に変更してください。なお、この場合は <command>virsh nodedev-detach</command> や <command>virsh nodedev-reattach</command> のコマンドを利用して、対応するドライバに対する処理を行う必要があります。具体的には、 &vmguest; を起動する前に <command>virsh nodedev-detach pci_0000_03_07_0</command> を実行してホスト側から切り離し、終了後には <command>virsh nodedev-reattach pci_0000_03_07_0</command> を実行して、ホスト側で認識できるように再設定する必要があります。</para>
+        <para>上記の例では <literal>managed='yes'</literal> を指定しているため、 <literal>managed</literal> を選択していることになります。 <literal>unmanaged</literal> に切り替えたい場合は、これを <literal>managed='no'</literal> に変更してください。なお、この場合は <command>virsh nodedev-detach</command> や <command>virsh nodedev-reattach</command> のコマンドを利用して、対応するドライバに対する処理を行う必要があります。具体的には、 &vmguest; を起動する前に <command>virsh nodedev-detach pci_0000_17_00_0</command> を実行してホスト側から切り離し、終了後には <command>virsh nodedev-reattach pci_0000_17_00_0</command> を実行して、ホスト側で認識できるように再設定する必要があります。</para>
       </step>
       <step>
         <para>ホスト側で &selnx; が動作している場合は、 &vmguest; をシャットダウンして &selnx; を無効化します。</para>
