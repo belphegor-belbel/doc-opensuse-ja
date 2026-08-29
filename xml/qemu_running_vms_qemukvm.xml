@@ -13,6 +13,12 @@
     </dm:docmanager>
   <revhistory xml:id="rh-cha-qemu-running">
    <revision>
+     <date>2026-08-20</date>
+     <revdescription>
+       <para>ここで、 <replaceable>バックエンドの種類</replaceable> には、 <literal>null</literal> , <literal>socket</literal> , <literal>udp</literal> , <literal>msmouse</literal> , <literal>vc</literal> , <literal>file</literal> , <literal>pipe</literal> , <literal>console</literal> , <literal>serial</literal> , <literal>pty</literal> , <literal>stdio</literal> , <literal>braille</literal> , <literal>tty</literal> , <literal>parport</literal> のいずれかを指定します。また、それぞれのキャラクタデバイスに対しては、最大で 127 文字までの識別 (ID) 文字列を指定しなければなりません。この識別文字列は、関連する他のディレクティブを指定する際に使用します。それぞれのバックエンドに対する全てのオプションについて、詳しくはマニュアルページ ( <command>man 1 qemu</command> ) をお読みください。下記にそれぞれの <literal>バックエンド</literal> に対する概要説明を記述します:</para>
+     </revdescription>
+   </revision>
+   <revision>
      <date>2024-06-27</date>
      <revdescription>
        <para/>
@@ -733,20 +739,27 @@ macaddr=&wsIVmac;<co xml:id="co-qemu-running-networking-nic-mac"/>,name=ncard1</
           <remark>cwickert 2017-09-01: still up to date?</remark>
           <para>現時点では、 &suse; は <literal>rtl8139</literal> , <literal>e1000</literal> およびその派生系である <literal>e1000-82540em</literal> , <literal>e1000-82544gc</literal> , <literal>e1000-82545em</literal> , <literal>virtio-net-pci</literal> にそれぞれ対応しています。そのドライバで指定可能なオプションの一覧を取得したい場合は、ドライバのオプションの箇所に <option>help</option> を追加してください:</para>
 <screen>&prompt.sudo;qemu-system-x86_64 -device e1000,help
-e1000.mac=macaddr
-e1000.vlan=vlan
-e1000.netdev=netdev
-e1000.bootindex=int32
-e1000.autonegotiation=on/off
-e1000.mitigation=on/off
-e1000.addr=pci-devfn
-e1000.romfile=str
-e1000.rombar=uint32
-e1000.multifunction=on/off
-e1000.command_serr_enable=on/off</screen>
-        </callout>
-        <callout arearefs="co-qemu-running-networking-nic-vlan">
-          <para>ネットワークインターフェイスを VLAN 番号 1 に接続する指定です。主に識別用のものとなりますが、必要であれば独自の番号を設定することができます。このサブオプションを省略した場合、 &qemu; は既定値である 0 を指定したものとみなします。</para>
+e1000 options:
+  acpi-index=&lt;uint32&gt;    -  (default: 0)
+  addr=&lt;str&gt;             - Slot and optional function number, example: 06.0 or 06 (default: -1)
+  bootindex=&lt;int32&gt;
+  busnr=&lt;busnr&gt;
+  extra_mac_registers=&lt;bool&gt; - on/off (default: on)
+  failover_pair_id=&lt;str&gt;
+  init-vet=&lt;bool&gt;        - on/off (default: on)
+  mac=&lt;str&gt;              - Ethernet 6-byte MAC Address, example: 52:54:00:12:34:56
+  migrate_tso_props=&lt;bool&gt; - on/off (default: on)
+  multifunction=&lt;bool&gt;   - on/off (default: off)
+  netdev=&lt;str&gt;           - ID of a netdev to use as a backend
+  rombar=&lt;int32&gt;         -  (default: -1)
+  romfile=&lt;str&gt;
+  romsize=&lt;uint32&gt;       -  (default: 4294967295)
+  x-max-bounce-buffer-size=&lt;size&gt; - Maximum buffer size allocated for bounce buffers used for mapped access to indirect DMA memory (default: 4096)
+  x-pcie-ari-nextfn-1=&lt;bool&gt; - on/off (default: off)
+  x-pcie-err-unc-mask=&lt;bool&gt; - on/off (default: on)
+  x-pcie-ext-tag=&lt;bool&gt;  - on/off (default: on)
+  x-pcie-extcap-init=&lt;bool&gt; - on/off (default: on)
+  x-pcie-lnksta-dllla=&lt;bool&gt; - on/off (default: on)</screen>
         </callout>
         <callout arearefs="co-qemu-running-networking-nic-mac">
           <para>ネットワークカードの Media Access Control (MAC) アドレスを指定しています。この値はネットワーク内で唯一のものでなければならないため、必ず指定しておくことをお勧めします。指定しない場合、 &qemu; は既定の MAC アドレスを使用してしまうため、同じ VLAN 内で MAC アドレスの重複を引き起こしてしまうことになります。</para>
@@ -772,9 +785,6 @@ e1000.command_serr_enable=on/off</screen>
           <calloutlist>
             <callout arearefs="co-usermode-user">
               <para>ユーザモードネットワーキングの指定を行っています。</para>
-            </callout>
-            <callout arearefs="co-usermode-vlan">
-              <para>VLAN 番号 1 に接続しています。省略した場合、既定値である 0 になります。</para>
             </callout>
             <callout arearefs="co-usermode-name">
               <para>ネットワークスタックに対する分かりやすい名前を指定しています。 &qemu; モニタなどで識別する際に有用です。</para>
