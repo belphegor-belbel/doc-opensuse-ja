@@ -15,7 +15,7 @@
    <revision>
      <date>2026-08-20</date>
      <revdescription>
-       <para>ここで、 <replaceable>バックエンドの種類</replaceable> には、 <literal>null</literal> , <literal>socket</literal> , <literal>udp</literal> , <literal>msmouse</literal> , <literal>vc</literal> , <literal>file</literal> , <literal>pipe</literal> , <literal>console</literal> , <literal>serial</literal> , <literal>pty</literal> , <literal>stdio</literal> , <literal>braille</literal> , <literal>tty</literal> , <literal>parport</literal> のいずれかを指定します。また、それぞれのキャラクタデバイスに対しては、最大で 127 文字までの識別 (ID) 文字列を指定しなければなりません。この識別文字列は、関連する他のディレクティブを指定する際に使用します。それぞれのバックエンドに対する全てのオプションについて、詳しくはマニュアルページ ( <command>man 1 qemu</command> ) をお読みください。下記にそれぞれの <literal>バックエンド</literal> に対する概要説明を記述します:</para>
+       <para>現在の &qemu; 書式に合わせて、ネットワークの設定例にて <literal>-netdev</literal> の行内に netdev のバックエンドオプション (例: <literal>ifname</literal> , <literal>script</literal> , <literal>downscript</literal> , <literal>restrict</literal> , <literal>net</literal> , <literal>host</literal> , <literal>dhcpstart</literal> , <literal>hostname</literal> , <literal>tftp</literal> , <literal>bootfile</literal> , <literal>hostfwd</literal>) を追加。廃止予定となった <literal>vlan</literal> サブオプションを削除し、同様に廃止予定となった <literal>macaddr</literal> を <literal>mac</literal> サブオプションに修正。</para>
      </revdescription>
    </revision>
    <revision>
@@ -728,8 +728,8 @@ socket,id=tcp_socket1,host=localhost,port=7777,server,nowait</screen>
       <para><option>-device</option> オプションとともに <literal>-netdev</literal> オプションを指定することで、新しい擬似ネットワークカードを追加することができます:</para>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
 -netdev tap<co xml:id="co-qemu-running-networking-nic-tap"/>,id=hostnet0 \
--device virtio-net-pci<co xml:id="co-qemu-running-networking-nic-drv"/>,netdev=hostnet0,vlan=1<co xml:id="co-qemu-running-networking-nic-vlan"/>,\
-macaddr=&wsIVmac;<co xml:id="co-qemu-running-networking-nic-mac"/>,name=ncard1</screen>
+-device virtio-net-pci<co xml:id="co-qemu-running-networking-nic-drv"/>,netdev=hostnet0,\
+mac=&wsIVmac;<co xml:id="co-qemu-running-networking-nic-mac"/></screen>
       <calloutlist>
         <callout arearefs="co-qemu-running-networking-nic-tap">
           <para>ネットワークデバイスの種類を指定しています。</para>
@@ -780,14 +780,14 @@ e1000 options:
         <example xml:id="ex-qemu-net-usermode-resctrict">
           <title>制限付きユーザモードネットワーク</title>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
--netdev user<co xml:id="co-usermode-user"/>,id=hostnet0 \
--device virtio-net-pci,netdev=hostnet0,vlan=1<co xml:id="co-usermode-vlan"/>,name=user_net1<co xml:id="co-usermode-name"/>,restrict=yes<co xml:id="co-usermode-restrict"/></screen>
+-netdev user<co xml:id="co-usermode-user"/>,id=hostnet0<co xml:id="co-usermode-name"/>,restrict=yes<co xml:id="co-usermode-restrict"/> \
+-device virtio-net-pci,netdev=hostnet0</screen>
           <calloutlist>
             <callout arearefs="co-usermode-user">
               <para>ユーザモードネットワーキングの指定を行っています。</para>
             </callout>
             <callout arearefs="co-usermode-name">
-              <para>ネットワークスタックに対する分かりやすい名前を指定しています。 &qemu; モニタなどで識別する際に有用です。</para>
+              <para>ネットワークバックエンドに対する分かりやすい名前を指定しています。 &qemu; モニタなどで識別する際に有用です。</para>
             </callout>
             <callout arearefs="co-usermode-restrict">
               <para>&vmguest; を孤立させる指定です。これにより &vmhost; と通信ができなくなるほか、外部ネットワークにもパケットが送信されなくなります。</para>
@@ -797,9 +797,9 @@ e1000 options:
         <example xml:id="ex-qemu-net-usermode-iprange">
           <title>独自の IP アドレス範囲を指定したユーザモードネットワーク</title>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
--netdev user,id=hostnet0 \
--device virtio-net-pci,netdev=hostnet0,net=10.2.0.0/8<co xml:id="co-usermode-net"/>,host=10.2.0.6<co xml:id="co-usermode-host"/>,\
-dhcpstart=10.2.0.20<co xml:id="co-usermode-dhcpstart"/>,hostname=tux_kvm_guest<co xml:id="co-usermode-hostname"/></screen>
+-netdev user,id=hostnet0,net=10.2.0.0/8<co xml:id="co-usermode-net"/>,host=10.2.0.6<co xml:id="co-usermode-host"/>,\
+dhcpstart=10.2.0.20<co xml:id="co-usermode-dhcpstart"/>,hostname=tux_kvm_guest<co xml:id="co-usermode-hostname"/> \
+-device virtio-net-pci,netdev=hostnet0</screen>
           <calloutlist>
             <callout arearefs="co-usermode-net">
               <para>&vmguest; との間で使用されるネットワークの IP アドレスとネットマスク (オプション) を指定しています。既定値は 10.0.2.0/8 です。</para>
@@ -818,9 +818,9 @@ dhcpstart=10.2.0.20<co xml:id="co-usermode-dhcpstart"/>,hostname=tux_kvm_guest<c
         <example xml:id="ex-qemu-net-usermode-netboot-tftp">
           <title>ネットワーク起動と TFTP を利用したユーザモードネットワーク</title>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
--netdev user,id=hostnet0 \
--device virtio-net-pci,netdev=hostnet0,tftp=/images/tftp_dir<co xml:id="co-usermode-tftp"/>,\
-bootfile=/images/boot/pxelinux.0<co xml:id="co-usermode-bootfile"/></screen>
+-netdev user,id=hostnet0,tftp=/images/tftp_dir<co xml:id="co-usermode-tftp"/>,\
+bootfile=/images/boot/pxelinux.0<co xml:id="co-usermode-bootfile"/> \
+-device virtio-net-pci,netdev=hostnet0</screen>
           <calloutlist>
             <callout arearefs="co-usermode-tftp">
               <para>内蔵 TFTP (非常に基本的な機能に限定されたファイル転送プロトコル) サーバを有効化しています。 &vmguest; 側からは、指定したディレクトリがルートディレクトリとなります。</para>
@@ -833,8 +833,8 @@ bootfile=/images/boot/pxelinux.0<co xml:id="co-usermode-bootfile"/></screen>
         <example xml:id="ex-qemu-net-usermode-hostfwd">
           <title>ホスト側でのポート転送を指定したユーザモードネットワーク</title>
 <screen>&prompt.sudo;qemu-system-x86_64 [...] \
--netdev user,id=hostnet0 \
--device virtio-net-pci,netdev=hostnet0,hostfwd=tcp::2222-:22</screen>
+-netdev user,id=hostnet0,hostfwd=tcp::2222-:22 \
+-device virtio-net-pci,netdev=hostnet0</screen>
           <para>ホスト側で TCP ポート番号 2222 に届いたパケットを、 &vmguest; 側の TCP ポート番号 22 ( <systemitem class="service">SSH</systemitem> ) に転送する指定です。 &vmguest; 側で <systemitem class="daemon">sshd</systemitem> が動作していれば、</para>
 <screen>&prompt.user;ssh <replaceable>ホスト</replaceable> -p 2222</screen>
           <para>のように入力することで、 &vmguest; 側の <systemitem class="daemon">SSH</systemitem> に接続することができるようになります。ここで <replaceable>ホスト</replaceable> には &vmhost; のホスト名または IP アドレスを指定します。</para>
@@ -885,9 +885,8 @@ sudo ip link add name $bridge type bridge
 sudo ip link set $bridge up
 sudo ip link set $tap master $bridge<co xml:id="co-qemu-net-bridge-br3"/>
 qemu-system-x86_64 -machine accel=kvm -m 512 -hda /images/sles_base.raw \
- -netdev tap,id=hostnet0 \
- -device virtio-net-pci,netdev=hostnet0,vlan=0,macaddr=&wsIVmac;,\
- ifname=$tap<co xml:id="co-qemu-net-bridge-ifname"/>,script=no<co xml:id="co-qemu-net-bridge-script"/>,downscript=no
+ -netdev tap,id=hostnet0,ifname=$tap<co xml:id="co-qemu-net-bridge-ifname"/>,script=no<co xml:id="co-qemu-net-bridge-script"/>,downscript=no \
+ -device virtio-net-pci,netdev=hostnet0,mac=&wsIVmac;
 sudo ip link set $tap nomaster<co xml:id="co-qemu-net-bridge-delif"/>
 sudo ip link set $tap down<co xml:id="co-qemu-net-bridge-linkdown"/>
 sudo tunctl -d $tap<co xml:id="co-qemu-net-bridge-deltap"/></screen>
@@ -929,11 +928,11 @@ sudo tunctl -d $tap<co xml:id="co-qemu-net-bridge-deltap"/></screen>
         <para>&vmguest; をネットワークブリッジ経由でネットワークに接続する場合、もう 1 つの方法として <filename>qemu-bridge-helper</filename> というヘルパープログラムを使用する方法が用意されています。これは TAP インターフェイスを作成して指定したブリッジに接続するまでの処理を行います。既定のヘルパープログラムは <filename>/usr/lib/qemu-bridge-helper</filename> にあります。なお、このヘルパープログラムは setuid root ビットが設定されていて、かつ仮想化グループ ( <literal>kvm</literal> ) のメンバーのみに実行権限が与えられていますので、 <command>qemu-system-ARCH</command> コマンド自身を &rootuser; 権限で動作させる必要はありません。</para>
         <para>ヘルパーは下記のようにしてネットワークブリッジを指定した場合、自動的に呼び出されます:</para>
 <screen>qemu-system-x86_64 [...] \
- -netdev bridge,id=hostnet0,vlan=0,br=br0 \
+ -netdev bridge,id=hostnet0,br=br0 \
  -device virtio-net-pci,netdev=hostnet0</screen>
         <para>TAP デバイスの設定／設定解除を行うプログラムを用意することで、独自のプログラムを実行することもできます。ヘルパープログラムを指定するには、 <option>helper=<replaceable>ヘルパープログラムのパス</replaceable></option> のように指定してください:</para>
 <screen>qemu-system-x86_64 [...] \
- -netdev bridge,id=hostnet0,vlan=0,br=br0,helper=/path/to/bridge-helper \
+ -netdev bridge,id=hostnet0,br=br0,helper=/path/to/bridge-helper \
  -device virtio-net-pci,netdev=hostnet0</screen>
         <tip>
           <para><literal>qemu-bridge-helper</literal> に対してアクセス権限を設定するには、 <filename>/etc/qemu/bridge.conf</filename> ファイルを作成してください。たとえば下記のようなディレクティブを設定したものとすると、</para>
